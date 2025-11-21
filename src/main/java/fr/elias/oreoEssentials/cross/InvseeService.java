@@ -59,18 +59,19 @@ public final class InvseeService {
             return;
         }
 
-        // On garde une session par viewer (un seul /invsee à la fois par staff)
-        InvseeSession sess = new InvseeSession(target.getUniqueId(), p.getViewerId());
-        sess.setTargetName(target.getName());
-        sessions.put(p.getViewerId(), sess);
 
-        // Snapshot complet de l'inventaire "live"
+        // InvseeSession sess = new InvseeSession(target.getUniqueId(), p.getViewerId());
+        // sess.setTargetName(target.getName());
+        // sessions.put(p.getViewerId(), sess);
+
+
         ItemStack[] snap = target.getInventory().getContents();
         broker.sendStateToViewer(p.getViewerId(), target.getUniqueId(), snap);
 
         plugin.getLogger().info("[INVSEE] handleRemoteOpen: sent initial state to viewer="
                 + p.getViewerName() + " for target=" + target.getName());
     }
+
 
     /**
      * OWNER node; applique une édition d'un viewer distant sur l'inventaire réel.
@@ -115,24 +116,27 @@ public final class InvseeService {
 
         ItemStack[] contents = ItemStacksCodec.decodeFromBytes(p.getContentsBytes());
 
-        InvseeSession sess = sessions.computeIfAbsent(
-                p.getViewerId(),
-                v -> new InvseeSession(p.getTargetId(), p.getViewerId())
-        );
+        InvseeSession sess = sessions.get(p.getViewerId());
+        if (sess == null) {
+            plugin.getLogger().fine("[INVSEE] applyRemoteState: no session for viewerId="
+                    + p.getViewerId() + " (GUI probably closed)");
+            return;
+        }
+
         sess.setLastSnapshot(contents);
 
         Player viewer = Bukkit.getPlayer(p.getViewerId());
         if (viewer != null && viewer.isOnline()) {
             InvseeMenu menu = sess.getMenu();
             if (menu != null) {
-                // cross.InvseeMenu doit avoir une méthode refreshFromSession(...)
-                menu.refreshFromSession(sess);
+                menu.refreshFromSession(sess); // you can leave it empty, SmartInvs will call update()
             }
         }
 
         plugin.getLogger().info("[INVSEE] applyRemoteState: snapshot received for viewerId="
                 + p.getViewerId() + " targetId=" + p.getTargetId());
     }
+
 
     /* ------------------------------------------------------------------
      * 2) FLUX /INVSEE CLASSIQUE (cross.InvseeMenu + sessions)

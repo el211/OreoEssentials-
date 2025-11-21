@@ -6,14 +6,14 @@ import fr.elias.oreoEssentials.playerdirectory.PlayerDirectory;
 import fr.elias.oreoEssentials.services.TeleportService;
 import fr.elias.oreoEssentials.teleport.TpCrossServerBroker;
 import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.UUID;
 
-public class MoveCommand implements OreoCommand {
+public class MoveCommand implements OreoCommand, org.bukkit.command.TabCompleter {
 
     private final TeleportService teleportService;
 
@@ -78,9 +78,8 @@ public class MoveCommand implements OreoCommand {
             return true;
         }
 
-        // 2) destination local? (maybe we only failed by name case)
+        // 2) destination local?
         if (toLocal != null) {
-            // we already handled (both local) earlier, but keep it safe
             teleportService.teleportSilently(fromLocal, toLocal);
             admin.sendMessage("§aMoved §b" + fromLocal.getName() + " §ato §b" + toLocal.getName() + "§a.");
             if (!admin.equals(fromLocal)) {
@@ -143,7 +142,6 @@ public class MoveCommand implements OreoCommand {
                 return true;
             }
 
-            // This teleports 'fromLocal' to the remote player 'targetName' on 'presence'
             broker.requestCrossServerTp(fromLocal, toUuid, targetName, presence);
             admin.sendMessage("§aAsked proxy to move §b" + fromLocal.getName() + " §ato §b" + targetName + "§a on §b" + presence + "§a.");
             return true;
@@ -156,10 +154,6 @@ public class MoveCommand implements OreoCommand {
 
     // ---------- helpers ----------
 
-    /**
-     * /move <player> with 1 arg: behave like your /tp command (admin -> target),
-     * reusing the same resolve + cross-server logic.
-     */
     private boolean moveSelfToTarget(Player admin, String arg) {
         if (arg == null || arg.isEmpty()) {
             admin.sendMessage("§cUsage: /move <player> [target]");
@@ -211,7 +205,6 @@ public class MoveCommand implements OreoCommand {
 
         String targetName = safeNameLookup(dir, targetUuid, arg);
 
-        // presence says same server → retry by UUID
         if (presence != null && presence.equalsIgnoreCase(localServer)) {
             Player again = Bukkit.getPlayer(targetUuid);
             if (again != null && again.isOnline()) {
@@ -225,7 +218,6 @@ public class MoveCommand implements OreoCommand {
             }
         }
 
-        // remote server
         if (presence != null && !presence.isBlank() && !presence.equalsIgnoreCase(localServer)) {
             TpCrossServerBroker tpBroker = plugin.getTpBroker();
             if (tpBroker == null) {
@@ -234,7 +226,6 @@ public class MoveCommand implements OreoCommand {
             }
 
             tpBroker.requestCrossServerTp(admin, targetUuid, targetName, presence);
-            // TpCrossServerBroker already handles messaging / switching, so we just stop here
             return true;
         }
 
@@ -242,10 +233,6 @@ public class MoveCommand implements OreoCommand {
         return true;
     }
 
-    /**
-     * Same as in your TpCommand: resolve a player on *this* server using
-     * exact name, case-insensitive, or UUID.
-     */
     private Player resolveOnline(String nameOrUuid) {
         Player p = Bukkit.getPlayerExact(nameOrUuid);
         if (p != null) return p;
@@ -262,10 +249,6 @@ public class MoveCommand implements OreoCommand {
         return null;
     }
 
-    /**
-     * Local-only version (no display name / UUID loop), just to keep the
-     * 2-arg move logic simple.
-     */
     private Player resolveOnlineLocalOnly(String nameOrUuid) {
         Player p = Bukkit.getPlayerExact(nameOrUuid);
         if (p != null) return p;
@@ -288,5 +271,51 @@ public class MoveCommand implements OreoCommand {
         } catch (Throwable ignored) {
             return fallback;
         }
+    }
+
+    // ---------- TAB COMPLETER ----------
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender,
+                                      Command cmd,
+                                      String alias,
+                                      String[] args) {
+        if (!sender.hasPermission("oreo.move")) return List.of();
+
+        // We complete both arg1 (<player>) and arg2 ([target]) with player names
+        if (args.length == 1 || args.length == 2) {
+            String partial = args[args.length - 1];
+            String want = partial.toLowerCase(Locale.ROOT);
+
+            Set<String> out = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+
+            // 1) Local online players
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                String n = p.getName();
+                if (n != null && n.toLowerCase(Locale.ROOT).startsWith(want)) {
+                    out.add(n);
+                }
+            }
+
+            // 2) Network-wide via PlayerDirectory.suggestOnlineNames()
+            OreoEssentials plugin = OreoEssentials.get();
+            PlayerDirectory dir = plugin.getPlayerDirectory();
+            if (dir != null) {
+                try {
+                    var names = dir.suggestOnlineNames(want, 50);
+                    if (names != null) {
+                        for (String n : names) {
+                            if (n != null && n.toLowerCase(Locale.ROOT).startsWith(want)) {
+                                out.add(n);
+                            }
+                        }
+                    }
+                } catch (Throwable ignored) {}
+            }
+
+            return out.stream().limit(50).toList();
+        }
+
+        return List.of();
     }
 }

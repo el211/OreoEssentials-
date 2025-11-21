@@ -62,6 +62,10 @@ public class AfkService {
         afkPlayers.remove(id);
         originalTabNames.remove(id);
     }
+    public void clearAfk(Player player) {
+        // Simply mark them as not AFK and refresh tab name
+        setAfk(player, false);
+    }
 
     /**
      * Applies the correct tablist name according to AFK state.

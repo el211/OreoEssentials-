@@ -1,5 +1,5 @@
 name: OreoEssentials
-version: "2.4a-SNAPSHOT"
+version: "2.4b-SNAPSHOT"
 main: fr.elias.oreoEssentials.OreoEssentials
 api-version: "1.21"
 description: "All-in-one essentials plugin with homes/warps/spawn, RTP, economy (Vault), chat tools, portals/jump pads, cross-server EC & player sync."
