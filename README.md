@@ -1,4 +1,5 @@
 # 🍪 OreoEssentials
+<img width="500" height="500" alt="image" src="https://github.com/user-attachments/assets/dd1bd76b-3602-4019-95c6-36337faa1222" />
 
 > The most advanced all-in-one Essentials plugin for Paper 1.21+  
 > Free & open-source plugin by **Oreo Studios**
