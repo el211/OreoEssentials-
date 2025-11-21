@@ -1,16 +1,22 @@
 package fr.elias.oreoEssentials.commands.core.admins;
 
+import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class TphereCommand implements OreoCommand, org.bukkit.command.TabCompleter {
+
+    private final OreoEssentials plugin;
+
+    public TphereCommand(OreoEssentials plugin) {
+        this.plugin = plugin;
+    }
 
     @Override public String name() { return "tphere"; }
     @Override public List<String> aliases() { return List.of(); }
@@ -42,15 +48,44 @@ public class TphereCommand implements OreoCommand, org.bukkit.command.TabComplet
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, org.bukkit.command.Command cmd, String alias, String[] args) {
-        if (args.length == 1) {
-            String p = args[0].toLowerCase(Locale.ROOT);
-            return Bukkit.getOnlinePlayers().stream()
-                    .map(Player::getName)
-                    .filter(n -> n.toLowerCase(Locale.ROOT).startsWith(p))
-                    .sorted(String.CASE_INSENSITIVE_ORDER)
-                    .collect(Collectors.toList());
+    public List<String> onTabComplete(CommandSender sender,
+                                      org.bukkit.command.Command cmd,
+                                      String alias,
+                                      String[] args) {
+        if (args.length != 1) {
+            return List.of();
         }
-        return List.of();
+
+        final String partial = args[0];
+        final String want = partial.toLowerCase(Locale.ROOT);
+
+        // On garde la même structure que TpaTabCompleter :
+        // Set trié, insensible à la casse
+        Set<String> out = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+
+        // 1) Joueurs locaux en ligne
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            String n = p.getName();
+            if (n != null && n.toLowerCase(Locale.ROOT).startsWith(want)) {
+                out.add(n);
+            }
+        }
+
+        // 2) Joueurs réseau via PlayerDirectory.suggestOnlineNames()
+        var dir = plugin.getPlayerDirectory();
+        if (dir != null) {
+            try {
+                var names = dir.suggestOnlineNames(want, 50);
+                if (names != null) {
+                    for (String n : names) {
+                        if (n != null && n.toLowerCase(Locale.ROOT).startsWith(want)) {
+                            out.add(n);
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        return out.stream().limit(50).collect(Collectors.toList());
     }
 }

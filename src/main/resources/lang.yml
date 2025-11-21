@@ -399,6 +399,8 @@ enderchest:
   storage:
     load-failed: "%prefix%&cFailed to load your ender chest.&7 Please try again later."
     save-failed: "%prefix%&cFailed to save your ender chest.&7 Your items should still be safe, but contact staff if this keeps happening."
+    opened-cross-server: "%prefix%&7Coffre de l'End &bcross-serveur &7ouvert."
+
 modgui:
   main:
     player:

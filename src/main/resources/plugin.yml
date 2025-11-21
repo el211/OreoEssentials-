@@ -26,6 +26,11 @@ commands:
     description: Set the server spawn
     permission: oreo.setspawn
 
+  move:
+    description: "Move a player to another player (cross-server aware)"
+    usage: "/move <player> [target]"
+    permission: "oreo.move"
+
   back:
     description: Return to your last location
     permission: oreo.back

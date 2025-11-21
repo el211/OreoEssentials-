@@ -45,6 +45,7 @@ import fr.elias.oreoEssentials.customcraft.OeCraftCommand;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.commands.core.playercommands.SitCommand;
 import fr.elias.oreoEssentials.listeners.SitListener;
+import fr.elias.oreoEssentials.commands.core.admins.MoveCommand;
 
 
 // Tab completion
@@ -1301,7 +1302,7 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[TAB] Disabled by settings.yml (features.tab.enabled=false).");
         }
 
-        var tphere = new fr.elias.oreoEssentials.commands.core.admins.TphereCommand();
+        var tphere = new fr.elias.oreoEssentials.commands.core.admins.TphereCommand(this);
         this.commands.register(tphere);
         if (getCommand("tphere") != null) {
             getCommand("tphere").setTabCompleter(tphere);
@@ -1392,7 +1393,9 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new fr.elias.oreoEssentials.commands.core.admins.ReloadAllCommand()) //reload all command
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.VaultsCommand()) //vaults command
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.UuidCommand())//uuid command
-                .register(new TpCommand(teleportService));
+                .register(new TpCommand(teleportService))
+                .register(new MoveCommand(teleportService)); // /move <player> [target]
+
         // -------- Tab completion wiring --------
         if (getCommand("oeserver") != null) {
             getCommand("oeserver").setTabCompleter(new ServerProxyCommand(proxyMessenger));
@@ -1406,6 +1409,9 @@ public final class OreoEssentials extends JavaPlugin {
         }
         if (getCommand("tp") != null) {
             getCommand("tp").setTabCompleter(tpaTpCompleter);
+        }
+        if (getCommand("move") != null) {
+            getCommand("move").setTabCompleter(tpaTpCompleter);
         }
 
         if (getCommand("balance") != null) {

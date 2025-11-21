@@ -38,9 +38,16 @@ public class EnderChestListener implements Listener {
             e.setCancelled(true);
             p.closeInventory();
             service.open(p);
-            p.sendMessage(ChatColor.GRAY + "Opened cross-server Ender Chest.");
+
+            // Utilise Lang.msg pour prefix + couleurs + PAPI
+            p.sendMessage(fr.elias.oreoEssentials.util.Lang.msg(
+                    "enderchest.storage.opened-cross-server",
+                    null,
+                    p
+            ));
         }
     }
+
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onClick(InventoryClickEvent e) {
