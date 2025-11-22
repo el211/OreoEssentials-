@@ -5,9 +5,8 @@ tab:
   use-placeholderapi: true
   interval-ticks: 100
 
-  # 🔴 NEW: global network mode (read by TabListManager.networkMode)
   network:
-    all-servers: true   # true = use PlayerDirectory snapshot for %oe_network_*% placeholders
+    all-servers: true
 
   header: |-
     &8&m------------------------------\n
@@ -28,21 +27,30 @@ tab:
     fade-out: 10
 
   name-format:
-    enabled: false            # ⬅️ turn this off if you want all players in all servers to show and download the velocity extension of oreoessentials
+    enabled: true          # turn ON so Oreo controls names
     use-rank-formats: true
     rank-key: "%luckperms_primary_group%"
-    pattern: "&7[%luckperms_prefix%&7]&r %nick_or_name%"
+
+    # NEW: what you want AFTER the name
+    # You can put anything here (or leave it empty):
+    #   - ""                        -> nothing
+    #   - " &7(%server_name%)"      -> server name
+    #   - " &8- &7%player_world%"   -> world name
+    server-tag: " &7(%server_name%)"
+
+    # Use %oe_server_tag% in your pattern wherever you want the suffix
+    pattern: "&7[%luckperms_prefix%&7]&r %nick_or_name%%oe_server_tag%"
 
     rank-formats:
-      default: "&7[%luckperms_prefix%&7]&r %nick_or_name%"
-      owner: "&4&lOWNER &r%nick_or_name%"
-      admin: "&c&lADMIN &r%nick_or_name%"
-      mod: "&2&lMOD &r%nick_or_name%"
-      vip: "&6⭐ &r%nick_or_name%"
+      default: "&7[%luckperms_prefix%&7]&r %nick_or_name%%oe_server_tag%"
+      owner: "&4&lOWNER &r%nick_or_name%%oe_server_tag%"
+      admin: "&c&lADMIN &r%nick_or_name%%oe_server_tag%"
+      mod: "&2&lMOD &r%nick_or_name%%oe_server_tag%"
+      vip: "&6⭐ &r%nick_or_name%%oe_server_tag%"
 
     enforce-max-length: true
     max-length: 16
-    overflow: "TRIM"   # TRIM or ELLIPSIS
+    overflow: "TRIM"
 
   per-world:
   # world_nether:

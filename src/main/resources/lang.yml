@@ -446,3 +446,32 @@ playerinspect:
     tps: "&7TPS: &f%tps%"
     tps-na: "&7TPS: &fN/A"
 
+playerwarps:
+  usage:
+    root: "%prefix%&eUsage: &f/pw &7<set|del|list|warpName>"
+    set: "%prefix%&eUsage: &f/pw set &7<name>"
+    del: "%prefix%&eUsage: &f/pw del &7<name>"
+
+  limit: "%prefix%&cPlayer warp limit reached (&e%max%&c)."
+
+  set:
+    success: "%prefix%&aPlayer warp &b%name% &ahas been created."
+    duplicate: "%prefix%&cYou already have a player warp named &e%name%&c."
+
+  delete:
+    success: "%prefix%&aPlayer warp &b%name% &ahas been deleted."
+    not-found: "%prefix%&cYou don't have any player warp named &e%name%&c."
+    failed: "%prefix%&cFailed to delete player warp &e%name%&c."
+
+  list:
+    empty: "%prefix%&eYou have no player warps. Use &b/pw set <name>&e to create one."
+    self: "%prefix%&eYour player warps: &b%list%"
+
+  teleport:
+    local: "%prefix%&aTeleported to player warp &b%name%&a."
+    cross-send: "%prefix%&eSending you to &b%server%&e… you'll be teleported to player warp &b%name%&e on arrival."
+    not-found: "%prefix%&cPlayer warp not found: &e%name%&c."
+    no-permission: "%prefix%&cYou don't have permission to use this player warp."
+    cross-disabled: "%prefix%&cCross-server player warps are disabled by server config."
+    messaging-disabled: "%prefix%&cCross-server messaging is disabled, cannot use this player warp."
+    failed: "%prefix%&cFailed to teleport to this player warp. &7Contact an administrator."
