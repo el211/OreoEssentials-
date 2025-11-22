@@ -110,36 +110,36 @@
 
             UUID uuid = player.getUniqueId();
 
-            // 2) Owner = toujours autorisé
+            // 2) Owner = ALWAYS allowed (even if locked)
             if (warp.getOwner().equals(uuid)) {
                 return true;
             }
 
-            // 3) Managers = autorisés
+            // 3) Managers = ALWAYS allowed (even if locked)
             if (warp.getManagers() != null && warp.getManagers().contains(uuid)) {
                 return true;
             }
 
-            // 4) Admin bypass lock
+            // 4) Staff bypass lock
             if (player.hasPermission("oe.pw.bypass.lock")) {
                 return true;
             }
 
-            // 5) Warp locké = personne d'autre ne passe,
-            //    même s'il est whitelisted ou connaît le password.
+            // 5) Warp locked = nobody else passes, even if whitelisted / password
             if (warp.isLocked()) {
                 return false;
             }
 
-            // 6) Whitelist activée -> seulement whitelist
+            // 6) Whitelist = only whitelisted players
             if (warp.isWhitelistEnabled()) {
                 Set<UUID> wl = warp.getWhitelist();
                 return wl != null && wl.contains(uuid);
             }
 
-            // 7) Sinon public
+            // 7) Otherwise public
             return true;
         }
+
 
 
 

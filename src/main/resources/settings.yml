@@ -86,3 +86,9 @@ features:
       default: 3
       vip: 10
       mvp: 25
+  tpa:
+    cooldown: true #false
+    cooldown-amount: 5 # in sec
+  warp:
+    cooldown: true #false
+    cooldown-amount: 5 # in sec

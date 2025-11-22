@@ -73,7 +73,7 @@ public final class PlayerSyncService {
             if (pr.inv) {
                 if (s.inventory != null) {
                     // main inventory has 36 slots (0..35) -> clamp to 36
-                    ItemStack[] main = EnderChestStorage.clamp(s.inventory, 36);
+                    ItemStack[] main = EnderChestStorage.clamp(s.inventory, 4); // 4 rows = 36 slots
                     p.getInventory().setContents(main);
                 }
                 if (s.armor != null) {
@@ -92,20 +92,44 @@ public final class PlayerSyncService {
             if (pr.health) {
                 AttributeInstance maxHealthAttr = p.getAttribute(Attribute.MAX_HEALTH);
                 double max = (maxHealthAttr != null ? maxHealthAttr.getValue() : 20.0);
-                double target = Math.max(1.0, Math.min(max, s.health));
-                // setHealth can throw if > max; protect with bounds
-                p.setHealth(target);
+
+                double raw = s.health;
+                double target;
+
+                // If snapshot health is 0 or negative, treat it as "no stored value" → full health
+                if (raw <= 0.0) {
+                    target = max;
+                } else {
+                    target = Math.max(1.0, Math.min(max, raw));
+                }
+
+                try {
+                    p.setHealth(target);
+                } catch (IllegalArgumentException ignored) {
+                    // In case of weird attributes, fall back to full health
+                    p.setHealth(Math.min(max, p.getHealth()));
+                }
             }
 
             // Hunger
             if (pr.hunger) {
-                p.setFoodLevel(Math.max(0, Math.min(20, s.food)));
-                p.setSaturation(Math.max(0f, Math.min(20f, s.saturation)));
+                int food = s.food;
+                float sat = s.saturation;
+
+                if (food <= 0 && sat <= 0f) {
+                    // Treat "empty" snapshot as "no data" → give normal starting hunger
+                    p.setFoodLevel(20);
+                    p.setSaturation(10f);
+                } else {
+                    p.setFoodLevel(Math.max(0, Math.min(20, food)));
+                    p.setSaturation(Math.max(0f, Math.min(20f, sat)));
+                }
             }
         } catch (Throwable t) {
             plugin.getLogger().warning("[SYNC] load/apply failed for " + p.getUniqueId() + ": " + t.getMessage());
         }
     }
+
 
     public PlayerSyncPrefsStore prefs() { return prefs; }
 }
