@@ -17,4 +17,5 @@ public interface PlayerWarpStorage {
     List<PlayerWarp> listByOwner(UUID owner);
 
     List<PlayerWarp> listAll();
+
 }

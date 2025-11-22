@@ -14,13 +14,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class MongoPlayerWarpStorage implements PlayerWarpStorage {
 
+    // Core fields
     private static final String F_ID       = "id";
     private static final String F_OWNER    = "owner";
     private static final String F_NAME     = "name";
@@ -30,10 +29,16 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
     private static final String F_Z        = "z";
     private static final String F_YAW      = "yaw";
     private static final String F_PITCH    = "pitch";
+
+    // Extra metadata
     private static final String F_DESC     = "description";
     private static final String F_CATEGORY = "category";
     private static final String F_LOCKED   = "locked";
     private static final String F_COST     = "cost";
+
+    // Whitelist
+    private static final String F_WL_ENABLED = "whitelist_enabled";
+    private static final String F_WL_PLAYERS = "whitelist_players";
 
     private final MongoCollection<Document> col;
 
@@ -42,13 +47,20 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
      */
     public MongoPlayerWarpStorage(MongoClient client, String dbName, String collectionName) {
         this.col = client.getDatabase(dbName).getCollection(collectionName);
-        // Unique warp id
+
+        // Unique id per warp
         col.createIndex(Indexes.ascending(F_ID), new IndexOptions().unique(true));
-        try {
-            col.createIndex(Indexes.ascending(F_OWNER));
-            col.createIndex(Indexes.ascending(F_NAME));
-        } catch (Throwable ignored) {}
+
+        // Fast lookup by owner + name (what /pw <name> uses)
+        col.createIndex(Indexes.compoundIndex(
+                Indexes.ascending(F_OWNER),
+                Indexes.ascending(F_NAME)
+        ));
     }
+
+    // ------------------------------------------------------
+    // Storage API
+    // ------------------------------------------------------
 
     @Override
     public void save(PlayerWarp warp) {
@@ -68,20 +80,26 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
 
     @Override
     public PlayerWarp getByOwnerAndName(UUID owner, String nameLower) {
+        if (owner == null || nameLower == null) return null;
+
         Document d = col.find(Filters.and(
                 Filters.eq(F_OWNER, owner.toString()),
                 Filters.eq(F_NAME, nameLower.trim().toLowerCase(Locale.ROOT))
         )).first();
+
         return fromDoc(d);
     }
 
     @Override
     public boolean delete(String id) {
+        if (id == null || id.isEmpty()) return false;
         return col.deleteOne(Filters.eq(F_ID, id)).getDeletedCount() > 0;
     }
 
     @Override
     public List<PlayerWarp> listByOwner(UUID owner) {
+        if (owner == null) return Collections.emptyList();
+
         List<PlayerWarp> out = new ArrayList<>();
         for (Document d : col.find(Filters.eq(F_OWNER, owner.toString()))) {
             PlayerWarp w = fromDoc(d);
@@ -100,60 +118,110 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         return out;
     }
 
-    /* ------------- helpers ------------- */
+    // ------------------------------------------------------
+    // Document <-> PlayerWarp
+    // ------------------------------------------------------
 
     private Document toDoc(PlayerWarp warp) {
         Location loc = warp.getLocation();
         Document d = new Document();
+
         d.put(F_ID, warp.getId());
         d.put(F_OWNER, warp.getOwner().toString());
-        d.put(F_NAME, warp.getName().trim().toLowerCase(Locale.ROOT));
+        // store lowercase name for consistent lookup
+        d.put(F_NAME, warp.getName() == null
+                ? ""
+                : warp.getName().trim().toLowerCase(Locale.ROOT));
 
-        if (loc.getWorld() != null) {
-            d.put(F_WORLD, loc.getWorld().getName());
+        if (loc != null) {
+            if (loc.getWorld() != null) {
+                d.put(F_WORLD, loc.getWorld().getName());
+            }
+            d.put(F_X, loc.getX());
+            d.put(F_Y, loc.getY());
+            d.put(F_Z, loc.getZ());
+            d.put(F_YAW, loc.getYaw());
+            d.put(F_PITCH, loc.getPitch());
         }
-        d.put(F_X, loc.getX());
-        d.put(F_Y, loc.getY());
-        d.put(F_Z, loc.getZ());
-        d.put(F_YAW, loc.getYaw());
-        d.put(F_PITCH, loc.getPitch());
 
         d.put(F_DESC, warp.getDescription());
         d.put(F_CATEGORY, warp.getCategory());
         d.put(F_LOCKED, warp.isLocked());
         d.put(F_COST, warp.getCost());
 
+        // Whitelist
+        d.put(F_WL_ENABLED, warp.isWhitelistEnabled());
+        List<String> wl = warp.getWhitelist().stream()
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        d.put(F_WL_PLAYERS, wl);
+
         return d;
     }
 
+    @SuppressWarnings("unchecked")
     private PlayerWarp fromDoc(Document d) {
         if (d == null) return null;
 
         String worldName = d.getString(F_WORLD);
         World world = (worldName == null ? null : Bukkit.getWorld(worldName));
         if (world == null) {
-            // World not loaded → you can decide to skip or handle differently
+            // World not loaded or missing → skip this warp
             return null;
         }
 
-        double x = d.getDouble(F_X);
-        double y = d.getDouble(F_Y);
-        double z = d.getDouble(F_Z);
-        float yaw = d.get(F_YAW) == null ? 0f : ((Number) d.get(F_YAW)).floatValue();
-        float pitch = d.get(F_PITCH) == null ? 0f : ((Number) d.get(F_PITCH)).floatValue();
+        double x = num(d, F_X, 0.0);
+        double y = num(d, F_Y, 0.0);
+        double z = num(d, F_Z, 0.0);
+        float yaw = (float) num(d, F_YAW, 0.0);
+        float pitch = (float) num(d, F_PITCH, 0.0);
 
         Location loc = new Location(world, x, y, z, yaw, pitch);
 
         String id = d.getString(F_ID);
-        UUID owner = UUID.fromString(d.getString(F_OWNER));
-        String name = d.getString(F_NAME);
+        String ownerStr = d.getString(F_OWNER);
+        if (id == null || ownerStr == null) return null;
 
-        PlayerWarp warp = new PlayerWarp(id, owner, name, loc);
+        UUID owner;
+        try {
+            owner = UUID.fromString(ownerStr);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+
+        String name = d.getString(F_NAME);
+        if (name == null) name = "";
+
+        // Whitelist fields (safe defaults for legacy docs)
+        boolean whitelistEnabled = d.getBoolean(F_WL_ENABLED, false);
+        Set<UUID> whitelist = new HashSet<>();
+        Object rawList = d.get(F_WL_PLAYERS);
+        if (rawList instanceof List<?>) {
+            for (Object o : (List<?>) rawList) {
+                if (o instanceof String s) {
+                    try {
+                        whitelist.add(UUID.fromString(s));
+                    } catch (IllegalArgumentException ignored) {
+                    }
+                }
+            }
+        }
+
+        // Use constructor that supports whitelist
+        PlayerWarp warp = new PlayerWarp(id, owner, name, loc, whitelistEnabled, whitelist);
+
+        // Extra metadata
         warp.setDescription(d.getString(F_DESC));
         warp.setCategory(d.getString(F_CATEGORY));
         warp.setLocked(d.getBoolean(F_LOCKED, false));
-        warp.setCost(d.get(F_COST) == null ? 0.0 : ((Number) d.get(F_COST)).doubleValue());
+        warp.setCost(num(d, F_COST, 0.0));
 
         return warp;
+    }
+
+    private static double num(Document d, String key, double def) {
+        Object o = d.get(key);
+        if (o instanceof Number n) return n.doubleValue();
+        return def;
     }
 }

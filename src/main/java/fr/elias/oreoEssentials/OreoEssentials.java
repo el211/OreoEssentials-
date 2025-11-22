@@ -122,7 +122,7 @@ public final class OreoEssentials extends JavaPlugin {
     private NotesChatListener notesChat;
     private fr.elias.oreoEssentials.daily.DailyMongoStore dailyStore;
     private FreezeManager freezeManager;
-
+    private Economy economy;
     private EconomyBootstrap ecoBootstrap;
     // add near other services
     private fr.elias.oreoEssentials.integration.DiscordModerationNotifier discordMod;
@@ -1437,6 +1437,15 @@ public final class OreoEssentials extends JavaPlugin {
             pwCmd = new PlayerWarpCommand(this.playerWarpService);
         }
 
+        // /pwwhitelist command for managing warp whitelists
+        if (getCommand("pwwhitelist") != null && this.playerWarpService != null) {
+            PlayerWarpWhitelistCommand pwwCmd = new PlayerWarpWhitelistCommand(this.playerWarpService);
+            getCommand("pwwhitelist").setExecutor(pwwCmd);
+            getCommand("pwwhitelist").setTabCompleter(pwwCmd);
+            getLogger().info("[PlayerWarps] /pwwhitelist registered.");
+        } else {
+            getLogger().info("[PlayerWarps] /pwwhitelist not registered (command missing in plugin.yml or playerWarpService=null).");
+        }
 
         // Registeration of all remaining commands
         this.commands

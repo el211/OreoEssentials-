@@ -555,6 +555,10 @@ commands:
     aliases: [ ch, chgui ]
     permission: oreo.channels.gui.open
 
+  pwwhitelist:
+    description: Manage player warp whitelists
+    usage: /pwwhitelist <add|remove> <warp> <player>
+    permission: oreo.playerwarps.whitelist
 permissions:
   oreo.*:
     description: All OreoEssentials features
@@ -829,7 +833,13 @@ permissions:
   oreo.craft:
     description: Use the custom craft designer
     default: op
+  oe.pw.whitelist:
+    description: "Manage whitelist for your own warps"
+    default: true
 
+  oe.pw.admin.whitelist:
+    description: "Manage whitelist for any warp"
+    default: op
   oreo.effect.me:
     default: true
     description: Allow using /effectme
