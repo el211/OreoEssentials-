@@ -2,6 +2,7 @@
 package fr.elias.oreoEssentials.playerwarp;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -19,13 +20,12 @@ public class PlayerWarpService {
         this.directory = directory;
 
         OreoEssentials.get().getLogger().info(
-                "[PlayerWarps/DEBUG] PlayerWarpService init. storage="
+                "[PlayerWarps] Service init. storage="
                         + storage.getClass().getSimpleName()
                         + " directory="
                         + (directory == null ? "null" : directory.getClass().getSimpleName())
         );
     }
-
 
     private static String buildId(UUID owner, String name) {
         return owner.toString() + ":" + name.trim().toLowerCase(Locale.ROOT);
@@ -47,7 +47,7 @@ public class PlayerWarpService {
         );
         storage.save(warp);
 
-        // NEW: register owning server in directory
+        // Register owning server in directory (if available)
         if (directory != null) {
             try {
                 String serverName = OreoEssentials.get()
@@ -68,13 +68,13 @@ public class PlayerWarpService {
         return warp;
     }
 
-
     public boolean deleteWarp(PlayerWarp warp) {
         boolean ok = storage.delete(warp.getId());
         if (ok && directory != null) {
             try {
                 directory.deleteWarp(warp.getId());
-            } catch (Throwable ignored) {}
+            } catch (Throwable ignored) {
+            }
         }
         return ok;
     }
@@ -142,7 +142,6 @@ public class PlayerWarpService {
         OreoEssentials plugin = OreoEssentials.get();
 
         if (directory == null) {
-            plugin.getLogger().info("[PW/DEBUG] getWarpServer: directory=null, using localServer=" + localServer);
             return localServer;
         }
 
@@ -150,12 +149,10 @@ public class PlayerWarpService {
         try {
             s = directory.getWarpServer(warp.getId());
         } catch (Throwable t) {
-            plugin.getLogger().warning("[PW/DEBUG] getWarpServer: directory.getWarpServer threw: " + t.getMessage());
+            plugin.getLogger().warning(
+                    "[PlayerWarps] getWarpServer failed for id=" + warp.getId() + ": " + t.getMessage()
+            );
         }
-
-        plugin.getLogger().info("[PW/DEBUG] getWarpServer: warpId=" + warp.getId()
-                + " rawDirectoryServer=" + s
-                + " localServer=" + localServer);
 
         return (s == null || s.isBlank()) ? localServer : s;
     }
@@ -168,18 +165,43 @@ public class PlayerWarpService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Simple local teleport helper, now with Lang messages.
+     * Cross-server logic is handled elsewhere (PlayerWarpCrossServerBroker + commands).
+     */
     public boolean teleportToPlayerWarp(Player player, UUID ownerId, String warpName) {
-        // Simple helper if you want to use it elsewhere
-        PlayerWarp warp = findByOwnerAndName(ownerId, warpName);
-        if (warp == null) {
-            player.sendMessage("§cPlayer warp not found.");
+        OreoEssentials plugin = OreoEssentials.get();
+
+        if (warpName == null || warpName.isBlank()) {
+            Lang.send(player, "playerwarps.teleport.not-found",
+                    Map.of("name", ""), player);
             return false;
         }
+
+        String trimmed = warpName.trim();
+        PlayerWarp warp = findByOwnerAndName(ownerId, trimmed);
+        if (warp == null) {
+            Lang.send(player, "playerwarps.teleport.not-found",
+                    Map.of("name", trimmed), player);
+            return false;
+        }
+
+        if (!canUse(player, warp)) {
+            Lang.send(player, "playerwarps.teleport.no-permission",
+                    Map.of("name", warp.getName()), player);
+            return false;
+        }
+
         try {
-            player.teleport(warp.getLocation());
+            Location loc = warp.getLocation().clone();
+            player.teleport(loc);
+            Lang.send(player, "playerwarps.teleport.local",
+                    Map.of("name", warp.getName()), player);
             return true;
         } catch (Exception ex) {
-            OreoEssentials.get().getLogger().warning("[PW] teleportToPlayerWarp failed: " + ex.getMessage());
+            plugin.getLogger().warning("[PlayerWarps] teleportToPlayerWarp failed: " + ex.getMessage());
+            Lang.send(player, "playerwarps.teleport.failed",
+                    Map.of("name", warp.getName()), player);
             return false;
         }
     }

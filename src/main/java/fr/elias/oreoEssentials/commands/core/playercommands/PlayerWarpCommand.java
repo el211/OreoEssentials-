@@ -55,12 +55,16 @@ public class PlayerWarpCommand implements OreoCommand {
                     return true;
                 }
                 if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /pw set <name>");
+                    // Lang-based usage
+                    Lang.send(actor, "pw.usage-set",
+                            Map.of("label", label),
+                            actor);
                     return true;
                 }
                 String name = args[1];
 
-                int limit = plugin.getConfig().getInt("playerwarps.limit.default", 3);
+                // use service limit logic (supports groups, etc.)
+                int limit = service.getLimit(actor);
                 if (!service.isUnderLimit(actor, limit) &&
                         !actor.hasPermission("oe.pw.limit.bypass")) {
                     Lang.send(actor, "pw.limit-reached",
@@ -89,7 +93,10 @@ public class PlayerWarpCommand implements OreoCommand {
                     return true;
                 }
                 if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /pw remove <warp>");
+                    // Lang-based usage
+                    Lang.send(actor, "pw.usage-remove",
+                            Map.of("label", label),
+                            actor);
                     return true;
                 }
                 String name = args[1];
@@ -266,8 +273,6 @@ public class PlayerWarpCommand implements OreoCommand {
                     + " world=" + (loc == null || loc.getWorld() == null ? "null" : loc.getWorld().getName())
                     + " xyz=" + safeLocString(loc));
 
-            // If you have a helper:
-            // service.teleportToPlayerWarp(actor, targetWarp.getOwner(), targetWarp.getName());
             actor.teleport(loc);
 
             Lang.send(actor, "pw.teleported",

@@ -9,7 +9,7 @@
 #   %amount%                -> raw amount string
 #   %amount_formatted%      -> formatted number (e.g. 1,234.56)
 #   %balance%               -> raw balance number
-#   %balance_formatted%     -> formatted balance number
+#   %balance_formatted%     -> formatted number
 #   %currency_symbol%       -> from economy.currency.symbol
 #   %currency_name%         -> from economy.currency.name
 #   %currency_name_plural%  -> from economy.currency.name_plural
@@ -66,7 +66,6 @@ kits:
       second: "s"
     smallest-unit: "second"
     max-chunks: 3
-
 
 # =========================================================
 # Custom Crafting (OreoCraft)
@@ -207,6 +206,7 @@ tpa:
     none: "&cNo pending teleport requests."
     debug-hint: "&7(If this was cross-server, ensure the request arrived on this server and hasn’t expired.)"
     failed: "&cFailed to accept teleport request. &7See console or contact an administrator."
+
 near:
   radius-not-number: "&cRadius must be a number."
   none: "&eNo players within &f%radius% &eblocks."
@@ -226,7 +226,6 @@ kill:
     no-permission: "&cYou lack permission to kill others."
     killed: "&aKilled &b%player%&a."
   target-not-found: "&cPlayer not found."
-
 
 warp:
   list-empty: "&eWarps: &7(none)"
@@ -250,6 +249,7 @@ warp:
   delete:
     success: "&cDeleted warp &e%warp%&c."
     failed: "&cFailed to delete warp &e%warp%&c."
+
 spawn:
   not-set: "&cSpawn is not set."
   teleported: "&aTeleported to spawn."
@@ -283,7 +283,6 @@ home:
   switch-failed: "&cFailed to switch you to %server%."
   switch-failed-tip: "&7Make sure '&b%server%&7' matches the server name in your proxy config."
   suggest: "&7Did you mean: &b%suggestions%"
-
 
 player:
   sit:
@@ -362,8 +361,9 @@ admin:
     not-found: "%prefix%&cPlayer not found: &e%target%&c."
     brought: "%prefix%&aBrought &b%target% &ato you."
     notice: "%prefix%&eYou were teleported to &b%player%&e."
+
 # =========================================================
-# Warps
+# Warps (Admin / setwarp / delwarp)
 # =========================================================
 warps:
   usage:
@@ -373,9 +373,10 @@ warps:
   deleted: "%prefix%&aWarp &b%warp% &aremoved."
   not-found: "%prefix%&cWarp not found: &e%warp%&c."
 
-
+# =========================================================
+# EnderChest
+# =========================================================
 enderchest:
-  # Command-related messages for /ec or /enderchest
   command:
     usage: "%prefix%&eUsage: &f/%label% &7[player]"
     self-no-permission: "%prefix%&cYou don't have permission to open the ender chest."
@@ -383,24 +384,21 @@ enderchest:
     target-not-found: "%prefix%&cPlayer not found: &e%target%&c."
     opened-self: "%prefix%&aOpened your virtual ender chest."
     opened-other: "%prefix%&aOpened &b%target%&a's virtual ender chest."
-
-  # GUI / slots info
   gui:
     title: "&5Ender Chest"
     locked-slot-name: "&cLocked slot"
     locked-slot-lore:
       - "&7Slots available: &b%slots%"
       - "&8Upgrade your rank for more space."
-
-    # Optional hint when clicking a locked slot (if you send a chat message in the listener)
     locked-click: "%prefix%&cThis slot is locked.&7 Upgrade your rank to unlock more ender chest space."
-
-  # Storage / technical error messages (if you ever want to surface them to players)
   storage:
     load-failed: "%prefix%&cFailed to load your ender chest.&7 Please try again later."
     save-failed: "%prefix%&cFailed to save your ender chest.&7 Your items should still be safe, but contact staff if this keeps happening."
     opened-cross-server: "%prefix%&7Coffre de l'End &bcross-serveur &7ouvert."
 
+# =========================================================
+# Moderation GUI / Inspect / Freeze
+# =========================================================
 modgui:
   main:
     player:
@@ -424,11 +422,13 @@ modgui:
   ecsee:
     target-offline: "%prefix%&cTarget went offline."
     title: "&bEditing EnderChest of &e%target%"
+
 freeze:
   frozen: "%prefix%&cYou have been frozen for &e%seconds%s&c."
   unfrozen: "%prefix%&aYou are no longer frozen."
   expired: "%prefix%&aFreeze expired."
   actionbar-staff: "&c[Frozen] &f%target% &7(%seconds%s)"
+
 playerinspect:
   target-offline: "&cThat player is not online on the network."
   head-name: "&b%player% &7(&e%server%&7)"
@@ -446,6 +446,9 @@ playerinspect:
     tps: "&7TPS: &f%tps%"
     tps-na: "&7TPS: &fN/A"
 
+# =========================================================
+# Player Warps (service-level + generic messages)
+# =========================================================
 playerwarps:
   usage:
     root: "%prefix%&eUsage: &f/pw &7<set|del|list|warpName>"
@@ -456,22 +459,45 @@ playerwarps:
 
   set:
     success: "%prefix%&aPlayer warp &b%name% &ahas been created."
-    duplicate: "%prefix%&cYou already have a player warp named &e%name%&c."
+    limit-reached: "%prefix%&cYou reached your max player warp limit (&e%limit%&c)."
+    already-exists: "%prefix%&cYou already have a warp with that name."
 
   delete:
     success: "%prefix%&aPlayer warp &b%name% &ahas been deleted."
-    not-found: "%prefix%&cYou don't have any player warp named &e%name%&c."
-    failed: "%prefix%&cFailed to delete player warp &e%name%&c."
+    not-found: "%prefix%&cPlayer warp not found: &e%name%&c."
 
   list:
     empty: "%prefix%&eYou have no player warps. Use &b/pw set <name>&e to create one."
     self: "%prefix%&eYour player warps: &b%list%"
 
   teleport:
-    local: "%prefix%&aTeleported to player warp &b%name%&a."
-    cross-send: "%prefix%&eSending you to &b%server%&e… you'll be teleported to player warp &b%name%&e on arrival."
     not-found: "%prefix%&cPlayer warp not found: &e%name%&c."
-    no-permission: "%prefix%&cYou don't have permission to use this player warp."
-    cross-disabled: "%prefix%&cCross-server player warps are disabled by server config."
-    messaging-disabled: "%prefix%&cCross-server messaging is disabled, cannot use this player warp."
-    failed: "%prefix%&cFailed to teleport to this player warp. &7Contact an administrator."
+    no-permission: "%prefix%&cYou don't have access to that warp."
+    local: "%prefix%&aTeleported to player warp &b%name%&a."
+    failed: "%prefix%&cTeleport failed for warp &e%name%&c. Contact an administrator."
+
+# =========================================================
+# /pw Command (PlayerWarpCommand)
+# =========================================================
+pw:
+  usage-set: "%prefix%&eUsage: &f/%label% set &7<name>"
+  usage-remove: "%prefix%&eUsage: &f/%label% remove &7<warp>"
+
+  no-permission-set: "%prefix%&cYou don't have permission to set player warps."
+  limit-reached: "%prefix%&cYou reached your player warp limit (&e%limit%&c)."
+  already-exists: "%prefix%&cYou already have a warp named &e%name%&c."
+  set-success: "%prefix%&aPlayer warp &b%name% &ahas been created."
+
+  not-found-owner: "%prefix%&cYou don't have a warp named &e%name%&c."
+  no-permission-remove: "%prefix%&cYou don't have permission to remove player warps."
+  remove-success: "%prefix%&aPlayer warp &b%name% &ahas been removed."
+  remove-failed: "%prefix%&cFailed to remove player warp &e%name%&c. Contact an administrator."
+
+  not-found: "%prefix%&cPlayer warp not found: &e%name%&c."
+  no-permission-warp: "%prefix%&cYou don't have access to that player warp (&e%name%&c)."
+
+  teleported: "%prefix%&aTeleported to player warp &b%name%&a."
+  teleport-failed: "%prefix%&cTeleport failed: &7%error%"
+
+  sending: "%prefix%&eSending you to &b%server%&e… you'll be teleported to player warp &b%warp%&e on arrival."
+  messaging-disabled: "%prefix%&cCross-server messaging is disabled.&7 (Unable to send you to &b%server%&7 for warp &b%warp%&7.)"
