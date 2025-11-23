@@ -9,10 +9,11 @@ import fr.elias.oreoEssentials.rabbitmq.packet.impl.SpawnTeleportRequestPacket;
 import fr.elias.oreoEssentials.services.SpawnDirectory;
 import fr.elias.oreoEssentials.services.SpawnService;
 import fr.elias.oreoEssentials.util.Lang;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -47,26 +48,9 @@ public class SpawnCommand implements OreoCommand {
                 + " targetServer=" + targetServer
                 + " spawnDir=" + (spawnDir == null ? "null" : "ok"));
 
-        // Local spawn -> direct teleport
+        // Local spawn -> cooldown + teleport on this server
         if (targetServer.equalsIgnoreCase(localServer)) {
-            Location l = spawn.getSpawn();
-            if (l == null) {
-                Lang.send(p, "spawn.not-set", Map.of(), p);
-                log.warning("[SpawnCmd] Local spawn not set.");
-                return true;
-            }
-            try {
-                p.teleport(l);
-                Lang.send(p, "spawn.teleported", Map.of(), p);
-                log.info("[SpawnCmd] Local teleport success. loc=" + l);
-            } catch (Exception ex) {
-                log.warning("[SpawnCmd] Local teleport exception: " + ex.getMessage());
-                Lang.send(p, "spawn.teleport-failed",
-                        Map.of("error", ex.getMessage() == null ? "unknown" : ex.getMessage()),
-                        p
-                );
-            }
-            return true;
+            return handleLocalSpawn(plugin, p, log);
         }
 
         // Respect cross-server toggle for spawn
@@ -80,23 +64,112 @@ public class SpawnCommand implements OreoCommand {
             return true;
         }
 
-        // Remote spawn: publish to the target server’s queue, then proxy-switch
+        // Remote spawn -> cooldown on current server, then packet + proxy switch
+        return handleRemoteSpawn(plugin, p, localServer, targetServer, log);
+    }
+
+    /**
+     * Local spawn (targetServer == localServer).
+     * Applies cooldown (if enabled) and then teleports the player to spawn.
+     */
+    private boolean handleLocalSpawn(OreoEssentials plugin, Player p, java.util.logging.Logger log) {
+        Location spawnLoc = spawn.getSpawn();
+        if (spawnLoc == null) {
+            Lang.send(p, "spawn.not-set", Map.of(), p);
+            log.warning("[SpawnCmd] Local spawn not set.");
+            return true;
+        }
+
+        // Read cooldown from settings.yml: features.spawn.cooldown / cooldown-amount
+        ConfigurationSection sec =
+                plugin.getSettingsConfig().getRoot().getConfigurationSection("features.spawn");
+        boolean enabled = sec != null && sec.getBoolean("cooldown", false);
+        int seconds     = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
+
+        // No cooldown configured -> immediate teleport (legacy behavior)
+        if (!enabled || seconds <= 0) {
+            try {
+                p.teleport(spawnLoc);
+                Lang.send(p, "spawn.teleported", Map.of(), p);
+                log.info("[SpawnCmd] Local teleport success. loc=" + spawnLoc);
+            } catch (Exception ex) {
+                log.warning("[SpawnCmd] Local teleport exception: " + ex.getMessage());
+                Lang.send(p, "spawn.teleport-failed",
+                        Map.of("error", ex.getMessage() == null ? "unknown" : ex.getMessage()),
+                        p
+                );
+            }
+            return true;
+        }
+
+        // Cooldown enabled: countdown with "no movement" rule (no block movement)
+        final Location origin = p.getLocation().clone();
+
+        new BukkitRunnable() {
+            int remain = seconds;
+
+            @Override
+            public void run() {
+                if (!p.isOnline()) {
+                    log.info("[SpawnCmd] Player went offline during spawn countdown; cancel.");
+                    cancel();
+                    return;
+                }
+
+                // Cancel if player moved to another block/world (head rotation allowed)
+                if (hasBodyMoved(p, origin)) {
+                    cancel();
+                    Lang.send(p, "spawn.cancelled-moved", Map.of(), p);
+                    log.info("[SpawnCmd] Player moved during spawn countdown; cancelled.");
+                    return;
+                }
+
+                if (remain <= 0) {
+                    cancel();
+                    try {
+                        p.teleport(spawnLoc);
+                        Lang.send(p, "spawn.teleported", Map.of(), p);
+                        log.info("[SpawnCmd] Local teleport success after countdown. loc=" + spawnLoc);
+                    } catch (Exception ex) {
+                        log.warning("[SpawnCmd] Local teleport exception after countdown: " + ex.getMessage());
+                        Lang.send(p, "spawn.teleport-failed",
+                                Map.of("error", ex.getMessage() == null ? "unknown" : ex.getMessage()),
+                                p
+                        );
+                    }
+                    return;
+                }
+
+                // Show countdown to the player (lang-based)
+                String title = Lang.msg("teleport.countdown.title", null, p);
+                String subtitle = Lang.msg(
+                        "teleport.countdown.subtitle",
+                        Map.of("seconds", String.valueOf(remain)),
+                        p
+                );
+                p.sendTitle(title, subtitle, 0, 20, 0);
+                remain--;
+            }
+        }.runTaskTimer(plugin, 0L, 20L);
+
+        return true;
+    }
+
+    /**
+     * Remote spawn: countdown on current server, then send SpawnTeleportRequestPacket
+     * + proxy switch via plugin messaging.
+     */
+    private boolean handleRemoteSpawn(OreoEssentials plugin,
+                                      Player p,
+                                      String localServer,
+                                      String targetServer,
+                                      java.util.logging.Logger log) {
+
         final PacketManager pm = plugin.getPacketManager();
         log.info("[SpawnCmd] Remote spawn. pm=" + (pm == null ? "null" : "ok")
                 + " pm.init=" + (pm != null && pm.isInitialized()));
 
-        if (pm != null && pm.isInitialized()) {
-            String requestId = UUID.randomUUID().toString();
-            plugin.getLogger().info("[SPAWN/SEND] from=" + localServer
-                    + " player=" + p.getUniqueId()
-                    + " -> targetServer=" + targetServer
-                    + " requestId=" + requestId);
-
-            // Build + publish to the target server’s individual channel
-            SpawnTeleportRequestPacket pkt = new SpawnTeleportRequestPacket(p.getUniqueId(), targetServer, requestId);
-            PacketChannel ch = PacketChannel.individual(targetServer);
-            pm.sendPacket(ch, pkt);
-        } else {
+        if (pm == null || !pm.isInitialized()) {
             Lang.send(p, "spawn.messaging-disabled", Map.of(), p);
             Lang.send(p, "spawn.messaging-disabled-tip",
                     Map.of("server", targetServer),
@@ -105,19 +178,110 @@ public class SpawnCommand implements OreoCommand {
             return true;
         }
 
-        if (sendPlayerToServer(p, targetServer)) {
-            Lang.send(p, "spawn.sending",
-                    Map.of("server", targetServer),
-                    p
-            );
-            log.info("[SpawnCmd] Proxy switch initiated. player=" + p.getUniqueId() + " to=" + targetServer);
-        } else {
-            Lang.send(p, "spawn.switch-failed",
-                    Map.of("server", targetServer),
-                    p
-            );
-            log.warning("[SpawnCmd] Proxy switch failed to " + targetServer + " (check Velocity/Bungee server name match).");
+        // Read cooldown from settings.yml: features.spawn.cooldown / cooldown-amount
+        ConfigurationSection sec =
+                plugin.getSettingsConfig().getRoot().getConfigurationSection("features.spawn");
+        boolean enabled = sec != null && sec.getBoolean("cooldown", false);
+        int seconds     = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
+
+        // If no cooldown configured -> behave like before (instant request + server switch)
+        if (!enabled || seconds <= 0) {
+            String requestId = UUID.randomUUID().toString();
+            plugin.getLogger().info("[SPAWN/SEND] (no cooldown) from=" + localServer
+                    + " player=" + p.getUniqueId()
+                    + " -> targetServer=" + targetServer
+                    + " requestId=" + requestId);
+
+            SpawnTeleportRequestPacket pkt =
+                    new SpawnTeleportRequestPacket(p.getUniqueId(), targetServer, requestId);
+            PacketChannel ch = PacketChannel.individual(targetServer);
+            pm.sendPacket(ch, pkt);
+
+            if (sendPlayerToServer(p, targetServer)) {
+                Lang.send(p, "spawn.sending",
+                        Map.of("server", targetServer),
+                        p
+                );
+                log.info("[SpawnCmd] Proxy switch initiated (no cooldown). player=" + p.getUniqueId() + " to=" + targetServer);
+            } else {
+                Lang.send(p, "spawn.switch-failed",
+                        Map.of("server", targetServer),
+                        p
+                );
+                log.warning("[SpawnCmd] Proxy switch failed to " + targetServer + " (check Velocity/Bungee server name match).");
+            }
+            return true;
         }
+
+        // Cooldown enabled: countdown on current server, then send packet + switch.
+        final Location origin = p.getLocation().clone();
+        final String requestId = UUID.randomUUID().toString();
+
+        plugin.getLogger().info("[SPAWN/SEND] (cooldown) from=" + localServer
+                + " player=" + p.getUniqueId()
+                + " -> targetServer=" + targetServer
+                + " requestId=" + requestId
+                + " cooldown=" + seconds + "s");
+
+        new BukkitRunnable() {
+            int remain = seconds;
+
+            @Override
+            public void run() {
+                if (!p.isOnline()) {
+                    log.info("[SpawnCmd] Player went offline during remote spawn countdown; cancel.");
+                    cancel();
+                    return;
+                }
+
+                // Cancel if player moved to another block/world (head rotation allowed)
+                if (hasBodyMoved(p, origin)) {
+                    cancel();
+                    Lang.send(p, "spawn.cancelled-moved", Map.of(), p);
+                    log.info("[SpawnCmd] Player moved during remote spawn countdown; cancelled.");
+                    return;
+                }
+
+                if (remain <= 0) {
+                    cancel();
+
+                    // Send packet to target server
+                    SpawnTeleportRequestPacket pkt =
+                            new SpawnTeleportRequestPacket(p.getUniqueId(), targetServer, requestId);
+                    PacketChannel ch = PacketChannel.individual(targetServer);
+                    pm.sendPacket(ch, pkt);
+
+                    // Now proxy-switch the player
+                    if (sendPlayerToServer(p, targetServer)) {
+                        Lang.send(p, "spawn.sending",
+                                Map.of("server", targetServer),
+                                p
+                        );
+                        log.info("[SpawnCmd] Proxy switch initiated after countdown. player="
+                                + p.getUniqueId() + " to=" + targetServer);
+                    } else {
+                        Lang.send(p, "spawn.switch-failed",
+                                Map.of("server", targetServer),
+                                p
+                        );
+                        log.warning("[SpawnCmd] Proxy switch failed to " + targetServer
+                                + " (check Velocity/Bungee server name match).");
+                    }
+                    return;
+                }
+
+                // Show countdown to the player (lang-based)
+                String title = Lang.msg("teleport.countdown.title", null, p);
+                String subtitle = Lang.msg(
+                        "teleport.countdown.subtitle",
+                        Map.of("seconds", String.valueOf(remain)),
+                        p
+                );
+                p.sendTitle(title, subtitle, 0, 20, 0);
+                remain--;
+            }
+        }.runTaskTimer(plugin, 0L, 20L);
+
         return true;
     }
 
@@ -137,5 +301,16 @@ public class SpawnCommand implements OreoCommand {
             log.warning("[SpawnCmd] Failed to send Connect plugin message: " + ex.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Check if player moved to another block/world (head rotation allowed).
+     */
+    private boolean hasBodyMoved(Player p, Location origin) {
+        Location now = p.getLocation();
+        return !now.getWorld().equals(origin.getWorld())
+                || now.getBlockX() != origin.getBlockX()
+                || now.getBlockY() != origin.getBlockY()
+                || now.getBlockZ() != origin.getBlockZ();
     }
 }

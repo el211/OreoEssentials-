@@ -142,10 +142,11 @@ public class WarpCommand implements OreoCommand {
         }
 
         // Countdown shown to the TARGET player
-        startCountdown(target, seconds, () ->
+        startCountdown(target, seconds, warpName, () ->
                 performWarp(plugin, warps, sender, actor, target, warpName)
         );
         return true;
+
     }
 
     /**
@@ -317,10 +318,15 @@ public class WarpCommand implements OreoCommand {
     }
 
     /**
-     * Shows a big title countdown on the player, then runs the action.
+     * Shows a big title countdown on the player, cancels if he moves,
+     * then runs the action at the end.
+     *
+     * Uses:
+     *  - warp.cancelled-moved in lang.yml when the player moves.
      */
-    private void startCountdown(Player target, int seconds, Runnable action) {
+    private void startCountdown(Player target, int seconds, String warpName, Runnable action) {
         final OreoEssentials plugin = OreoEssentials.get();
+        final Location origin = target.getLocation().clone(); // for movement check
 
         new BukkitRunnable() {
             int remaining = seconds;
@@ -332,20 +338,48 @@ public class WarpCommand implements OreoCommand {
                     return;
                 }
 
+                // Cancel if player moved to another block/world (head rotation allowed)
+                if (hasBodyMoved(target, origin)) {
+                    cancel();
+                    // Lang: warp cancelled because of movement
+                    Lang.send(target, "warp.cancelled-moved",
+                            Map.of("warp", warpName),
+                            target
+                    );
+                    return;
+                }
+
                 if (remaining <= 0) {
                     cancel();
                     action.run();
                     return;
                 }
 
-                // Big title in the middle of the screen
-                target.sendTitle(
-                        "§bTeleporting...",
-                        "§fIn §e" + remaining + "§fs",
-                        0, 20, 0
+                // Title + subtitle from lang.yml
+                String title = Lang.msg("teleport.countdown.title", null, target);
+                String subtitle = Lang.msg(
+                        "teleport.countdown.subtitle",
+                        Map.of("seconds", String.valueOf(remaining)),
+                        target
                 );
+
+                target.sendTitle(title, subtitle, 0, 20, 0);
                 remaining--;
             }
         }.runTaskTimer(plugin, 0L, 20L);
     }
+
+
+
+    /**
+     * Check if player moved to another block/world (head rotation allowed).
+     */
+    private boolean hasBodyMoved(Player p, Location origin) {
+        Location now = p.getLocation();
+        return !now.getWorld().equals(origin.getWorld())
+                || now.getBlockX() != origin.getBlockX()
+                || now.getBlockY() != origin.getBlockY()
+                || now.getBlockZ() != origin.getBlockZ();
+    }
+
 }

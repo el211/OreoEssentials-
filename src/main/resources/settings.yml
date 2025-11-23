@@ -98,3 +98,7 @@ features:
   warp:
     cooldown: true #false
     cooldown-amount: 5 # in sec
+
+  spawn:
+    cooldown: true        # Enable/disable spawn countdown
+    cooldown-amount: 5    # Seconds before teleport; 0 or negative = instant

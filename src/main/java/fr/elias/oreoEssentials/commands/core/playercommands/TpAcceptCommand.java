@@ -12,6 +12,7 @@ import org.bukkit.Location;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 
@@ -23,17 +24,37 @@ public class TpAcceptCommand implements OreoCommand {
         this.tpa = tpa;
     }
 
-    @Override public String name()    { return "tpaccept"; }
-    @Override public List<String> aliases() { return List.of(); }
-    @Override public String permission()    { return "oreo.tpa"; }
-    @Override public String usage()         { return "[player]"; }
-    @Override public boolean playerOnly()   { return true; }
+    @Override
+    public String name() {
+        return "tpaccept";
+    }
+
+    @Override
+    public List<String> aliases() {
+        return List.of();
+    }
+
+    @Override
+    public String permission() {
+        return "oreo.tpa";
+    }
+
+    @Override
+    public String usage() {
+        return "[player]";
+    }
+
+    @Override
+    public boolean playerOnly() {
+        return true;
+    }
 
     // ---- debug helpers (same pattern as /tpa) ----
     private static String traceId() {
         return Long.toString(ThreadLocalRandom.current().nextLong(2176782336L), 36)
                 .toUpperCase(Locale.ROOT);
     }
+
     private boolean dbg() {
         try {
             var c = OreoEssentials.get().getConfig();
@@ -42,6 +63,7 @@ public class TpAcceptCommand implements OreoCommand {
             return false;
         }
     }
+
     private boolean echo() {
         try {
             return OreoEssentials.get().getConfig()
@@ -50,20 +72,27 @@ public class TpAcceptCommand implements OreoCommand {
             return false;
         }
     }
+
     private void D(String id, String msg) {
         if (dbg()) OreoEssentials.get().getLogger().info("[TPACCEPT " + id + "] " + msg);
     }
+
     private void E(String id, String msg, Throwable t) {
         if (dbg()) {
-            OreoEssentials.get().getLogger().log(Level.WARNING,
-                    "[TPACCEPT " + id + "] " + msg, t);
+            OreoEssentials.get().getLogger().log(
+                    Level.WARNING,
+                    "[TPACCEPT " + id + "] " + msg,
+                    t
+            );
         }
     }
+
     private void P(Player p, String id, String msg) {
         if (dbg() && echo()) {
             p.sendMessage("§8[§bTPA§8/§7" + id + "§8] §7" + msg);
         }
     }
+
     private static String ms(long startNanos) {
         long ms = (System.nanoTime() - startNanos) / 1_000_000L;
         return ms + "ms";
@@ -73,8 +102,8 @@ public class TpAcceptCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player target)) return true;
 
-        final String id     = traceId();
-        final long   t0     = System.nanoTime();
+        final String id = traceId();
+        final long t0 = System.nanoTime();
         final String server = OreoEssentials.get().getConfigService().serverName();
 
         D(id, "enter player=" + target.getName() + " server=" + server);
@@ -94,8 +123,7 @@ public class TpAcceptCommand implements OreoCommand {
                 P(target, id, "cross-server accept " + (handled ? "✓" : "–"));
 
                 if (handled) {
-                    // Cross-server path already processed by broker; we do NOT
-                    // call TeleportService.accept() here (same behavior as before).
+                    // ✅ IMPORTANT: STOP HERE – NO COUNTDOWN ON THIS SERVER
                     D(id, "done (cross-server handled) in " + ms(t0));
                     return true;
                 }
@@ -125,18 +153,8 @@ public class TpAcceptCommand implements OreoCommand {
             Lang.send(target, "tpa.accept.failed", null, target);
             return true;
         }
-
     }
 
-    /**
-     * Starts a countdown before actually performing the local TPA accept.
-     * Reads:
-     *
-     * features:
-     *   tpa:
-     *     cooldown: true
-     *     cooldown-amount: 5
-     */
     /**
      * Starts a countdown before actually performing the local TPA accept.
      * Reads:
@@ -159,7 +177,7 @@ public class TpAcceptCommand implements OreoCommand {
                 plugin.getSettingsConfig().getRoot().getConfigurationSection("features.tpa");
 
         boolean enabled = sec != null && sec.getBoolean("cooldown", false);
-        int seconds     = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
+        int seconds = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
 
         // No cooldown configured → teleport instantly (legacy behavior)
         if (!enabled || seconds <= 0) {
@@ -213,16 +231,18 @@ public class TpAcceptCommand implements OreoCommand {
                 }
 
                 // Show countdown to the REQUESTER (the one who did /tpa <player>)
-                requester.sendTitle(
-                        "§aTéléportation...",
-                        "§fDans §e" + remain + " §fs",
-                        0, 20, 0
+                String title = Lang.msg("teleport.countdown.title", null, requester);
+                String subtitle = Lang.msg(
+                        "teleport.countdown.subtitle",
+                        Map.of("seconds", String.valueOf(remain)),
+                        requester
                 );
+                requester.sendTitle(title, subtitle, 0, 20, 0);
+
                 remain--;
             }
         }.runTaskTimer(plugin, 0L, 20L);
     }
-
 
     /**
      * Original local accept logic, extracted from execute() so it can be reused

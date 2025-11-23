@@ -206,6 +206,17 @@ tpa:
     none: "&cNo pending teleport requests."
     debug-hint: "&7(If this was cross-server, ensure the request arrived on this server and hasn’t expired.)"
     failed: "&cFailed to accept teleport request. &7See console or contact an administrator."
+  # Shown to the player who did /tpa <target> when they move during countdown
+  cancelled-moved-requester: "&cTéléportation annulée: vous avez bougé."
+
+  # Optionally shown to the target (player who did /tpaccept) when the requester cancels by moving
+  cancelled-moved-target: "&eLa demande de téléportation de &b{requester}&e a été annulée car il a bougé."
+
+  # (Optional) If you want a chat hint when cooldown starts for the requester
+  cooldown-start-requester: "&7Téléportation vers &b{target}&7 dans &e{seconds} &7secondes. Ne bougez pas !"
+
+  # (Optional) If you want a generic cooldown disabled hint for debug
+  cooldown-disabled: "&7Téléportation immédiate (aucun délai configuré pour &fTPA&7)."
 
 near:
   radius-not-number: "&cRadius must be a number."
@@ -249,6 +260,11 @@ warp:
   delete:
     success: "&cDeleted warp &e%warp%&c."
     failed: "&cFailed to delete warp &e%warp%&c."
+  # NEW — player moved during warp cooldown
+  cancelled-moved: "%prefix%&cTéléportation au warp &e%warp% &cannulée car vous avez bougé."
+
+  # (Optional) start hint
+  cooldown-start: "&7Téléportation au warp &b{warp}&7 dans &e{seconds} &7secondes. Ne bougez pas !"
 
 spawn:
   not-set: "&cSpawn is not set."
@@ -260,6 +276,7 @@ spawn:
   messaging-disabled-tip: "&7Use &b/server %server% &7then run &b/spawn"
   sending: "&eSending you to &b%server%&e… you'll be teleported to spawn on arrival."
   switch-failed: "&cFailed to switch you to %server%."
+  cancelled-moved: "&cTéléportation annulée: vous avez bougé."
 
 delhome:
   removed: "&aHome removed."
@@ -342,6 +359,7 @@ admin:
     self: "%prefix%&aTeleported to &b%target%&a."
     other: "%prefix%&aTeleported &b%from% &ato &b%to%&a."
     notice: "%prefix%&eYou were teleported to &b%to%&e."
+
 
   # New: live skin/name utilities (PacketEvents-aware refresher)
   skin:
@@ -607,3 +625,8 @@ pw:
   password-set: "%prefix%&aPassword set for warp &b%warp%&a."
   password-cleared: "%prefix%&aPassword cleared for warp &b%warp%&a."
   cost-not-enough: "%prefix%&cYou need &e%amount%&c to use this player warp."
+
+teleport:
+  countdown:
+    title: "&aTeleporting..."
+    subtitle: "&fIn &e%seconds% &fs"
