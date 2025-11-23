@@ -2,9 +2,6 @@
 package fr.elias.oreoEssentials.events;
 
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Statistic;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -13,13 +10,13 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.event.*;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
-import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class EventEngine implements Listener {
+
     private final EventConfig config;
     private final DeathMessageService deaths;
 
@@ -32,28 +29,60 @@ public final class EventEngine implements Listener {
         this.deaths = deaths;
     }
 
+    // Auto-translate &-colors for commands from events.yml
+    private String colorize(String s) {
+        return (s == null) ? null : s.replace('&', '§');
+    }
+
     private void run(EventType type, Player p, Map<String, String> extra) {
         List<String> cmds = config.commands(type);
         if (cmds.isEmpty()) return;
-        final String playerName = p == null ? "" : p.getName();
+
+        final String playerName = (p == null ? "" : p.getName());
+
         for (String raw : cmds) {
             String line = raw.replace("[playerName]", playerName);
             if (extra != null) {
-                for (var e : extra.entrySet()) line = line.replace(e.getKey(), e.getValue());
+                for (var e : extra.entrySet()) {
+                    line = line.replace(e.getKey(), e.getValue());
+                }
             }
+
             boolean asConsole = line.toLowerCase(Locale.ROOT).startsWith("asconsole!");
-            boolean asPlayer = line.toLowerCase(Locale.ROOT).startsWith("asplayer!");
-            int delay = extractDelay(line);
+            boolean asPlayer  = line.toLowerCase(Locale.ROOT).startsWith("asplayer!");
+            int delay         = extractDelay(line);
+
+            // Strip directives then colorize
             String cmd = strip(line);
+            cmd = colorize(cmd);
+
+            // Snapshot into final variables for lambda
+            final String cmdToRun      = cmd;
+            final boolean asConsoleF   = asConsole;
+            final boolean asPlayerF    = asPlayer;
+            final Player playerContext = p;
 
             Runnable task = () -> {
-                if (cmd.isEmpty()) return;
-                if (asConsole) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
-                else if (asPlayer && p != null) p.performCommand(cmd);
-                else Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+                if (cmdToRun == null || cmdToRun.isEmpty()) return;
+
+                if (asConsoleF) {
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmdToRun);
+                } else if (asPlayerF && playerContext != null) {
+                    playerContext.performCommand(cmdToRun);
+                } else {
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmdToRun);
+                }
             };
-            if (delay > 0) Bukkit.getScheduler().runTaskLater(Bukkit.getPluginManager().getPlugin("OreoEssentials"), task, delay * 20L);
-            else task.run();
+
+            if (delay > 0) {
+                Bukkit.getScheduler().runTaskLater(
+                        Bukkit.getPluginManager().getPlugin("OreoEssentials"),
+                        task,
+                        delay * 20L
+                );
+            } else {
+                task.run();
+            }
         }
     }
 
@@ -63,7 +92,11 @@ public final class EventEngine implements Listener {
         if (idx < 0) return 0;
         String sub = low.substring(idx + 6).trim();
         String[] p = sub.split("\\s+");
-        try { return Integer.parseInt(p[0]); } catch (Exception ignored) { return 0; }
+        try {
+            return Integer.parseInt(p[0]);
+        } catch (Exception ignored) {
+            return 0;
+        }
     }
 
     private String strip(String s) {
@@ -103,10 +136,14 @@ public final class EventEngine implements Listener {
                 "[toWorld]", e.getTo().getWorld().getName()
         ));
         if (!e.getFrom().getWorld().equals(e.getTo().getWorld())) {
-            run(EventType.playerPreWorldChange, e.getPlayer(), Map.of("[toWorld]", e.getTo().getWorld().getName()));
+            run(EventType.playerPreWorldChange, e.getPlayer(),
+                    Map.of("[toWorld]", e.getTo().getWorld().getName()));
             // fire post-change one tick later to simulate "after"
-            Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("OreoEssentials"),
-                    () -> run(EventType.playerWorldChange, e.getPlayer(), Map.of("[toWorld]", e.getTo().getWorld().getName())));
+            Bukkit.getScheduler().runTask(
+                    Bukkit.getPluginManager().getPlugin("OreoEssentials"),
+                    () -> run(EventType.playerWorldChange, e.getPlayer(),
+                            Map.of("[toWorld]", e.getTo().getWorld().getName()))
+            );
         }
     }
 
@@ -122,17 +159,20 @@ public final class EventEngine implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onWorldChange(PlayerChangedWorldEvent e) {
-        run(EventType.playerWorldChange, e.getPlayer(), Map.of("[toWorld]", e.getPlayer().getWorld().getName()));
+        run(EventType.playerWorldChange, e.getPlayer(),
+                Map.of("[toWorld]", e.getPlayer().getWorld().getName()));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onGM(PlayerGameModeChangeEvent e) {
-        run(EventType.playerGameModeChange, e.getPlayer(), Map.of("[newGameMode]", e.getNewGameMode().name()));
+        run(EventType.playerGameModeChange, e.getPlayer(),
+                Map.of("[newGameMode]", e.getNewGameMode().name()));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onKick(PlayerKickEvent e) {
-        run(EventType.playerKick, e.getPlayer(), Map.of("[reason]", String.valueOf(e.getReason())));
+        run(EventType.playerKick, e.getPlayer(),
+                Map.of("[reason]", String.valueOf(e.getReason())));
     }
 
     // "Ban" is not a direct player event; handle via AsyncPlayerPreLoginEvent with result KICK_BANNED
@@ -147,7 +187,8 @@ public final class EventEngine implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onLevelChange(PlayerLevelChangeEvent e) {
-        run(EventType.playerLevelChange, e.getPlayer(), Map.of("[level]", String.valueOf(e.getNewLevel())));
+        run(EventType.playerLevelChange, e.getPlayer(),
+                Map.of("[level]", String.valueOf(e.getNewLevel())));
     }
 
     // Void fall: simple Y<0 detector
@@ -160,7 +201,7 @@ public final class EventEngine implements Listener {
 
     // Elytra glide start/stop
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onGlide(org.bukkit.event.entity.EntityToggleGlideEvent e) {
+    public void onGlide(EntityToggleGlideEvent e) {
         if (!(e.getEntity() instanceof Player p)) return;
         run(e.isGliding() ? EventType.elytraStartGlide : EventType.elytraEndGlide, p, null);
     }
@@ -177,7 +218,9 @@ public final class EventEngine implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSwap(PlayerSwapHandItemsEvent e) {
         run(EventType.swapHandItems, e.getPlayer(), null);
-        if (e.getPlayer().isSneaking()) run(EventType.sneakingSwapHandItems, e.getPlayer(), null);
+        if (e.getPlayer().isSneaking()) {
+            run(EventType.sneakingSwapHandItems, e.getPlayer(), null);
+        }
     }
 
     // PVP start/stop (very lightweight)
@@ -186,8 +229,11 @@ public final class EventEngine implements Listener {
         if (!(e.getEntity() instanceof Player victim)) return;
 
         Player damager = null;
-        if (e.getDamager() instanceof Player p) damager = p;
-        else if (e.getDamager() instanceof Projectile proj && proj.getShooter() instanceof Player p) damager = p;
+        if (e.getDamager() instanceof Player p) {
+            damager = p;
+        } else if (e.getDamager() instanceof Projectile proj && proj.getShooter() instanceof Player p) {
+            damager = p;
+        }
 
         if (damager != null && damager != victim) {
             UUID a = damager.getUniqueId(), b = victim.getUniqueId();
@@ -207,19 +253,23 @@ public final class EventEngine implements Listener {
             Bukkit.getScheduler().runTaskLater(
                     Bukkit.getPluginManager().getPlugin("OreoEssentials"),
                     () -> {
-                        if (Objects.equals(pvpLastOpponent.get(aF), bF) && Objects.equals(pvpLastOpponent.get(bF), aF)) {
+                        if (Objects.equals(pvpLastOpponent.get(aF), bF)
+                                && Objects.equals(pvpLastOpponent.get(bF), aF)) {
                             pvpLastOpponent.remove(aF);
                             pvpLastOpponent.remove(bF);
                             Player pa = Bukkit.getPlayer(aF), pb = Bukkit.getPlayer(bF);
-                            if (pa != null) run(EventType.pvpstop, pa, Map.of("[opponent]", victimName));
-                            if (pb != null) run(EventType.pvpstop, pb, Map.of("[opponent]", damagerName));
+                            if (pa != null) {
+                                run(EventType.pvpstop, pa, Map.of("[opponent]", victimName));
+                            }
+                            if (pb != null) {
+                                run(EventType.pvpstop, pb, Map.of("[opponent]", damagerName));
+                            }
                         }
                     },
                     20L * 15
             );
         }
     }
-
 
     // Custom death message + playerKillPlayer event hooks
     @EventHandler(priority = EventPriority.MONITOR)
@@ -257,7 +307,8 @@ public final class EventEngine implements Listener {
 
         // Fire event commands:
         if (killer != null) {
-            run(EventType.playerKillPlayer, killer, Map.of("[victim]", dead.getName()));
+            run(EventType.playerKillPlayer, killer,
+                    Map.of("[victim]", dead.getName()));
         }
 
         // --- MythicMobs support (optional) ---
@@ -280,5 +331,4 @@ public final class EventEngine implements Listener {
         );
         e.setDeathMessage(msg);
     }
-
 }
