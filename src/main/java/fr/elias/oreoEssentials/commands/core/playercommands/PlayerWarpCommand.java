@@ -34,8 +34,9 @@ public class PlayerWarpCommand implements OreoCommand {
 
     @Override
     public String usage() {
-        return "help|set|remove|list|amount|rtp|near|reset|rename|setowner|removeall|reload|addwarps|whitelist|desc|category|lock|icon|cost|managers|password|<warp>";
+        return "help|set|remove|list|amount|rtp|near|reset|rename|setowner|removeall|reload|addwarps|whitelist|desc|category|lock|icon|cost|managers|password|gui|mywarps|<warp>";
     }
+
 
     @Override public boolean playerOnly() { return false; }
 
@@ -104,6 +105,40 @@ public class PlayerWarpCommand implements OreoCommand {
                 }
                 return true;
             }
+
+            /* --------------------------------------------------------
+             * /pw gui  -> open global browser
+             * -------------------------------------------------------- */
+            case "gui" -> {
+                if (actor == null) {
+                    sender.sendMessage("§cOnly players can use /pw gui.");
+                    return true;
+                }
+                // optional: permission check
+                if (!actor.hasPermission("oe.pw.gui")) {
+                    Lang.send(actor, "pw.no-permission-list", Map.of(), actor);
+                    return true;
+                }
+                fr.elias.oreoEssentials.playerwarp.gui.PlayerWarpBrowseMenu.open(actor, service);
+                return true;
+            }
+
+            /* --------------------------------------------------------
+             * /pw mywarps  -> open personal warps & categories
+             * -------------------------------------------------------- */
+            case "mywarps" -> {
+                if (actor == null) {
+                    sender.sendMessage("§cOnly players can use /pw mywarps.");
+                    return true;
+                }
+                if (!actor.hasPermission("oe.pw.mywarps")) {
+                    Lang.send(actor, "pw.no-permission-list", Map.of(), actor);
+                    return true;
+                }
+                fr.elias.oreoEssentials.playerwarp.gui.MyPlayerWarpsMenu.open(actor, service);
+                return true;
+            }
+
 
             /* --------------------------------------------------------
              * /pw remove <warp>

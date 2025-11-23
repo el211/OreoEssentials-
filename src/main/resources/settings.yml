@@ -71,10 +71,9 @@ features:
     enabled: true
 
   playerwarps:
-    enabled: true
-    cross-server: true
+    enabled: true        # turn /pw on/off
+    cross-server: true   # only effective when essentials.storage = mongodb
 
-    # toggle big features
     features:
       description: true
       rating: true
@@ -92,6 +91,7 @@ features:
       default: 3
       vip: 10
       mvp: 25
+
   tpa:
     cooldown: true #false
     cooldown-amount: 5 # in sec

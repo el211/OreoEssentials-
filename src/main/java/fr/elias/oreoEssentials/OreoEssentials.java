@@ -55,7 +55,11 @@ import fr.elias.oreoEssentials.commands.core.playercommands.SitCommand;
 import fr.elias.oreoEssentials.listeners.SitListener;
 import fr.elias.oreoEssentials.commands.core.admins.MoveCommand;
 
-
+import fr.elias.oreoEssentials.services.mongoservices.MongoPlayerWarpStorage;
+import fr.elias.oreoEssentials.services.yaml.YamlPlayerWarpStorage;
+import fr.elias.oreoEssentials.playerwarp.PlayerWarpService;
+import fr.elias.oreoEssentials.playerwarp.PlayerWarpStorage;
+import fr.elias.oreoEssentials.playerwarp.PlayerWarpDirectory;
 // Tab completion
 
 // Economy commands
@@ -146,6 +150,10 @@ public final class OreoEssentials extends JavaPlugin {
     private SpawnService spawnService;
     private InventoryManager invManager;
     public InventoryManager getInvManager() { return invManager; }
+    public InventoryManager getInventoryManager() {
+        return invManager;
+    }
+
     private ProxyMessenger proxyMessenger;
     public ProxyMessenger getProxyMessenger() { return proxyMessenger; }
     private WarpService warpService;
@@ -281,6 +289,7 @@ public final class OreoEssentials extends JavaPlugin {
         // We'll need these values everywhere, so grab them ASAP.
         this.configService = new ConfigService(this); // we pull this early now
         final String essentialsStorage = getConfig().getString("essentials.storage", "yaml").toLowerCase();
+
         final String economyType       = getConfig().getString("economy.type", "none").toLowerCase();
         this.economyEnabled = settingsConfig.economyEnabled();
         getLogger().info("[Economy] " + (economyEnabled ? "Enabled" : "Disabled") + " via settings.yml");
@@ -743,12 +752,16 @@ public final class OreoEssentials extends JavaPlugin {
         // Conversations / auto messages
         getServer().getPluginManager().registerEvents(new ConversationListener(this), this);
         new fr.elias.oreoEssentials.tasks.AutoMessageScheduler(this).start();
+        // PlayerWarps flags (used in all storage modes)
+        var pwRoot = settingsConfig.getRoot().getConfigurationSection("playerwarps");
+        boolean pwEnabled = (pwRoot == null) || pwRoot.getBoolean("enabled", true);
+        boolean pwCross   = (pwRoot == null) || pwRoot.getBoolean("cross-server", true);
 
         // -------- Essentials storage selection (Homes/Warps/Spawn/Back) --------
         // Also sets up cross-server directories when using MongoDB
         switch (essentialsStorage) {
             case "mongodb" -> {
-                String uri    = getConfig().getString("storage.mongo.uri", "mongodb://localhost:27017");
+                String uri = getConfig().getString("storage.mongo.uri", "mongodb://localhost:27017");
                 String dbName = getConfig().getString("storage.mongo.database", "oreo");
                 String prefix = getConfig().getString("storage.mongo.collectionPrefix", "oreo_");
 
@@ -801,20 +814,21 @@ public final class OreoEssentials extends JavaPlugin {
                     this.warpDirectory = new MongoWarpDirectory(
                             this.homesMongoClient, dbName, prefix + "warp_directory"
                     );
-                } catch (Throwable ignored) { this.warpDirectory = null; }
+                } catch (Throwable ignored) {
+                    this.warpDirectory = null;
+                }
                 try {
                     this.spawnDirectory = new MongoSpawnDirectory(
                             this.homesMongoClient, dbName, prefix + "spawn_directory"
                     );
-                } catch (Throwable ignored) { this.spawnDirectory = null; }
+                } catch (Throwable ignored) {
+                    this.spawnDirectory = null;
+                }
                 {
-                // --- PlayerWarps (Mongo only, optional cross-server) ---
                     {
+                        // --- PlayerWarps (Mongo only, optional cross-server) ---
                         var settingsRoot = this.settingsConfig.getRoot();
                         var pwSection = settingsRoot.getConfigurationSection("playerwarps");
-
-                        boolean pwEnabled = pwSection == null || pwSection.getBoolean("enabled", true);
-                        boolean pwCross = pwSection == null || pwSection.getBoolean("cross-server", true); // <- safer default
 
                         getLogger().info("[PlayerWarps/DEBUG] essentialsStorage=" + essentialsStorage
                                 + " pwEnabled=" + pwEnabled
@@ -855,29 +869,52 @@ public final class OreoEssentials extends JavaPlugin {
                             this.playerWarpService = null;
                             getLogger().info("[PlayerWarps] Disabled by settings.yml (playerwarps.enabled=false).");
                         }
-                    }
-                }
 
-                getLogger().info("[STORAGE] Using MongoDB (MongoHomesStorage + directories).");
+                        getLogger().info("[STORAGE] Using MongoDB (MongoHomesStorage + directories).");
+                    }
+
+                }
             }
             case "json" -> {
-                this.storage         = new fr.elias.oreoEssentials.services.JsonStorage(this);
-                this.homeDirectory   = null;
-                this.warpDirectory   = null;
-                this.spawnDirectory  = null;
-                this.playerWarpService   = null;
-                this.playerWarpDirectory = null;
+                this.storage        = new JsonStorage(this);
+                this.homeDirectory  = null;
+                this.warpDirectory  = null;
+                this.spawnDirectory = null;
+
+                if (pwEnabled) {
+                    PlayerWarpStorage pwStorage = new YamlPlayerWarpStorage(this); // local file
+                    this.playerWarpService      = new PlayerWarpService(pwStorage, null); // directory = null
+                    this.playerWarpDirectory    = null;
+                    getLogger().info("[PlayerWarps] Enabled with local YAML storage (essentials.storage=json, no cross-server).");
+                } else {
+                    this.playerWarpService   = null;
+                    this.playerWarpDirectory = null;
+                    getLogger().info("[PlayerWarps] Disabled by settings.yml (playerwarps.enabled=false).");
+                }
+
                 getLogger().info("[STORAGE] Using JSON.");
             }
+
             default -> {
-                this.storage         = new fr.elias.oreoEssentials.services.YamlStorage(this);
-                this.homeDirectory   = null;
-                this.warpDirectory   = null;
-                this.spawnDirectory  = null;
-                this.playerWarpService   = null;
-                this.playerWarpDirectory = null;
+                this.storage        = new fr.elias.oreoEssentials.services.YamlStorage(this);
+                this.homeDirectory  = null;
+                this.warpDirectory  = null;
+                this.spawnDirectory = null;
+
+                if (pwEnabled) {
+                    PlayerWarpStorage pwStorage = new YamlPlayerWarpStorage(this); // local YAML
+                    this.playerWarpService      = new PlayerWarpService(pwStorage, null);
+                    this.playerWarpDirectory    = null;
+                    getLogger().info("[PlayerWarps] Enabled with local YAML storage (no cross-server).");
+                } else {
+                    this.playerWarpService   = null;
+                    this.playerWarpDirectory = null;
+                    getLogger().info("[PlayerWarps] Disabled by settings.yml (playerwarps.enabled=false).");
+                }
+
                 getLogger().info("[STORAGE] Using YAML.");
             }
+
 
         }
 

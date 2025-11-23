@@ -13,6 +13,8 @@ import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.inventory.ItemStack;
+
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,7 +37,7 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
     private static final String F_CATEGORY = "category";
     private static final String F_LOCKED   = "locked";
     private static final String F_COST     = "cost";
-
+    private static final String F_ICON     = "icon";
     // Whitelist
     private static final String F_WL_ENABLED = "whitelist_enabled";
     private static final String F_WL_PLAYERS = "whitelist_players";
@@ -148,7 +150,12 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         d.put(F_CATEGORY, warp.getCategory());
         d.put(F_LOCKED, warp.isLocked());
         d.put(F_COST, warp.getCost());
-
+        // Icon (serialized map)
+        if (warp.getIcon() != null) {
+            d.put(F_ICON, warp.getIcon().serialize());
+        } else {
+            d.remove(F_ICON);
+        }
         // Whitelist
         d.put(F_WL_ENABLED, warp.isWhitelistEnabled());
         List<String> wl = warp.getWhitelist().stream()
@@ -215,7 +222,18 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         warp.setCategory(d.getString(F_CATEGORY));
         warp.setLocked(d.getBoolean(F_LOCKED, false));
         warp.setCost(num(d, F_COST, 0.0));
-
+        // Icon
+        Object rawIcon = d.get(F_ICON);
+        if (rawIcon instanceof Map<?, ?> rawMap) {
+            try {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> iconMap = (Map<String, Object>) rawMap;
+                ItemStack icon = ItemStack.deserialize(iconMap);
+                warp.setIcon(icon);
+            } catch (Exception ignored) {
+                // if something is wrong with stored data, just ignore and keep default icon
+            }
+        }
         return warp;
     }
 

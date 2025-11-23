@@ -34,6 +34,7 @@ public class PlayerWarpTabCompleter implements TabCompleter {
         }
 
         // /pw
+// /pw
         if (args.length == 1) {
             String prefix = args[0].toLowerCase(Locale.ROOT);
 
@@ -65,7 +66,11 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                     "whitelist",
                     "ban",
                     "managers",
-                    "favourite"
+                    "favourite",
+
+                    // 🔹 NEW:
+                    "gui",
+                    "mywarps"
             ));
 
             // Also allow directly typing warp names as first arg: /pw <warp>
@@ -81,6 +86,7 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                     .sorted(String.CASE_INSENSITIVE_ORDER)
                     .collect(Collectors.toList());
         }
+
 
         // /pw <sub> ...
         if (args.length == 2) {

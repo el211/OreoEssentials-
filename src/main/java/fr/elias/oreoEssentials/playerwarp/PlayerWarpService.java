@@ -228,7 +228,7 @@
                 return false;
             }
 
-            // 🔒 HARD OWNER CHECK — even if storage is buggy, we refuse other people's warps
+            // 🔒 Owner sanity check
             if (!warp.getOwner().equals(ownerId)) {
                 plugin.getLogger().warning("[OreoEssentials] [PW/SECURITY] Mismatch: storage returned warp id="
                         + warp.getId() + " owner=" + warp.getOwner()
@@ -247,18 +247,16 @@
                 return false;
             }
 
-            // 🔹🔹🔹 COST HANDLING — ADD THIS BLOCK 🔹🔹🔹
+            // 💰 COST HANDLING (shared by /pw and GUI)
             double cost = warp.getCost();
             if (cost > 0
-                    && !player.getUniqueId().equals(warp.getOwner())              // owner ne paye pas
-                    && !player.hasPermission("oe.pw.bypass.cost")) {              // bypass perm
+                    && !player.getUniqueId().equals(warp.getOwner())           // owner = free
+                    && !player.hasPermission("oe.pw.bypass.cost")) {           // bypass = free
 
-                // ⛽ Adapte cette ligne à TON système d'économie
-                // (ex: plugin.getEconomyService(), RabbitEconomy, etc.)
-                Economy eco = plugin.getVaultEconomy(); // ⬅️ change is here
+                Economy eco = plugin.getVaultEconomy(); // your Vault bridge
 
                 if (eco == null) {
-                    plugin.getLogger().warning("[OreoEssentials] [PW] Economy not available; skipping cost for warp " + warp.getId());
+                    plugin.getLogger().warning("[OreoEssentials] [PW] Economy not available; can't charge cost for warp " + warp.getId());
                 } else {
                     if (!eco.has(player, cost)) {
                         Lang.send(player, "pw.cost-not-enough",
@@ -266,8 +264,10 @@
                         return false;
                     }
 
+                    // Withdraw from player
                     eco.withdrawPlayer(player, cost);
 
+                    // Pay owner if possible
                     OfflinePlayer owner = org.bukkit.Bukkit.getOfflinePlayer(warp.getOwner());
                     if (owner != null) {
                         eco.depositPlayer(owner, cost);
@@ -280,11 +280,11 @@
                             player);
                 }
             }
-            // 🔹🔹🔹 FIN DU BLOC COST 🔹🔹🔹
 
+            // ===== Server resolution =====
             String localServer   = plugin.getConfigService().serverName();
             String targetServer  = getWarpServer(warp, localServer);
-            boolean crossEnabled = plugin.getCrossServerSettings().warps(); // re-use warps flag
+            boolean crossEnabled = plugin.getCrossServerSettings().warps();
             boolean messaging    = plugin.isMessagingAvailable();
             boolean sameServer   = localServer.equalsIgnoreCase(targetServer);
 
@@ -299,7 +299,7 @@
                     + " messagingAvailable=" + messaging
                     + " sameServer=" + sameServer);
 
-            // ==== LOCAL TELEPORT PATH ====
+            // ==== LOCAL TELEPORT ====
             if (!crossEnabled || !messaging || sameServer) {
                 if (!crossEnabled) {
                     plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] Cross-server playerwarps disabled in config.");
@@ -331,7 +331,7 @@
                 return ok;
             }
 
-            // ==== CROSS-SERVER PATH ====
+            // ==== CROSS-SERVER TELEPORT ====
             plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] Using cross-server teleport. from="
                     + localServer + " to=" + targetServer);
 
@@ -361,6 +361,7 @@
 
             return true;
         }
+
 
 
         private static String formatLocation(Location loc) {
