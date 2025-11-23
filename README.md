@@ -258,7 +258,7 @@ Staff/Admin commands:
 
 Contributions are welcome!
 
-- Fork the repository
+- Fork the repository ( READ FORK POLICY FIRST)
 - Create a feature branch: git checkout -b feature/my-feature
 - Commit your changes: git commit -m "Add my feature"
 - Push the branch: git push origin feature/my-feature
