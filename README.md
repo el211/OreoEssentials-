@@ -1,7 +1,17 @@
 # 🍪 OreoEssentials
 
-> The most advanced all-in-one Essentials plugin for Paper 1.21+  
-> Free & open-source plugin by **Oreo Studios**
+<p align="center">
+  <img width="500" height="500" alt="OreoEssentials logo" src="https://github.com/user-attachments/assets/dd1bd76b-3602-4019-95c6-36337faa1222" />
+</p>
+
+<p align="center">
+  <strong>The most advanced all-in-one Essentials plugin for Paper 1.21+</strong><br />
+  Free &amp; open-source plugin by <strong>Oreo Studios</strong>
+</p>
+
+<p align="center">
+  Documentation: <a href="https://docs.oreo-studio.shop/oreoessentials/">https://docs.oreo-studio.shop/oreoessentials/</a>
+</p>
 
 OreoEssentials provides a modern Essentials replacement for single and multi-server Paper networks with homes, warps, kits, GUIs, cross-server syncing (inventory/enderchest/economy), RabbitMQ/Redis/Mongo integrations, moderation tools, and much more — all designed for high-performance networks.
 
@@ -26,23 +36,6 @@ OreoEssentials provides a modern Essentials replacement for single and multi-ser
 - Async operations and Redis caching for performance
 - SmartInvs-based GUIs for modern UX
 - 200+ commands and extensive PlaceholderAPI placeholders
-
----
-
-## Table of contents
-
-- [Requirements](#requirements)  
-- [Installation (Single Server)](#installation-single-server)  
-- [Cross-Server Setup (Multi-Server Networks)](#cross-server-setup-multi-server-networks)  
-  - [Database (Mongo / Redis)](#database-mongo--redis)  
-  - [RabbitMQ (Cross-Server Messaging)](#rabbitmq-cross-server-messaging)  
-  - [Feature toggles](#feature-toggles)  
-- [Configuration files overview](#configuration-files-overview)  
-- [Examples](#examples)  
-- [Commands (Overview)](#commands-overview)  
-- [Contributing](#contributing)  
-- [Bug reports & Support](#bug-reports--support)  
-- [License](#license)
 
 ---
 
@@ -271,7 +264,7 @@ Contributions are welcome!
 - Push the branch: git push origin feature/my-feature
 - Open a Pull Request
 
-Please follow existing code style and use meaningful commit messages.
+Please follow existing code style and use meaningful commit messages. See the documentation link above for developer guidelines and contribution details.
 
 ---
 
@@ -287,6 +280,36 @@ Support channels:
 - SpigotMC resource page (discussions & reviews)
 - Oreo Studios Discord (recommended for fast help)
 - GitHub Issues (for reproducible bugs & feature requests)
+
+---
+
+## Forking Policy
+
+Oreo Studios appreciates community interest in contributing and collaborating. To avoid confusion about official forks and derivative distributions, we require explicit permission before publicly forking or distributing a derived version of this repository.
+
+If you wish to fork or publicly distribute a derived plugin, please follow these steps to request permission:
+
+1. Open a ticket on our official Oreo Studios Discord. Include a link to your Discord profile or tag so we can verify your request.
+2. In the ticket, provide:
+   - Your GitHub username
+   - A short description of how you intend to use or distribute the fork
+   - The repository or project URL you plan to publish (if applicable)
+   - Any substantive changes you plan to make that differ from the original project
+3. Wait for a reply from an Oreo Studios maintainer. We will respond with approval, denial, or follow-up questions.
+
+Note: This is our project policy. The legal rights and permissions that apply to this repository are governed by the repository's LICENSE file. If you are unsure how the license applies to your intended use, consult legal counsel.
+
+---
+
+## Copyright & Company Info
+
+Copyright (c) Oreo Studios.
+
+Oreo Studios is an officially registered company in France.
+- SIRET: 993 823 469 00017
+- Code APE: 62.01Z
+
+All rights reserved. Portions of this project are provided under the terms of the LICENSE file included in this repository. For formal copyright claims, permission requests, or questions related to commercial use, please open a ticket on our official Oreo Studios Discord so we can respond and track your request.
 
 ---
 
