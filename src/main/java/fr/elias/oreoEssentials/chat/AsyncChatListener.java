@@ -15,9 +15,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
+import java.util.List;
+import java.util.regex.Pattern;
+
 /**
  * Formats chat using FormatManager, optionally syncs to RabbitMQ,
  * and optionally forwards to Discord via webhook if enabled in config.
+ * Also supports banned-words censoring from settings.yml (chat.banned-words).
  */
 public class AsyncChatListener implements Listener {
 
@@ -27,6 +31,10 @@ public class AsyncChatListener implements Listener {
     private final boolean discordEnabled;
     private final String discordWebhookUrl;
     private final MuteService muteService; // used to prevent publishing when muted
+
+    // NEW: banned words config (from SettingsConfig)
+    private final boolean bannedWordsEnabled;
+    private final List<String> bannedWords;
 
     public AsyncChatListener(
             FormatManager fm,
@@ -42,6 +50,15 @@ public class AsyncChatListener implements Listener {
         this.discordEnabled = discordEnabled;
         this.discordWebhookUrl = (discordWebhookUrl == null) ? "" : discordWebhookUrl.trim();
         this.muteService = muteService;
+
+        // Load banned-words settings from SettingsConfig
+        var settings = OreoEssentials.get().getSettingsConfig();
+        this.bannedWordsEnabled = settings.bannedWordsEnabled();
+        this.bannedWords = settings.bannedWords();
+
+        // Optional: debug to verify it loaded correctly
+        Bukkit.getLogger().info("[OreoEssentials] Chat banned-words enabled=" +
+                bannedWordsEnabled + " list=" + this.bannedWords);
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
@@ -110,6 +127,9 @@ public class AsyncChatListener implements Listener {
         message = message.trim();
         if (message.isEmpty()) return; // ignore empty messages
 
+        // NEW: censor banned words BEFORE formatting & forwarding
+        message = censorBannedWords(message);
+
         // Format (plugin-defined) -> may include color codes (&)
         String formatted = formatManager.formatMessage(player, message);
 
@@ -136,7 +156,6 @@ public class AsyncChatListener implements Listener {
                         player.getName(),
                         formatted
                 );
-
             }
         } catch (Throwable ex) {
             Bukkit.getLogger().severe("[OreoEssentials] ChatSync publish failed: " + ex.getMessage());
@@ -164,5 +183,28 @@ public class AsyncChatListener implements Listener {
         // Remove legacy ampersand codes first, then strip Bukkit color section (§) if present
         String noAmp = s.replaceAll("(?i)&[0-9A-FK-OR]", "");
         return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', noAmp));
+    }
+
+    /**
+     * Censor banned words from the message using chat.banned-words.list.
+     * Example:
+     *   "fuck" -> "****"
+     */
+    private String censorBannedWords(String message) {
+        if (!bannedWordsEnabled || bannedWords == null || bannedWords.isEmpty()) return message;
+        if (message == null || message.isEmpty()) return message;
+
+        String result = message;
+        for (String word : bannedWords) {
+            if (word == null || word.isBlank()) continue;
+
+            // (?i) = case-insensitive; Pattern.quote = literal match
+            String pattern = "(?i)" + Pattern.quote(word);
+            String replacement = "*".repeat(word.length());
+
+            result = result.replaceAll(pattern, replacement);
+        }
+
+        return result;
     }
 }

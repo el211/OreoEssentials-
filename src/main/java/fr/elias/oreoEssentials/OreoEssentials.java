@@ -6,7 +6,7 @@ import fr.elias.oreoEssentials.bossbar.BossBarToggleCommand;
 import fr.elias.oreoEssentials.clearlag.ClearLagCommands;
 import fr.elias.oreoEssentials.clearlag.ClearLagManager;
 import fr.elias.oreoEssentials.commands.CommandManager;
-
+import fr.elias.oreoEssentials.rtp.listeners.RtpJoinListener;
 // Core commands (essentials-like)
 import fr.elias.oreoEssentials.commands.completion.*;
 import fr.elias.oreoEssentials.commands.core.playercommands.*;
@@ -31,6 +31,7 @@ import fr.elias.oreoEssentials.modgui.notes.NotesChatListener;
 import fr.elias.oreoEssentials.modgui.notes.PlayerNotesManager;
 import fr.elias.oreoEssentials.modgui.world.WorldTweaksListener;
 import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
+import fr.elias.oreoEssentials.rtp.RtpPendingService;
 import fr.elias.oreoEssentials.services.*;
 import fr.elias.oreoEssentials.services.chatservices.MuteService;
 import fr.elias.oreoEssentials.services.mongoservices.*;
@@ -180,6 +181,7 @@ public final class OreoEssentials extends JavaPlugin {
     private PlayerEconomyDatabase database;
     private RedisManager redis;
     private OfflinePlayerCache offlinePlayerCache;
+    private RtpPendingService rtpPendingService;
 
     // Vault provider reference (optional)
     private Economy vaultEconomy;
@@ -233,12 +235,18 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.config.CrossServerSettings getCrossServerSettings() { return crossServerSettings; }
 
     // RTP + EnderChest
-    private RtpConfig rtpConfig;
-    public RtpConfig getRtpConfig() { return rtpConfig; }
+
 
     private fr.elias.oreoEssentials.enderchest.EnderChestConfig ecConfig;
     private fr.elias.oreoEssentials.enderchest.EnderChestService ecService;
     public fr.elias.oreoEssentials.enderchest.EnderChestService getEnderChestService() { return ecService; }
+    // RTP + EnderChest
+    private RtpConfig rtpConfig;
+    public RtpConfig getRtpConfig() { return rtpConfig; }
+
+    // NEW: Cross-server RTP bridge (used by RtpCommand)
+    private fr.elias.oreoEssentials.rtp.RtpCrossServerBridge rtpBridge;
+
 
     private ScoreboardService scoreboardService;
     private fr.elias.oreoEssentials.mobs.HealthBarListener healthBarListener;
@@ -520,7 +528,6 @@ public final class OreoEssentials extends JavaPlugin {
         this.invManager = new InventoryManager(this);
         this.invManager.init();
         // --- Server Management GUI (ModGUI) ---
-// --- Server Management GUI (ModGUI) ---
         try {
             this.modGuiService = new fr.elias.oreoEssentials.modgui.ModGuiService(this);
             getLogger().info("[ModGUI] Server management GUI ready (/modgui).");
@@ -800,9 +807,8 @@ public final class OreoEssentials extends JavaPlugin {
                             this.homesMongoClient, dbName, prefix + "spawn_directory"
                     );
                 } catch (Throwable ignored) { this.spawnDirectory = null; }
-                // --- PlayerWarps (Mongo only, optional cross-server) ---
                 {
-// --- PlayerWarps (Mongo only, optional cross-server) ---
+                // --- PlayerWarps (Mongo only, optional cross-server) ---
                     {
                         var settingsRoot = this.settingsConfig.getRoot();
                         var pwSection = settingsRoot.getConfigurationSection("playerwarps");
@@ -876,7 +882,6 @@ public final class OreoEssentials extends JavaPlugin {
         }
 
         // ---- EnderChest config + storage (respect cross-server.enderchest + storage mode)
-        // ---- EnderChest config + storage (respect cross-server.enderchest + storage mode)
         this.ecConfig = new fr.elias.oreoEssentials.enderchest.EnderChestConfig(this);
         // Constructor already calls reload(), so no extra call needed.
 
@@ -919,7 +924,6 @@ public final class OreoEssentials extends JavaPlugin {
 
 
         // --- Player Sync bootstrap ---
-// --- Player Sync bootstrap ---
         final boolean invSyncEnabled = settingsConfig.featureOption("cross-server", "inventory", true);
 
         fr.elias.oreoEssentials.playersync.PlayerSyncStorage invStorage;
@@ -1236,21 +1240,17 @@ public final class OreoEssentials extends JavaPlugin {
             this.tpaBroker = null;
             getLogger().info("[BROKER] TPA cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
-// --- NEW: TP cross-server broker (admin /tp) ---
+        // --- NEW: TP cross-server broker (admin /tp) ---
         if (packetManager != null && packetManager.isInitialized()) {
             this.tpBroker = new fr.elias.oreoEssentials.teleport.TpCrossServerBroker(
-                    this,
-                    this.teleportService,
-                    this.packetManager,
-                    proxyMessenger,
-                    configService.serverName()
+                    this, this.teleportService, this.packetManager, proxyMessenger, configService.serverName()
             );
             getLogger().info("[BROKER] TP cross-server broker ready (server=" + configService.serverName() + ").");
         } else {
             this.tpBroker = null;
             getLogger().info("[BROKER] TP cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
-// --- NEW: TP cross-server broker (admin /tp) ---
+        // --- NEW: TP cross-server broker (admin /tp) ---
         if (packetManager != null && packetManager.isInitialized()) {
             this.tpBroker = new fr.elias.oreoEssentials.teleport.TpCrossServerBroker(
                     this,
@@ -1348,7 +1348,13 @@ public final class OreoEssentials extends JavaPlugin {
         }
         // Initialize RTP config (constructor calls reload())
         // ---- RTP config (local + cross-server aware)
-        this.rtpConfig = new RtpConfig(this); // loads rtp.yml
+        this.rtpPendingService = new RtpPendingService();     // 1) data holder
+        this.rtpConfig         = new RtpConfig(this);         // 2) load rtp.yml
+
+        getServer().getPluginManager().registerEvents(        // 3) listener
+                new RtpJoinListener(this),
+                this
+        );
 
         if (!settingsConfig.rtpEnabled()) {
             unregisterCommandHard("rtp");
@@ -1363,11 +1369,30 @@ public final class OreoEssentials extends JavaPlugin {
             var rtpCmd = new fr.elias.oreoEssentials.commands.core.playercommands.RtpCommand();
             this.commands.register(rtpCmd);
 
-
             getLogger().info("[RTP] Enabled — /rtp registered with tab-completion.");
         }
 
+        // RTP cross-server bridge (/rtp) ---
+        // Only useful if RabbitMQ is up AND cross-server RTP is enabled in rtp.yml
 
+        if (packetManager != null && packetManager.isInitialized()
+                && this.rtpConfig != null && this.rtpConfig.isCrossServerEnabled()) {
+            try {
+                this.rtpBridge = new fr.elias.oreoEssentials.rtp.RtpCrossServerBridge(
+                        this,
+                        this.packetManager,
+                        this.configService.serverName()
+                );
+                getLogger().info("[RTP] Cross-server RTP bridge ready (server=" + configService.serverName() + ").");
+            } catch (Throwable t) {
+                this.rtpBridge = null;
+                getLogger().warning("[RTP] Failed to init cross-server RTP bridge: " + t.getMessage());
+            }
+        } else {
+            this.rtpBridge = null;
+            getLogger().info("[RTP] Cross-server RTP bridge disabled "
+                    + "(PacketManager missing or cross-server RTP off).");
+        }
 
         // --- BossBar (controlled by config: bossbar.enabled)
         if (settingsConfig.bossbarEnabled()) {
@@ -1521,18 +1546,29 @@ public final class OreoEssentials extends JavaPlugin {
             getCommand("oeserver").setTabCompleter(new ServerProxyCommand(proxyMessenger));
         }
         getCommand("kick").setTabCompleter(new KickTabCompleter(this));
+        // /clear & /ci cross-server tab completion
+        if (getCommand("clear") != null) {
+            getCommand("clear").setTabCompleter(new ClearTabCompleter(this));
+        }
 
-        // Shared network-wide player completer for /tpa and /tp
-        TpaTabCompleter tpaTpCompleter = new TpaTabCompleter(this);
+
+        // /tpa → only ONLINE (network-wide)
+        TpaTabCompleter tpaCompleter = new TpaTabCompleter(this);
         if (getCommand("tpa") != null) {
-            getCommand("tpa").setTabCompleter(tpaTpCompleter);
+            getCommand("tpa").setTabCompleter(tpaCompleter);
         }
+
+        // /tp → ONLINE + OFFLINE (local + network)
+        TpTabCompleter tpCompleter = new TpTabCompleter(this);
         if (getCommand("tp") != null) {
-            getCommand("tp").setTabCompleter(tpaTpCompleter);
+            getCommand("tp").setTabCompleter(tpCompleter);
         }
+
+        // /move still uses online-only suggestion (same as /tpa)
         if (getCommand("move") != null) {
-            getCommand("move").setTabCompleter(tpaTpCompleter);
+            getCommand("move").setTabCompleter(tpaCompleter);
         }
+
 
         if (getCommand("balance") != null) {
             getCommand("balance").setTabCompleter((sender, cmd, alias, args) -> {
@@ -1819,7 +1855,10 @@ public final class OreoEssentials extends JavaPlugin {
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerWarpTeleportRequestPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerWarpTeleportRequestPacket::new
         );
-
+        pm.registerPacket(
+                fr.elias.oreoEssentials.rtp.RtpTeleportRequestPacket.class,
+                fr.elias.oreoEssentials.rtp.RtpTeleportRequestPacket::new
+        );
         pm.registerPacket(
                 fr.elias.oreoEssentials.cross.InvseeOpenRequestPacket.class,
                 fr.elias.oreoEssentials.cross.InvseeOpenRequestPacket::new
@@ -2104,6 +2143,14 @@ public final class OreoEssentials extends JavaPlugin {
     public SettingsConfig getSettings() {
         return settings;
     }
+    public RtpPendingService getRtpPendingService() {
+        return rtpPendingService;
+    }
+    public fr.elias.oreoEssentials.rtp.RtpCrossServerBridge getRtpBridge() {
+        return rtpBridge;
+    }
+
     public EconomyBootstrap getEcoBootstrap() { return ecoBootstrap; }
     public Economy getVaultEconomy() { return vaultEconomy; }
 }
+

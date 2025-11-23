@@ -6,6 +6,12 @@ features:
   chat:
     enabled: true
     discord-bridge: true
+    banned-words:
+      enabled: true
+      list:
+        - "badword"
+        - "anotherbadword"
+        - "insult"
 
   economy:
     enabled: true
@@ -62,7 +68,7 @@ features:
     invsee: true
 
   tab:
-    enabled: true      # 👈 NEW
+    enabled: true
 
   playerwarps:
     enabled: true

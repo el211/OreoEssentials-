@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/config/SettingsConfig.java
 package fr.elias.oreoEssentials.config;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -5,6 +6,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.util.List;
+import java.util.Locale;
 
 public class SettingsConfig {
 
@@ -49,27 +52,62 @@ public class SettingsConfig {
         return cfg.getBoolean("features." + featureKey + "." + subKey, def);
     }
 
-
     // ----------------------------------------------------------------
     // Typed helpers (explicit API for main systems)
     // ----------------------------------------------------------------
 
     // Kits
     public boolean kitsEnabled() { return isEnabled("kits"); }
+
     public boolean kitsCommandsEnabled() {
         return featureOption("kits", "register-commands", true);
     }
 
     // Trade
     public boolean tradeEnabled() { return isEnabled("trade"); }
+
     public boolean tradeCrossServerEnabled() {
         return featureOption("trade", "cross-server", true);
     }
 
     // Chat + Discord bridge
-    public boolean chatEnabled() { return isEnabled("chat"); }
+    /** Master toggle for Oreo chat handling based on features.chat.enabled. */
+    public boolean chatEnabled() {
+        return isEnabled("chat");
+    }
+
     public boolean chatDiscordBridgeEnabled() {
         return featureOption("chat", "discord-bridge", false);
+    }
+
+    // 🔴 Banned words (chat)
+    public boolean bannedWordsEnabled() {
+        // Prefer root "chat.banned-words" if present, else "features.chat.banned-words"
+        String baseKey;
+        if (cfg.isConfigurationSection("chat.banned-words")) {
+            baseKey = "chat.banned-words";
+        } else {
+            baseKey = "features.chat.banned-words";
+        }
+        return cfg.getBoolean(baseKey + ".enabled", false);
+    }
+
+    public List<String> bannedWords() {
+        String baseKey;
+        if (cfg.isConfigurationSection("chat.banned-words")) {
+            baseKey = "chat.banned-words";
+        } else {
+            baseKey = "features.chat.banned-words";
+        }
+
+        List<String> rawList = cfg.getStringList(baseKey + ".list");
+        if (rawList == null) {
+            return List.of();
+        }
+        return rawList.stream()
+                .filter(s -> s != null && !s.isBlank())
+                .map(s -> s.toLowerCase(Locale.ROOT))
+                .toList();
     }
 
     // Player Vaults
@@ -95,6 +133,7 @@ public class SettingsConfig {
 
     // Sit
     public boolean sitEnabled() { return isEnabled("sit"); }
+
     public boolean getBoolean(String path, boolean def) {
         return cfg.getBoolean(path, def);
     }
@@ -123,15 +162,8 @@ public class SettingsConfig {
         return isEnabled("tab");
     }
 
-
     // Alias used by CrossServerSettings
     public FileConfiguration getRoot() {
         return cfg;
     }
-
-
-
-
-
-
 }

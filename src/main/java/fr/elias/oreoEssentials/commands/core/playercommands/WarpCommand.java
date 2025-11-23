@@ -12,7 +12,10 @@ import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -46,7 +49,7 @@ public class WarpCommand implements OreoCommand {
         // Actor = the one running the command (may be null if console)
         Player actor = (sender instanceof Player) ? (Player) sender : null;
 
-        // /warp or /warp list → list warps
+        // /warp or /warp list → list warps (NO COOLDOWN)
         if (args.length == 0 || args[0].equalsIgnoreCase("list")) {
             var list = warps.listWarps();
             if (list.isEmpty()) {
@@ -126,8 +129,36 @@ public class WarpCommand implements OreoCommand {
             return true;
         }
 
-        // Console: no specific permission checks (console is trusted)
-        // ----------------------------------------------
+        // ---- Cooldown / countdown (features.warp.cooldown) ----
+        FileConfiguration settings = plugin.getSettingsConfig().getRoot();
+        ConfigurationSection warpSection = settings.getConfigurationSection("features.warp");
+        boolean useCooldown = warpSection != null && warpSection.getBoolean("cooldown", false);
+        int seconds = (warpSection != null ? warpSection.getInt("cooldown-amount", 0) : 0);
+
+        // If no cooldown or invalid value, just execute immediately
+        if (!useCooldown || seconds <= 0 || target == null) {
+            performWarp(plugin, warps, sender, actor, target, warpName);
+            return true;
+        }
+
+        // Countdown shown to the TARGET player
+        startCountdown(target, seconds, () ->
+                performWarp(plugin, warps, sender, actor, target, warpName)
+        );
+        return true;
+    }
+
+    /**
+     * Runs the original warp logic (local or cross-server) AFTER the countdown.
+     */
+    private void performWarp(OreoEssentials plugin,
+                             WarpService warps,
+                             CommandSender sender,
+                             Player actor,
+                             Player target,
+                             String warpName) {
+
+        final var log = plugin.getLogger();
 
         // Resolve server owner for this warp
         final String localServer  = plugin.getConfigService().serverName();
@@ -154,7 +185,7 @@ public class WarpCommand implements OreoCommand {
                     sender.sendMessage("§cWarp '" + warpName + "' not found on this server.");
                 }
                 log.warning("[WarpCmd] Local warp not found. warp=" + warpName);
-                return true;
+                return;
             }
             try {
                 target.teleport(l);
@@ -182,7 +213,7 @@ public class WarpCommand implements OreoCommand {
                 }
                 log.warning("[WarpCmd] Local teleport exception: " + ex.getMessage());
             }
-            return true;
+            return;
         }
 
         // Respect cross-server toggle for warps
@@ -200,7 +231,7 @@ public class WarpCommand implements OreoCommand {
             } else {
                 sender.sendMessage("§cCross-server warps are disabled in config.");
             }
-            return true;
+            return;
         }
 
         // Remote warp: publish to the target server’s queue, then proxy-switch the TARGET player
@@ -232,7 +263,7 @@ public class WarpCommand implements OreoCommand {
             } else {
                 sender.sendMessage("§cCross-server messaging is disabled; cannot warp to " + targetServer + ".");
             }
-            return true;
+            return;
         }
 
         // Proxy switch for the TARGET player
@@ -264,7 +295,6 @@ public class WarpCommand implements OreoCommand {
             log.warning("[WarpCmd] Proxy switch failed to " + targetServer
                     + " (check Velocity/Bungee server name match).");
         }
-        return true;
     }
 
     /** Bungee/Velocity plugin message switch (for the TARGET player) */
@@ -284,5 +314,38 @@ public class WarpCommand implements OreoCommand {
             log.warning("[WarpCmd] Failed to send Connect plugin message: " + ex.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Shows a big title countdown on the player, then runs the action.
+     */
+    private void startCountdown(Player target, int seconds, Runnable action) {
+        final OreoEssentials plugin = OreoEssentials.get();
+
+        new BukkitRunnable() {
+            int remaining = seconds;
+
+            @Override
+            public void run() {
+                if (!target.isOnline()) {
+                    cancel();
+                    return;
+                }
+
+                if (remaining <= 0) {
+                    cancel();
+                    action.run();
+                    return;
+                }
+
+                // Big title in the middle of the screen
+                target.sendTitle(
+                        "§bTeleporting...",
+                        "§fIn §e" + remaining + "§fs",
+                        0, 20, 0
+                );
+                remaining--;
+            }
+        }.runTaskTimer(plugin, 0L, 20L);
     }
 }
