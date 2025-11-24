@@ -627,6 +627,11 @@ pw:
   cost-not-enough: "%prefix%&cYou need &e%amount%&c to use this player warp."
   password-wrong: "%prefix% &cWrong password for warp &e%warp%&c."
   password-not-required: "%prefix% &7Warp &e%warp% &7doesn't require a password."
+  password-title-wrong: "&cWrong password"
+  password-subtitle-wrong: "&7Try again"
+
+  password-title-empty: "&cWrong password"
+  password-subtitle-empty: "&7No password entered"
 
 teleport:
   countdown:

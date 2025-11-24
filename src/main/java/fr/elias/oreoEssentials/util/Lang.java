@@ -153,4 +153,51 @@ public final class Lang {
         String s = out.toString().trim();
         return s.isEmpty() ? "0" + us : s;
     }
+
+    // ------------------------------------------------------------------------
+    // TITLE HELPERS
+    // ------------------------------------------------------------------------
+
+    /**
+     * Sends a title/subtitle using lang.yml keys.
+     *
+     * @param player   target player
+     * @param titleKey lang.yml path for the title (can be null/empty)
+     * @param subKey   lang.yml path for the subtitle (can be null/empty)
+     * @param vars     placeholders like "warp" -> "spawn"
+     * @param fadeIn   fade in ticks
+     * @param stay     stay ticks
+     * @param fadeOut  fade out ticks
+     */
+    public static void sendTitle(Player player,
+                                 String titleKey,
+                                 String subKey,
+                                 Map<String, String> vars,
+                                 int fadeIn,
+                                 int stay,
+                                 int fadeOut) {
+        if (player == null) return;
+
+        String title = "";
+        String subtitle = "";
+
+        if (titleKey != null && !titleKey.isEmpty()) {
+            title = msg(titleKey, vars, player);
+        }
+        if (subKey != null && !subKey.isEmpty()) {
+            subtitle = msg(subKey, vars, player);
+        }
+
+        player.sendTitle(title, subtitle, fadeIn, stay, fadeOut);
+    }
+
+    /**
+     * Overload with default fade timings (10,40,10).
+     */
+    public static void sendTitle(Player player,
+                                 String titleKey,
+                                 String subKey,
+                                 Map<String, String> vars) {
+        sendTitle(player, titleKey, subKey, vars, 10, 40, 10);
+    }
 }
