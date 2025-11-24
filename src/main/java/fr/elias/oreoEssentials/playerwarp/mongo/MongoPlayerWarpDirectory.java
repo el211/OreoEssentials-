@@ -1,5 +1,5 @@
 // src/main/java/fr/elias/oreoEssentials/services/mongoservices/MongoPlayerWarpDirectory.java
-package fr.elias.oreoEssentials.services.mongoservices;
+package fr.elias.oreoEssentials.playerwarp.mongo;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;

@@ -58,7 +58,13 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
         for (int i = 0; i < allWarps.size(); i++) {
             PlayerWarp warp = allWarps.get(i);
             items[i] = ClickableItem.of(buildWarpItem(player, warp), e -> {
-                // Teleport via service (handles lock, whitelist, cost, cross-server)
+                if (isPasswordProtectedFor(player, warp)) {
+                    Lang.send(player, "pw.password-required",
+                            Map.of("warp", warp.getName()),
+                            player);
+                    return;
+                }
+
                 boolean ok = service.teleportToPlayerWarp(player, warp.getOwner(), warp.getName());
                 if (!ok) {
                     Lang.send(player, "pw.teleport-failed",
@@ -66,6 +72,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
                             player);
                 }
             });
+
         }
 
 
@@ -99,6 +106,17 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
                 update(player, contents);
             }
         }));
+    }
+    private boolean isPasswordProtectedFor(Player viewer, PlayerWarp warp) {
+        String pwd = warp.getPassword();
+        if (pwd == null || pwd.isEmpty()) return false;
+
+        UUID uuid = viewer.getUniqueId();
+        if (warp.getOwner().equals(uuid)) return false;
+        if (warp.getManagers() != null && warp.getManagers().contains(uuid)) return false;
+        if (viewer.hasPermission("oe.pw.bypass.password")) return false;
+
+        return true;
     }
 
     private ItemStack buildWarpItem(Player viewer, PlayerWarp warp) {

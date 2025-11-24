@@ -3,9 +3,11 @@ package fr.elias.oreoEssentials;
 
 import fr.elias.oreoEssentials.bossbar.BossBarService;
 import fr.elias.oreoEssentials.bossbar.BossBarToggleCommand;
-import fr.elias.oreoEssentials.clearlag.ClearLagCommands;
 import fr.elias.oreoEssentials.clearlag.ClearLagManager;
 import fr.elias.oreoEssentials.commands.CommandManager;
+import fr.elias.oreoEssentials.playerwarp.*;
+import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpCommand;
+import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpTabCompleter;
 import fr.elias.oreoEssentials.rtp.listeners.RtpJoinListener;
 // Core commands (essentials-like)
 import fr.elias.oreoEssentials.commands.completion.*;
@@ -24,24 +26,18 @@ import fr.elias.oreoEssentials.commands.core.playercommands.WarpCommand;
 import fr.elias.oreoEssentials.config.SettingsConfig;
 import fr.elias.oreoEssentials.customcraft.CustomCraftingService;
 import fr.elias.oreoEssentials.homes.TeleportBroker;
-import fr.elias.oreoEssentials.kits.KitsManager;
 import fr.elias.oreoEssentials.modgui.freeze.FreezeManager;
 import fr.elias.oreoEssentials.modgui.ip.IpTracker;
 import fr.elias.oreoEssentials.modgui.notes.NotesChatListener;
 import fr.elias.oreoEssentials.modgui.notes.PlayerNotesManager;
 import fr.elias.oreoEssentials.modgui.world.WorldTweaksListener;
-import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rtp.RtpPendingService;
 import fr.elias.oreoEssentials.services.*;
 import fr.elias.oreoEssentials.services.chatservices.MuteService;
 import fr.elias.oreoEssentials.services.mongoservices.*;
-import fr.elias.oreoEssentials.playerwarp.PlayerWarpService;
-import fr.elias.oreoEssentials.playerwarp.PlayerWarpStorage;
-import fr.elias.oreoEssentials.playerwarp.PlayerWarpDirectory;
-import fr.elias.oreoEssentials.commands.core.playercommands.PlayerWarpCommand;
 
-import fr.elias.oreoEssentials.services.mongoservices.MongoPlayerWarpStorage;
-import fr.elias.oreoEssentials.services.mongoservices.MongoPlayerWarpDirectory;
+import fr.elias.oreoEssentials.playerwarp.mongo.MongoPlayerWarpStorage;
+import fr.elias.oreoEssentials.playerwarp.mongo.MongoPlayerWarpDirectory;
 
 import fr.elias.oreoEssentials.util.KillallLogger;
 import fr.elias.oreoEssentials.util.Lang;
@@ -55,11 +51,7 @@ import fr.elias.oreoEssentials.commands.core.playercommands.SitCommand;
 import fr.elias.oreoEssentials.listeners.SitListener;
 import fr.elias.oreoEssentials.commands.core.admins.MoveCommand;
 
-import fr.elias.oreoEssentials.services.mongoservices.MongoPlayerWarpStorage;
 import fr.elias.oreoEssentials.services.yaml.YamlPlayerWarpStorage;
-import fr.elias.oreoEssentials.playerwarp.PlayerWarpService;
-import fr.elias.oreoEssentials.playerwarp.PlayerWarpStorage;
-import fr.elias.oreoEssentials.playerwarp.PlayerWarpDirectory;
 // Tab completion
 
 // Economy commands
@@ -98,7 +90,6 @@ import fr.elias.oreoEssentials.chat.AsyncChatListener;
 import fr.elias.oreoEssentials.chat.CustomConfig;
 import fr.elias.oreoEssentials.chat.FormatManager;
 import fr.elias.oreoEssentials.util.ChatSyncManager;
-import fr.elias.oreoEssentials.mobs.GrinchHook;
 
 // Vault
 import fr.elias.oreoEssentials.util.ProxyMessenger;
@@ -106,11 +97,7 @@ import fr.elias.oreoEssentials.vault.VaultEconomyProvider;
 import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.Objects;
 
 public final class OreoEssentials extends JavaPlugin {
 

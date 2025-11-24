@@ -1,4 +1,4 @@
-package fr.elias.oreoEssentials.commands.completion;
+package fr.elias.oreoEssentials.playerwarp.command;
 
 import fr.elias.oreoEssentials.playerwarp.PlayerWarp;
 import fr.elias.oreoEssentials.playerwarp.PlayerWarpService;
@@ -34,7 +34,6 @@ public class PlayerWarpTabCompleter implements TabCompleter {
         }
 
         // /pw
-// /pw
         if (args.length == 1) {
             String prefix = args[0].toLowerCase(Locale.ROOT);
 
@@ -54,7 +53,7 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                     "reload",
                     "addwarps",
 
-                    // stubbed but present in command
+                    // meta / extras
                     "desc",
                     "open",
                     "icon",
@@ -68,9 +67,12 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                     "managers",
                     "favourite",
 
-                    // 🔹 NEW:
+                    // NEW / GUI
                     "gui",
-                    "mywarps"
+                    "mywarps",
+
+                    // 🔹 NEW: /pw use <warp> <password>
+                    "use"
             ));
 
             // Also allow directly typing warp names as first arg: /pw <warp>
@@ -86,7 +88,6 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                     .sorted(String.CASE_INSENSITIVE_ORDER)
                     .collect(Collectors.toList());
         }
-
 
         // /pw <sub> ...
         if (args.length == 2) {
@@ -112,6 +113,21 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                     List<String> actions = Arrays.asList("enable", "disable", "list", "set", "remove");
                     return actions.stream()
                             .filter(a -> a.startsWith(prefix))
+                            .collect(Collectors.toList());
+                }
+
+                // /pw use <warp> <password>
+                case "use" -> {
+                    // Suggest only warps that actually have a password set
+                    return safeListAll().stream()
+                            .filter(w -> {
+                                String pwd = w.getPassword();
+                                return pwd != null && !pwd.isEmpty();
+                            })
+                            .map(PlayerWarp::getName)
+                            .filter(Objects::nonNull)
+                            .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
+                            .sorted(String.CASE_INSENSITIVE_ORDER)
                             .collect(Collectors.toList());
                 }
 
@@ -203,6 +219,11 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                     return amounts.stream()
                             .filter(a -> a.startsWith(prefix))
                             .collect(Collectors.toList());
+                }
+
+                // /pw use <warp> <password> -> we don't tab-complete the password itself
+                case "use" -> {
+                    return Collections.emptyList();
                 }
 
                 default -> {

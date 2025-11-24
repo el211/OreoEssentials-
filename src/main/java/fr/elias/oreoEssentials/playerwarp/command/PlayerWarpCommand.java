@@ -1,12 +1,10 @@
-package fr.elias.oreoEssentials.commands.core.playercommands;
+package fr.elias.oreoEssentials.playerwarp.command;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.playerwarp.PlayerWarp;
 import fr.elias.oreoEssentials.playerwarp.PlayerWarpService;
-import fr.elias.oreoEssentials.playerwarp.PlayerWarpCrossServerBroker;
 import fr.elias.oreoEssentials.util.Lang;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -21,24 +19,37 @@ public class PlayerWarpCommand implements OreoCommand {
 
     private final PlayerWarpService service;
 
-    // extra per-player warp allowance (in addition to service.getLimit(player))
+    // Extra per-player warp allowance (in addition to service.getLimit(player))
     private final Map<UUID, Integer> extraWarps = new HashMap<>();
 
     public PlayerWarpCommand(PlayerWarpService service) {
         this.service = service;
     }
 
-    @Override public String name() { return "pw"; }
-    @Override public List<String> aliases() { return List.of("playerwarp", "pwarp"); }
-    @Override public String permission() { return "oe.pw.base"; }
+    @Override
+    public String name() {
+        return "pw";
+    }
+
+    @Override
+    public List<String> aliases() {
+        return List.of("playerwarp", "pwarp");
+    }
+
+    @Override
+    public String permission() {
+        return "oe.pw.base";
+    }
 
     @Override
     public String usage() {
-        return "help|set|remove|list|amount|rtp|near|reset|rename|setowner|removeall|reload|addwarps|whitelist|desc|category|lock|icon|cost|managers|password|gui|mywarps|<warp>";
+        return "help|set|remove|list|amount|rtp|near|reset|rename|setowner|removeall|reload|addwarps|whitelist|desc|category|lock|icon|cost|managers|password|use|gui|mywarps|<warp>";
     }
 
-
-    @Override public boolean playerOnly() { return false; }
+    @Override
+    public boolean playerOnly() {
+        return false;
+    }
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
@@ -73,9 +84,7 @@ public class PlayerWarpCommand implements OreoCommand {
                     return true;
                 }
                 if (args.length < 2) {
-                    Lang.send(actor, "pw.usage-set",
-                            Map.of("label", label),
-                            actor);
+                    Lang.send(actor, "pw.usage-set", Map.of("label", label), actor);
                     return true;
                 }
                 String name = args[1];
@@ -84,8 +93,8 @@ public class PlayerWarpCommand implements OreoCommand {
                 int extra = extraWarps.getOrDefault(actor.getUniqueId(), 0);
                 int effectiveLimit = baseLimit + extra;
 
-                if (!service.isUnderLimit(actor, effectiveLimit) &&
-                        !actor.hasPermission("oe.pw.limit.bypass")) {
+                if (!service.isUnderLimit(actor, effectiveLimit)
+                        && !actor.hasPermission("oe.pw.limit.bypass")) {
                     Lang.send(actor, "pw.limit-reached",
                             Map.of("limit", String.valueOf(effectiveLimit)),
                             actor);
@@ -114,7 +123,6 @@ public class PlayerWarpCommand implements OreoCommand {
                     sender.sendMessage("§cOnly players can use /pw gui.");
                     return true;
                 }
-                // optional: permission check
                 if (!actor.hasPermission("oe.pw.gui")) {
                     Lang.send(actor, "pw.no-permission-list", Map.of(), actor);
                     return true;
@@ -139,7 +147,6 @@ public class PlayerWarpCommand implements OreoCommand {
                 return true;
             }
 
-
             /* --------------------------------------------------------
              * /pw remove <warp>
              * -------------------------------------------------------- */
@@ -149,9 +156,7 @@ public class PlayerWarpCommand implements OreoCommand {
                     return true;
                 }
                 if (args.length < 2) {
-                    Lang.send(actor, "pw.usage-remove",
-                            Map.of("label", label),
-                            actor);
+                    Lang.send(actor, "pw.usage-remove", Map.of("label", label), actor);
                     return true;
                 }
                 String name = args[1];
@@ -162,8 +167,8 @@ public class PlayerWarpCommand implements OreoCommand {
                             actor);
                     return true;
                 }
-                if (!actor.hasPermission("oe.pw.remove") &&
-                        !actor.hasPermission("oe.pw.admin.remove")) {
+                if (!actor.hasPermission("oe.pw.remove")
+                        && !actor.hasPermission("oe.pw.admin.remove")) {
                     Lang.send(actor, "pw.no-permission-remove", Map.of(), actor);
                     return true;
                 }
@@ -195,14 +200,14 @@ public class PlayerWarpCommand implements OreoCommand {
                         sender.sendMessage("§cPlayer '" + targetName + "' is not online (for now only online lookups).");
                         return true;
                     }
-                    var warps = service.listByOwner(target.getUniqueId());
+                    List<PlayerWarp> warps = service.listByOwner(target.getUniqueId());
                     sendList(sender, target.getName(), warps);
                 } else {
                     if (actor == null) {
-                        var warps = service.listAll();
+                        List<PlayerWarp> warps = service.listAll();
                         sendList(sender, "ALL", warps);
                     } else {
-                        var warps = service.listByOwner(actor.getUniqueId());
+                        List<PlayerWarp> warps = service.listByOwner(actor.getUniqueId());
                         sendList(sender, actor.getName(), warps);
                     }
                 }
@@ -227,7 +232,8 @@ public class PlayerWarpCommand implements OreoCommand {
                     }
                     int count = service.getWarpCount(target);
                     Lang.send(sender, "pw.amount-other",
-                            Map.of("player", target.getName(), "amount", String.valueOf(count)),
+                            Map.of("player", target.getName(),
+                                    "amount", String.valueOf(count)),
                             actor);
                 } else {
                     if (actor == null) {
@@ -263,6 +269,7 @@ public class PlayerWarpCommand implements OreoCommand {
 
                 List<PlayerWarp> usable = all.stream()
                         .filter(w -> service.canUse(actor, w))
+                        .filter(w -> !isPasswordProtected(w, actor)) // don't rtp into password-protected warps
                         .collect(Collectors.toList());
 
                 if (usable.isEmpty()) {
@@ -271,7 +278,6 @@ public class PlayerWarpCommand implements OreoCommand {
                 }
 
                 PlayerWarp targetWarp = usable.get(new Random().nextInt(usable.size()));
-
                 teleportWithRouting(plugin, actor, targetWarp);
                 return true;
             }
@@ -293,7 +299,8 @@ public class PlayerWarpCommand implements OreoCommand {
                 if (args.length >= 2) {
                     try {
                         page = Math.max(1, Integer.parseInt(args[1]));
-                    } catch (NumberFormatException ignored) {}
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
 
                 double maxDistance = 200.0;
@@ -347,9 +354,7 @@ public class PlayerWarpCommand implements OreoCommand {
                     return true;
                 }
                 if (args.length < 2) {
-                    Lang.send(actor, "pw.usage-reset",
-                            Map.of("label", label),
-                            actor);
+                    Lang.send(actor, "pw.usage-reset", Map.of("label", label), actor);
                     return true;
                 }
                 String name = args[1];
@@ -389,9 +394,7 @@ public class PlayerWarpCommand implements OreoCommand {
                     return true;
                 }
                 if (args.length < 3) {
-                    Lang.send(actor, "pw.usage-rename",
-                            Map.of("label", label),
-                            actor);
+                    Lang.send(actor, "pw.usage-rename", Map.of("label", label), actor);
                     return true;
                 }
                 String oldName = args[1];
@@ -487,7 +490,7 @@ public class PlayerWarpCommand implements OreoCommand {
                 }
                 String targetName = args[1];
                 Player target = Bukkit.getPlayerExact(targetName);
-                OfflinePlayer off = target != null ? target : Bukkit.getOfflinePlayer(targetName);
+                OfflinePlayer off = (target != null ? target : Bukkit.getOfflinePlayer(targetName));
                 if (off == null || off.getUniqueId() == null) {
                     sender.sendMessage("§cCould not resolve player '" + targetName + "'.");
                     return true;
@@ -539,7 +542,7 @@ public class PlayerWarpCommand implements OreoCommand {
                 String amountStr = args[2];
 
                 Player target = Bukkit.getPlayerExact(targetName);
-                OfflinePlayer off = target != null ? target : Bukkit.getOfflinePlayer(targetName);
+                OfflinePlayer off = (target != null ? target : Bukkit.getOfflinePlayer(targetName));
                 if (off == null || off.getUniqueId() == null) {
                     sender.sendMessage("§cCould not resolve player '" + targetName + "'.");
                     return true;
@@ -576,8 +579,8 @@ public class PlayerWarpCommand implements OreoCommand {
                     return true;
                 }
 
-                if (!actor.hasPermission("oe.pw.whitelist") &&
-                        !actor.hasPermission("oe.pw.admin.whitelist")) {
+                if (!actor.hasPermission("oe.pw.whitelist")
+                        && !actor.hasPermission("oe.pw.admin.whitelist")) {
                     Lang.send(actor, "pw.no-permission-whitelist", Map.of(), actor);
                     return true;
                 }
@@ -690,7 +693,7 @@ public class PlayerWarpCommand implements OreoCommand {
                                                 "player", off.getName() == null ? targetName : off.getName()),
                                         actor);
                             }
-                        } else {
+                        } else { // remove
                             if (wl.remove(targetId)) {
                                 service.saveWarp(warp);
                                 Lang.send(actor, "pw.whitelist-removed",
@@ -738,7 +741,8 @@ public class PlayerWarpCommand implements OreoCommand {
                 if (warp == null && actor.hasPermission("oe.pw.admin.meta")) {
                     warp = service.listAll().stream()
                             .filter(w -> w.getName().equalsIgnoreCase(warpName))
-                            .findFirst().orElse(null);
+                            .findFirst()
+                            .orElse(null);
                 }
                 if (warp == null) {
                     Lang.send(actor, "pw.not-found-owner",
@@ -799,7 +803,8 @@ public class PlayerWarpCommand implements OreoCommand {
                 if (warp == null && actor.hasPermission("oe.pw.admin.meta")) {
                     warp = service.listAll().stream()
                             .filter(w -> w.getName().equalsIgnoreCase(warpName))
-                            .findFirst().orElse(null);
+                            .findFirst()
+                            .orElse(null);
                 }
                 if (warp == null) {
                     Lang.send(actor, "pw.not-found-owner",
@@ -823,7 +828,9 @@ public class PlayerWarpCommand implements OreoCommand {
                 }
 
                 String cat = args[2];
-                if (cat.equalsIgnoreCase("none") || cat.equalsIgnoreCase("clear") || cat.equalsIgnoreCase("-")) {
+                if (cat.equalsIgnoreCase("none")
+                        || cat.equalsIgnoreCase("clear")
+                        || cat.equalsIgnoreCase("-")) {
                     warp.setCategory("");
                     service.saveWarp(warp);
                     Lang.send(actor, "pw.category-cleared",
@@ -861,7 +868,8 @@ public class PlayerWarpCommand implements OreoCommand {
                 if (warp == null && actor.hasPermission("oe.pw.admin.meta")) {
                     warp = service.listAll().stream()
                             .filter(w -> w.getName().equalsIgnoreCase(warpName))
-                            .findFirst().orElse(null);
+                            .findFirst()
+                            .orElse(null);
                 }
                 if (warp == null) {
                     Lang.send(actor, "pw.not-found-owner",
@@ -915,7 +923,8 @@ public class PlayerWarpCommand implements OreoCommand {
                 if (warp == null && actor.hasPermission("oe.pw.admin.meta")) {
                     warp = service.listAll().stream()
                             .filter(w -> w.getName().equalsIgnoreCase(warpName))
-                            .findFirst().orElse(null);
+                            .findFirst()
+                            .orElse(null);
                 }
                 if (warp == null) {
                     Lang.send(actor, "pw.not-found-owner",
@@ -924,8 +933,9 @@ public class PlayerWarpCommand implements OreoCommand {
                     return true;
                 }
 
-                if (args.length >= 3 &&
-                        (args[2].equalsIgnoreCase("clear") || args[2].equalsIgnoreCase("none"))) {
+                if (args.length >= 3
+                        && (args[2].equalsIgnoreCase("clear")
+                        || args[2].equalsIgnoreCase("none"))) {
                     warp.setIcon(null);
                     service.saveWarp(warp);
                     Lang.send(actor, "pw.icon-cleared",
@@ -972,7 +982,8 @@ public class PlayerWarpCommand implements OreoCommand {
                 if (warp == null && actor.hasPermission("oe.pw.admin.meta")) {
                     warp = service.listAll().stream()
                             .filter(w -> w.getName().equalsIgnoreCase(warpName))
-                            .findFirst().orElse(null);
+                            .findFirst()
+                            .orElse(null);
                 }
                 if (warp == null) {
                     Lang.send(actor, "pw.not-found-owner",
@@ -1010,8 +1021,6 @@ public class PlayerWarpCommand implements OreoCommand {
 
             /* --------------------------------------------------------
              * /pw managers <warp> [player]
-             * - /pw managers place1           -> list
-             * - /pw managers place1 Neko     -> toggle add/remove
              * -------------------------------------------------------- */
             case "managers" -> {
                 if (actor == null) {
@@ -1032,7 +1041,8 @@ public class PlayerWarpCommand implements OreoCommand {
                 if (warp == null && actor.hasPermission("oe.pw.admin.meta")) {
                     warp = service.listAll().stream()
                             .filter(w -> w.getName().equalsIgnoreCase(warpName))
-                            .findFirst().orElse(null);
+                            .findFirst()
+                            .orElse(null);
                 }
                 if (warp == null) {
                     Lang.send(actor, "pw.not-found-owner",
@@ -1051,7 +1061,7 @@ public class PlayerWarpCommand implements OreoCommand {
                     } else {
                         for (UUID u : managers) {
                             OfflinePlayer off = Bukkit.getOfflinePlayer(u);
-                            String name = off.getName() != null ? off.getName() : u.toString();
+                            String name = (off.getName() != null ? off.getName() : u.toString());
                             actor.sendMessage("§7- §a" + name);
                         }
                     }
@@ -1077,7 +1087,7 @@ public class PlayerWarpCommand implements OreoCommand {
                     service.saveWarp(warp);
                     Lang.send(actor, "pw.manager-removed",
                             Map.of("warp", warp.getName(),
-                                    "player", off.getName() == null ? targetName : off.getName()),
+                                    "player", (off.getName() == null ? targetName : off.getName())),
                             actor);
                 } else {
                     managers.add(id);
@@ -1085,7 +1095,7 @@ public class PlayerWarpCommand implements OreoCommand {
                     service.saveWarp(warp);
                     Lang.send(actor, "pw.manager-added",
                             Map.of("warp", warp.getName(),
-                                    "player", off.getName() == null ? targetName : off.getName()),
+                                    "player", (off.getName() == null ? targetName : off.getName())),
                             actor);
                 }
                 return true;
@@ -1115,7 +1125,8 @@ public class PlayerWarpCommand implements OreoCommand {
                 if (warp == null && actor.hasPermission("oe.pw.admin.meta")) {
                     warp = service.listAll().stream()
                             .filter(w -> w.getName().equalsIgnoreCase(warpName))
-                            .findFirst().orElse(null);
+                            .findFirst()
+                            .orElse(null);
                 }
                 if (warp == null) {
                     Lang.send(actor, "pw.not-found-owner",
@@ -1144,6 +1155,60 @@ public class PlayerWarpCommand implements OreoCommand {
             }
 
             /* --------------------------------------------------------
+             * /pw use <warp> <password>
+             * -------------------------------------------------------- */
+            case "use" -> {
+                if (actor == null) {
+                    sender.sendMessage("§cOnly players can use password-protected warps.");
+                    return true;
+                }
+                if (args.length < 3) {
+                    Lang.send(actor, "pw.usage-use", Map.of("label", label), actor);
+                    return true;
+                }
+
+                String warpName = args[1];
+                String givenPassword = args[2];
+
+                PlayerWarp targetWarp = service.listAll().stream()
+                        .filter(w -> w.getName().equalsIgnoreCase(warpName))
+                        .findFirst()
+                        .orElse(null);
+
+                if (targetWarp == null) {
+                    Lang.send(actor, "pw.not-found",
+                            Map.of("name", warpName.toLowerCase(Locale.ROOT)),
+                            actor);
+                    return true;
+                }
+
+                // Basic access check (lock, perms, cost, whitelist, etc.)
+                if (!service.canUse(actor, targetWarp)) {
+                    Lang.send(actor, "pw.no-permission-warp",
+                            Map.of("name", targetWarp.getName()),
+                            actor);
+                    return true;
+                }
+
+                String realPassword = targetWarp.getPassword();
+                if (realPassword == null || realPassword.isEmpty()) {
+                    // No password anymore, just behave like normal teleport.
+                    teleportWithRouting(plugin, actor, targetWarp);
+                    return true;
+                }
+
+                if (!realPassword.equals(givenPassword)) {
+                    Lang.send(actor, "pw.password-wrong",
+                            Map.of("warp", targetWarp.getName()),
+                            actor);
+                    return true;
+                }
+
+                teleportWithRouting(plugin, actor, targetWarp);
+                return true;
+            }
+
+            /* --------------------------------------------------------
              * /pw <warp> (fallback)
              * -------------------------------------------------------- */
             default -> {
@@ -1165,6 +1230,14 @@ public class PlayerWarpCommand implements OreoCommand {
                     return true;
                 }
 
+                // Check password first: direct /pw <warp> requires /pw use <warp> <password>
+                if (isPasswordProtected(targetWarp, actor)) {
+                    Lang.send(actor, "pw.password-required",
+                            Map.of("warp", targetWarp.getName()),
+                            actor);
+                    return true;
+                }
+
                 if (!service.canUse(actor, targetWarp)) {
                     Lang.send(actor, "pw.no-permission-warp",
                             Map.of("name", targetWarp.getName()),
@@ -1181,91 +1254,15 @@ public class PlayerWarpCommand implements OreoCommand {
     // ----------------- Helpers -----------------
 
     private void teleportWithRouting(OreoEssentials plugin, Player actor, PlayerWarp targetWarp) {
-        try {
-            // ----- COST HANDLING -----
-            double cost = targetWarp.getCost();
-            if (cost > 0 && !actor.getUniqueId().equals(targetWarp.getOwner())) {
-                Economy eco = plugin.getVaultEconomy(); // doit exister dans ton main
-                if (eco == null) {
-                    Lang.send(actor, "pw.cost-no-economy",
-                            Map.of("amount", String.valueOf(cost)),
-                            actor);
-                    return;
-                }
-
-                if (!eco.has(actor, cost)) {
-                    Lang.send(actor, "pw.cost-insufficient",
-                            Map.of("amount", String.valueOf(cost)),
-                            actor);
-                    return;
-                }
-
-                OfflinePlayer owner = Bukkit.getOfflinePlayer(targetWarp.getOwner());
-                eco.withdrawPlayer(actor, cost);
-                if (owner != null) {
-                    eco.depositPlayer(owner, cost);
-                }
-
-                String ownerName = (owner != null && owner.getName() != null) ? owner.getName() : "Unknown";
-                Lang.send(actor, "pw.cost-charged",
-                        Map.of("amount", String.valueOf(cost),
-                                "owner", ownerName),
-                        actor);
-            }
-
-            // ----- ROUTING LOCAL / CROSS-SERVER -----
-            final String localServer = plugin.getConfigService().serverName();
-            String targetServer = service.getWarpServer(targetWarp, localServer);
-
-            var cs = plugin.getCrossServerSettings();
-            boolean crossEnabled = cs != null && cs.warps();
-            boolean sameServer = (targetServer == null)
-                    || targetServer.equalsIgnoreCase(localServer);
-            boolean messagingAvailable = plugin.isMessagingAvailable();
-
-            if (!crossEnabled || sameServer || !messagingAvailable) {
-                teleportLocal(plugin, actor, targetWarp);
-                return;
-            }
-
-            try {
-                PlayerWarpCrossServerBroker broker = new PlayerWarpCrossServerBroker(
-                        plugin,
-                        service,
-                        plugin.getPacketManager(),
-                        plugin.getProxyMessenger(),
-                        localServer
-                );
-
-                UUID ownerId = targetWarp.getOwner();
-                String warpName = targetWarp.getName();
-
-                broker.requestCrossServerTeleport(
-                        actor,
-                        ownerId,
-                        warpName,
-                        targetServer
-                );
-
-                Lang.send(actor, "pw.sending",
-                        Map.of("server", targetServer, "warp", warpName),
-                        actor);
-            } catch (Exception ex) {
-                plugin.getLogger().warning("[PW] Cross-server teleport failed: " + ex.getMessage());
-                ex.printStackTrace();
-                Lang.send(actor, "pw.messaging-disabled",
-                        Map.of("server", targetServer, "warp", targetWarp.getName()),
-                        actor);
-            }
-        } catch (Exception ex) {
-            plugin.getLogger().warning("[PW] teleportWithRouting failed: " + ex.getMessage());
-            ex.printStackTrace();
+        boolean ok = service.teleportToPlayerWarp(actor, targetWarp.getOwner(), targetWarp.getName());
+        if (!ok) {
             Lang.send(actor, "pw.teleport-failed",
-                    Map.of("error", ex.getMessage() == null ? "unknown" : ex.getMessage()),
+                    Map.of("error", "unknown"),
                     actor);
         }
     }
 
+    @SuppressWarnings("unused")
     private void teleportLocal(OreoEssentials plugin, Player actor, PlayerWarp targetWarp) {
         try {
             Location loc = targetWarp.getLocation();
@@ -1288,6 +1285,7 @@ public class PlayerWarpCommand implements OreoCommand {
         s.sendMessage("§b/" + label + " help §7- Show this help.");
         s.sendMessage("§b/" + label + " set <name> §7- Set a warp at your location.");
         s.sendMessage("§b/" + label + " <warp> §7- Teleport to a player warp.");
+        s.sendMessage("§b/" + label + " use <warp> <password> §7- Use a password-protected warp.");
         s.sendMessage("§b/" + label + " list [player] §7- List player warps.");
         s.sendMessage("§b/" + label + " amount [player] §7- Show warp count.");
         s.sendMessage("§b/" + label + " rtp §7- Teleport to a random warp.");
@@ -1307,13 +1305,28 @@ public class PlayerWarpCommand implements OreoCommand {
         s.sendMessage("§b/" + label + " cost <warp> <amount> §7- Set teleport price.");
         s.sendMessage("§b/" + label + " managers <warp> [player] §7- List or toggle managers.");
         s.sendMessage("§b/" + label + " password <warp> <pwd|off> §7- Set or clear password.");
+        s.sendMessage("§b/" + label + " gui §7- Open the global player warp browser.");
+        s.sendMessage("§b/" + label + " mywarps §7- Open your personal warp manager.");
         s.sendMessage("§8§m------------------------");
+    }
+
+    private boolean isPasswordProtected(PlayerWarp warp, Player player) {
+        String pwd = warp.getPassword();
+        if (pwd == null || pwd.isEmpty()) return false;
+
+        UUID uuid = player.getUniqueId();
+
+        if (warp.getOwner().equals(uuid)) return false;
+        if (warp.getManagers() != null && warp.getManagers().contains(uuid)) return false;
+        if (player.hasPermission("oe.pw.bypass.password")) return false;
+
+        return true;
     }
 
     private void sendList(CommandSender sender, String ownerName, List<PlayerWarp> warps) {
         sender.sendMessage("§8§m------------------------");
         sender.sendMessage("§bPlayer warps for §e" + ownerName + "§7:");
-        if (warps.isEmpty()) {
+        if (warps == null || warps.isEmpty()) {
             sender.sendMessage("§7  (none)");
         } else {
             for (PlayerWarp w : warps) {

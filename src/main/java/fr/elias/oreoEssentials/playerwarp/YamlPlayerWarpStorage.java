@@ -2,11 +2,11 @@
 package fr.elias.oreoEssentials.playerwarp;
 
 import fr.elias.oreoEssentials.OreoEssentials;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,11 +28,20 @@ import java.util.stream.Collectors;
  *     z: 0.0
  *     yaw: 0.0
  *     pitch: 0.0
+ *     description: "..."
+ *     category: "..."
+ *     locked: false
+ *     cost: 0.0
+ *     icon: <ItemStack>
  *     whitelist:
  *       enabled: true
  *       players:
  *         - "uuid1"
  *         - "uuid2"
+ *     managers:
+ *       - "uuid1"
+ *       - "uuid2"
+ *     password: "changeme"
  */
 public class YamlPlayerWarpStorage implements PlayerWarpStorage {
 
@@ -129,7 +138,7 @@ public class YamlPlayerWarpStorage implements PlayerWarpStorage {
             return null;
         }
 
-        // NEW: whitelist fields
+        // --- whitelist fields (legacy-safe) ---
         boolean whitelistEnabled = sec.getBoolean("whitelist.enabled", false);
         List<String> wlRaw = sec.getStringList("whitelist.players");
         Set<UUID> wl = new HashSet<>();
@@ -140,8 +149,37 @@ public class YamlPlayerWarpStorage implements PlayerWarpStorage {
             }
         }
 
-        // use NEW constructor
-        return new PlayerWarp(warpId, owner, name, loc, whitelistEnabled, wl);
+        // Base object
+        PlayerWarp warp = new PlayerWarp(warpId, owner, name, loc, whitelistEnabled, wl);
+
+        // --- extra metadata ---
+        warp.setDescription(sec.getString("description", ""));
+        warp.setCategory(sec.getString("category", ""));
+        warp.setLocked(sec.getBoolean("locked", false));
+        warp.setCost(sec.getDouble("cost", 0.0D));
+
+        // --- icon (ItemStack) ---
+        Object rawIcon = sec.get("icon");
+        if (rawIcon instanceof ItemStack icon) {
+            warp.setIcon(icon);
+        }
+
+        // --- managers ---
+        List<String> managersRaw = sec.getStringList("managers");
+        Set<UUID> managers = new HashSet<>();
+        for (String s : managersRaw) {
+            try {
+                managers.add(UUID.fromString(s));
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        warp.setManagers(managers);
+
+        // --- password ---
+        String pwd = sec.getString("password", null);
+        warp.setPassword(pwd); // PlayerWarp normalizes null/empty
+
+        return warp;
     }
 
     private void toSection(String id, PlayerWarp warp, ConfigurationSection root) {
@@ -162,12 +200,30 @@ public class YamlPlayerWarpStorage implements PlayerWarpStorage {
         sec.set("yaw", loc.getYaw());
         sec.set("pitch", loc.getPitch());
 
-        // NEW whitelist fields
+        // --- extra metadata ---
+        sec.set("description", warp.getDescription());
+        sec.set("category", warp.getCategory());
+        sec.set("locked", warp.isLocked());
+        sec.set("cost", warp.getCost());
+
+        // icon (Bukkit handles ItemStack serialization)
+        sec.set("icon", warp.getIcon());
+
+        // --- whitelist ---
         sec.set("whitelist.enabled", warp.isWhitelistEnabled());
         List<String> wl = warp.getWhitelist().stream()
                 .map(UUID::toString)
                 .collect(Collectors.toList());
         sec.set("whitelist.players", wl);
+
+        // --- managers ---
+        List<String> managers = warp.getManagers().stream()
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        sec.set("managers", managers);
+
+        // --- password ---
+        sec.set("password", warp.getPassword());
     }
 
     /* --------------------------------------------------------

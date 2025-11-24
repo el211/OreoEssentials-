@@ -39,7 +39,6 @@ public class PlayerWarpEditMenu implements InventoryProvider {
                 .open(player);
     }
 
-
     @Override
     public void init(Player player, InventoryContents contents) {
         // ---------- CENTER INFO ----------
@@ -57,7 +56,10 @@ public class PlayerWarpEditMenu implements InventoryProvider {
 
         List<String> lore = new ArrayList<>();
         OfflinePlayer ownerOff = Bukkit.getOfflinePlayer(warp.getOwner());
-        String ownerName = (ownerOff != null && ownerOff.getName() != null) ? ownerOff.getName() : warp.getOwner().toString();
+        String ownerName = (ownerOff != null && ownerOff.getName() != null)
+                ? ownerOff.getName()
+                : warp.getOwner().toString();
+
         lore.add("§7Owner: §e" + ownerName);
         if (category != null && !category.isEmpty()) {
             lore.add("§7Category: §b" + category);
@@ -218,9 +220,49 @@ public class PlayerWarpEditMenu implements InventoryProvider {
             player.closeInventory();
         }));
 
+        // ---------- PASSWORD TOGGLE ----------
+        boolean hasPwd = warp.getPassword() != null && !warp.getPassword().isEmpty();
+
+        ItemStack pwdItem = new ItemStack(Material.TRIPWIRE_HOOK);
+        ItemMeta pwdMeta = pwdItem.getItemMeta();
+        pwdMeta.setDisplayName("§ePassword protection");
+
+        List<String> pwdLore = new ArrayList<>();
+        pwdLore.add("§7Current: " + (hasPwd ? "§aEnabled" : "§cDisabled"));
+        pwdLore.add("");
+        if (hasPwd) {
+            pwdLore.add("§7Players must use:");
+            pwdLore.add("§f/pw use " + warp.getName() + " <password>");
+            pwdLore.add("");
+            pwdLore.add("§7Left-click: §cClear password");
+        } else {
+            pwdLore.add("§7No password set.");
+            pwdLore.add("§7Use:");
+            pwdLore.add("§f/pw password " + warp.getName() + " <password>");
+            pwdLore.add("");
+            pwdLore.add("§7Left-click: §aSet default password 'changeme'");
+        }
+        pwdMeta.setLore(pwdLore);
+        pwdItem.setItemMeta(pwdMeta);
+
+        contents.set(2, 8, ClickableItem.of(pwdItem, e -> {
+            if (warp.getPassword() == null || warp.getPassword().isEmpty()) {
+                warp.setPassword("changeme");
+                service.saveWarp(warp);
+                Lang.send(player, "pw.password-placeholder-set",
+                        Map.of("warp", warp.getName(), "password", "changeme"),
+                        player);
+            } else {
+                warp.setPassword(null);
+                service.saveWarp(warp);
+                Lang.send(player, "pw.password-cleared",
+                        Map.of("warp", warp.getName()),
+                        player);
+            }
+            open(player, service, warp, categoryFilter); // refresh GUI
+        }));
+
         // ---------- META / COMMAND HINTS ROW ----------
-        // This row does not execute commands (because they need extra args),
-        // it just tells the player which command to run.
         ItemStack metaItem = new ItemStack(Material.BOOK);
         ItemMeta metaMeta = metaItem.getItemMeta();
         metaMeta.setDisplayName("§bAdvanced settings");
@@ -255,10 +297,10 @@ public class PlayerWarpEditMenu implements InventoryProvider {
                 result.add(current.toString());
                 current.setLength(0);
             }
-            if (!current.isEmpty()) current.append(" ");
+            if (current.length() > 0) current.append(" ");
             current.append(w);
         }
-        if (!current.isEmpty()) {
+        if (current.length() > 0) {
             result.add(current.toString());
         }
         return result;

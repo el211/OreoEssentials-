@@ -625,6 +625,8 @@ pw:
   password-set: "%prefix%&aPassword set for warp &b%warp%&a."
   password-cleared: "%prefix%&aPassword cleared for warp &b%warp%&a."
   cost-not-enough: "%prefix%&cYou need &e%amount%&c to use this player warp."
+  password-wrong: "%prefix% &cWrong password for warp &e%warp%&c."
+  password-not-required: "%prefix% &7Warp &e%warp% &7doesn't require a password."
 
 teleport:
   countdown:

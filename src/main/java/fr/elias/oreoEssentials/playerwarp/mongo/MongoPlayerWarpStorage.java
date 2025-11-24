@@ -1,12 +1,11 @@
 // src/main/java/fr/elias/oreoEssentials/services/mongoservices/MongoPlayerWarpStorage.java
-package fr.elias.oreoEssentials.services.mongoservices;
+package fr.elias.oreoEssentials.playerwarp.mongo;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
-import com.mongodb.client.model.ReplaceOptions;
 import fr.elias.oreoEssentials.playerwarp.PlayerWarp;
 import fr.elias.oreoEssentials.playerwarp.PlayerWarpStorage;
 import org.bson.Document;
@@ -14,7 +13,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
-
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,9 +36,14 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
     private static final String F_LOCKED   = "locked";
     private static final String F_COST     = "cost";
     private static final String F_ICON     = "icon";
+
     // Whitelist
     private static final String F_WL_ENABLED = "whitelist_enabled";
     private static final String F_WL_PLAYERS = "whitelist_players";
+
+    // NEW: managers & password
+    private static final String F_MANAGERS = "managers";
+    private static final String F_PASSWORD = "password";
 
     private final MongoCollection<Document> col;
 
@@ -70,7 +73,7 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         col.replaceOne(
                 Filters.eq(F_ID, warp.getId()),
                 d,
-                new ReplaceOptions().upsert(true)
+                new com.mongodb.client.model.ReplaceOptions().upsert(true)
         );
     }
 
@@ -150,18 +153,37 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         d.put(F_CATEGORY, warp.getCategory());
         d.put(F_LOCKED, warp.isLocked());
         d.put(F_COST, warp.getCost());
+
         // Icon (serialized map)
         if (warp.getIcon() != null) {
             d.put(F_ICON, warp.getIcon().serialize());
         } else {
             d.remove(F_ICON);
         }
+
         // Whitelist
         d.put(F_WL_ENABLED, warp.isWhitelistEnabled());
         List<String> wl = warp.getWhitelist().stream()
                 .map(UUID::toString)
                 .collect(Collectors.toList());
         d.put(F_WL_PLAYERS, wl);
+
+        // NEW: managers
+        if (warp.getManagers() != null && !warp.getManagers().isEmpty()) {
+            List<String> mgr = warp.getManagers().stream()
+                    .map(UUID::toString)
+                    .collect(Collectors.toList());
+            d.put(F_MANAGERS, mgr);
+        } else {
+            d.remove(F_MANAGERS);
+        }
+
+        // NEW: password
+        if (warp.getPassword() != null && !warp.getPassword().isEmpty()) {
+            d.put(F_PASSWORD, warp.getPassword());
+        } else {
+            d.remove(F_PASSWORD);
+        }
 
         return d;
     }
@@ -203,13 +225,12 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         boolean whitelistEnabled = d.getBoolean(F_WL_ENABLED, false);
         Set<UUID> whitelist = new HashSet<>();
         Object rawList = d.get(F_WL_PLAYERS);
-        if (rawList instanceof List<?>) {
-            for (Object o : (List<?>) rawList) {
+        if (rawList instanceof List<?> list) {
+            for (Object o : list) {
                 if (o instanceof String s) {
                     try {
                         whitelist.add(UUID.fromString(s));
-                    } catch (IllegalArgumentException ignored) {
-                    }
+                    } catch (IllegalArgumentException ignored) { }
                 }
             }
         }
@@ -222,6 +243,7 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         warp.setCategory(d.getString(F_CATEGORY));
         warp.setLocked(d.getBoolean(F_LOCKED, false));
         warp.setCost(num(d, F_COST, 0.0));
+
         // Icon
         Object rawIcon = d.get(F_ICON);
         if (rawIcon instanceof Map<?, ?> rawMap) {
@@ -234,6 +256,25 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
                 // if something is wrong with stored data, just ignore and keep default icon
             }
         }
+
+        // NEW: managers
+        Object rawMgrList = d.get(F_MANAGERS);
+        Set<UUID> managers = new HashSet<>();
+        if (rawMgrList instanceof List<?> mgrList) {
+            for (Object o : mgrList) {
+                if (o instanceof String s) {
+                    try {
+                        managers.add(UUID.fromString(s));
+                    } catch (IllegalArgumentException ignored) { }
+                }
+            }
+        }
+        warp.setManagers(managers);
+
+        // NEW: password
+        String pwd = d.getString(F_PASSWORD);
+        warp.setPassword(pwd); // PlayerWarp already normalizes null / empty
+
         return warp;
     }
 
