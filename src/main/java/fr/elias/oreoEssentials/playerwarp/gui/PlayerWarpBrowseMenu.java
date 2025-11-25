@@ -21,7 +21,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
@@ -68,13 +68,13 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
             PlayerWarp warp = allWarps.get(i);
             items[i] = ClickableItem.of(buildWarpItem(player, warp), e -> {
 
-                // If password-protected for this player → open anvil password prompt
+                // If password-protected for this player → open password prompt
                 if (isPasswordProtectedFor(player, warp)) {
                     Lang.send(player, "pw.password-required",
                             Map.of("warp", warp.getName()),
                             player);
 
-                    openPasswordAnvil(player, warp);
+                    openPasswordChatPrompt(player, warp);
                     return;
                 }
 
@@ -121,83 +121,84 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
     }
 
     // ------------------------------------------------------------------------
-    // PASSWORD ANVIL PROMPT
+    // PASSWORD CHAT PROMPT
     // ------------------------------------------------------------------------
 
     /**
-     * Opens an anvil GUI where the player types the password by renaming a paper
-     * and confirming by clicking the result item.
+     * Asks the player to type the password in chat.
+     * The next chat message from this player is captured as the password.
      */
-    private void openPasswordAnvil(Player player, PlayerWarp warp) {
+    private void openPasswordChatPrompt(Player player, PlayerWarp warp) {
         OreoEssentials plugin = OreoEssentials.get();
 
-        // Create an anvil inventory for this player
-        Inventory anvil = Bukkit.createInventory(player, InventoryType.ANVIL,
-                ChatColor.AQUA + "Enter password for " + warp.getName());
+        // Close the GUI so they clearly see the chat prompt
+        InventoryView view = player.getOpenInventory();
+        if (view != null) {
+            Inventory top = view.getTopInventory();
+            if (top != null) {
+                player.closeInventory();
+            }
+        }
 
-        // Left input: paper with a hint name
-        ItemStack paper = new ItemStack(Material.PAPER);
-        ItemMeta meta = paper.getItemMeta();
-        meta.setDisplayName(ChatColor.GRAY + "Type password here");
-        paper.setItemMeta(meta);
-        anvil.setItem(0, paper);
+        plugin.getLogger().info("[OreoEssentials] [OreoEssentials] [PW/DEBUG] [CHAT] Waiting for password in chat for player "
+                + player.getName() + " warp=" + warp.getName());
 
-        // Open it
-        InventoryView view = player.openInventory(anvil);
+        // Optional extra hint (you can add a dedicated lang key later if you want)
+        player.sendMessage(ChatColor.YELLOW + "Type the password for warp "
+                + ChatColor.AQUA + warp.getName()
+                + ChatColor.YELLOW + " in chat, or type "
+                + ChatColor.RED + "cancel"
+                + ChatColor.YELLOW + " to abort.");
 
-        // Temporary listener bound to this inventory + player
         Listener listener = new Listener() {
 
             @EventHandler
-            public void onClick(InventoryClickEvent event) {
-                if (!(event.getWhoClicked() instanceof Player p)) return;
-                if (!p.getUniqueId().equals(player.getUniqueId())) return;
-                if (event.getInventory() == null) return;
-                if (!event.getInventory().equals(anvil)) return;
-
-                int rawSlot = event.getRawSlot();
-
-                // Only treat result slot (2) as confirm
-                if (rawSlot != 2) {
-                    // Allow normal typing/renaming on input
-                    event.setCancelled(false);
+            public void onChat(AsyncPlayerChatEvent event) {
+                if (!event.getPlayer().getUniqueId().equals(player.getUniqueId())) {
                     return;
                 }
 
-                // Result slot clicked: confirm password
+                // This is our player → capture this message as the password attempt
                 event.setCancelled(true);
-
-                ItemStack resultItem = event.getInventory().getItem(2);
-                if (resultItem == null || !resultItem.hasItemMeta() ||
-                        !resultItem.getItemMeta().hasDisplayName()) {
-
-                    p.closeInventory();
-                    // Use lang-based title for "no password entered"
-                    Lang.sendTitle(p,
-                            "pw.password-title-empty",
-                            "pw.password-subtitle-empty",
-                            Map.of("warp", warp.getName()));
-                    HandlerList.unregisterAll(this);
-                    return;
-                }
-
-                String typed = ChatColor.stripColor(resultItem.getItemMeta().getDisplayName());
-                if (typed == null) typed = "";
-
-                p.closeInventory();
                 HandlerList.unregisterAll(this);
 
-                handlePasswordResult(p, warp, typed);
+                String msg = event.getMessage();
+                if (msg == null) msg = "";
+
+                String typed = msg.trim();
+
+                OreoEssentials.get().getLogger().info(
+                        "[OreoEssentials] [OreoEssentials] [PW/DEBUG] [CHAT] Player "
+                                + player.getName() + " typed password='" + typed + "' for warp=" + warp.getName()
+                );
+
+                // Handle "cancel"
+                if (typed.equalsIgnoreCase("cancel")) {
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        player.sendMessage(ChatColor.RED + "Password entry cancelled for warp "
+                                + ChatColor.AQUA + warp.getName());
+                    });
+                    return;
+                }
+
+                String finalTyped = typed;
+                // Back to main thread for warp logic / commands
+                Bukkit.getScheduler().runTask(plugin, () -> handlePasswordResult(player, warp, finalTyped));
             }
 
             @EventHandler
             public void onClose(InventoryCloseEvent event) {
+                // Just in case, but GUI is already closed before we register this listener
                 if (!(event.getPlayer() instanceof Player p)) return;
                 if (!p.getUniqueId().equals(player.getUniqueId())) return;
-                if (!event.getInventory().equals(anvil)) return;
 
-                // When player closes the anvil manually, unregister listener
-                HandlerList.unregisterAll(this);
+                // No debug spam here; we mainly care about chat
+            }
+
+            @EventHandler
+            public void onClick(InventoryClickEvent event) {
+                // Player might reopen some inventory while prompt is active,
+                // but we don't care: we only listen to chat.
             }
         };
 
@@ -205,7 +206,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
     }
 
     /**
-     * Called after the player confirmed the password via the anvil.
+     * Called after the player provided a password (via chat).
      */
     private void handlePasswordResult(Player player, PlayerWarp warp, String typedPassword) {
         // Refresh warp from service in case it was changed meanwhile
@@ -219,12 +220,27 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
             Lang.send(player, "pw.not-found",
                     Map.of("name", warp.getName().toLowerCase(Locale.ROOT)),
                     player);
+            OreoEssentials.get().getLogger().info(
+                    "[OreoEssentials] [OreoEssentials] [PW/DEBUG] [CHAT] Warp no longer exists for "
+                            + player.getName() + " warp=" + warp.getName()
+            );
             return;
         }
 
         String realPassword = current.getPassword();
+        OreoEssentials.get().getLogger().info(
+                "[OreoEssentials] [OreoEssentials] [PW/DEBUG] [CHAT] Password check for warp '"
+                        + current.getName()
+                        + "': typed='" + typedPassword + "' (len=" + typedPassword.length() + ")"
+                        + ", stored='" + realPassword + "' (len=" + (realPassword == null ? -1 : realPassword.length()) + ")"
+        );
+
         if (realPassword == null || realPassword.isEmpty()) {
             // No password anymore → behave like normal teleport
+            OreoEssentials.get().getLogger().info(
+                    "[OreoEssentials] [OreoEssentials] [PW/DEBUG] [CHAT] Warp '" + current.getName()
+                            + "' has no password anymore, teleporting normally."
+            );
             boolean ok = service.teleportToPlayerWarp(player, current.getOwner(), current.getName());
             if (!ok) {
                 Lang.send(player, "pw.teleport-failed",
@@ -234,35 +250,25 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
             return;
         }
 
-        if (!realPassword.equals(typedPassword)) {
-            // WRONG PASSWORD
-            Lang.send(player, "pw.password-wrong",
-                    Map.of("warp", current.getName()),
-                    player);
-
-            // Title from lang.yml for wrong password
-            Lang.sendTitle(player,
-                    "pw.password-title-wrong",
-                    "pw.password-subtitle-wrong",
-                    Map.of("warp", current.getName()));
-            return;
-        }
-
-        // Extra access checks (lock, whitelist, cost, perms, etc.)
+        // Extra access checks (lock, whitelist, cost, perms, etc.) BEFORE we even compare
         if (!service.canUse(player, current)) {
             Lang.send(player, "pw.no-permission-warp",
                     Map.of("name", current.getName()),
                     player);
+            OreoEssentials.get().getLogger().info(
+                    "[OreoEssentials] [OreoEssentials] [PW/DEBUG] [CHAT] Player " + player.getName()
+                            + " failed canUse() check for warp='" + current.getName() + "'"
+            );
             return;
         }
 
-        // Correct password → teleport using full routing logic
-        boolean ok = service.teleportToPlayerWarp(player, current.getOwner(), current.getName());
-        if (!ok) {
-            Lang.send(player, "pw.teleport-failed",
-                    Map.of("error", "unknown"),
-                    player);
-        }
+        // Now, to be 100% consistent with commands, we call /pw use <warp> <password>
+        String cmd = "pw use " + current.getName() + " " + typedPassword;
+        OreoEssentials.get().getLogger().info(
+                "[OreoEssentials] [OreoEssentials] [PW/DEBUG] [CHAT] Executing '/" + cmd + "' for " + player.getName()
+        );
+
+        player.performCommand(cmd);
     }
 
     // ------------------------------------------------------------------------
