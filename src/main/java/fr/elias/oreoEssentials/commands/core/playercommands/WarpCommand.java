@@ -129,25 +129,35 @@ public class WarpCommand implements OreoCommand {
             return true;
         }
 
-        // ---- Cooldown / countdown (features.warp.cooldown) ----
+// ---- Cooldown / countdown (features.warp.cooldown) ----
         FileConfiguration settings = plugin.getSettingsConfig().getRoot();
         ConfigurationSection warpSection = settings.getConfigurationSection("features.warp");
         boolean useCooldown = warpSection != null && warpSection.getBoolean("cooldown", false);
         int seconds = (warpSection != null ? warpSection.getInt("cooldown-amount", 0) : 0);
 
-        // If no cooldown or invalid value, just execute immediately
-        if (!useCooldown || seconds <= 0 || target == null) {
+        /*
+         * If:
+         *  - command is run from CONSOLE (actor == null), OR
+         *  - actor is OP, OR
+         *  - cooldown disabled, OR
+         *  - cooldown invalid,
+         * then teleport IMMEDIATELY with no countdown.
+         */
+        boolean actorIsOp = actor != null && actor.isOp();
+
+        if (actor == null || actorIsOp || !useCooldown || seconds <= 0 || target == null) {
             performWarp(plugin, warps, sender, actor, target, warpName);
             return true;
         }
 
-        // Countdown shown to the TARGET player
+        // Countdown shown to the TARGET player (only for non-op in-game actors)
         startCountdown(target, seconds, warpName, () ->
                 performWarp(plugin, warps, sender, actor, target, warpName)
         );
         return true;
 
     }
+
 
     /**
      * Runs the original warp logic (local or cross-server) AFTER the countdown.

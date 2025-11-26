@@ -56,13 +56,18 @@ public class EnderChestListener implements Listener {
             service.open(p);
 
             // Message: enderchest.storage.opened-cross-server
-            p.sendMessage(Lang.msg(
+            String msg = Lang.msg(
                     "enderchest.storage.opened-cross-server",
                     null,
                     p
-            ));
+            );
+
+            if (msg != null && !msg.isEmpty()) {
+                p.sendMessage(msg);
+            }
         }
     }
+
 
     // --------------------------------------------------
     // CLICK PROTECTION (BLOCK LOCKED SLOTS + LOCK ITEMS)

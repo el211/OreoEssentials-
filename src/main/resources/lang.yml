@@ -637,3 +637,14 @@ teleport:
   countdown:
     title: "&aTeleporting..."
     subtitle: "&fIn &e%seconds% &fs"
+    
+moderation:
+  mute:
+    usage: "%prefix%&eUsage: &f/%label% &7<player> <duration> [reason]"
+    player-not-found: "%prefix%&cPlayer not found: &e%target%&c."
+    invalid-duration: "%prefix%&cInvalid duration. Use &e30s&c, &e10m&c, &e2h&c, &e1d&c..."
+    executor:
+      success: "%prefix%&aMuted &b%target% &afor &e%duration%&a%reason_suffix%"
+    target:
+      notified: "%prefix%&cYou have been muted for &e%duration%&c%reason_suffix%"
+    broadcast: "%prefix%&e%staff% &7muted &c%target% &7for &e%duration%&7%reason_suffix%"

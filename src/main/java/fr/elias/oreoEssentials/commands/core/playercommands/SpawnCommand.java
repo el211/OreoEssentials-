@@ -71,6 +71,7 @@ public class SpawnCommand implements OreoCommand {
     /**
      * Local spawn (targetServer == localServer).
      * Applies cooldown (if enabled) and then teleports the player to spawn.
+     * OPs bypass the cooldown.
      */
     private boolean handleLocalSpawn(OreoEssentials plugin, Player p, java.util.logging.Logger log) {
         Location spawnLoc = spawn.getSpawn();
@@ -86,12 +87,16 @@ public class SpawnCommand implements OreoCommand {
         boolean enabled = sec != null && sec.getBoolean("cooldown", false);
         int seconds     = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
 
-        // No cooldown configured -> immediate teleport (legacy behavior)
-        if (!enabled || seconds <= 0) {
+        // OP bypass
+        boolean bypassCooldown = p.isOp();
+
+        // No cooldown configured OR OP -> immediate teleport (legacy behavior)
+        if (bypassCooldown || !enabled || seconds <= 0) {
             try {
                 p.teleport(spawnLoc);
                 Lang.send(p, "spawn.teleported", Map.of(), p);
-                log.info("[SpawnCmd] Local teleport success. loc=" + spawnLoc);
+                log.info("[SpawnCmd] Local teleport success. loc=" + spawnLoc
+                        + (bypassCooldown ? " (bypass cooldown: OP)" : ""));
             } catch (Exception ex) {
                 log.warning("[SpawnCmd] Local teleport exception: " + ex.getMessage());
                 Lang.send(p, "spawn.teleport-failed",
@@ -158,6 +163,7 @@ public class SpawnCommand implements OreoCommand {
     /**
      * Remote spawn: countdown on current server, then send SpawnTeleportRequestPacket
      * + proxy switch via plugin messaging.
+     * OPs bypass the cooldown.
      */
     private boolean handleRemoteSpawn(OreoEssentials plugin,
                                       Player p,
@@ -184,10 +190,16 @@ public class SpawnCommand implements OreoCommand {
         boolean enabled = sec != null && sec.getBoolean("cooldown", false);
         int seconds     = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
 
-        // If no cooldown configured -> behave like before (instant request + server switch)
-        if (!enabled || seconds <= 0) {
-            String requestId = UUID.randomUUID().toString();
-            plugin.getLogger().info("[SPAWN/SEND] (no cooldown) from=" + localServer
+        // OP bypass
+        boolean bypassCooldown = p.isOp();
+
+        final String requestId = UUID.randomUUID().toString();
+
+        // If no cooldown configured OR OP -> behave like before (instant request + server switch)
+        if (bypassCooldown || !enabled || seconds <= 0) {
+            plugin.getLogger().info("[SPAWN/SEND] (no cooldown"
+                    + (bypassCooldown ? " / OP bypass" : "")
+                    + ") from=" + localServer
                     + " player=" + p.getUniqueId()
                     + " -> targetServer=" + targetServer
                     + " requestId=" + requestId);
@@ -202,7 +214,9 @@ public class SpawnCommand implements OreoCommand {
                         Map.of("server", targetServer),
                         p
                 );
-                log.info("[SpawnCmd] Proxy switch initiated (no cooldown). player=" + p.getUniqueId() + " to=" + targetServer);
+                log.info("[SpawnCmd] Proxy switch initiated (no cooldown"
+                        + (bypassCooldown ? " / OP bypass" : "")
+                        + "). player=" + p.getUniqueId() + " to=" + targetServer);
             } else {
                 Lang.send(p, "spawn.switch-failed",
                         Map.of("server", targetServer),
@@ -215,7 +229,6 @@ public class SpawnCommand implements OreoCommand {
 
         // Cooldown enabled: countdown on current server, then send packet + switch.
         final Location origin = p.getLocation().clone();
-        final String requestId = UUID.randomUUID().toString();
 
         plugin.getLogger().info("[SPAWN/SEND] (cooldown) from=" + localServer
                 + " player=" + p.getUniqueId()

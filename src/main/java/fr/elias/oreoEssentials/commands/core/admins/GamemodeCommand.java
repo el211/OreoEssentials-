@@ -23,7 +23,9 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
     @Override public String name() { return "gamemode"; }
     @Override public List<String> aliases() { return List.of("gm"); }
     @Override public String permission() { return "oreo.gamemode"; }
-    @Override public String usage() { return "<survival|creative|spectator|visitor|s|c|sp|v> [player]"; }
+    @Override public String usage() {
+        return "<survival|creative|adventure|spectator|visitor|0|1|2|3|4|s|c|a|sp|v> [player]";
+    }
     @Override public boolean playerOnly() { return false; }
 
     @Override
@@ -74,6 +76,7 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
         switch (mode) {
             case SURVIVAL -> p.setGameMode(GameMode.SURVIVAL);
             case CREATIVE -> p.setGameMode(GameMode.CREATIVE);
+            case ADVENTURE -> p.setGameMode(GameMode.ADVENTURE);
             case SPECTATOR -> p.setGameMode(GameMode.SPECTATOR);
             case VISITOR -> {
                 p.setGameMode(GameMode.SURVIVAL);
@@ -83,18 +86,30 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
     }
 
     enum Mode {
-        SURVIVAL("survival", "s"),
-        CREATIVE("creative", "c"),
-        SPECTATOR("spectator", "sp"),
-        VISITOR("visitor", "v"); // survival + blocked interactions
+        // vanilla mapping: 0=SURVIVAL, 1=CREATIVE, 2=ADVENTURE, 3=SPECTATOR, 4=VISITOR (custom)
+        SURVIVAL("survival", "s", "0"),
+        CREATIVE("creative", "c", "1"),
+        ADVENTURE("adventure", "a", "2"),
+        SPECTATOR("spectator", "sp", "3"),
+        VISITOR("visitor", "v", "4"); // survival + blocked interactions
 
         final String display;
         final String shortKey;
-        Mode(String display, String shortKey) { this.display = display; this.shortKey = shortKey; }
+        final String numericKey;
+
+        Mode(String display, String shortKey, String numericKey) {
+            this.display = display;
+            this.shortKey = shortKey;
+            this.numericKey = numericKey;
+        }
 
         static Mode fromString(String s) {
             for (Mode m : values()) {
-                if (m.display.equalsIgnoreCase(s) || m.shortKey.equalsIgnoreCase(s)) return m;
+                if (m.display.equalsIgnoreCase(s)
+                        || m.shortKey.equalsIgnoreCase(s)
+                        || (m.numericKey != null && m.numericKey.equalsIgnoreCase(s))) {
+                    return m;
+                }
             }
             return null;
         }
@@ -104,7 +119,11 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
     @Override
     public java.util.List<String> onTabComplete(CommandSender sender, org.bukkit.command.Command cmd, String alias, String[] args) {
         if (args.length == 1) {
-            return List.of("survival", "creative", "spectator", "visitor", "s", "c", "sp", "v");
+            return List.of(
+                    "survival", "creative", "adventure", "spectator", "visitor",
+                    "0", "1", "2", "3", "4",
+                    "s", "c", "a", "sp", "v"
+            );
         }
         if (args.length == 2 && sender.hasPermission("oreo.gamemode.others")) {
             String pfx = args[1].toLowerCase(Locale.ROOT);

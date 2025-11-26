@@ -1320,10 +1320,10 @@ public class PlayerWarpCommand implements OreoCommand {
 
         UUID uuid = player.getUniqueId();
 
-        if (warp.getOwner().equals(uuid)) return false;
-        if (warp.getManagers() != null && warp.getManagers().contains(uuid)) return false;
+        // ✅ Only real bypass: permission
         if (player.hasPermission("oe.pw.bypass.password")) return false;
 
+        // Everyone else (even owner) must enter password
         return true;
     }
 

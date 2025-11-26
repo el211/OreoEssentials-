@@ -41,3 +41,13 @@ worlds:
     default: 200
   world_the_end:
     default: 150
+
+# cooldown settings
+cooldown:
+  default: 60   # cooldown in seconds if no permission matches
+
+  # Permission → cooldown in seconds
+  tiers:
+    oreo.rtp.cooldown.vip: 30
+    oreo.rtp.cooldown.mvp: 15
+    oreo.rtp.cooldown.elite: 5

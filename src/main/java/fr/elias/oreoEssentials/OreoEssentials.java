@@ -238,6 +238,8 @@ public final class OreoEssentials extends JavaPlugin {
     // RTP + EnderChest
     private RtpConfig rtpConfig;
     public RtpConfig getRtpConfig() { return rtpConfig; }
+    // RTP cooldowns (per-player, in millis)
+    private final java.util.Map<java.util.UUID, Long> rtpCooldownCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     // NEW: Cross-server RTP bridge (used by RtpCommand)
     private fr.elias.oreoEssentials.rtp.RtpCrossServerBridge rtpBridge;
@@ -2160,6 +2162,10 @@ public final class OreoEssentials extends JavaPlugin {
     public ModBridge getModBridge() {
         return modBridge;
     }
+    public java.util.Map<java.util.UUID, Long> getRtpCooldownCache() {
+        return rtpCooldownCache;
+    }
+
     // Playtime tracker getter (name expected by PlaceholderAPIHook)
     public fr.elias.oreoEssentials.playtime.PlaytimeTracker getPlaytimeTracker() {
         return this.playtimeTracker;

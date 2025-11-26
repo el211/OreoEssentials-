@@ -60,6 +60,28 @@ public class RtpCommand implements OreoCommand {
             return true;
         }
 
+        // --- Cooldown RTP (per-permission) ---
+        int cooldown = cfg.cooldownFor(p);
+        if (cooldown > 0) {
+
+            Long last = plugin.getRtpCooldownCache().get(p.getUniqueId());
+            long now = System.currentTimeMillis();
+
+            if (last != null) {
+                long elapsed = (now - last) / 1000;
+                long remain = cooldown - elapsed;
+
+                if (remain > 0) {
+                    p.sendMessage("§cVous devez attendre §e" + remain + "s §cavant d'utiliser /rtp.");
+                    return true;
+                }
+            }
+
+            // Enregistrer nouveau timestamp
+            plugin.getRtpCooldownCache().put(p.getUniqueId(), now);
+        }
+
+
         // 1) Decide target world (optionally from argument)
         String requestedWorld = (args.length >= 1) ? args[0] : null;
         String targetWorldName = cfg.chooseTargetWorld(p, requestedWorld);
