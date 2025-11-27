@@ -62,9 +62,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "set" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can set player warps.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "set"), null);
                     return true;
                 }
+
                 if (!actor.hasPermission("oe.pw.set")) {
                     Lang.send(actor, "pw.no-permission-set", Map.of(), actor);
                     return true;
@@ -108,9 +109,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "gui" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can use /pw gui.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "gui"), null);
                     return true;
                 }
+
                 // optional: permission check
                 if (!actor.hasPermission("oe.pw.gui")) {
                     Lang.send(actor, "pw.no-permission-list", Map.of(), actor);
@@ -125,9 +127,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "mywarps" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can use /pw mywarps.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "mywarps"), null);
                     return true;
                 }
+
                 if (!actor.hasPermission("oe.pw.mywarps")) {
                     Lang.send(actor, "pw.no-permission-list", Map.of(), actor);
                     return true;
@@ -141,9 +144,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "remove" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can remove their own warps for now.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "remove"), null);
                     return true;
                 }
+
                 if (args.length < 2) {
                     Lang.send(actor, "pw.usage-remove",
                             Map.of("label", label),
@@ -188,9 +192,12 @@ public class PlayerWarpCommand implements OreoCommand {
                     String targetName = args[1];
                     Player target = Bukkit.getPlayerExact(targetName);
                     if (target == null) {
-                        sender.sendMessage("§cPlayer '" + targetName + "' is not online (for now only online lookups).");
+                        Lang.send(sender, "pw.list-target-offline",
+                                Map.of("player", targetName),
+                                actor);
                         return true;
                     }
+
                     var warps = service.listByOwner(target.getUniqueId());
                     sendList(sender, target.getName(), warps);
                 } else {
@@ -218,18 +225,22 @@ public class PlayerWarpCommand implements OreoCommand {
                     String targetName = args[1];
                     Player target = Bukkit.getPlayerExact(targetName);
                     if (target == null) {
-                        sender.sendMessage("§cPlayer '" + targetName + "' is not online.");
+                        Lang.send(sender, "pw.amount-target-offline",
+                                Map.of("player", targetName),
+                                actor);
                         return true;
                     }
+
                     int count = service.getWarpCount(target);
                     Lang.send(sender, "pw.amount-other",
                             Map.of("player", target.getName(), "amount", String.valueOf(count)),
                             actor);
                 } else {
                     if (actor == null) {
-                        sender.sendMessage("§cConsole must specify a player: /pw amount <player>");
+                        Lang.send(sender, "pw.amount-console-usage", Map.of(), null);
                         return true;
                     }
+
                     int count = service.getWarpCount(actor);
                     Lang.send(actor, "pw.amount-self",
                             Map.of("amount", String.valueOf(count)),
@@ -243,9 +254,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "rtp" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can use /pw rtp.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "rtp"), null);
                     return true;
                 }
+
                 if (!actor.hasPermission("oe.pw.rtp")) {
                     Lang.send(actor, "pw.no-permission-rtp", Map.of(), actor);
                     return true;
@@ -278,9 +290,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "near" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can use /pw near.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "near"), null);
                     return true;
                 }
+
                 if (!actor.hasPermission("oe.pw.near")) {
                     Lang.send(actor, "pw.no-permission-near", Map.of(), actor);
                     return true;
@@ -337,9 +350,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "reset" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can use /pw reset.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "reset"), null);
                     return true;
                 }
+
                 if (!actor.hasPermission("oe.pw.reset")) {
                     Lang.send(actor, "pw.no-permission-reset", Map.of(), actor);
                     return true;
@@ -379,9 +393,11 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "rename" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can use /pw rename.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "rename"), null);
                     return true;
                 }
+
+
                 if (!actor.hasPermission("oe.pw.rename")) {
                     Lang.send(actor, "pw.no-permission-rename", Map.of(), actor);
                     return true;
@@ -486,10 +502,10 @@ public class PlayerWarpCommand implements OreoCommand {
                 String targetName = args[1];
                 Player target = Bukkit.getPlayerExact(targetName);
                 OfflinePlayer off = target != null ? target : Bukkit.getOfflinePlayer(targetName);
-                if (off == null || off.getUniqueId() == null) {
-                    sender.sendMessage("§cCould not resolve player '" + targetName + "'.");
-                    return true;
-                }
+                Lang.send(sender, "pw.player-resolve-failed",
+                        Map.of("player", targetName),
+                        actor);
+
 
                 List<PlayerWarp> warps = service.listByOwner(off.getUniqueId());
                 int count = 0;
@@ -547,9 +563,10 @@ public class PlayerWarpCommand implements OreoCommand {
                 try {
                     amount = Integer.parseInt(amountStr);
                 } catch (NumberFormatException ex) {
-                    sender.sendMessage("§cAmount must be a number.");
+                    Lang.send(sender, "pw.addwarps-invalid-amount", Map.of(), actor);
                     return true;
                 }
+
 
                 UUID uuid = off.getUniqueId();
                 int current = extraWarps.getOrDefault(uuid, 0);
@@ -570,9 +587,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "whitelist" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can manage warp whitelists.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "whitelist"), null);
                     return true;
                 }
+
 
                 if (!actor.hasPermission("oe.pw.whitelist") &&
                         !actor.hasPermission("oe.pw.admin.whitelist")) {
@@ -719,9 +737,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "desc" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can edit warp descriptions.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "desc"), null);
                     return true;
                 }
+
                 if (!actor.hasPermission("oe.pw.meta.desc")) {
                     Lang.send(actor, "pw.no-permission-desc", Map.of(), actor);
                     return true;
@@ -780,9 +799,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "category" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can edit warp categories.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "category"), null);
                     return true;
                 }
+
                 if (!actor.hasPermission("oe.pw.meta.category")) {
                     Lang.send(actor, "pw.no-permission-category", Map.of(), actor);
                     return true;
@@ -842,9 +862,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "lock" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can lock warps.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "lock"), null);
                     return true;
                 }
+
                 if (!actor.hasPermission("oe.pw.meta.lock")) {
                     Lang.send(actor, "pw.no-permission-lock", Map.of(), actor);
                     return true;
@@ -896,9 +917,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "icon" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can set warp icons.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "icon"), null);
                     return true;
                 }
+
                 if (!actor.hasPermission("oe.pw.meta.icon")) {
                     Lang.send(actor, "pw.no-permission-icon", Map.of(), actor);
                     return true;
@@ -1011,9 +1033,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "managers" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can edit warp managers.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "managers"), null);
                     return true;
                 }
+
                 if (!actor.hasPermission("oe.pw.meta.managers")) {
                     Lang.send(actor, "pw.no-permission-managers", Map.of(), actor);
                     return true;
@@ -1092,9 +1115,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "password" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can set warp passwords.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "password"), null);
                     return true;
                 }
+
                 if (!actor.hasPermission("oe.pw.meta.password")) {
                     Lang.send(actor, "pw.no-permission-password", Map.of(), actor);
                     return true;
@@ -1144,9 +1168,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             case "use" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can use warps.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "use"), null);
                     return true;
                 }
+
                 if (!actor.hasPermission("oe.pw.use") && !actor.hasPermission("oe.pw.base")) {
                     Lang.send(actor, "pw.no-permission-warp", Map.of("name", ""), actor);
                     return true;
@@ -1175,9 +1200,10 @@ public class PlayerWarpCommand implements OreoCommand {
              * -------------------------------------------------------- */
             default -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can use /pw <warp>.");
+                    Lang.send(sender, "pw.only-players-sub", Map.of("sub", "<warp>"), null);
                     return true;
                 }
+
 
                 String warpName = args[0];
                 String givenPassword = (args.length >= 2 ? args[1] : null);
