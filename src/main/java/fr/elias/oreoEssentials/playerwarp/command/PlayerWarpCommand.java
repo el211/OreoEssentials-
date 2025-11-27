@@ -1140,63 +1140,36 @@ public class PlayerWarpCommand implements OreoCommand {
             }
 
             /* --------------------------------------------------------
-             * /pw use <warp> <password>
+             * /pw use <warp> [password]
              * -------------------------------------------------------- */
             case "use" -> {
                 if (actor == null) {
-                    sender.sendMessage("§cOnly players can use password-protected warps.");
+                    sender.sendMessage("§cOnly players can use warps.");
                     return true;
                 }
                 if (!actor.hasPermission("oe.pw.use") && !actor.hasPermission("oe.pw.base")) {
                     Lang.send(actor, "pw.no-permission-warp", Map.of("name", ""), actor);
                     return true;
                 }
-                if (args.length < 3) {
-                    Lang.send(actor, "pw.usage-use", Map.of("label", label), actor);
+                if (args.length < 2) {
+                    Lang.send(actor, "pw.usage-use",
+                            Map.of("label", label),
+                            actor);
                     return true;
                 }
 
                 String warpName = args[1];
-                String givenPassword = args[2];
+                String givenPassword = (args.length >= 3 ? args[2] : null);
 
-                PlayerWarp targetWarp = service.listAll().stream()
-                        .filter(w -> w.getName().equalsIgnoreCase(warpName))
-                        .findFirst()
-                        .orElse(null);
-
-                if (targetWarp == null) {
-                    Lang.send(actor, "pw.not-found",
-                            Map.of("name", warpName.toLowerCase(Locale.ROOT)),
-                            actor);
-                    return true;
-                }
-
-                // basic access check (lock, perms, cost, whitelist, etc.)
-                if (!service.canUse(actor, targetWarp)) {
-                    Lang.send(actor, "pw.no-permission-warp",
-                            Map.of("name", targetWarp.getName()),
-                            actor);
-                    return true;
-                }
-
-                String realPassword = targetWarp.getPassword();
-                if (realPassword == null || realPassword.isEmpty()) {
-                    // No password anymore, just behave like normal teleport.
-                    teleportWithRouting(plugin, actor, targetWarp);
-                    return true;
-                }
-
-                if (!realPassword.equals(givenPassword)) {
-                    Lang.send(actor, "pw.password-wrong",
-                            Map.of("warp", targetWarp.getName()),
-                            actor);
-                    return true;
-                }
-
-                teleportWithRouting(plugin, actor, targetWarp);
-                return true;
+                // EXACT SAME LOGIC AS DEFAULT
+                return handleWarpTeleport(plugin, actor, warpName, givenPassword);
             }
 
+
+
+            /* --------------------------------------------------------
+             * /pw <warp> [password] (fallback)
+             * -------------------------------------------------------- */
             /* --------------------------------------------------------
              * /pw <warp> [password] (fallback)
              * -------------------------------------------------------- */
@@ -1207,70 +1180,101 @@ public class PlayerWarpCommand implements OreoCommand {
                 }
 
                 String warpName = args[0];
+                String givenPassword = (args.length >= 2 ? args[1] : null);
 
-                PlayerWarp targetWarp = service.listAll().stream()
-                        .filter(w -> w.getName().equalsIgnoreCase(warpName))
-                        .findFirst()
-                        .orElse(null);
+                // EXACT SAME LOGIC AS /pw use
+                return handleWarpTeleport(plugin, actor, warpName, givenPassword);
+            }
 
-                if (targetWarp == null) {
-                    Lang.send(actor, "pw.not-found",
-                            Map.of("name", warpName.toLowerCase(Locale.ROOT)),
-                            actor);
-                    return true;
-                }
+        }
+    }
+    /**
+     * Shared logic for:
+     * - /pw <warp>
+     * - /pw <warp> <password>
+     * - /pw use <warp>
+     * - /pw use <warp> <password>
+     */
+    private boolean handleWarpTeleport(OreoEssentials plugin, Player actor, String warpName, String givenPassword) {
+        plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] handleWarpTeleport: player="
+                + actor.getName()
+                + " warpName=" + warpName
+                + " givenPassword=" + (givenPassword == null ? "null" : "'" + givenPassword + "'"));
 
-                // If a second argument exists, treat it as password shortcut:
-                // /pw <warp> <password>  ==  /pw use <warp> <password>
-                if (args.length >= 2) {
-                    String givenPassword = args[1];
+        PlayerWarp targetWarp = service.listAll().stream()
+                .filter(w -> w.getName().equalsIgnoreCase(warpName))
+                .findFirst()
+                .orElse(null);
 
-                    // basic access check (lock, perms, cost, whitelist, etc.)
-                    if (!service.canUse(actor, targetWarp)) {
-                        Lang.send(actor, "pw.no-permission-warp",
-                                Map.of("name", targetWarp.getName()),
-                                actor);
-                        return true;
-                    }
+        if (targetWarp == null) {
+            plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] handleWarpTeleport: warp not found in listAll() for name=" + warpName);
+            Lang.send(actor, "pw.not-found",
+                    Map.of("name", warpName.toLowerCase(Locale.ROOT)),
+                    actor);
+            return true;
+        }
 
-                    String realPassword = targetWarp.getPassword();
-                    if (realPassword == null || realPassword.isEmpty()) {
-                        // no password set -> just tp
-                        teleportWithRouting(plugin, actor, targetWarp);
-                        return true;
-                    }
+        plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] handleWarpTeleport: resolved warp id="
+                + targetWarp.getId()
+                + " owner=" + targetWarp.getOwner()
+                + " name=" + targetWarp.getName());
 
-                    if (!realPassword.equals(givenPassword)) {
-                        Lang.send(actor, "pw.password-wrong",
-                                Map.of("warp", targetWarp.getName()),
-                                actor);
-                        return true;
-                    }
+        // If a password was provided
+        if (givenPassword != null) {
+            plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] handleWarpTeleport: password branch");
 
-                    teleportWithRouting(plugin, actor, targetWarp);
-                    return true;
-                }
+            if (!service.canUse(actor, targetWarp)) {
+                plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] handleWarpTeleport: canUse()=false, blocking");
+                Lang.send(actor, "pw.no-permission-warp",
+                        Map.of("name", targetWarp.getName()),
+                        actor);
+                return true;
+            }
 
-                // No password in args: behave like normal direct warp, but block if password-protected
-                if (isPasswordProtected(targetWarp, actor)) {
-                    Lang.send(actor, "pw.password-required",
-                            Map.of("warp", targetWarp.getName()),
-                            actor);
-                    return true;
-                }
-
-                if (!service.canUse(actor, targetWarp)) {
-                    Lang.send(actor, "pw.no-permission-warp",
-                            Map.of("name", targetWarp.getName()),
-                            actor);
-                    return true;
-                }
-
+            String realPassword = targetWarp.getPassword();
+            if (realPassword == null || realPassword.isEmpty()) {
+                plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] handleWarpTeleport: warp has no password, teleporting normally");
                 teleportWithRouting(plugin, actor, targetWarp);
                 return true;
             }
+
+            if (!realPassword.equals(givenPassword)) {
+                plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] handleWarpTeleport: wrong password");
+                Lang.send(actor, "pw.password-wrong",
+                        Map.of("warp", targetWarp.getName()),
+                        actor);
+                return true;
+            }
+
+            plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] handleWarpTeleport: password OK, teleporting");
+            teleportWithRouting(plugin, actor, targetWarp);
+            return true;
         }
+
+        // No password given
+        plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] handleWarpTeleport: no password branch");
+
+        if (isPasswordProtected(targetWarp, actor)) {
+            plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] handleWarpTeleport: warp is password-protected, blocking");
+            Lang.send(actor, "pw.password-required",
+                    Map.of("warp", targetWarp.getName()),
+                    actor);
+            return true;
+        }
+
+        if (!service.canUse(actor, targetWarp)) {
+            plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] handleWarpTeleport: canUse()=false, blocking");
+            Lang.send(actor, "pw.no-permission-warp",
+                    Map.of("name", targetWarp.getName()),
+                    actor);
+            return true;
+        }
+
+        plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] handleWarpTeleport: all checks OK, calling teleportWithRouting");
+        teleportWithRouting(plugin, actor, targetWarp);
+        return true;
     }
+
 
     // ----------------- Helpers -----------------
 
@@ -1316,14 +1320,17 @@ public class PlayerWarpCommand implements OreoCommand {
 
     private boolean isPasswordProtected(PlayerWarp warp, Player player) {
         String pwd = warp.getPassword();
-        if (pwd == null || pwd.isEmpty()) return false;
+        if (pwd == null || pwd.isEmpty()) {
+            // No password -> not protected
+            return false;
+        }
 
-        UUID uuid = player.getUniqueId();
+        // Only staff with explicit bypass can ignore password
+        if (player.hasPermission("oe.pw.bypass.password")) {
+            return false;
+        }
 
-        // ✅ Only real bypass: permission
-        if (player.hasPermission("oe.pw.bypass.password")) return false;
-
-        // Everyone else (even owner) must enter password
+        // Everyone else must enter the password
         return true;
     }
 

@@ -2126,7 +2126,6 @@ public final class OreoEssentials extends JavaPlugin {
                 return owner == this;
             });
         } catch (Throwable ignored) {
-            // Best effort; if reflection fails we simply don't claim the executors.
         }
     }
     // Playtime Rewards service getter (name expected by PlaceholderAPIHook)
@@ -2165,8 +2164,6 @@ public final class OreoEssentials extends JavaPlugin {
     public java.util.Map<java.util.UUID, Long> getRtpCooldownCache() {
         return rtpCooldownCache;
     }
-
-    // Playtime tracker getter (name expected by PlaceholderAPIHook)
     public fr.elias.oreoEssentials.playtime.PlaytimeTracker getPlaytimeTracker() {
         return this.playtimeTracker;
     }

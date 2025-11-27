@@ -118,18 +118,15 @@ public class PlayerWarpTabCompleter implements TabCompleter {
 
                 // /pw use <warp> <password>
                 case "use" -> {
-                    // Suggest only warps that actually have a password set
+                    // Suggest ALL warps, not only password-protected ones
                     return safeListAll().stream()
-                            .filter(w -> {
-                                String pwd = w.getPassword();
-                                return pwd != null && !pwd.isEmpty();
-                            })
                             .map(PlayerWarp::getName)
                             .filter(Objects::nonNull)
                             .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
                             .sorted(String.CASE_INSENSITIVE_ORDER)
                             .collect(Collectors.toList());
                 }
+
 
                 // Global warp name (admin-ish)
                 case "setowner",
