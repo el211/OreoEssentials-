@@ -626,12 +626,49 @@ pw:
   password-cleared: "%prefix%&aPassword cleared for warp &b%warp%&a."
   cost-not-enough: "%prefix%&cYou need &e%amount%&c to use this player warp."
   password-wrong: "%prefix% &cWrong password for warp &e%warp%&c."
+  password-required: "%prefix%&cThis warp is password protected. Use &f/pw %warp% <password>&c."
   password-not-required: "%prefix% &7Warp &e%warp% &7doesn't require a password."
   password-title-wrong: "&cWrong password"
   password-subtitle-wrong: "&7Try again"
 
   password-title-empty: "&cWrong password"
   password-subtitle-empty: "&7No password entered"
+  # ---- Help & list formatting ----
+  help-header: "&8&m------------------------"
+  help-footer: "&8&m------------------------"
+  help-body: |
+    &b/%label% help &7- Show this help.
+    &b/%label% set <name> &7- Set a warp at your location.
+    &b/%label% <warp> &7- Teleport to a player warp.
+    &b/%label% <warp> <password> &7- Shortcut for password-protected warps.
+    &b/%label% use <warp> <password> &7- Use a password-protected warp.
+    &b/%label% list [player] &7- List player warps.
+    &b/%label% amount [player] &7- Show warp count.
+    &b/%label% rtp &7- Teleport to a random warp.
+    &b/%label% near [page] &7- List nearby warps.
+    &b/%label% remove <warp> &7- Remove your warp.
+    &b/%label% reset <warp> &7- Reset warp to your current location.
+    &b/%label% rename <warp> <name> &7- Rename a warp.
+    &b/%label% setowner <warp> <player> &7- Transfer warp ownership.
+    &b/%label% removeall <player> &7- Remove all warps of a player.
+    &b/%label% reload &7- Reload PlayerWarp configs.
+    &b/%label% addwarps <player> <amount> &7- Add extra warp slots.
+    &b/%label% whitelist <action> <warp> [player] &7- Manage warp whitelist.
+    &b/%label% desc <warp> [text] &7- Set or show description.
+    &b/%label% category <warp> [name] &7- Set or show category.
+    &b/%label% lock <warp> [on/off] &7- Lock or unlock a warp.
+    &b/%label% icon <warp> [clear] &7- Set warp icon from hand.
+    &b/%label% cost <warp> <amount> &7- Set teleport price.
+    &b/%label% managers <warp> [player] &7- List or toggle managers.
+    &b/%label% password <warp> <pwd|off> &7- Set or clear password.
+    &b/%label% gui &7- Open the global warp browser.
+    &b/%label% mywarps &7- Open your personal warp manager."
+
+  list-header: "&8&m------------------------\n&bPlayer warps for &e%owner%&7:"
+  list-empty: "&7  (none)"
+  list-entry: "&7- &a%name%"
+  list-footer: "&8&m------------------------"
+
 
 teleport:
   countdown:

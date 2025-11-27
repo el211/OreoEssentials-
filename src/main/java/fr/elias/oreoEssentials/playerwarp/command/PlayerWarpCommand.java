@@ -1288,35 +1288,18 @@ public class PlayerWarpCommand implements OreoCommand {
     }
 
     private void sendHelp(CommandSender s, String label) {
-        s.sendMessage("§8§m------------------------");
-        s.sendMessage("§b/" + label + " help §7- Show this help.");
-        s.sendMessage("§b/" + label + " set <name> §7- Set a warp at your location.");
-        s.sendMessage("§b/" + label + " <warp> §7- Teleport to a player warp.");
-        s.sendMessage("§b/" + label + " <warp> <password> §7- Shortcut for password-protected warps.");
-        s.sendMessage("§b/" + label + " use <warp> <password> §7- Use a password-protected warp.");
-        s.sendMessage("§b/" + label + " list [player] §7- List player warps.");
-        s.sendMessage("§b/" + label + " amount [player] §7- Show warp count.");
-        s.sendMessage("§b/" + label + " rtp §7- Teleport to a random warp.");
-        s.sendMessage("§b/" + label + " near [page] §7- List nearby warps.");
-        s.sendMessage("§b/" + label + " remove <warp> §7- Remove your warp.");
-        s.sendMessage("§b/" + label + " reset <warp> §7- Reset warp to your current location.");
-        s.sendMessage("§b/" + label + " rename <warp> <name> §7- Rename a warp.");
-        s.sendMessage("§b/" + label + " setowner <warp> <player> §7- Transfer warp ownership.");
-        s.sendMessage("§b/" + label + " removeall <player> §7- Remove all warps of a player.");
-        s.sendMessage("§b/" + label + " reload §7- Reload PlayerWarp configs.");
-        s.sendMessage("§b/" + label + " addwarps <player> <amount> §7- Add extra warp slots.");
-        s.sendMessage("§b/" + label + " whitelist <action> <warp> [player] §7- Manage warp whitelist.");
-        s.sendMessage("§b/" + label + " desc <warp> [text] §7- Set or show description.");
-        s.sendMessage("§b/" + label + " category <warp> [name] §7- Set or show category.");
-        s.sendMessage("§b/" + label + " lock <warp> [on/off] §7- Lock or unlock a warp.");
-        s.sendMessage("§b/" + label + " icon <warp> [clear] §7- Set warp icon from hand.");
-        s.sendMessage("§b/" + label + " cost <warp> <amount> §7- Set teleport price.");
-        s.sendMessage("§b/" + label + " managers <warp> [player] §7- List or toggle managers.");
-        s.sendMessage("§b/" + label + " password <warp> <pwd|off> §7- Set or clear password.");
-        s.sendMessage("§b/" + label + " gui §7- Open the global warp browser.");
-        s.sendMessage("§b/" + label + " mywarps §7- Open your personal warp manager.");
-        s.sendMessage("§8§m------------------------");
+        Player viewer = (s instanceof Player p) ? p : null;
+
+        // Top line
+        Lang.send(s, "pw.help-header", Map.of(), viewer);
+
+        // All help lines (multi-line string in lang.yml)
+        Lang.send(s, "pw.help-body", Map.of("label", label), viewer);
+
+        // Bottom line
+        Lang.send(s, "pw.help-footer", Map.of(), viewer);
     }
+
 
     private boolean isPasswordProtected(PlayerWarp warp, Player player) {
         String pwd = warp.getPassword();
@@ -1335,15 +1318,25 @@ public class PlayerWarpCommand implements OreoCommand {
     }
 
     private void sendList(CommandSender sender, String ownerName, List<PlayerWarp> warps) {
-        sender.sendMessage("§8§m------------------------");
-        sender.sendMessage("§bPlayer warps for §e" + ownerName + "§7:");
+        Player viewer = (sender instanceof Player p) ? p : null;
+
+        // Header ("----" + title line)
+        Lang.send(sender, "pw.list-header",
+                Map.of("owner", ownerName),
+                viewer);
+
         if (warps == null || warps.isEmpty()) {
-            sender.sendMessage("§7  (none)");
+            Lang.send(sender, "pw.list-empty", Map.of(), viewer);
         } else {
             for (PlayerWarp w : warps) {
-                sender.sendMessage("§7- §a" + w.getName());
+                Lang.send(sender, "pw.list-entry",
+                        Map.of("name", w.getName()),
+                        viewer);
             }
         }
-        sender.sendMessage("§8§m------------------------");
+
+        // Footer line
+        Lang.send(sender, "pw.list-footer", Map.of(), viewer);
     }
+
 }
