@@ -93,6 +93,48 @@ public class TeleportService {
         if (who == null || target == null) return;
         teleportSilently(who, target.getLocation());
     }
+    /**
+     * Returns the requester who issued /tpa <target>, or null.
+     */
+    public Player getRequester(Player target) {
+        if (target == null) return null;
+
+        TpaRequest req = pendingToTarget.get(target.getUniqueId());
+        if (req == null) return null;
+
+        return Bukkit.getPlayer(req.from);
+    }
+    /**
+     * Cancel a pending TPA request because the requester moved during the countdown.
+     */
+    public boolean cancelRequestDueToMovement(Player target, Player requester) {
+        if (target == null) return false;
+
+        TpaRequest req = pendingToTarget.remove(target.getUniqueId());
+        if (req == null) {
+            // no pending request for this target
+            return false;
+        }
+
+        // Optional: ensure it's the same requester
+        if (requester != null && !req.from.equals(requester.getUniqueId())) {
+            // Not the same requester, but we already removed it anyway.
+        }
+
+        // Message to the requester (the one who did /tpa)
+        if (requester != null && requester.isOnline()) {
+            requester.sendMessage("§cYour teleport request was cancelled because you moved.");
+        }
+
+        // Message to the target (the one who did /tpaccept)
+        if (target.isOnline()) {
+            String name = (requester != null ? requester.getName() : "a player");
+            target.sendMessage("§cThe teleport request from §e" + name + "§c was cancelled because they moved.");
+        }
+
+        return true;
+    }
+
 
     public void shutdown() {
         pendingToTarget.clear();

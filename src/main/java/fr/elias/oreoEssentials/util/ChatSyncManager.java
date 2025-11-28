@@ -100,6 +100,8 @@ public class ChatSyncManager {
             Bukkit.getLogger().warning("[OreoEssentials] ChatSync MUTE broadcast failed: " + e.getMessage());
         }
     }
+
+    /** Broadcast chat control (global mute, slowmode, clear chat…) */
     public void broadcastChatControl(String type, String value, String actorName) {
         if (!enabled) return;
 
@@ -153,6 +155,22 @@ public class ChatSyncManager {
         }
     }
 
+    /**
+     * Helper pour envoyer un message "système" global (mute, ban, etc.)
+     * Utilisée par MuteCommand: sync.broadcastSystemMessage(broadcastMsg);
+     */
+    public void broadcastSystemMessage(String message) {
+        if (!enabled) return;
+        String serverName;
+        try {
+            serverName = OreoEssentials.get().getConfigService().serverName();
+        } catch (Throwable t) {
+            serverName = Bukkit.getServer().getName();
+        }
+        // On force un channel générique "SYSTEM" (tu peux changer le nom si tu veux filtrer un jour)
+        publishChannelSystem(serverName, "SYSTEM", message);
+    }
+
     /** Broadcast an unmute to all servers. */
     public void broadcastUnmute(UUID playerId) {
         if (!enabled) return;
@@ -178,8 +196,7 @@ public class ChatSyncManager {
             DeliverCallback cb = (tag, delivery) -> {
                 String msg = new String(delivery.getBody(), StandardCharsets.UTF_8);
 
-                // ---- Control messages (mute/unmute) ----
-// ---- Control messages (mute/unmute + chat control) ----
+                // ---- Control messages (mute/unmute + chat control) ----
                 if (msg.startsWith("CTRL;;")) {
                     // Possible forms:
                     // 1) CTRL;;UNMUTE;;serverId;;playerUUID
@@ -191,7 +208,6 @@ public class ChatSyncManager {
                     String action = p[1]; // "MUTE", "UNMUTE" or "CHAT";
 
                     // ======== CHAT CONTROL (GLOBAL_MUTE, SLOWMODE, CLEAR_CHAT) ========
-// ======== CHAT CONTROL (GLOBAL_MUTE, SLOWMODE, CLEAR_CHAT) ========
                     if ("CHAT".equalsIgnoreCase(action)) {
                         if (p.length < 6) return;
 
@@ -200,18 +216,8 @@ public class ChatSyncManager {
                         String valueB64 = p[4];
                         String actorB64 = p[5];
 
-                        String value;
-                        String actor;
-                        try {
-                            value = new String(Base64.getDecoder().decode(valueB64), StandardCharsets.UTF_8);
-                        } catch (Exception ex) {
-                            value = "";
-                        }
-                        try {
-                            actor = new String(Base64.getDecoder().decode(actorB64), StandardCharsets.UTF_8);
-                        } catch (Exception ex) {
-                            actor = "Unknown";
-                        }
+                        String value = fromB64(valueB64);
+                        String actor = fromB64(actorB64);
 
                         // make final/effectively-final copies for lambda
                         final String fType  = type;
@@ -256,7 +262,6 @@ public class ChatSyncManager {
                         return;
                     }
 
-
                     // ======== LEGACY MUTE / UNMUTE CONTROL ========
                     if (p.length >= 4) {
                         String originServer = p[2]; // still unused
@@ -264,14 +269,14 @@ public class ChatSyncManager {
 
                         try {
                             UUID target = UUID.fromString(uuidStr);
-                            if ("UNMUTE".equals(action)) {
+                            if ("UNMUTE".equalsIgnoreCase(action)) {
                                 Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
                                     if (muteService != null) muteService.unmute(target);
                                 });
-                            } else if ("MUTE".equals(action) && p.length >= 7) {
+                            } else if ("MUTE".equalsIgnoreCase(action) && p.length >= 7) {
                                 long until = Long.parseLong(p[4]);
-                                String reason = new String(Base64.getDecoder().decode(p[5]), StandardCharsets.UTF_8);
-                                String by = new String(Base64.getDecoder().decode(p[6]), StandardCharsets.UTF_8);
+                                String reason = fromB64(p[5]);
+                                String by = fromB64(p[6]);
                                 Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
                                     if (muteService != null) muteService.mute(target, until, reason, by);
                                 });
@@ -283,8 +288,61 @@ public class ChatSyncManager {
                     return; // do not fall through to normal chat handling
                 }
 
+                // ---- Channel system messages (CHANSYS) ----
+                if (msg.startsWith(EX_CHANNEL_SYS + ";;")) {
+                    // CHANSYS;;serverId;;b64(server);;b64(channel);;b64(message)
+                    String[] p = msg.split(";;", 5);
+                    if (p.length < 5) return;
 
-                // ---- Chat messages ----
+                    String originServerId = p[1];
+                    if (SERVER_ID.toString().equals(originServerId)) return; // ignore loopback
+
+                    String serverName = fromB64(p[2]);   // not used now, kept for future
+                    String channel    = fromB64(p[3]);   // e.g. "SYSTEM"
+                    String message    = fromB64(p[4]);
+
+                    final String toSend = ChatColor.translateAlternateColorCodes('&', message);
+
+                    Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+                        Bukkit.broadcastMessage(toSend);
+                        Bukkit.getConsoleSender().sendMessage(toSend);
+                    });
+                    return;
+                }
+
+                // ---- Channel user messages (CHANMSG) ----
+                if (msg.startsWith(EX_CHANNEL_MSG + ";;")) {
+                    // CHANMSG;;serverId;;senderUUID;;b64(server);;b64(senderName);;b64(channel);;b64(message)
+                    String[] p = msg.split(";;", 7);
+                    if (p.length < 7) return;
+
+                    String originServerId = p[1];
+                    if (SERVER_ID.toString().equals(originServerId)) return; // ignore loopback
+
+                    String senderUuidStr  = p[2];
+                    String serverNameB64  = p[3];
+                    String senderNameB64  = p[4];
+                    String channelB64     = p[5];
+                    String messageB64     = p[6];
+
+                    UUID senderUuid = null;
+                    try {
+                        senderUuid = UUID.fromString(senderUuidStr);
+                    } catch (Exception ignored) {}
+
+                    // mute check réseau
+                    if (muteService != null && senderUuid != null && muteService.isMuted(senderUuid)) {
+                        return;
+                    }
+
+                    String message = fromB64(messageB64);
+                    final String toSend = ChatColor.translateAlternateColorCodes('&', message);
+
+                    Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> Bukkit.broadcastMessage(toSend));
+                    return;
+                }
+
+                // ---- Legacy simple chat messages ----
                 String[] split = msg.split(";;", 4);
                 if (split.length != 4) return;
 
@@ -305,12 +363,7 @@ public class ChatSyncManager {
                 // If we have muteService and a valid UUID, drop message when that UUID is muted locally
                 if (muteService != null && senderUuid != null && muteService.isMuted(senderUuid)) return;
 
-                String decodedMessage;
-                try {
-                    decodedMessage = new String(Base64.getDecoder().decode(msgB64), StandardCharsets.UTF_8);
-                } catch (Exception ex) {
-                    decodedMessage = "[remote] <decode error>";
-                }
+                String decodedMessage = fromB64(msgB64);
 
                 // Broadcast on main thread; message is expected to use '&' color codes
                 final String toSend = ChatColor.translateAlternateColorCodes('&', decodedMessage);
@@ -345,6 +398,15 @@ public class ChatSyncManager {
     private static String b64(String s) {
         if (s == null) s = "";
         return Base64.getEncoder().encodeToString(s.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String fromB64(String s) {
+        if (s == null) return "";
+        try {
+            return new String(Base64.getDecoder().decode(s), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private static String nullSafe(String s) {

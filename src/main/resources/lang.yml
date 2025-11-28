@@ -9,7 +9,7 @@
 #   %amount%                -> raw amount string
 #   %amount_formatted%      -> formatted number (e.g. 1,234.56)
 #   %balance%               -> raw balance number
-#   %balance_formatted%     -> formatted balance number
+#   %balance_formatted%     -> formatted number
 #   %currency_symbol%       -> from economy.currency.symbol
 #   %currency_name%         -> from economy.currency.name
 #   %currency_name_plural%  -> from economy.currency.name_plural
@@ -17,24 +17,25 @@
 # =========================================================
 
 general:
-  prefix: "&6&lOreo&f&lEssentials &8» &r"
+  prefix: '&6&lOreo&f&lEssentials &8» &r'
 
 # =========================================================
 # Kits
 # =========================================================
 kits:
-  only-players: "%prefix%&cOnly players can use this."
-  no-permission-open: "%prefix%&cYou don't have permission to open kits."
-  no-permission-claim: "%prefix%&cYou don't have permission to claim kits."
-  usage-kit: "%prefix%&eUsage: &f/kit &7<name>"
-  unknown-kit: "%prefix%&cUnknown kit: &e%kit_id%&c."
-  inventory-full: "%prefix%&cYour inventory is full! Make some space first."
-  claimed: "%prefix%&aYou claimed &6%kit_name%&a!"
-  cooldown: "%prefix%&cYou must wait &e%cooldown_left%&c before claiming &6%kit_name%&c."
-  bypass-cooldown: "%prefix%&7Cooldown bypassed for &f%kit_name%&7."
-  commands-ran: "%prefix%&7Applied kit actions for &f%kit_name%&7."
-  itemadder-missing: "%prefix%&cItemsAdder is not installed/enabled, skipping IA items for this kit."
-  reloaded: "%prefix%&aKits configuration reloaded."
+  only-players: '%prefix%&cOnly players can use this.'
+  no-permission-open: '%prefix%&cYou don''t have permission to open kits.'
+  no-permission-claim: '%prefix%&cYou don''t have permission to claim kits.'
+  usage-kit: '%prefix%&eUsage: &f/kit &7<name>'
+  unknown-kit: '%prefix%&cUnknown kit: &e%kit_id%&c.'
+  inventory-full: '%prefix%&cYour inventory is full! Make some space first.'
+  claimed: '%prefix%&aYou claimed &6%kit_name%&a!'
+  cooldown: '%prefix%&cYou must wait &e%cooldown_left%&c before claiming &6%kit_name%&c.'
+  bypass-cooldown: '%prefix%&7Cooldown bypassed for &f%kit_name%&7.'
+  commands-ran: '%prefix%&7Applied kit actions for &f%kit_name%&7.'
+  itemadder-missing: '%prefix%&cItemsAdder is not installed/enabled, skipping IA items
+    for this kit.'
+  reloaded: '%prefix%&aKits configuration reloaded.'
 
   gui:
     lore:
@@ -47,12 +48,12 @@ kits:
     sounds:
       claim:
         enabled: true
-        sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+        sound: ENTITY_EXPERIENCE_ORB_PICKUP
         volume: 0.8
         pitch: 1.2
       denied:
         enabled: true
-        sound: "BLOCK_NOTE_BLOCK_BASS"
+        sound: BLOCK_NOTE_BLOCK_BASS
         volume: 0.7
         pitch: 0.7
 
@@ -60,13 +61,12 @@ kits:
   time:
     humanize: true
     units:
-      day: "d"
-      hour: "h"
-      minute: "m"
-      second: "s"
-    smallest-unit: "second"
+      day: d
+      hour: h
+      minute: m
+      second: s
+    smallest-unit: second
     max-chunks: 3
-
 
 # =========================================================
 # Custom Crafting (OreoCraft)
@@ -74,375 +74,669 @@ kits:
 customcraft:
   # Chat / command messages
   messages:
-    saved: "%prefix%&aRecipe &e%name% &ahas been saved (&f%mode%&a) %perm_note%."
-    invalid: "%prefix%&cInvalid recipe. You need a result item and at least one ingredient."
-    deleted: "%prefix%&aRecipe &e%name% &ahas been deleted."
-    delete-hint: "%prefix%&eTip: Hold &lSHIFT &eand click the barrier to delete &c%name%&e."
-    reloaded: "%prefix%&aCustom recipes reloaded."
-    list: "%prefix%&eRecipes (%count%): &7%names%"
-    no-permission-craft: "%prefix%&cYou lack permission to craft this (&e%permission%&c)."
+    saved: '%prefix%&aRecipe &e%name% &ahas been saved (&f%mode%&a) %perm_note%.'
+    invalid: '%prefix%&cInvalid recipe. You need a result item and at least one ingredient.'
+    deleted: '%prefix%&aRecipe &e%name% &ahas been deleted.'
+    delete-hint: '%prefix%&eTip: Hold &lSHIFT &eand click the barrier to delete &c%name%&e.'
+    reloaded: '%prefix%&aCustom recipes reloaded.'
+    list: '%prefix%&eRecipes (%count%): &7%names%'
+    no-permission-craft: '%prefix%&cYou lack permission to craft this (&e%permission%&c).'
 
   # GUI strings
   gui:
-    title: "&bOreoCraft — %name%"
+    title: '&bOreoCraft — %name%'
     labels:
-      ingredients: "&eIngredients (3×3)"
-      result: "&aResult →"
+      ingredients: '&eIngredients (3×3)'
+      result: '&aResult →'
 
     delete:
-      name: "&cDelete this recipe"
+      name: '&cDelete this recipe'
       lore:
-        - "&7Click: &fInfo"
-        - "&7SHIFT+Click: &cCONFIRM deletion"
+        - '&7Click: &fInfo'
+        - '&7SHIFT+Click: &cCONFIRM deletion'
 
     mode:
-      shaped-name: "&bMode: SHAPED"
-      shapeless-name: "&aMode: SHAPELESS"
-      lore-common: "&7Click to toggle."
-      lore-shaped: "&7Layout matters."
-      lore-shapeless: "&7Order doesn't matter."
+      shaped-name: '&bMode: SHAPED'
+      shapeless-name: '&aMode: SHAPELESS'
+      lore-common: '&7Click to toggle.'
+      lore-shaped: '&7Layout matters.'
+      lore-shapeless: '&7Order doesn''t matter.'
 
     permission:
-      public-name: "&aPublic"
+      public-name: '&aPublic'
       public-lore:
-        - "&7No permission required."
-        - "&7Click to require a default node."
-      required-name: "&6Permission required"
+        - '&7No permission required.'
+        - '&7Click to require a default node.'
+      required-name: '&6Permission required'
       required-lore:
-        - "&7Node: &e%permission%"
-        - "&7Click to make it &aPublic"
+        - '&7Node: &e%permission%'
+        - '&7Click to make it &aPublic'
 
   # Recipe browser (list) menu
   browse:
-    title: "&bOreoCraft — Recipes"
-    hint: "&eClick a recipe to edit"
+    title: '&bOreoCraft — Recipes'
+    hint: '&eClick a recipe to edit'
     icon-lore:
-      - "&7Mode: &f%mode%"
-      - "&7Perm: &f%permission_or_none%"
-      - "&aClick to edit"
-    prev: "&ePrevious"
-    next: "&eNext"
+      - '&7Mode: &f%mode%'
+      - '&7Perm: &f%permission_or_none%'
+      - '&aClick to edit'
+    prev: '&ePrevious'
+    next: '&eNext'
 
   # Formatting helpers
   format:
     mode:
-      shaped: "Shaped"
-      shapeless: "Shapeless"
+      shaped: Shaped
+      shapeless: Shapeless
     permission:
-      none: "&7None"
-      note-public: "&7(public)"
-      note-required: "&6perm &e%permission%"
+      none: '&7None'
+      note-public: '&7(public)'
+      note-required: '&6perm &e%permission%'
 
 # =========================================================
 # Economy
 # =========================================================
 economy:
   currency:
-    symbol: "$"
-    name: "dollar"
-    name_plural: "dollars"
+    symbol: $
+    name: dollar
+    name_plural: dollars
 
   errors:
-    not-a-number: "%prefix%&cInvalid amount."
-    amount-not-positive: "%prefix%&cAmount must be positive."
-    player-not-found: "%prefix%&cPlayer not found: &e%target%&c."
-    self-target-disallowed: "%prefix%&cYou cannot do that to yourself."
-    no-economy: "%prefix%&cEconomy is not available."
-    insufficient-funds: "%prefix%&cInsufficient funds."
-    no-permission: "%prefix%&cYou don't have permission."
+    not-a-number: '%prefix%&cInvalid amount.'
+    amount-not-positive: '%prefix%&cAmount must be positive.'
+    player-not-found: '%prefix%&cPlayer not found: &e%target%&c.'
+    self-target-disallowed: '%prefix%&cYou cannot do that to yourself.'
+    no-economy: '%prefix%&cEconomy is not available.'
+    insufficient-funds: '%prefix%&cInsufficient funds.'
+    no-permission: '%prefix%&cYou don''t have permission.'
 
   money:
     usage:
-      view: "%prefix%&eUsage: &f/money &7[player]"
-      admin: "%prefix%&eUsage: &f/money &7<give|take|set> <player> <amount>"
-    view-self: "%prefix%&7Your balance: &a%currency_symbol%%balance_formatted%"
-    view-other: "%prefix%&7%target%'s balance: &a%currency_symbol%%balance_formatted%"
+      view: '%prefix%&eUsage: &f/money &7[player]'
+      admin: '%prefix%&eUsage: &f/money &7<give|take|set> <player> <amount>'
+    view-self: '%prefix%&7Your balance: &a%currency_symbol%%balance_formatted%'
+    view-other: '%prefix%&7%target%''s balance: &a%currency_symbol%%balance_formatted%'
     give:
-      sender: "%prefix%&aGave &f%currency_symbol%%amount_formatted% &ato &e%target%&a."
-      receiver: "%prefix%&aYou received &f%currency_symbol%%amount_formatted%&a. New balance: &a%currency_symbol%%balance_formatted%."
+      sender: '%prefix%&aGave &f%currency_symbol%%amount_formatted% &ato &e%target%&a.'
+      receiver: '%prefix%&aYou received &f%currency_symbol%%amount_formatted%&a. New
+        balance: &a%currency_symbol%%balance_formatted%.'
     take:
-      sender: "%prefix%&aTook &f%currency_symbol%%amount_formatted% &afrom &e%target%&a."
-      receiver: "%prefix%&c&l%currency_symbol%%amount_formatted% &7was removed from your balance. New balance: &a%currency_symbol%%balance_formatted%."
+      sender: '%prefix%&aTook &f%currency_symbol%%amount_formatted% &afrom &e%target%&a.'
+      receiver: '%prefix%&c&l%currency_symbol%%amount_formatted% &7was removed from
+        your balance. New balance: &a%currency_symbol%%balance_formatted%.'
     set:
-      sender: "%prefix%&aSet &e%target%&a's balance to &f%currency_symbol%%amount_formatted%&a."
-      receiver: "%prefix%&7Your balance was set to &a%currency_symbol%%amount_formatted%."
+      sender: '%prefix%&aSet &e%target%&a''s balance to &f%currency_symbol%%amount_formatted%&a.'
+      receiver: '%prefix%&7Your balance was set to &a%currency_symbol%%amount_formatted%.'
 
   pay:
-    usage: "%prefix%&eUsage: &f/pay &7<player> <amount>"
-    self: "%prefix%&cYou cannot pay yourself."
-    success-sender: "%prefix%&aPaid &b%target% &7%currency_symbol%%amount_formatted%&a."
-    success-receiver: "%prefix%&aYou received &7%currency_symbol%%amount_formatted% &afrom &b%player%&a."
-    fail-insufficient: "%prefix%&cYou don't have &f%currency_symbol%%amount_formatted%&c."
+    usage: '%prefix%&eUsage: &f/pay &7<player> <amount>'
+    self: '%prefix%&cYou cannot pay yourself.'
+    success-sender: '%prefix%&aPaid &b%target% &7%currency_symbol%%amount_formatted%&a.'
+    success-receiver: '%prefix%&aYou received &7%currency_symbol%%amount_formatted%
+      &afrom &b%player%&a.'
+    fail-insufficient: '%prefix%&cYou don''t have &f%currency_symbol%%amount_formatted%&c.'
 
   cheque:
     usage:
-      root: "%prefix%&eUsage: &f/cheque &7<create|redeem> ..."
-      create: "%prefix%&eUsage: &f/cheque create &7<amount> [note]"
-      redeem: "%prefix%&eUsage: &f/cheque redeem"
+      root: '%prefix%&eUsage: &f/cheque &7<create|redeem> ...'
+      create: '%prefix%&eUsage: &f/cheque create &7<amount> [note]'
+      redeem: '%prefix%&eUsage: &f/cheque redeem'
     create:
-      success: "%prefix%&aCreated a cheque for &f%currency_symbol%%amount_formatted%&a."
-      fail-amount: "%prefix%&cInvalid cheque amount."
-      fail-insufficient: "%prefix%&cYou need &f%currency_symbol%%amount_formatted%&c to create that cheque."
+      success: '%prefix%&aCreated a cheque for &f%currency_symbol%%amount_formatted%&a.'
+      fail-amount: '%prefix%&cInvalid cheque amount.'
+      fail-insufficient: '%prefix%&cYou need &f%currency_symbol%%amount_formatted%&c
+        to create that cheque.'
     redeem:
-      success: "%prefix%&aRedeemed a cheque for &f%currency_symbol%%amount_formatted%&a. New balance: &a%currency_symbol%%balance_formatted%."
-      fail-none: "%prefix%&cYou are not holding a valid cheque."
-      fail-invalid: "%prefix%&cThis cheque is invalid or corrupted."
+      success: '%prefix%&aRedeemed a cheque for &f%currency_symbol%%amount_formatted%&a.
+        New balance: &a%currency_symbol%%balance_formatted%.'
+      fail-none: '%prefix%&cYou are not holding a valid cheque.'
+      fail-invalid: '%prefix%&cThis cheque is invalid or corrupted.'
 
   format:
-    thousands-separator: ","
-    decimal-separator: "."
+    thousands-separator: ','
+    decimal-separator: .
     decimals: 2
 
 tpa:
-  usage: "&cUsage: &f/%label% <player>"
-  self: "&cYou cannot TPA to yourself."
+  usage: '&cUsage: &f/%label% <player>'
+  self: '&cYou cannot TPA to yourself.'
   not-found:
-    name-hint: "&cPlayer &f%input% &cis not online. &7(If they’re on another server, use their exact &fMinecraft&7 name.)"
-    generic: "&cPlayer &f%input% &cnot found online. &7(They may be offline or on another proxy cluster.)"
+    name-hint: '&cPlayer &f%input% &cis not online. &7(If they’re on another server,
+      use their exact &fMinecraft&7 name.)'
+    generic: '&cPlayer &f%input% &cnot found online. &7(They may be offline or on
+      another proxy cluster.)'
   sent:
-    cross-server: "&7Request sent to &b%target% &7on &b%server%&7. They can &a/tpaccept&7."
-    global: "&7We broadcast your request to &f%target% &7across the network. If they’re online, they can &a/tpaccept&7."
-  broker-unavailable: "&cCross-server TPA broker is currently unavailable. &7Ask &f%target% &7to join your server directly."
+    cross-server: '&7Request sent to &b%target% &7on &b%server%&7. They can &a/tpaccept&7.'
+    global: '&7We broadcast your request to &f%target% &7across the network. If they’re
+      online, they can &a/tpaccept&7.'
+  broker-unavailable: '&cCross-server TPA broker is currently unavailable. &7Ask &f%target%
+    &7to join your server directly.'
   accept:
-    none: "&cNo pending teleport requests."
-    debug-hint: "&7(If this was cross-server, ensure the request arrived on this server and hasn’t expired.)"
-    failed: "&cFailed to accept teleport request. &7See console or contact an administrator."
+    none: '&cNo pending teleport requests.'
+    debug-hint: '&7(If this was cross-server, ensure the request arrived on this server
+      and hasn’t expired.)'
+    failed: '&cFailed to accept teleport request. &7See console or contact an administrator.'
+  # Shown to the player who did /tpa <target> when they move during countdown
+  cancelled-moved-requester: '&cTéléportation annulée: vous avez bougé.'
+
+  # Optionally shown to the target (player who did /tpaccept) when the requester cancels by moving
+  cancelled-moved-target: '&eLa demande de téléportation de &b{requester}&e a été
+    annulée car il a bougé.'
+
+  # (Optional) If you want a chat hint when cooldown starts for the requester
+  cooldown-start-requester: '&7Téléportation vers &b{target}&7 dans &e{seconds} &7secondes.
+    Ne bougez pas !'
+
+  # (Optional) If you want a generic cooldown disabled hint for debug
+  cooldown-disabled: '&7Téléportation immédiate (aucun délai configuré pour &fTPA&7).'
+
 near:
-  radius-not-number: "&cRadius must be a number."
-  none: "&eNo players within &f%radius% &eblocks."
-  list: "&6Nearby (&f%radius%m&6): &7%list%"
+  radius-not-number: '&cRadius must be a number.'
+  none: '&eNo players within &f%radius% &eblocks.'
+  list: '&6Nearby (&f%radius%m&6): &7%list%'
 
 playtime:
-  self: "&bYour playtime: &f%time%"
-  other: "&b%player%&7's playtime: &f%time%"
-  no-permission: "&cYou don't have permission."
-  player-not-found: "&cPlayer not found."
+  self: '&bYour playtime: &f%time%'
+  other: '&b%player%&7''s playtime: &f%time%'
+  no-permission: '&cYou don''t have permission.'
+  player-not-found: '&cPlayer not found.'
 
 kill:
   self:
-    no-permission: "&cYou lack permission."
-    slain: "&cYou have been slain."
+    no-permission: '&cYou lack permission.'
+    slain: '&cYou have been slain.'
   others:
-    no-permission: "&cYou lack permission to kill others."
-    killed: "&aKilled &b%player%&a."
-  target-not-found: "&cPlayer not found."
-
+    no-permission: '&cYou lack permission to kill others.'
+    killed: '&aKilled &b%player%&a.'
+  target-not-found: '&cPlayer not found.'
 
 warp:
-  list-empty: "&eWarps: &7(none)"
-  list: "&eWarps: &7%warps%"
+  list-empty: '&eWarps: &7(none)'
+  list: '&eWarps: &7%warps%'
 
-  no-permission: "&cYou don't have permission for this warp."
-  no-permission-with-node: "&cYou don't have permission for this warp.&7 (%permission%)"
+  no-permission: '&cYou don''t have permission for this warp.'
+  no-permission-with-node: '&cYou don''t have permission for this warp.&7 (%permission%)'
 
-  not-found: "&cWarp not found."
-  teleported: "&aTeleported to warp &b%warp%&a."
-  teleport-failed: "&cTeleport failed: &7%error%"
+  not-found: '&cWarp not found.'
+  teleported: '&aTeleported to warp &b%warp%&a.'
+  teleport-failed: '&cTeleport failed: &7%error%'
 
-  cross-disabled: "&cCross-server warps are disabled by server config."
-  cross-disabled-tip: "&7Use &b/server %server% &7then run &b/warp %warp%"
+  cross-disabled: '&cCross-server warps are disabled by server config.'
+  cross-disabled-tip: '&7Use &b/server %server% &7then run &b/warp %warp%'
 
-  messaging-disabled: "&cCross-server messaging is disabled."
-  messaging-disabled-tip: "&7Use &b/server %server% &7then run &b/warp %warp%"
+  messaging-disabled: '&cCross-server messaging is disabled.'
+  messaging-disabled-tip: '&7Use &b/server %server% &7then run &b/warp %warp%'
 
-  sending: "&eSending you to &b%server%&e… you'll be teleported to warp &b%warp%&e on arrival."
-  switch-failed: "&cFailed to switch you to %server%."
+  sending: '&eSending you to &b%server%&e… you''ll be teleported to warp &b%warp%&e
+    on arrival.'
+  switch-failed: '&cFailed to switch you to %server%.'
   delete:
-    success: "&cDeleted warp &e%warp%&c."
-    failed: "&cFailed to delete warp &e%warp%&c."
+    success: '&cDeleted warp &e%warp%&c.'
+    failed: '&cFailed to delete warp &e%warp%&c.'
+  # NEW — player moved during warp cooldown
+  cancelled-moved: '%prefix%&cTéléportation au warp &e%warp% &cannulée car vous avez
+    bougé.'
+
+  # (Optional) start hint
+  cooldown-start: '&7Téléportation au warp &b{warp}&7 dans &e{seconds} &7secondes.
+    Ne bougez pas !'
+
 spawn:
-  not-set: "&cSpawn is not set."
-  teleported: "&aTeleported to spawn."
-  teleport-failed: "&cTeleport failed: &7%error%"
-  cross-disabled: "&cCross-server spawn is disabled by server config."
-  cross-disabled-tip: "&7Use &b/server %server% &7then run &b/spawn"
-  messaging-disabled: "&cCross-server messaging is disabled."
-  messaging-disabled-tip: "&7Use &b/server %server% &7then run &b/spawn"
-  sending: "&eSending you to &b%server%&e… you'll be teleported to spawn on arrival."
-  switch-failed: "&cFailed to switch you to %server%."
+  not-set: '&cSpawn is not set.'
+  teleported: '&aTeleported to spawn.'
+  teleport-failed: '&cTeleport failed: &7%error%'
+  cross-disabled: '&cCross-server spawn is disabled by server config.'
+  cross-disabled-tip: '&7Use &b/server %server% &7then run &b/spawn'
+  messaging-disabled: '&cCross-server messaging is disabled.'
+  messaging-disabled-tip: '&7Use &b/server %server% &7then run &b/spawn'
+  sending: '&eSending you to &b%server%&e… you''ll be teleported to spawn on arrival.'
+  switch-failed: '&cFailed to switch you to %server%.'
+  cancelled-moved: '&cTéléportation annulée: vous avez bougé.'
 
 delhome:
-  removed: "&aHome removed."
-  not-found: "&cHome not found."
+  removed: '&aHome removed.'
+  not-found: '&cHome not found.'
 
 sethome:
-  limit: "&cHome limit reached (&e%max%&c). Ask staff for a higher rank."
-  set: "&aHome &b%name% &ahas been set."
+  limit: '&cHome limit reached (&e%max%&c). Ask staff for a higher rank.'
+  set: '&aHome &b%name% &ahas been set.'
 
 home:
-  no-homes: "&eYou have no homes. Use &b%sethome% <name>"
-  list: "&6Homes: &b%homes%"
-  tip: "&7Tip: &b/%label% <name>&7 to teleport."
-  not-found: "&cHome not found: &e%name%"
-  teleported: "&aTeleported to home &b%name%&a."
-  cross-disabled: "&cCross-server homes are disabled by server config."
-  cross-disabled-tip: "&7Use &b/server %server% &7then run &b/home %name%"
-  messaging-disabled: "&cCross-server messaging is disabled. Ask an admin to enable RabbitMQ."
-  messaging-disabled-tip: "&7You can still switch with &b/server %server% &7and run &b/home %name%"
-  sending: "&eSending you to &b%server%&e… you'll be teleported to home &b%name%&e on arrival."
-  switch-failed: "&cFailed to switch you to %server%."
-  switch-failed-tip: "&7Make sure '&b%server%&7' matches the server name in your proxy config."
-  suggest: "&7Did you mean: &b%suggestions%"
-
+  no-homes: '&eYou have no homes. Use &b%sethome% <name>'
+  list: '&6Homes: &b%homes%'
+  tip: '&7Tip: &b/%label% <name>&7 to teleport.'
+  not-found: '&cHome not found: &e%name%'
+  teleported: '&aTeleported to home &b%name%&a.'
+  cross-disabled: '&cCross-server homes are disabled by server config.'
+  cross-disabled-tip: '&7Use &b/server %server% &7then run &b/home %name%'
+  messaging-disabled: '&cCross-server messaging is disabled. Ask an admin to enable
+    RabbitMQ.'
+  messaging-disabled-tip: '&7You can still switch with &b/server %server% &7and run
+    &b/home %name%'
+  sending: '&eSending you to &b%server%&e… you''ll be teleported to home &b%name%&e
+    on arrival.'
+  switch-failed: '&cFailed to switch you to %server%.'
+  switch-failed-tip: '&7Make sure ''&b%server%&7'' matches the server name in your
+    proxy config.'
+  suggest: '&7Did you mean: &b%suggestions%'
 
 player:
   sit:
-    sat: "&aYou sit down on &f%block%&a."
-    stand: "&aYou stand up."
-    already-riding: "&cYou are already riding something."
-    not-on-ground: "&cYou must be on the ground to sit."
-    not-while-flying: "&cYou cannot sit while flying or gliding."
-    no-block: "&cYou can't sit here."
+    sat: '&aYou sit down on &f%block%&a.'
+    stand: '&aYou stand up.'
+    already-riding: '&cYou are already riding something.'
+    not-on-ground: '&cYou must be on the ground to sit.'
+    not-while-flying: '&cYou cannot sit while flying or gliding.'
+    no-block: '&cYou can''t sit here.'
 
 # =========================================================
 # Admin / Utility command messages
 # =========================================================
 admin:
   afelius:
-    usage: "%prefix%&eUsage: &f/%label% &7reload &8<&fall|config|chat-format&8>"
-    reloaded-all: "%prefix%&aAll configurations reloaded."
-    reloaded-config: "%prefix%&aMain config reloaded."
-    reloaded-chat: "%prefix%&achat-format.yml reloaded."
-    unknown-section: "%prefix%&cUnknown section. Use: &7%sections%"
+    usage: '%prefix%&eUsage: &f/%label% &7reload &8<&fall|config|chat-format&8>'
+    reloaded-all: '%prefix%&aAll configurations reloaded.'
+    reloaded-config: '%prefix%&aMain config reloaded.'
+    reloaded-chat: '%prefix%&achat-format.yml reloaded.'
+    unknown-section: '%prefix%&cUnknown section. Use: &7%sections%'
 
   disenchant:
-    usage: "&cUsage: /%label% <enchantment|all> [levels]"
-    none: "&cThis item has no enchantments."
-    all: "&aAll enchantments have been removed."
-    not-present: "&cThis item does not have &e%ench%&c."
-    removed: "&aRemoved enchantment &e%ench%&a from your item."
-    partial: "&aLowered &e%ench%&a by &e%removed% &alevel(s). Remaining: &e%remaining%."
+    usage: '&cUsage: /%label% <enchantment|all> [levels]'
+    none: '&cThis item has no enchantments.'
+    all: '&aAll enchantments have been removed.'
+    not-present: '&cThis item does not have &e%ench%&c.'
+    removed: '&aRemoved enchantment &e%ench%&a from your item.'
+    partial: '&aLowered &e%ench%&a by &e%removed% &alevel(s). Remaining: &e%remaining%.'
 
   enchant:
-    usage: "%prefix%&eUsage: &f/%label% &7<enchantment> [level] [unsafe] [ignoreConflicts]"
-    hold-item: "%prefix%&cHold the item you want to enchant."
-    unknown: "%prefix%&cUnknown enchantment: &e%input%&c."
-    too-high: "%prefix%&cMax level for &e%ench% &cis &e%max%&c. Use 'unsafe' or permission &eoreo.enchant.unsafe&c."
-    conflict: "%prefix%&cConflicts with &e%with%&c. Add 'ignoreConflicts' or get permission &eoreo.enchant.ignoreconflicts&c."
-    applied: "%prefix%&aApplied &b%ench% &7%level%&a."
-    failed: "%prefix%&cCould not apply enchantment: &7%reason%"
+    usage: '%prefix%&eUsage: &f/%label% &7<enchantment> [level] [unsafe] [ignoreConflicts]'
+    hold-item: '%prefix%&cHold the item you want to enchant.'
+    unknown: '%prefix%&cUnknown enchantment: &e%input%&c.'
+    too-high: '%prefix%&cMax level for &e%ench% &cis &e%max%&c. Use ''unsafe'' or
+      permission &eoreo.enchant.unsafe&c.'
+    conflict: '%prefix%&cConflicts with &e%with%&c. Add ''ignoreConflicts'' or get
+      permission &eoreo.enchant.ignoreconflicts&c.'
+    applied: '%prefix%&aApplied &b%ench% &7%level%&a.'
+    failed: '%prefix%&cCould not apply enchantment: &7%reason%'
 
   fly:
-    console-usage: "%prefix%&eUsage (console): &f/%label% &7<player>"
-    not-found: "%prefix%&cPlayer not found: &e%target%&c."
-    enabled: "%prefix%&aFlight enabled."
-    disabled: "%prefix%&cFlight disabled."
-    toggled-other: "%prefix%&eToggled flight for &b%target% &7(%state%)."
+    console-usage: '%prefix%&eUsage (console): &f/%label% &7<player>'
+    not-found: '%prefix%&cPlayer not found: &e%target%&c.'
+    enabled: '%prefix%&aFlight enabled.'
+    disabled: '%prefix%&cFlight disabled.'
+    toggled-other: '%prefix%&eToggled flight for &b%target% &7(%state%).'
 
   head:
-    usage: "%prefix%&eUsage: &f/%label% &7<player>"
-    cannot-resolve: "%prefix%&cCould not resolve &e%target%&c's head."
-    dropped: "%prefix%&eInventory full—dropped the head at your feet."
-    given: "%prefix%&aGave you &b%target%&a's head."
+    usage: '%prefix%&eUsage: &f/%label% &7<player>'
+    cannot-resolve: '%prefix%&cCould not resolve &e%target%&c''s head.'
+    dropped: '%prefix%&eInventory full—dropped the head at your feet.'
+    given: '%prefix%&aGave you &b%target%&a''s head.'
 
   tp:
-    usage: "%prefix%&eUsage: &f/%label% &7<player> [target]"
-    console-usage: "%prefix%&eConsole usage: &f/%label% &7<player> <target>"
-    not-found: "%prefix%&cPlayer not found: &e%target%&c."
-    not-found-either: "%prefix%&cPlayer not found (&e%from%&c or &e%to%&c)."
-    self: "%prefix%&aTeleported to &b%target%&a."
-    other: "%prefix%&aTeleported &b%from% &ato &b%to%&a."
-    notice: "%prefix%&eYou were teleported to &b%to%&e."
+    usage: '%prefix%&eUsage: &f/%label% &7<player> [target]'
+    console-usage: '%prefix%&eConsole usage: &f/%label% &7<player> <target>'
+    not-found: '%prefix%&cPlayer not found: &e%target%&c.'
+    not-found-either: '%prefix%&cPlayer not found (&e%from%&c or &e%to%&c).'
+    self: '%prefix%&aTeleported to &b%target%&a.'
+    other: '%prefix%&aTeleported &b%from% &ato &b%to%&a.'
+    notice: '%prefix%&eYou were teleported to &b%to%&e.'
+  skin:
+    usage: '%prefix%&eUsage: &f/%label% &7<player>'
+    cannot-resolve: '%prefix%&cCould not resolve &e%target%&c''s skin.'
+    applied: '%prefix%&aYour skin is now &b%target%&a.'
+    applied-no-live: '%prefix%&aApplied skin data internally, but your server build
+      doesn''t support live skin change without extra libs.&7 (Tip: PacketEvents or
+      LibsDisguises)'
+  clone:
+    usage: '%prefix%&eUsage: &f/%label% &7<player>'
+    cannot-resolve: '%prefix%&cCould not resolve &e%target% &cto clone.'
+    applied: '%prefix%&aCloned &b%target%&a (skin%with_name%).'
+    applied-no-live: '%prefix%&aSkin copied.&7 (Live name/skin change may require
+      PacketEvents/LibsDisguises.)'
+  tphere:
+    usage: '%prefix%&eUsage: &f/%label% &7<player>'
+    not-found: '%prefix%&cPlayer not found: &e%target%&c.'
+    brought: '%prefix%&aBrought &b%target% &ato you.'
+    notice: '%prefix%&eYou were teleported to &b%player%&e.'
 
+teleport:
+  countdown:
+    title: '&aTéléportation...'
+    subtitle: '&fDans &e%seconds% &fs'
   # New: live skin/name utilities (PacketEvents-aware refresher)
   skin:
-    usage: "%prefix%&eUsage: &f/%label% &7<player>"
-    cannot-resolve: "%prefix%&cCould not resolve &e%target%&c's skin."
-    applied: "%prefix%&aYour skin is now &b%target%&a."
-    applied-no-live: "%prefix%&aApplied skin data internally, but your server build doesn't support live skin change without extra libs.&7 (Tip: PacketEvents or LibsDisguises)"
+    usage: '%prefix%&eUsage: &f/%label% &7<player>'
+    cannot-resolve: '%prefix%&cCould not resolve &e%target%&c''s skin.'
+    applied: '%prefix%&aYour skin is now &b%target%&a.'
+    applied-no-live: '%prefix%&aApplied skin data internally, but your server build
+      doesn''t support live skin change without extra libs.&7 (Tip: PacketEvents or
+      LibsDisguises)'
 
   clone:
-    usage: "%prefix%&eUsage: &f/%label% &7<player>"
-    cannot-resolve: "%prefix%&cCould not resolve &e%target% &cto clone."
-    applied: "%prefix%&aCloned &b%target%&a (skin%with_name%)."
-    applied-no-live: "%prefix%&aSkin copied.&7 (Live name/skin change may require PacketEvents/LibsDisguises.)"
+    usage: '%prefix%&eUsage: &f/%label% &7<player>'
+    cannot-resolve: '%prefix%&cCould not resolve &e%target% &cto clone.'
+    applied: '%prefix%&aCloned &b%target%&a (skin%with_name%).'
+    applied-no-live: '%prefix%&aSkin copied.&7 (Live name/skin change may require
+      PacketEvents/LibsDisguises.)'
 
   tphere:
-    usage: "%prefix%&eUsage: &f/%label% &7<player>"
-    not-found: "%prefix%&cPlayer not found: &e%target%&c."
-    brought: "%prefix%&aBrought &b%target% &ato you."
-    notice: "%prefix%&eYou were teleported to &b%player%&e."
+    usage: '%prefix%&eUsage: &f/%label% &7<player>'
+    not-found: '%prefix%&cPlayer not found: &e%target%&c.'
+    brought: '%prefix%&aBrought &b%target% &ato you.'
+    notice: '%prefix%&eYou were teleported to &b%player%&e.'
+
 # =========================================================
-# Warps
+# Warps (Admin / setwarp / delwarp)
 # =========================================================
 warps:
   usage:
-    setwarp: "%prefix%&eUsage: &f/%label% &7<name>"
-    delwarp: "%prefix%&eUsage: &f/%label% &7<name>"
-  set: "%prefix%&aWarp &b%warp% &aset."
-  deleted: "%prefix%&aWarp &b%warp% &aremoved."
-  not-found: "%prefix%&cWarp not found: &e%warp%&c."
+    setwarp: '%prefix%&eUsage: &f/%label% &7<name>'
+    delwarp: '%prefix%&eUsage: &f/%label% &7<name>'
+  set: '%prefix%&aWarp &b%warp% &aset.'
+  deleted: '%prefix%&aWarp &b%warp% &aremoved.'
+  not-found: '%prefix%&cWarp not found: &e%warp%&c.'
 
-
+# =========================================================
+# EnderChest
+# =========================================================
 enderchest:
-  # Command-related messages for /ec or /enderchest
   command:
-    usage: "%prefix%&eUsage: &f/%label% &7[player]"
-    self-no-permission: "%prefix%&cYou don't have permission to open the ender chest."
-    others-no-permission: "%prefix%&cYou don't have permission to open other players' ender chests."
-    target-not-found: "%prefix%&cPlayer not found: &e%target%&c."
-    opened-self: "%prefix%&aOpened your virtual ender chest."
-    opened-other: "%prefix%&aOpened &b%target%&a's virtual ender chest."
-
-  # GUI / slots info
+    usage: '%prefix%&eUsage: &f/%label% &7[player]'
+    self-no-permission: '%prefix%&cYou don''t have permission to open the ender chest.'
+    others-no-permission: '%prefix%&cYou don''t have permission to open other players''
+      ender chests.'
+    target-not-found: '%prefix%&cPlayer not found: &e%target%&c.'
+    opened-self: '%prefix%&aOpened your virtual ender chest.'
+    opened-other: '%prefix%&aOpened &b%target%&a''s virtual ender chest.'
   gui:
-    title: "&5Ender Chest"
-    locked-slot-name: "&cLocked slot"
+    title: '&5Ender Chest'
+    locked-slot-name: '&cLocked slot'
     locked-slot-lore:
-      - "&7Slots available: &b%slots%"
-      - "&8Upgrade your rank for more space."
-
-    # Optional hint when clicking a locked slot (if you send a chat message in the listener)
-    locked-click: "%prefix%&cThis slot is locked.&7 Upgrade your rank to unlock more ender chest space."
-
-  # Storage / technical error messages (if you ever want to surface them to players)
+      - '&7Slots available: &b%slots%'
+      - '&8Upgrade your rank for more space.'
+    locked-click: '%prefix%&cThis slot is locked.&7 Upgrade your rank to unlock more
+      ender chest space.'
   storage:
-    load-failed: "%prefix%&cFailed to load your ender chest.&7 Please try again later."
-    save-failed: "%prefix%&cFailed to save your ender chest.&7 Your items should still be safe, but contact staff if this keeps happening."
-    opened-cross-server: "%prefix%&7Coffre de l'End &bcross-serveur &7ouvert."
+    load-failed: '%prefix%&cFailed to load your ender chest.&7 Please try again later.'
+    save-failed: '%prefix%&cFailed to save your ender chest.&7 Your items should still
+      be safe, but contact staff if this keeps happening.'
+    opened-cross-server: '%prefix%&7Coffre de l''End &bcross-serveur &7ouvert.'
 
+# =========================================================
+# Moderation GUI / Inspect / Freeze
+# =========================================================
 modgui:
   main:
     player:
-      name: "&ePlayer moderation"
+      name: '&ePlayer moderation'
       lore:
-        - "&7Ban, mute, kick, heal, feed, kill,"
-        - "&7invsee/ecsee, gm, freeze, vanish…"
+        - '&7Ban, mute, kick, heal, feed, kill,'
+        - '&7invsee/ecsee, gm, freeze, vanish…'
     world:
-      name: "&aWorld moderation"
+      name: '&aWorld moderation'
       lore:
-        - "&7Choose a world to manage time/weather/spawn,"
-        - "&7border, gamerules, per-world whitelist/mobs"
+        - '&7Choose a world to manage time/weather/spawn,'
+        - '&7border, gamerules, per-world whitelist/mobs'
     server:
-      name: "&cServer moderation"
+      name: '&cServer moderation'
       lore:
-        - "&7Difficulty, whitelist, default gm, quick spawns"
+        - '&7Difficulty, whitelist, default gm, quick spawns'
     titles:
-      player: "&8Player moderation"
-      world: "&8Select World"
-      server: "&8Server moderation"
+      player: '&8Player moderation'
+      world: '&8Select World'
+      server: '&8Server moderation'
   ecsee:
-    target-offline: "%prefix%&cTarget went offline."
-    title: "&bEditing EnderChest of &e%target%"
-freeze:
-  frozen: "%prefix%&cYou have been frozen for &e%seconds%s&c."
-  unfrozen: "%prefix%&aYou are no longer frozen."
-  expired: "%prefix%&aFreeze expired."
-  actionbar-staff: "&c[Frozen] &f%target% &7(%seconds%s)"
-playerinspect:
-  target-offline: "&cThat player is not online on the network."
-  head-name: "&b%player% &7(&e%server%&7)"
-  lore:
-    health: "&7Health: &c%current%&7/&c%max%"
-    health-na: "&7Health: &fN/A"
-    food: "&7Food: &e%food%"
-    food-na: "&7Food: &fN/A"
-    gamemode: "&7Gamemode: &f%gm%"
-    world: "&7World: &a%world%"
-    location: "&7Location: &f%x% %y% %z%"
-    location-na: "&7Location: &fREMOTE"
-    ping: "&7Ping: &f%ping%"
-    ping-na: "&7Ping: &fN/A"
-    tps: "&7TPS: &f%tps%"
-    tps-na: "&7TPS: &fN/A"
+    target-offline: '%prefix%&cTarget went offline.'
+    title: '&bEditing EnderChest of &e%target%'
 
+freeze:
+  frozen: '%prefix%&cYou have been frozen for &e%seconds%s&c.'
+  unfrozen: '%prefix%&aYou are no longer frozen.'
+  expired: '%prefix%&aFreeze expired.'
+  actionbar-staff: '&c[Frozen] &f%target% &7(%seconds%s)'
+
+playerinspect:
+  target-offline: '&cThat player is not online on the network.'
+  head-name: '&b%player% &7(&e%server%&7)'
+  lore:
+    health: '&7Health: &c%current%&7/&c%max%'
+    health-na: '&7Health: &fN/A'
+    food: '&7Food: &e%food%'
+    food-na: '&7Food: &fN/A'
+    gamemode: '&7Gamemode: &f%gm%'
+    world: '&7World: &a%world%'
+    location: '&7Location: &f%x% %y% %z%'
+    location-na: '&7Location: &fREMOTE'
+    ping: '&7Ping: &f%ping%'
+    ping-na: '&7Ping: &fN/A'
+    tps: '&7TPS: &f%tps%'
+    tps-na: '&7TPS: &fN/A'
+
+# =========================================================
+# Player Warps (service-level + generic messages)
+# =========================================================
+playerwarps:
+  usage:
+    root: '%prefix%&eUsage: &f/pw &7<set|del|list|warpName>'
+    set: '%prefix%&eUsage: &f/pw set &7<name>'
+    del: '%prefix%&eUsage: &f/pw del &7<name>'
+
+  whitelist:
+    usage: '%prefix%&eUsage: &f/%label% &7<add|remove> <warp> <player>'
+    not-found: '%prefix%&cWarp not found: &e%name%&c.'
+    not-enabled: '%prefix%&cWhitelist is not enabled for warp &e%name%&c.'
+    player-not-found: '%prefix%&cPlayer not found.'
+    already: '%prefix%&e%target% &7is already whitelisted for warp &b%name%&7.'
+    added: '%prefix%&aAdded &b%target% &ato whitelist of warp &b%name%&a.'
+    not-in: '%prefix%&e%target% &7is not in whitelist of warp &b%name%&7.'
+    removed: '%prefix%&cRemoved &b%target% &cfrom whitelist of warp &b%name%&c.'
+
+  limit: '%prefix%&cPlayer warp limit reached (&e%max%&c).'
+
+  set:
+    success: '%prefix%&aPlayer warp &b%name% &ahas been created.'
+    limit-reached: '%prefix%&cYou reached your max player warp limit (&e%limit%&c).'
+    already-exists: '%prefix%&cYou already have a warp with that name.'
+
+  delete:
+    success: '%prefix%&aPlayer warp &b%name% &ahas been deleted.'
+    not-found: '%prefix%&cPlayer warp not found: &e%name%&c.'
+
+  list:
+    empty: '%prefix%&eYou have no player warps. Use &b/pw set <name>&e to create one.'
+    self: '%prefix%&eYour player warps: &b%list%'
+
+  teleport:
+    not-found: '%prefix%&cPlayer warp not found: &e%name%&c.'
+    no-permission: '%prefix%&cYou don''t have access to that warp.'
+    local: '%prefix%&aTeleported to player warp &b%name%&a.'
+    failed: '%prefix%&cTeleport failed for warp &e%name%&c. Contact an administrator.'
+
+# =========================================================
+# /pw Command (PlayerWarpCommand)
+# =========================================================
+pw:
+  usage-set: '%prefix%&eUsage: &f/%label% set &7<name>'
+  usage-remove: '%prefix%&eUsage: &f/%label% remove &7<warp>'
+
+  no-permission-set: '%prefix%&cYou don''t have permission to set player warps.'
+  limit-reached: '%prefix%&cYou reached your player warp limit (&e%limit%&c).'
+  already-exists: '%prefix%&cYou already have a warp named &e%name%&c.'
+  set-success: '%prefix%&aPlayer warp &b%name% &ahas been created.'
+
+  not-found-owner: '%prefix%&cYou don''t have a warp named &e%name%&c.'
+  no-permission-remove: '%prefix%&cYou don''t have permission to remove player warps.'
+  remove-success: '%prefix%&aPlayer warp &b%name% &ahas been removed.'
+  remove-failed: '%prefix%&cFailed to remove player warp &e%name%&c. Contact an administrator.'
+
+  not-found: '%prefix%&cPlayer warp not found: &e%name%&c.'
+  no-permission-warp: '%prefix%&cYou don''t have access to that player warp (&e%name%&c).'
+
+  teleported: '%prefix%&aTeleported to player warp &b%name%&a.'
+  teleport-failed: '%prefix%&cTeleport failed: &7%error%'
+
+  sending: '%prefix%&eSending you to &b%server%&e… you''ll be teleported to player
+    warp &b%warp%&e on arrival.'
+  messaging-disabled: '%prefix%&cCross-server messaging is disabled.&7 (Unable to
+    send you to &b%server%&7 for warp &b%warp%&7.)'
+  no-permission-amount: '%prefix%&cYou don''t have permission to use &e/pw amount&c.'
+  amount-self: '%prefix%&eYou currently have &b%amount% &eplayer warps.'
+  amount-other: '%prefix%&ePlayer &b%player% &ehas &b%amount% &eplayer warps.'
+
+  no-permission-rtp: '%prefix%&cYou don''t have permission to use &e/pw rtp&c.'
+  rtp-none: '%prefix%&cThere are no available player warps to randomly teleport to.'
+  no-permission-base: '%prefix%&cYou don''t have permission to use player warps.'
+  no-permission-list: '%prefix%&cYou don''t have permission to list player warps.'
+  rtp-none-usable: '%prefix%&eThere are no player warps you can use.'
+  no-permission-near: '%prefix%&cYou don''t have permission to use /pw near.'
+  near-none: '%prefix%&eNo player warps within &f%radius% &eblocks.'
+  near-page-empty: '%prefix%&cNo warps on page &e%page%&c.'
+  no-permission-reset: '%prefix%&cYou don''t have permission to reset player warps.'
+  usage-reset: '%prefix%&eUsage: &f/%label% reset &7<warp>'
+  reset-success: '%prefix%&aReset player warp &b%name% &ato your current location.'
+  reset-failed: '%prefix%&cFailed to reset player warp &e%name%&c.'
+  no-permission-rename: '%prefix%&cYou don''t have permission to rename player warps.'
+  usage-rename: '%prefix%&eUsage: &f/%label% rename &7<warp> <newName>'
+  rename-success: '%prefix%&aRenamed &b%old% &ato &b%name%&a.'
+  rename-failed: '%prefix%&cFailed to rename &e%old% &cto &e%name%&c.'
+  no-permission-setowner: '%prefix%&cYou don''t have permission to change warp owners.'
+  usage-setowner: '%prefix%&eUsage: &f/%label% setowner &7<warp> <player>'
+  setowner-success: '%prefix%&aTransferred warp &b%warp% &ato &e%player%&a.'
+  setowner-failed: '%prefix%&cFailed to transfer warp &e%warp% &cto &e%player%&c.'
+  no-permission-removeall: '%prefix%&cYou don''t have permission to remove all warps.'
+  usage-removeall: '%prefix%&eUsage: &f/%label% removeall &7<player>'
+  removeall-success: '%prefix%&aRemoved &b%amount% &aplayer warps for &e%player%&a.'
+  no-permission-reload: '%prefix%&cYou don''t have permission to reload player warps.'
+  reload-success: '%prefix%&aPlayerWarp configuration reloaded.'
+  no-permission-addwarps: '%prefix%&cYou don''t have permission to add warp slots.'
+  usage-addwarps: '%prefix%&eUsage: &f/%label% addwarps &7<player> <amount>'
+  addwarps-success: '%prefix%&aAdded &b%amount% &aextra warps to &e%player%&a. Total
+    extra: &b%total%&a.'
+  not-implemented-yet: '%prefix%&eSubcommand ''&b%sub%&e'' is not implemented in this
+    build.'
+  no-permission-whitelist: '&cYou don''t have permission to manage warp whitelists.'
+  usage-whitelist: '&eUsage: &f/pw whitelist <enable|disable|list|set|remove> <warp>
+    [player]'
+  usage-whitelist-set: '&eUsage: &f/pw whitelist set <warp> <player>'
+  usage-whitelist-remove: '&eUsage: &f/pw whitelist remove <warp> <player>'
+  whitelist-not-owner: '&cYou must be the owner of this warp (or admin) to edit its
+    whitelist.'
+  whitelist-enabled: '&aWhitelist enabled for warp &e%warp%&a.'
+  whitelist-disabled: '&cWhitelist disabled for warp &e%warp%&c.'
+  whitelist-added: '&a%player% has been added to the whitelist of &e%warp%&a.'
+  whitelist-already: '&e%player% &7is already whitelisted on &e%warp%&7.'
+  whitelist-removed: '&c%player% has been removed from the whitelist of &e%warp%&c.'
+  whitelist-not-found: '&e%player% &7is not whitelisted on &e%warp%&7.'
+  # ---- Meta: description ----
+  usage-desc: '%prefix%&eUsage: &f/%label% desc &7<warp> [description...]'
+  no-permission-desc: '%prefix%&cYou don''t have permission to edit warp descriptions.'
+  desc-set: '%prefix%&aUpdated description for &b%warp%&a: &7%desc%'
+  desc-cleared: '%prefix%&aCleared description for &b%warp%&a.'
+  desc-show: '%prefix%&eDescription for &b%warp%&e: &7%desc%'
+  desc-empty: '%prefix%&eWarp &b%warp% &ehas no description set.'
+
+  # ---- Meta: category ----
+  usage-category: '%prefix%&eUsage: &f/%label% category &7<warp> [category]'
+  no-permission-category: '%prefix%&cYou don''t have permission to edit warp categories.'
+  category-set: '%prefix%&aSet category of &b%warp% &ato &e%category%&a.'
+  category-cleared: '%prefix%&aCleared category for &b%warp%&a.'
+  category-show: '%prefix%&eCategory for &b%warp%&e: &7%category%'
+  category-empty: '%prefix%&eWarp &b%warp% &ehas no category.'
+
+  # ---- Meta: lock ----
+  usage-lock: '%prefix%&eUsage: &f/%label% lock &7<warp> [on|off|toggle]'
+  no-permission-lock: '%prefix%&cYou don''t have permission to lock warps.'
+  locked: '%prefix%&cWarp &b%warp% &cis now &clocked&c.'
+  unlocked: '%prefix%&aWarp &b%warp% &ais now &aunlocked&a.'
+
+  # ---- Meta: icon ----
+  usage-icon: '%prefix%&eUsage: &f/%label% icon &7<warp> [clear]'
+  no-permission-icon: '%prefix%&cYou don''t have permission to set warp icons.'
+  icon-no-item: '%prefix%&cYou must hold an item in your main hand to use as an icon.'
+  icon-set: '%prefix%&aIcon updated for warp &b%warp%&a.'
+  icon-cleared: '%prefix%&aCleared icon for warp &b%warp%&a.'
+
+  # ---- Meta: cost ----
+  usage-cost: '%prefix%&eUsage: &f/%label% cost &7<warp> <amount>'
+  no-permission-cost: '%prefix%&cYou don''t have permission to set warp costs.'
+  cost-invalid: '%prefix%&cInvalid cost: &e%input%&c.'
+  cost-cleared: '%prefix%&aTeleport to &b%warp% &ais now &ffree&a.'
+  cost-set: '%prefix%&aSet teleport cost of &b%warp% &ato &f%amount%&a.'
+  cost-no-economy: '%prefix%&cEconomy is not available. Cannot charge &f%amount%&c.'
+  cost-insufficient: '%prefix%&cYou need at least &f%amount% &cto use this warp.'
+  cost-charged: '%prefix%&aYou paid &f%amount% &ato &e%owner% &afor this warp.'
+
+  # ---- Meta: managers ----
+  usage-managers: '%prefix%&eUsage: &f/%label% managers &7<warp> [player]'
+  no-permission-managers: '%prefix%&cYou don''t have permission to edit warp managers.'
+  managers-player-not-found: '%prefix%&cPlayer not found: &e%player%&c.'
+  manager-added: '%prefix%&aAdded &b%player% &aas manager of &e%warp%&a.'
+  manager-removed: '%prefix%&cRemoved &b%player% &cfrom managers of &e%warp%&c.'
+
+  # ---- Meta: password ----
+  usage-password: '%prefix%&eUsage: &f/%label% password &7<warp> <password|off>'
+  no-permission-password: '%prefix%&cYou don''t have permission to set warp passwords.'
+  password-set: '%prefix%&aPassword set for warp &b%warp%&a.'
+  password-cleared: '%prefix%&aPassword cleared for warp &b%warp%&a.'
+  cost-not-enough: '%prefix%&cYou need &e%amount%&c to use this player warp.'
+  password-wrong: '%prefix% &cWrong password for warp &e%warp%&c.'
+  password-not-required: '%prefix% &7Warp &e%warp% &7doesn''t require a password.'
+  password-title-wrong: '&cWrong password'
+  password-subtitle-wrong: '&7Try again'
+  password-title-empty: '&cWrong password'
+  password-subtitle-empty: '&7No password entered'
+  password-required: '%prefix%&cThis warp is password protected. Use &f/pw %warp%
+    <password>&c.'
+  help-header: '&8&m------------------------'
+  help-footer: '&8&m------------------------'
+  help-body: |
+    &b/%label% help &7- Show this help.
+    &b/%label% set <name> &7- Set a warp at your location.
+    &b/%label% <warp> &7- Teleport to a player warp.
+    &b/%label% <warp> <password> &7- Shortcut for password-protected warps.
+    &b/%label% use <warp> <password> &7- Use a password-protected warp.
+    &b/%label% list [player] &7- List player warps.
+    &b/%label% amount [player] &7- Show warp count.
+    &b/%label% rtp &7- Teleport to a random warp.
+    &b/%label% near [page] &7- List nearby warps.
+    &b/%label% remove <warp> &7- Remove your warp.
+    &b/%label% reset <warp> &7- Reset warp to your current location.
+    &b/%label% rename <warp> <name> &7- Rename a warp.
+    &b/%label% setowner <warp> <player> &7- Transfer warp ownership.
+    &b/%label% removeall <player> &7- Remove all warps of a player.
+    &b/%label% reload &7- Reload PlayerWarp configs.
+    &b/%label% addwarps <player> <amount> &7- Add extra warp slots.
+    &b/%label% whitelist <action> <warp> [player] &7- Manage warp whitelist.
+    &b/%label% desc <warp> [text] &7- Set or show description.
+    &b/%label% category <warp> [name] &7- Set or show category.
+    &b/%label% lock <warp> [on/off] &7- Lock or unlock a warp.
+    &b/%label% icon <warp> [clear] &7- Set warp icon from hand.
+    &b/%label% cost <warp> <amount> &7- Set teleport price.
+    &b/%label% managers <warp> [player] &7- List or toggle managers.
+    &b/%label% password <warp> <pwd|off> &7- Set or clear password.
+    &b/%label% gui &7- Open the global warp browser.
+    &b/%label% mywarps &7- Open your personal warp manager."
+  list-header: |-
+    &8&m------------------------
+    &bPlayer warps for &e%owner%&7:
+  list-empty: '&7  (none)'
+  list-entry: '&7- &a%name%'
+  list-footer: '&8&m------------------------'
+  only-players-sub: '%prefix%&cOnly players can use &e/pw %sub%&c.'
+  list-target-offline: '%prefix%&cPlayer &e%player% &cis not online.&7 (For now only
+    online lookups.)'
+  amount-target-offline: '%prefix%&cPlayer &e%player% &cis not online.'
+  amount-console-usage: '%prefix%&cConsole must specify a player: &f/pw amount <player>'
+  player-resolve-failed: '%prefix%&cCould not resolve player &e%player%&c.'
+  addwarps-invalid-amount: '%prefix%&cAmount must be a number.'
+moderation:
+  mute:
+    usage: '%prefix%&eUsage: &f/%label% &7<player> <duration> [reason]'
+    player-not-found: '%prefix%&cPlayer not found: &e%target%&c.'
+    invalid-duration: '%prefix%&cInvalid duration. Use &e30s&c, &e10m&c, &e2h&c, &e1d&c...'
+    executor:
+      success: '%prefix%&aMuted &b%target% &afor &e%duration%&a%reason_suffix%'
+    target:
+      notified: '%prefix%&cYou have been muted for &e%duration%&c%reason_suffix%'
+    broadcast: '%prefix%&e%staff% &7muted &c%target% &7for &e%duration%&7%reason_suffix%'

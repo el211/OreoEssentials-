@@ -149,7 +149,22 @@ public final class RtpConfig {
         return null;
     }
 
-    /* ----------------- Radius logic (unchanged) ----------------- */
+    /**
+     * Version qui priorise un monde demandé explicitement.
+     */
+    public String chooseTargetWorld(Player p, String requestedWorld) {
+        // 1) Si un monde est demandé
+        if (requestedWorld != null && !requestedWorld.isBlank()) {
+            if (allowedWorlds.isEmpty() || allowedWorlds.contains(requestedWorld)) {
+                return requestedWorld;
+            }
+        }
+
+        // 2) Sinon, fallback sur l’ancienne logique
+        return chooseTargetWorld(p);
+    }
+
+    /* ----------------- Radius logic (inchangé) ----------------- */
 
     /**
      * Get the best radius for a player, honoring per-world overrides and tier permissions.
@@ -184,7 +199,6 @@ public final class RtpConfig {
         return bestRadiusFor(permNode -> p.hasPermission(permNode));
     }
 
-
     /** Backward-compatible global best-radius calculator. */
     public int bestRadiusFor(Predicate<String> hasTierPerm) {
         int best = cfg.getInt("default", 200);
@@ -204,22 +218,73 @@ public final class RtpConfig {
         return best;
     }
 
-// Dans RtpConfig
+    /* ----------------- ✅ Cooldown logic (NOUVEAU) ----------------- */
 
     /**
-     * Version qui priorise un monde demandé explicitement.
+     * Cooldown RTP en secondes pour un joueur, basé sur:
+     * - cooldown.worlds.<world>.default
+     * - cooldown.worlds.<world>.<tier>
+     * - cooldown.default
+     * - cooldown.<tier>
+     *
+     * Tiers = mêmes clés que pour le radius :
+     *   "vip"  -> permission "oreo.tier.vip"
+     *   "legend" -> "oreo.tier.legend"
+     *
+     * On prend le *plus petit* cooldown parmi les perms que le joueur a.
      */
-    public String chooseTargetWorld(Player p, String requestedWorld) {
-        // 1) Si un monde est demandé
-        if (requestedWorld != null && !requestedWorld.isBlank()) {
-            if (allowedWorlds.isEmpty() || allowedWorlds.contains(requestedWorld)) {
-                return requestedWorld;
+    public int cooldownFor(Player p) {
+        String base = "cooldown";
+        // cooldown.global default
+        int globalDefault = cfg.getInt(base + ".default", 0);
+
+        // 1) Per-world override : cooldown.worlds.<world>.*
+        String worldPath = base + ".worlds." + p.getWorld().getName();
+        if (cfg.isConfigurationSection(worldPath)) {
+            int best = cfg.getInt(worldPath + ".default", globalDefault);
+
+            var worldSec = cfg.getConfigurationSection(worldPath);
+            if (worldSec != null) {
+                for (String key : worldSec.getKeys(false)) {
+                    if ("default".equalsIgnoreCase(key)) continue;
+
+                    int val = cfg.getInt(worldPath + "." + key, -1);
+                    if (val < 0) continue;
+
+                    String permNode = "oreo.tier." + key;
+                    if (p.hasPermission(permNode)) {
+                        if (best <= 0 || val < best) {
+                            best = val;
+                        }
+                    }
+                }
+            }
+            return best;
+        }
+
+        // 2) Sinon, global cooldown: cooldown.*
+        int best = globalDefault;
+        var cooldownSec = cfg.getConfigurationSection(base);
+        if (cooldownSec != null) {
+            for (String key : cooldownSec.getKeys(false)) {
+                if ("default".equalsIgnoreCase(key) || "worlds".equalsIgnoreCase(key)) continue;
+
+                int val = cooldownSec.getInt(key, -1);
+                if (val < 0) continue;
+
+                String permNode = "oreo.tier." + key;
+                if (p.hasPermission(permNode)) {
+                    if (best <= 0 || val < best) {
+                        best = val;
+                    }
+                }
             }
         }
 
-        // 2) Sinon, fallback sur l’ancienne logique
-        return chooseTargetWorld(p);
+        return best;
     }
+
+    /* ----------------- internal helpers ----------------- */
 
     private boolean isNonTierKey(String key) {
         return "enabled".equalsIgnoreCase(key)
@@ -230,6 +295,7 @@ public final class RtpConfig {
                 || "min-y".equalsIgnoreCase(key)
                 || "max-y".equalsIgnoreCase(key)
                 || "worlds".equalsIgnoreCase(key)
-                || "cross-server".equalsIgnoreCase(key);
+                || "cross-server".equalsIgnoreCase(key)
+                || "cooldown".equalsIgnoreCase(key); // ✅ important: ignorer la section cooldown pour le radius
     }
 }

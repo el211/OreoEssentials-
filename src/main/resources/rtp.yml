@@ -41,3 +41,10 @@ worlds:
     default: 200
   world_the_end:
     default: 150
+
+cooldown:
+  default: 30
+
+  paladin: 10
+  vip: 20
+  mvp: 15

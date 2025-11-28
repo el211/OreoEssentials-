@@ -20,6 +20,7 @@ public final class InvseeMenu implements InventoryProvider {
     private final InvseeSession session;
     private final SmartInventory inv;
     private final ItemStack[] lastSnapshot = new ItemStack[36];
+    private int tickCounter = 0;
 
     public InvseeMenu(OreoEssentials plugin,
                       InvseeService service,
@@ -82,7 +83,22 @@ public final class InvseeMenu implements InventoryProvider {
                 }
             });
         }
+
+        // 3) periodically ask the owner node for a fresh snapshot
+        tickCounter++;
+        // every 10 ticks (~0.5s) – you can tune this to 20 (1s) if you want less traffic
+        if (tickCounter % 10 == 0) {
+            var broker = service.getBroker();
+            if (broker != null && plugin.isMessagingAvailable()) {
+                broker.requestOpen(
+                        viewer,
+                        session.getTargetId(),
+                        session.getTargetNameOrFallback()
+                );
+            }
+        }
     }
+
 
     /** Called by InvseeService.applyRemoteState(...) to repaint from session snapshot. */
     public void refreshFromSession(InvseeSession sess) {

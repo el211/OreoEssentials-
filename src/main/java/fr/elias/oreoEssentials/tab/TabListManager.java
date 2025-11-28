@@ -38,6 +38,9 @@ public class TabListManager {
     // Controlled by tab.yml: tab.network.all-servers
     private boolean networkMode;
 
+    // NEW: suffix pattern (configured in tab.yml -> tab.name-format.server-tag)
+    private String serverTagPattern;
+
     // Title
     private boolean titleEnabled;
     private boolean titleShowOnJoin;
@@ -156,6 +159,9 @@ public class TabListManager {
         String ov = nf != null ? nf.getString("overflow", "TRIM") : "TRIM";
         overflowMode = "ELLIPSIS".equalsIgnoreCase(ov) ? OverflowMode.ELLIPSIS : OverflowMode.TRIM;
 
+        // NEW: custom suffix pattern configured in tab.yml
+        serverTagPattern = nf != null ? nf.getString("server-tag", "") : "";
+
         rankFormats.clear();
         if (nf != null && nf.isConfigurationSection("rank-formats")) {
             for (String k : nf.getConfigurationSection("rank-formats").getKeys(false)) {
@@ -271,7 +277,7 @@ public class TabListManager {
                 String nickOrName = safeNickOrName(p);
                 String rendered = patternToUse.replace("%nick_or_name%", nickOrName);
 
-                // Apply internal placeholders in name too (for network counts etc.)
+                // Apply internal placeholders in name too (for network counts etc. and %oe_server_tag%)
                 rendered = applyInternalPlaceholders(p, rendered);
 
                 // then PAPI
@@ -441,6 +447,7 @@ public class TabListManager {
      *   %oe_local_online%   -> current server online players
      *   %oe_network_online% -> full network online players (PlayerDirectory), fallback = local
      *   %oe_network_list%   -> multi-line "name §8(§7server§8)" list (if PlayerDirectory available)
+     *   %oe_server_tag%     -> suffix from tab.yml (tab.name-format.server-tag)
      *
      * This runs BEFORE PlaceholderAPI.
      */
@@ -494,6 +501,15 @@ public class TabListManager {
             } else {
                 out = out.replace("%oe_network_list%", String.join("\n", networkLines));
             }
+        }
+
+        // --- NEW: %oe_server_tag% from tab.yml ---
+        if (out.contains("%oe_server_tag%")) {
+            String tag = serverTagPattern;
+            if (tag == null) tag = "";
+            // Allow colors and PAPI later (PAPI will run after this method)
+            tag = color(tag);
+            out = out.replace("%oe_server_tag%", tag);
         }
 
         return out;

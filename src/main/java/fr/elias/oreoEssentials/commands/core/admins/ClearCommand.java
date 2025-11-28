@@ -120,26 +120,4 @@ public class ClearCommand implements OreoCommand {
         invService.save(uuid, snap);
     }
 
-    @Override
-    public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
-        // /clear <player>
-        if (args.length != 1) {
-            return List.of();
-        }
-
-        if (!sender.hasPermission("oreo.clear.others")) {
-            return List.of();
-        }
-
-        String prefix = args[0];
-
-        var plugin = OreoEssentials.get();
-        var directory = plugin.getPlayerDirectory();
-
-        var names = directory.suggestOnlineNames(prefix, 50);
-
-        return names.stream()
-                .sorted(String.CASE_INSENSITIVE_ORDER)
-                .collect(Collectors.toList());
-    }
 }

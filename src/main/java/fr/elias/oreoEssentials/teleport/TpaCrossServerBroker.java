@@ -8,6 +8,7 @@ import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.rabbitmq.packet.impl.TpaRequestPacket;
 import fr.elias.oreoEssentials.rabbitmq.packet.impl.TpaSummonPacket;
 import fr.elias.oreoEssentials.services.TeleportService;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.elias.oreoEssentials.util.ProxyMessenger;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -144,6 +145,8 @@ public final class TpaCrossServerBroker implements Listener {
      * @return true if a cross-server pending was handled.
      */
     public boolean acceptCrossServer(Player target) {
+        if (target == null) return false;
+
         Pending p = pendingForTarget.remove(target.getUniqueId());
         if (p == null) {
             dbg("No cross-server pending for " + target.getName());
@@ -161,15 +164,24 @@ public final class TpaCrossServerBroker implements Listener {
         pendingArrival.put(p.requesterUuid, target.getUniqueId());
 
         // Ask requester's current server to move them here
-        pm.sendPacket(PacketChannel.individual(p.fromServer),
-                new TpaSummonPacket(p.requesterUuid, localServer));
+        if (isMessagingReady()) {
+            pm.sendPacket(
+                    PacketChannel.individual(p.fromServer),
+                    new TpaSummonPacket(p.requesterUuid, localServer)
+            );
+        }
 
-        target.sendMessage("§aTeleport request accepted. Summoning §b" + p.requesterName + "§7…");
-        dbg("Accept -> summon requester=" + p.requesterUuid + " from=" + p.fromServer + " to=" + localServer
+        target.sendMessage("§aTeleport request accepted. Summoning §b"
+                + p.requesterName + "§7…");
+        dbg("Accept -> summon requester=" + p.requesterUuid
+                + " from=" + p.fromServer + " to=" + localServer
                 + " (target=" + target.getName() + ")");
 
         // Safety: clean up if they never arrive
-        Bukkit.getScheduler().runTaskLater(plugin, () -> pendingArrival.remove(p.requesterUuid), 20L * 60);
+        Bukkit.getScheduler().runTaskLater(plugin,
+                () -> pendingArrival.remove(p.requesterUuid),
+                20L * 60);
+
         return true;
     }
 
@@ -186,7 +198,7 @@ public final class TpaCrossServerBroker implements Listener {
     }
 
     /* ====================================================================== */
-    /*                              PACKET HANDLERS                            */
+    /*                              PACKET HANDLERS                           */
     /* ====================================================================== */
 
     /** Handles incoming request ON THE TARGET'S SERVER. */
@@ -231,22 +243,88 @@ public final class TpaCrossServerBroker implements Listener {
             return;
         }
 
-        try {
+        // Read cooldown from settings.yml
+        var root = plugin.getSettingsConfig().getRoot();
+        var sec  = root.getConfigurationSection("features.tpa");
+
+        boolean enabled = sec != null && sec.getBoolean("cooldown", false);
+        int seconds     = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
+
+        // If no cooldown configured -> old instant behavior
+        if (!enabled || seconds <= 0) {
             boolean ok = connectToServer(requester, pkt.getDestServer());
             if (ok) {
-                dbg("Summon: switching " + requester.getName() + " -> " + pkt.getDestServer());
-                requester.sendMessage("§7Teleporting to §b" + pkt.getDestServer() + "§7…");
+                requester.sendMessage("§7Téléportation vers §b" + pkt.getDestServer() + "§7…");
             } else {
                 plugin.getLogger().warning("[TPA-X] Could not send " + requester.getName()
                         + " to server " + pkt.getDestServer() + " (no ProxyMessenger method matched)");
             }
-        } catch (Throwable t) {
-            plugin.getLogger().warning("[TPA-X] Failed to switch requester to " + pkt.getDestServer() + ": " + t.getMessage());
+            return;
         }
+
+        // ✅ Cross-server cooldown for the REQUESTER
+        final String destServer = pkt.getDestServer();
+        final Location origin = requester.getLocation().clone();
+
+        dbg("Starting cross-server TPA countdown for requester=" + requester.getName()
+                + " destServer=" + destServer + " seconds=" + seconds);
+
+        new org.bukkit.scheduler.BukkitRunnable() {
+            int remain = seconds;
+
+            @Override
+            public void run() {
+                if (!requester.isOnline()) {
+                    dbg("Requester went offline during cross-server countdown; cancel.");
+                    cancel();
+                    return;
+                }
+
+                // Cancel if requester moved (allow head movement only)
+                if (hasBodyMoved(requester, origin)) {
+                    requester.sendMessage("§cTéléportation annulée: vous avez bougé.");
+                    dbg("Requester moved; cancelling cross-server countdown.");
+                    cancel();
+                    return;
+                }
+
+                if (remain <= 0) {
+                    cancel();
+                    dbg("Cross-server countdown finished; connecting " + requester.getName()
+                            + " -> " + destServer);
+                    boolean ok = connectToServer(requester, destServer);
+                    if (ok) {
+                        requester.sendMessage("§7Téléportation vers §b" + destServer + "§7…");
+                    } else {
+                        plugin.getLogger().warning("[TPA-X] Failed to connect "
+                                + requester.getName() + " to " + destServer);
+                    }
+                    return;
+                }
+
+                // Show countdown to the REQUESTER — title/subtitle from lang.yml
+                String title = Lang.msg("teleport.countdown.title", null, requester);
+                String subtitle = Lang.msg(
+                        "teleport.countdown.subtitle",
+                        Map.of("seconds", String.valueOf(remain)),
+                        requester
+                );
+                requester.sendTitle(title, subtitle, 0, 20, 0);
+
+                remain--;
+            }
+        }.runTaskTimer(plugin, 0L, 20L);
+    }
+
+    private boolean hasBodyMoved(Player p, Location origin) {
+        Location now = p.getLocation();
+        // Same block X/Z = we consider this "no movement" (can move head)
+        return now.getBlockX() != origin.getBlockX()
+                || now.getBlockZ() != origin.getBlockZ();
     }
 
     /* ====================================================================== */
-    /*                              ARRIVAL FINALIZE                           */
+    /*                              ARRIVAL FINALIZE                          */
     /* ====================================================================== */
 
     @EventHandler
@@ -280,7 +358,7 @@ public final class TpaCrossServerBroker implements Listener {
     }
 
     /* ====================================================================== */
-    /*                                   UTIL                                  */
+    /*                                   UTIL                                 */
     /* ====================================================================== */
 
     private boolean isMessagingReady() {
@@ -330,14 +408,20 @@ public final class TpaCrossServerBroker implements Listener {
         try {
             for (String m : new String[]{"connect", "send", "sendToServer"}) {
                 Method method = find(proxy.getClass(), m, Player.class, String.class);
-                if (method != null) { method.invoke(proxy, player, server); return true; }
+                if (method != null) {
+                    method.invoke(proxy, player, server);
+                    return true;
+                }
             }
         } catch (Throwable ignored) {}
 
         try {
             for (String m : new String[]{"connect", "send", "sendToServer"}) {
                 Method method = find(proxy.getClass(), m, String.class);
-                if (method != null) { method.invoke(proxy, server); return true; }
+                if (method != null) {
+                    method.invoke(proxy, server);
+                    return true;
+                }
             }
         } catch (Throwable ignored) {}
 
@@ -362,8 +446,15 @@ public final class TpaCrossServerBroker implements Listener {
         while (it.hasNext()) {
             Map.Entry<UUID, Pending> e = it.next();
             Pending p = e.getValue();
-            if (p == null) { it.remove(); removed++; continue; }
-            if (p.expiresAt > 0 && p.expiresAt < now) { it.remove(); removed++; }
+            if (p == null) {
+                it.remove();
+                removed++;
+                continue;
+            }
+            if (p.expiresAt > 0 && p.expiresAt < now) {
+                it.remove();
+                removed++;
+            }
         }
         if (removed > 0) dbg("Purged " + removed + " expired pending requests.");
     }

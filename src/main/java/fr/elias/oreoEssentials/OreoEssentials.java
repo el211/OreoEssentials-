@@ -3,13 +3,14 @@ package fr.elias.oreoEssentials;
 
 import fr.elias.oreoEssentials.bossbar.BossBarService;
 import fr.elias.oreoEssentials.bossbar.BossBarToggleCommand;
-import fr.elias.oreoEssentials.clearlag.ClearLagCommands;
 import fr.elias.oreoEssentials.clearlag.ClearLagManager;
 import fr.elias.oreoEssentials.commands.CommandManager;
-
+import fr.elias.oreoEssentials.playerwarp.*;
+import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpCommand;
+import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpTabCompleter;
+import fr.elias.oreoEssentials.rtp.listeners.RtpJoinListener;
 // Core commands (essentials-like)
-import fr.elias.oreoEssentials.commands.completion.KickTabCompleter;
-import fr.elias.oreoEssentials.commands.completion.TpaTabCompleter;
+import fr.elias.oreoEssentials.commands.completion.*;
 import fr.elias.oreoEssentials.commands.core.playercommands.*;
 import fr.elias.oreoEssentials.commands.core.admins.*;
 import fr.elias.oreoEssentials.commands.core.moderation.*;
@@ -25,16 +26,19 @@ import fr.elias.oreoEssentials.commands.core.playercommands.WarpCommand;
 import fr.elias.oreoEssentials.config.SettingsConfig;
 import fr.elias.oreoEssentials.customcraft.CustomCraftingService;
 import fr.elias.oreoEssentials.homes.TeleportBroker;
-import fr.elias.oreoEssentials.kits.KitsManager;
 import fr.elias.oreoEssentials.modgui.freeze.FreezeManager;
 import fr.elias.oreoEssentials.modgui.ip.IpTracker;
 import fr.elias.oreoEssentials.modgui.notes.NotesChatListener;
 import fr.elias.oreoEssentials.modgui.notes.PlayerNotesManager;
 import fr.elias.oreoEssentials.modgui.world.WorldTweaksListener;
-import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
+import fr.elias.oreoEssentials.rtp.RtpPendingService;
 import fr.elias.oreoEssentials.services.*;
 import fr.elias.oreoEssentials.services.chatservices.MuteService;
 import fr.elias.oreoEssentials.services.mongoservices.*;
+
+import fr.elias.oreoEssentials.playerwarp.mongo.MongoPlayerWarpStorage;
+import fr.elias.oreoEssentials.playerwarp.mongo.MongoPlayerWarpDirectory;
+
 import fr.elias.oreoEssentials.util.KillallLogger;
 import fr.elias.oreoEssentials.util.Lang;
 import com.mongodb.client.MongoClient;
@@ -47,10 +51,8 @@ import fr.elias.oreoEssentials.commands.core.playercommands.SitCommand;
 import fr.elias.oreoEssentials.listeners.SitListener;
 import fr.elias.oreoEssentials.commands.core.admins.MoveCommand;
 
-
+import fr.elias.oreoEssentials.services.yaml.YamlPlayerWarpStorage;
 // Tab completion
-import fr.elias.oreoEssentials.commands.completion.HomeTabCompleter;
-import fr.elias.oreoEssentials.commands.completion.WarpTabCompleter;
 
 // Economy commands
 import fr.elias.oreoEssentials.commands.ecocommands.MoneyCommand;
@@ -88,7 +90,6 @@ import fr.elias.oreoEssentials.chat.AsyncChatListener;
 import fr.elias.oreoEssentials.chat.CustomConfig;
 import fr.elias.oreoEssentials.chat.FormatManager;
 import fr.elias.oreoEssentials.util.ChatSyncManager;
-import fr.elias.oreoEssentials.mobs.GrinchHook;
 
 // Vault
 import fr.elias.oreoEssentials.util.ProxyMessenger;
@@ -96,11 +97,7 @@ import fr.elias.oreoEssentials.vault.VaultEconomyProvider;
 import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.Objects;
 
 public final class OreoEssentials extends JavaPlugin {
 
@@ -117,7 +114,7 @@ public final class OreoEssentials extends JavaPlugin {
     private NotesChatListener notesChat;
     private fr.elias.oreoEssentials.daily.DailyMongoStore dailyStore;
     private FreezeManager freezeManager;
-
+    private Economy economy;
     private EconomyBootstrap ecoBootstrap;
     // add near other services
     private fr.elias.oreoEssentials.integration.DiscordModerationNotifier discordMod;
@@ -140,11 +137,19 @@ public final class OreoEssentials extends JavaPlugin {
     private SpawnService spawnService;
     private InventoryManager invManager;
     public InventoryManager getInvManager() { return invManager; }
+    public InventoryManager getInventoryManager() {
+        return invManager;
+    }
+
     private ProxyMessenger proxyMessenger;
     public ProxyMessenger getProxyMessenger() { return proxyMessenger; }
     private WarpService warpService;
     private HomeService homeService;
     private TeleportService teleportService;
+    // Player warps (cross-server via Mongo)
+    private PlayerWarpService playerWarpService;
+    private PlayerWarpDirectory playerWarpDirectory;
+
     private BackService backService;
     private MessageService messageService;
     private DeathBackService deathBackService;
@@ -171,6 +176,7 @@ public final class OreoEssentials extends JavaPlugin {
     private PlayerEconomyDatabase database;
     private RedisManager redis;
     private OfflinePlayerCache offlinePlayerCache;
+    private RtpPendingService rtpPendingService;
 
     // Vault provider reference (optional)
     private Economy vaultEconomy;
@@ -224,12 +230,20 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.config.CrossServerSettings getCrossServerSettings() { return crossServerSettings; }
 
     // RTP + EnderChest
-    private RtpConfig rtpConfig;
-    public RtpConfig getRtpConfig() { return rtpConfig; }
+
 
     private fr.elias.oreoEssentials.enderchest.EnderChestConfig ecConfig;
     private fr.elias.oreoEssentials.enderchest.EnderChestService ecService;
     public fr.elias.oreoEssentials.enderchest.EnderChestService getEnderChestService() { return ecService; }
+    // RTP + EnderChest
+    private RtpConfig rtpConfig;
+    public RtpConfig getRtpConfig() { return rtpConfig; }
+    // RTP cooldowns (per-player, in millis)
+    private final java.util.Map<java.util.UUID, Long> rtpCooldownCache = new java.util.concurrent.ConcurrentHashMap<>();
+
+    // NEW: Cross-server RTP bridge (used by RtpCommand)
+    private fr.elias.oreoEssentials.rtp.RtpCrossServerBridge rtpBridge;
+
 
     private ScoreboardService scoreboardService;
     private fr.elias.oreoEssentials.mobs.HealthBarListener healthBarListener;
@@ -264,6 +278,7 @@ public final class OreoEssentials extends JavaPlugin {
         // We'll need these values everywhere, so grab them ASAP.
         this.configService = new ConfigService(this); // we pull this early now
         final String essentialsStorage = getConfig().getString("essentials.storage", "yaml").toLowerCase();
+
         final String economyType       = getConfig().getString("economy.type", "none").toLowerCase();
         this.economyEnabled = settingsConfig.economyEnabled();
         getLogger().info("[Economy] " + (economyEnabled ? "Enabled" : "Disabled") + " via settings.yml");
@@ -511,7 +526,6 @@ public final class OreoEssentials extends JavaPlugin {
         this.invManager = new InventoryManager(this);
         this.invManager.init();
         // --- Server Management GUI (ModGUI) ---
-// --- Server Management GUI (ModGUI) ---
         try {
             this.modGuiService = new fr.elias.oreoEssentials.modgui.ModGuiService(this);
             getLogger().info("[ModGUI] Server management GUI ready (/modgui).");
@@ -727,12 +741,16 @@ public final class OreoEssentials extends JavaPlugin {
         // Conversations / auto messages
         getServer().getPluginManager().registerEvents(new ConversationListener(this), this);
         new fr.elias.oreoEssentials.tasks.AutoMessageScheduler(this).start();
+        // PlayerWarps flags (used in all storage modes)
+        var pwRoot = settingsConfig.getRoot().getConfigurationSection("playerwarps");
+        boolean pwEnabled = (pwRoot == null) || pwRoot.getBoolean("enabled", true);
+        boolean pwCross   = (pwRoot == null) || pwRoot.getBoolean("cross-server", true);
 
         // -------- Essentials storage selection (Homes/Warps/Spawn/Back) --------
         // Also sets up cross-server directories when using MongoDB
         switch (essentialsStorage) {
             case "mongodb" -> {
-                String uri    = getConfig().getString("storage.mongo.uri", "mongodb://localhost:27017");
+                String uri = getConfig().getString("storage.mongo.uri", "mongodb://localhost:27017");
                 String dbName = getConfig().getString("storage.mongo.database", "oreo");
                 String prefix = getConfig().getString("storage.mongo.collectionPrefix", "oreo_");
 
@@ -785,32 +803,110 @@ public final class OreoEssentials extends JavaPlugin {
                     this.warpDirectory = new MongoWarpDirectory(
                             this.homesMongoClient, dbName, prefix + "warp_directory"
                     );
-                } catch (Throwable ignored) { this.warpDirectory = null; }
+                } catch (Throwable ignored) {
+                    this.warpDirectory = null;
+                }
                 try {
                     this.spawnDirectory = new MongoSpawnDirectory(
                             this.homesMongoClient, dbName, prefix + "spawn_directory"
                     );
-                } catch (Throwable ignored) { this.spawnDirectory = null; }
+                } catch (Throwable ignored) {
+                    this.spawnDirectory = null;
+                }
+                {
+                    {
+                        // --- PlayerWarps (Mongo only, optional cross-server) ---
+                        var settingsRoot = this.settingsConfig.getRoot();
+                        var pwSection = settingsRoot.getConfigurationSection("playerwarps");
 
-                getLogger().info("[STORAGE] Using MongoDB (MongoHomesStorage + directories).");
+                        getLogger().info("[PlayerWarps/DEBUG] essentialsStorage=" + essentialsStorage
+                                + " pwEnabled=" + pwEnabled
+                                + " pwCross=" + pwCross
+                                + " pwSectionExists=" + (pwSection != null));
+
+                        if (pwEnabled) {
+                            PlayerWarpStorage pwStorage = new MongoPlayerWarpStorage(
+                                    this.homesMongoClient,
+                                    dbName,
+                                    prefix + "playerwarps"
+                            );
+
+                            PlayerWarpDirectory pwDir = null;
+                            if (pwCross) {
+                                try {
+                                    pwDir = new MongoPlayerWarpDirectory(
+                                            this.homesMongoClient,
+                                            dbName,
+                                            prefix + "playerwarp_directory"
+                                    );
+                                    getLogger().info("[PlayerWarps/DEBUG] MongoPlayerWarpDirectory initialized: "
+                                            + pwDir.getClass().getSimpleName());
+                                } catch (Throwable t) {
+                                    getLogger().warning("[PlayerWarps] Failed to init MongoPlayerWarpDirectory: " + t.getMessage());
+                                }
+                            } else {
+                                getLogger().info("[PlayerWarps/DEBUG] pwCross=false, directory will be null (local-only warps).");
+                            }
+
+                            this.playerWarpDirectory = pwDir;
+                            this.playerWarpService = new PlayerWarpService(pwStorage, pwDir);
+
+                            getLogger().info("[PlayerWarps] Enabled with MongoDB storage. cross-server=" + pwCross
+                                    + " directory=" + (pwDir == null ? "null" : pwDir.getClass().getSimpleName()));
+                        } else {
+                            this.playerWarpDirectory = null;
+                            this.playerWarpService = null;
+                            getLogger().info("[PlayerWarps] Disabled by settings.yml (playerwarps.enabled=false).");
+                        }
+
+                        getLogger().info("[STORAGE] Using MongoDB (MongoHomesStorage + directories).");
+                    }
+
+                }
             }
             case "json" -> {
-                this.storage       = new fr.elias.oreoEssentials.services.JsonStorage(this);
-                this.homeDirectory = null;
-                this.warpDirectory = null;
+                this.storage        = new JsonStorage(this);
+                this.homeDirectory  = null;
+                this.warpDirectory  = null;
                 this.spawnDirectory = null;
+
+                if (pwEnabled) {
+                    PlayerWarpStorage pwStorage = new YamlPlayerWarpStorage(this); // local file
+                    this.playerWarpService      = new PlayerWarpService(pwStorage, null); // directory = null
+                    this.playerWarpDirectory    = null;
+                    getLogger().info("[PlayerWarps] Enabled with local YAML storage (essentials.storage=json, no cross-server).");
+                } else {
+                    this.playerWarpService   = null;
+                    this.playerWarpDirectory = null;
+                    getLogger().info("[PlayerWarps] Disabled by settings.yml (playerwarps.enabled=false).");
+                }
+
                 getLogger().info("[STORAGE] Using JSON.");
             }
+
             default -> {
-                this.storage       = new fr.elias.oreoEssentials.services.YamlStorage(this);
-                this.homeDirectory = null;
-                this.warpDirectory = null;
+                this.storage        = new fr.elias.oreoEssentials.services.YamlStorage(this);
+                this.homeDirectory  = null;
+                this.warpDirectory  = null;
                 this.spawnDirectory = null;
+
+                if (pwEnabled) {
+                    PlayerWarpStorage pwStorage = new YamlPlayerWarpStorage(this); // local YAML
+                    this.playerWarpService      = new PlayerWarpService(pwStorage, null);
+                    this.playerWarpDirectory    = null;
+                    getLogger().info("[PlayerWarps] Enabled with local YAML storage (no cross-server).");
+                } else {
+                    this.playerWarpService   = null;
+                    this.playerWarpDirectory = null;
+                    getLogger().info("[PlayerWarps] Disabled by settings.yml (playerwarps.enabled=false).");
+                }
+
                 getLogger().info("[STORAGE] Using YAML.");
             }
+
+
         }
 
-        // ---- EnderChest config + storage (respect cross-server.enderchest + storage mode)
         // ---- EnderChest config + storage (respect cross-server.enderchest + storage mode)
         this.ecConfig = new fr.elias.oreoEssentials.enderchest.EnderChestConfig(this);
         // Constructor already calls reload(), so no extra call needed.
@@ -854,7 +950,6 @@ public final class OreoEssentials extends JavaPlugin {
 
 
         // --- Player Sync bootstrap ---
-// --- Player Sync bootstrap ---
         final boolean invSyncEnabled = settingsConfig.featureOption("cross-server", "inventory", true);
 
         fr.elias.oreoEssentials.playersync.PlayerSyncStorage invStorage;
@@ -935,7 +1030,7 @@ public final class OreoEssentials extends JavaPlugin {
         this.warpService  = new WarpService(storage, this.warpDirectory);
         this.homeService  = new HomeService(this.storage, this.configService, this.homeDirectory);
 
-// -------- RabbitMQ (optional cross-server signaling) --------
+        // -------- RabbitMQ (optional cross-server signaling) --------
         if (rabbitEnabled) {
             RabbitMQSender rabbit = new RabbitMQSender(getConfig().getString("rabbitmq.uri"));
 
@@ -953,7 +1048,7 @@ public final class OreoEssentials extends JavaPlugin {
                     getLogger().info("[RABBIT] Packet registry checksum=" + packetManager.registryChecksum());
                 } catch (Throwable ignored) {}
 
-// ---- Cross-server Invsee broker + service ----
+            // ---- Cross-server Invsee broker + service ----
                 if (invSyncEnabled) {
                     try {
                         this.invseeBroker = new fr.elias.oreoEssentials.cross.InvseeCrossServerBroker(
@@ -1171,7 +1266,17 @@ public final class OreoEssentials extends JavaPlugin {
             this.tpaBroker = null;
             getLogger().info("[BROKER] TPA cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
-// --- NEW: TP cross-server broker (admin /tp) ---
+        // --- NEW: TP cross-server broker (admin /tp) ---
+        if (packetManager != null && packetManager.isInitialized()) {
+            this.tpBroker = new fr.elias.oreoEssentials.teleport.TpCrossServerBroker(
+                    this, this.teleportService, this.packetManager, proxyMessenger, configService.serverName()
+            );
+            getLogger().info("[BROKER] TP cross-server broker ready (server=" + configService.serverName() + ").");
+        } else {
+            this.tpBroker = null;
+            getLogger().info("[BROKER] TP cross-server broker disabled (PacketManager unavailable or not initialized).");
+        }
+        // --- NEW: TP cross-server broker (admin /tp) ---
         if (packetManager != null && packetManager.isInitialized()) {
             this.tpBroker = new fr.elias.oreoEssentials.teleport.TpCrossServerBroker(
                     this,
@@ -1184,6 +1289,29 @@ public final class OreoEssentials extends JavaPlugin {
         } else {
             this.tpBroker = null;
             getLogger().info("[BROKER] TP cross-server broker disabled (PacketManager unavailable or not initialized).");
+        }
+
+// --- NEW: PlayerWarp cross-server broker (/pw) ---
+        if (packetManager != null
+                && packetManager.isInitialized()
+                && playerWarpService != null
+                && proxyMessenger != null) {
+
+            try {
+                new fr.elias.oreoEssentials.playerwarp.PlayerWarpCrossServerBroker(
+                        this,
+                        playerWarpService,
+                        packetManager,
+                        proxyMessenger,
+                        configService.serverName()
+                );
+                getLogger().info("[BROKER] PlayerWarpCrossServerBroker enabled.");
+            } catch (Throwable t) {
+                getLogger().warning("[BROKER] Failed to init PlayerWarpCrossServerBroker: " + t.getMessage());
+            }
+        } else {
+            getLogger().info("[BROKER] PlayerWarpCrossServerBroker disabled "
+                    + "(packetManager or playerWarpService or proxyMessenger missing).");
         }
 
         // -------- Moderation listeners --------
@@ -1246,7 +1374,13 @@ public final class OreoEssentials extends JavaPlugin {
         }
         // Initialize RTP config (constructor calls reload())
         // ---- RTP config (local + cross-server aware)
-        this.rtpConfig = new RtpConfig(this); // loads rtp.yml
+        this.rtpPendingService = new RtpPendingService();     // 1) data holder
+        this.rtpConfig         = new RtpConfig(this);         // 2) load rtp.yml
+
+        getServer().getPluginManager().registerEvents(        // 3) listener
+                new RtpJoinListener(this),
+                this
+        );
 
         if (!settingsConfig.rtpEnabled()) {
             unregisterCommandHard("rtp");
@@ -1261,11 +1395,30 @@ public final class OreoEssentials extends JavaPlugin {
             var rtpCmd = new fr.elias.oreoEssentials.commands.core.playercommands.RtpCommand();
             this.commands.register(rtpCmd);
 
-
             getLogger().info("[RTP] Enabled — /rtp registered with tab-completion.");
         }
 
+        // RTP cross-server bridge (/rtp) ---
+        // Only useful if RabbitMQ is up AND cross-server RTP is enabled in rtp.yml
 
+        if (packetManager != null && packetManager.isInitialized()
+                && this.rtpConfig != null && this.rtpConfig.isCrossServerEnabled()) {
+            try {
+                this.rtpBridge = new fr.elias.oreoEssentials.rtp.RtpCrossServerBridge(
+                        this,
+                        this.packetManager,
+                        this.configService.serverName()
+                );
+                getLogger().info("[RTP] Cross-server RTP bridge ready (server=" + configService.serverName() + ").");
+            } catch (Throwable t) {
+                this.rtpBridge = null;
+                getLogger().warning("[RTP] Failed to init cross-server RTP bridge: " + t.getMessage());
+            }
+        } else {
+            this.rtpBridge = null;
+            getLogger().info("[RTP] Cross-server RTP bridge disabled "
+                    + "(PacketManager missing or cross-server RTP off).");
+        }
 
         // --- BossBar (controlled by config: bossbar.enabled)
         if (settingsConfig.bossbarEnabled()) {
@@ -1329,6 +1482,21 @@ public final class OreoEssentials extends JavaPlugin {
                 new fr.elias.oreoEssentials.jail.JailGuardListener(jailService),
                 this
         );
+        // --- Player Warps (/pw) ---
+        PlayerWarpCommand pwCmd = null;
+        if (this.playerWarpService != null) {
+            pwCmd = new PlayerWarpCommand(this.playerWarpService);
+        }
+
+        // /pwwhitelist command for managing warp whitelists
+        if (getCommand("pwwhitelist") != null && this.playerWarpService != null) {
+            PlayerWarpWhitelistCommand pwwCmd = new PlayerWarpWhitelistCommand(this.playerWarpService);
+            getCommand("pwwhitelist").setExecutor(pwwCmd);
+            getCommand("pwwhitelist").setTabCompleter(pwwCmd);
+            getLogger().info("[PlayerWarps] /pwwhitelist registered.");
+        } else {
+            getLogger().info("[PlayerWarps] /pwwhitelist not registered (command missing in plugin.yml or playerWarpService=null).");
+        }
 
         // Registeration of all remaining commands
         this.commands
@@ -1395,24 +1563,38 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.UuidCommand())//uuid command
                 .register(new TpCommand(teleportService))
                 .register(new MoveCommand(teleportService)); // /move <player> [target]
-
+        // Register /pw if service is available
+        if (pwCmd != null) {
+            this.commands.register(pwCmd);
+        }
         // -------- Tab completion wiring --------
         if (getCommand("oeserver") != null) {
             getCommand("oeserver").setTabCompleter(new ServerProxyCommand(proxyMessenger));
         }
         getCommand("kick").setTabCompleter(new KickTabCompleter(this));
+        // /clear & /ci cross-server tab completion
+        if (getCommand("clear") != null) {
+            getCommand("clear").setTabCompleter(new ClearTabCompleter(this));
+        }
 
-        // Shared network-wide player completer for /tpa and /tp
-        TpaTabCompleter tpaTpCompleter = new TpaTabCompleter(this);
+
+        // /tpa → only ONLINE (network-wide)
+        TpaTabCompleter tpaCompleter = new TpaTabCompleter(this);
         if (getCommand("tpa") != null) {
-            getCommand("tpa").setTabCompleter(tpaTpCompleter);
+            getCommand("tpa").setTabCompleter(tpaCompleter);
         }
+
+        // /tp → ONLINE + OFFLINE (local + network)
+        TpTabCompleter tpCompleter = new TpTabCompleter(this);
         if (getCommand("tp") != null) {
-            getCommand("tp").setTabCompleter(tpaTpCompleter);
+            getCommand("tp").setTabCompleter(tpCompleter);
         }
+
+        // /move still uses online-only suggestion (same as /tpa)
         if (getCommand("move") != null) {
-            getCommand("move").setTabCompleter(tpaTpCompleter);
+            getCommand("move").setTabCompleter(tpaCompleter);
         }
+
 
         if (getCommand("balance") != null) {
             getCommand("balance").setTabCompleter((sender, cmd, alias, args) -> {
@@ -1486,6 +1668,15 @@ public final class OreoEssentials extends JavaPlugin {
             getCommand("warp").setTabCompleter(new WarpTabCompleter(warpService));
         if (getCommand("enchant") != null)
             getCommand("enchant").setTabCompleter(new fr.elias.oreoEssentials.commands.completion.EnchantTabCompleter());
+        if (getCommand("warp") != null)
+            getCommand("warp").setTabCompleter(new WarpTabCompleter(warpService));
+        if (getCommand("pw") != null && this.playerWarpService != null) {
+            getCommand("pw").setTabCompleter(new PlayerWarpTabCompleter(this.playerWarpService));
+        }
+
+        if (getCommand("enchant") != null)
+            getCommand("enchant").setTabCompleter(new fr.elias.oreoEssentials.commands.completion.EnchantTabCompleter());
+
         if (getCommand("disenchant") != null)
             getCommand("disenchant").setTabCompleter(
                     new fr.elias.oreoEssentials.commands.completion.EnchantTabCompleter()
@@ -1686,8 +1877,14 @@ public final class OreoEssentials extends JavaPlugin {
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerQuitPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerQuitPacket::new
         );
-
-        // 🔵 ADD THIS BLOCK (new)
+        pm.registerPacket(
+                fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerWarpTeleportRequestPacket.class,
+                fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerWarpTeleportRequestPacket::new
+        );
+        pm.registerPacket(
+                fr.elias.oreoEssentials.rtp.RtpTeleportRequestPacket.class,
+                fr.elias.oreoEssentials.rtp.RtpTeleportRequestPacket::new
+        );
         pm.registerPacket(
                 fr.elias.oreoEssentials.cross.InvseeOpenRequestPacket.class,
                 fr.elias.oreoEssentials.cross.InvseeOpenRequestPacket::new
@@ -1865,6 +2062,9 @@ public final class OreoEssentials extends JavaPlugin {
     public SpawnService getSpawnService() { return spawnService; }
     public WarpService getWarpService() { return warpService; }
     public HomeService getHomeService() { return homeService; }
+    public PlayerWarpService getPlayerWarpService() { return playerWarpService; }
+    public PlayerWarpDirectory getPlayerWarpDirectory() { return playerWarpDirectory; }
+
     public TeleportService getTeleportService() { return teleportService; }
     public BackService getBackService() { return backService; }
     public MessageService getMessageService() { return messageService; }
@@ -1926,7 +2126,6 @@ public final class OreoEssentials extends JavaPlugin {
                 return owner == this;
             });
         } catch (Throwable ignored) {
-            // Best effort; if reflection fails we simply don't claim the executors.
         }
     }
     // Playtime Rewards service getter (name expected by PlaceholderAPIHook)
@@ -1962,13 +2161,23 @@ public final class OreoEssentials extends JavaPlugin {
     public ModBridge getModBridge() {
         return modBridge;
     }
-    // Playtime tracker getter (name expected by PlaceholderAPIHook)
+    public java.util.Map<java.util.UUID, Long> getRtpCooldownCache() {
+        return rtpCooldownCache;
+    }
     public fr.elias.oreoEssentials.playtime.PlaytimeTracker getPlaytimeTracker() {
         return this.playtimeTracker;
     }
     public SettingsConfig getSettings() {
         return settings;
     }
+    public RtpPendingService getRtpPendingService() {
+        return rtpPendingService;
+    }
+    public fr.elias.oreoEssentials.rtp.RtpCrossServerBridge getRtpBridge() {
+        return rtpBridge;
+    }
+
     public EconomyBootstrap getEcoBootstrap() { return ecoBootstrap; }
     public Economy getVaultEconomy() { return vaultEconomy; }
 }
+

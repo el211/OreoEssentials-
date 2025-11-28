@@ -1,5 +1,5 @@
 name: OreoEssentials
-version: "2.4b-SNAPSHOT"
+version: "2.5-SNAPSHOT"
 main: fr.elias.oreoEssentials.OreoEssentials
 api-version: "1.21"
 description: "All-in-one essentials plugin with homes/warps/spawn, RTP, economy (Vault), chat tools, portals/jump pads, cross-server EC & player sync."
@@ -34,6 +34,12 @@ commands:
   back:
     description: Return to your last location
     permission: oreo.back
+
+  pw:
+    description: Player warps (set/list/teleport)
+    usage: "/pw help"
+    aliases: [playerwarp, playerwarps]
+    permission: "oe.pw"
 
   modgui:
     description: Open Server Management GUI
@@ -549,6 +555,10 @@ commands:
     aliases: [ ch, chgui ]
     permission: oreo.channels.gui.open
 
+  pwwhitelist:
+    description: Manage player warp whitelists
+    usage: /pwwhitelist <add|remove> <warp> <player>
+    permission: oreo.playerwarps.whitelist
 permissions:
   oreo.*:
     description: All OreoEssentials features
@@ -788,6 +798,33 @@ permissions:
   oreo.jail.list:
     description: Allows listing jails (/jaillist)
     default: true
+  oe.pw:
+    description: "Base permission for /pw"
+    default: true
+
+  oe.pw.set:
+    description: "Set your own player warps"
+    default: true
+
+  oe.pw.remove:
+    description: "Remove your own warps"
+    default: true
+
+  oe.pw.list:
+    description: "List your own warps"
+    default: true
+
+  oe.pw.amount:
+    description: "Check your warp amount"
+    default: true
+
+  oe.pw.warp:
+    description: "Teleport to your own warps"
+    default: true
+
+  oe.pw.limit.bypass:
+    description: "Bypass player warp limits"
+    default: op
 
   oreo.jail.bypass:
     description: Bypass jail restrictions (movement/blocked commands)
@@ -796,7 +833,13 @@ permissions:
   oreo.craft:
     description: Use the custom craft designer
     default: op
+  oe.pw.whitelist:
+    description: "Manage whitelist for your own warps"
+    default: true
 
+  oe.pw.admin.whitelist:
+    description: "Manage whitelist for any warp"
+    default: op
   oreo.effect.me:
     default: true
     description: Allow using /effectme
