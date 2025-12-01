@@ -2,9 +2,12 @@ package fr.elias.oreoEssentials.services;
 
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.commands.core.playercommands.back.BackLocation;
+import fr.elias.oreoEssentials.commands.core.playercommands.back.BackService;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.Location;
+import fr.elias.oreoEssentials.commands.core.playercommands.back.BackLocation;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -133,6 +136,40 @@ public class TeleportService {
         }
 
         return true;
+    }
+    /**
+     * Téléporte vers un BackLocation.
+     * - Si même serveur : TP Bukkit normal (avec /back enregistré).
+     * - Si autre serveur : on passe par BackCrossServerBroker + ProxyMessenger.
+     */
+    public boolean teleportToServerLocation(Player who, BackLocation loc) {
+        if (who == null || loc == null) return false;
+
+        String localServer = plugin.getConfigService().serverName();
+
+        // même serveur -> TP local
+        if (loc.getServer() == null
+                || loc.getServer().isBlank()
+                || loc.getServer().equalsIgnoreCase(localServer)) {
+
+            Location dest = loc.toLocalLocation();
+            if (dest == null) {
+                return false;
+            }
+
+            teleportSilently(who, dest); // enregistre le /back précédent aussi
+            return true;
+        }
+
+        // autre serveur -> broker cross-serveur
+        var backBroker = plugin.getBackBroker();
+        if (backBroker != null && plugin.isMessagingAvailable()) {
+            backBroker.requestCrossServerBack(who, loc);
+            return true;
+        }
+
+        // pas de broker / Rabbit down
+        return false;
     }
 
 

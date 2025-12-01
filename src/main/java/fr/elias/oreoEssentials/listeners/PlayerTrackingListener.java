@@ -1,7 +1,7 @@
 // File: src/main/java/fr/elias/oreoEssentials/listeners/PlayerTrackingListener.java
 package fr.elias.oreoEssentials.listeners;
 
-import fr.elias.oreoEssentials.services.BackService;
+import fr.elias.oreoEssentials.commands.core.playercommands.back.BackService;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;

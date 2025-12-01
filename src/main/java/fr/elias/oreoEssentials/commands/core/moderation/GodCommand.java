@@ -29,6 +29,9 @@ public class GodCommand implements OreoCommand {
         // /god -> self (must be a player)
         if (args.length == 0) {
             if (!(sender instanceof Player p)) {
+
+
+
                 sender.sendMessage(ChatColor.YELLOW + "Usage: /" + label + " <player>");
                 return true;
             }

@@ -62,6 +62,45 @@ public class MongoHomesStorage implements StorageApi {
         Document data = d.get("data", Document.class);
         return fromDoc(data);
     }
+    @Override
+    public void setBackData(UUID uuid, Map<String, Object> data) {
+        if (data == null) {
+            // on supprime l’entrée de back pour ce joueur
+            metaCol.deleteOne(Filters.and(
+                    Filters.eq("type", "back"),
+                    Filters.eq("uuid", uuid.toString())
+            ));
+            return;
+        }
+
+        Document doc = new Document("type", "back")
+                .append("uuid", uuid.toString())
+                .append("data", new Document(data));
+
+        metaCol.replaceOne(
+                Filters.and(
+                        Filters.eq("type", "back"),
+                        Filters.eq("uuid", uuid.toString())
+                ),
+                doc,
+                new ReplaceOptions().upsert(true)
+        );
+    }
+
+    @Override
+    public Map<String, Object> getBackData(UUID uuid) {
+        Document d = metaCol.find(Filters.and(
+                Filters.eq("type", "back"),
+                Filters.eq("uuid", uuid.toString())
+        )).first();
+        if (d == null) return null;
+
+        Document data = d.get("data", Document.class);
+        if (data == null) return null;
+
+        return new LinkedHashMap<>(data);
+    }
+
 
     /* ---------------- warps ---------------- */
 
@@ -196,22 +235,56 @@ public class MongoHomesStorage implements StorageApi {
     }
 
     /* ---------------- back ---------------- */
+    /* ---------------- back / last location (compat + new /back) ---------------- */
 
     @Override
     public void setLast(UUID uuid, Location loc) {
-        Document key = new Document("type", "last").append("uuid", uuid.toString());
-        metaCol.replaceOne(key, key.append("data", toDoc(loc)), new ReplaceOptions().upsert(true));
+        Document key = new Document("type", "last")
+                .append("uuid", uuid.toString());
+
+        if (loc == null) {
+            // supprime l'entrée "last" legacy si on passe null
+            metaCol.deleteOne(key);
+        } else {
+            metaCol.replaceOne(
+                    key,
+                    key.append("data", toDoc(loc)),
+                    new ReplaceOptions().upsert(true)
+            );
+        }
+
+        // NEW: met aussi à jour les données /back cross-server via l'impl par défaut
+        // -> Location -> Map -> setBackData(...)
+        StorageApi.super.setLast(uuid, loc);
     }
 
     @Override
     public Location getLast(UUID uuid) {
+
+        // 1) Try NEW cross-server system first
+        Map<String, Object> backData = getBackData(uuid);
+        if (backData != null) {
+            // StorageApi.super.getLast() will convert that into a Bukkit Location,
+            // BUT only if world exists on local server.
+            return StorageApi.super.getLast(uuid);
+        }
+
+        // 2) LEGACY fallback: old "last" entry in meta collection
         Document d = metaCol.find(Filters.and(
                 Filters.eq("type", "last"),
                 Filters.eq("uuid", uuid.toString())
         )).first();
+
         if (d == null) return null;
-        return fromDoc(d.get("data", Document.class));
+
+        Document data = d.get("data", Document.class);
+        if (data == null) return null;
+
+        return fromDoc(data);
     }
+
+
+
 
     /* ---------------- lifecycle ---------------- */
 

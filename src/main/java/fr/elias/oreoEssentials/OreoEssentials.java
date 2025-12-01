@@ -5,6 +5,9 @@ import fr.elias.oreoEssentials.bossbar.BossBarService;
 import fr.elias.oreoEssentials.bossbar.BossBarToggleCommand;
 import fr.elias.oreoEssentials.clearlag.ClearLagManager;
 import fr.elias.oreoEssentials.commands.CommandManager;
+import fr.elias.oreoEssentials.commands.core.moderation.freeze.FreezeCommand;
+import fr.elias.oreoEssentials.commands.core.playercommands.back.BackCommand;
+import fr.elias.oreoEssentials.commands.core.playercommands.back.BackService;
 import fr.elias.oreoEssentials.playerwarp.*;
 import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpCommand;
 import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpTabCompleter;
@@ -158,6 +161,7 @@ public final class OreoEssentials extends JavaPlugin {
     // near your other fields
     private fr.elias.oreoEssentials.teleport.TpaCrossServerBroker tpaBroker;
     public fr.elias.oreoEssentials.teleport.TpaCrossServerBroker getTpaBroker() { return tpaBroker; }
+    private FreezeService freezeService;
 
     private fr.elias.oreoEssentials.kits.KitsManager kitsManager;
     private fr.elias.oreoEssentials.tab.TabListManager tabListManager;
@@ -186,7 +190,10 @@ public final class OreoEssentials extends JavaPlugin {
     // Cross-server Invsee (live inventory viewer)
     private fr.elias.oreoEssentials.cross.InvseeService invseeService;
     private fr.elias.oreoEssentials.cross.InvseeCrossServerBroker invseeBroker;
-
+    private fr.elias.oreoEssentials.teleport.BackCrossServerBroker backBroker;
+    public fr.elias.oreoEssentials.teleport.BackCrossServerBroker getBackBroker() {
+        return backBroker;
+    }
     public fr.elias.oreoEssentials.cross.InvseeService getInvseeService() {
         return invseeService;
     }
@@ -290,7 +297,10 @@ public final class OreoEssentials extends JavaPlugin {
         final String localServerName = configService.serverName(); // unified server id
 
         this.killallLogger = new KillallLogger(this);
-
+        this.freezeService = new FreezeService(); // constructeur sans argument
+        getServer().getPluginManager().registerEvents(
+                new FreezeListener(freezeService), this
+        );
         // -------- Commands (manager then registrations) --------
         this.commands = new CommandManager(this);
 
@@ -1290,8 +1300,22 @@ public final class OreoEssentials extends JavaPlugin {
             this.tpBroker = null;
             getLogger().info("[BROKER] TP cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
+        // --- NEW: Back cross-server broker (/back) ---
+        if (packetManager != null && packetManager.isInitialized() && proxyMessenger != null) {
+            this.backBroker = new fr.elias.oreoEssentials.teleport.BackCrossServerBroker(
+                    this,
+                    this.teleportService,
+                    this.packetManager,
+                    proxyMessenger,
+                    configService.serverName()
+            );
+            getLogger().info("[BROKER] Back cross-server broker ready (server=" + configService.serverName() + ").");
+        } else {
+            this.backBroker = null;
+            getLogger().info("[BROKER] Back cross-server broker disabled (PacketManager unavailable or proxyMessenger null).");
+        }
 
-// --- NEW: PlayerWarp cross-server broker (/pw) ---
+        // --- NEW: PlayerWarp cross-server broker (/pw) ---
         if (packetManager != null
                 && packetManager.isInitialized()
                 && playerWarpService != null
@@ -1315,11 +1339,6 @@ public final class OreoEssentials extends JavaPlugin {
         }
 
         // -------- Moderation listeners --------
-        FreezeService freezeService = new FreezeService();
-        getServer().getPluginManager().registerEvents(
-                new fr.elias.oreoEssentials.listeners.FreezeListener(freezeService),
-                this
-        );
         VanishService vanishService = new VanishService(this);
         getServer().getPluginManager().registerEvents(
                 new fr.elias.oreoEssentials.listeners.VanishListener(vanishService, this),
@@ -1502,7 +1521,7 @@ public final class OreoEssentials extends JavaPlugin {
         this.commands
                 .register(new SpawnCommand(spawnService)) //go to spawn command
                 .register(new SetSpawnCommand(spawnService)) //set spawn command
-                .register(new BackCommand(backService)) // go back command
+                .register(new BackCommand(backService, teleportService, this)) // go back command
                 .register(new WarpCommand(warpService)) //go to warps
                 .register(new SetWarpCommand(warpService)) //setwarps
                 .register(new WarpsCommand(warpService))      // <- Player GUI /warps
@@ -1935,6 +1954,11 @@ public final class OreoEssentials extends JavaPlugin {
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.TpJumpPacket::new
         );
         pm.registerPacket(
+                fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.BackTeleportPacket.class,
+                fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.BackTeleportPacket::new
+        );
+
+        pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.TpaBringPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.TpaBringPacket::new
         );
@@ -2074,7 +2098,9 @@ public final class OreoEssentials extends JavaPlugin {
     public ChatSyncManager getChatSyncManager() { return chatSyncManager; }
     public fr.elias.oreoEssentials.mobs.HealthBarListener getHealthBarListener() { return healthBarListener; }
 
-
+    public FreezeService getFreezeService() {
+        return freezeService;
+    }
     public fr.elias.oreoEssentials.chat.CustomConfig getChatConfig() { return chatConfig; }
 
     public WarpDirectory getWarpDirectory() { return warpDirectory; }

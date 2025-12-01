@@ -6,6 +6,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.UpdateOptions;
 import fr.elias.oreoEssentials.services.ConfigService;
 import fr.elias.oreoEssentials.services.HomeService;
 import fr.elias.oreoEssentials.services.StorageApi;
@@ -45,6 +46,51 @@ public class MongoStorage implements StorageApi {
         this.colPlayers = db.getCollection(p + "playerdata");
         // indexes are optional here; data set is small
     }
+    @Override
+    public void setBackData(UUID uuid, Map<String, Object> data) {
+        String id = uuid.toString();
+
+        if (data == null) {
+            colPlayers.updateOne(eq("_id", id), unset("back"));
+            return;
+        }
+
+        Document backDoc = new Document();
+        backDoc.put("server", data.get("server"));
+        backDoc.put("world", data.get("world"));
+        backDoc.put("x", data.get("x"));
+        backDoc.put("y", data.get("y"));
+        backDoc.put("z", data.get("z"));
+        backDoc.put("yaw", data.get("yaw"));
+        backDoc.put("pitch", data.get("pitch"));
+
+        colPlayers.updateOne(
+                eq("_id", id),
+                combine(
+                        set("_id", id),
+                        set("back", backDoc)
+                ),
+                new UpdateOptions().upsert(true)
+        );
+    }
+
+    @Override
+    public Map<String, Object> getBackData(UUID uuid) {
+        Document d = colPlayers.find(eq("_id", uuid.toString()))
+                .projection(new Document("back", 1))
+                .first();
+        if (d == null) return null;
+
+        Document back = d.get("back", Document.class);
+        if (back == null) return null;
+
+        return new LinkedHashMap<>(back);
+    }
+
+
+
+
+
 
     /* ---------------- spawn ---------------- */
 
@@ -167,21 +213,49 @@ public class MongoStorage implements StorageApi {
 
     /* ---------------- last location ---------------- */
 
-    @Override public void setLast(UUID uuid, Location loc) {
+    /* ---------------- last location (compat + new /back) ---------------- */
+
+    @Override
+    public void setLast(UUID uuid, Location loc) {
         String id = uuid.toString();
-        colPlayers.updateOne(eq("_id", id),
-                combine(set("_id", id), set("lastLocation", LocUtil.toDoc(loc))),
-                new com.mongodb.client.model.UpdateOptions().upsert(true));
+
+        // 1) LEGACY: continue to maintain lastLocation for old code
+        if (loc == null) {
+            colPlayers.updateOne(eq("_id", id), unset("lastLocation"));
+        } else {
+            colPlayers.updateOne(
+                    eq("_id", id),
+                    combine(
+                            set("_id", id),
+                            set("lastLocation", LocUtil.toDoc(loc))
+                    ),
+                    new UpdateOptions().upsert(true)
+            );
+        }
+
+        // 2) NEW: also update the cross-server /back data via StorageApi default
+        // -> this will convert Location -> Map and call setBackData(...)
+        StorageApi.super.setLast(uuid, loc);
     }
 
-    @Override public Location getLast(UUID uuid) {
+    @Override
+    public Location getLast(UUID uuid) {
+        // 1) NEW: try to read via the cross-server /back data
+        Location fromBack = StorageApi.super.getLast(uuid); // uses getBackData(...)
+        if (fromBack != null) return fromBack;
+
+        // 2) LEGACY: fallback to old "lastLocation" if back is not present
         Document d = colPlayers.find(eq("_id", uuid.toString()))
-                .projection(new Document("lastLocation", 1)).first();
+                .projection(new Document("lastLocation", 1))
+                .first();
         if (d == null) return null;
+
         Document loc = d.get("lastLocation", Document.class);
         if (loc == null) return null;
+
         return LocUtil.fromDoc(loc);
     }
+
 
     /* ---------------- lifecycle ---------------- */
 

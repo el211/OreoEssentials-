@@ -201,6 +201,7 @@ public class KitsManager {
         try { dataCfg.save(dataFile); } catch (Exception ignored) {}
     }
 
+
     /**
      * Tries to give the kit to player.
      * @return true if handled (success or messaged), false if kit ID was unknown.
@@ -221,8 +222,28 @@ public class KitsManager {
             return true;
         }
 
+        // permission globale "je peux utiliser des kits"
         if (!p.hasPermission("oreo.kit.claim")) {
             Lang.send(p, "kits.no-permission-claim", Map.of(), p);
+            return true;
+        }
+
+        // 🔹 Permission spécifique au kit : oreo.kit.<id>
+        String kitPerm = "oreo.kit." + kit.getId().toLowerCase(Locale.ROOT);
+
+        // il faut soit la perm exacte, soit un wildcard, soit être admin
+        if (!p.hasPermission(kitPerm)
+                && !p.hasPermission("oreo.kit.*")
+                && !p.hasPermission("oreo.kits.admin")) {
+
+            Lang.send(p, "kits.no-permission-specific",
+                    Map.of(
+                            "kit_id", kit.getId(),
+                            "kit_name", kit.getDisplayName(),
+                            "perm", kitPerm
+                    ),
+                    p
+            );
             return true;
         }
 
@@ -249,8 +270,7 @@ public class KitsManager {
             leftover.values().forEach(drop -> p.getWorld().dropItemNaturally(p.getLocation(), drop));
         }
 
-        // Run commands (console:/player: prefixes)
-// Run commands (console:/player: prefixes) with simple delay! support
+        // Run commands (console:/player: prefixes) with simple delay! support
         if (kit.getCommands() != null) {
             long delayTicks = 0L; // cumul
             for (String raw : kit.getCommands()) {
@@ -275,11 +295,11 @@ public class KitsManager {
             Lang.send(p, "kits.commands-ran", Map.of("kit_name", kit.getDisplayName()), p);
         }
 
-
         markClaim(p, kit);
         Lang.send(p, "kits.claimed", Map.of("kit_name", kit.getDisplayName()), p);
         return true;
     }
+
     private long parseDelayTicks(String line) {
         try {
             String arg = line.substring("delay!".length()).trim().toLowerCase(Locale.ROOT);

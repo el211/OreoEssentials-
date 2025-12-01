@@ -36,6 +36,7 @@ kits:
   itemadder-missing: '%prefix%&cItemsAdder is not installed/enabled, skipping IA items
     for this kit.'
   reloaded: '%prefix%&aKits configuration reloaded.'
+  no-permission-specific: "&cVous n'avez pas la permission d'utiliser le kit &e%kit_name% &8(&7%perm%&8)."
 
   gui:
     lore:
