@@ -741,3 +741,5 @@ moderation:
     target:
       notified: '%prefix%&cYou have been muted for &e%duration%&c%reason_suffix%'
     broadcast: '%prefix%&e%staff% &7muted &c%target% &7for &e%duration%&7%reason_suffix%'
+ping:
+  self: '&7Your ping: &b%ping%ms'

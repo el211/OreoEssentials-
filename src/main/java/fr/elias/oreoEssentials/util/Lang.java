@@ -2,10 +2,14 @@ package fr.elias.oreoEssentials.util;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.ChatColor;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +22,17 @@ public final class Lang {
     private static OreoEssentials plugin;
     private static YamlConfiguration cfg;
     private static String prefix = "";
+
+    // MiniMessage + legacy (with hex) support
+    private static final MiniMessage MINI = MiniMessage.builder()
+            .strict(false) // allow unknown tags instead of crashing
+            .build();
+
+    private static final LegacyComponentSerializer LEGACY_HEX = LegacyComponentSerializer.builder()
+            .hexColors() // enable hex colors
+            .useUnusualXRepeatedCharacterHexFormat() // §x§R§R§G§G§B§B
+            .character('§') // output will use § codes
+            .build();
 
     private Lang() {}
 
@@ -76,6 +91,7 @@ public final class Lang {
         }
 
         // Initialize prefix after we have the merged config
+        // NOTE: prefix also supports MiniMessage + gradients now
         prefix = color(get("general.prefix", ""));
     }
 
@@ -108,16 +124,59 @@ public final class Lang {
             } catch (Throwable ignored) {}
         }
 
+        // Color + MiniMessage/hex/gradients
         return color(raw);
     }
 
     public static void send(CommandSender to, String path, Map<String, String> vars, Player papiFor) {
         String s = msg(path, vars, papiFor);
-        if (!s.isEmpty()) to.sendMessage(s);
+        if (s == null || s.isEmpty()) return;
+
+        // On modern Paper, this will still work because the string contains § + hex codes.
+        to.sendMessage(s);
     }
 
+    /**
+     * Colorize a string:
+     * - Supports traditional & codes
+     * - Supports MiniMessage, gradients, hex colors, etc.
+     *   Example in lang.yml:
+     *   "<gradient:#ff0000:#00ff00>Gradient &a+ legacy</gradient>"
+     *
+     * The final output is a legacy string with § + hex codes so Bukkit can send it.
+     */
     public static String color(String s) {
-        return s == null ? "" : s.replace('&', '§').replace("\\n", "\n");
+        if (s == null || s.isEmpty()) return "";
+
+        // Handle explicit "\n" in config
+        s = s.replace("\\n", "\n");
+
+        // Detect if the string looks like MiniMessage (gradients, hex tags, etc.)
+        // You can adjust this condition if needed.
+        boolean looksLikeMiniMessage =
+                s.contains("<gradient") ||
+                        s.contains("<rainbow") ||
+                        s.contains("<#") ||
+                        s.contains("</") ||
+                        s.contains("<bold") ||
+                        s.contains("<italic") ||
+                        s.contains("<underlined") ||
+                        s.contains("<color:");
+
+        if (looksLikeMiniMessage) {
+            // 1) First translate legacy & codes inside the MiniMessage text
+            //    so you can mix &a with <gradient:...> etc.
+            String withLegacy = ChatColor.translateAlternateColorCodes('&', s);
+
+            // 2) Parse with MiniMessage (handles gradients, hex, etc.)
+            Component component = MINI.deserialize(withLegacy);
+
+            // 3) Serialize to legacy string with hex (gradient becomes a sequence of hex colors)
+            return LEGACY_HEX.serialize(component);
+        } else {
+            // No MM tags → just normal &-colors (still supports hex if you use MiniMessage styles elsewhere)
+            return ChatColor.translateAlternateColorCodes('&', s);
+        }
     }
 
     public static boolean getBool(String path, boolean def) {
@@ -161,13 +220,8 @@ public final class Lang {
     /**
      * Sends a title/subtitle using lang.yml keys.
      *
-     * @param player   target player
-     * @param titleKey lang.yml path for the title (can be null/empty)
-     * @param subKey   lang.yml path for the subtitle (can be null/empty)
-     * @param vars     placeholders like "warp" -> "spawn"
-     * @param fadeIn   fade in ticks
-     * @param stay     stay ticks
-     * @param fadeOut  fade out ticks
+     * MiniMessage & gradients are also supported here via the same `color()` method,
+     * because we end up with a hex-legacy string.
      */
     public static void sendTitle(Player player,
                                  String titleKey,
