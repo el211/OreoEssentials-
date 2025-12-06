@@ -207,30 +207,36 @@ tpa:
       use their exact &fMinecraft&7 name.)'
     generic: '&cPlayer &f%input% &cnot found online. &7(They may be offline or on
       another proxy cluster.)'
+
   sent:
+    local: '%prefix%&aTPA sent to &b%target%&a.'
     cross-server: '&7Request sent to &b%target% &7on &b%server%&7. They can &a/tpaccept&7.'
     global: '&7We broadcast your request to &f%target% &7across the network. If they’re
       online, they can &a/tpaccept&7.'
+
+  request-target: '%prefix%&b%player% &ewants to teleport to you. &a/tpaccept &eor &c/tpdeny &e(&f%timeout%s&e).'
+
   broker-unavailable: '&cCross-server TPA broker is currently unavailable. &7Ask &f%target%
     &7to join your server directly.'
+
   accept:
-    none: '&cNo pending teleport requests.'
-    debug-hint: '&7(If this was cross-server, ensure the request arrived on this server
-      and hasn’t expired.)'
-    failed: '&cFailed to accept teleport request. &7See console or contact an administrator.'
-  # Shown to the player who did /tpa <target> when they move during countdown
-  cancelled-moved-requester: '&cTéléportation annulée: vous avez bougé.'
+    none: '%prefix%&cNo pending teleport requests.'
+    requester-offline: '%prefix%&cRequester is no longer online.'
+    accepted: '%prefix%&aAccepted teleport request from &b%player%&a.'
 
-  # Optionally shown to the target (player who did /tpaccept) when the requester cancels by moving
-  cancelled-moved-target: '&eLa demande de téléportation de &b{requester}&e a été
-    annulée car il a bougé.'
+  teleported: '%prefix%&aTeleported to &b%target%&a.'
 
-  # (Optional) If you want a chat hint when cooldown starts for the requester
-  cooldown-start-requester: '&7Téléportation vers &b{target}&7 dans &e{seconds} &7secondes.
+  deny:
+    requester: '%prefix%&cYour teleport request to &b%target% &cwas denied.'
+    target: '%prefix%&aDenied teleport request.&r'
+
+  cancelled-moved-requester: '%prefix%&cYour teleport request was cancelled because you moved.'
+  cancelled-moved-target: '%prefix%&cThe teleport request from &b%requester% &cwas cancelled because they moved.'
+
+  cooldown-start-requester: '&7Téléportation vers &b%target%&7 dans &e%seconds% &7secondes.
     Ne bougez pas !'
-
-  # (Optional) If you want a generic cooldown disabled hint for debug
   cooldown-disabled: '&7Téléportation immédiate (aucun délai configuré pour &fTPA&7).'
+
 
 near:
   radius-not-number: '&cRadius must be a number.'
@@ -401,6 +407,22 @@ admin:
     brought: '%prefix%&aBrought &b%target% &ato you.'
     notice: '%prefix%&eYou were teleported to &b%player%&e.'
 
+  clear:
+    console-usage: '%prefix%&cConsole must specify a player: &f/%label% <player>'
+    no-service: '%prefix%&cInventoryService is not available; cannot clear persistent inventory.'
+
+    self:
+      all-servers: '%prefix%&aYour inventory has been cleared on &fall servers&a.'
+      this-server: '%prefix%&aYour inventory has been cleared on &fthis server&a.'
+
+    others-no-permission: '%prefix%&cYou lack permission: &eoreo.clear.others'
+    target-not-found: '%prefix%&cPlayer ''&e%target%&c'' not found in directory.'
+
+    target-notified-all: '%prefix%&eYour inventory was cleared by &b%player% &eon &fall servers&e.'
+    target-notified-local: '%prefix%&eYour inventory was cleared by &b%player% &eon &fthis server&e.'
+
+    sender-confirm-all: '%prefix%&aCleared &b%target%&a''s inventory &7(persistent, all servers)&a.'
+    sender-confirm-local: '%prefix%&aCleared &b%target%&a''s live inventory on &fthis server &7(no persistent InventoryService)&a.'
 teleport:
   countdown:
     title: '&aTéléportation...'
@@ -553,6 +575,18 @@ playerwarps:
     no-permission: '%prefix%&cYou don''t have access to that warp.'
     local: '%prefix%&aTeleported to player warp &b%name%&a.'
     failed: '%prefix%&cTeleport failed for warp &e%name%&c. Contact an administrator.'
+rtp:
+  disabled: '%prefix%&cRandom teleport is currently disabled.'
+  cooldown-wait: '%prefix%&cVous devez attendre &e%seconds%s &cavant d''utiliser &e/%label%&c.'
+  no-world: '%prefix%&cNo valid world found for random teleport.'
+  cross-switch: '%prefix%&7Switching you to &b%server%&7 for random teleport in &b%world%&7…'
+  not-configured: '%prefix%&cRandom teleport is not configured on this server.'
+  world-not-loaded: '%prefix%&cWorld &e%world%&c is not loaded on this server.'
+  not-allowed-world: '%prefix%&cRandom teleport is not allowed in this world.'
+  trying: '%prefix%&7Trying random teleport in &b%world%&7 up to &b%radius%&7 blocks…'
+  no-safe-spot: '%prefix%&cCouldn''t find a safe spot. Try again.'
+  teleported: '%prefix%&aTeleported to &b%x%&7, &b%y%&7, &b%z% &7in &b%world%&7.'
+  failed: '%prefix%&cTeleport failed.'
 
 # =========================================================
 # /pw Command (PlayerWarpCommand)
