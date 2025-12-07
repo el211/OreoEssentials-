@@ -5,6 +5,7 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.rtp.RtpConfig;
 import fr.elias.oreoEssentials.rtp.RtpCrossServerBridge;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -56,7 +57,7 @@ public class RtpCommand implements OreoCommand {
         RtpConfig cfg = plugin.getRtpConfig();
 
         if (cfg == null || !cfg.isEnabled()) {
-            p.sendMessage("§cRandom teleport is currently disabled.");
+            Lang.send(p, "rtp.disabled", null, p);
             return true;
         }
 
@@ -72,7 +73,14 @@ public class RtpCommand implements OreoCommand {
                 long remain = cooldown - elapsed;
 
                 if (remain > 0) {
-                    p.sendMessage("§cVous devez attendre §e" + remain + "s §cavant d'utiliser /rtp.");
+                    Lang.send(p,
+                            "rtp.cooldown-wait",
+                            java.util.Map.of(
+                                    "seconds", String.valueOf(remain),
+                                    "label", label
+                            ),
+                            p
+                    );
                     return true;
                 }
             }
@@ -81,13 +89,12 @@ public class RtpCommand implements OreoCommand {
             plugin.getRtpCooldownCache().put(p.getUniqueId(), now);
         }
 
-
         // 1) Decide target world (optionally from argument)
         String requestedWorld = (args.length >= 1) ? args[0] : null;
         String targetWorldName = cfg.chooseTargetWorld(p, requestedWorld);
 
         if (targetWorldName == null || targetWorldName.isBlank()) {
-            p.sendMessage("§cNo valid world found for random teleport.");
+            Lang.send(p, "rtp.no-world", null, p);
             return true;
         }
 
@@ -100,8 +107,14 @@ public class RtpCommand implements OreoCommand {
 
         if (crossEnabled && !sameServer) {
             // Cross-server RTP path
-            p.sendMessage("§7Switching you to §b" + targetServer
-                    + "§7 for random teleport in §b" + targetWorldName + "§7…");
+            Lang.send(p,
+                    "rtp.cross-switch",
+                    java.util.Map.of(
+                            "server", targetServer,
+                            "world", targetWorldName
+                    ),
+                    p
+            );
 
             RtpCrossServerBridge bridge = plugin.getRtpBridge();
             if (bridge != null) {
@@ -129,19 +142,23 @@ public class RtpCommand implements OreoCommand {
 
         RtpConfig cfg = plugin.getRtpConfig();
         if (cfg == null) {
-            p.sendMessage("§cRandom teleport is not configured on this server.");
+            Lang.send(p, "rtp.not-configured", null, p);
             return false;
         }
 
         World world = Bukkit.getWorld(targetWorldName);
         if (world == null) {
-            p.sendMessage("§cWorld §e" + targetWorldName + "§c is not loaded on this server.");
+            Lang.send(p,
+                    "rtp.world-not-loaded",
+                    java.util.Map.of("world", targetWorldName),
+                    p
+            );
             return false;
         }
 
         // Check allowlist for that world too
         if (!cfg.allowedWorlds().isEmpty() && !cfg.allowedWorlds().contains(world.getName())) {
-            p.sendMessage("§cRandom teleport is not allowed in this world.");
+            Lang.send(p, "rtp.not-allowed-world", null, p);
             return false;
         }
 
@@ -152,23 +169,37 @@ public class RtpCommand implements OreoCommand {
         Location center = world.getSpawnLocation();
 
 
-        p.sendMessage("§7Trying random teleport in §b" + world.getName()
-                + "§7 up to §b" + radius + "§7 blocks…");
+        // "Trying random teleport in ..."
+        Lang.send(p,
+                "rtp.trying",
+                java.util.Map.of(
+                        "world", world.getName(),
+                        "radius", String.valueOf(radius)
+                ),
+                p
+        );
 
         Location dest = findSafeLocation(world, center, radius, cfg);
         if (dest == null) {
-            p.sendMessage("§cCouldn't find a safe spot. Try again.");
+            Lang.send(p, "rtp.no-safe-spot", null, p);
             return false;
         }
 
         boolean ok = p.teleport(dest);
         if (ok) {
-            p.sendMessage("§aTeleported to §b" + dest.getBlockX()
-                    + "§7, §b" + dest.getBlockY()
-                    + "§7, §b" + dest.getBlockZ()
-                    + " §7in §b" + world.getName());
+            // "Teleported to x, y, z in world"
+            Lang.send(p,
+                    "rtp.teleported",
+                    java.util.Map.of(
+                            "x", String.valueOf(dest.getBlockX()),
+                            "y", String.valueOf(dest.getBlockY()),
+                            "z", String.valueOf(dest.getBlockZ()),
+                            "world", world.getName()
+                    ),
+                    p
+            );
         } else {
-            p.sendMessage("§cTeleport failed.");
+            Lang.send(p, "rtp.failed", null, p);
         }
         return ok;
     }
