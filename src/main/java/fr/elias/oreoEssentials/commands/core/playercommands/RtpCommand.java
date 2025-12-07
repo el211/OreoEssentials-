@@ -165,10 +165,9 @@ public class RtpCommand implements OreoCommand {
         // Compute radius using per-world + tier permissions
         int radius = cfg.radiusFor(p, null);
 
-        // Center: if same world, use player's position; else use world spawn
-        Location center = (world.equals(p.getWorld()))
-                ? p.getLocation()
-                : world.getSpawnLocation();
+        // Always use world spawn as RTP center
+        Location center = world.getSpawnLocation();
+
 
         // "Trying random teleport in ..."
         Lang.send(p,
