@@ -193,6 +193,11 @@ commands:
     permission: oreo.vanish
     usage: "/vanish [on|off]"
 
+  importzhomes:
+    description: "Import homes from zEssentials into OreoEssentials"
+    usage: "/importzhomes"
+    permission: oreo.admin.import
+
   ban:
     description: Ban a player (optionally temporary)
     permission: oreo.ban

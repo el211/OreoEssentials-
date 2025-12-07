@@ -314,3 +314,15 @@ conversations:
         replies:
           - "<gradient:#FFD700:#1E90FF>You can type /help to see all</gradient> <gradient:#1E90FF:#FF1493>available</gradient> <gradient:#FF1493:#FFD700>commands.</gradient>"
           - "<gradient:#FF1493:#1E90FF>Check the</gradient> <gradient:#1E90FF:#FFD700>website for a detailed</gradient> <gradient:#FFD700:#FF1493>command list.</gradient>"
+
+
+
+
+zessentials-migration:
+  enabled: true
+  # Pour SQLite :
+  jdbc-url: "jdbc:sqlite:plugins/zEssentials/data.db"
+  user: ""
+  password: ""
+  table-prefix: "zessentials_"
+

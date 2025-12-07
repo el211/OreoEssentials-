@@ -8,6 +8,7 @@ import fr.elias.oreoEssentials.commands.CommandManager;
 import fr.elias.oreoEssentials.commands.core.moderation.freeze.FreezeCommand;
 import fr.elias.oreoEssentials.commands.core.playercommands.back.BackCommand;
 import fr.elias.oreoEssentials.commands.core.playercommands.back.BackService;
+import fr.elias.oreoEssentials.migration.commands.ZEssentialsHomesImportCommand;
 import fr.elias.oreoEssentials.playerwarp.*;
 import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpCommand;
 import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpTabCompleter;
@@ -1581,6 +1582,7 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.VaultsCommand()) //vaults command
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.UuidCommand())//uuid command
                 .register(new TpCommand(teleportService))
+                .register(new ZEssentialsHomesImportCommand(this, storage, homeDirectory))
                 .register(new MoveCommand(teleportService)); // /move <player> [target]
         // Register /pw if service is available
         if (pwCmd != null) {
