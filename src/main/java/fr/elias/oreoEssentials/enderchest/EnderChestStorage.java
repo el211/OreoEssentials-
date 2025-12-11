@@ -50,9 +50,17 @@ public interface EnderChestStorage {
     static ItemStack[] clamp(ItemStack[] src, int rows) {
         int size = Math.max(1, rows) * 9;
         if (src == null) return null;
-        if (src.length == size) return src;
+
+        // ⚠️ Si on a plus d'items que la taille logique actuelle,
+        // on NE COUPE PAS : on garde tout tel quel.
+        if (src.length >= size) {
+            return src;
+        }
+
+        // Si on a moins, on étend avec des null
         ItemStack[] dst = new ItemStack[size];
-        System.arraycopy(src, 0, dst, 0, Math.min(size, src.length));
+        System.arraycopy(src, 0, dst, 0, src.length);
         return dst;
     }
+
 }

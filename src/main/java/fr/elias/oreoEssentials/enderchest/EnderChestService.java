@@ -60,21 +60,41 @@ public class EnderChestService {
     }
 
     /** Save only the first N slots; ignore locked area entirely. */
+
     public void saveFromInventory(Player p, Inventory inv) {
         try {
             int allowed = resolveSlots(p);
-            int rowsForStorage = Math.max(1, (int) Math.ceil(allowed / 9.0));
 
+            // On travaille toujours avec la capacité max théorique (6 rangées = 54 slots)
+            final int MAX_ROWS = 6;
+            final int MAX_SIZE = MAX_ROWS * 9;
+
+            UUID uuid = p.getUniqueId();
+
+            // 1) On récupère l'ancien contenu complet
+            ItemStack[] existing = storage.load(uuid, MAX_ROWS);
+            if (existing == null || existing.length < MAX_SIZE) {
+                ItemStack[] fixed = new ItemStack[MAX_SIZE];
+                if (existing != null) {
+                    System.arraycopy(existing, 0, fixed, 0, existing.length);
+                }
+                existing = fixed;
+            }
+
+            // 2) On écrase uniquement les slots visibles 0..allowed-1
             ItemStack[] src = inv.getContents();
-            ItemStack[] toSave = new ItemStack[allowed];
             for (int i = 0; i < allowed && i < src.length; i++) {
                 ItemStack it = src[i];
-                toSave[i] = (isLockItem(it) ? null : it);
+                existing[i] = (isLockItem(it) ? null : it);
             }
-            storage.save(p.getUniqueId(), rowsForStorage, toSave);
+
+            // 3) On ne touche PAS aux slots [allowed..MAX_SIZE-1]
+            // -> les items anciens dans cette zone restent sauvés même si plus visibles.
+
+            // 4) On sauvegarde tout sur 6 rangées
+            storage.save(uuid, MAX_ROWS, existing);
         } catch (Throwable t) {
             plugin.getLogger().warning("[EC] Save failed for " + p.getUniqueId() + ": " + t.getMessage());
-            // Lang message: enderchest.storage.save-failed
             fr.elias.oreoEssentials.util.Lang.send(
                     p,
                     "enderchest.storage.save-failed",
@@ -83,6 +103,7 @@ public class EnderChestService {
             );
         }
     }
+
     // in EnderChestService
     public ItemStack[] loadFor(java.util.UUID uuid, int rows) {
         return storage.load(uuid, rows);
