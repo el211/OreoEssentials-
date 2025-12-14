@@ -13,6 +13,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.util.List;
+import java.util.Locale;
 
 public final class ConversationListener implements Listener {
     private final Plugin plugin;
@@ -20,22 +21,35 @@ public final class ConversationListener implements Listener {
     private final LegacyComponentSerializer legacy = LegacyComponentSerializer.builder()
             .hexColors().useUnusualXRepeatedCharacterHexFormat().build();
 
-    public ConversationListener(Plugin plugin) { this.plugin = plugin; }
+    public ConversationListener(Plugin plugin) {
+        this.plugin = plugin;
+    }
 
-    @EventHandler(priority = EventPriority.MONITOR) // runs after your formatter; event may be cancelled
+    @EventHandler(priority = EventPriority.MONITOR) // runs after formatter; event may be cancelled
     public void onChat(AsyncPlayerChatEvent e) {
         FileConfiguration c = plugin.getConfig();
         ConfigurationSection root = c.getConfigurationSection("conversations");
         if (root == null) return;
 
+        // NEW: master toggle
+        if (!root.getBoolean("enabled", true)) return;
+
         final Player sender = e.getPlayer();
-        final String msg = e.getMessage().toLowerCase();
+        String raw = e.getMessage();
+        if (raw == null || raw.isBlank()) return;
+
+        final String msg = raw.toLowerCase(Locale.ROOT);
 
         for (String botKey : root.getKeys(false)) {
+            if (botKey.equalsIgnoreCase("enabled")) continue; // skip master key
+
             ConfigurationSection bot = root.getConfigurationSection(botKey);
             if (bot == null) continue;
 
-            String callName = bot.getString("custom_call_name", "").toLowerCase();
+            // NEW: per-bot toggle
+            if (!bot.getBoolean("enabled", true)) continue;
+
+            String callName = bot.getString("custom_call_name", "").toLowerCase(Locale.ROOT);
             if (callName.isEmpty() || !msg.contains(callName)) continue; // must mention the bot
 
             // Optional quick self_mention_reply when only the name is said
@@ -43,18 +57,21 @@ public final class ConversationListener implements Listener {
 
             ConfigurationSection questions = bot.getConfigurationSection("questions");
             boolean matched = false;
+
             if (questions != null) {
                 for (String qKey : questions.getKeys(false)) {
                     ConfigurationSection q = questions.getConfigurationSection(qKey);
                     if (q == null) continue;
-                    String keyword = q.getString("keyword", "").toLowerCase();
-                    String keyPhrase = q.getString("key_phrase", "").toLowerCase();
+
+                    String keyword = q.getString("keyword", "").toLowerCase(Locale.ROOT);
+                    String keyPhrase = q.getString("key_phrase", "").toLowerCase(Locale.ROOT);
                     List<String> replies = q.getStringList("replies");
 
                     if ((!keyword.isEmpty() && msg.contains(keyword)) ||
                             (!keyPhrase.isEmpty() && msg.contains(keyPhrase))) {
+
                         if (!replies.isEmpty()) {
-                            String reply = replies.get((int)(Math.random() * replies.size()));
+                            String reply = replies.get((int) (Math.random() * replies.size()));
                             sayAsBot(bot, reply.replace("{name}", sender.getName()));
                             matched = true;
                             break;
@@ -67,14 +84,20 @@ public final class ConversationListener implements Listener {
                 sayAsBot(bot, selfReply.replace("{name}", sender.getName()));
             }
 
-            // answer once per bot
+            // answer once per bot mention
             break;
         }
     }
 
     private void sayAsBot(ConfigurationSection bot, String body) {
-        boolean lookLikePlayer = bot.getBoolean("look_like_player",
-                Bukkit.getPluginManager().isPluginEnabled("MiniPlaceholders")); // default false if you prefer
+        // NEW: final guard (in case someone calls this directly later)
+        if (!bot.getBoolean("enabled", true)) return;
+
+        boolean lookLikePlayer = bot.getBoolean(
+                "look_like_player",
+                Bukkit.getPluginManager().isPluginEnabled("MiniPlaceholders")
+        );
+
         String playerNameFmt   = bot.getString("player_name", "BOT");
         String playerPrefixFmt = bot.getString("player_prefix", "");
         String delimiter       = bot.getString("delimiter", " | ");
@@ -83,7 +106,7 @@ public final class ConversationListener implements Listener {
                 ? (playerPrefixFmt + " " + playerNameFmt + " " + delimiter + " " + body)
                 : body;
 
-        String legacyMsg = legacy.serialize(MiniMessage.miniMessage().deserialize(output));
+        String legacyMsg = legacy.serialize(mm.deserialize(output));
         Bukkit.getScheduler().runTask(plugin, () ->
                 Bukkit.getOnlinePlayers().forEach(p -> p.sendMessage(legacyMsg)));
     }

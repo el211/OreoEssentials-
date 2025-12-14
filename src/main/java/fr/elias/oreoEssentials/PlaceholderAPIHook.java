@@ -9,6 +9,7 @@ import fr.elias.oreoEssentials.playtime.PlaytimeTracker;
 import fr.elias.oreoEssentials.util.Lang;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
@@ -49,6 +50,20 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         if (id.equals("balance")) {
             if (economy == null) return "0";
             return String.valueOf(economy.getBalance(player));
+        }
+        /* ---------------- SERVER NICKNAMES ---------------- */
+        if (id.equals("server_name")) {
+            return Bukkit.getServer().getName();
+        }
+
+        if (id.equals("server_nick")) {
+            return resolveServerNick(Bukkit.getServer().getName());
+        }
+
+        if (id.startsWith("server_nick_")) {
+            String serverId = id.substring("server_nick_".length());
+            if (serverId.isBlank()) return "";
+            return resolveServerNick(serverId);
         }
 
         /* ---------------- KITS ---------------- */
@@ -286,6 +301,25 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         if (!p.hasPermission("oreo.kit.claim")) return false;
         long left = Math.max(0, km.getSecondsLeft(p, k));
         return left == 0 || p.hasPermission("oreo.kit.bypasscooldown");
+    }
+    private String resolveServerNick(String serverName) {
+        try {
+            var c = plugin.getConfig();
+            String def = c.getString("server_nicknames.default", serverName);
+
+            // store keys as-is, but compare case-insensitive
+            var sec = c.getConfigurationSection("server_nicknames.map");
+            if (sec == null) return def;
+
+            for (String key : sec.getKeys(false)) {
+                if (key != null && key.equalsIgnoreCase(serverName)) {
+                    return sec.getString(key, def);
+                }
+            }
+            return def;
+        } catch (Throwable t) {
+            return serverName;
+        }
     }
 
     /** Best-effort total seconds using your stack: Prewards.getPlaytimeSeconds -> Tracker -> Bukkit stat. */
