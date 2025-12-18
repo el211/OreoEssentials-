@@ -327,6 +327,7 @@ home:
   switch-failed-tip: '&7Make sure ''&b%server%&7'' matches the server name in your
     proxy config.'
   suggest: '&7Did you mean: &b%suggestions%'
+  cancelled-moved: "&cTéléportation annulée: vous avez bougé. &7(Home: %name%)"
 
 player:
   sit:

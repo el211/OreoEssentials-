@@ -26,8 +26,6 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
     @Override public String usage() { return "<player>"; }
     @Override public boolean playerOnly() { return true; }
 
-    private static final int EC_SIZE = 27; // 3 rows
-
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player viewer)) return true;
@@ -66,25 +64,43 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
             return true;
         }
 
+        // ---- FIXED: Determine target's actual slot count ----
+        int targetSlots;
+        Player live = Bukkit.getPlayer(targetId);
+        if (live != null && live.isOnline()) {
+            // If player is online, use their actual permissions
+            targetSlots = svc.resolveSlots(live);
+        } else {
+            // If offline, use best estimate
+            targetSlots = svc.resolveSlotsOffline(targetId);
+        }
+
+        // Calculate rows needed for target's slot count
+        int targetRows = Math.max(1, (int) Math.ceil(targetSlots / 9.0));
+        int guiSize = targetRows * 9;
+
+        if (debug) {
+            log.info("[ECSEE] Target=" + targetName + " has " + targetSlots + " slots (" + targetRows + " rows)");
+        }
+
         // ---- Decide best source for contents ----
         ItemStack[] contents;
         String source;
-        Player live = Bukkit.getPlayer(targetId);
 
         if (live != null && live.isOnline()) {
             boolean viewingVirtual = live.getOpenInventory() != null
                     && EnderChestService.TITLE.equals(live.getOpenInventory().getTitle());
 
             if (viewingVirtual) {
-                contents = Arrays.copyOf(live.getOpenInventory().getTopInventory().getContents(), EC_SIZE);
+                contents = Arrays.copyOf(live.getOpenInventory().getTopInventory().getContents(), guiSize);
                 source = "LIVE_VIRTUAL_GUI";
             } else {
-                contents = EnderChestStorage.clamp(svc.loadFor(targetId, 3), 3);
+                contents = EnderChestStorage.clamp(svc.loadFor(targetId, targetRows), targetRows);
                 source = "SERVICE_SNAPSHOT_ONLINE";
             }
 
             if (debug) {
-                ItemStack[] vanilla = Arrays.copyOf(live.getEnderChest().getContents(), EC_SIZE);
+                ItemStack[] vanilla = Arrays.copyOf(live.getEnderChest().getContents(), Math.min(27, guiSize));
                 int vanillaNonEmpty = countNonEmpty(vanilla);
                 log.info("[ECSEE] Online target=" + targetName
                         + " source=" + source
@@ -92,7 +108,7 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
                         + " vanillaNonEmpty=" + vanillaNonEmpty);
             }
         } else {
-            contents = EnderChestStorage.clamp(svc.loadFor(targetId, 3), 3);
+            contents = EnderChestStorage.clamp(svc.loadFor(targetId, targetRows), targetRows);
             source = "SERVICE_SNAPSHOT_OFFLINE";
             if (debug) {
                 log.info("[ECSEE] Offline target=" + targetName
@@ -101,18 +117,20 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
             }
         }
 
-        // ---- Open proxy GUI ----
+        // ---- Open proxy GUI with correct size ----
         Inventory gui = Bukkit.createInventory(
                 null,
-                EC_SIZE,
+                guiSize,
                 ChatColor.DARK_PURPLE + "Ender Chest " + ChatColor.GRAY + "(" + targetName + ")"
         );
-        gui.setContents(EnderChestStorage.clamp(contents, 3));
+        gui.setContents(EnderChestStorage.clamp(contents, targetRows));
         viewer.openInventory(gui);
 
         // ---- Save on close ----
         UUID viewerId = viewer.getUniqueId();
         String finalSource = source;
+        final int finalTargetRows = targetRows;
+        final int finalGuiSize = guiSize;
 
         Listener l = new Listener() {
             @EventHandler(priority = EventPriority.MONITOR)
@@ -121,10 +139,10 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
                 if (!p.getUniqueId().equals(viewerId)) return;
                 if (e.getInventory() != gui) return;
 
-                ItemStack[] edited = Arrays.copyOf(gui.getContents(), EC_SIZE);
+                ItemStack[] edited = Arrays.copyOf(gui.getContents(), finalGuiSize);
 
                 // Persist (so cross-server & future joins see changes)
-                svc.saveFor(targetId, 3, edited);
+                svc.saveFor(targetId, finalTargetRows, edited);
 
                 // If target is online on THIS server, try to mirror live view
                 Player liveNow = Bukkit.getPlayer(targetId);
@@ -135,13 +153,16 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
                                         && EnderChestService.TITLE.equals(liveNow.getOpenInventory().getTitle());
 
                         if (viewingVirtual) {
-                            for (int i = 0; i < EC_SIZE; i++) {
-                                liveNow.getOpenInventory().getTopInventory().setItem(i, edited[i]);
+                            Inventory targetGui = liveNow.getOpenInventory().getTopInventory();
+                            for (int i = 0; i < Math.min(finalGuiSize, targetGui.getSize()); i++) {
+                                targetGui.setItem(i, edited[i]);
                             }
-                            svc.saveFromInventory(liveNow, liveNow.getOpenInventory().getTopInventory());
+                            svc.saveFromInventory(liveNow, targetGui);
                             if (debug) log.info("[ECSEE] Mirrored changes to target's VIRTUAL GUI. target=" + targetName);
                         } else {
-                            liveNow.getEnderChest().setContents(edited);
+                            // Only write to vanilla enderchest if it can fit (vanilla EC is max 27 slots)
+                            ItemStack[] vanillaContents = Arrays.copyOf(edited, Math.min(27, edited.length));
+                            liveNow.getEnderChest().setContents(vanillaContents);
                             if (debug) log.info("[ECSEE] Wrote changes to target's VANILLA EC. target=" + targetName);
                         }
                     } catch (Throwable t) {

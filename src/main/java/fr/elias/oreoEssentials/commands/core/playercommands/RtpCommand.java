@@ -85,7 +85,7 @@ public class RtpCommand implements OreoCommand {
                 }
             }
 
-            // Enregistrer nouveau timestamp
+            // Save new timestamp
             plugin.getRtpCooldownCache().put(p.getUniqueId(), now);
         }
 
@@ -138,6 +138,7 @@ public class RtpCommand implements OreoCommand {
     public static boolean doLocalRtp(OreoEssentials plugin,
                                      Player p,
                                      String targetWorldName) {
+
         if (p == null || !p.isOnline()) return false;
 
         RtpConfig cfg = plugin.getRtpConfig();
@@ -162,12 +163,16 @@ public class RtpCommand implements OreoCommand {
             return false;
         }
 
-        // Compute radius using per-world + tier permissions
-        int radius = cfg.radiusFor(p, null);
+        // Compute radius and minimum distance (per-world / tier if your config supports it)
+        int radius = cfg.radiusFor(p, java.util.List.of(world.getName()));
+        int minRadius = cfg.minRadiusFor(p, world.getName());
+
+        // clamp safety
+        if (minRadius < 0) minRadius = 0;
+        if (minRadius > radius) minRadius = radius;
 
         // Always use world spawn as RTP center
         Location center = world.getSpawnLocation();
-
 
         // "Trying random teleport in ..."
         Lang.send(p,
@@ -175,11 +180,12 @@ public class RtpCommand implements OreoCommand {
                 java.util.Map.of(
                         "world", world.getName(),
                         "radius", String.valueOf(radius)
+                        // If you want to show it: add "min", String.valueOf(minRadius)
                 ),
                 p
         );
 
-        Location dest = findSafeLocation(world, center, radius, cfg);
+        Location dest = findSafeLocation(world, center, radius, minRadius, cfg);
         if (dest == null) {
             Lang.send(p, "rtp.no-safe-spot", null, p);
             return false;
@@ -187,7 +193,6 @@ public class RtpCommand implements OreoCommand {
 
         boolean ok = p.teleport(dest);
         if (ok) {
-            // "Teleported to x, y, z in world"
             Lang.send(p,
                     "rtp.teleported",
                     java.util.Map.of(
@@ -204,20 +209,33 @@ public class RtpCommand implements OreoCommand {
         return ok;
     }
 
-    private static Location findSafeLocation(World world, Location center, int radius, RtpConfig cfg) {
+    /**
+     * Find a safe location within [minRadius, radius] of center.
+     */
+    private static Location findSafeLocation(World world,
+                                             Location center,
+                                             int radius,
+                                             int minRadius,
+                                             RtpConfig cfg) {
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
+
         int attempts = cfg.attempts();
         int minY = Math.max(5, cfg.minY());
         int maxY = Math.min(world.getMaxHeight() - 1, cfg.maxY());
         Set<String> unsafe = cfg.unsafeBlocks();
 
+        int min = Math.max(0, minRadius);
+        int max = Math.max(min + 1, radius + 1); // +1 so radius is reachable
+
         for (int i = 0; i < attempts; i++) {
+
             double angle = rnd.nextDouble(0, Math.PI * 2);
-            double dist = rnd.nextDouble(0, Math.max(1, radius));
+            double dist  = rnd.nextDouble(min, max);
 
             int x = center.getBlockX() + (int) Math.round(Math.cos(angle) * dist);
             int z = center.getBlockZ() + (int) Math.round(Math.sin(angle) * dist);
 
+            // Ensure chunk is loaded
             Chunk chunk = world.getChunkAt(new Location(world, x, 0, z));
             if (!chunk.isLoaded()) {
                 chunk.load(true);
@@ -237,25 +255,29 @@ public class RtpCommand implements OreoCommand {
             Block head   = world.getBlockAt(x, y + 2, z);
             Block ground = world.getBlockAt(x, y, z);
 
+            // Must have space for player
             if (!feet.isEmpty() || !head.isEmpty()) {
                 continue;
             }
 
+            // Unsafe ground types
             String groundType = ground.getType().name();
             if (unsafe.contains(groundType)) {
                 continue;
             }
 
+            // Avoid liquids
             if (ground.isLiquid()) {
                 continue;
             }
 
             // Found a valid location
             Location tp = new Location(world, x + 0.5, y + 1.0, z + 0.5);
-            tp.setYaw(ThreadLocalRandom.current().nextFloat() * 360f);
+            tp.setYaw(rnd.nextFloat() * 360f);
             tp.setPitch(0f);
             return tp;
         }
+
         return null;
     }
 
@@ -290,4 +312,6 @@ public class RtpCommand implements OreoCommand {
                 .sorted()
                 .toList();
     }
+
+
 }

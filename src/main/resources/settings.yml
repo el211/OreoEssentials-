@@ -12,6 +12,12 @@ features:
         - "badword"
         - "anotherbadword"
         - "insult"
+  home:
+    enabled: true
+
+    cooldown: false
+    cooldown-amount: 5
+
 
   economy:
     enabled: true
