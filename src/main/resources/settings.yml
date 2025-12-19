@@ -51,6 +51,9 @@ features:
   rtp:
     enabled: true
 
+    warmup: true
+    warmup-amount: 5
+
   scoreboard:
     enabled: true
 

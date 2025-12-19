@@ -8,7 +8,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerTeleportEvent;
-
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerKickEvent;
 public class BackListener implements Listener {
 
     private final BackService backService;
@@ -34,8 +35,25 @@ public class BackListener implements Listener {
                 );
                 break;
             default:
-                // pas de back sur enderpearl / nether / portal etc (à toi de voir)
+                // pas de back sur enderpearl / nether / portal etc
                 break;
         }
+    }
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onQuit(PlayerQuitEvent event) {
+        Player p = event.getPlayer();
+        backService.setLast(
+                p.getUniqueId(),
+                BackLocation.from(serverName, p.getLocation())
+        );
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onKick(PlayerKickEvent event) {
+        Player p = event.getPlayer();
+        backService.setLast(
+                p.getUniqueId(),
+                BackLocation.from(serverName, p.getLocation())
+        );
     }
 }

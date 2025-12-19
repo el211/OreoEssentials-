@@ -588,7 +588,10 @@ rtp:
   no-safe-spot: '%prefix%&cCouldn''t find a safe spot. Try again.'
   teleported: '%prefix%&aTeleported to &b%x%&7, &b%y%&7, &b%z% &7in &b%world%&7.'
   failed: '%prefix%&cTeleport failed.'
-
+  cancelled-moved: "&cRTP cancelled: you moved."
+  warmup:
+    title: "&e{seconds}"
+    subtitle: "&7Random teleport..."
 # =========================================================
 # /pw Command (PlayerWarpCommand)
 # =========================================================

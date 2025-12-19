@@ -78,6 +78,7 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         final String raw = args[0];
         final String key = normalize(raw);
 
+
         // ---- Cooldown / countdown (features.home.cooldown) ----
         FileConfiguration settings = plugin.getSettingsConfig().getRoot();
         ConfigurationSection homeSection = settings.getConfigurationSection("features.home");
@@ -91,6 +92,22 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         final String localServer = homes.localServer();
         final String homeServer = homes.homeServer(player.getUniqueId(), key);
         final String targetServer = (homeServer == null ? localServer : homeServer);
+// ✅ FIX: check existence BEFORE starting countdown
+        if (targetServer.equalsIgnoreCase(localServer)) {
+            // Local server: must exist locally
+            if (homes.getHome(player.getUniqueId(), key) == null) {
+                Lang.send(player, "home.not-found", Map.of("name", raw), player);
+                suggestClosest(player, key);
+                return true;
+            }
+        } else {
+            // Cross-server: must exist in cross-server index (homeServer must be set)
+            if (homeServer == null || homeServer.isBlank()) {
+                Lang.send(player, "home.not-found", Map.of("name", raw), player);
+                suggestClosest(player, key);
+                return true;
+            }
+        }
 
         // Local teleport (with optional countdown)
         if (targetServer.equalsIgnoreCase(localServer)) {
@@ -211,6 +228,19 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                     .collect(Collectors.toList());
         }
         return List.of();
+    }
+    private boolean homeExistsSomewhere(UUID playerId, String homeKey) {
+        try {
+            // If HomeService can resolve a server for the home, it exists somewhere (cross-server index)
+            String server = homes.homeServer(playerId, homeKey);
+            if (server != null && !server.isBlank()) return true;
+
+            // Otherwise, it might be local-only (or index not available): try local lookup
+            return homes.getHome(playerId, homeKey) != null;
+        } catch (Throwable ignored) {
+            // On any failure, fall back to local lookup
+            return homes.getHome(playerId, homeKey) != null;
+        }
     }
 
     /* ---------------- helpers ---------------- */

@@ -8,6 +8,8 @@ import fr.elias.oreoEssentials.commands.CommandManager;
 import fr.elias.oreoEssentials.commands.core.moderation.freeze.FreezeCommand;
 import fr.elias.oreoEssentials.commands.core.playercommands.back.BackCommand;
 import fr.elias.oreoEssentials.commands.core.playercommands.back.BackService;
+import fr.elias.oreoEssentials.cross.InvlookListener;
+import fr.elias.oreoEssentials.cross.InvlookManager;
 import fr.elias.oreoEssentials.migration.commands.ZEssentialsHomesImportCommand;
 import fr.elias.oreoEssentials.playerwarp.*;
 import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpCommand;
@@ -101,8 +103,11 @@ import fr.elias.oreoEssentials.vault.VaultEconomyProvider;
 import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.Map;
 
 public final class OreoEssentials extends JavaPlugin {
 
@@ -265,6 +270,7 @@ public final class OreoEssentials extends JavaPlugin {
     private CustomCraftingService customCraftingService;
     public CustomCraftingService getCustomCraftingService() { return customCraftingService; }
     private fr.elias.oreoEssentials.holograms.OreoHolograms oreoHolograms;
+    private InvlookManager invlookManager;
 
     // Playtime
     private fr.elias.oreoEssentials.playtime.PlaytimeTracker playtimeTracker;
@@ -305,6 +311,8 @@ public final class OreoEssentials extends JavaPlugin {
         );
         // -------- Commands (manager then registrations) --------
         this.commands = new CommandManager(this);
+        this.invlookManager = new InvlookManager();
+        getServer().getPluginManager().registerEvents(new InvlookListener(this), this);
 
         getLogger().info(
                 "[BOOT] storage=" + essentialsStorage
@@ -349,7 +357,7 @@ public final class OreoEssentials extends JavaPlugin {
 
             switch (economyType) {
                 case "mongodb" -> {
-                    MongoDBManager mgr = new MongoDBManager(redis);
+                    MongoDBManager mgr = new MongoDBManager(this, redis);
                     boolean ok = mgr.connect(
                             getConfig().getString("economy.mongodb.uri"),
                             getConfig().getString("economy.mongodb.database"),
@@ -992,6 +1000,7 @@ public final class OreoEssentials extends JavaPlugin {
                 this
         );
 
+
         // --- expose InventoryService so /invsee works for offline & cross-server ---
         fr.elias.oreoEssentials.services.InventoryService invSvc =
                 new fr.elias.oreoEssentials.services.InventoryService() {
@@ -1086,6 +1095,7 @@ public final class OreoEssentials extends JavaPlugin {
                     this.invseeService = null;
                     getLogger().info("[INVSEE] Cross-server Invsee disabled (invSyncEnabled=false).");
                 }
+
 
 
                 // now you can subscribe channels & handlers safely
@@ -2091,7 +2101,9 @@ public final class OreoEssentials extends JavaPlugin {
     public HomeService getHomeService() { return homeService; }
     public PlayerWarpService getPlayerWarpService() { return playerWarpService; }
     public PlayerWarpDirectory getPlayerWarpDirectory() { return playerWarpDirectory; }
-
+    public InvlookManager getInvlookManager() {
+        return invlookManager;
+    }
     public TeleportService getTeleportService() { return teleportService; }
     public BackService getBackService() { return backService; }
     public MessageService getMessageService() { return messageService; }
@@ -2125,38 +2137,61 @@ public final class OreoEssentials extends JavaPlugin {
     @SuppressWarnings("unchecked")
     private void unregisterCommandHard(String label) {
         try {
-            // Get the command map
-            org.bukkit.plugin.SimplePluginManager spm =
-                    (org.bukkit.plugin.SimplePluginManager) getServer().getPluginManager();
-            java.lang.reflect.Field f = org.bukkit.plugin.SimplePluginManager.class.getDeclaredField("commandMap");
-            f.setAccessible(true);
-            org.bukkit.command.SimpleCommandMap map = (org.bukkit.command.SimpleCommandMap) f.get(spm);
+            // 1) Get commandMap from the actual server implementation (CraftServer)
+            Object craftServer = getServer();
 
-            // Known commands map
-            java.lang.reflect.Field f2 = org.bukkit.command.SimpleCommandMap.class.getDeclaredField("knownCommands");
+            org.bukkit.command.CommandMap commandMap = null;
+
+            // Try a public method first (some forks expose it)
+            try {
+                var m = craftServer.getClass().getMethod("getCommandMap");
+                Object res = m.invoke(craftServer);
+                if (res instanceof org.bukkit.command.CommandMap cm) {
+                    commandMap = cm;
+                }
+            } catch (Throwable ignored) {}
+
+            // Fallback: reflect field "commandMap"
+            if (commandMap == null) {
+                var f = craftServer.getClass().getDeclaredField("commandMap");
+                f.setAccessible(true);
+                Object res = f.get(craftServer);
+                if (res instanceof org.bukkit.command.CommandMap cm) {
+                    commandMap = cm;
+                }
+            }
+
+            if (!(commandMap instanceof org.bukkit.command.SimpleCommandMap map)) return;
+
+            // 2) Access knownCommands
+            var f2 = org.bukkit.command.SimpleCommandMap.class.getDeclaredField("knownCommands");
             f2.setAccessible(true);
-            java.util.Map<String, org.bukkit.command.Command> known =
-                    (java.util.Map<String, org.bukkit.command.Command>) f2.get(map);
+            Map<String, org.bukkit.command.Command> known =
+                    (Map<String, Command>) f2.get(map);
 
-            // remove plain and namespaced aliases that point to us
+            // 3) Remove plain + namespaced entries only if they belong to THIS plugin
             String lower = label.toLowerCase(java.util.Locale.ROOT);
+
             known.entrySet().removeIf(e -> {
                 String k = e.getKey().toLowerCase(java.util.Locale.ROOT);
                 if (!k.equals(lower) && !k.endsWith(":" + lower)) return false;
+
                 org.bukkit.command.Command cmd = e.getValue();
-                org.bukkit.plugin.Plugin owner = null;
+                if (!(cmd instanceof org.bukkit.command.PluginCommand pc)) return false;
+
                 try {
-                    java.lang.reflect.Field fc = org.bukkit.command.PluginCommand.class.getDeclaredField("owningPlugin");
-                    fc.setAccessible(true);
-                    if (cmd instanceof org.bukkit.command.PluginCommand pc) {
-                        owner = (org.bukkit.plugin.Plugin) fc.get(pc);
-                    }
-                } catch (Throwable ignored) {}
-                return owner == this;
+                    // PluginCommand#getPlugin exists on Bukkit/Spigot/Paper
+                    return pc.getPlugin() == this;
+                } catch (Throwable ignored) {
+                    return false;
+                }
             });
+
         } catch (Throwable ignored) {
+            // keep silent: unregister is best-effort
         }
     }
+
     // Playtime Rewards service getter (name expected by PlaceholderAPIHook)
     public fr.elias.oreoEssentials.playtime.PlaytimeRewardsService getPlaytimeRewardsService() {
         return this.playtimeRewards;

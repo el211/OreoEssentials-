@@ -6,10 +6,7 @@ import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.rtp.RtpConfig;
 import fr.elias.oreoEssentials.rtp.RtpCrossServerBridge;
 import fr.elias.oreoEssentials.util.Lang;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -105,30 +102,113 @@ public class RtpCommand implements OreoCommand {
         boolean crossEnabled = cfg.isCrossServerEnabled();
         boolean sameServer   = (targetServer == null) || targetServer.equalsIgnoreCase(localServer);
 
-        if (crossEnabled && !sameServer) {
-            // Cross-server RTP path
-            Lang.send(p,
-                    "rtp.cross-switch",
-                    java.util.Map.of(
-                            "server", targetServer,
-                            "world", targetWorldName
-                    ),
-                    p
-            );
+// ---- Warmup countdown (settings.yml: features.rtp.warmup) ----
+        var settings = plugin.getSettingsConfig();
+        final boolean useWarmup = settings.rtpWarmupEnabled();
+        final int seconds = settings.rtpWarmupSeconds();
 
-            RtpCrossServerBridge bridge = plugin.getRtpBridge();
-            if (bridge != null) {
-                // New flow: send RtpTeleportRequestPacket + proxy switch.
-                bridge.requestCrossServerRtp(p, targetWorldName, targetServer);
-            } else {
-                // Fallback: at least move the player to the server (requires /server support)
-                p.performCommand("server " + targetServer);
-            }
+// Same bypass rule as home
+        final boolean bypass = p.isOp() || !useWarmup || seconds <= 0;
+
+        if (crossEnabled && !sameServer) {
+            // Cross-server RTP action
+            final Runnable action = () -> {
+                Lang.send(p,
+                        "rtp.cross-switch",
+                        java.util.Map.of(
+                                "server", targetServer,
+                                "world", targetWorldName
+                        ),
+                        p
+                );
+
+                RtpCrossServerBridge bridge = plugin.getRtpBridge();
+                if (bridge != null) {
+                    bridge.requestCrossServerRtp(p, targetWorldName, targetServer);
+                } else {
+                    p.performCommand("server " + targetServer);
+                }
+            };
+
+            if (bypass) action.run();
+            else startRtpCountdown(plugin, p, seconds, targetWorldName, action);
+
             return true;
         }
 
-        // 3) Local RTP on this node
-        return doLocalRtp(plugin, p, targetWorldName);
+// Local RTP action
+        final Runnable action = () -> doLocalRtp(plugin, p, targetWorldName);
+
+        if (bypass) action.run();
+        else startRtpCountdown(plugin, p, seconds, targetWorldName, action);
+
+        return true;
+
+    }
+    private static void startRtpCountdown(OreoEssentials plugin,
+                                          Player target,
+                                          int seconds,
+                                          String worldName,
+                                          Runnable action) {
+
+        final Location origin = target.getLocation().clone();
+
+        new org.bukkit.scheduler.BukkitRunnable() {
+            int remaining = seconds;
+
+            @Override
+            public void run() {
+                if (!target.isOnline()) {
+                    cancel();
+                    return;
+                }
+
+                if (hasMoved(target, origin)) {
+                    cancel();
+                    Lang.send(target, "rtp.cancelled-moved", null, target);
+                    return;
+                }
+
+                if (remaining <= 0) {
+                    cancel();
+                    action.run();
+                    return;
+                }
+
+                // Title "5 4 3 2 1"
+                // Use your Lang system if you want, but keeping it simple and compatible:
+                String title = Lang.msg("rtp.warmup.title",
+                        java.util.Map.of("seconds", String.valueOf(remaining)),
+                        target
+                );
+                String subtitle = Lang.msg("rtp.warmup.subtitle",
+                        java.util.Map.of("seconds", String.valueOf(remaining), "world", worldName),
+                        target
+                );
+
+            // legacy title API expects § codes -> translate & from lang
+                title = ChatColor.translateAlternateColorCodes('&', title);
+                subtitle = ChatColor.translateAlternateColorCodes('&', subtitle);
+
+                target.sendTitle(title, subtitle, 0, 20, 0);
+
+                remaining--;
+            }
+        }.runTaskTimer(plugin, 0L, 20L);
+    }
+
+    private static boolean hasMoved(Player p, Location origin) {
+        Location now = p.getLocation();
+
+        if (now.getWorld() == null || origin.getWorld() == null) return true;
+        if (!now.getWorld().equals(origin.getWorld())) return true;
+
+        double dx = now.getX() - origin.getX();
+        double dy = now.getY() - origin.getY();
+        double dz = now.getZ() - origin.getZ();
+
+        // Same tolerance style as home: tiny movement cancels
+        return (dx * dx + dy * dy + dz * dz) > (0.05 * 0.05);
     }
 
     /**

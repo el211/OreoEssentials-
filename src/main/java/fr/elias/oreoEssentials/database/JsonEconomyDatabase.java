@@ -28,12 +28,14 @@ public class JsonEconomyDatabase implements PlayerEconomyDatabase {
     // Defaults (wire to config later if you want)
     private static final double STARTING_BALANCE = 100.0;
     private static final double MIN_BALANCE = 0.0;
-    private static final double MAX_BALANCE = 1_000_000_000.0;
+    private final double MAX_BALANCE;
     private static final boolean ALLOW_NEGATIVE = false;
 
     public JsonEconomyDatabase(JavaPlugin plugin, RedisManager redis) {
         this.plugin = plugin;
         this.redis = redis;
+        this.MAX_BALANCE = plugin.getConfig().getDouble("economy.max-balance", 1_000_000_000.0);
+
     }
 
     // Signature compatibility; args unused

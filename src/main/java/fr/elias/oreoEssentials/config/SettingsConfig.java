@@ -124,6 +124,14 @@ public class SettingsConfig {
 
     // RTP
     public boolean rtpEnabled() { return isEnabled("rtp"); }
+    // RTP warmup (title countdown like /home)
+    public boolean rtpWarmupEnabled() {
+        return cfg.getBoolean("features.rtp.warmup", false);
+    }
+
+    public int rtpWarmupSeconds() {
+        return Math.max(0, cfg.getInt("features.rtp.warmup-amount", 0));
+    }
 
     // Bossbar
     public boolean bossbarEnabled() { return isEnabled("bossbar"); }

@@ -1,0 +1,65 @@
+// File: src/main/java/fr/elias/oreoEssentials/cross/InvlookListener.java
+package fr.elias.oreoEssentials.cross;
+
+import fr.elias.oreoEssentials.OreoEssentials;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.*;
+import org.bukkit.event.player.PlayerQuitEvent;
+
+public class InvlookListener implements Listener {
+
+    private final OreoEssentials plugin;
+
+    public InvlookListener(OreoEssentials plugin) {
+        this.plugin = plugin;
+    }
+
+    private boolean isInvlook(Player p) {
+        return plugin.getInvlookManager() != null && plugin.getInvlookManager().isReadOnly(p.getUniqueId());
+    }
+
+    // Clicks (including shift-click / number key / swap)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onClick(InventoryClickEvent e) {
+        if (!(e.getWhoClicked() instanceof Player p)) return;
+        if (!isInvlook(p)) return;
+
+        // Cancel any attempt to move items in/out
+        e.setCancelled(true);
+    }
+
+    // Dragging
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onDrag(InventoryDragEvent e) {
+        if (!(e.getWhoClicked() instanceof Player p)) return;
+        if (!isInvlook(p)) return;
+        e.setCancelled(true);
+    }
+
+    // Prevent creative middle-click clone etc.
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onCreative(InventoryCreativeEvent e) {
+        if (!(e.getWhoClicked() instanceof Player p)) return;
+        if (!isInvlook(p)) return;
+        e.setCancelled(true);
+    }
+
+    // When they close, remove read-only flag (so it doesn't affect other menus)
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onClose(InventoryCloseEvent e) {
+        if (!(e.getPlayer() instanceof Player p)) return;
+        if (plugin.getInvlookManager() != null) {
+            plugin.getInvlookManager().unmark(p.getUniqueId());
+        }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent e) {
+        if (plugin.getInvlookManager() != null) {
+            plugin.getInvlookManager().unmark(e.getPlayer().getUniqueId());
+        }
+    }
+}

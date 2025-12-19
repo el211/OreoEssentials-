@@ -12,6 +12,7 @@ import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.Sorts;
+import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.offline.OfflinePlayerCache;
 import org.bson.Document;
 import org.bukkit.Bukkit;
@@ -30,11 +31,14 @@ public class MongoDBManager implements PlayerEconomyDatabase {
     // You can wire these from config later if desired
     private static final double STARTING_BALANCE = 100.0;
     private static final double MIN_BALANCE = 0.0;
-    private static final double MAX_BALANCE = 1_000_000_000.0;
+    private final double MAX_BALANCE;
     private static final boolean ALLOW_NEGATIVE = false;
 
-    public MongoDBManager(RedisManager redis) {
+    public MongoDBManager(OreoEssentials plugin, RedisManager redis)
+    {
         this.redis = redis;
+        this.MAX_BALANCE = plugin.getConfig().getDouble("economy.max-balance", 1_000_000_000.0);
+
     }
 
     @Override
