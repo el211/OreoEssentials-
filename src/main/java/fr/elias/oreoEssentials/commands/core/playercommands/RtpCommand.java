@@ -167,28 +167,12 @@ public class RtpCommand implements OreoCommand {
         int radius = cfg.radiusFor(p, java.util.List.of(world.getName()));
         int minRadius = cfg.minRadiusFor(p, world.getName());
 
-<<<<<<< HEAD
-        // Always use world spawn as RTP center
-        Location center = world.getSpawnLocation();
-
-
-        // "Trying random teleport in ..."
-        Lang.send(p,
-                "rtp.trying",
-                java.util.Map.of(
-                        "world", world.getName(),
-                        "radius", String.valueOf(radius)
-                ),
-                p
-        );
-=======
         // clamp safety
         if (minRadius < 0) minRadius = 0;
         if (minRadius > radius) minRadius = radius;
 
         // Always use world spawn as RTP center
         Location center = world.getSpawnLocation();
->>>>>>> main
 
         // "Trying random teleport in ..."
         Lang.send(p,
@@ -209,10 +193,6 @@ public class RtpCommand implements OreoCommand {
 
         boolean ok = p.teleport(dest);
         if (ok) {
-<<<<<<< HEAD
-            // "Teleported to x, y, z in world"
-=======
->>>>>>> main
             Lang.send(p,
                     "rtp.teleported",
                     java.util.Map.of(

@@ -1,6 +1,7 @@
 chat:
   enabled: false                   # ← set true to let AsyncChatListener handle chat
   strip-name-colors: true          # ← NEW: strip colors from names before formatting
+  use-minimessage: false # default: false (legacy &-codes). set true to enable <head>, <hover>, <click>, <gradient>
 
   # You can use:
   #  - %player_displayname%  (respects /nick)
@@ -10,7 +11,7 @@ chat:
   #  - <gradient:#c1:#c2[:#c3...]>TEXT</gradient> (multi-stop gradient)
 
   # Example: gradient prefix + balance + display name + message
-  default: "<gradient:#00e5ff:#00ffa3>%luckperms_prefix%</gradient> &7&e($%vault_eco_balance%) &7- &f%player_displayname% &8» &f%chat_message%"
+  default: "<gradient:#ffb300:#ff3d00><head:%player_name%> %player_name%</gradient> <gray>»</gray> <white>%chat_message%</white>"
 
   # Example: VIP uses a gold hex on the name itself
   vip: "&7%luckperms_prefix% &7&e($%vault_eco_balance%) &7- <#ffd700>&l%player_name%</gradient> &8» &f%chat_message%"

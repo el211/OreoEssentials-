@@ -6,6 +6,9 @@ import fr.elias.oreoEssentials.modgui.ModGuiService;
 import fr.elias.oreoEssentials.services.chatservices.MuteService;
 import fr.elias.oreoEssentials.util.ChatSyncManager;
 import fr.elias.oreoEssentials.util.DiscordWebhook;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -16,12 +19,19 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
  * Formats chat using FormatManager, optionally syncs to RabbitMQ,
  * and optionally forwards to Discord via webhook if enabled in config.
- * Also supports banned-words censoring from settings.yml (chat.banned-words).
+ *
+ * Supports two output modes:
+ *  - Legacy (& codes) (default, backward compatible)
+ *  - MiniMessage (chat.use-minimessage: true) with <head>, <gradient>, <hover>, <click>, etc.
+ *
+ * NOTE: When MiniMessage mode is enabled, your chat format strings should use MiniMessage tags
+ * (e.g. <gradient:...>, <click:...>, <hover:...>, <head:...>) instead of & codes.
  */
 public class AsyncChatListener implements Listener {
 
@@ -30,11 +40,17 @@ public class AsyncChatListener implements Listener {
     private final ChatSyncManager syncManager;
     private final boolean discordEnabled;
     private final String discordWebhookUrl;
-    private final MuteService muteService; // used to prevent publishing when muted
+    private final MuteService muteService;
 
-    // NEW: banned words config (from SettingsConfig)
+    // banned words config (from SettingsConfig)
     private final boolean bannedWordsEnabled;
     private final List<String> bannedWords;
+
+    // MiniMessage toggle
+    private final boolean useMiniMessage;
+
+    // MiniMessage instance (includes standard tags like <head>, <hover>, <click>, <gradient> if your Adventure is new enough)
+    private static final MiniMessage MINI = MiniMessage.miniMessage();
 
     public AsyncChatListener(
             FormatManager fm,
@@ -51,46 +67,39 @@ public class AsyncChatListener implements Listener {
         this.discordWebhookUrl = (discordWebhookUrl == null) ? "" : discordWebhookUrl.trim();
         this.muteService = muteService;
 
-        // Load banned-words settings from SettingsConfig
         var settings = OreoEssentials.get().getSettingsConfig();
         this.bannedWordsEnabled = settings.bannedWordsEnabled();
         this.bannedWords = settings.bannedWords();
 
-        // Optional: debug to verify it loaded correctly
-        Bukkit.getLogger().info("[OreoEssentials] Chat banned-words enabled=" +
-                bannedWordsEnabled + " list=" + this.bannedWords);
+        final FileConfiguration conf = chatConfig == null ? null : chatConfig.getCustomConfig();
+        this.useMiniMessage = conf != null && conf.getBoolean("chat.use-minimessage", false);
+
+        Bukkit.getLogger().info("[OreoEssentials] Chat mode=" + (useMiniMessage ? "MiniMessage" : "Legacy")
+                + " bannedWords=" + bannedWordsEnabled + " list=" + this.bannedWords);
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onChat(AsyncPlayerChatEvent event) {
-        // If something else (e.g., MuteListener) cancelled already, we won't run (ignoreCancelled=true)
-
-        // Respect global master toggle from settings.yml
         if (!OreoEssentials.get().getSettingsConfig().chatEnabled()) {
-            // Let vanilla/bukkit handle chat if Oreo chat formatting is disabled
-            return;
+            return; // let vanilla handle
         }
 
-        // Optionally still ensure config exists (for formats), but don't use it as toggle
         final FileConfiguration conf = chatConfig == null ? null : chatConfig.getCustomConfig();
         if (conf == null) {
-            // No chat-format.yml found; let vanilla handle it, or you can still continue with hardcoded fallback.
-            return;
+            return; // no formats found => let vanilla handle
         }
 
         final Player player = event.getPlayer();
 
-        // ---------------- ModGUI chat controls ----------------
+        // ---------------- ModGUI chat controls (SAFE enough to check here, but we still broadcast on main) ----------------
         ModGuiService svc = OreoEssentials.get().getModGuiService();
 
-        // GLOBAL MUTE
         if (svc != null && svc.chatMuted()) {
             player.sendMessage("§cChat is currently muted.");
             event.setCancelled(true);
             return;
         }
 
-        // SLOWMODE PER-PLAYER
         if (svc != null && svc.getSlowmodeSeconds() > 0) {
             if (!svc.canSendMessage(player.getUniqueId())) {
                 long left = svc.getRemainingSlowmode(player.getUniqueId());
@@ -101,68 +110,94 @@ public class AsyncChatListener implements Listener {
             svc.recordMessage(player.getUniqueId());
         }
 
-        // STAFF CHAT (bypass normal public chat; only staff see it)
         if (svc != null && svc.isStaffChatEnabled(player.getUniqueId())) {
-            for (Player p2 : Bukkit.getOnlinePlayers()) {
-                if (p2.hasPermission("oreo.staffchat")) {
-                    p2.sendMessage("§b[StaffChat] §f" + player.getName() + ": §7" + event.getMessage());
-                }
-            }
+            // Staff chat: broadcast ONLY to staff, still main-thread message sending below for safety
             event.setCancelled(true);
+            final String staffMsg = event.getMessage() == null ? "" : event.getMessage();
+
+            Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+                for (Player p2 : Bukkit.getOnlinePlayers()) {
+                    if (p2.hasPermission("oreo.staffchat")) {
+                        p2.sendMessage("§b[StaffChat] §f" + player.getName() + ": §7" + staffMsg);
+                    }
+                }
+            });
             return;
         }
-        // -----------------------------------------------------
+        // ---------------------------------------------------------------------------------------------------------------
 
-        // Extra guard: if muted, do not format/relay/broadcast here either
         if (muteService != null && muteService.isMuted(player.getUniqueId())) {
             event.setCancelled(true);
             return;
         }
 
-        // We take over the chat pipeline
+        // Take over the pipeline
         event.setCancelled(true);
 
         String message = event.getMessage();
         if (message == null) message = "";
         message = message.trim();
-        if (message.isEmpty()) return; // ignore empty messages
+        if (message.isEmpty()) return;
 
-        // NEW: censor banned words BEFORE formatting & forwarding
+        // Censor banned words (pure string ops; safe async)
         message = censorBannedWords(message);
 
-        // Format (plugin-defined) -> may include color codes (&)
-        String formatted = formatManager.formatMessage(player, message);
+        // Capture primitives for main-thread work
+        final UUID senderUuid = player.getUniqueId();
+        final String senderName = player.getName();
+        final String serverName = Bukkit.getServer().getName();
+        final String finalMessage = message;
 
-        // PlaceholderAPI expansion (best-effort)
+        Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+            Player live = Bukkit.getPlayer(senderUuid);
+            if (live == null) return; // player left
+
+            // Format on main thread (safer because it touches displayName, LuckPerms user, etc.)
+            String formatted = formatManager.formatMessage(live, finalMessage);
+
+            // PlaceholderAPI expansion (main thread)
+            formatted = applyPapiBestEffort(live, formatted);
+
+            // Broadcast: legacy string OR Adventure component
+            if (!useMiniMessage) {
+                // Backward compatible legacy mode
+                final String mcOut = ChatColor.translateAlternateColorCodes('&', formatted);
+                Bukkit.broadcastMessage(mcOut);
+            } else {
+                // MiniMessage mode: parse tags like <head>, <gradient>, <hover>, <click>
+                // IMPORTANT: your format should be written in MiniMessage when this mode is enabled.
+                Component out;
+                try {
+                    out = MINI.deserialize(formatted);
+                } catch (Throwable parseFail) {
+                    // Fallback: show raw text (prevents total chat break on bad tags)
+                    out = Component.text(formatted);
+                }
+                Bukkit.getServer().sendMessage(out);
+            }
+
+            // Cross-server sync (send the raw formatted string so receivers can parse in their own mode)
+            try {
+                if (syncManager != null) {
+                    syncManager.publishMessage(senderUuid, serverName, senderName, formatted);
+                }
+            } catch (Throwable ex) {
+                Bukkit.getLogger().severe("[OreoEssentials] ChatSync publish failed: " + ex.getMessage());
+            }
+
+            // Discord webhook (plain text)
+            maybeSendToDiscord(senderName, toPlainText(formatted));
+        });
+    }
+
+    private String applyPapiBestEffort(Player player, String input) {
+        if (input == null) return "";
         try {
             if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-                formatted = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, formatted);
+                return me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, input);
             }
-        } catch (Throwable ignored) {
-            // Keep formatted as-is on any PAPI failure
-        }
-
-        // Translate & broadcast to Minecraft players on main thread
-        final String mcOut = ChatColor.translateAlternateColorCodes('&', formatted);
-        Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> Bukkit.broadcastMessage(mcOut));
-
-        // Optional cross-server sync (RabbitMQ) — include sender UUID
-        try {
-            if (syncManager != null) {
-                // send full formatted message INCLUDING gradients/hex
-                syncManager.publishMessage(
-                        player.getUniqueId(),
-                        Bukkit.getServer().getName(),
-                        player.getName(),
-                        formatted
-                );
-            }
-        } catch (Throwable ex) {
-            Bukkit.getLogger().severe("[OreoEssentials] ChatSync publish failed: " + ex.getMessage());
-        }
-
-        // Optional Discord webhook (guarded by flag + URL)
-        maybeSendToDiscord(player.getName(), stripColors(formatted));
+        } catch (Throwable ignored) { }
+        return input;
     }
 
     /** Send to Discord only if enabled and URL is present. */
@@ -177,18 +212,31 @@ public class AsyncChatListener implements Listener {
         }
     }
 
-    /** Basic color/formatting strip for cleaner external outputs (sync/discord). */
-    private String stripColors(String s) {
-        if (s == null) return "";
-        // Remove legacy ampersand codes first, then strip Bukkit color section (§) if present
-        String noAmp = s.replaceAll("(?i)&[0-9A-FK-OR]", "");
-        return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', noAmp));
+    /**
+     * Convert to plain text for external outputs.
+     * - In legacy mode: strip legacy colors
+     * - In MiniMessage mode: best-effort parse to Component then plain text, fallback to tag-stripping regex
+     */
+    private String toPlainText(String formatted) {
+        if (formatted == null) return "";
+
+        if (!useMiniMessage) {
+            String noAmp = formatted.replaceAll("(?i)&[0-9A-FK-ORX]", "");
+            return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', noAmp));
+        }
+
+        try {
+            Component c = MINI.deserialize(formatted);
+            return PlainTextComponentSerializer.plainText().serialize(c);
+        } catch (Throwable ignored) {
+            // fallback: strip tags like <...>
+            return formatted.replaceAll("<[^>]+>", "");
+        }
     }
 
     /**
      * Censor banned words from the message using chat.banned-words.list.
-     * Example:
-     *   "fuck" -> "****"
+     * Example: "fuck" -> "****"
      */
     private String censorBannedWords(String message) {
         if (!bannedWordsEnabled || bannedWords == null || bannedWords.isEmpty()) return message;
@@ -198,13 +246,10 @@ public class AsyncChatListener implements Listener {
         for (String word : bannedWords) {
             if (word == null || word.isBlank()) continue;
 
-            // (?i) = case-insensitive; Pattern.quote = literal match
             String pattern = "(?i)" + Pattern.quote(word);
             String replacement = "*".repeat(word.length());
-
             result = result.replaceAll(pattern, replacement);
         }
-
         return result;
     }
 }

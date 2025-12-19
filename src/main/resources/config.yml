@@ -339,7 +339,6 @@ conversations:
           - "<gradient:#FF1493:#1E90FF>Check the</gradient> <gradient:#1E90FF:#FFD700>website for a detailed</gradient> <gradient:#FFD700:#FF1493>command list.</gradient>"
 
 
-<<<<<<< HEAD
 
 
 zessentials-migration:
@@ -350,10 +349,10 @@ zessentials-migration:
   password: ""
   table-prefix: "zessentials_"
 
-=======
+
 server_nicknames:
   default: "UNKNOWN"
   map:
     afeliav7: "MINING"
     afeliav7_nether: "NETHER"
->>>>>>> main
+
