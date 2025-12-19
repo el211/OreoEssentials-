@@ -9,6 +9,7 @@ import fr.elias.oreoEssentials.playtime.PlaytimeTracker;
 import fr.elias.oreoEssentials.util.Lang;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
@@ -49,6 +50,20 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         if (id.equals("balance")) {
             if (economy == null) return "0";
             return String.valueOf(economy.getBalance(player));
+        }
+        /* ---------------- SERVER NICKNAMES ---------------- */
+        if (id.equals("server_name")) {
+            return Bukkit.getServer().getName();
+        }
+
+        if (id.equals("server_nick")) {
+            return resolveServerNick(Bukkit.getServer().getName());
+        }
+
+        if (id.startsWith("server_nick_")) {
+            String serverId = id.substring("server_nick_".length());
+            if (serverId.isBlank()) return "";
+            return resolveServerNick(serverId);
         }
 
         /* ---------------- KITS ---------------- */
@@ -98,10 +113,23 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             long left = Math.max(0, km.getSecondsLeft(p, k));
             return left <= 0 ? "ready" : String.valueOf(left);
         }
-        if (id.startsWith("kit_cooldown_formatted_")) {
+// %oreo_kit_cooldown_formatted_<id>%
+// OU %oreo_kit_<id>_cooldown_formatted%
+        if (id.startsWith("kit_cooldown_formatted_") || (id.startsWith("kit_") && id.endsWith("_cooldown_formatted"))) {
             Player p = player.getPlayer();
             if (p == null) return "";
-            String kitId = id.substring("kit_cooldown_formatted_".length());
+
+            String kitId;
+
+            if (id.startsWith("kit_cooldown_formatted_")) {
+                // style: kit_cooldown_formatted_pvp
+                kitId = id.substring("kit_cooldown_formatted_".length());
+            } else {
+                // style: kit_pvp_cooldown_formatted
+                String core = id.substring("kit_".length(), id.length() - "_cooldown_formatted".length());
+                kitId = core;
+            }
+
             KitsManager km = kits();
             if (km == null) return "";
             Kit k = km.getKits().get(kitId.toLowerCase(Locale.ROOT));
@@ -109,16 +137,16 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
 
             long left = Math.max(0, km.getSecondsLeft(p, k));
             if (left <= 0) {
-                // Texte quand le kit est prêt
-                // change "ready" si tu veux un autre mot
+                // texte quand le kit est prêt (tu peux mettre ça dans lang.yml si tu veux)
                 return "ready";
-                // ou par ex :
+                // ou ex.:
                 // return Lang.get("kits.placeholder.ready", "ready");
             }
 
-            // Temps formaté, genre "3m 25s" via ton utilitaire Lang.timeHuman
+            // Temps formaté, genre "3m 25s"
             return Lang.timeHuman(left);
         }
+
 
         /* -------- PLAYTIME / PLAYTIME-REWARDS -------- */
         if (id.equals("playtime_total_seconds")) {
@@ -273,6 +301,25 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         if (!p.hasPermission("oreo.kit.claim")) return false;
         long left = Math.max(0, km.getSecondsLeft(p, k));
         return left == 0 || p.hasPermission("oreo.kit.bypasscooldown");
+    }
+    private String resolveServerNick(String serverName) {
+        try {
+            var c = plugin.getConfig();
+            String def = c.getString("server_nicknames.default", serverName);
+
+            // store keys as-is, but compare case-insensitive
+            var sec = c.getConfigurationSection("server_nicknames.map");
+            if (sec == null) return def;
+
+            for (String key : sec.getKeys(false)) {
+                if (key != null && key.equalsIgnoreCase(serverName)) {
+                    return sec.getString(key, def);
+                }
+            }
+            return def;
+        } catch (Throwable t) {
+            return serverName;
+        }
     }
 
     /** Best-effort total seconds using your stack: Prewards.getPlaytimeSeconds -> Tracker -> Bukkit stat. */

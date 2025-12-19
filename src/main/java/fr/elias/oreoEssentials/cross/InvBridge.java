@@ -137,6 +137,12 @@ public final class InvBridge {
                 s.contents = Arrays.copyOf(local.getInventory().getContents(), 41);
                 s.armor    = Arrays.copyOf(local.getInventory().getArmorContents(), 4);
                 s.offhand  = local.getInventory().getItemInOffHand();
+
+                // NEW: XP
+                s.level    = local.getLevel();
+                s.exp      = local.getExp();
+                s.totalExp = local.getTotalExperience();
+
                 return s;
             } catch (Throwable t) {
                 plugin.getLogger().warning("[INV-BRIDGE] Local requestLiveInv error for " + target + ": " + t.getMessage());
@@ -596,11 +602,18 @@ public final class InvBridge {
                         s.contents = Arrays.copyOf(p.getInventory().getContents(), 41);
                         s.armor    = Arrays.copyOf(p.getInventory().getArmorContents(), 4);
                         s.offhand  = p.getInventory().getItemInOffHand();
+
+                        // NEW
+                        s.level    = p.getLevel();
+                        s.exp      = p.getExp();
+                        s.totalExp = p.getTotalExperience();
+
                         ItemStack[] flat = InvLayouts.toFlat(s);
                         resp.blob = BukkitSerialization.toBytes(flat);
                         resp.arrayLen = flat.length;
                         resp.ok = true;
                     }
+
                     case EC -> {
                         EnderChestService svc = Bukkit.getServicesManager().load(EnderChestService.class);
                         if (svc == null) {

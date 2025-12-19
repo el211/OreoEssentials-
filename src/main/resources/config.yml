@@ -248,9 +248,14 @@ mobs:
     use-mythicmobs: true
 
 
-# -------- Join messages (Afelius) --------
 Join_messages:
   enable: true
+  disable_on_backend: true
+  use_backend_list_as: "blacklist"   # "blacklist" or "whitelist"
+  backend_server_names:
+    - "faction_world"
+    - "faction_nether"
+
   look_like_player: true
   player_name: "<gradient:#FF1493:#00FF7F>Afelius</gradient>"
   player_prefix: "<gradient:#8A2BE2:#00FFFF>[</gradient>"
@@ -258,6 +263,23 @@ Join_messages:
   join_message_delay: 0
   first_join: "<gradient:#FF1493:#00FF7F>Welcome</gradient> <gradient:#00FF7F:#1E90FF>{name}</gradient> <gradient:#1E90FF:#FF1493>to the server for the first time!</gradient>"
   rejoin_message: "<gradient:#00FF7F:#1E90FF>{name}</gradient> <gradient:#1E90FF:#FF1493>has joined the game.</gradient>"
+
+
+Quit_messages:
+  enable: true
+
+  disable_on_backend: true
+  use_backend_list_as: "blacklist"   # "blacklist" or "whitelist"
+  backend_server_names:
+    - "faction_world"
+    - "faction_nether"
+
+  look_like_player: true
+  player_name: "<gradient:#FF1493:#00FF7F>Afelius</gradient>"
+  player_prefix: "<gradient:#8A2BE2:#00FFFF>[</gradient>"
+  delimiter: " | "
+  message: "<gradient:#00FF7F:#1E90FF>{name}</gradient> <gradient:#1E90FF:#FF1493>has left the game.</gradient>"
+
 
 # -------- Automatic messages (Afelius) --------
 Automatic_message:
@@ -276,6 +298,7 @@ Automatic_message:
 
 # -------- Chat bot conversations (Afelius) --------
 conversations:
+  enabled: true   # master toggle for ALL conversation bots (optional but nice)
   afelius:
     custom_call_name: "afelius"
     self_mention_reply: "<gradient:#FF1493:#00FF7F>Hello</gradient>, <gradient:#00FF7F:#1E90FF>{name}</gradient>, <gradient:#1E90FF:#FF1493>how can I assist you today?</gradient>"
@@ -316,6 +339,7 @@ conversations:
           - "<gradient:#FF1493:#1E90FF>Check the</gradient> <gradient:#1E90FF:#FFD700>website for a detailed</gradient> <gradient:#FFD700:#FF1493>command list.</gradient>"
 
 
+<<<<<<< HEAD
 
 
 zessentials-migration:
@@ -326,3 +350,10 @@ zessentials-migration:
   password: ""
   table-prefix: "zessentials_"
 
+=======
+server_nicknames:
+  default: "UNKNOWN"
+  map:
+    afeliav7: "MINING"
+    afeliav7_nether: "NETHER"
+>>>>>>> main

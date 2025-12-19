@@ -238,8 +238,16 @@ public final class InvseeService {
         snap.contents = p.getInventory().getContents();
         snap.armor    = p.getInventory().getArmorContents();
         snap.offhand  = p.getInventory().getItemInOffHand();
+
+        // NEW: copy XP
+        snap.level    = p.getLevel();
+        snap.exp      = p.getExp();
+        snap.totalExp = p.getTotalExperience();
+
         return snap;
     }
+
+
 
     /**
      * Appelé par le ModGUI InvSeeMenu quand le staff ferme le GUI
@@ -265,6 +273,12 @@ public final class InvseeService {
                 if (snap.offhand != null) {
                     online.getInventory().setItemInOffHand(snap.offhand);
                 }
+
+                // NEW: restore XP (if snapshot has it)
+                online.setLevel(snap.level);
+                online.setExp(snap.exp);
+                online.setTotalExperience(snap.totalExp);
+
                 online.updateInventory();
             } catch (Exception e) {
                 plugin.getLogger().warning("[INVSEE] applySnapshotFromGui: failed to apply to online player: " + e.getMessage());

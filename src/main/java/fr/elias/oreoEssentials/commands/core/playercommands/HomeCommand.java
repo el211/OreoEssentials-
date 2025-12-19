@@ -13,7 +13,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -36,15 +39,23 @@ public class HomeCommand implements OreoCommand, TabCompleter {
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        if (!(sender instanceof Player p)) return true;
+        if (!(sender instanceof Player player)) return true;
+
+        final OreoEssentials plugin = OreoEssentials.get();
+
+        // Feature toggle (settings.yml: features.home.enabled)
+        if (!plugin.getSettingsConfig().isEnabled("home")) {
+            Lang.send(player, "home.disabled", Map.of(), player);
+            return true;
+        }
 
         // /home or /home list -> show homes (CROSS-SERVER)
         if (args.length == 0 || args[0].equalsIgnoreCase("list")) {
-            List<String> names = crossServerNames(p.getUniqueId());
+            List<String> names = crossServerNames(player.getUniqueId());
             if (names.isEmpty()) {
-                Lang.send(p, "home.no-homes",
+                Lang.send(player, "home.no-homes",
                         Map.of("sethome", "/sethome"),
-                        p
+                        player
                 );
                 return true;
             }
@@ -53,109 +64,136 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                     .sorted(String.CASE_INSENSITIVE_ORDER)
                     .collect(Collectors.joining(ChatColor.GRAY + ", " + ChatColor.AQUA));
 
-            Lang.send(p, "home.list",
+            Lang.send(player, "home.list",
                     Map.of("homes", list),
-                    p
+                    player
             );
-            Lang.send(p, "home.tip",
+            Lang.send(player, "home.tip",
                     Map.of("label", label),
-                    p
+                    player
             );
             return true;
         }
 
-        String raw = args[0];
-        String key = normalize(raw);
+        final String raw = args[0];
+        final String key = normalize(raw);
+
+        // ---- Cooldown / countdown (features.home.cooldown) ----
+        FileConfiguration settings = plugin.getSettingsConfig().getRoot();
+        ConfigurationSection homeSection = settings.getConfigurationSection("features.home");
+        final boolean useCooldown = homeSection != null && homeSection.getBoolean("cooldown", false);
+        final int seconds = homeSection != null ? homeSection.getInt("cooldown-amount", 0) : 0;
+
+        // Same rules as warp: OP bypass + invalid bypass
+        final boolean bypass = player.isOp() || !useCooldown || seconds <= 0;
 
         // Where does the home live?
-        String targetServer = homes.homeServer(p.getUniqueId(), key);
-        String localServer  = homes.localServer();
-        if (targetServer == null) targetServer = localServer;
+        final String localServer = homes.localServer();
+        final String homeServer = homes.homeServer(player.getUniqueId(), key);
+        final String targetServer = (homeServer == null ? localServer : homeServer);
 
-        // Local teleport
+        // Local teleport (with optional countdown)
         if (targetServer.equalsIgnoreCase(localServer)) {
-            Location loc = homes.getHome(p.getUniqueId(), key);
-            if (loc == null) {
-                Lang.send(p, "home.not-found",
-                        Map.of("name", raw),
-                        p
+
+            final Runnable action = () -> {
+                Location loc = homes.getHome(player.getUniqueId(), key);
+                if (loc == null) {
+                    Lang.send(player, "home.not-found",
+                            Map.of("name", raw),
+                            player
+                    );
+                    suggestClosest(player, key);
+                    return;
+                }
+                player.teleport(loc);
+                Lang.send(player, "home.teleported",
+                        Map.of("name", key),
+                        player
                 );
-                suggestClosest(p, key);
-                return true;
+            };
+
+            if (bypass) {
+                action.run();
+            } else {
+                startCountdown(player, seconds, key, action);
             }
-            p.teleport(loc);
-            Lang.send(p, "home.teleported",
-                    Map.of("name", key),
-                    p
-            );
             return true;
         }
 
-        // Respect cross-server toggle for homes
-        var cs = OreoEssentials.get().getCrossServerSettings();
-        if (!cs.homes()) {
-            Lang.send(p, "home.cross-disabled",
-                    Collections.emptyMap(),
-                    p
-            );
-            Lang.send(p, "home.cross-disabled-tip",
-                    Map.of(
-                            "server", targetServer,
-                            "name", key
-                    ),
-                    p
-            );
-            return true;
-        }
+        // Cross-server (with optional countdown before switching)
+        final Runnable action = () -> {
 
-        // Cross-server: publish to the TARGET SERVER'S QUEUE (not global), then proxy switch
-        final OreoEssentials plugin = OreoEssentials.get();
-        final PacketManager pm = plugin.getPacketManager();
+            // Respect cross-server toggle for homes
+            var cs = plugin.getCrossServerSettings();
+            if (!cs.homes()) {
+                Lang.send(player, "home.cross-disabled",
+                        Collections.emptyMap(),
+                        player
+                );
+                Lang.send(player, "home.cross-disabled-tip",
+                        Map.of(
+                                "server", targetServer,
+                                "name", key
+                        ),
+                        player
+                );
+                return;
+            }
 
-        if (pm != null && pm.isInitialized()) {
-            final String requestId = java.util.UUID.randomUUID().toString();
-            plugin.getLogger().info("[HOME/SEND] from=" + homes.localServer()
-                    + " player=" + p.getUniqueId()
-                    + " nameArg='" + key + "' -> targetServer=" + targetServer
-                    + " requestId=" + requestId);
+            // Cross-server: publish to the TARGET SERVER'S QUEUE (not global), then proxy switch
+            final PacketManager pm = plugin.getPacketManager();
 
-            HomeTeleportRequestPacket pkt = new HomeTeleportRequestPacket(p.getUniqueId(), key, targetServer, requestId);
-            PacketChannel targetChannel = PacketChannel.individual(targetServer);
-            pm.sendPacket(targetChannel, pkt);
+            if (pm != null && pm.isInitialized()) {
+                final String requestId = UUID.randomUUID().toString();
+                plugin.getLogger().info("[HOME/SEND] from=" + homes.localServer()
+                        + " player=" + player.getUniqueId()
+                        + " nameArg='" + key + "' -> targetServer=" + targetServer
+                        + " requestId=" + requestId);
+
+                HomeTeleportRequestPacket pkt = new HomeTeleportRequestPacket(player.getUniqueId(), key, targetServer, requestId);
+                PacketChannel targetChannel = PacketChannel.individual(targetServer);
+                pm.sendPacket(targetChannel, pkt);
+            } else {
+                Lang.send(player, "home.messaging-disabled",
+                        Collections.emptyMap(),
+                        player
+                );
+                Lang.send(player, "home.messaging-disabled-tip",
+                        Map.of(
+                                "server", targetServer,
+                                "name", key
+                        ),
+                        player
+                );
+                return;
+            }
+
+            // Switch via proxy
+            boolean switched = sendPlayerToServer(player, targetServer);
+            if (switched) {
+                Lang.send(player, "home.sending",
+                        Map.of(
+                                "server", targetServer,
+                                "name", key
+                        ),
+                        player
+                );
+            } else {
+                Lang.send(player, "home.switch-failed",
+                        Map.of("server", targetServer),
+                        player
+                );
+                Lang.send(player, "home.switch-failed-tip",
+                        Map.of("server", targetServer),
+                        player
+                );
+            }
+        };
+
+        if (bypass) {
+            action.run();
         } else {
-            Lang.send(p, "home.messaging-disabled",
-                    Collections.emptyMap(),
-                    p
-            );
-            Lang.send(p, "home.messaging-disabled-tip",
-                    Map.of(
-                            "server", targetServer,
-                            "name", key
-                    ),
-                    p
-            );
-            return true;
-        }
-
-        // Switch via proxy
-        boolean switched = sendPlayerToServer(p, targetServer);
-        if (switched) {
-            Lang.send(p, "home.sending",
-                    Map.of(
-                            "server", targetServer,
-                            "name", key
-                    ),
-                    p
-            );
-        } else {
-            Lang.send(p, "home.switch-failed",
-                    Map.of("server", targetServer),
-                    p
-            );
-            Lang.send(p, "home.switch-failed-tip",
-                    Map.of("server", targetServer),
-                    p
-            );
+            startCountdown(player, seconds, key, action);
         }
         return true;
     }
@@ -228,4 +266,66 @@ public class HomeCommand implements OreoCommand, TabCompleter {
             return false;
         }
     }
+
+    /**
+     * Shows a big title countdown on the player, cancels if he moves,
+     * then runs the action at the end.
+     *
+     * Uses:
+     *  - home.cancelled-moved in lang.yml when the player moves.
+     *  - teleport.countdown.title / teleport.countdown.subtitle for the title text.
+     */
+    private void startCountdown(Player target, int seconds, String homeName, Runnable action) {
+        final OreoEssentials plugin = OreoEssentials.get();
+        final Location origin = target.getLocation().clone();
+
+        new BukkitRunnable() {
+            int remaining = seconds;
+
+            @Override
+            public void run() {
+                if (!target.isOnline()) {
+                    cancel();
+                    return;
+                }
+
+                if (hasBodyMoved(target, origin)) {
+                    cancel();
+                    Lang.send(target, "home.cancelled-moved", Map.of("name", homeName), target);
+                    return;
+                }
+
+                if (remaining <= 0) {
+                    cancel();
+                    action.run();
+                    return;
+                }
+
+                String title = Lang.msg("teleport.countdown.title", null, target);
+                String subtitle = Lang.msg("teleport.countdown.subtitle",
+                        Map.of("seconds", String.valueOf(remaining)),
+                        target
+                );
+
+                target.sendTitle(title, subtitle, 0, 20, 0);
+                remaining--;
+            }
+        }.runTaskTimer(plugin, 0L, 20L);
+    }
+
+    private boolean hasBodyMoved(Player p, Location origin) {
+        Location now = p.getLocation();
+
+        if (now.getWorld() == null || origin.getWorld() == null) return true;
+        if (!now.getWorld().equals(origin.getWorld())) return true;
+
+        // cancel if moved even slightly (ignore head rotation)
+        double dx = now.getX() - origin.getX();
+        double dy = now.getY() - origin.getY();
+        double dz = now.getZ() - origin.getZ();
+
+        // tolerance: 0.05 blocks
+        return (dx * dx + dy * dy + dz * dz) > (0.05 * 0.05);
+    }
+
 }

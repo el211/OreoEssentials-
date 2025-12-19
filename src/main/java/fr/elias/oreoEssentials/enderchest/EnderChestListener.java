@@ -15,6 +15,7 @@ import org.bukkit.event.inventory.InventoryEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
 public class EnderChestListener implements Listener {
 
@@ -80,16 +81,53 @@ public class EnderChestListener implements Listener {
 
         Inventory top = e.getView().getTopInventory();
 
-        // If clicking in bottom inventory:
-        // - block shift-click to avoid dumping items into locked area
+        // --- CLIC DANS L’INVENTAIRE DU JOUEUR (bas) ---
         if (e.getClickedInventory() != top) {
+            // On ne bloque le shift-click que s’il ne peut PAS rentrer dans la zone autorisée
             if (e.isShiftClick()) {
-                e.setCancelled(true);
+                ItemStack moving = e.getCurrentItem();
+                if (moving == null || moving.getType().isAir()) {
+                    return; // rien à faire
+                }
+
+                int allowed = service.resolveSlots(p);
+
+                boolean canFit = false;
+                for (int slot = 0; slot < allowed; slot++) {
+                    ItemStack existing = top.getItem(slot);
+
+                    // slot vide dans la zone autorisée
+                    if (existing == null || existing.getType().isAir()) {
+                        canFit = true;
+                        break;
+                    }
+
+                    // stack similaire à compléter
+                    try {
+                        if (existing.isSimilar(moving)
+                                && existing.getAmount() < existing.getMaxStackSize()) {
+                            canFit = true;
+                            break;
+                        }
+                    } catch (Throwable ignored) {
+                        // fallback au type si jamais
+                        if (existing.getType() == moving.getType()
+                                && existing.getAmount() < existing.getMaxStackSize()) {
+                            canFit = true;
+                            break;
+                        }
+                    }
+                }
+
+                // aucune place dans la zone autorisée => on bloque
+                if (!canFit) {
+                    e.setCancelled(true);
+                }
             }
             return;
         }
 
-        // Now we are in the top (virtual EC GUI)
+        // --- CLIC DANS L’ENDER CHEST (top) ---
         int raw = e.getRawSlot();
         if (service.isLockedSlot(p, raw)) {
             e.setCancelled(true);
@@ -101,6 +139,7 @@ public class EnderChestListener implements Listener {
             e.setCancelled(true);
         }
     }
+
 
     // --------------------------------------------------
     // DRAG PROTECTION (BLOCK DRAGGING INTO LOCKED SLOTS)

@@ -336,6 +336,9 @@ public class KitsManager {
         if (line.isEmpty()) return;
 
         String withPlayer = line.replace("%player%", p.getName());
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            withPlayer = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, withPlayer);
+        }
         String lower = withPlayer.toLowerCase(Locale.ROOT);
 
         if (lower.startsWith("console:")) {

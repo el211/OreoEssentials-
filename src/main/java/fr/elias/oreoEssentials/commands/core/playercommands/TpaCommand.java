@@ -92,9 +92,17 @@ public class TpaCommand implements OreoCommand {
                 return true;
             }
             teleportService.request(requester, local);
+            // message "TPA sent to ..."
+            Lang.send(requester,
+                    "tpa.sent.local",
+                    Map.of("target", local.getName()),
+                    requester
+            );
+
             D(id, "same-server request queued in " + ms(t0));
             P(requester, id, "same server ✓");
             return true;
+
         }
 
         // 2) Directory lookup (Mongo, NO OfflinePlayer)

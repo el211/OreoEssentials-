@@ -101,6 +101,7 @@ import fr.elias.oreoEssentials.vault.VaultEconomyProvider;
 import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class OreoEssentials extends JavaPlugin {
@@ -2160,6 +2161,21 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.playtime.PlaytimeRewardsService getPlaytimeRewardsService() {
         return this.playtimeRewards;
     }
+
+    public final class PapiUtil {
+        private PapiUtil() {}
+
+        public static String apply(Player p, String text) {
+            if (text == null) return "";
+            if (!Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) return text;
+            try {
+                return me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, text);
+            } catch (Throwable t) {
+                return text;
+            }
+        }
+    }
+
     /**
      * Safe helper for logging / cross-server tags.
      * Tries configService.serverName(), then Bukkit server name, then "UNKNOWN".

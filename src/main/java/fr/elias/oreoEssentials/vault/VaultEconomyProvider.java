@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.ArrayList;
 
@@ -17,8 +18,22 @@ public class VaultEconomyProvider implements Economy {
 
     public VaultEconomyProvider(OreoEssentials plugin) {
         this.plugin = plugin;
-        this.databaseType = plugin.getConfig().getString("database.type", "mongodb").toLowerCase();
+
+        // On la nouvelle clee
+        String type = plugin.getConfig().getString("economy.type", null);
+
+        // si elle n'existe pas, on tombe sur l'ancienne
+        if (type == null) {
+            type = plugin.getConfig().getString("database.type", "mongodb");
+            plugin.getLogger().warning(
+                    "[ECON] Using legacy config key 'database.type'. " +
+                            "Please move it under 'economy.type' in config.yml."
+            );
+        }
+
+        this.databaseType = type.toLowerCase(Locale.ROOT);
     }
+
 
     private double getBalanceFromDatabase(UUID playerUUID) {
         return plugin.getDatabase().getBalance(playerUUID);

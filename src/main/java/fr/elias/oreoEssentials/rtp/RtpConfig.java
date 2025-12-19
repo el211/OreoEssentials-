@@ -148,6 +148,42 @@ public final class RtpConfig {
 
         return null;
     }
+    public int minRadiusFor(Player p, String worldName) {
+        // 1) Base global min-radius
+        int base = Math.max(0, cfg.getInt("min-radius", 0));
+
+        // 2) Global per-tier overrides (optional)
+        base = applyTierOverrides(p, base, "min-radius-tiers");
+
+        // 3) Per-world overrides
+        if (worldName != null && cfg.isConfigurationSection("worlds." + worldName)) {
+            String root = "worlds." + worldName;
+
+            base = Math.max(0, cfg.getInt(root + ".min-radius", base));
+
+            // 4) Per-world per-tier overrides (optional)
+            base = applyTierOverrides(p, base, root + ".min-radius-tiers");
+        }
+
+        return base;
+    }
+
+    private int applyTierOverrides(Player p, int current, String sectionPath) {
+        if (!cfg.isConfigurationSection(sectionPath)) return current;
+
+        // Keys are permission strings like "oreo.tier.vip"
+        var sec = cfg.getConfigurationSection(sectionPath);
+        if (sec == null) return current;
+
+        int best = current;
+
+        for (String perm : sec.getKeys(false)) {
+            if (p.hasPermission(perm)) {
+                best = Math.max(best, sec.getInt(perm, current));
+            }
+        }
+        return best;
+    }
 
     /**
      * Version qui priorise un monde demandé explicitement.
