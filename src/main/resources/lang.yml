@@ -590,8 +590,9 @@ rtp:
   failed: '%prefix%&cTeleport failed.'
   cancelled-moved: "&cRTP cancelled: you moved."
   warmup:
-    title: "&e{seconds}"
+    title: "&e%seconds%"
     subtitle: "&7Random teleport..."
+
 # =========================================================
 # /pw Command (PlayerWarpCommand)
 # =========================================================

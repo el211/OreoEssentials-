@@ -358,6 +358,10 @@ commands:
     permission: oreo.invsee
     usage: "/invsee <player>"
 
+  invlook:
+    description: View a player's inventory
+    permission: oreo.invlook
+    usage: "/invlook <player>"
   ecsee:
     description: View/edit a player's ender chest (online = live; offline = virtual)
     permission: oreo.ecsee

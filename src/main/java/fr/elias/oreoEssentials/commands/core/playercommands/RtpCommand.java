@@ -108,26 +108,26 @@ public class RtpCommand implements OreoCommand {
         final int seconds = settings.rtpWarmupSeconds();
 
 // Same bypass rule as home
-        final boolean bypass = p.isOp() || !useWarmup || seconds <= 0;
+        final boolean bypass = p.hasPermission("oreo.rtp.warmup.bypass") || !useWarmup || seconds <= 0;
+        plugin.getLogger().info("[RTP] warmup=" + useWarmup + " seconds=" + seconds
+                + " bypass=" + bypass + " hasBypassPerm=" + p.hasPermission("oreo.rtp.warmup.bypass"));
 
         if (crossEnabled && !sameServer) {
-            // Cross-server RTP action
+
             final Runnable action = () -> {
-                Lang.send(p,
-                        "rtp.cross-switch",
-                        java.util.Map.of(
-                                "server", targetServer,
-                                "world", targetWorldName
-                        ),
+                Lang.send(p, "rtp.cross-switch",
+                        java.util.Map.of("server", targetServer, "world", targetWorldName),
                         p
                 );
 
                 RtpCrossServerBridge bridge = plugin.getRtpBridge();
+
                 if (bridge != null) {
                     bridge.requestCrossServerRtp(p, targetWorldName, targetServer);
-                } else {
-                    p.performCommand("server " + targetServer);
                 }
+
+                // ✅ switch server happens AFTER warmup
+                p.performCommand("server " + targetServer);
             };
 
             if (bypass) action.run();
@@ -135,6 +135,7 @@ public class RtpCommand implements OreoCommand {
 
             return true;
         }
+
 
 // Local RTP action
         final Runnable action = () -> doLocalRtp(plugin, p, targetWorldName);

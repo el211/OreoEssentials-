@@ -126,12 +126,22 @@ public class SettingsConfig {
     public boolean rtpEnabled() { return isEnabled("rtp"); }
     // RTP warmup (title countdown like /home)
     public boolean rtpWarmupEnabled() {
-        return cfg.getBoolean("features.rtp.warmup", false);
+        if (cfg.isSet("features.rtp.warmup")) {
+            return cfg.getBoolean("features.rtp.warmup", false);
+        }
+        return cfg.getBoolean("rtp.warmup", false);
     }
 
     public int rtpWarmupSeconds() {
-        return Math.max(0, cfg.getInt("features.rtp.warmup-amount", 0));
+        int v;
+        if (cfg.isSet("features.rtp.warmup-amount")) {
+            v = cfg.getInt("features.rtp.warmup-amount", 0);
+        } else {
+            v = cfg.getInt("rtp.warmup-amount", 0);
+        }
+        return Math.max(0, v);
     }
+
 
     // Bossbar
     public boolean bossbarEnabled() { return isEnabled("bossbar"); }

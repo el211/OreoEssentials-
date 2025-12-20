@@ -719,6 +719,8 @@ public final class OreoEssentials extends JavaPlugin {
 
         // Custom join messages
         getServer().getPluginManager().registerEvents(new JoinMessagesListener(this), this);
+        getServer().getPluginManager().registerEvents(new QuitMessagesListener(this), this);
+
 
         // Chat sync via RabbitMQ (optional) — init before listener, pass mute service
         boolean chatSyncEnabled = chatConfig.getCustomConfig().getBoolean("MongoDB_rabbitmq.enabled", false);

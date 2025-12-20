@@ -128,8 +128,36 @@ public class WarpCommand implements OreoCommand {
                     + " tried to warp " + target.getName() + " to " + warpName);
             return true;
         }
+        // ---- Existence pre-check (avoid warmup if warp doesn't exist) ----
+        final String localServer = plugin.getConfigService().serverName();
+        final WarpDirectory warpDir = plugin.getWarpDirectory();
 
-// ---- Cooldown / countdown (features.warp.cooldown) ----
+        String ownerServer = (warpDir != null ? warpDir.getWarpServer(warpName) : null);
+
+        // If directory doesn't know this warp at all => not found (no warmup)
+        if (ownerServer == null || ownerServer.isBlank()) {
+            // maybe it's a local-only warp
+            Location test = warps.getWarp(warpName);
+            if (test == null) {
+                if (actor != null) Lang.send(actor, "warp.not-found", Map.of(), actor);
+                else sender.sendMessage("§cWarp '" + warpName + "' not found.");
+                return true;
+            }
+            ownerServer = localServer; // treat as local
+        }
+
+        // If warp is local, validate existence in local storage
+        if (ownerServer.equalsIgnoreCase(localServer)) {
+            Location test = warps.getWarp(warpName);
+            if (test == null) {
+                if (actor != null) Lang.send(actor, "warp.not-found", Map.of(), actor);
+                else sender.sendMessage("§cWarp '" + warpName + "' not found.");
+                return true;
+            }
+        }
+
+
+        // ---- Cooldown / countdown (features.warp.cooldown) ----
         FileConfiguration settings = plugin.getSettingsConfig().getRoot();
         ConfigurationSection warpSection = settings.getConfigurationSection("features.warp");
         boolean useCooldown = warpSection != null && warpSection.getBoolean("cooldown", false);

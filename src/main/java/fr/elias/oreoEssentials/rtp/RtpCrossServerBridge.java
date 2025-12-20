@@ -8,6 +8,7 @@ import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public final class RtpCrossServerBridge {
@@ -16,73 +17,94 @@ public final class RtpCrossServerBridge {
     private final PacketManager packets;
     private final String thisServer;
 
-    public RtpCrossServerBridge(OreoEssentials plugin,
-                                PacketManager packets,
-                                String thisServer) {
-        this.plugin = plugin;
+    public RtpCrossServerBridge(OreoEssentials plugin, PacketManager packets, String thisServer) {
+        this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.packets = packets;
-        this.thisServer = thisServer;
+        this.thisServer = thisServer == null ? "" : thisServer;
 
         if (packets == null || !packets.isInitialized()) {
             plugin.getLogger().warning("[RTP-BRIDGE] PacketManager not available; cross-server RTP disabled.");
             return;
         }
 
-        plugin.getLogger().info("[RTP-BRIDGE] Subscribing RtpTeleportRequestPacket on server=" + thisServer);
+        plugin.getLogger().info("[RTP-BRIDGE] Subscribing RtpTeleportRequestPacket on server=" + this.thisServer);
 
-        // Listen for teleport requests coming *to this server*
         packets.subscribe(RtpTeleportRequestPacket.class, (channel, pkt) -> {
+            if (pkt == null) return;
+
             plugin.getLogger().info("[RTP-BRIDGE] Received RtpTeleportRequestPacket req="
                     + pkt.getRequestId() + " player=" + pkt.getPlayerId()
                     + " world=" + pkt.getWorldName() + " via " + channel);
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                Player p = Bukkit.getPlayer(pkt.getPlayerId());
-                if (p != null && p.isOnline()) {
-                    // Player already online on this server → RTP immediately
-                    plugin.getLogger().info("[RTP-BRIDGE] Player online, doing immediate RTP for "
-                            + p.getName() + " in world=" + pkt.getWorldName());
-                    RtpCommand.doLocalRtp(plugin, p, pkt.getWorldName());
-                } else {
-                    // Store for PlayerJoinEvent
-                    plugin.getRtpPendingService().add(pkt.getPlayerId(), pkt.getWorldName());
-                    plugin.getLogger().info("[RTP-BRIDGE] Stored pending RTP for "
-                            + pkt.getPlayerId() + " in world=" + pkt.getWorldName());
-                }
-            });
+            Bukkit.getScheduler().runTask(plugin, () -> handleIncoming(pkt));
         });
+    }
+
+    private void handleIncoming(RtpTeleportRequestPacket pkt) {
+        UUID playerId = pkt.getPlayerId();
+        String worldName = pkt.getWorldName();
+
+        if (playerId == null || worldName == null || worldName.isBlank()) {
+            plugin.getLogger().warning("[RTP-BRIDGE] Ignoring invalid RTP packet (missing player/world).");
+            return;
+        }
+
+        // ✅ Always store pending (consistent behavior)
+        plugin.getRtpPendingService().add(playerId, worldName);
+        plugin.getLogger().info("[RTP-BRIDGE] Stored pending RTP for " + playerId + " in world=" + worldName);
+
+        // If player is already online on this server, consume & execute next tick
+        Player p = Bukkit.getPlayer(playerId);
+        if (p != null && p.isOnline()) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                Player pp = Bukkit.getPlayer(playerId);
+                if (pp == null || !pp.isOnline()) return;
+
+                String w = plugin.getRtpPendingService().consume(pp.getUniqueId());
+                if (w != null && !w.isBlank()) {
+                    plugin.getLogger().info("[RTP-BRIDGE] Player already online, executing pending RTP for "
+                            + pp.getName() + " in world=" + w);
+                    RtpCommand.doLocalRtp(plugin, pp, w);
+                }
+            }, 1L);
+        }
     }
 
     /**
      * Called by /rtp on Server A when it decides the RTP must happen on Server B.
+     * IMPORTANT: call this AFTER warmup finishes on Server A.
      */
-    public void requestCrossServerRtp(Player p,
-                                      String targetWorld,
-                                      String targetServer) {
+    public void requestCrossServerRtp(Player p, String targetWorld, String targetServer) {
+        if (p == null) return;
+
         if (packets == null || !packets.isInitialized()) {
             plugin.getLogger().warning("[RTP-BRIDGE] requestCrossServerRtp but PacketManager unavailable.");
-            // At least move the player to that server
             p.performCommand("server " + targetServer);
             return;
         }
 
-        UUID uuid  = p.getUniqueId();
+        if (targetServer == null || targetServer.isBlank()) {
+            plugin.getLogger().warning("[RTP-BRIDGE] requestCrossServerRtp called with empty targetServer.");
+            return;
+        }
+        if (targetWorld == null || targetWorld.isBlank()) {
+            plugin.getLogger().warning("[RTP-BRIDGE] requestCrossServerRtp called with empty targetWorld.");
+            return;
+        }
+
+        UUID uuid = p.getUniqueId();
         String req = UUID.randomUUID().toString();
 
         RtpTeleportRequestPacket pkt = new RtpTeleportRequestPacket(uuid, targetWorld, req);
 
-        // 🔥 Send directly to the *individual channel* of the destination server
-        packets.sendPacket(
-                PacketChannel.individual(targetServer),
-                pkt
-        );
+        packets.sendPacket(PacketChannel.individual(targetServer), pkt);
 
         plugin.getLogger().info("[RTP-BRIDGE] Sent RtpTeleportRequestPacket req=" + req
                 + " player=" + p.getName()
                 + " → server=" + targetServer
                 + " world=" + targetWorld);
 
-        // Then actually move the player via proxy
-        p.performCommand("server " + targetServer);
+// ❌ do NOT switch server here
+
     }
 }

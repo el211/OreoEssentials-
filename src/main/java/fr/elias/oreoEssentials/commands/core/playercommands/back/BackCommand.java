@@ -73,14 +73,20 @@ public class BackCommand implements OreoCommand {
             return true;
         }
 
-        // 🌐 Other server → use your cross-server TP system
-        boolean ok = teleportService.teleportToServerLocation(p, last);
-        if (!ok) {
-            p.sendMessage("§cUnable to teleport back across servers.");
+// 🌐 Other server → cross-server broker (packet + server switch handled by broker)
+        var broker = plugin.getBackBroker();
+        if (broker == null) {
+            p.sendMessage("§cBack cross-server broker not available.");
             return true;
         }
 
+// IMPORTANT: the broker method takes 2 args in your project
+        broker.requestCrossServerBack(p, last);
+
         p.sendMessage("§aTeleported back.");
         return true;
+
+
+
     }
 }
