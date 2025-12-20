@@ -84,6 +84,10 @@
             <name>Lumine Public</name>
             <url>https://mvn.lumine.io/repository/maven-public/</url>
         </repository>
+        <repository>
+            <id>nexo-repo</id>
+            <url>https://repo.nexomc.com/releases</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -112,12 +116,24 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.nexomc</groupId>
+            <artifactId>nexo</artifactId>
+            <version>1.15.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-text-minimessage</artifactId>
             <version>4.25.0</version> <!-- or matching your server -->
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <systemPath>${basedir}/libs/ItemsAdder_4.0.15.jar</systemPath>
+            <scope>system</scope>
+            <artifactId>api-itemsadder</artifactId>
+            <version>4.0.15</version>
+            <groupId>dev.lone.itemsadder</groupId>
+        </dependency>
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>

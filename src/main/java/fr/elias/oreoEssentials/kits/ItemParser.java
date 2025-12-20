@@ -54,6 +54,29 @@ public final class ItemParser {
                 // fallback below
             }
         }
+        // Nexo short form
+        if (def.toLowerCase(Locale.ROOT).startsWith("nexo:")) {
+            try {
+                // com.nexomc.nexo.api.NexoItems
+                // NexoItems.itemFromId(String) -> ItemBuilder
+                // ItemBuilder.build() or getItemStack() depending on API
+                Class<?> nexoItems = Class.forName("com.nexomc.nexo.api.NexoItems");
+                Object builder = nexoItems.getMethod("itemFromId", String.class).invoke(null, def.substring(5));
+                if (builder != null) {
+                    // Most builder APIs expose build()
+                    try {
+                        Object built = builder.getClass().getMethod("build").invoke(builder);
+                        if (built instanceof ItemStack is) return is;
+                    } catch (NoSuchMethodException ignored) {
+                        // fallback names (some APIs)
+                        Object built = builder.getClass().getMethod("getItemStack").invoke(builder);
+                        if (built instanceof ItemStack is) return is;
+                    }
+                }
+            } catch (Throwable ignored) {
+                // fallback below
+            }
+        }
 
         // Our normal syntax: "type:...,amount:...,enchants:..."
         if (!def.contains(":") || def.toLowerCase(Locale.ROOT).startsWith("type:")) {

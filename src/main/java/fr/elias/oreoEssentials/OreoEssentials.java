@@ -15,6 +15,7 @@ import fr.elias.oreoEssentials.playerwarp.*;
 import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpCommand;
 import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpTabCompleter;
 import fr.elias.oreoEssentials.rtp.listeners.RtpJoinListener;
+
 // Core commands (essentials-like)
 import fr.elias.oreoEssentials.commands.completion.*;
 import fr.elias.oreoEssentials.commands.core.playercommands.*;
@@ -148,6 +149,9 @@ public final class OreoEssentials extends JavaPlugin {
         return invManager;
     }
 
+    private fr.elias.oreoEssentials.sellgui.SellGuiManager sellGuiManager;
+    public fr.elias.oreoEssentials.sellgui.SellGuiManager getSellGuiManager() { return sellGuiManager; }
+
     private ProxyMessenger proxyMessenger;
     public ProxyMessenger getProxyMessenger() { return proxyMessenger; }
     private WarpService warpService;
@@ -222,6 +226,7 @@ public final class OreoEssentials extends JavaPlugin {
 
     // RabbitMQ packet manager (optional)
     private PacketManager packetManager;
+    private InvlookManager invlookManager;
 
     // Chat system (Afelius -> merged)
     private CustomConfig chatConfig;
@@ -260,7 +265,6 @@ public final class OreoEssentials extends JavaPlugin {
     private CustomCraftingService customCraftingService;
     public CustomCraftingService getCustomCraftingService() { return customCraftingService; }
     private fr.elias.oreoEssentials.holograms.OreoHolograms oreoHolograms;
-    private InvlookManager invlookManager;
 
     // Playtime
     private fr.elias.oreoEssentials.playtime.PlaytimeTracker playtimeTracker;
@@ -290,6 +294,7 @@ public final class OreoEssentials extends JavaPlugin {
 
         this.redisEnabled              = getConfig().getBoolean("redis.enabled", false);
         this.rabbitEnabled             = getConfig().getBoolean("rabbitmq.enabled", false);
+        this.invlookManager = new InvlookManager();
 
         this.crossServerSettings = fr.elias.oreoEssentials.config.CrossServerSettings.load(this);
         final String localServerName = configService.serverName(); // unified server id
@@ -313,7 +318,7 @@ public final class OreoEssentials extends JavaPlugin {
         );
 
         // -------------------------------------------------
-        // 1. REDIS (needed before economy DB in your design)
+        // 1. REDIS (needed before economy DB in our design)
         // -------------------------------------------------
         if (redisEnabled) {
             this.redis = new RedisManager(
@@ -334,7 +339,7 @@ public final class OreoEssentials extends JavaPlugin {
 
         // -------------------------------------------------
         // 2. ECONOMY BOOTSTRAP + VAULT REGISTRATION
-        //    (THIS MUST BE BEFORE ANY OTHER PLUGIN TOUCHES ECONOMY)
+        //    (BEFORE ANY OTHER PLUGIN TOUCHES ECONOMY)
         // -------------------------------------------------
         // Your internal economy layer:
         this.ecoBootstrap = new EconomyBootstrap(this);
@@ -535,6 +540,9 @@ public final class OreoEssentials extends JavaPlugin {
         // -------- UI/Managers created early --------
         this.invManager = new InventoryManager(this);
         this.invManager.init();
+        // -------- SellGUI (SmartInvs) --------
+        this.sellGuiManager = new fr.elias.oreoEssentials.sellgui.SellGuiManager(this, this.invManager);
+
         // --- Server Management GUI (ModGUI) ---
         try {
             this.modGuiService = new fr.elias.oreoEssentials.modgui.ModGuiService(this);
@@ -1564,6 +1572,7 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new fr.elias.oreoEssentials.playersync.PlayerSyncCommand(this, playerSyncService, invSyncEnabled)) //player synch class
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.EcCommand(this.ecService, crossServerEc)) //cross server enderchests
                 .register(new HeadCommand()) //head command
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.SellGuiCommand(this)) //sellgui command
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.AfkCommand(afkService)) //afk command
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.TrashCommand()) //trash command
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.WorkbenchCommand()) //workbench command
@@ -1577,6 +1586,7 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.NearCommand()) //near command
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.KillCommand()) //kill command
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.InvseeCommand()) //invseee command
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.invlook.InvlookCommand()) //invlook command
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.CookCommand()) //cook command
                 .register(new fr.elias.oreoEssentials.commands.ecocommands.BalanceCommand(this)) //balance command
                 .register(new fr.elias.oreoEssentials.commands.ecocommands.BalTopCommand(this)) //baltop command
@@ -1606,6 +1616,11 @@ public final class OreoEssentials extends JavaPlugin {
         TpaTabCompleter tpaCompleter = new TpaTabCompleter(this);
         if (getCommand("tpa") != null) {
             getCommand("tpa").setTabCompleter(tpaCompleter);
+        }
+        if (getCommand("invlook") != null) {
+            getCommand("invlook").setTabCompleter(
+                    new fr.elias.oreoEssentials.commands.core.playercommands.invlook.InvlookCommand()
+            );
         }
 
         // /tp → ONLINE + OFFLINE (local + network)
@@ -2052,7 +2067,14 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (oreoHolograms != null) oreoHolograms.unload(); } catch (Exception ignored) {}
         try { if (dailyStore != null) dailyStore.close(); } catch (Exception ignored) {}
         try { if (tradeService != null) tradeService.cancelAll(); } catch (Throwable ignored) {}
-
+        // -------------------------------------------------
+        // Invlook safety cleanup (avoid ghost read-only)
+        // -------------------------------------------------
+        try {
+            if (invlookManager != null) {
+                invlookManager.clear();
+            }
+        } catch (Exception ignored) {}
         dailyStore = null;
         this.healthBarListener = null;
 

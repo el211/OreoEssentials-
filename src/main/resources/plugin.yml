@@ -11,6 +11,8 @@ softdepend:
   - ItemsAdder
   - SmartInvs
   - PacketEvents
+  - Nexo
+
 loadbefore: [EconomyShopGUI]
 
 commands:
@@ -359,9 +361,18 @@ commands:
     usage: "/invsee <player>"
 
   invlook:
-    description: View a player's inventory
+    description: View a player's inventory in read-only mode
+    usage: /invlook <player>
     permission: oreo.invlook
-    usage: "/invlook <player>"
+    aliases: [invview]
+
+  sellgui:
+    description: Open the Sell GUI
+    aliases: [ sell ]
+    permission: oreo.sellgui
+    usage: "/sellgui"
+
+
   ecsee:
     description: View/edit a player's ender chest (online = live; offline = virtual)
     permission: oreo.ecsee
@@ -776,7 +787,9 @@ permissions:
   oreo.sit:
     description: "Allows using /sit"
     default: true
-
+  oreo.sellgui:
+    description: Allows opening the Sell GUI
+    default: true
   oreo.god.others:
     default: op
   oreo.gamemode:
