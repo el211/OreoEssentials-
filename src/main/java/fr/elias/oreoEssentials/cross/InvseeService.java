@@ -239,7 +239,7 @@ public final class InvseeService {
         snap.armor    = p.getInventory().getArmorContents();
         snap.offhand  = p.getInventory().getItemInOffHand();
 
-        // NEW: copy XP
+        //  copy XP
         snap.level    = p.getLevel();
         snap.exp      = p.getExp();
         snap.totalExp = p.getTotalExperience();
@@ -274,7 +274,7 @@ public final class InvseeService {
                     online.getInventory().setItemInOffHand(snap.offhand);
                 }
 
-                // NEW: restore XP (if snapshot has it)
+                //  restore XP (if snapshot has it)
                 online.setLevel(snap.level);
                 online.setExp(snap.exp);
                 online.setTotalExperience(snap.totalExp);

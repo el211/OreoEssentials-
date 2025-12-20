@@ -123,7 +123,7 @@ public class TpAcceptCommand implements OreoCommand {
                 P(target, id, "cross-server accept " + (handled ? "✓" : "–"));
 
                 if (handled) {
-                    // ✅ IMPORTANT: STOP HERE – NO COUNTDOWN ON THIS SERVER
+                    //  IMPORTANT: STOP HERE – NO COUNTDOWN ON THIS SERVER
                     D(id, "done (cross-server handled) in " + ms(t0));
                     return true;
                 }
@@ -137,7 +137,7 @@ public class TpAcceptCommand implements OreoCommand {
         //    Now goes through a countdown based on settings.yml
         // ===========================================================
         try {
-            // NEW: find the requester (player who did /tpa <target>)
+            //  find the requester (player who did /tpa <target>)
             Player requester = tpa.getRequester(target);
             if (requester == null || !requester.isOnline()) {
                 D(id, "no requester found for target=" + target.getName());

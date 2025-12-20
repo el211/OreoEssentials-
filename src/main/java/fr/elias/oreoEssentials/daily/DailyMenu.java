@@ -64,7 +64,7 @@ public final class DailyMenu implements InventoryProvider {
         final int currentStreak = svc.getStreak(p.getUniqueId());
         final int todayIndex    = svc.nextDayIndex(currentStreak);
 
-        // NEW: feature flag snapshot for this render
+        //  feature flag snapshot for this render
         final boolean featureOn = svc.isEnabled();
 
         // Grid buffer (usable area only)
@@ -137,7 +137,7 @@ public final class DailyMenu implements InventoryProvider {
             final boolean isReadyFinal = isReadyToday;
 
             final ClickableItem ci = ClickableItem.of(item, e -> {
-                // NEW: short-circuit when disabled
+                //  short-circuit when disabled
                 if (!svc.isEnabled()) {
                     p.sendMessage(svc.color("&cDaily Rewards is disabled."));
                     return;
@@ -209,7 +209,7 @@ public final class DailyMenu implements InventoryProvider {
                 contents.set(bottom, 4, ClickableItem.empty(stats));
             }
 
-            // NEW: Admin toggle button at slot 5
+            //  Admin toggle button at slot 5
             if (p.hasPermission("oreo.daily.admin")) {
                 final ItemStack lever = new ItemStack(Material.LEVER);
                 final ItemMeta lm = lever.getItemMeta();

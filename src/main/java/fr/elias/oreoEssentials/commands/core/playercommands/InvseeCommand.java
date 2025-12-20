@@ -35,7 +35,7 @@ public class InvseeCommand implements OreoCommand, TabCompleter {
         }
 
         OreoEssentials plugin = OreoEssentials.get();
-        InvseeService invseeService = plugin.getInvseeService(); // <<< you must expose this in OreoEssentials
+        InvseeService invseeService = plugin.getInvseeService();
 
         if (invseeService == null) {
             viewer.sendMessage(ChatColor.RED + "Invsee service is not available on this server.");

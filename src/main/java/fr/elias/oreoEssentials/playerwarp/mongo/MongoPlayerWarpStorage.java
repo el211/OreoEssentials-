@@ -41,7 +41,7 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
     private static final String F_WL_ENABLED = "whitelist_enabled";
     private static final String F_WL_PLAYERS = "whitelist_players";
 
-    // NEW: managers & password
+    //  managers & password
     private static final String F_MANAGERS = "managers";
     private static final String F_PASSWORD = "password";
 
@@ -168,7 +168,7 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
                 .collect(Collectors.toList());
         d.put(F_WL_PLAYERS, wl);
 
-        // NEW: managers
+        //  managers
         if (warp.getManagers() != null && !warp.getManagers().isEmpty()) {
             List<String> mgr = warp.getManagers().stream()
                     .map(UUID::toString)
@@ -178,7 +178,7 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
             d.remove(F_MANAGERS);
         }
 
-        // NEW: password
+        //  password
         if (warp.getPassword() != null && !warp.getPassword().isEmpty()) {
             d.put(F_PASSWORD, warp.getPassword());
         } else {
@@ -257,7 +257,7 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
             }
         }
 
-        // NEW: managers
+        //  managers
         Object rawMgrList = d.get(F_MANAGERS);
         Set<UUID> managers = new HashSet<>();
         if (rawMgrList instanceof List<?> mgrList) {
@@ -271,7 +271,7 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         }
         warp.setManagers(managers);
 
-        // NEW: password
+        //  password
         String pwd = d.getString(F_PASSWORD);
         warp.setPassword(pwd); // PlayerWarp already normalizes null / empty
 

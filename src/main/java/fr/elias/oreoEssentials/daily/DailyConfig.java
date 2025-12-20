@@ -17,7 +17,7 @@ public final class DailyConfig {
 
     public final Mongo mongo = new Mongo();
 
-    // NEW: master toggle
+    //  master toggle
     public boolean enabled = true;
 
     // General

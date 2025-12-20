@@ -16,7 +16,6 @@ public class PlayerWarp {
     private String name;
     private Location location;
 
-    // ---- NEW FIELDS ----
     private boolean whitelistEnabled;
     private Set<UUID> whitelist;
 
@@ -26,7 +25,6 @@ public class PlayerWarp {
     private boolean locked;
     private double cost;
 
-    // ---- NEWER FIELDS (for commands: icon / managers / password) ----
     /**
      * Icon used in GUI / list.
      * ⚠ Doit être (dé)sérialisé par ton layer de stockage (YAML/Mongo/etc.)

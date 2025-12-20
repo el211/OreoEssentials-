@@ -267,7 +267,7 @@ public final class TradeService implements Listener {
 
     private void startLocalTrade(Player a, Player b) {
         UUID sid = TradeIds.computeTradeId(a.getUniqueId(), b.getUniqueId());
-        clearGrantDedupFor(sid, a.getUniqueId(), b.getUniqueId());  // <-- add this
+        clearGrantDedupFor(sid, a.getUniqueId(), b.getUniqueId());
 
         log("[TRADE] startLocalTrade sid=" + sid);
 
@@ -296,7 +296,7 @@ public final class TradeService implements Listener {
         TradeSession session = sessionsById.computeIfAbsent(sid, __ ->
                 buildSession(sid, aId, aName, bId, bName));
 
-        // ✅ reset grant de-dup for this SID so repeated trades between the same two players work
+        //  reset grant de-dup for this SID so repeated trades between the same two players work
         clearGrantDedupFor(sid, aId, bId);
 
         playerToSession.put(aId, sid);
@@ -1075,7 +1075,7 @@ public final class TradeService implements Listener {
             }
         }
 
-        // ✅ Everything else is considered a valid trade item
+        //  Everything else is considered a valid trade item
         return true;
     }
 

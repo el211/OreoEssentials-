@@ -36,7 +36,7 @@ public class ConfirmDeleteGui implements InventoryProvider {
                 .provider(new ConfirmDeleteGui(homes, homeName, onConfirm, onCancel))
                 .size(3, 9)
                 .title(ChatColor.DARK_RED + "Delete '" + homeName + "'?")
-                .manager(fr.elias.oreoEssentials.OreoEssentials.get().getInvManager())  // <-- ADD THIS
+                .manager(fr.elias.oreoEssentials.OreoEssentials.get().getInvManager())
                 .build()
                 .open(p);
 

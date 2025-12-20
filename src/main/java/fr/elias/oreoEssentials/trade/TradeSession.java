@@ -204,7 +204,7 @@ public final class TradeSession {
             // Immediately lock UI to prevent any item pickup/drag while finishing.
             lockUiNow();
 
-            // NEW: mark we're closing now; further cancels/edits will be ignored.
+            //  mark we're closing now; further cancels/edits will be ignored.
             beginClosing();
 
             // Finish next tick: close UIs locally, then let service grant & broadcast.
@@ -291,7 +291,6 @@ public final class TradeSession {
 
         if (newVersion <= version) return;        // stale
         if (uiLocked || completed) return;        // ignore late edits during/after finish
-        // ADD THIS GUARD:
         if (isClosingOrClosed()) return;
         copy18(newA, offerA);
         copy18(newB, offerB);

@@ -138,7 +138,7 @@ public final class InvBridge {
                 s.armor    = Arrays.copyOf(local.getInventory().getArmorContents(), 4);
                 s.offhand  = local.getInventory().getItemInOffHand();
 
-                // NEW: XP
+                //  XP
                 s.level    = local.getLevel();
                 s.exp      = local.getExp();
                 s.totalExp = local.getTotalExperience();

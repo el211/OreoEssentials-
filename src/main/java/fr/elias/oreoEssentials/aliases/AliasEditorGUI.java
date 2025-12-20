@@ -186,7 +186,7 @@ public final class AliasEditorGUI {
                     e -> new CommandsProvider(service, invManager, aliasName).open(p)
             ));
 
-            // NEW: Perm-gate toggle
+            //  Perm-gate toggle
             c.set(3, 6, ClickableItem.of(
                     makeNamed(def.permGate ? Material.TRIPWIRE_HOOK : Material.IRON_DOOR,
                             "§bPerm Gate: " + (def.permGate ? "§aON" : "§cOFF"),
@@ -198,7 +198,7 @@ public final class AliasEditorGUI {
                     }
             ));
 
-            // NEW: Custom Tabs toggle + editor
+            //  Custom Tabs toggle + editor
             c.set(4, 2, ClickableItem.of(
                     makeNamed(def.addTabs ? Material.GLOWSTONE : Material.REDSTONE_LAMP,
                             "§bTab-Complete: " + (def.addTabs ? "§aON" : "§cOFF"),
@@ -373,7 +373,7 @@ public final class AliasEditorGUI {
     }
 
     /* ======================================================================
-     * NEW: Custom Tabs Provider (view / edit per-argument suggestions)
+     *  Custom Tabs Provider (view / edit per-argument suggestions)
      * ====================================================================== */
 
     private static final class CustomTabsProvider implements InventoryProvider {

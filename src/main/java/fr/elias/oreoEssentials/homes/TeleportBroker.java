@@ -125,7 +125,7 @@ public class TeleportBroker {
         }
     }
 
-    /** NEW: admin wants to go to someone else’s home */
+    /**  admin wants to go to someone else’s home */
     public boolean requestTeleportOtherHome(UUID subjectAdmin, UUID owner, String homeName) {
         String target = resolveHomeServer(owner, homeName);
         if (target == null || target.isBlank()) return false;

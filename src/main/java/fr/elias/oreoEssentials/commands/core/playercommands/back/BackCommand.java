@@ -52,7 +52,7 @@ public class BackCommand implements OreoCommand {
         Player p = (Player) sender;
         UUID uuid = p.getUniqueId();
 
-        // ✅ Use the new raw cross-server API
+        //  Use the new raw cross-server API
         BackLocation last = backService.getLastRaw(uuid);
         if (last == null) {
             p.sendMessage("§cNo last location recorded.");

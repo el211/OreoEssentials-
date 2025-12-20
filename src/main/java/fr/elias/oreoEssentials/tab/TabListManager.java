@@ -34,11 +34,11 @@ public class TabListManager {
     private String footer;
     private int intervalTicks;
 
-    // NEW: network-wide mode (true = use PlayerDirectory to show network stats)
+    //  network-wide mode (true = use PlayerDirectory to show network stats)
     // Controlled by tab.yml: tab.network.all-servers
     private boolean networkMode;
 
-    // NEW: suffix pattern (configured in tab.yml -> tab.name-format.server-tag)
+    //  suffix pattern (configured in tab.yml -> tab.name-format.server-tag)
     private String serverTagPattern;
 
     // Title
@@ -159,7 +159,7 @@ public class TabListManager {
         String ov = nf != null ? nf.getString("overflow", "TRIM") : "TRIM";
         overflowMode = "ELLIPSIS".equalsIgnoreCase(ov) ? OverflowMode.ELLIPSIS : OverflowMode.TRIM;
 
-        // NEW: custom suffix pattern configured in tab.yml
+        //  custom suffix pattern configured in tab.yml
         serverTagPattern = nf != null ? nf.getString("server-tag", "") : "";
 
         rankFormats.clear();
@@ -503,7 +503,7 @@ public class TabListManager {
             }
         }
 
-        // --- NEW: %oe_server_tag% from tab.yml ---
+        // ---  %oe_server_tag% from tab.yml ---
         if (out.contains("%oe_server_tag%")) {
             String tag = serverTagPattern;
             if (tag == null) tag = "";

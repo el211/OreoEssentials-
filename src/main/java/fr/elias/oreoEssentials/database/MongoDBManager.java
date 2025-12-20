@@ -54,7 +54,7 @@ public class MongoDBManager implements PlayerEconomyDatabase {
                     new IndexOptions().unique(true)
             );
 
-            System.out.println("[OreoEssentials] ✅ Connected to MongoDB: " + database);
+            System.out.println("[OreoEssentials]  Connected to MongoDB: " + database);
             return true;
         } catch (Exception e) {
             System.err.println("[OreoEssentials] ❌ Failed to connect to MongoDB! Check credentials & server.");

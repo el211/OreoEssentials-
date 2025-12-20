@@ -43,7 +43,7 @@ public class RabbitMQSender implements PacketSender {
                 // publish via default exchange directly to queue "id"
                 this.channel.basicPublish("", id, null, content);
             }
-            System.out.println("[OreoEssentials] ✅ Sent RabbitMQ message");
+            System.out.println("[OreoEssentials]  Sent RabbitMQ message");
         } catch (IOException e) {
             System.err.println("[OreoEssentials] ❌ Failed to send RabbitMQ message.");
             e.printStackTrace();
@@ -95,7 +95,7 @@ public class RabbitMQSender implements PacketSender {
         System.err.println("[OreoEssentials] 🔄 Attempting to reconnect to RabbitMQ...");
         close();
         if (connect()) {
-            System.out.println("[OreoEssentials] ✅ Successfully reconnected to RabbitMQ!");
+            System.out.println("[OreoEssentials]  Successfully reconnected to RabbitMQ!");
             try {
                 rebindAllConsumers();
             } catch (Exception e) {
@@ -122,7 +122,7 @@ public class RabbitMQSender implements PacketSender {
             for (String q : queues) {
                 declareQueue(q);
             }
-            System.out.println("[OreoEssentials] ✅ Connected to RabbitMQ successfully!");
+            System.out.println("[OreoEssentials]  Connected to RabbitMQ successfully!");
             return true;
         } catch (Exception e) {
             System.err.println("[OreoEssentials] ❌ Failed to connect to RabbitMQ!");
@@ -143,7 +143,7 @@ public class RabbitMQSender implements PacketSender {
         } finally {
             channel = null;
             connection = null;
-            System.out.println("[OreoEssentials] ✅ RabbitMQ connection closed.");
+            System.out.println("[OreoEssentials]  RabbitMQ connection closed.");
         }
     }
 

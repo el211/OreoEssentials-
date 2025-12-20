@@ -253,7 +253,7 @@ public class MongoHomesStorage implements StorageApi {
             );
         }
 
-        // NEW: met aussi à jour les données /back cross-server via l'impl par défaut
+        //  met aussi à jour les données /back cross-server via l'impl par défaut
         // -> Location -> Map -> setBackData(...)
         StorageApi.super.setLast(uuid, loc);
     }

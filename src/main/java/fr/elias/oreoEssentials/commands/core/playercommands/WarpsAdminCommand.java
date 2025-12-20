@@ -110,7 +110,7 @@ public class WarpsAdminCommand implements OreoCommand {
             return false;
         }
     }
-    /** ✅ Helper so other classes can reopen the admin GUI at a specific page. */
+    /** Helper so other classes can reopen the admin GUI at a specific page. */
     public static void openAdmin(Player p, WarpService warps, int page) {
         SmartInventory inv = SmartInventory.builder()
                 .id("oreo:warps_admin")

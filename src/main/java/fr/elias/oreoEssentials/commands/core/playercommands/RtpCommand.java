@@ -126,7 +126,7 @@ public class RtpCommand implements OreoCommand {
                     bridge.requestCrossServerRtp(p, targetWorldName, targetServer);
                 }
 
-                // ✅ switch server happens AFTER warmup
+                //  switch server happens AFTER warmup
                 p.performCommand("server " + targetServer);
             };
 

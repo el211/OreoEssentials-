@@ -1,5 +1,5 @@
 # ================= Daily Rewards — rewards.yml =================
-# New: Extras.CustomModelData (integer) — optional
+#  Extras.CustomModelData (integer) — optional
 # If set, the GUI icon uses this custom model data.
 
 Day Example:

@@ -44,7 +44,7 @@ public class WorldListMenu implements InventoryProvider {
                             .lore("&7Click to manage this world")
                             .build(),
                     e -> SmartInventory.builder()
-                            .manager(plugin.getInvManager()) // ✅ IMPORTANT: set manager
+                            .manager(plugin.getInvManager()) //  IMPORTANT: set manager
                             .provider(new WorldActionsMenu(plugin, svc, w))
                             .title("§8World: " + w.getName())
                             .size(6, 9)

@@ -23,7 +23,7 @@ public final class JailEditCommand implements CommandExecutor {
             case "pos1" -> { p1 = p.getLocation().clone(); sender.sendMessage("§aSet pos1."); }
             case "pos2" -> { p2 = p.getLocation().clone(); sender.sendMessage("§aSet pos2."); }
 
-            // NEW: alias of save
+            //  alias of save
             case "create", "save" -> {
                 if (a.length < 2) { sender.sendMessage("§c/jailedit " + a[0].toLowerCase(Locale.ROOT) + " <jailName>"); break; }
                 if (p1 == null || p2 == null) { sender.sendMessage("§cSet pos1 & pos2 first."); break; }

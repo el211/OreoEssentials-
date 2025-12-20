@@ -33,7 +33,7 @@ public class PlayerJoinPacketHandler implements PacketSubscriber<PlayerJoinPacke
 
         plugin.getLogger().fine("[Rabbit] Join @" + channel + " -> " + name + " (" + uuid + ")");
 
-        // ✅ Guarded cache access (getter is null-safe but we still guard)
+        //  Guarded cache access (getter is null-safe but we still guard)
         OfflinePlayerCache cache = plugin.getOfflinePlayerCache();
         if (cache != null) {
             try {

@@ -66,7 +66,7 @@ public class PacketRegistry {
         return idToDefinition.get(registryId);
     }
 
-    /* -------- NEW: dynamic registration overload -------- */
+    /* --------  dynamic registration overload -------- */
 
     /**
      * Programmatically register a packet class with a constructor supplier.

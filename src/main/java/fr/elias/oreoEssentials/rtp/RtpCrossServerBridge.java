@@ -49,7 +49,7 @@ public final class RtpCrossServerBridge {
             return;
         }
 
-        // ✅ Always store pending (consistent behavior)
+        //  Always store pending (consistent behavior)
         plugin.getRtpPendingService().add(playerId, worldName);
         plugin.getLogger().info("[RTP-BRIDGE] Stored pending RTP for " + playerId + " in world=" + worldName);
 

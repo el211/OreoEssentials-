@@ -67,7 +67,7 @@ public class YamlStorage implements StorageApi {
     }
 
     /* ---------------------------------------------------------------------- */
-    /*                       NEW: /back global storage                        */
+    /*                        /back global storage                        */
     /* ---------------------------------------------------------------------- */
 
     @Override

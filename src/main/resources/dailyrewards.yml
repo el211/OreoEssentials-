@@ -7,7 +7,7 @@ Storage:
     Collection: "daily_rewards"
 
 General:
-  Enabled: true            # <— NEW: master ON/OFF switch for Daily Rewards
+  Enabled: true            # <—  master ON/OFF switch for Daily Rewards
   PrintErrorsToConsole: true
   PluginPrefix: "&8[&b&lOREO&8·&6&lDaily&b&lRewards&8]"
   PluginGuiTitle: "&b&lOREO &6&lDaily &b&lRewards"
@@ -39,7 +39,7 @@ GUI:
 
 # =================================================================
 # Rewards section (replaces the old rewards.yml)
-# New: Extras.CustomModelData (integer > 0) is supported.
+#  Extras.CustomModelData (integer > 0) is supported.
 # =================================================================
 Rewards:
 

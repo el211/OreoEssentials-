@@ -2,7 +2,7 @@
 package fr.elias.oreoEssentials.services;
 
 import fr.elias.oreoEssentials.OreoEssentials;
-import org.bukkit.Bukkit; // <-- add this
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -30,7 +30,7 @@ public class ConfigService {
         plugin.saveConfig();
     }
 
-    // ---- NEW: single source of truth for server id ----
+    //  single source of truth for server id ----
     public String serverName() {
         return plugin.getConfig().getString("server.name", Bukkit.getServer().getName());
     }

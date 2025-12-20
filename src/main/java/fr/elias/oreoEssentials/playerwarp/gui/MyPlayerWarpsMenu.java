@@ -1,7 +1,7 @@
 // src/main/java/fr/elias/oreoEssentials/playerwarp/gui/MyPlayerWarpsMenu.java
 package fr.elias.oreoEssentials.playerwarp.gui;
 
-import fr.elias.oreoEssentials.OreoEssentials; // ← ADD THIS
+import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.playerwarp.PlayerWarp;
 import fr.elias.oreoEssentials.playerwarp.PlayerWarpService;
 import fr.elias.oreoEssentials.util.Lang;

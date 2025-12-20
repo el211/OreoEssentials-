@@ -1,6 +1,6 @@
 chat:
   enabled: false                   # ← set true to let AsyncChatListener handle chat
-  strip-name-colors: true          # ← NEW: strip colors from names before formatting
+  strip-name-colors: true          # ←  strip colors from names before formatting
   use-minimessage: false # default: false (legacy &-codes). set true to enable <head>, <hover>, <click>, <gradient>
 
   # You can use:

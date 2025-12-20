@@ -428,7 +428,7 @@ teleport:
   countdown:
     title: '&aTéléportation...'
     subtitle: '&fDans &e%seconds% &fs'
-  # New: live skin/name utilities (PacketEvents-aware refresher)
+  #  live skin/name utilities (PacketEvents-aware refresher)
   skin:
     usage: '%prefix%&eUsage: &f/%label% &7<player>'
     cannot-resolve: '%prefix%&cCould not resolve &e%target%&c''s skin.'

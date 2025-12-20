@@ -92,7 +92,7 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         final String localServer = homes.localServer();
         final String homeServer = homes.homeServer(player.getUniqueId(), key);
         final String targetServer = (homeServer == null ? localServer : homeServer);
-// ✅ FIX: check existence BEFORE starting countdown
+            // check existence BEFORE starting countdown
         if (targetServer.equalsIgnoreCase(localServer)) {
             // Local server: must exist locally
             if (homes.getHome(player.getUniqueId(), key) == null) {

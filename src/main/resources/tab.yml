@@ -31,7 +31,7 @@ tab:
     use-rank-formats: true
     rank-key: "%luckperms_primary_group%"
 
-    # NEW: what you want AFTER the name
+    #  what you want AFTER the name
     # You can put anything here (or leave it empty):
     #   - ""                        -> nothing
     #   - " &7(%server_name%)"      -> server name

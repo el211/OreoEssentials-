@@ -71,7 +71,7 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                     "gui",
                     "mywarps",
 
-                    // 🔹 NEW: /pw use <warp> <password>
+                    // 🔹  /pw use <warp> <password>
                     "use"
             ));
 

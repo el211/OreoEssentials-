@@ -223,7 +223,7 @@ mobs:
     update-interval-ticks: 5
     view-distance: 32.0
     require-line-of-sight: true
-    spawn-per-tick-cap: 40   # NEW: max new holograms created per sweeper tick
+    spawn-per-tick-cap: 40   #  max new holograms created per sweeper tick
 
     format:
       - "&f<name>"

@@ -22,7 +22,7 @@ public final class RtpConfig {
     private Set<String> allowedWorlds = Collections.emptySet();
     private Set<String> unsafeBlocks  = Collections.emptySet();
 
-    // ✅ NEW: cross-server RTP
+    //   cross-server RTP
     private boolean crossServerEnabled = false;
     private Map<String, String> worldServers = Collections.emptyMap(); // world -> server
     private String defaultTargetWorld; // optional
@@ -52,7 +52,7 @@ public final class RtpConfig {
         List<String> ub = cfg.getStringList("unsafe-blocks");
         unsafeBlocks = new HashSet<>(ub == null ? Collections.emptyList() : ub);
 
-        // ✅ NEW: cross-server section
+        //   cross-server section
         var cs = cfg.getConfigurationSection("cross-server");
         if (cs != null) {
             crossServerEnabled = cs.getBoolean("enabled", false);
@@ -105,7 +105,7 @@ public final class RtpConfig {
         return allowedWorlds.isEmpty() || allowedWorlds.contains(w.getName());
     }
 
-    /* ----------------- ✅ Cross-server helpers ----------------- */
+    /* -----------------  Cross-server helpers ----------------- */
 
     public boolean isCrossServerEnabled() {
         return crossServerEnabled;
@@ -254,7 +254,7 @@ public final class RtpConfig {
         return best;
     }
 
-    /* ----------------- ✅ Cooldown logic (NOUVEAU) ----------------- */
+    /* -----------------  Cooldown logic (NOUVEAU) ----------------- */
 
     /**
      * Cooldown RTP en secondes pour un joueur, basé sur:
@@ -332,6 +332,6 @@ public final class RtpConfig {
                 || "max-y".equalsIgnoreCase(key)
                 || "worlds".equalsIgnoreCase(key)
                 || "cross-server".equalsIgnoreCase(key)
-                || "cooldown".equalsIgnoreCase(key); // ✅ important: ignorer la section cooldown pour le radius
+                || "cooldown".equalsIgnoreCase(key); //  important: ignorer la section cooldown pour le radius
     }
 }

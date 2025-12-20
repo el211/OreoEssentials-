@@ -52,7 +52,6 @@ public final class DeathMessageService {
     public List<String> playerHover() { return yml.getStringList("PlayerHover"); }
     public List<String> killerHover() { return yml.getStringList("KillerHover"); }
 
-    // ADD this overload (keep your original buildMessage(...) as-is)
     public String buildMessage(
             Player dead,
             Player killer,

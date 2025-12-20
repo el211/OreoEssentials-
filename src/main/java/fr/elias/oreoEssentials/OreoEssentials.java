@@ -126,19 +126,16 @@ public final class OreoEssentials extends JavaPlugin {
     private FreezeManager freezeManager;
     private Economy economy;
     private EconomyBootstrap ecoBootstrap;
-    // add near other services
     private fr.elias.oreoEssentials.integration.DiscordModerationNotifier discordMod;
     public fr.elias.oreoEssentials.integration.DiscordModerationNotifier getDiscordMod() { return discordMod; }
     private fr.elias.oreoEssentials.services.HomeDirectory homeDirectory; // cross-server directory
     // Essentials services
-    // with other fields
     private fr.elias.oreoEssentials.teleport.TpCrossServerBroker tpBroker;
     public fr.elias.oreoEssentials.teleport.TpCrossServerBroker getTpBroker() { return tpBroker; }
     // Portals + JumpPads + PlayerVaults
     private fr.elias.oreoEssentials.portals.PortalsManager portals;
     private fr.elias.oreoEssentials.jumpads.JumpPadsManager jumpPads;
     private fr.elias.oreoEssentials.playervaults.PlayerVaultsConfig playerVaultsConfig;
-    // Field at top of class:
     private fr.elias.oreoEssentials.modgui.ModGuiService modGuiService;
     public fr.elias.oreoEssentials.modgui.ModGuiService getModGuiService() { return modGuiService; }
 
@@ -159,13 +156,11 @@ public final class OreoEssentials extends JavaPlugin {
     // Player warps (cross-server via Mongo)
     private PlayerWarpService playerWarpService;
     private PlayerWarpDirectory playerWarpDirectory;
-
     private BackService backService;
     private MessageService messageService;
     private DeathBackService deathBackService;
     private GodService godService;
     private CommandManager commands;
-    // near your other fields
     private fr.elias.oreoEssentials.teleport.TpaCrossServerBroker tpaBroker;
     public fr.elias.oreoEssentials.teleport.TpaCrossServerBroker getTpaBroker() { return tpaBroker; }
     private FreezeService freezeService;
@@ -209,7 +204,6 @@ public final class OreoEssentials extends JavaPlugin {
     // Interactive Commands
     private fr.elias.oreoEssentials.ic.ICManager icManager;
     public fr.elias.oreoEssentials.ic.ICManager getIcManager() { return icManager; }
-    // in OreoEssentials.java (fields with other services)
     private fr.elias.oreoEssentials.events.EventConfig eventConfig;
     private fr.elias.oreoEssentials.events.DeathMessageService deathMessages;
     // Playtime Rewards
@@ -239,23 +233,19 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.trade.TradeService getTradeService() { return tradeService; }
 
     private fr.elias.oreoEssentials.homes.HomeTeleportBroker homeTpBroker;
-    // in OreoEssentials.java fields
     private fr.elias.oreoEssentials.config.CrossServerSettings crossServerSettings;
     public fr.elias.oreoEssentials.config.CrossServerSettings getCrossServerSettings() { return crossServerSettings; }
 
     // RTP + EnderChest
-
-
     private fr.elias.oreoEssentials.enderchest.EnderChestConfig ecConfig;
     private fr.elias.oreoEssentials.enderchest.EnderChestService ecService;
     public fr.elias.oreoEssentials.enderchest.EnderChestService getEnderChestService() { return ecService; }
-    // RTP + EnderChest
     private RtpConfig rtpConfig;
     public RtpConfig getRtpConfig() { return rtpConfig; }
     // RTP cooldowns (per-player, in millis)
     private final java.util.Map<java.util.UUID, Long> rtpCooldownCache = new java.util.concurrent.ConcurrentHashMap<>();
 
-    // NEW: Cross-server RTP bridge (used by RtpCommand)
+    //  Cross-server RTP bridge (used by RtpCommand)
     private fr.elias.oreoEssentials.rtp.RtpCrossServerBridge rtpBridge;
 
 
@@ -1290,7 +1280,7 @@ public final class OreoEssentials extends JavaPlugin {
             this.tpaBroker = null;
             getLogger().info("[BROKER] TPA cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
-        // --- NEW: TP cross-server broker (admin /tp) ---
+        // ---  TP cross-server broker (admin /tp) ---
         if (packetManager != null && packetManager.isInitialized()) {
             this.tpBroker = new fr.elias.oreoEssentials.teleport.TpCrossServerBroker(
                     this, this.teleportService, this.packetManager, proxyMessenger, configService.serverName()
@@ -1300,7 +1290,7 @@ public final class OreoEssentials extends JavaPlugin {
             this.tpBroker = null;
             getLogger().info("[BROKER] TP cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
-        // --- NEW: TP cross-server broker (admin /tp) ---
+        // ---  TP cross-server broker (admin /tp) ---
         if (packetManager != null && packetManager.isInitialized()) {
             this.tpBroker = new fr.elias.oreoEssentials.teleport.TpCrossServerBroker(
                     this,
@@ -1314,7 +1304,7 @@ public final class OreoEssentials extends JavaPlugin {
             this.tpBroker = null;
             getLogger().info("[BROKER] TP cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
-        // --- NEW: Back cross-server broker (/back) ---
+        // ---  Back cross-server broker (/back) ---
         if (packetManager != null && packetManager.isInitialized() && proxyMessenger != null) {
             this.backBroker = new fr.elias.oreoEssentials.teleport.BackCrossServerBroker(
                     this,
@@ -1329,7 +1319,7 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[BROKER] Back cross-server broker disabled (PacketManager unavailable or proxyMessenger null).");
         }
 
-        // --- NEW: PlayerWarp cross-server broker (/pw) ---
+        // ---  PlayerWarp cross-server broker (/pw) ---
         if (packetManager != null
                 && packetManager.isInitialized()
                 && playerWarpService != null

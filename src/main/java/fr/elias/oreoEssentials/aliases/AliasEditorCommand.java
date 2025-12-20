@@ -241,7 +241,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            /* ---------------- NEW: PERM-GATE & TABS ---------------- */
+            /* ----------------  PERM-GATE & TABS ---------------- */
             case "permgate" -> { // /aliaseditor permgate <name> <true|false>
                 if (args.length < 3) { sender.sendMessage("§cUsage: /aliaseditor permgate <name> <true|false>"); return true; }
                 var def = service.get(args[1]); if (def == null) { sender.sendMessage("§cAlias not found."); return true; }
@@ -341,7 +341,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
             }
             case "set", "addline", "enable", "disable", "delete", "info",
                  "addcheck", "listchecks", "setfailmsg", "setlogic", "runas", "cooldown", "delcheck",
-                 // new:
+                 // 
                  "permgate","tabs","addtab","deltag","cleartabs" -> {
 
                 if (args.length == 2) return prefix(names, args[1]);

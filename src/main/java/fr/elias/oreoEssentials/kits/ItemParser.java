@@ -88,7 +88,7 @@ public final class ItemParser {
 
         ItemStack is = new ItemStack(mat, amount);
 
-        // NEW: handle potion_type:...
+        //  handle potion_type:...
         applyPotionMeta(is, d);
 
         // Enchantments

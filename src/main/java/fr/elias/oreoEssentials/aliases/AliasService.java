@@ -119,7 +119,7 @@ public final class AliasService {
                 }
             }
 
-            // NEW: permission gate + tabs (support legacy keys too)
+            //  permission gate + tabs (support legacy keys too)
             def.permGate = a.getBoolean("perm-gate", a.getBoolean("Perm", false));
             def.addTabs  = a.getBoolean("add-tabs",  a.getBoolean("AddTabs", false));
 

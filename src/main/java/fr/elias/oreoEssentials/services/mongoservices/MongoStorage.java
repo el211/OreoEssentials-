@@ -172,7 +172,7 @@ public class MongoStorage implements StorageApi {
     }
 
     /**
-     * NEW: structured listing used by /otherhomes and /otherhome
+     *  structured listing used by /otherhomes and /otherhome
      * This legacy store only keeps a LocUtil doc; it doesn't store "server",
      * so we fill it with the current server name.
      */
@@ -233,14 +233,14 @@ public class MongoStorage implements StorageApi {
             );
         }
 
-        // 2) NEW: also update the cross-server /back data via StorageApi default
+        // 2)  also update the cross-server /back data via StorageApi default
         // -> this will convert Location -> Map and call setBackData(...)
         StorageApi.super.setLast(uuid, loc);
     }
 
     @Override
     public Location getLast(UUID uuid) {
-        // 1) NEW: try to read via the cross-server /back data
+        // 1)  try to read via the cross-server /back data
         Location fromBack = StorageApi.super.getLast(uuid); // uses getBackData(...)
         if (fromBack != null) return fromBack;
 

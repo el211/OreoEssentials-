@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public abstract class Packet {
 
-    // ✅ Ensures the packet always has a valid ID
+    //  Ensures the packet always has a valid ID
     private UUID packetId = UUID.randomUUID();
 
     /**

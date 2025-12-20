@@ -31,7 +31,7 @@ public final class ConversationListener implements Listener {
         ConfigurationSection root = c.getConfigurationSection("conversations");
         if (root == null) return;
 
-        // NEW: master toggle
+        //  master toggle
         if (!root.getBoolean("enabled", true)) return;
 
         final Player sender = e.getPlayer();
@@ -46,7 +46,7 @@ public final class ConversationListener implements Listener {
             ConfigurationSection bot = root.getConfigurationSection(botKey);
             if (bot == null) continue;
 
-            // NEW: per-bot toggle
+            //  per-bot toggle
             if (!bot.getBoolean("enabled", true)) continue;
 
             String callName = bot.getString("custom_call_name", "").toLowerCase(Locale.ROOT);
@@ -90,7 +90,7 @@ public final class ConversationListener implements Listener {
     }
 
     private void sayAsBot(ConfigurationSection bot, String body) {
-        // NEW: final guard (in case someone calls this directly later)
+        //  final guard (in case someone calls this directly later)
         if (!bot.getBoolean("enabled", true)) return;
 
         boolean lookLikePlayer = bot.getBoolean(

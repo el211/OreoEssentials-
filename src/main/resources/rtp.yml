@@ -8,7 +8,7 @@ enabled: true
 # Global fallbacks
 # ------------------------------------------
 default: 200          # max radius (blocks) if no tier/world override matches
-min-radius: 50        # ✅ NEW: minimum distance from world spawn (blocks)
+min-radius: 50        #   minimum distance from world spawn (blocks)
 attempts: 30          # how many tries to find a safe spot
 min-y: 50             # minimum Y to consider (clamped to >= 5 by code)
 max-y: 200            # maximum Y to consider (clamped to world max height)
@@ -45,7 +45,7 @@ unsafe-blocks:
   - MAGMA_BLOCK
 
 # ------------------------------------------
-# ✅ Cross-server RTP (Bungee / Velocity)
+#  Cross-server RTP (Bungee / Velocity)
 # ------------------------------------------
 cross-server:
   enabled: true
@@ -66,7 +66,7 @@ cross-server:
 worlds:
   world:
     default: 300
-    min-radius: 80          # ✅ NEW: per-world minimum distance
+    min-radius: 80          #   per-world minimum distance
     oreo.tier.vip: 700
     oreo.tier.mvp: 1200
 

@@ -39,7 +39,7 @@ public class ClearLagManager {
 
         this.cfg = new ClearLagConfig(root);
 
-        // NEW: master switch check
+        //  master switch check
         if (!cfg.masterEnabled) {
             cancelSchedulers();
             plugin.getLogger().info("[OreoLag] Disabled by config (enable=false).");

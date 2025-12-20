@@ -30,7 +30,7 @@ public class PostgreSQLManager implements PlayerEconomyDatabase {
         try {
             Class.forName("org.postgresql.Driver");
             connection = DriverManager.getConnection(url, user, password);
-            plugin.getLogger().info("✅ Connected to PostgreSQL database!");
+            plugin.getLogger().info(" Connected to PostgreSQL database!");
 
             // Ensure table exists
             String createTableQuery = "CREATE TABLE IF NOT EXISTS " + TABLE + " (" +
@@ -55,7 +55,7 @@ public class PostgreSQLManager implements PlayerEconomyDatabase {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
-                plugin.getLogger().info("✅ PostgreSQL connection closed.");
+                plugin.getLogger().info(" PostgreSQL connection closed.");
             }
         } catch (SQLException e) {
             plugin.getLogger().severe("❌ Error closing PostgreSQL connection!");

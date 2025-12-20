@@ -70,7 +70,7 @@ public final class DynamicAliasRegistry {
         register(plugin, name, exec, desc, null);
     }
 
-    /** NEW: register with DynamicAliasExecutor and optional TabCompleter. */
+    /**  register with DynamicAliasExecutor and optional TabCompleter. */
     public static void register(Plugin plugin, String name, DynamicAliasExecutor exec, String desc, TabCompleter tab) {
         // DynamicAliasExecutor IS a CommandExecutor, so just delegate to the generic overload.
         register(plugin, name, (CommandExecutor) exec, desc, tab);

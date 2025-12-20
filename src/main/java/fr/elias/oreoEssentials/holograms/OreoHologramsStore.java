@@ -50,7 +50,7 @@ public final class OreoHologramsStore {
             d.viewPermission = c.getString("viewPermission", "");
             d.manualViewers = c.getStringList("manualViewers");
 
-            // NEW: load update interval for ALL types (fallback to legacy text key)
+            //  load update interval for ALL types (fallback to legacy text key)
             d.updateIntervalTicks = c.getLong("updateIntervalTicks",
                     c.getLong("updateTextIntervalTicks", 0L));
 
@@ -99,7 +99,7 @@ public final class OreoHologramsStore {
             c.set("viewPermission", d.viewPermission);
             c.set("manualViewers", d.manualViewers);
 
-            // NEW: always persist the common update interval
+            //  always persist the common update interval
             c.set("updateIntervalTicks", d.updateIntervalTicks);
 
             // type-specific

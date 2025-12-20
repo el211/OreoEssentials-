@@ -12,7 +12,7 @@ public class TpaRequestPacket extends Packet {
     private UUID requesterUuid;
     private String requesterName;
     private UUID targetUuid;
-    private String targetName;          // <-- NEW: allows fallback on cracked/offline servers
+    private String targetName;          // <--  allows fallback on cracked/offline servers
     private String fromServer;
     private long expiresAtEpochMs;
 

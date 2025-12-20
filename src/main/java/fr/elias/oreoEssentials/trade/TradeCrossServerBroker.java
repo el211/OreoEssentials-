@@ -162,7 +162,6 @@ public final class TradeCrossServerBroker {
 
         // (GUI updates are handled by TradeService.applyRemoteState(...) in the handler)
     }
-    // --- add this near other helpers ---
     private PacketChannel currentNodeChannel() {
         // route to this server's own Individual channel
         return PacketChannels.individual(serverName);

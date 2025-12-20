@@ -10,7 +10,7 @@ public final class CrossServerSettings {
     private final boolean warps;
     private final boolean spawn;
     private final boolean economy;
-    private final boolean enderchest; // NEW: cross-server /ec
+    private final boolean enderchest; //  cross-server /ec
 
     private CrossServerSettings(boolean homes,
                                 boolean warps,

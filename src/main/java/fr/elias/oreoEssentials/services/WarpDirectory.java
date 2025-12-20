@@ -11,7 +11,7 @@ public interface WarpDirectory {
 
     default void setWarpPermission(String warpName, String permission) { /* no-op by default */ }
 
-    // ✅ convenience helper
+    //  convenience helper
     default void clearWarpPermission(String warpName) {
         setWarpPermission(warpName, null);
     }

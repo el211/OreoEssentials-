@@ -11,7 +11,7 @@ public interface InventoryService {
         public ItemStack[] armor;    // 4
         public ItemStack   offhand;  // 1
 
-        // NEW: XP FIELDS
+        //  XP FIELDS
         /**
          * Player level (green number above the hotbar).
          */

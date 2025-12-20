@@ -183,7 +183,7 @@ public class JsonStorage implements StorageApi {
 
     @Override
     public void setLast(UUID uuid, Location loc) {
-        // NEW: update /back data using the default StorageApi logic
+        //  update /back data using the default StorageApi logic
         // This calls setBackData(UUID, Map...) above (which is synchronized).
         StorageApi.super.setLast(uuid, loc);
 
@@ -292,6 +292,6 @@ public class JsonStorage implements StorageApi {
     private static final class PlayerData {
         Document lastLocation = null;                 // legacy /back storage
         Map<String, Document> homes = new LinkedHashMap<>();
-        Map<String, Object> back = null;             // NEW: global /back data (BackLocation.toMap)
+        Map<String, Object> back = null;             //  global /back data (BackLocation.toMap)
     }
 }
