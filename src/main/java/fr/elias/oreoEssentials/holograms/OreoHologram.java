@@ -8,7 +8,10 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.util.Transformation;
 import org.joml.Vector3f;
-
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -135,6 +138,7 @@ public abstract class OreoHologram {
         }
         return Optional.empty();
     }
+
 
     /** Apply common Display properties that every hologram type should honor. */
     protected final void commonDisplayTweaks(Display d) {

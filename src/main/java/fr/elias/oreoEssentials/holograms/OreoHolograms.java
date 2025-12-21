@@ -133,4 +133,4 @@ public final class OreoHolograms {
         c.itemStackBase64 = d.itemStackBase64;
         return c;
     }
-}
+}  

@@ -323,7 +323,14 @@ public class RtpCommand implements OreoCommand {
             }
 
             // Scan downward to find ground from the top
-            int y = Math.min(maxY, world.getMaxHeight() - 1);
+            int top = Math.min(maxY, world.getMaxHeight() - 1);
+
+            // In Nether, never scan from the ceiling area, or you'll land on the roof.
+            if (world.getEnvironment() == World.Environment.NETHER) {
+                top = Math.min(top, 120); // 120 is safely below the roof
+            }
+
+            int y = top;
             while (y > minY && world.getBlockAt(x, y, z).isEmpty()) {
                 y--;
             }
@@ -335,6 +342,19 @@ public class RtpCommand implements OreoCommand {
             Block feet   = world.getBlockAt(x, y + 1, z);
             Block head   = world.getBlockAt(x, y + 2, z);
             Block ground = world.getBlockAt(x, y, z);
+            // --- Nether roof protection ---
+            if (world.getEnvironment() == World.Environment.NETHER) {
+                // Roof bedrock is typically at y=127 (player ends up at 128).
+                // If we found ground in the roof band, skip it.
+                if (y >= 126) { // 126/127 are the roof layers depending on seed/version
+                    continue;
+                }
+
+                // Optional extra safety: if the "ground" is bedrock and high, skip it.
+                if (ground.getType() == Material.BEDROCK && y >= 120) {
+                    continue;
+                }
+            }
 
             // Must have space for player
             if (!feet.isEmpty() || !head.isEmpty()) {

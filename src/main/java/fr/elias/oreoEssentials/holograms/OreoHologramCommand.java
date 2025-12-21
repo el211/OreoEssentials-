@@ -120,7 +120,13 @@ public final class OreoHologramCommand implements TabExecutor {
         }
 
         api.save();
-        p.sendMessage("§aCreated hologram §f"+name+"§a ("+type+").");
+
+        p.sendMessage("§aCreated hologram §f" + name + "§a (" + type + ").");
+        p.sendMessage("§7Tip: §f/ohologram edit " + name +
+                " setLine 1 &fWelcome to &bYOUR LINE HERE!");
+        p.sendMessage("§7Tip: §f/ohologram edit " + name +
+                " addLine &7Enjoy your stay!");
+
     }
 
     private void remove(CommandSender s, String[] a) {
@@ -284,7 +290,12 @@ public final class OreoHologramCommand implements TabExecutor {
         return safeParseLong(s, 20L); // ticks default
     }
 
-    private static String colorize(String s) { return s.replace("&","§"); }
+    private static String colorize(String s) {
+        // If user typed MiniMessage, keep it as-is
+        if (s.contains("<") && s.contains(">")) return s;
+        // Otherwise support legacy &
+        return s.replace("&", "§");
+    }
 
     @Override
     public List<String> onTabComplete(CommandSender s, Command cmd, String alias, String[] a) {
@@ -346,6 +357,21 @@ public final class OreoHologramCommand implements TabExecutor {
                     .limit(300)
                     .collect(Collectors.toList());
         }
+        // ---- Text line-number completion (setLine/removeLine/insertBefore/insertAfter) ----
+        if (a.length == 4 && a[0].equalsIgnoreCase("edit")) {
+            var h = api.get(a[1]);
+            if (h != null && h.getType() == OreoHologramType.TEXT) {
+                String sub = a[2].toLowerCase(Locale.ROOT);
+                if (sub.equals("setline") || sub.equals("removeline") || sub.equals("insertbefore") || sub.equals("insertafter")) {
+                    int lines = Math.max(1, ((TextOreoHologram) h).toData().lines.size());
+                    List<String> nums = new ArrayList<>(lines + 2);
+                    for (int i = 1; i <= lines; i++) nums.add(String.valueOf(i));
+                    nums.add(String.valueOf(lines + 1)); // allow "next line"
+                    return starts(nums, a[3]);
+                }
+            }
+        }
+
 
         if (a.length == 4 && a[0].equalsIgnoreCase("edit")) {
             switch (a[2].toLowerCase(Locale.ROOT)) {
