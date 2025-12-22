@@ -24,8 +24,8 @@ public class PingCommand implements OreoCommand {
         Lang.send(
                 p,
                 "ping.self",
-                Map.of("ping", String.valueOf(ping)),
-                p
+                null, // <-- def string (none)
+                Map.of("ping", String.valueOf(ping)) // <-- placeholders
         );
 
         return true;

@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/HeadCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -30,7 +31,7 @@ public class HeadCommand implements OreoCommand, org.bukkit.command.TabCompleter
         Player self = (Player) sender;
 
         if (args.length < 1) {
-            Lang.send(self, "admin.head.usage", Map.of("label", label), self);
+            Lang.send(self, "admin.head.usage", null, Map.of("label", label));
             return true;
         }
 
@@ -44,7 +45,7 @@ public class HeadCommand implements OreoCommand, org.bukkit.command.TabCompleter
             if (u != null) prof = MojangSkinFetcher.fetchProfileWithTextures(u, target);
         }
         if (prof == null) {
-            Lang.send(self, "admin.head.cannot-resolve", Map.of("target", target), self);
+            Lang.send(self, "admin.head.cannot-resolve", null, Map.of("target", target));
             return true;
         }
 
@@ -60,9 +61,9 @@ public class HeadCommand implements OreoCommand, org.bukkit.command.TabCompleter
         HashMap<Integer, ItemStack> leftover = self.getInventory().addItem(skull);
         if (!leftover.isEmpty()) {
             self.getWorld().dropItemNaturally(self.getLocation(), skull);
-            Lang.send(self, "admin.head.dropped", null, self);
+            Lang.send(self, "admin.head.dropped", null, null);
         } else {
-            Lang.send(self, "admin.head.given", Map.of("target", target), self);
+            Lang.send(self, "admin.head.given", null, Map.of("target", target));
         }
         return true;
     }

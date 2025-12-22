@@ -45,7 +45,7 @@ public class HomeCommand implements OreoCommand, TabCompleter {
 
         // Feature toggle (settings.yml: features.home.enabled)
         if (!plugin.getSettingsConfig().isEnabled("home")) {
-            Lang.send(player, "home.disabled", Map.of(), player);
+            Lang.send(player, "home.disabled", null, Collections.emptyMap());
             return true;
         }
 
@@ -54,8 +54,8 @@ public class HomeCommand implements OreoCommand, TabCompleter {
             List<String> names = crossServerNames(player.getUniqueId());
             if (names.isEmpty()) {
                 Lang.send(player, "home.no-homes",
-                        Map.of("sethome", "/sethome"),
-                        player
+                        null,
+                        Map.of("sethome", "/sethome")
                 );
                 return true;
             }
@@ -65,12 +65,12 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                     .collect(Collectors.joining(ChatColor.GRAY + ", " + ChatColor.AQUA));
 
             Lang.send(player, "home.list",
-                    Map.of("homes", list),
-                    player
+                    null,
+                    Map.of("homes", list)
             );
             Lang.send(player, "home.tip",
-                    Map.of("label", label),
-                    player
+                    null,
+                    Map.of("label", label)
             );
             return true;
         }
@@ -78,32 +78,32 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         final String raw = args[0];
         final String key = normalize(raw);
 
-
         // ---- Cooldown / countdown (features.home.cooldown) ----
         FileConfiguration settings = plugin.getSettingsConfig().getRoot();
         ConfigurationSection homeSection = settings.getConfigurationSection("features.home");
         final boolean useCooldown = homeSection != null && homeSection.getBoolean("cooldown", false);
         final int seconds = homeSection != null ? homeSection.getInt("cooldown-amount", 0) : 0;
 
-        // Same rules as warp: OP bypass + invalid bypass
+        // OP bypass + invalid bypass
         final boolean bypass = player.isOp() || !useCooldown || seconds <= 0;
 
         // Where does the home live?
         final String localServer = homes.localServer();
         final String homeServer = homes.homeServer(player.getUniqueId(), key);
         final String targetServer = (homeServer == null ? localServer : homeServer);
-            // check existence BEFORE starting countdown
+
+        // check existence BEFORE starting countdown
         if (targetServer.equalsIgnoreCase(localServer)) {
             // Local server: must exist locally
             if (homes.getHome(player.getUniqueId(), key) == null) {
-                Lang.send(player, "home.not-found", Map.of("name", raw), player);
+                Lang.send(player, "home.not-found", null, Map.of("name", raw));
                 suggestClosest(player, key);
                 return true;
             }
         } else {
             // Cross-server: must exist in cross-server index (homeServer must be set)
             if (homeServer == null || homeServer.isBlank()) {
-                Lang.send(player, "home.not-found", Map.of("name", raw), player);
+                Lang.send(player, "home.not-found", null, Map.of("name", raw));
                 suggestClosest(player, key);
                 return true;
             }
@@ -116,16 +116,16 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 Location loc = homes.getHome(player.getUniqueId(), key);
                 if (loc == null) {
                     Lang.send(player, "home.not-found",
-                            Map.of("name", raw),
-                            player
+                            null,
+                            Map.of("name", raw)
                     );
                     suggestClosest(player, key);
                     return;
                 }
                 player.teleport(loc);
                 Lang.send(player, "home.teleported",
-                        Map.of("name", key),
-                        player
+                        null,
+                        Map.of("name", key)
                 );
             };
 
@@ -144,15 +144,15 @@ public class HomeCommand implements OreoCommand, TabCompleter {
             var cs = plugin.getCrossServerSettings();
             if (!cs.homes()) {
                 Lang.send(player, "home.cross-disabled",
-                        Collections.emptyMap(),
-                        player
+                        null,
+                        Collections.emptyMap()
                 );
                 Lang.send(player, "home.cross-disabled-tip",
+                        null,
                         Map.of(
                                 "server", targetServer,
                                 "name", key
-                        ),
-                        player
+                        )
                 );
                 return;
             }
@@ -172,15 +172,15 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 pm.sendPacket(targetChannel, pkt);
             } else {
                 Lang.send(player, "home.messaging-disabled",
-                        Collections.emptyMap(),
-                        player
+                        null,
+                        Collections.emptyMap()
                 );
                 Lang.send(player, "home.messaging-disabled-tip",
+                        null,
                         Map.of(
                                 "server", targetServer,
                                 "name", key
-                        ),
-                        player
+                        )
                 );
                 return;
             }
@@ -189,20 +189,20 @@ public class HomeCommand implements OreoCommand, TabCompleter {
             boolean switched = sendPlayerToServer(player, targetServer);
             if (switched) {
                 Lang.send(player, "home.sending",
+                        null,
                         Map.of(
                                 "server", targetServer,
                                 "name", key
-                        ),
-                        player
+                        )
                 );
             } else {
                 Lang.send(player, "home.switch-failed",
-                        Map.of("server", targetServer),
-                        player
+                        null,
+                        Map.of("server", targetServer)
                 );
                 Lang.send(player, "home.switch-failed-tip",
-                        Map.of("server", targetServer),
-                        player
+                        null,
+                        Map.of("server", targetServer)
                 );
             }
         };
@@ -229,6 +229,7 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         }
         return List.of();
     }
+
     private boolean homeExistsSomewhere(UUID playerId, String homeKey) {
         try {
             // If HomeService can resolve a server for the home, it exists somewhere (cross-server index)
@@ -276,8 +277,8 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                     suggestions
             );
             Lang.send(p, "home.suggest",
-                    Map.of("suggestions", joined),
-                    p
+                    null,
+                    Map.of("suggestions", joined)
             );
         }
     }
@@ -321,7 +322,10 @@ public class HomeCommand implements OreoCommand, TabCompleter {
 
                 if (hasBodyMoved(target, origin)) {
                     cancel();
-                    Lang.send(target, "home.cancelled-moved", Map.of("name", homeName), target);
+                    Lang.send(target, "home.cancelled-moved",
+                            null,
+                            Map.of("name", homeName)
+                    );
                     return;
                 }
 
@@ -331,11 +335,14 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                     return;
                 }
 
-                String title = Lang.msg("teleport.countdown.title", null, target);
-                String subtitle = Lang.msg("teleport.countdown.subtitle",
-                        Map.of("seconds", String.valueOf(remaining)),
-                        target
-                );
+                // FIXED: Use two-parameter version (no variables needed)
+                String title = Lang.msg("teleport.countdown.title", target);
+                String subtitle = Lang.msg("teleport.countdown.subtitle", target);
+
+                // Now do the %seconds% replacement manually
+                if (subtitle != null) {
+                    subtitle = subtitle.replace("%seconds%", String.valueOf(remaining));
+                }
 
                 target.sendTitle(title, subtitle, 0, 20, 0);
                 remaining--;

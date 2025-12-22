@@ -28,17 +28,17 @@ public class PayCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player from)) {
-            sender.sendMessage(Lang.msg("economy.pay.usage", null, null));
+            sender.sendMessage(Lang.msg("economy.pay.usage", null));
             return true;
         }
         if (args.length < 2) {
-            from.sendMessage(Lang.msg("economy.pay.usage", null, from));
+            from.sendMessage(Lang.msg("economy.pay.usage", from));
             return true;
         }
 
         Economy econ = OreoEssentials.get().getVaultEconomy();
         if (econ == null) {
-            from.sendMessage(Lang.msg("economy.errors.no-economy", null, from));
+            from.sendMessage(Lang.msg("economy.errors.no-economy", from));
             return true;
         }
 
@@ -48,13 +48,13 @@ public class PayCommand implements OreoCommand {
             return true;
         }
         if (from.getUniqueId().equals(target.getUniqueId())) {
-            from.sendMessage(Lang.msg("economy.pay.self", null, from));
+            from.sendMessage(Lang.msg("economy.pay.self", from));
             return true;
         }
 
         Double amount = parseAmount(args[1]);
         if (amount == null || amount <= 0) {
-            from.sendMessage(Lang.msg("economy.errors.not-a-number", null, from));
+            from.sendMessage(Lang.msg("economy.errors.not-a-number", from));
             return true;
         }
 
@@ -69,13 +69,13 @@ public class PayCommand implements OreoCommand {
 
         EconomyResponse w = econ.withdrawPlayer(from, amount);
         if (w == null || w.type != EconomyResponse.ResponseType.SUCCESS) {
-            from.sendMessage(Lang.msg("economy.errors.no-economy", null, from));
+            from.sendMessage(Lang.msg("economy.errors.no-economy", from));
             return true;
         }
         EconomyResponse d = econ.depositPlayer(target, amount);
         if (d == null || d.type != EconomyResponse.ResponseType.SUCCESS) {
             econ.depositPlayer(from, amount); // refund
-            from.sendMessage(Lang.msg("economy.errors.no-economy", null, from));
+            from.sendMessage(Lang.msg("economy.errors.no-economy", from));
             return true;
         }
 

@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/EnchantCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -13,6 +14,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public class EnchantCommand implements OreoCommand {
+
     @Override public String name() { return "enchant"; }
     @Override public List<String> aliases() { return List.of(); }
     @Override public String permission() { return "oreo.enchant"; }
@@ -22,20 +24,21 @@ public class EnchantCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         Player p = (Player) sender;
+
         if (args.length < 1) {
-            Lang.send(p, "admin.enchant.usage", Map.of("label", label), p);
+            Lang.send(p, "admin.enchant.usage", null, Map.of("label", label));
             return true;
         }
 
         ItemStack item = p.getInventory().getItemInMainHand();
         if (item == null || item.getType().isAir()) {
-            Lang.send(p, "admin.enchant.hold-item", null, p);
+            Lang.send(p, "admin.enchant.hold-item", null, null);
             return true;
         }
 
         Enchantment ench = resolve(args[0]);
         if (ench == null) {
-            Lang.send(p, "admin.enchant.unknown", Map.of("input", args[0]), p);
+            Lang.send(p, "admin.enchant.unknown", null, Map.of("input", args[0]));
             return true;
         }
 
@@ -50,16 +53,16 @@ public class EnchantCommand implements OreoCommand {
         int max = ench.getMaxLevel();
         if (level < 1) level = 1;
         if (level > max && !(unsafe || sender.hasPermission("oreo.enchant.unsafe"))) {
-            Lang.send(p, "admin.enchant.too-high",
-                    Map.of("ench", enchKey(ench), "max", String.valueOf(max)), p);
+            Lang.send(p, "admin.enchant.too-high", null,
+                    Map.of("ench", enchKey(ench), "max", String.valueOf(max)));
             return true;
         }
 
         if (!ignore && !sender.hasPermission("oreo.enchant.ignoreconflicts")) {
             for (Enchantment ex : item.getEnchantments().keySet()) {
                 if (ex.conflictsWith(ench)) {
-                    Lang.send(p, "admin.enchant.conflict",
-                            Map.of("with", enchKey(ex)), p);
+                    Lang.send(p, "admin.enchant.conflict", null,
+                            Map.of("with", enchKey(ex)));
                     return true;
                 }
             }
@@ -71,19 +74,24 @@ public class EnchantCommand implements OreoCommand {
             } else {
                 item.addEnchantment(ench, Math.min(level, max));
             }
-            Lang.send(p, "admin.enchant.applied",
-                    Map.of("ench", enchKey(ench), "level", String.valueOf(level)), p);
+            Lang.send(p, "admin.enchant.applied", null,
+                    Map.of("ench", enchKey(ench), "level", String.valueOf(level)));
         } catch (Exception ex) {
-            Lang.send(p, "admin.enchant.failed",
-                    Map.of("reason", ex.getMessage() == null ? "unknown" : ex.getMessage()), p);
+            Lang.send(p, "admin.enchant.failed", null,
+                    Map.of("reason", ex.getMessage() == null ? "unknown" : ex.getMessage()));
         }
         return true;
     }
 
-    private static String enchKey(Enchantment e) { return e.getKey().toString(); }
+    private static String enchKey(Enchantment e) {
+        // Prefer stable namespaced form, e.g., "minecraft:sharpness"
+        return e.getKey().toString();
+    }
 
     private static Enchantment resolve(String input) {
         String s = input.toLowerCase(Locale.ROOT).trim();
+
+        // Try exact namespaced key first (plugin:ench or minecraft:ench)
         try {
             NamespacedKey key = NamespacedKey.fromString(s);
             if (key != null) {
@@ -92,14 +100,14 @@ public class EnchantCommand implements OreoCommand {
             }
         } catch (Exception ignored) {}
 
+        // Try implicit minecraft namespace
         Enchantment byMc = Enchantment.getByKey(NamespacedKey.minecraft(s));
         if (byMc != null) return byMc;
 
+        // Fallback: match by simple key ("sharpness", "looting", etc.)
         for (Enchantment e : Enchantment.values()) {
             String simple = e.getKey().getKey();
-            if (simple.equalsIgnoreCase(s)
-                    || e.getKey().toString().equalsIgnoreCase(s)
-                    || (e.getName() != null && e.getName().equalsIgnoreCase(s))) {
+            if (simple.equalsIgnoreCase(s) || e.getKey().toString().equalsIgnoreCase(s)) {
                 return e;
             }
         }

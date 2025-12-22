@@ -59,10 +59,10 @@ public class EnderChestListener implements Listener {
             // Message: enderchest.storage.opened-cross-server
             String msg = Lang.msg(
                     "enderchest.storage.opened-cross-server",
-                    null,
-                    p
+                    p // use the overload without default
             );
 
+            // Keep defensive check (why: messages can be empty/missing in lang files)
             if (msg != null && !msg.isEmpty()) {
                 p.sendMessage(msg);
             }

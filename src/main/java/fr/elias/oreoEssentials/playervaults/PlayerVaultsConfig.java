@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/playervaults/PlayerVaultsConfig.java
 package fr.elias.oreoEssentials.playervaults;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -6,7 +7,16 @@ import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.*;
 
+/**
+ * Immutable config snapshot for PlayerVaults.
+ * Modernized sound handling:
+ * - Config stores sounds as STRING KEYS (e.g., "minecraft:ui.button.click").
+ * - Legacy names like "UI_BUTTON_CLICK" are auto-converted to "minecraft:ui.button.click".
+ * - Old enum getters are kept for backward-compat without using Sound.valueOf(...).
+ */
 public final class PlayerVaultsConfig {
+
+    private static final String MINECRAFT_NS = "minecraft:";
 
     private final boolean enabled;
     private final String storage;                // auto|yaml|mongodb
@@ -20,8 +30,9 @@ public final class PlayerVaultsConfig {
 
     private final String denyMessage;
 
-    private final Sound openSound;
-    private final Sound denySound;
+    // NEW: modern string sound keys (use with player.playSound(..., key, vol, pitch))
+    private final String openSoundKey;
+    private final String denySoundKey;
 
     // menu text
     private final String menuTitle;
@@ -53,12 +64,12 @@ public final class PlayerVaultsConfig {
 
         denyMessage = cs.getString("deny-message", "&cYou don't have permission to access vault &f#%id%&c.");
 
-        // sounds
+        // sounds (stored as modern keys)
         ConfigurationSection snd = cs.getConfigurationSection("sounds");
-        openSound = safeSound(snd != null ? snd.getString("open", "UI_BUTTON_CLICK") : "UI_BUTTON_CLICK",
-                Sound.UI_BUTTON_CLICK);
-        denySound = safeSound(snd != null ? snd.getString("deny", "ENTITY_VILLAGER_NO") : "ENTITY_VILLAGER_NO",
-                Sound.ENTITY_VILLAGER_NO);
+        String rawOpen = (snd != null ? snd.getString("open", "minecraft:ui.button.click") : "minecraft:ui.button.click");
+        String rawDeny = (snd != null ? snd.getString("deny", "minecraft:entity.villager.no") : "minecraft:entity.villager.no");
+        openSoundKey = normalizeSoundKey(rawOpen);
+        denySoundKey = normalizeSoundKey(rawDeny);
 
         // menu
         ConfigurationSection menu = cs.getConfigurationSection("menu");
@@ -122,8 +133,26 @@ public final class PlayerVaultsConfig {
     public int defaultSlots() { return defaultSlots; }
 
     public String denyMessage() { return denyMessage; }
-    public Sound openSound() { return openSound; }
-    public Sound denySound() { return denySound; }
+
+    /** Modern string key for open sound (use with player.playSound(loc, key, vol, pitch)). */
+    public String openSoundKey() { return openSoundKey; }
+    /** Modern string key for deny sound (use with player.playSound(loc, key, vol, pitch)). */
+    public String denySoundKey() { return denySoundKey; }
+
+    // ---- Back-compat enum getters (no Sound.valueOf used) ----
+    // They return a best-effort enum for legacy code. Prefer the *Key() getters instead.
+
+    /** @deprecated Use {@link #openSoundKey()} and string-based playSound. */
+    @Deprecated(forRemoval = true)
+    public Sound openSound() {
+        return legacyGuessEnum(openSoundKey, Sound.UI_BUTTON_CLICK);
+    }
+
+    /** @deprecated Use {@link #denySoundKey()} and string-based playSound. */
+    @Deprecated(forRemoval = true)
+    public Sound denySound() {
+        return legacyGuessEnum(denySoundKey, Sound.ENTITY_VILLAGER_NO);
+    }
 
     public String menuTitle() { return menuTitle; }
     public String menuItemUnlockedName() { return menuItemUnlockedName; }
@@ -160,9 +189,46 @@ public final class PlayerVaultsConfig {
         return (sec != null && sec.isString(key)) ? sec.getString(key, def) : def;
     }
 
-    private static Sound safeSound(String name, Sound fallback) {
-        try { return Sound.valueOf(name.toUpperCase(Locale.ROOT)); }
-        catch (Throwable t) { return fallback; }
+    /**
+     * Normalize any input into a namespaced modern sound key.
+     * Accepts:
+     * - "minecraft:ui.button.click" → as-is
+     * - "ui.button.click"           → "minecraft:ui.button.click"
+     * - "UI_BUTTON_CLICK"           → "minecraft:ui.button.click"
+     */
+    private static String normalizeSoundKey(String raw) {
+        if (raw == null) return "minecraft:ui.button.click";
+        final String s = raw.trim();
+        if (s.isEmpty()) return "minecraft:ui.button.click";
+
+        // modern-ish: contains dot
+        if (s.indexOf('.') >= 0) {
+            return s.indexOf(':') >= 0 ? s : MINECRAFT_NS + s;
+        }
+        // namespaced but no dot: accept as-is (caller-provided)
+        if (s.indexOf(':') >= 0) {
+            return s;
+        }
+        // legacy UPPER_UNDERSCORE → lower + '.' + minecraft:
+        final String dotted = s.toLowerCase(Locale.ROOT).replace('_', '.');
+        return MINECRAFT_NS + dotted;
+    }
+
+    /**
+     * Best-effort mapping from a modern key to a legacy enum without using valueOf.
+     * Only maps a few common ones; otherwise returns the provided default.
+     * Why: avoid deprecated Sound.valueOf and future removal.
+     */
+    private static Sound legacyGuessEnum(String key, Sound def) {
+        if (key == null) return def;
+        final String k = key.toLowerCase(Locale.ROOT);
+        // very small stable map for common UI sounds
+        if (k.endsWith("ui.button.click")) return Sound.UI_BUTTON_CLICK;
+        if (k.endsWith("entity.villager.no")) return Sound.ENTITY_VILLAGER_NO;
+        if (k.endsWith("entity.experience_orb.pickup")) return Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
+        if (k.endsWith("block.note_block.pling")) return Sound.BLOCK_NOTE_BLOCK_PLING;
+        if (k.endsWith("block.note_block.bass")) return Sound.BLOCK_NOTE_BLOCK_BASS;
+        return def;
     }
 
     private static int clamp(int v, int min, int max) { return Math.max(min, Math.min(max, v)); }

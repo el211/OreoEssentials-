@@ -42,7 +42,7 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
         // /money
         if (args.length == 0) {
             if (!(sender instanceof Player p)) {
-                sender.sendMessage(Lang.msg("economy.money.usage.view", null, null));
+                sender.sendMessage(Lang.msg("economy.money.usage.view", null));
                 return true;
             }
             showSelfBalance(p);
@@ -59,23 +59,23 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
         if (args.length >= 3) {
             final String sub = args[0].toLowerCase(Locale.ROOT);
             if (!sub.equals("give") && !sub.equals("take") && !sub.equals("set")) {
-                sender.sendMessage(Lang.msg("economy.money.usage.admin", null, sender instanceof Player ? (Player) sender : null));
+                sender.sendMessage(Lang.msg("economy.money.usage.admin", sender instanceof Player ? (Player) sender : null));
                 return true;
             }
 
             if (!sender.hasPermission("oreo.money." + sub)) {
-                sender.sendMessage(Lang.msg("economy.errors.no-permission", null, sender instanceof Player ? (Player) sender : null));
+                sender.sendMessage(Lang.msg("economy.errors.no-permission", sender instanceof Player ? (Player) sender : null));
                 return true;
             }
 
             final String targetName = args[1];
             final Double amount = parsePositiveAmount(args[2]);
             if (amount == null) {
-                sender.sendMessage(Lang.msg("economy.errors.not-a-number", null, sender instanceof Player ? (Player) sender : null));
+                sender.sendMessage(Lang.msg("economy.errors.not-a-number", sender instanceof Player ? (Player) sender : null));
                 return true;
             }
             if (amount <= 0 && !sub.equals("set")) {
-                sender.sendMessage(Lang.msg("economy.errors.amount-not-positive", null, sender instanceof Player ? (Player) sender : null));
+                sender.sendMessage(Lang.msg("economy.errors.amount-not-positive", sender instanceof Player ? (Player) sender : null));
                 return true;
             }
 
@@ -129,7 +129,7 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
 
             // ---- Vault fallback
             if (vault == null) {
-                sender.sendMessage(Lang.msg("economy.errors.no-economy", null, sender instanceof Player ? (Player) sender : null));
+                sender.sendMessage(Lang.msg("economy.errors.no-economy", sender instanceof Player ? (Player) sender : null));
                 return true;
             }
             OfflinePlayer off = Bukkit.getOfflinePlayer(targetName);
@@ -174,7 +174,7 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
             return true;
         }
 
-        sender.sendMessage(Lang.msg("economy.money.usage.view", null, sender instanceof Player ? (Player) sender : null));
+        sender.sendMessage(Lang.msg("economy.money.usage.view", sender instanceof Player ? (Player) sender : null));
         return true;
     }
 
@@ -198,7 +198,7 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
             player.sendMessage(Lang.msg("economy.money.view-self", vars, player));
             return;
         }
-        player.sendMessage(Lang.msg("economy.errors.no-economy", null, player));
+        player.sendMessage(Lang.msg("economy.errors.no-economy", player));
     }
 
     private void showOtherBalance(CommandSender sender, String targetName) {
@@ -228,7 +228,7 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
             sender.sendMessage(Lang.msg("economy.money.view-other", vars, sender instanceof Player ? (Player) sender : null));
             return;
         }
-        sender.sendMessage(Lang.msg("economy.errors.no-economy", null, sender instanceof Player ? (Player) sender : null));
+        sender.sendMessage(Lang.msg("economy.errors.no-economy", sender instanceof Player ? (Player) sender : null));
     }
 
     private double safeVaultBalance(OfflinePlayer player) {

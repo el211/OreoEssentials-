@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/customcraft/CraftDesignerMenu.java
 package fr.elias.oreoEssentials.customcraft;
 
 import fr.elias.oreoEssentials.util.Lang;
@@ -8,7 +9,11 @@ import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
 import fr.minuskube.inv.content.InventoryProvider;
 import fr.minuskube.inv.content.SlotPos;
-import org.bukkit.ChatColor;
+import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -17,10 +22,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 public final class CraftDesignerMenu implements InventoryProvider {
     private final CustomCraftingService service;
@@ -30,6 +32,9 @@ public final class CraftDesignerMenu implements InventoryProvider {
     private ItemStack result = null;
     private boolean shapeless = false;
     private String permission = null;
+
+    private static final MiniMessage MM = MiniMessage.miniMessage();
+    private static final LegacyComponentSerializer LEGACY_SEC = LegacyComponentSerializer.legacySection();
 
     private CraftDesignerMenu(Plugin plugin, CustomCraftingService service, String recipeName) {
         this.service = service;
@@ -41,11 +46,15 @@ public final class CraftDesignerMenu implements InventoryProvider {
                                        CustomCraftingService service, String recipeName) {
         CraftDesignerMenu menu = new CraftDesignerMenu(plugin, service, recipeName);
 
+        String title = i18nLegacy("customcraft.gui.title",
+                "<#00bcd4><bold>OreoCraft</bold></#00bcd4> <gray>—</gray> <white>%name%</white>",
+                Map.of("name", recipeName), null);
+
         return SmartInventory.builder()
                 .id("oecraft:" + recipeName)
                 .provider(menu)
                 .size(5, 9)
-                .title(color(Lang.get("customcraft.gui.title", "&bOreoCraft — %name%").replace("%name%", recipeName)))
+                .title(title)                       // inventory title = String (legacy)
                 .manager(invMgr)
                 .closeable(true)
                 .listener(new InventoryListener<>(InventoryCloseEvent.class, e -> {
@@ -64,9 +73,9 @@ public final class CraftDesignerMenu implements InventoryProvider {
 
         // Labels
         contents.set(0, 2, ClickableItem.empty(ui(Material.BOOK,
-                color(Lang.get("customcraft.gui.labels.ingredients", "&eIngredients (3×3)")))));
+                i18nLegacy("customcraft.gui.labels.ingredients", "<yellow>Ingredients (3×3)</yellow>", Map.of(), player))));
         contents.set(0, 6, ClickableItem.empty(ui(Material.EMERALD,
-                color(Lang.get("customcraft.gui.labels.result", "&aResult →")))));
+                i18nLegacy("customcraft.gui.labels.result", "<green>Result →</green>", Map.of(), player))));
 
         // Load existing
         service.get(recipeName).ifPresent(r -> {
@@ -101,26 +110,28 @@ public final class CraftDesignerMenu implements InventoryProvider {
         ItemStack it = new ItemStack(Material.BARRIER);
         ItemMeta m = it.getItemMeta();
         if (m != null) {
-            m.setDisplayName(color(Lang.get("customcraft.gui.delete.name", "&cDelete this recipe")));
+            m.setDisplayName(i18nLegacy("customcraft.gui.delete.name", "<red>Delete this recipe</red>", Map.of(), player));
 
             List<String> lore = langList("customcraft.gui.delete.lore",
-                    List.of("&7Click: &fInfo", "&7SHIFT+Click: &cCONFIRM deletion"));
-            m.setLore(lore.stream().map(CraftDesignerMenu::color).toList());
+                    List.of("<gray>Click:</gray> <white>Info</white>", "<gray>SHIFT+Click:</gray> <red>CONFIRM deletion</red>"));
+            m.setLore(lore.stream().map(CraftDesignerMenu::mmInlineToLegacy).toList());
             it.setItemMeta(m);
         }
         contents.set(0, 0, ClickableItem.of(it, (InventoryClickEvent e) -> {
             if (!e.isShiftClick()) {
-                player.sendMessage(color(
-                        Lang.get("customcraft.messages.delete-hint",
-                                        "%prefix%&eTip: Hold &lSHIFT &eand click the barrier to delete &c%name%&e.")
-                                .replace("%name%", recipeName)
-                ));
+                Component msg = MM.deserialize(Lang.get("customcraft.messages.delete-hint",
+                                "%prefix%<yellow>Tip:</yellow> Hold <bold>SHIFT</bold> and click to delete <red>%name%</red>.")
+                        .replace("%name%", recipeName));
+                ((Player) e.getWhoClicked()).sendMessage(msg);
                 return;
             }
             boolean ok = service.delete(recipeName);
-            if (ok) player.sendMessage(color(Lang.get("customcraft.messages.deleted", "%prefix%&aRecipe &e%name% &ahas been deleted.").replace("%name%", recipeName)));
-            else    player.sendMessage(color(Lang.get("customcraft.messages.invalid", "%prefix%&cInvalid recipe. You need a result item and at least one ingredient.")));
-            player.closeInventory();
+            if (ok) ((Player) e.getWhoClicked()).sendMessage(MM.deserialize(
+                    Lang.get("customcraft.messages.deleted", "%prefix%<green>Recipe <yellow>%name%</yellow> has been deleted.</green>")
+                            .replace("%name%", recipeName)));
+            else ((Player) e.getWhoClicked()).sendMessage(MM.deserialize(
+                    Lang.get("customcraft.messages.invalid", "%prefix%<red>Invalid recipe. You need a result item and at least one ingredient.</red>")));
+            e.getWhoClicked().closeInventory();
         }));
     }
 
@@ -129,15 +140,16 @@ public final class CraftDesignerMenu implements InventoryProvider {
         ItemMeta m = it.getItemMeta();
         if (m != null) {
             String nameKey = shapeless ? "customcraft.gui.mode.shapeless-name" : "customcraft.gui.mode.shaped-name";
-            String name = Lang.get(nameKey, shapeless ? "&aMode: SHAPELESS" : "&bMode: SHAPED");
+            String nameDef = shapeless ? "<green>Mode: SHAPELESS</green>" : "<aqua>Mode: SHAPED</aqua>";
+            String name = i18nLegacy(nameKey, nameDef, Map.of(), null);
 
             List<String> lore = new ArrayList<>();
-            lore.add(Lang.get("customcraft.gui.mode.lore-common", "&7Click to toggle."));
-            lore.add(Lang.get(shapeless ? "customcraft.gui.mode.lore-shapeless" : "customcraft.gui.mode.lore-shaped",
-                    shapeless ? "&7Order doesn't matter." : "&7Layout matters."));
+            lore.add(mmInlineToLegacy(Lang.get("customcraft.gui.mode.lore-common", "<gray>Click to toggle.</gray>")));
+            lore.add(mmInlineToLegacy(Lang.get(shapeless ? "customcraft.gui.mode.lore-shapeless" : "customcraft.gui.mode.lore-shaped",
+                    shapeless ? "<gray>Order doesn't matter.</gray>" : "<gray>Layout matters.</gray>")));
 
-            m.setDisplayName(color(name));
-            m.setLore(lore.stream().map(CraftDesignerMenu::color).toList());
+            m.setDisplayName(name);
+            m.setLore(lore);
             it.setItemMeta(m);
         }
         contents.set(0, 4, ClickableItem.of(it, (InventoryClickEvent e) -> {
@@ -153,26 +165,22 @@ public final class CraftDesignerMenu implements InventoryProvider {
         ItemMeta m = it.getItemMeta();
         if (m != null) {
             if (hasPerm) {
-                m.setDisplayName(color(Lang.get("customcraft.gui.permission.required-name", "&6Permission required")));
+                m.setDisplayName(i18nLegacy("customcraft.gui.permission.required-name", "<gold>Permission required</gold>", Map.of(), null));
                 List<String> lore = langList("customcraft.gui.permission.required-lore",
-                        List.of("&7Node: &e%permission%", "&7Click to make it &aPublic"));
+                        List.of("<gray>Node:</gray> <yellow>%permission%</yellow>", "<gray>Click to make it</gray> <green>Public</green>"));
                 final String p = permission;
-                m.setLore(lore.stream().map(s -> color(s.replace("%permission%", p))).toList());
+                m.setLore(lore.stream().map(s -> mmInlineToLegacy(s.replace("%permission%", p))).toList());
             } else {
-                m.setDisplayName(color(Lang.get("customcraft.gui.permission.public-name", "&aPublic")));
+                m.setDisplayName(i18nLegacy("customcraft.gui.permission.public-name", "<green>Public</green>", Map.of(), null));
                 List<String> lore = langList("customcraft.gui.permission.public-lore",
-                        List.of("&7No permission required.", "&7Click to require a default node."));
-                m.setLore(lore.stream().map(CraftDesignerMenu::color).toList());
+                        List.of("<gray>No permission required.</gray>", "<gray>Click to require a default node.</gray>"));
+                m.setLore(lore.stream().map(CraftDesignerMenu::mmInlineToLegacy).toList());
             }
             it.setItemMeta(m);
         }
         contents.set(0, 8, ClickableItem.of(it, (InventoryClickEvent e) -> {
             boolean nowHas = permission != null && !permission.isBlank();
-            if (nowHas) {
-                permission = null; // make public
-            } else {
-                permission = "oreo.craft.use." + recipeName.toLowerCase(Locale.ROOT);
-            }
+            permission = nowHas ? null : "oreo.craft.use." + recipeName.toLowerCase(Locale.ROOT);
             drawPermissionToggle(contents);
         }));
     }
@@ -228,18 +236,18 @@ public final class CraftDesignerMenu implements InventoryProvider {
             String mode = shapeless ? Lang.get("customcraft.format.mode.shapeless", "Shapeless")
                     : Lang.get("customcraft.format.mode.shaped", "Shaped");
             String permNote = (permission == null || permission.isBlank())
-                    ? Lang.get("customcraft.format.permission.note-public", "&7(public)")
-                    : Lang.get("customcraft.format.permission.note-required", "&6perm &e%permission%").replace("%permission%", permission);
+                    ? Lang.get("customcraft.format.permission.note-public", "<gray>(public)</gray>")
+                    : Lang.get("customcraft.format.permission.note-required", "<gold>perm</gold> <yellow>%permission%</yellow>").replace("%permission%", permission);
 
             String msg = Lang.get("customcraft.messages.saved",
-                    "%prefix%&aRecipe &e%name% &ahas been saved (&f%mode%&a) %perm_note%.");
-            msg = msg.replace("%name%", recipeName)
+                            "%prefix%<green>Recipe <yellow>%name%</yellow> has been saved (<white>%mode%</white>) %perm_note%.</green>")
+                    .replace("%name%", recipeName)
                     .replace("%mode%", mode)
                     .replace("%perm_note%", permNote);
-            player.sendMessage(color(msg));
+            player.sendMessage(MM.deserialize(applyPapi(player, msg)));
         } else {
-            player.sendMessage(color(Lang.get("customcraft.messages.invalid",
-                    "%prefix%&cInvalid recipe. You need a result item and at least one ingredient.")));
+            player.sendMessage(MM.deserialize(Lang.get("customcraft.messages.invalid",
+                    "%prefix%<red>Invalid recipe. You need a result item and at least one ingredient.</red>")));
         }
     }
 
@@ -252,11 +260,6 @@ public final class CraftDesignerMenu implements InventoryProvider {
 
     /* ---------------- helpers ---------------- */
 
-    private static String color(String s) {
-        return ChatColor.translateAlternateColorCodes('&', s == null ? "" : s);
-    }
-
-    /** Read list from lang via basePath.0, basePath.1, …; return default if none. */
     private static List<String> langList(String basePath, List<String> def) {
         List<String> out = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
@@ -266,5 +269,23 @@ public final class CraftDesignerMenu implements InventoryProvider {
         }
         if (out.isEmpty() && def != null) out.addAll(def);
         return out;
+    }
+
+    private static String i18nLegacy(String key, String def, Map<String,String> vars, Player p) {
+        String raw = Lang.get(key, def);
+        if (vars != null) for (var e : vars.entrySet()) raw = raw.replace("%" + e.getKey() + "%", e.getValue());
+        raw = applyPapi(p, raw);
+        return LEGACY_SEC.serialize(MM.deserialize(raw));
+    }
+
+    private static String mmInlineToLegacy(String raw) {
+        return LEGACY_SEC.serialize(MM.deserialize(raw == null ? "" : raw));
+    }
+
+    private static String applyPapi(Player p, String raw) {
+        if (raw == null) return "";
+        try { if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) return PlaceholderAPI.setPlaceholders(p, raw); }
+        catch (Throwable ignored) {}
+        return raw;
     }
 }

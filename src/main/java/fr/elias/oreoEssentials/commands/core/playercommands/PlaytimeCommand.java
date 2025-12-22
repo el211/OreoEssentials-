@@ -53,20 +53,15 @@ public final class PlaytimeCommand implements CommandExecutor, TabCompleter {
             long secs = vanillaPlaytimeSeconds(self);
             String time = fmt(secs);
 
-            Lang.send(self, "playtime.self",
-                    Map.of("time", time),
-                    self
-            );
+            Lang.send(self, "playtime.self", null,
+                    Map.of("time", time));
             return true;
         }
 
         // others
         if (!sender.hasPermission("oreo.playtime.others")) {
             if (sender instanceof Player p) {
-                Lang.send(p, "playtime.no-permission",
-                        Map.of(),
-                        p
-                );
+                Lang.send(p, "playtime.no-permission", null, null);
             } else {
                 sender.sendMessage("§cYou don't have permission.");
             }
@@ -76,10 +71,7 @@ public final class PlaytimeCommand implements CommandExecutor, TabCompleter {
         Player target = Bukkit.getPlayerExact(args[0]);
         if (target == null) {
             if (sender instanceof Player p) {
-                Lang.send(p, "playtime.player-not-found",
-                        Map.of(),
-                        p
-                );
+                Lang.send(p, "playtime.player-not-found", null, null);
             } else {
                 sender.sendMessage("§cPlayer not found.");
             }
@@ -90,13 +82,11 @@ public final class PlaytimeCommand implements CommandExecutor, TabCompleter {
         String time = fmt(secs);
 
         if (sender instanceof Player p) {
-            Lang.send(p, "playtime.other",
+            Lang.send(p, "playtime.other", null,
                     Map.of(
                             "player", target.getName(),
                             "time", time
-                    ),
-                    p
-            );
+                    ));
         } else {
             sender.sendMessage("§b" + target.getName() + "§7's playtime: §f" + time);
         }

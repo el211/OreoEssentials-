@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/util/Lang.java
 package fr.elias.oreoEssentials.util;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -5,9 +6,12 @@ import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -18,124 +22,91 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
+import java.time.Duration;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Lang utility for OreoEssentials
- *
- * Goals (FIXED):
- * - Supports MiniMessage (<gradient>, <#RRGGBB>, etc.) + legacy & codes + legacy hex variants.
- * - NEVER feeds MiniMessage a string containing legacy '§' formatting codes.
- * - Keeps %prefix% as RAW MiniMessage (not serialized legacy) to avoid mixing formats.
- * - Provides both:
- *   - Component API (preferred on Paper/Adventure)
- *   - Legacy String API (for Inventory titles / old Bukkit APIs)
- * - Optional PlaceholderAPI support.
+ * MiniMessage-first lang with legacy-& bridge + PAPI + console fallback + GUI helpers.
+ * Now with Map-based variable replacement support.
  */
 public final class Lang {
 
     private static OreoEssentials plugin;
     private static YamlConfiguration cfg;
 
-    /**
-     * Prefix MUST remain RAW (MiniMessage string), never legacy §.
-     * If we store it as legacy, it will get injected into MiniMessage inputs and trigger
-     * "Legacy formatting codes detected in a MiniMessage string".
-     */
+    /** RAW MiniMessage, never pre-serialized (to keep hover/gradient possible). */
     private static String prefixRaw = "";
 
-    // MiniMessage (non-strict: unknown tags are ignored instead of crashing)
-    private static final MiniMessage MINI = MiniMessage.builder()
-            .strict(false)
-            .build();
-
-    // Serialize Component -> legacy § string (with hex in §x§R§R§G§G§B§B format)
+    // Parsers/serializers
+    private static final MiniMessage MM = MiniMessage.builder().strict(false).build();
+    private static final LegacyComponentSerializer LEGACY_AMP = LegacyComponentSerializer.legacyAmpersand();
+    private static final LegacyComponentSerializer LEGACY_SEC = LegacyComponentSerializer.legacySection();
     private static final LegacyComponentSerializer LEGACY_HEX = LegacyComponentSerializer.builder()
             .hexColors()
             .useUnusualXRepeatedCharacterHexFormat()
             .character(LegacyComponentSerializer.SECTION_CHAR)
             .build();
+    private static final PlainTextComponentSerializer PLAIN = PlainTextComponentSerializer.plainText();
 
-    // ------------------------------------------------------------
-    // Legacy (&) -> MiniMessage conversion patterns
-    // ------------------------------------------------------------
-
-    // &#RRGGBB -> <#RRGGBB>
-    private static final Pattern LEGACY_HEX_HASH = Pattern.compile("(?i)&#([0-9a-f]{6})");
-
-    // &x&8&7&c&e&e&b -> <#87ceeb>
+    // Detection + conversions
+    private static final Pattern AMP_OR_SECTION = Pattern.compile("(?i)(?:&|§)[0-9A-FK-ORX]");
     private static final Pattern LEGACY_HEX_AMP_X = Pattern.compile("(?i)&x((&[0-9a-f]){6})");
-
-    // §x§8§7§c§e§e§b -> <#87ceeb> (shouldn't exist in MM input, but we normalize just in case)
     private static final Pattern LEGACY_HEX_SECTION_X = Pattern.compile("(?i)§x((§[0-9a-f]){6})");
-
-    // &a, &l, &r, ...
+    private static final Pattern LEGACY_HEX_HASH = Pattern.compile("(?i)&#([0-9a-f]{6})");
     private static final Pattern LEGACY_CODES = Pattern.compile("(?i)&([0-9a-fk-or])");
 
     private Lang() {}
 
-    // ------------------------------------------------------------
-    // INIT + LOAD / MERGE
-    // ------------------------------------------------------------
+    /* ============================= INIT / RELOAD ============================= */
 
     public static void init(OreoEssentials pl) {
-        plugin = pl;
+        plugin = Objects.requireNonNull(pl, "plugin");
 
         File f = new File(plugin.getDataFolder(), "lang.yml");
-        if (!f.exists()) {
-            plugin.saveResource("lang.yml", false);
-        }
-
+        if (!f.exists()) plugin.saveResource("lang.yml", false);
         cfg = YamlConfiguration.loadConfiguration(f);
 
-        // Load default lang.yml from jar
+        // Merge defaults from jar (fills missing keys; preserves user edits)
         YamlConfiguration defCfg = new YamlConfiguration();
         try (InputStream is = plugin.getResource("lang.yml")) {
             if (is != null) {
-                defCfg = YamlConfiguration.loadConfiguration(
-                        new InputStreamReader(is, StandardCharsets.UTF_8)
-                );
+                defCfg = YamlConfiguration.loadConfiguration(new InputStreamReader(is, StandardCharsets.UTF_8));
             } else {
-                plugin.getLogger().warning("[Lang] Could not find default lang.yml in JAR.");
+                plugin.getLogger().warning("[Lang] Default lang.yml wasn't found in JAR.");
             }
         } catch (Exception ex) {
-            plugin.getLogger().warning("[Lang] Failed to load default lang.yml from JAR: " + ex.getMessage());
+            plugin.getLogger().warning("[Lang] Failed to read default lang.yml: " + ex.getMessage());
         }
-
-        // Merge missing keys from default into disk config
         if (defCfg != null) {
             boolean changed = false;
-
             for (String key : defCfg.getKeys(true)) {
                 Object defVal = defCfg.get(key);
                 if (defVal instanceof ConfigurationSection) continue;
-
-                if (!cfg.contains(key)) {
-                    cfg.set(key, defVal);
-                    changed = true;
-                }
+                if (!cfg.contains(key)) { cfg.set(key, defVal); changed = true; }
             }
-
             if (changed) {
-                try {
-                    cfg.save(f);
-                    plugin.getLogger().info("[Lang] Added missing lang.yml keys from default.");
-                } catch (IOException e) {
-                    plugin.getLogger().warning("[Lang] Failed to save merged lang.yml: " + e.getMessage());
-                }
+                try { cfg.save(f); }
+                catch (IOException e) { plugin.getLogger().warning("[Lang] Save merged lang.yml failed: " + e.getMessage()); }
             }
         }
 
-        // IMPORTANT FIX: store prefix RAW, do not color() it here.
         prefixRaw = get("general.prefix", "");
     }
 
+    public static void reload() {
+        File f = new File(Objects.requireNonNull(plugin).getDataFolder(), "lang.yml");
+        cfg = YamlConfiguration.loadConfiguration(f);
+        prefixRaw = get("general.prefix", "");
+    }
+
+    /* ============================= LOW-LEVEL GETTERS ============================= */
+
     public static String get(String path, String def) {
         if (cfg == null) return def;
-        return cfg.getString(path, def);
+        String v = cfg.getString(path, def);
+        return v == null ? def : v;
     }
 
     public static List<String> getList(String path) {
@@ -153,225 +124,281 @@ public final class Lang {
         return cfg.getDouble(path, def);
     }
 
-    // ------------------------------------------------------------
-    // MESSAGE BUILDERS (RAW -> Component / Legacy)
-    // ------------------------------------------------------------
+    /* ============================= CORE MSG METHODS WITH MAP SUPPORT ============================= */
 
     /**
-     * Returns the fully resolved raw string (MiniMessage + placeholders),
-     * WITHOUT converting it to legacy §.
-     *
-     * This guarantees MiniMessage never sees legacy codes.
+     * Get message with variable replacement support.
+     * @param key Lang key
+     * @param vars Variables to replace (can be null)
+     * @param viewer Player for PAPI (can be null)
+     * @return Formatted message as legacy string
      */
-    public static String raw(String path, Map<String, String> vars, Player papiFor) {
-        String s = get(path, "");
-        if (s == null || s.isEmpty()) return "";
+    public static String msg(String key, Map<?, ?> vars, Player viewer) {
+        String resolved = rawOrDefault(key, null, vars, viewer);
+        return LEGACY_SEC.serialize(toComponent(resolved));
+    }
 
-        // allow "\n" in config
+    /**
+     * Get message without variables (simple key + player).
+     * @param key Lang key
+     * @param viewer Player for PAPI (can be null)
+     * @return Formatted message as legacy string
+     */
+    public static String msg(String key, Player viewer) {
+        return msg(key, (Map<?, ?>) null, viewer);
+    }
+
+    /**
+     * Get message with default value and variable replacement.
+     * @param key Lang key
+     * @param def Default if key not found
+     * @param vars Variables to replace (can be null)
+     * @param viewer Player for PAPI (can be null)
+     * @return Formatted message as legacy string
+     */
+    public static String msgWithDefault(String key, String def, Map<?, ?> vars, Player viewer) {
+        String resolved = rawOrDefault(key, def, vars, viewer);
+        return LEGACY_SEC.serialize(toComponent(resolved));
+    }
+
+    /**
+     * Get message with default value, no variables.
+     * @param key Lang key
+     * @param def Default if key not found
+     * @param viewer Player for PAPI (can be null)
+     * @return Formatted message as legacy string
+     */
+    public static String msgWithDefault(String key, String def, Player viewer) {
+        return msgWithDefault(key, def, null, viewer);
+    }
+
+    /**
+     * DEPRECATED: Old signature for backwards compatibility.
+     * Use msg(key, viewer) or msgWithDefault(key, def, viewer) instead.
+     * This overload exists to catch old code patterns.
+     */
+    @Deprecated
+    public static String msg(String key, String def, Player viewer) {
+        return msgWithDefault(key, def, viewer);
+    }
+
+    /**
+     * Convenience: resolve message by key, then apply %placeholders% from vars.
+     */
+    public static String msgv(String key, Map<?, ?> vars, Player context) {
+        return msg(key, vars, context);
+    }
+
+    /**
+     * Same as above but allows a default string if the key is missing.
+     */
+    public static String msgv(String key, String def, Map<?, ?> vars, Player context) {
+        return msgWithDefault(key, def, vars, context);
+    }
+
+    /* ============================= RESOLVE / PARSE ============================= */
+
+    /** Resolve lang → apply vars → PAPI → raw string (MiniMessage or legacy). */
+    public static String raw(String key, Map<?, ?> vars, Player papiFor) {
+        String s = get(key, "");
+        if (s == null) return "";
         s = s.replace("\\n", "\n");
-
-        // inject %prefix% using RAW prefix (MiniMessage string)
-        if (s.contains("%prefix%")) {
-            s = s.replace("%prefix%", prefixRaw);
-        }
-
-        // simple variables: %key%
-        if (vars != null) {
+        if (s.contains("%prefix%")) s = s.replace("%prefix%", prefixRaw);
+        if (vars != null && !vars.isEmpty()) {
             for (var e : vars.entrySet()) {
-                String key = "%" + e.getKey() + "%";
-                s = s.replace(key, String.valueOf(e.getValue()));
+                String k = String.valueOf(e.getKey());
+                String v = String.valueOf(e.getValue());
+                s = s.replace("%" + k + "%", v);
             }
         }
-
-        // PlaceholderAPI (optional)
-        if (papiFor != null && Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            try {
-                s = PlaceholderAPI.setPlaceholders(papiFor, s);
-            } catch (Throwable ignored) {}
-        }
-
+        if (papiFor != null) s = applyPapiMaybe(papiFor, s);
         return s;
     }
 
-    /**
-     * Preferred: returns a Component (Adventure).
-     * Safe: legacy codes are converted to MiniMessage tags BEFORE parsing.
-     */
-    public static Component msgComp(String path, Map<String, String> vars, Player papiFor) {
-        String s = raw(path, vars, papiFor);
-        if (s.isEmpty()) return Component.empty();
-        return toComponent(s);
+    /** Build chat Component (MiniMessage-first + legacy-& bridge). */
+    public static Component msgComp(String key, Map<?, ?> vars, Player papiFor) {
+        return toComponent(raw(key, vars, papiFor));
     }
 
-    /**
-     * For old Bukkit APIs: returns legacy § string (with hex).
-     * Safe: we build Component first, then serialize.
-     */
-    public static String msgLegacy(String path, Map<String, String> vars, Player papiFor) {
-        Component c = msgComp(path, vars, papiFor);
-        if (c == null) return "";
-        return LEGACY_HEX.serialize(c);
+    public static Component msgComp(String key, Player papiFor) {
+        return msgComp(key, null, papiFor);
     }
 
-    /**
-     * Send a message safely.
-     * - Players: use Adventure Component (no legacy mixing)
-     * - Console/others: fallback to legacy string
-     */
-    public static void send(CommandSender to, String path, Map<String, String> vars, Player papiFor) {
-        if (to == null) return;
+    /** Legacy string for GUI (inventory titles/lore). */
+    public static String msgLegacy(String key, Map<?, ?> vars, Player papiFor) {
+        return LEGACY_SEC.serialize(msgComp(key, vars, papiFor));
+    }
 
-        Component c = msgComp(path, vars, papiFor);
-        if (c == null || c.equals(Component.empty())) return;
+    public static String msgLegacy(String key, Player papiFor) {
+        return msgLegacy(key, null, papiFor);
+    }
 
+    /** GUI helper: MM or & → legacy (for titles/buttons). */
+    public static String ui(String key, String def, Map<?, ?> vars, Player p) {
+        String resolved = rawOrDefault(key, def, vars, p);
+        return LEGACY_SEC.serialize(toComponent(resolved));
+    }
+
+    public static String ui(String key, String def, Player p) {
+        return ui(key, def, null, p);
+    }
+
+    /** GUI lore helper (list under baseKey.0, .1, ...), with default if empty. */
+    public static List<String> uiList(String baseKey, List<String> def, Player p) {
+        List<String> raw = new ArrayList<>();
+        for (int i = 0; i < 400; i++) { // safe cap
+            String v = get(baseKey + "." + i, null);
+            if (v == null) break;
+            raw.add(v);
+        }
+        if (raw.isEmpty() && def != null) raw.addAll(def);
+        List<String> out = new ArrayList<>(raw.size());
+        for (String line : raw) out.add(LEGACY_SEC.serialize(toComponent(applyPapiMaybe(p, line))));
+        return out;
+    }
+
+    /** Direct parse of arbitrary raw text (MiniMessage or legacy). */
+    public static Component parse(String raw, Player p) {
+        return toComponent(applyPapiMaybe(p, raw));
+    }
+
+    public static String parseToLegacy(String raw, Player p) {
+        return LEGACY_SEC.serialize(parse(raw, p));
+    }
+
+    /* ============================= SENDING ============================= */
+
+    /** Send lang message with Map support. Player → Component; Console → plain text. */
+    public static void send(CommandSender to, String key, String def, Map<?, ?> vars) {
+        String resolved = rawOrDefault(key, def, vars, (to instanceof Player p) ? p : null);
+        sendRaw(to, resolved);
+    }
+
+    public static void send(CommandSender to, String key, String def) {
+        send(to, key, def, (Map<?, ?>) null);
+    }
+
+    public static void send(CommandSender to, String key) {
+        send(to, key, "", (Map<?, ?>) null);
+    }
+
+    /** Send raw MiniMessage/legacy. Player → Component; Console → plain text. */
+    public static void sendRaw(CommandSender to, String raw) {
         if (to instanceof Player p) {
-            p.sendMessage(c);
+            p.sendMessage(toComponent(applyPapiMaybe(p, raw)));
         } else {
-            // console etc.
-            to.sendMessage(LEGACY_HEX.serialize(c));
+            to.sendMessage(PLAIN.serialize(toComponent(raw)));
         }
     }
 
-    // ------------------------------------------------------------
-    // TITLE HELPERS
-    // ------------------------------------------------------------
+    /* ============================= TITLES ============================= */
 
-    public static void sendTitle(Player player,
-                                 String titleKey,
-                                 String subKey,
-                                 Map<String, String> vars,
-                                 int fadeIn,
-                                 int stay,
-                                 int fadeOut) {
-        if (player == null) return;
-
-        Component title = Component.empty();
-        Component subtitle = Component.empty();
-
-        if (titleKey != null && !titleKey.isEmpty()) {
-            title = msgComp(titleKey, vars, player);
-        }
-        if (subKey != null && !subKey.isEmpty()) {
-            subtitle = msgComp(subKey, vars, player);
-        }
-
-        player.showTitle(net.kyori.adventure.title.Title.title(
-                title,
-                subtitle,
-                net.kyori.adventure.title.Title.Times.times(
-                        java.time.Duration.ofMillis(fadeIn * 50L),
-                        java.time.Duration.ofMillis(stay * 50L),
-                        java.time.Duration.ofMillis(fadeOut * 50L)
-                )
-        ));
+    /** Title using lang keys; times in ticks. */
+    public static void sendTitle(Player p,
+                                 String titleKey, String titleDef,
+                                 String subKey, String subDef,
+                                 Map<?, ?> vars,
+                                 int fadeInTicks, int stayTicks, int fadeOutTicks) {
+        Component title = toComponent(rawOrDefault(titleKey, titleDef, vars, p));
+        Component subtitle = toComponent(rawOrDefault(subKey, subDef, vars, p));
+        Title.Times times = Title.Times.times(Duration.ofMillis(fadeInTicks * 50L),
+                Duration.ofMillis(stayTicks * 50L),
+                Duration.ofMillis(fadeOutTicks * 50L));
+        p.showTitle(Title.title(title, subtitle, times));
     }
 
-    public static void sendTitle(Player player,
-                                 String titleKey,
-                                 String subKey,
-                                 Map<String, String> vars) {
-        sendTitle(player, titleKey, subKey, vars, 10, 40, 10);
+    public static void sendTitle(Player p, String titleKey, String subKey, Map<?, ?> vars) {
+        sendTitle(p, titleKey, "", subKey, "", vars, 10, 60, 10);
     }
 
-    // ------------------------------------------------------------
-    // TIME HUMANIZER (UNCHANGED LOGIC)
-    // ------------------------------------------------------------
+    public static void clearTitle(Player p) {
+        p.clearTitle();
+    }
 
-    public static String timeHuman(long seconds) {
-        boolean humanize = cfg != null && cfg.getBoolean("kits.time.humanize", true);
-        if (!humanize) return seconds + "s";
+    /* ============================= HUMANIZED TIME ============================= */
 
-        long days = seconds / 86400; seconds %= 86400;
-        long hours = seconds / 3600; seconds %= 3600;
-        long minutes = seconds / 60; seconds %= 60;
-        long secs = seconds;
+    /** Humanize duration (ms) using simple units; override strings via lang if desired. */
+    public static String timeHuman(long millis) {
+        if (millis < 0) millis = 0;
+        long seconds = millis / 1000;
+        long d = seconds / 86400; seconds %= 86400;
+        long h = seconds / 3600;  seconds %= 3600;
+        long m = seconds / 60;    long s = seconds % 60;
 
-        String ud = get("kits.time.units.day", "d");
-        String uh = get("kits.time.units.hour", "h");
-        String um = get("kits.time.units.minute", "m");
-        String us = get("kits.time.units.second", "s");
-        int maxChunks = cfg != null ? cfg.getInt("kits.time.max-chunks", 3) : 3;
+        List<String> parts = new ArrayList<>(4);
+        if (d > 0) parts.add(d + " " + (d == 1 ? get("time.day", "day") : get("time.days", "days")));
+        if (h > 0) parts.add(h + " " + (h == 1 ? get("time.hour", "hour") : get("time.hours", "hours")));
+        if (m > 0) parts.add(m + " " + (m == 1 ? get("time.minute", "minute") : get("time.minutes", "minutes")));
+        if (s > 0 || parts.isEmpty()) parts.add(s + " " + (s == 1 ? get("time.second", "second") : get("time.seconds", "seconds")));
+
+        String sep = get("time.separator", ", ");
+        String last = get("time.last-separator", " and ");
+        if (parts.size() == 1) return parts.get(0);
+        if (parts.size() == 2) return parts.get(0) + last + parts.get(1);
 
         StringBuilder out = new StringBuilder();
-        int chunks = 0;
-
-        if (days > 0 && chunks < maxChunks) { out.append(days).append(ud).append(' '); chunks++; }
-        if (hours > 0 && chunks < maxChunks) { out.append(hours).append(uh).append(' '); chunks++; }
-        if (minutes > 0 && chunks < maxChunks) { out.append(minutes).append(um).append(' '); chunks++; }
-        if (secs > 0 && chunks < maxChunks) { out.append(secs).append(us).append(' '); chunks++; }
-
-        String s = out.toString().trim();
-        return s.isEmpty() ? "0" + us : s;
+        for (int i = 0; i < parts.size(); i++) {
+            if (i == parts.size() - 1) out.append(parts.get(i));
+            else if (i == parts.size() - 2) out.append(parts.get(i)).append(last);
+            else out.append(parts.get(i)).append(sep);
+        }
+        return out.toString();
     }
 
-    // ------------------------------------------------------------
-    // CORE FIX: Convert ANY legacy (& or §) into MiniMessage tags BEFORE deserializing
-    // ------------------------------------------------------------
+    /* ============================= MISC ============================= */
 
-    /**
-     * Convert a raw config string (may contain MiniMessage tags + legacy codes)
-     * into a safe Adventure Component.
-     *
-     * Key properties:
-     * - NEVER calls ChatColor.translateAlternateColorCodes before MiniMessage (that would create § codes).
-     * - Converts legacy into MiniMessage tags:
-     *     &a -> <green>, &l -> <bold>, &#RRGGBB -> <#RRGGBB>, &x&... -> <#...>
-     * - Normalizes any accidental '§' to '&' then converts.
-     * - Disables italics by default (matches common chat expectations).
-     */
+    /** Color utility: MiniMessage/legacy → legacy-§ with hex preserved. */
+    public static String color(String s) { return LEGACY_HEX.serialize(toComponent(s)); }
+
+    /* ============================= CORE CONVERSION ============================= */
+
+    /** MM-first parse with legacy-& bridge; no-italic by default (Minecraft UI norm). */
     public static Component toComponent(String input) {
         if (input == null || input.isEmpty()) return Component.empty();
 
-        // Normalize any accidental legacy § to '&' (so we can convert safely)
-        String mmInput = input.replace(LegacyComponentSerializer.SECTION_CHAR, '&');
+        String normalized = input.replace('§', '&');
+        if (AMP_OR_SECTION.matcher(normalized).find()) {
+            String mm = legacyToMiniMessage(normalized);
+            try {
+                return MM.deserialize(mm, baseResolvers()).decoration(TextDecoration.ITALIC, false);
+            } catch (Throwable t) {
+                return LEGACY_AMP.deserialize(normalized).decoration(TextDecoration.ITALIC, false);
+            }
+        }
 
-        // Convert legacy variants into MiniMessage tags
-        mmInput = legacyAmpToMiniMessage(mmInput);
-
-        // Parse with MiniMessage
-        Component c = MINI.deserialize(mmInput);
-
-        // Common MC behavior: no italics by default
-        return c.decoration(TextDecoration.ITALIC, false);
+        try {
+            return MM.deserialize(normalized, baseResolvers()).decoration(TextDecoration.ITALIC, false);
+        } catch (Throwable t) {
+            return Component.text(normalized).decoration(TextDecoration.ITALIC, false);
+        }
     }
 
-    /**
-     * Convert legacy ampersand codes into MiniMessage tags.
-     * Supports:
-     * - &x&8&7&c&e&e&b (legacy hex)
-     * - &#87CEEB (legacy hex)
-     * - &a &l &r etc
-     */
-    private static String legacyAmpToMiniMessage(String input) {
+    /** Legacy (&, §, &#, &x&… hex) → MiniMessage tags. */
+    private static String legacyToMiniMessage(String input) {
         if (input == null || input.isEmpty()) return "";
 
-        // Handle legacy hex with &x&... (e.g. &x&8&7&c&e&e&b)
+        // &x&F&F&0&0&0&0 → <#FF0000>
         Matcher mx = LEGACY_HEX_AMP_X.matcher(input);
         StringBuffer sbx = new StringBuffer();
         while (mx.find()) {
-            String hex = mx.group(1).replace("&", ""); // 87ceeb
+            String hex = mx.group(1).replace("&", "");
             mx.appendReplacement(sbx, "<#" + hex + ">");
         }
         mx.appendTail(sbx);
         input = sbx.toString();
 
-        // Handle legacy hex with §x§... (rare, but just in case after weird sources)
-        Matcher ms = LEGACY_HEX_SECTION_X.matcher(input.replace('&', '§'));
-        // We intentionally run this on a §-version to match pattern, then restore output back into input.
-        // Convert by scanning original input for §x... patterns after reintroducing §.
-        String sectionCandidate = input.replace('&', '§');
-        ms = LEGACY_HEX_SECTION_X.matcher(sectionCandidate);
+        // §x§F§F§0§0§0§0 → <#FF0000>
+        String section = input.replace('&', '§');
+        Matcher ms = LEGACY_HEX_SECTION_X.matcher(section);
         StringBuffer sbs = new StringBuffer();
         while (ms.find()) {
-            String group = ms.group(1); // §8§7§c§e§e§b
-            String hex = group.replace("§", "");
+            String hex = ms.group(1).replace("§", "");
             ms.appendReplacement(sbs, "<#" + hex + ">");
         }
         ms.appendTail(sbs);
-        // Convert back to normal string (it already contains <#...>)
-        input = sbs.toString().replace('§', '&'); // keep consistent
+        input = sbs.toString().replace('§', '&');
 
-        // Handle legacy hex &#RRGGBB
+        // &#RRGGBB → <#RRGGBB>
         Matcher mh = LEGACY_HEX_HASH.matcher(input);
         StringBuffer sbh = new StringBuffer();
         while (mh.find()) {
@@ -380,20 +407,19 @@ public final class Lang {
         mh.appendTail(sbh);
         input = sbh.toString();
 
-        // Handle classic & codes -> tags
+        // &a, &l, &r, …
         Matcher m = LEGACY_CODES.matcher(input);
         StringBuffer sb = new StringBuffer();
         while (m.find()) {
             char code = Character.toLowerCase(m.group(1).charAt(0));
-            String repl = legacyCodeToMiniMessage(code);
-            m.appendReplacement(sb, Matcher.quoteReplacement(repl));
+            m.appendReplacement(sb, Matcher.quoteReplacement(codeToTag(code)));
         }
         m.appendTail(sb);
         return sb.toString();
     }
 
-    private static String legacyCodeToMiniMessage(char code) {
-        return switch (code) {
+    private static String codeToTag(char c) {
+        return switch (c) {
             case '0' -> "<black>";
             case '1' -> "<dark_blue>";
             case '2' -> "<dark_green>";
@@ -416,29 +442,44 @@ public final class Lang {
             case 'n' -> "<underlined>";
             case 'o' -> "<italic>";
             case 'r' -> "<reset>";
-            default -> "";
+            default  -> "";
         };
     }
 
-    // ------------------------------------------------------------
-    // BACKWARD-COMPAT HELPERS (Optional)
-    // ------------------------------------------------------------
-
-    /**
-     * Old API compatibility: colorize to legacy string.
-     * This is SAFE because it converts to Component first (no legacy -> MiniMessage mixing).
-     */
-    public static String color(String s) {
-        if (s == null || s.isEmpty()) return "";
-        return LEGACY_HEX.serialize(toComponent(s));
+    private static TagResolver baseResolvers() {
+        return TagResolver.resolver(
+                Placeholder.unparsed("server_name", safeServerName())
+        );
     }
 
-    /**
-     * If you still have code that expects a String message:
-     * Prefer msgLegacy(...) instead of msg(...).
-     */
-    @Deprecated
-    public static String msg(String path, Map<String, String> vars, Player papiFor) {
-        return msgLegacy(path, vars, papiFor);
+    private static String safeServerName() {
+        try { return Bukkit.getServer().getName(); }
+        catch (Throwable t) { return "Server"; }
+    }
+
+    private static String rawOrDefault(String key, String def, Map<?, ?> vars, Player p) {
+        String v = get(key, null);
+        if (v == null) v = def == null ? "" : def;
+        if (v.contains("%prefix%")) v = v.replace("%prefix%", prefixRaw);
+        if (vars != null && !vars.isEmpty()) {
+            for (var e : vars.entrySet()) {
+                String k = String.valueOf(e.getKey());
+                String val = String.valueOf(e.getValue());
+                v = v.replace("%" + k + "%", val);
+            }
+        }
+        return applyPapiMaybe(p, v.replace("\\n", "\n"));
+    }
+
+    private static boolean isPapiPresent() {
+        try { return Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI"); }
+        catch (Throwable t) { return false; }
+    }
+
+    private static String applyPapiMaybe(Player p, String raw) {
+        if (raw == null) return "";
+        if (p == null || !isPapiPresent()) return raw;
+        try { return PlaceholderAPI.setPlaceholders(p, raw); }
+        catch (Throwable ignored) { return raw; }
     }
 }

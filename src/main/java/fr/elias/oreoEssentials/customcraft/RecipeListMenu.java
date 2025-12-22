@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/customcraft/RecipeListMenu.java
 package fr.elias.oreoEssentials.customcraft;
 
 import fr.elias.oreoEssentials.util.Lang;
@@ -8,7 +9,10 @@ import fr.minuskube.inv.content.InventoryContents;
 import fr.minuskube.inv.content.InventoryProvider;
 import fr.minuskube.inv.content.Pagination;
 import fr.minuskube.inv.content.SlotIterator;
-import org.bukkit.ChatColor;
+import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -16,27 +20,29 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public final class RecipeListMenu implements InventoryProvider {
     private final Plugin plugin;
     private final InventoryManager invMgr;
     private final CustomCraftingService service;
 
+    private static final MiniMessage MM = MiniMessage.miniMessage();
+    private static final LegacyComponentSerializer LEGACY_SEC = LegacyComponentSerializer.legacySection();
+
     private RecipeListMenu(Plugin plugin, InventoryManager invMgr, CustomCraftingService service) {
-        this.plugin = plugin;
-        this.invMgr = invMgr;
-        this.service = service;
+        this.plugin = plugin; this.invMgr = invMgr; this.service = service;
     }
 
     public static SmartInventory open(Player p, Plugin plugin, InventoryManager invMgr, CustomCraftingService service) {
+        String title = i18nLegacy("customcraft.browse.title", "<#00bcd4><bold>OreoCraft</bold></#00bcd4> <gray>—</gray> <white>Recipes</white>",
+                Map.of("name", ""), p);
         SmartInventory inv = SmartInventory.builder()
                 .id("oecraft:browse")
                 .provider(new RecipeListMenu(plugin, invMgr, service))
                 .size(6, 9)
-                .title(color(Lang.get("customcraft.browse.title", "&bOreoCraft — Recipes")))
+                .title(title)                // inventory title requires String
                 .manager(invMgr)
                 .build();
         inv.open(p);
@@ -50,7 +56,7 @@ public final class RecipeListMenu implements InventoryProvider {
 
         contents.set(0, 4, ClickableItem.empty(ui(
                 Material.BOOK,
-                color(Lang.get("customcraft.browse.hint", "&eClick a recipe to edit"))
+                i18nLegacy("customcraft.browse.hint", "<yellow>Click a recipe to edit</yellow>", Map.of(), player)
         )));
 
         Pagination pag = contents.pagination();
@@ -67,19 +73,21 @@ public final class RecipeListMenu implements InventoryProvider {
                         .orElse("?");
 
                 String perm = service.getPermissionFor(name)
-                        .orElse(Lang.get("customcraft.format.permission.none", "&7None"));
+                        .orElse(Lang.get("customcraft.format.permission.none", "<gray>None</gray>"));
+                // display name
+                m.setDisplayName(i18nLegacyInline("<aqua>" + name + "</aqua>"));
 
-                m.setDisplayName(color("&b" + name));
-
-                // ← read list from lang via key.0, key.1, …
+                // lore (MiniMessage → legacy)
                 List<String> loreTemplate = langList("customcraft.browse.icon-lore",
-                        List.of("&7Mode: &f%mode%", "&7Perm: &f%permission_or_none%", "&aClick to edit"));
+                        List.of("<gray>Mode:</gray> <white>%mode%</white>",
+                                "<gray>Perm:</gray> <white>%permission_or_none%</white>",
+                                "<green>Click to edit</green>"));
 
                 List<String> lore = new ArrayList<>(loreTemplate.size());
                 for (String line : loreTemplate) {
                     line = line.replace("%mode%", mode)
                             .replace("%permission_or_none%", perm);
-                    lore.add(color(line));
+                    lore.add(i18nLegacyInline(line));
                 }
                 m.setLore(lore);
                 icon.setItemMeta(m);
@@ -101,33 +109,28 @@ public final class RecipeListMenu implements InventoryProvider {
         pag.addToIterator(si);
 
         contents.set(5, 3, ClickableItem.of(
-                ui(Material.ARROW, color(Lang.get("customcraft.browse.prev", "&ePrevious"))),
+                ui(Material.ARROW, i18nLegacy("customcraft.browse.prev", "<yellow>Previous</yellow>", Map.of(), player)),
                 (InventoryClickEvent e) -> {
                     Player p = (Player) e.getWhoClicked();
                     if (!pag.isFirst()) invMgr.getInventory(p).ifPresent(inv -> inv.open(p, pag.getPage() - 1));
                 }));
         contents.set(5, 5, ClickableItem.of(
-                ui(Material.ARROW, color(Lang.get("customcraft.browse.next", "&eNext"))),
+                ui(Material.ARROW, i18nLegacy("customcraft.browse.next", "<yellow>Next</yellow>", Map.of(), player)),
                 (InventoryClickEvent e) -> {
                     Player p = (Player) e.getWhoClicked();
                     invMgr.getInventory(p).ifPresent(inv -> inv.open(p, pag.getPage() + 1));
                 }));
     }
 
-    @Override
-    public void update(Player player, InventoryContents contents) { /* no-op */ }
+    @Override public void update(Player player, InventoryContents contents) { /* no-op */ }
+
+    /* ---------------- helpers ---------------- */
 
     private static ItemStack ui(Material m, String name) {
         ItemStack it = new ItemStack(m);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) { meta.setDisplayName(name); it.setItemMeta(meta); }
         return it;
-    }
-
-    /* ---------------- helpers ---------------- */
-
-    private static String color(String s) {
-        return ChatColor.translateAlternateColorCodes('&', s == null ? "" : s);
     }
 
     /** Read list from lang via basePath.0, basePath.1, …; return default if none. */
@@ -140,5 +143,22 @@ public final class RecipeListMenu implements InventoryProvider {
         }
         if (out.isEmpty() && def != null) out.addAll(def);
         return out;
+    }
+
+    // ---- MiniMessage → legacy helpers (GUIs require String) ----
+    private static String i18nLegacy(String key, String def, Map<String,String> vars, Player p) {
+        String raw = Lang.get(key, def);
+        if (vars != null) for (var e : vars.entrySet()) raw = raw.replace("%" + e.getKey() + "%", e.getValue());
+        raw = applyPapi(p, raw);
+        return LEGACY_SEC.serialize(MM.deserialize(raw));
+    }
+    private static String i18nLegacyInline(String raw) {
+        return LEGACY_SEC.serialize(MM.deserialize(raw == null ? "" : raw));
+    }
+    private static String applyPapi(Player p, String raw) {
+        if (raw == null) return "";
+        try { if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) return PlaceholderAPI.setPlaceholders(p, raw); }
+        catch (Throwable ignored) {}
+        return raw;
     }
 }

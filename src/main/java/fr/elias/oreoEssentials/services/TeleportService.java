@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/services/TeleportService.java
 package fr.elias.oreoEssentials.services;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -33,101 +34,125 @@ public class TeleportService {
         this.back = back;
         this.timeoutSec = config.tpaTimeoutSeconds();
 
-        // periodic cleanup avoids stale requests if server uptime is long
+        // cleanup stale requests
         Bukkit.getScheduler().runTaskTimer(plugin, this::cleanup, 20L * 30, 20L * 30);
     }
 
-    /**
-     * Crée une requête TPA de "from" vers "to".
-     */
+    /** Create a TPA from "from" → "to". */
     public boolean request(Player from, Player to) {
+        if (from == null || to == null || !from.isOnline() || !to.isOnline()) return false;
+
         long exp = System.currentTimeMillis() + timeoutSec * 1000L;
         pendingToTarget.put(to.getUniqueId(), new TpaRequest(from.getUniqueId(), exp));
 
-        // Message au target: "<player> wants to teleport to you..."
-        Lang.send(to,
+        // Notify target
+        Lang.send(
+                to,
                 "tpa.request-target",
+                "<yellow><bold>%player%</bold></yellow> <gray>wants to teleport to you.</gray> "
+                        + "<dark_gray>(expires in</dark_gray> <white>%timeout%</white><dark_gray>s)</dark_gray>",
                 Map.of(
                         "player", from.getName(),
                         "timeout", String.valueOf(timeoutSec)
-                ),
-                to
+                )
         );
 
-        // Message au requester: "TPA sent to ..."
-        Lang.send(from,
+        // Notify requester
+        Lang.send(
+                from,
                 "tpa.sent.local",
-                Map.of("target", to.getName()),
-                from
+                "<green>Teleport request sent to <yellow>%target%</yellow>.</green>",
+                Map.of("target", to.getName())
         );
         return true;
     }
 
-    /**
-     * /tpaccept
-     */
+    /** /tpaccept */
     public boolean accept(Player target) {
+        if (target == null || !target.isOnline()) return false;
+
         TpaRequest req = pendingToTarget.remove(target.getUniqueId());
         long now = System.currentTimeMillis();
 
         if (req == null || req.expiresAt < now) {
-            // "No pending teleport requests."
-            Lang.send(target, "tpa.accept.none", null, target);
+            Lang.send(
+                    target,
+                    "tpa.accept.none",
+                    "<red>No pending teleport requests.</red>"
+            );
             return false;
         }
 
         Player from = Bukkit.getPlayer(req.from);
         if (from == null || !from.isOnline()) {
-            // "Requester is no longer online."
-            Lang.send(target, "tpa.accept.requester-offline", null, target);
+            Lang.send(
+                    target,
+                    "tpa.accept.requester-offline",
+                    "<red>The requester is no longer online.</red>"
+            );
             return false;
         }
 
-        // Enregistrer /back
-        back.setLast(from.getUniqueId(), from.getLocation());
+        // record /back
+        try { if (back != null) back.setLast(from.getUniqueId(), from.getLocation()); } catch (Throwable ignored) {}
 
-        // TP vers le target
-        from.teleport(target.getLocation());
+        // do TP
+        Location dest = target.getLocation();
+        if (dest != null) {
+            if (Bukkit.isPrimaryThread()) {
+                from.teleport(dest);
+            } else {
+                Bukkit.getScheduler().runTask(plugin, () -> from.teleport(dest));
+            }
+        }
 
-        // Message pour le requester: "Teleported to <target>"
-        Lang.send(from,
+        // messages
+        Lang.send(
+                from,
                 "tpa.teleported",
-                Map.of("target", target.getName()),
-                from
+                "<green>Teleported to <yellow>%target%</yellow>.</green>",
+                Map.of("target", target.getName())
         );
 
-        // Message pour le target: "Accepted teleport request."
-        Lang.send(target,
+        Lang.send(
+                target,
                 "tpa.accept.accepted",
-                Map.of("player", from.getName()),
-                target
+                "<green>Accepted teleport request from <yellow>%player%</yellow>.</green>",
+                Map.of("player", from.getName())
         );
+
         return true;
     }
 
-    /**
-     * /tpdeny
-     */
+    /** /tpdeny */
     public boolean deny(Player target) {
+        if (target == null || !target.isOnline()) return false;
+
         TpaRequest req = pendingToTarget.remove(target.getUniqueId());
         if (req == null) {
-            // Réutilise le même message que pour /tpaccept quand rien n'est en attente
-            Lang.send(target, "tpa.accept.none", null, target);
+            Lang.send(
+                    target,
+                    "tpa.accept.none",
+                    "<red>No pending teleport requests.</red>"
+            );
             return false;
         }
 
         Player from = Bukkit.getPlayer(req.from);
         if (from != null && from.isOnline()) {
-            // "Your teleport request to X was denied."
-            Lang.send(from,
+            Lang.send(
+                    from,
                     "tpa.deny.requester",
-                    Map.of("target", target.getName()),
-                    from
+                    "<red>Your teleport request to <yellow>%target%</yellow> was denied.</red>",
+                    Map.of("target", target.getName())
             );
         }
 
-        // "Denied teleport request."
-        Lang.send(target, "tpa.deny.target", null, target);
+        Lang.send(
+                target,
+                "tpa.deny.target",
+                "<yellow>Denied the teleport request.</yellow>"
+        );
         return true;
     }
 
@@ -137,74 +162,55 @@ public class TeleportService {
     }
 
     // ------------------------------------------------------------------------
-    // TP utilitaires
+    // TP utilities
     // ------------------------------------------------------------------------
 
-    /** Teleport sans messages, mais enregistre /back. */
+    /** Teleport silently (records /back). */
     public void teleportSilently(Player who, Location to) {
         if (who == null || to == null) return;
-        try {
-            if (back != null) back.setLast(who.getUniqueId(), who.getLocation());
-        } catch (Throwable ignored) {}
+        try { if (back != null) back.setLast(who.getUniqueId(), who.getLocation()); } catch (Throwable ignored) {}
 
-        Runnable tp = () -> {
-            try {
-                who.teleport(to);
-            } catch (Throwable ignored) {}
-        };
+        Runnable tp = () -> { try { who.teleport(to); } catch (Throwable ignored) {} };
 
-        if (Bukkit.isPrimaryThread()) {
-            tp.run();
-        } else {
-            Bukkit.getScheduler().runTask(plugin, tp);
-        }
+        if (Bukkit.isPrimaryThread()) tp.run();
+        else Bukkit.getScheduler().runTask(plugin, tp);
     }
 
-    /** Teleport 'who' vers la position actuelle de 'target' silencieusement. */
+    /** Teleport 'who' to current location of 'target' silently. */
     public void teleportSilently(Player who, Player target) {
-        if (who == null || target == null) return;
+        if (who == null || target == null || !target.isOnline()) return;
         teleportSilently(who, target.getLocation());
     }
 
-    /**
-     * Retourne le requester qui a fait /tpa <target>, ou null.
-     */
+    /** Get requester who /tpa'd this target, or null. */
     public Player getRequester(Player target) {
         if (target == null) return null;
-
         TpaRequest req = pendingToTarget.get(target.getUniqueId());
-        if (req == null) return null;
-
-        return Bukkit.getPlayer(req.from);
+        return (req == null) ? null : Bukkit.getPlayer(req.from);
     }
 
-    /**
-     * Annuler une TPA car le requester a bougé pendant le countdown.
-     */
+    /** Cancel a TPA because the requester moved during countdown. */
     public boolean cancelRequestDueToMovement(Player target, Player requester) {
         if (target == null) return false;
 
         TpaRequest req = pendingToTarget.remove(target.getUniqueId());
-        if (req == null) {
-            return false;
-        }
+        if (req == null) return false;
 
-        // Message au requester
         if (requester != null && requester.isOnline()) {
-            Lang.send(requester,
+            Lang.send(
+                    requester,
                     "tpa.cancelled-moved-requester",
-                    null,
-                    requester
+                    "<red>Your teleport request was cancelled because you moved.</red>"
             );
         }
 
-        // Message au target
         if (target.isOnline()) {
-            String name = (requester != null ? requester.getName() : "unknown");
-            Lang.send(target,
+            String name = requester != null ? requester.getName() : "unknown";
+            Lang.send(
+                    target,
                     "tpa.cancelled-moved-target",
-                    Map.of("requester", name),
-                    target
+                    "<yellow>Teleport request from <white>%requester%</white> was cancelled (requester moved).</yellow>",
+                    Map.of("requester", name)
             );
         }
 
@@ -212,38 +218,33 @@ public class TeleportService {
     }
 
     /**
-     * Téléporte vers un BackLocation.
-     * - Si même serveur : TP Bukkit normal (avec /back enregistré).
-     * - Si autre serveur : on passe par BackCrossServerBroker + ProxyMessenger.
+     * Teleport to a BackLocation (same-server direct, cross-server via broker if available).
      */
     public boolean teleportToServerLocation(Player who, BackLocation loc) {
         if (who == null || loc == null) return false;
 
         String localServer = plugin.getConfigService().serverName();
 
-        // même serveur -> TP local
+        // same server → local tp
         if (loc.getServer() == null
                 || loc.getServer().isBlank()
                 || loc.getServer().equalsIgnoreCase(localServer)) {
 
             Location dest = loc.toLocalLocation();
-            if (dest == null) {
-                return false;
-            }
+            if (dest == null) return false;
 
             teleportSilently(who, dest);
             return true;
         }
 
-        // autre serveur -> broker cross-serveur
+        // other server → broker
         var backBroker = plugin.getBackBroker();
         if (backBroker != null && plugin.isMessagingAvailable()) {
             backBroker.requestCrossServerBack(who, loc);
             return true;
         }
 
-        // pas de broker / Rabbit down
-        return false;
+        return false; // broker unavailable
     }
 
     public void shutdown() {

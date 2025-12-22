@@ -139,6 +139,12 @@ public final class OreoEssentials extends JavaPlugin {
     private fr.elias.oreoEssentials.playervaults.PlayerVaultsConfig playerVaultsConfig;
     private fr.elias.oreoEssentials.modgui.ModGuiService modGuiService;
     public fr.elias.oreoEssentials.modgui.ModGuiService getModGuiService() { return modGuiService; }
+    // File: src/main/java/fr/elias/oreoEssentials/OreoEssentials.java
+// Add a field + getter:
+    private fr.elias.oreoEssentials.holograms.perplayer_nms.PerPlayerTextDisplayService perPlayerTextDisplayService;
+    public fr.elias.oreoEssentials.holograms.perplayer_nms.PerPlayerTextDisplayService getPerPlayerTextDisplayService() {
+        return perPlayerTextDisplayService;
+    }
 
     private ConfigService configService;
     private StorageApi storage;
@@ -1370,7 +1376,9 @@ public final class OreoEssentials extends JavaPlugin {
                 new GodListener(godService),
                 this
         );
-
+        getServer().getPluginManager().registerEvents(
+                new fr.elias.oreoEssentials.rtp.listeners.DeathRespawnListener(this), this
+        );
             // -------- Portals --------
         this.portals = new fr.elias.oreoEssentials.portals.PortalsManager(this);
         getServer().getPluginManager().registerEvents(
@@ -1832,9 +1840,43 @@ public final class OreoEssentials extends JavaPlugin {
         if (getCommand("oevents") != null) {
             getCommand("oevents").setExecutor(eventCmd);
             getCommand("oevents").setTabCompleter(eventCmd);
+        }// Only wire per-player text if enabled in settings and Display API is present
+        if (settingsConfig.getRoot().getBoolean("holograms.text.per-player", false)) {
+            try {
+                Class.forName("org.bukkit.entity.Display"); // requires Paper/Folia
+
+                // 1) Load NMS bridge
+                fr.elias.oreoEssentials.holograms.nms.NmsHologramBridge nms =
+                        fr.elias.oreoEssentials.holograms.nms.NmsBridgeLoader.loadOrThrow();
+
+                // 2) Start the per-player service (field exists with getter)
+                this.perPlayerTextDisplayService =
+                        new fr.elias.oreoEssentials.holograms.perplayer_nms.PerPlayerTextDisplayService(this, nms);
+
+                // 3) Register cleanup listener
+                getServer().getPluginManager().registerEvents(
+                        new fr.elias.oreoEssentials.holograms.perplayer_nms.PerPlayerTextDisplayListener(
+                                this.perPlayerTextDisplayService
+                        ),
+                        this
+                );
+
+                // 4) Tick it (lightweight, every 10 ticks)
+                getServer().getScheduler().runTaskTimer(this, () -> {
+                    try { perPlayerTextDisplayService.tick(); }
+                    catch (Throwable t) { getLogger().warning("[PerPlayerTextDisplay] tick failed: " + t.getMessage()); }
+                }, 20L, 10L);
+
+                getLogger().info("[PerPlayerTextDisplay] Enabled.");
+            } catch (ClassNotFoundException x) {
+                getLogger().warning("[PerPlayerTextDisplay] Display entities not available on this server. Requires Paper/Folia.");
+            } catch (Throwable t) {
+                getLogger().warning("[PerPlayerTextDisplay] Failed to initialize: " + t.getMessage());
+            }
         }
 
-// --- OreoHolograms (NEW MODULE, settings toggle) ---
+        // --- OreoHolograms (NEW MODULE, settings toggle) ---
+
         if (settingsConfig.oreoHologramsEnabled()) {
             try {
                 // sanity check: requires Paper/Folia Display entities

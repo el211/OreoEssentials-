@@ -141,7 +141,7 @@ public class TpAcceptCommand implements OreoCommand {
             Player requester = tpa.getRequester(target);
             if (requester == null || !requester.isOnline()) {
                 D(id, "no requester found for target=" + target.getName());
-                Lang.send(target, "tpa.accept.none", null, target);
+                Lang.send(target, "tpa.accept.none", null, Map.of());
                 return true;
             }
 
@@ -150,7 +150,7 @@ public class TpAcceptCommand implements OreoCommand {
             return true;
         } catch (Throwable t) {
             E(id, "local countdown / teleportService.accept threw", t);
-            Lang.send(target, "tpa.accept.failed", null, target);
+            Lang.send(target, "tpa.accept.failed", null, Map.of());
             return true;
         }
     }
@@ -231,12 +231,11 @@ public class TpAcceptCommand implements OreoCommand {
                 }
 
                 // Show countdown to the REQUESTER (the one who did /tpa <player>)
-                String title = Lang.msg("teleport.countdown.title", null, requester);
-                String subtitle = Lang.msg(
-                        "teleport.countdown.subtitle",
-                        Map.of("seconds", String.valueOf(remain)),
-                        requester
-                );
+                String title = Lang.msg("teleport.countdown.title", requester);
+                String subtitle = Lang.msg("teleport.countdown.subtitle", requester);
+                if (subtitle != null) {
+                    subtitle = subtitle.replace("%seconds%", String.valueOf(remain));
+                }
                 requester.sendTitle(title, subtitle, 0, 20, 0);
 
                 remain--;
@@ -255,9 +254,9 @@ public class TpAcceptCommand implements OreoCommand {
         P(target, id, "local accept " + (ok ? "✓" : "–"));
 
         if (!ok) {
-            Lang.send(target, "tpa.accept.none", null, target);
+            Lang.send(target, "tpa.accept.none", null, Map.of());
             if (dbg()) {
-                Lang.send(target, "tpa.accept.debug-hint", null, target);
+                Lang.send(target, "tpa.accept.debug-hint", null, Map.of());
             }
         }
     }

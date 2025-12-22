@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/DelWarpCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -22,14 +23,14 @@ public class DelWarpCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (args.length < 1) {
-            Lang.send(sender, "warps.usage.delwarp", Map.of("label", label), null);
+            Lang.send(sender, "warps.usage.delwarp", null, Map.of("label", label));
             return true;
         }
         String name = args[0].toLowerCase();
         if (warps.delWarp(name)) {
-            Lang.send(sender, "warps.deleted", Map.of("warp", name), null);
+            Lang.send(sender, "warps.deleted", null, Map.of("warp", name));
         } else {
-            Lang.send(sender, "warps.not-found", Map.of("warp", name), null);
+            Lang.send(sender, "warps.not-found", null, Map.of("warp", name));
         }
         return true;
     }

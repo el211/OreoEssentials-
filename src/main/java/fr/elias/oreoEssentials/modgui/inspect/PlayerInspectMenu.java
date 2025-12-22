@@ -1,4 +1,4 @@
-// package: fr.elias.oreoEssentials.modgui.inspect
+// File: src/main/java/fr/elias/oreoEssentials/modgui/inspect/PlayerInspectMenu.java
 package fr.elias.oreoEssentials.modgui.inspect;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -27,7 +27,7 @@ public class PlayerInspectMenu implements InventoryProvider {
 
     @Override
     public void init(Player p, InventoryContents c) {
-        // everything is updated live in update()
+        // updated live in update()
     }
 
     @Override
@@ -60,7 +60,8 @@ public class PlayerInspectMenu implements InventoryProvider {
         // Completely offline (no local, no known server) → close
         if (!isLocal && (serverName == null || serverName.isBlank())) {
             viewer.closeInventory();
-            Lang.send(viewer, "playerinspect.target-offline", null, viewer);
+            // FIX: use valid overload (no null/default map misuse)
+            Lang.send(viewer, "playerinspect.target-offline");
             return;
         }
 
@@ -71,7 +72,7 @@ public class PlayerInspectMenu implements InventoryProvider {
             serverName = "N/A";
         }
 
-        // 👇 effectively-final copy for lambdas
+        // effectively-final copy for lambdas
         final String targetName = name;
 
         // ----- Stats (only if on this Spigot) -----
@@ -163,7 +164,8 @@ public class PlayerInspectMenu implements InventoryProvider {
                         .build(),
                 e -> {
                     if (!viewer.hasPermission("oreo.mod.invsee")) {
-                        Lang.send(viewer, "playerinspect.no-permission-invsee", null, viewer);
+                        // FIX: valid overload
+                        Lang.send(viewer, "playerinspect.no-permission-invsee");
                         return;
                     }
 

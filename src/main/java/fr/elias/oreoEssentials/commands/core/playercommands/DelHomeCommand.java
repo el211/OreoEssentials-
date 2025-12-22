@@ -22,15 +22,28 @@ public class DelHomeCommand implements OreoCommand {
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        if (args.length < 1) return false;
+        if (args.length < 1) {
+            // usage via lang with fallback
+            Lang.send(sender,
+                    "delhome.usage",
+                    "§eUsage: /%label% <name>",
+                    Map.of("label", label));
+            return true;
+        }
 
         Player p = (Player) sender;
         String rawName = args[0];
 
         if (homes.delHome(p.getUniqueId(), rawName)) {
-            Lang.send(p, "delhome.removed", Map.of(), p);
+            Lang.send(p,
+                    "delhome.removed",
+                    "§aHome §e%name% §ahas been removed.",
+                    Map.of("name", rawName));
         } else {
-            Lang.send(p, "delhome.not-found", Map.of(), p);
+            Lang.send(p,
+                    "delhome.not-found",
+                    "§cNo home named §e%name%§c.",
+                    Map.of("name", rawName));
         }
         return true;
     }

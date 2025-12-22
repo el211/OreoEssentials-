@@ -1,21 +1,48 @@
 chat:
-  enabled: false                   # ← set true to let AsyncChatListener handle chat
-  strip-name-colors: true          # ←  strip colors from names before formatting
-  use-minimessage: false # default: false (legacy &-codes). set true to enable <head>, <hover>, <click>, <gradient>
+  enabled: true
+  strip-name-colors: false
 
-  # You can use:
-  #  - %player_displayname%  (respects /nick)
-  #  - %player_name%         (plain username; will use display name if %player_displayname% absent)
-  #  - %chat_message%        (raw message; we inject this before colorization)
-  #  - <#RRGGBB>             (hex color tag)
-  #  - <gradient:#c1:#c2[:#c3...]>TEXT</gradient> (multi-stop gradient)
+  # MiniMessage pipeline (PAPI -> optional & bridge -> MM)
+  use-minimessage: true
+  minimessage-translate-legacy-amp: true
 
-  # Example: gradient prefix + balance + display name + message
-  default: "<gradient:#ffb300:#ff3d00><head:%player_name%> %player_name%</gradient> <gray>»</gray> <white>%chat_message%</white>"
+  papi:
+    apply-to-format: true      # resolve %vault_eco_balance%, %luckperms_prefix%, etc.
+    apply-to-message: true     # allow %placeholders% inside the player's message
 
-  # Example: VIP uses a gold hex on the name itself
-  vip: "&7%luckperms_prefix% &7&e($%vault_eco_balance%) &7- <#ffd700>&l%player_name%</gradient> &8» &f%chat_message%"
+  # Optional glyphs (only if you ever use <glyph:...>)
+  head:
+    font: "oreo:heads"
+    default-glyph: "\uE001"
+    glyphs:
+      default: "\uE001"
+      vip:     "\uE002"
+      staff:   "\uE003"
+      admin:   "\uE004"
 
+  # ===================== Rank formats =====================
+  # Notes:
+  # - <head:%player_uuid%> needs MiniMessage 4.25.0+ on your platform.
+  # - <server_name> is provided by the listener TagResolver.
+  # - %vault_eco_balance% comes from PAPI + Vault (applied to the format).
+  # - %chat_message% stays unwrapped so player colors/gradients work.
+
+  default:   "<gradient:#ffb300:#ff3d00><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  helper:    "<gradient:#8bc34a:#4caf50><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  moderator: "<gradient:#00e5ff:#00bfa5><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  staff:     "<gradient:#00c6ff:#0072ff><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  elite:     "<gradient:#b993d6:#8ca6db><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  hero:      "<gradient:#ff512f:#dd2476><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  legend:    "<gradient:#f7971e:#ffd200><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  mvp:       "<gradient:#12c2e9:#c471ed:#f64f59><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+
+  # VIP keeps LP prefix + balance; also shows server
+  vip: "<gray>%luckperms_prefix%</gray> <yellow>($%vault_eco_balance%)</yellow> <dark_gray>-</dark_gray> <gradient:#ffd700:#ffb300><bold><head:%player_uuid%> %player_name%</bold></gradient> <gray>[<server_name>]</gray> <dark_gray>»</dark_gray> %chat_message%"
+
+  admin: "<gradient:#ff3d00:#d50000><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  owner: "<gradient:#8e2de2:#4a00e0><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+
+  # Discord relay
   discord:
     enabled: false
     webhook_url: "https://discord.com/api/webhooks/your-webhook-id/your-webhook-token"
@@ -24,4 +51,3 @@ MongoDB_rabbitmq:
   enabled: false
   rabbitmq:
     uri: "amqp://guest:guest@localhost:5672/"
-#gradient messages will also be supported in cross server wise

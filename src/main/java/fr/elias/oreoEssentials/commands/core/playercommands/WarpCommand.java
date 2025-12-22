@@ -54,17 +54,14 @@ public class WarpCommand implements OreoCommand {
             var list = warps.listWarps();
             if (list.isEmpty()) {
                 if (actor != null) {
-                    Lang.send(actor, "warp.list-empty", Map.of(), actor);
+                    Lang.send(actor, "warp.list-empty", null, Map.of());
                 } else {
                     sender.sendMessage("[Warp] No warps defined.");
                 }
             } else {
                 String joined = list.stream().collect(Collectors.joining(", "));
                 if (actor != null) {
-                    Lang.send(actor, "warp.list",
-                            Map.of("warps", joined),
-                            actor
-                    );
+                    Lang.send(actor, "warp.list", null, Map.of("warps", joined));
                 } else {
                     sender.sendMessage("[Warp] Warps: " + joined);
                 }
@@ -99,7 +96,7 @@ public class WarpCommand implements OreoCommand {
         // ---- Permission checks ----
         // Base permission for actor (if actor exists)
         if (actor != null && !actor.hasPermission("oreo.warp")) {
-            Lang.send(actor, "warp.no-permission", Map.of(), actor);
+            Lang.send(actor, "warp.no-permission", null, Map.of());
             log.info("[WarpCmd] Denied (base perm) actor=" + actor.getName() + " warp=" + warpName);
             return true;
         }
@@ -108,12 +105,9 @@ public class WarpCommand implements OreoCommand {
         if (actor != null && !warps.canUse(actor, warpName)) {
             String rp = warps.requiredPermission(warpName);
             if (rp == null || rp.isBlank()) {
-                Lang.send(actor, "warp.no-permission", Map.of(), actor);
+                Lang.send(actor, "warp.no-permission", null, Map.of());
             } else {
-                Lang.send(actor, "warp.no-permission-with-node",
-                        Map.of("permission", rp),
-                        actor
-                );
+                Lang.send(actor, "warp.no-permission-with-node", null, Map.of("permission", rp));
             }
             log.info("[WarpCmd] Denied (warp perm) actor=" + actor.getName()
                     + " target=" + target.getName()
@@ -128,6 +122,7 @@ public class WarpCommand implements OreoCommand {
                     + " tried to warp " + target.getName() + " to " + warpName);
             return true;
         }
+
         // ---- Existence pre-check (avoid warmup if warp doesn't exist) ----
         final String localServer = plugin.getConfigService().serverName();
         final WarpDirectory warpDir = plugin.getWarpDirectory();
@@ -139,7 +134,7 @@ public class WarpCommand implements OreoCommand {
             // maybe it's a local-only warp
             Location test = warps.getWarp(warpName);
             if (test == null) {
-                if (actor != null) Lang.send(actor, "warp.not-found", Map.of(), actor);
+                if (actor != null) Lang.send(actor, "warp.not-found", null, Map.of());
                 else sender.sendMessage("§cWarp '" + warpName + "' not found.");
                 return true;
             }
@@ -150,12 +145,11 @@ public class WarpCommand implements OreoCommand {
         if (ownerServer.equalsIgnoreCase(localServer)) {
             Location test = warps.getWarp(warpName);
             if (test == null) {
-                if (actor != null) Lang.send(actor, "warp.not-found", Map.of(), actor);
+                if (actor != null) Lang.send(actor, "warp.not-found", null, Map.of());
                 else sender.sendMessage("§cWarp '" + warpName + "' not found.");
                 return true;
             }
         }
-
 
         // ---- Cooldown / countdown (features.warp.cooldown) ----
         FileConfiguration settings = plugin.getSettingsConfig().getRoot();
@@ -185,7 +179,6 @@ public class WarpCommand implements OreoCommand {
         return true;
 
     }
-
 
     /**
      * Runs the original warp logic (local or cross-server) AFTER the countdown.
@@ -219,7 +212,7 @@ public class WarpCommand implements OreoCommand {
             Location l = warps.getWarp(warpName);
             if (l == null) {
                 if (actor != null) {
-                    Lang.send(actor, "warp.not-found", Map.of(), actor);
+                    Lang.send(actor, "warp.not-found", null, Map.of());
                 } else {
                     sender.sendMessage("§cWarp '" + warpName + "' not found on this server.");
                 }
@@ -229,10 +222,7 @@ public class WarpCommand implements OreoCommand {
             try {
                 target.teleport(l);
                 // Message to target
-                Lang.send(target, "warp.teleported",
-                        Map.of("warp", warpName),
-                        target
-                );
+                Lang.send(target, "warp.teleported", null, Map.of("warp", warpName));
                 // Message to sender if different
                 if (!sender.equals(target)) {
                     sender.sendMessage("§aTeleported §e" + target.getName()
@@ -243,10 +233,7 @@ public class WarpCommand implements OreoCommand {
             } catch (Exception ex) {
                 String err = (ex.getMessage() == null ? "unknown" : ex.getMessage());
                 if (actor != null) {
-                    Lang.send(actor, "warp.teleport-failed",
-                            Map.of("error", err),
-                            actor
-                    );
+                    Lang.send(actor, "warp.teleport-failed", null, Map.of("error", err));
                 } else {
                     sender.sendMessage("§cTeleport failed: " + err);
                 }
@@ -259,14 +246,11 @@ public class WarpCommand implements OreoCommand {
         var cs = plugin.getCrossServerSettings();
         if (!cs.warps() && !targetServer.equalsIgnoreCase(localServer)) {
             if (actor != null) {
-                Lang.send(actor, "warp.cross-disabled", Map.of(), actor);
-                Lang.send(actor, "warp.cross-disabled-tip",
-                        Map.of(
-                                "server", targetServer,
-                                "warp", warpName
-                        ),
-                        actor
-                );
+                Lang.send(actor, "warp.cross-disabled", null, Map.of());
+                Lang.send(actor, "warp.cross-disabled-tip", null, Map.of(
+                        "server", targetServer,
+                        "warp", warpName
+                ));
             } else {
                 sender.sendMessage("§cCross-server warps are disabled in config.");
             }
@@ -291,14 +275,11 @@ public class WarpCommand implements OreoCommand {
             pm.sendPacket(ch, pkt);
         } else {
             if (actor != null) {
-                Lang.send(actor, "warp.messaging-disabled", Map.of(), actor);
-                Lang.send(actor, "warp.messaging-disabled-tip",
-                        Map.of(
-                                "server", targetServer,
-                                "warp", warpName
-                        ),
-                        actor
-                );
+                Lang.send(actor, "warp.messaging-disabled", null, Map.of());
+                Lang.send(actor, "warp.messaging-disabled-tip", null, Map.of(
+                        "server", targetServer,
+                        "warp", warpName
+                ));
             } else {
                 sender.sendMessage("§cCross-server messaging is disabled; cannot warp to " + targetServer + ".");
             }
@@ -308,13 +289,10 @@ public class WarpCommand implements OreoCommand {
         // Proxy switch for the TARGET player
         if (sendPlayerToServer(target, targetServer)) {
             // Message to target
-            Lang.send(target, "warp.sending",
-                    Map.of(
-                            "server", targetServer,
-                            "warp", warpName
-                    ),
-                    target
-            );
+            Lang.send(target, "warp.sending", null, Map.of(
+                    "server", targetServer,
+                    "warp", warpName
+            ));
             // Message to sender if different
             if (!sender.equals(target)) {
                 sender.sendMessage("§aSending §e" + target.getName()
@@ -324,10 +302,7 @@ public class WarpCommand implements OreoCommand {
                     + " to=" + targetServer);
         } else {
             if (actor != null) {
-                Lang.send(actor, "warp.switch-failed",
-                        Map.of("server", targetServer),
-                        actor
-                );
+                Lang.send(actor, "warp.switch-failed", null, Map.of("server", targetServer));
             } else {
                 sender.sendMessage("§cProxy switch failed to " + targetServer + ".");
             }
@@ -380,10 +355,7 @@ public class WarpCommand implements OreoCommand {
                 if (hasBodyMoved(target, origin)) {
                     cancel();
                     // Lang: warp cancelled because of movement
-                    Lang.send(target, "warp.cancelled-moved",
-                            Map.of("warp", warpName),
-                            target
-                    );
+                    Lang.send(target, "warp.cancelled-moved", null, Map.of("warp", warpName));
                     return;
                 }
 
@@ -394,9 +366,8 @@ public class WarpCommand implements OreoCommand {
                 }
 
                 // Title + subtitle from lang.yml
-                String title = Lang.msg("teleport.countdown.title", null, target);
-                String subtitle = Lang.msg(
-                        "teleport.countdown.subtitle",
+                String title = Lang.msg("teleport.countdown.title", target);
+                String subtitle = Lang.msgv("teleport.countdown.subtitle",
                         Map.of("seconds", String.valueOf(remaining)),
                         target
                 );
@@ -406,8 +377,6 @@ public class WarpCommand implements OreoCommand {
             }
         }.runTaskTimer(plugin, 0L, 20L);
     }
-
-
 
     /**
      * Check if player moved to another block/world (head rotation allowed).

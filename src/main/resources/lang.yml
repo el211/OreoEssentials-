@@ -70,69 +70,65 @@ kits:
     max-chunks: 3
 
 # =========================================================
-# Custom Crafting (OreoCraft)
+# Custom Crafting (OreoCraft) - MiniMessage version
 # =========================================================
 customcraft:
-  # Chat / command messages
   messages:
-    saved: '%prefix%&aRecipe &e%name% &ahas been saved (&f%mode%&a) %perm_note%.'
-    invalid: '%prefix%&cInvalid recipe. You need a result item and at least one ingredient.'
-    deleted: '%prefix%&aRecipe &e%name% &ahas been deleted.'
-    delete-hint: '%prefix%&eTip: Hold &lSHIFT &eand click the barrier to delete &c%name%&e.'
-    reloaded: '%prefix%&aCustom recipes reloaded.'
-    list: '%prefix%&eRecipes (%count%): &7%names%'
-    no-permission-craft: '%prefix%&cYou lack permission to craft this (&e%permission%&c).'
+    saved: "%prefix% <green>Recipe <yellow>%name%</yellow> has been saved (<white>%mode%</white>) %perm_note%.</green>"
+    invalid: "%prefix% <red>Invalid recipe. You need a result item and at least one ingredient.</red>"
+    deleted: "%prefix% <green>Recipe <yellow>%name%</yellow> has been deleted.</green>"
+    delete-hint: "%prefix% <yellow>Tip:</yellow> Hold <bold>SHIFT</bold> and click the barrier to delete <red>%name%</red>."
+    reloaded: "%prefix% <green>Custom recipes reloaded.</green>"
+    list: "%prefix% <yellow>Recipes</yellow> (<white>%count%</white>): <gray>%names%</gray>"
+    no-permission-craft: "%prefix% <red>You lack permission to craft this</red> (<yellow>%permission%</yellow><red>).</red>"
 
-  # GUI strings
   gui:
-    title: '&bOreoCraft — %name%'
+    title: "<#00bcd4><bold>OreoCraft</bold></#00bcd4> <gray>—</gray> <white>%name%</white>"
     labels:
-      ingredients: '&eIngredients (3×3)'
-      result: '&aResult →'
+      ingredients: "<yellow>Ingredients (3×3)</yellow>"
+      result: "<green>Result →</green>"
 
     delete:
-      name: '&cDelete this recipe'
+      name: "<red>Delete this recipe</red>"
       lore:
-        - '&7Click: &fInfo'
-        - '&7SHIFT+Click: &cCONFIRM deletion'
+        - "<gray>Click:</gray> <white>Info</white>"
+        - "<gray>SHIFT+Click:</gray> <red>CONFIRM deletion</red>"
 
     mode:
-      shaped-name: '&bMode: SHAPED'
-      shapeless-name: '&aMode: SHAPELESS'
-      lore-common: '&7Click to toggle.'
-      lore-shaped: '&7Layout matters.'
-      lore-shapeless: '&7Order doesn''t matter.'
+      shaped-name: "<aqua>Mode: SHAPED</aqua>"
+      shapeless-name: "<green>Mode: SHAPELESS</green>"
+      lore-common: "<gray>Click to toggle.</gray>"
+      lore-shaped: "<gray>Layout matters.</gray>"
+      lore-shapeless: "<gray>Order doesn''t matter.</gray>"
 
     permission:
-      public-name: '&aPublic'
+      public-name: "<green>Public</green>"
       public-lore:
-        - '&7No permission required.'
-        - '&7Click to require a default node.'
-      required-name: '&6Permission required'
+        - "<gray>No permission required.</gray>"
+        - "<gray>Click to require a default node.</gray>"
+      required-name: "<gold>Permission required</gold>"
       required-lore:
-        - '&7Node: &e%permission%'
-        - '&7Click to make it &aPublic'
+        - "<gray>Node:</gray> <yellow>%permission%</yellow>"
+        - "<gray>Click to make it</gray> <green>Public</green>"
 
-  # Recipe browser (list) menu
   browse:
-    title: '&bOreoCraft — Recipes'
-    hint: '&eClick a recipe to edit'
+    title: "<#00bcd4><bold>OreoCraft</bold></#00bcd4> <gray>—</gray> <white>Recipes</white>"
+    hint: "<yellow>Click a recipe to edit</yellow>"
     icon-lore:
-      - '&7Mode: &f%mode%'
-      - '&7Perm: &f%permission_or_none%'
-      - '&aClick to edit'
-    prev: '&ePrevious'
-    next: '&eNext'
+      - "<gray>Mode:</gray> <white>%mode%</white>"
+      - "<gray>Perm:</gray> <white>%permission_or_none%</white>"
+      - "<green>Click to edit</green>"
+    prev: "<yellow>Previous</yellow>"
+    next: "<yellow>Next</yellow>"
 
-  # Formatting helpers
   format:
     mode:
-      shaped: Shaped
-      shapeless: Shapeless
+      shaped: "Shaped"
+      shapeless: "Shapeless"
     permission:
-      none: '&7None'
-      note-public: '&7(public)'
-      note-required: '&6perm &e%permission%'
+      none: "<gray>None</gray>"
+      note-public: "<gray>(public)</gray>"
+      note-required: "<gold>perm</gold> <yellow>%permission%</yellow>"
 
 # =========================================================
 # Economy

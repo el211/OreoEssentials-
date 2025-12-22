@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/ClearCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -37,7 +38,7 @@ public class ClearCommand implements OreoCommand {
             Lang.send(sender,
                     "admin.clear.no-service",
                     null,
-                    (sender instanceof Player p) ? p : null
+                    null
             );
             // on peut quand même clear en live si le joueur est ici
         }
@@ -48,8 +49,8 @@ public class ClearCommand implements OreoCommand {
                 // Console doit préciser un joueur
                 Lang.send(sender,
                         "admin.clear.console-usage",
-                        Map.of("label", label),
-                        null
+                        null,
+                        Map.of("label", label)
                 );
                 return true;
             }
@@ -65,13 +66,13 @@ public class ClearCommand implements OreoCommand {
                 Lang.send(p,
                         "admin.clear.self.all-servers",
                         null,
-                        p
+                        null
                 );
             } else {
                 Lang.send(p,
                         "admin.clear.self.this-server",
                         null,
-                        p
+                        null
                 );
             }
 
@@ -83,7 +84,7 @@ public class ClearCommand implements OreoCommand {
             Lang.send(sender,
                     "admin.clear.others-no-permission",
                     null,
-                    (sender instanceof Player p) ? p : null
+                    null
             );
             return true;
         }
@@ -95,8 +96,8 @@ public class ClearCommand implements OreoCommand {
         if (targetUuid == null) {
             Lang.send(sender,
                     "admin.clear.target-not-found",
-                    Map.of("target", targetName),
-                    (sender instanceof Player p) ? p : null
+                    null,
+                    Map.of("target", targetName)
             );
             return true;
         }
@@ -110,15 +111,15 @@ public class ClearCommand implements OreoCommand {
                 // Notifier le joueur: clear all servers
                 Lang.send(online,
                         "admin.clear.target-notified-all",
-                        Map.of("player", sender.getName()),
-                        online
+                        null,
+                        Map.of("player", sender.getName())
                 );
             } else {
                 // Notifier le joueur: clear local uniquement
                 Lang.send(online,
                         "admin.clear.target-notified-local",
-                        Map.of("player", sender.getName()),
-                        online
+                        null,
+                        Map.of("player", sender.getName())
                 );
             }
         }
@@ -128,14 +129,14 @@ public class ClearCommand implements OreoCommand {
             clearPersistentInventory(invService, targetUuid);
             Lang.send(sender,
                     "admin.clear.sender-confirm-all",
-                    Map.of("target", targetName),
-                    (sender instanceof Player p) ? p : null
+                    null,
+                    Map.of("target", targetName)
             );
         } else {
             Lang.send(sender,
                     "admin.clear.sender-confirm-local",
-                    Map.of("target", targetName),
-                    (sender instanceof Player p) ? p : null
+                    null,
+                    Map.of("target", targetName)
             );
         }
 

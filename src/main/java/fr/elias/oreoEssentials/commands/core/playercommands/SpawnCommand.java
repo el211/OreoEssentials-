@@ -56,11 +56,8 @@ public class SpawnCommand implements OreoCommand {
         // Respect cross-server toggle for spawn
         var cs = plugin.getCrossServerSettings();
         if (!cs.spawn()) {
-            Lang.send(p, "spawn.cross-disabled", Map.of(), p);
-            Lang.send(p, "spawn.cross-disabled-tip",
-                    Map.of("server", targetServer),
-                    p
-            );
+            Lang.send(p, "spawn.cross-disabled", null, Map.of());
+            Lang.send(p, "spawn.cross-disabled-tip", null, Map.of("server", targetServer));
             return true;
         }
 
@@ -76,7 +73,7 @@ public class SpawnCommand implements OreoCommand {
     private boolean handleLocalSpawn(OreoEssentials plugin, Player p, java.util.logging.Logger log) {
         Location spawnLoc = spawn.getSpawn();
         if (spawnLoc == null) {
-            Lang.send(p, "spawn.not-set", Map.of(), p);
+            Lang.send(p, "spawn.not-set", null, Map.of());
             log.warning("[SpawnCmd] Local spawn not set.");
             return true;
         }
@@ -94,15 +91,14 @@ public class SpawnCommand implements OreoCommand {
         if (bypassCooldown || !enabled || seconds <= 0) {
             try {
                 p.teleport(spawnLoc);
-                Lang.send(p, "spawn.teleported", Map.of(), p);
+                Lang.send(p, "spawn.teleported", null, Map.of());
                 log.info("[SpawnCmd] Local teleport success. loc=" + spawnLoc
                         + (bypassCooldown ? " (bypass cooldown: OP)" : ""));
             } catch (Exception ex) {
                 log.warning("[SpawnCmd] Local teleport exception: " + ex.getMessage());
                 Lang.send(p, "spawn.teleport-failed",
-                        Map.of("error", ex.getMessage() == null ? "unknown" : ex.getMessage()),
-                        p
-                );
+                        null,
+                        Map.of("error", ex.getMessage() == null ? "unknown" : ex.getMessage()));
             }
             return true;
         }
@@ -124,7 +120,7 @@ public class SpawnCommand implements OreoCommand {
                 // Cancel if player moved to another block/world (head rotation allowed)
                 if (hasBodyMoved(p, origin)) {
                     cancel();
-                    Lang.send(p, "spawn.cancelled-moved", Map.of(), p);
+                    Lang.send(p, "spawn.cancelled-moved", null, Map.of());
                     log.info("[SpawnCmd] Player moved during spawn countdown; cancelled.");
                     return;
                 }
@@ -133,25 +129,24 @@ public class SpawnCommand implements OreoCommand {
                     cancel();
                     try {
                         p.teleport(spawnLoc);
-                        Lang.send(p, "spawn.teleported", Map.of(), p);
+                        Lang.send(p, "spawn.teleported", null, Map.of());
                         log.info("[SpawnCmd] Local teleport success after countdown. loc=" + spawnLoc);
                     } catch (Exception ex) {
                         log.warning("[SpawnCmd] Local teleport exception after countdown: " + ex.getMessage());
                         Lang.send(p, "spawn.teleport-failed",
-                                Map.of("error", ex.getMessage() == null ? "unknown" : ex.getMessage()),
-                                p
-                        );
+                                null,
+                                Map.of("error", ex.getMessage() == null ? "unknown" : ex.getMessage()));
                     }
                     return;
                 }
 
-                // Show countdown to the player (lang-based)
-                String title = Lang.msg("teleport.countdown.title", null, p);
-                String subtitle = Lang.msg(
-                        "teleport.countdown.subtitle",
-                        Map.of("seconds", String.valueOf(remain)),
-                        p
-                );
+// Show countdown to the player (lang-based)
+                String title = Lang.msg("teleport.countdown.title", p);  // FIXED
+                String subtitle = Lang.msg("teleport.countdown.subtitle", p);  // FIXED
+// Manually apply %seconds% because we're doing post-replacement
+                if (subtitle != null) {
+                    subtitle = subtitle.replace("%seconds%", String.valueOf(remain));
+                }
                 p.sendTitle(title, subtitle, 0, 20, 0);
                 remain--;
             }
@@ -176,11 +171,8 @@ public class SpawnCommand implements OreoCommand {
                 + " pm.init=" + (pm != null && pm.isInitialized()));
 
         if (pm == null || !pm.isInitialized()) {
-            Lang.send(p, "spawn.messaging-disabled", Map.of(), p);
-            Lang.send(p, "spawn.messaging-disabled-tip",
-                    Map.of("server", targetServer),
-                    p
-            );
+            Lang.send(p, "spawn.messaging-disabled", null, Map.of());
+            Lang.send(p, "spawn.messaging-disabled-tip", null, Map.of("server", targetServer));
             return true;
         }
 
@@ -210,18 +202,12 @@ public class SpawnCommand implements OreoCommand {
             pm.sendPacket(ch, pkt);
 
             if (sendPlayerToServer(p, targetServer)) {
-                Lang.send(p, "spawn.sending",
-                        Map.of("server", targetServer),
-                        p
-                );
+                Lang.send(p, "spawn.sending", null, Map.of("server", targetServer));
                 log.info("[SpawnCmd] Proxy switch initiated (no cooldown"
                         + (bypassCooldown ? " / OP bypass" : "")
                         + "). player=" + p.getUniqueId() + " to=" + targetServer);
             } else {
-                Lang.send(p, "spawn.switch-failed",
-                        Map.of("server", targetServer),
-                        p
-                );
+                Lang.send(p, "spawn.switch-failed", null, Map.of("server", targetServer));
                 log.warning("[SpawnCmd] Proxy switch failed to " + targetServer + " (check Velocity/Bungee server name match).");
             }
             return true;
@@ -250,7 +236,7 @@ public class SpawnCommand implements OreoCommand {
                 // Cancel if player moved to another block/world (head rotation allowed)
                 if (hasBodyMoved(p, origin)) {
                     cancel();
-                    Lang.send(p, "spawn.cancelled-moved", Map.of(), p);
+                    Lang.send(p, "spawn.cancelled-moved", null, Map.of());
                     log.info("[SpawnCmd] Player moved during remote spawn countdown; cancelled.");
                     return;
                 }
@@ -266,30 +252,23 @@ public class SpawnCommand implements OreoCommand {
 
                     // Now proxy-switch the player
                     if (sendPlayerToServer(p, targetServer)) {
-                        Lang.send(p, "spawn.sending",
-                                Map.of("server", targetServer),
-                                p
-                        );
+                        Lang.send(p, "spawn.sending", null, Map.of("server", targetServer));
                         log.info("[SpawnCmd] Proxy switch initiated after countdown. player="
                                 + p.getUniqueId() + " to=" + targetServer);
                     } else {
-                        Lang.send(p, "spawn.switch-failed",
-                                Map.of("server", targetServer),
-                                p
-                        );
+                        Lang.send(p, "spawn.switch-failed", null, Map.of("server", targetServer));
                         log.warning("[SpawnCmd] Proxy switch failed to " + targetServer
                                 + " (check Velocity/Bungee server name match).");
                     }
                     return;
                 }
 
-                // Show countdown to the player (lang-based)
-                String title = Lang.msg("teleport.countdown.title", null, p);
-                String subtitle = Lang.msg(
-                        "teleport.countdown.subtitle",
-                        Map.of("seconds", String.valueOf(remain)),
-                        p
-                );
+// Show countdown to the player (lang-based)
+                String title = Lang.msg("teleport.countdown.title", p);  // FIXED
+                String subtitle = Lang.msg("teleport.countdown.subtitle", p);  // FIXED
+                if (subtitle != null) {
+                    subtitle = subtitle.replace("%seconds%", String.valueOf(remain));
+                }
                 p.sendTitle(title, subtitle, 0, 20, 0);
                 remain--;
             }

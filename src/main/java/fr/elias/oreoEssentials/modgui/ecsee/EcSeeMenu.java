@@ -30,13 +30,22 @@ public class EcSeeMenu implements InventoryProvider {
         this.targetId = targetId;
     }
 
+// File: src/main/java/your/package/YourClass.java
+
     @Override
     public void init(Player viewer, InventoryContents c) {
         EnderChestService ecs = plugin.getEnderChestService();
         if (ecs == null) {
             viewer.closeInventory();
-            Lang.send(viewer, "modgui.ecsee.service-missing",
-                    null, viewer);
+
+            // ✅ FIX: use a valid overload (no bogus 4th-arg Player)
+            // Option 1: rely on lang.yml only
+            Lang.send(viewer, "modgui.ecsee.service-missing");
+
+            // Option 2 (if you want a hardcoded fallback too), pick ONE of these:
+            // Lang.send(viewer, "modgui.ecsee.service-missing", "§cEnderChest service is missing.");
+            // Lang.send(viewer, "modgui.ecsee.service-missing", "", Map.of()); // placeholders supported if needed
+
             return;
         }
 
@@ -74,10 +83,9 @@ public class EcSeeMenu implements InventoryProvider {
         }
 
         String titleName = Lang.get(
-                        "modgui.ecsee.title",
-                        "&bEditing EnderChest of &e%target%"
-                )
-                .replace("%target%", targetName);
+                "modgui.ecsee.title",
+                "&bEditing EnderChest of &e%target%"
+        ).replace("%target%", targetName);
 
         c.set(5, 4, ClickableItem.empty(
                 new ItemBuilder(Material.ENDER_CHEST)
@@ -85,6 +93,7 @@ public class EcSeeMenu implements InventoryProvider {
                         .build()
         ));
     }
+
 
     @Override
     public void update(Player player, InventoryContents contents) {

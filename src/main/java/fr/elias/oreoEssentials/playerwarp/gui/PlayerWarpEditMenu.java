@@ -1,3 +1,4 @@
+// src/main/java/fr/elias/oreoEssentials/playerwarp/gui/PlayerWarpEditMenu.java
 package fr.elias.oreoEssentials.playerwarp.gui;
 
 import fr.elias.oreoEssentials.playerwarp.PlayerWarp;
@@ -102,8 +103,7 @@ public class PlayerWarpEditMenu implements InventoryProvider {
         contents.set(1, 1, ClickableItem.of(tp, e -> {
             boolean ok = service.teleportToPlayerWarp(player, warp.getOwner(), warp.getName());
             if (!ok) {
-                Lang.send(player, "pw.teleport-failed",
-                        Map.of("error", "unknown"), player);
+                Lang.send(player, "pw.teleport-failed", "", Map.of("error", "unknown"));
             }
         }));
 
@@ -122,9 +122,7 @@ public class PlayerWarpEditMenu implements InventoryProvider {
         contents.set(1, 2, ClickableItem.of(reset, e -> {
             warp.setLocation(player.getLocation().clone());
             service.saveWarp(warp);
-            Lang.send(player, "pw.reset-success",
-                    Map.of("name", warp.getName()), player);
-            // re-open to refresh info
+            Lang.send(player, "pw.reset-success", "", Map.of("name", warp.getName()));
             open(player, service, warp, categoryFilter);
         }));
 
@@ -144,8 +142,7 @@ public class PlayerWarpEditMenu implements InventoryProvider {
             boolean newState = !warp.isLocked();
             warp.setLocked(newState);
             service.saveWarp(warp);
-            Lang.send(player, newState ? "pw.locked" : "pw.unlocked",
-                    Map.of("warp", warp.getName()), player);
+            Lang.send(player, newState ? "pw.locked" : "pw.unlocked", "", Map.of("warp", warp.getName()));
             open(player, service, warp, categoryFilter);
         }));
 
@@ -167,11 +164,9 @@ public class PlayerWarpEditMenu implements InventoryProvider {
             warp.setWhitelistEnabled(newState);
             service.saveWarp(warp);
             if (newState) {
-                Lang.send(player, "pw.whitelist-enabled",
-                        Map.of("warp", warp.getName()), player);
+                Lang.send(player, "pw.whitelist-enabled", "", Map.of("warp", warp.getName()));
             } else {
-                Lang.send(player, "pw.whitelist-disabled",
-                        Map.of("warp", warp.getName()), player);
+                Lang.send(player, "pw.whitelist-disabled", "", Map.of("warp", warp.getName()));
             }
             open(player, service, warp, categoryFilter);
         }));
@@ -191,13 +186,12 @@ public class PlayerWarpEditMenu implements InventoryProvider {
         contents.set(1, 6, ClickableItem.of(iconItem, e -> {
             ItemStack hand = player.getInventory().getItemInMainHand();
             if (hand == null || hand.getType().isAir()) {
-                Lang.send(player, "pw.icon-no-item", Map.of(), player);
+                Lang.send(player, "pw.icon-no-item");
                 return;
             }
             warp.setIcon(hand.clone());
             service.saveWarp(warp);
-            Lang.send(player, "pw.icon-set",
-                    Map.of("warp", warp.getName()), player);
+            Lang.send(player, "pw.icon-set", "", Map.of("warp", warp.getName()));
             open(player, service, warp, categoryFilter);
         }));
 
@@ -213,10 +207,8 @@ public class PlayerWarpEditMenu implements InventoryProvider {
         delete.setItemMeta(deleteMeta);
 
         contents.set(1, 7, ClickableItem.of(delete, e -> {
-            // You can add a confirmation GUI later if you want
             service.deleteWarp(warp);
-            Lang.send(player, "pw.remove-success",
-                    Map.of("name", warp.getName()), player);
+            Lang.send(player, "pw.remove-success", "", Map.of("name", warp.getName()));
             player.closeInventory();
         }));
 
@@ -249,17 +241,14 @@ public class PlayerWarpEditMenu implements InventoryProvider {
             if (warp.getPassword() == null || warp.getPassword().isEmpty()) {
                 warp.setPassword("changeme");
                 service.saveWarp(warp);
-                Lang.send(player, "pw.password-placeholder-set",
-                        Map.of("warp", warp.getName(), "password", "changeme"),
-                        player);
+                Lang.send(player, "pw.password-placeholder-set", "", Map.of(
+                        "warp", warp.getName(), "password", "changeme"));
             } else {
                 warp.setPassword(null);
                 service.saveWarp(warp);
-                Lang.send(player, "pw.password-cleared",
-                        Map.of("warp", warp.getName()),
-                        player);
+                Lang.send(player, "pw.password-cleared", "", Map.of("warp", warp.getName()));
             }
-            open(player, service, warp, categoryFilter); // refresh GUI
+            open(player, service, warp, categoryFilter);
         }));
 
         // ---------- META / COMMAND HINTS ROW ----------

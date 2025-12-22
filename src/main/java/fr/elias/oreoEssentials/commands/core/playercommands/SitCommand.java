@@ -60,21 +60,21 @@ public class SitCommand implements OreoCommand {
         // If already sitting on one of our seats -> stand up (toggle behavior)
         if (isSitting(p)) {
             standUp(p);
-            Lang.send(p, "player.sit.stand", null, p);
+            Lang.send(p, "player.sit.stand", null, null);
             return true;
         }
 
         // Basic state checks
         if (p.getVehicle() != null) {
-            Lang.send(p, "player.sit.already-riding", null, p);
+            Lang.send(p, "player.sit.already-riding", null, null);
             return true;
         }
         if (!p.isOnGround()) {
-            Lang.send(p, "player.sit.not-on-ground", null, p);
+            Lang.send(p, "player.sit.not-on-ground", null, null);
             return true;
         }
         if (p.isFlying() || p.isGliding()) {
-            Lang.send(p, "player.sit.not-while-flying", null, p);
+            Lang.send(p, "player.sit.not-while-flying", null, null);
             return true;
         }
 
@@ -88,7 +88,7 @@ public class SitCommand implements OreoCommand {
         }
 
         if (blockBelow.getType() == Material.AIR) {
-            Lang.send(p, "player.sit.no-block", null, p);
+            Lang.send(p, "player.sit.no-block", null, null);
             return true;
         }
 
@@ -139,9 +139,12 @@ public class SitCommand implements OreoCommand {
         seat.addPassenger(p);
 
         // Feedback to player with simple placeholder
-        Lang.send(p, "player.sit.sat", Map.of(
-                "block", blockBelow.getType().name().toLowerCase()
-        ), p);
+        Lang.send(
+                p,
+                "player.sit.sat",
+                null,
+                Map.of("block", blockBelow.getType().name().toLowerCase())
+        );
 
         return true;
     }

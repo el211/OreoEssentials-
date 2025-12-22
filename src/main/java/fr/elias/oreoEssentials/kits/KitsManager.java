@@ -201,7 +201,6 @@ public class KitsManager {
         try { dataCfg.save(dataFile); } catch (Exception ignored) {}
     }
 
-
     /**
      * Tries to give the kit to player.
      * @return true if handled (success or messaged), false if kit ID was unknown.
@@ -209,22 +208,22 @@ public class KitsManager {
     public boolean claim(Player p, String kitId) {
         Kit kit = kits.get(kitId.toLowerCase(Locale.ROOT));
         if (kit == null) {
-            Lang.send(p, "kits.unknown-kit", Map.of("kit_id", kitId), p);
+            Lang.send(p, "kits.unknown-kit", null, Map.of("kit_id", kitId));
             return false;
         }
 
         // Gate when disabled
         if (!isEnabled()) {
-            Lang.send(p, "kits.disabled", Map.of(), p);
+            Lang.send(p, "kits.disabled", null, Map.of());
             if (p.hasPermission("oreo.kits.admin")) {
-                Lang.send(p, "kits.disabled.hint", Map.of("cmd", "/kits toggle"), p);
+                Lang.send(p, "kits.disabled.hint", null, Map.of("cmd", "/kits toggle"));
             }
             return true;
         }
 
         // permission globale "je peux utiliser des kits"
         if (!p.hasPermission("oreo.kit.claim")) {
-            Lang.send(p, "kits.no-permission-claim", Map.of(), p);
+            Lang.send(p, "kits.no-permission-claim", null, Map.of());
             return true;
         }
 
@@ -237,12 +236,12 @@ public class KitsManager {
                 && !p.hasPermission("oreo.kits.admin")) {
 
             Lang.send(p, "kits.no-permission-specific",
+                    null,
                     Map.of(
                             "kit_id", kit.getId(),
                             "kit_name", kit.getDisplayName(),
                             "perm", kitPerm
-                    ),
-                    p
+                    )
             );
             return true;
         }
@@ -250,17 +249,17 @@ public class KitsManager {
         long left = getSecondsLeft(p, kit);
         if (left > 0 && !p.hasPermission("oreo.kit.bypasscooldown")) {
             Lang.send(p, "kits.cooldown",
+                    null,
                     Map.of(
                             "kit_name", kit.getDisplayName(),
                             "cooldown_left", Lang.timeHuman(left),
                             "cooldown_left_raw", String.valueOf(left)
-                    ),
-                    p);
+                    ));
             return true;
         } else if (left > 0) {
             Lang.send(p, "kits.bypass-cooldown",
-                    Map.of("kit_name", kit.getDisplayName()),
-                    p);
+                    null,
+                    Map.of("kit_name", kit.getDisplayName()));
         }
 
         // Give items with overflow drop
@@ -292,11 +291,11 @@ public class KitsManager {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> runKitCommand(p, line), runAt);
             }
 
-            Lang.send(p, "kits.commands-ran", Map.of("kit_name", kit.getDisplayName()), p);
+            Lang.send(p, "kits.commands-ran", null, Map.of("kit_name", kit.getDisplayName()));
         }
 
         markClaim(p, kit);
-        Lang.send(p, "kits.claimed", Map.of("kit_name", kit.getDisplayName()), p);
+        Lang.send(p, "kits.claimed", null, Map.of("kit_name", kit.getDisplayName()));
         return true;
     }
 
@@ -355,6 +354,7 @@ public class KitsManager {
         // default -> console
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), withPlayer);
     }
+
     public org.bukkit.configuration.file.FileConfiguration kitsCfg() { return kitsCfg; }
     public fr.elias.oreoEssentials.OreoEssentials getPlugin() { return plugin; }
 

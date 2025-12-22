@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/ecocommands/ChequeCommand.java
 package fr.elias.oreoEssentials.commands.ecocommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -24,6 +25,14 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
 
+/**
+ * Creates and redeems paper "cheques" for money.
+ * Works with your Database first; falls back to Vault if present.
+ *
+ * Lang usage:
+ * - Send strings with Lang.msg(key, vars, viewer) to get PAPI + MiniMessage/& support.
+ * - For console/plain usage, pass viewer = null.
+ */
 public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
 
     private final OreoEssentials plugin;
@@ -38,11 +47,13 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
+    /* ================= Bukkit CommandExecutor ================= */
+
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Lang.msg("economy.cheque.usage.root", null, null));
+            sender.sendMessage(Lang.msg("economy.cheque.usage.root", null));
             return true;
         }
 
@@ -51,7 +62,7 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
         boolean canRedeem = player.hasPermission("oreo.cheque.redeem") || player.hasPermission("rabbiteconomy.cheque.redeem");
 
         if (args.length == 0) {
-            player.sendMessage(Lang.msg("economy.cheque.usage.root", null, player));
+            player.sendMessage(Lang.msg("economy.cheque.usage.root", player));
             return true;
         }
 
@@ -59,35 +70,39 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
 
         if (sub.equals("create")) {
             if (!canCreate) {
-                player.sendMessage(Lang.msg("economy.errors.no-permission", null, player));
+                player.sendMessage(Lang.msg("economy.errors.no-permission", player));
                 return true;
             }
             if (args.length < 2) {
-                player.sendMessage(Lang.msg("economy.cheque.usage.create", null, player));
+                player.sendMessage(Lang.msg("economy.cheque.usage.create", player));
                 return true;
             }
 
             Double amount = parseAmount(args[1]);
             if (amount == null || amount <= 0) {
-                player.sendMessage(Lang.msg("economy.cheque.create.fail-amount", null, player));
+                player.sendMessage(Lang.msg("economy.cheque.create.fail-amount", player));
                 return true;
             }
 
-            // DB preferred
+            // Prefer your database
             if (plugin.getDatabase() != null) {
                 UUID id = player.getUniqueId();
                 Async.run(() -> {
                     double bal = plugin.getDatabase().getBalance(id);
                     if (bal + 1e-9 < amount) {
-                        runSync(() -> player.sendMessage(Lang.msg("economy.cheque.create.fail-insufficient",
-                                Map.of("amount_formatted", fmt(amount), "currency_symbol", currencySymbol()), player)));
+                        runSync(() -> player.sendMessage(
+                                Lang.msg("economy.cheque.create.fail-insufficient",
+                                        Map.of("amount_formatted", fmt(amount),
+                                                "currency_symbol", currencySymbol()),
+                                        player)));
                         return;
                     }
                     plugin.getDatabase().setBalance(id, player.getName(), bal - amount);
                     runSync(() -> {
                         giveChequeItem(player, amount);
                         player.sendMessage(Lang.msg("economy.cheque.create.success",
-                                Map.of("amount_formatted", fmt(amount), "currency_symbol", currencySymbol()), player));
+                                Map.of("amount_formatted", fmt(amount),
+                                        "currency_symbol", currencySymbol()), player));
                     });
                 });
                 return true;
@@ -98,40 +113,42 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
                 double bal = vault.getBalance(player);
                 if (bal + 1e-9 < amount) {
                     player.sendMessage(Lang.msg("economy.cheque.create.fail-insufficient",
-                            Map.of("amount_formatted", fmt(amount), "currency_symbol", currencySymbol()), player));
+                            Map.of("amount_formatted", fmt(amount),
+                                    "currency_symbol", currencySymbol()), player));
                     return true;
                 }
                 vault.withdrawPlayer(player, amount);
                 giveChequeItem(player, amount);
                 player.sendMessage(Lang.msg("economy.cheque.create.success",
-                        Map.of("amount_formatted", fmt(amount), "currency_symbol", currencySymbol()), player));
+                        Map.of("amount_formatted", fmt(amount),
+                                "currency_symbol", currencySymbol()), player));
                 return true;
             }
 
-            player.sendMessage(Lang.msg("economy.errors.no-economy", null, player));
+            player.sendMessage(Lang.msg("economy.errors.no-economy", player));
             return true;
         }
 
         if (sub.equals("redeem")) {
             if (!canRedeem) {
-                player.sendMessage(Lang.msg("economy.errors.no-permission", null, player));
+                player.sendMessage(Lang.msg("economy.errors.no-permission", player));
                 return true;
             }
             ItemStack inHand = player.getInventory().getItemInMainHand();
             double amt = readChequeAmount(inHand);
             if (amt <= 0) {
-                player.sendMessage(Lang.msg("economy.cheque.redeem.fail-none", null, player));
+                player.sendMessage(Lang.msg("economy.cheque.redeem.fail-none", player));
                 return true;
             }
             redeemCheque(player, inHand, amt);
             return true;
         }
 
-        player.sendMessage(Lang.msg("economy.cheque.usage.root", null, player));
+        player.sendMessage(Lang.msg("economy.cheque.usage.root", player));
         return true;
     }
 
-    /* ---------- Right-click redeem ---------- */
+    /* ================= Right-click redeem ================= */
 
     @EventHandler
     public void onUseCheque(PlayerInteractEvent e) {
@@ -149,9 +166,10 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
         redeemCheque(p, item, amt);
     }
 
-    /* ---------- core ---------- */
+    /* ================= Core logic ================= */
 
     private void redeemCheque(Player player, ItemStack item, double amount) {
+        // DB preferred
         if (plugin.getDatabase() != null) {
             Async.run(() -> {
                 UUID id = player.getUniqueId();
@@ -167,6 +185,8 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
             });
             return;
         }
+
+        // Vault fallback
         if (vault != null) {
             vault.depositPlayer(player, amount);
             removeOne(item);
@@ -176,13 +196,15 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
                             "currency_symbol", currencySymbol()), player));
             return;
         }
-        player.sendMessage(Lang.msg("economy.errors.no-economy", null, player));
+
+        player.sendMessage(Lang.msg("economy.errors.no-economy", player));
     }
 
     private void giveChequeItem(Player player, double amount) {
         ItemStack cheque = new ItemStack(Material.PAPER, 1);
         ItemMeta meta = cheque.getItemMeta();
         if (meta != null) {
+            // Display name/lore left as legacy colors; items don't render MiniMessage
             meta.setDisplayName("§6Cheque: §e" + currencySymbol() + fmt(amount));
             meta.setLore(List.of("§7Right-click to redeem this cheque."));
             meta.getPersistentDataContainer().set(chequeKey, PersistentDataType.DOUBLE, amount);
@@ -204,11 +226,10 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
     private void removeOne(ItemStack stack) {
         if (stack == null) return;
         int amt = stack.getAmount();
-        if (amt <= 1) stack.setAmount(0);
-        else stack.setAmount(amt - 1);
+        stack.setAmount(Math.max(0, amt - 1));
     }
 
-    /* ---------- util ---------- */
+    /* ================= Util ================= */
 
     private void runSync(Runnable r) {
         if (Bukkit.isPrimaryThread()) r.run();
@@ -239,44 +260,18 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
     private String currencySymbol() {
         return Lang.get("economy.currency.symbol", "$");
     }
-    // =========================
-    // OreoCommand implementation
-    // =========================
 
-    @Override
-    public String name() {
-        // base label for this command
-        return "cheque";
-    }
+    /* ================= OreoCommand ================= */
 
-    @Override
-    public List<String> aliases() {
-        // no extra aliases (plugin.yml doesn't define any)
-        return List.of();
-    }
-
-    @Override
-    public String permission() {
-        // matches plugin.yml base permission
-        return "oreo.cheque.create";
-    }
-
-    @Override
-    public String usage() {
-        // generic usage shown by CommandManager
-        return "<create|redeem> [amount]";
-    }
-
-    @Override
-    public boolean playerOnly() {
-        // console is not supported (you already check instanceof Player)
-        return true;
-    }
+    @Override public String name() { return "cheque"; }
+    @Override public List<String> aliases() { return List.of(); }
+    @Override public String permission() { return "oreo.cheque.create"; }
+    @Override public String usage() { return "<create|redeem> [amount]"; }
+    @Override public boolean playerOnly() { return true; }
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        // delegate to the existing Bukkit onCommand implementation
+        // Delegate to Bukkit's path to preserve behavior
         return onCommand(sender, null, label, args);
     }
-
 }

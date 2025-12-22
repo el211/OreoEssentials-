@@ -117,7 +117,7 @@ public final class ScoreboardService implements Listener {
 
     public void show(Player p) {
         if (!cfg.enabled()) return;
-        if (isShown(p)) { refresh(p); return; }
+        if (isShown(p)) return; // <-- important
 
         ScoreboardManager mgr = Bukkit.getScoreboardManager();
         if (mgr == null) return;
@@ -132,6 +132,7 @@ public final class ScoreboardService implements Listener {
         p.setScoreboard(board);
         shown.add(p.getUniqueId());
     }
+
 
     public void hide(Player p) {
         clearBoard(p);
@@ -149,15 +150,33 @@ public final class ScoreboardService implements Listener {
 
     private void refresh(Player p) {
         Scoreboard board = p.getScoreboard();
-        if (board == null) { show(p); return; }
-        Objective obj = board.getObjective(DisplaySlot.SIDEBAR);
-        if (obj == null) { show(p); return; }
 
+        // If player has no scoreboard, create one once (no recursion)
+        if (board == null) {
+            ScoreboardManager mgr = Bukkit.getScoreboardManager();
+            if (mgr == null) return;
+            board = mgr.getNewScoreboard();
+            p.setScoreboard(board);
+        }
+
+        // Ensure the objective exists
+        Objective obj = board.getObjective("oreo_sb");
+        if (obj == null) {
+            obj = board.registerNewObjective("oreo_sb", "dummy");
+            obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+            shown.add(p.getUniqueId()); // keep tracking consistent
+        } else if (obj.getDisplaySlot() != DisplaySlot.SIDEBAR) {
+            obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+        }
+
+        // Update title
         try { obj.setDisplayName(render(p, titleAnim.current())); } catch (Throwable ignored) {}
 
+        // Reset + reapply lines
         for (String e : new ArrayList<>(board.getEntries())) board.resetScores(e);
         applyLines(p, board, obj);
     }
+
 
     private void applyLines(Player p, Scoreboard board, Objective obj) {
         List<String> lines = cfg.lines();

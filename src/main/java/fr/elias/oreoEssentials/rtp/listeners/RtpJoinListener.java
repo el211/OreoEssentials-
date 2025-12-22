@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/rtp/listeners/RtpJoinListener.java
 package fr.elias.oreoEssentials.rtp.listeners;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -20,23 +21,22 @@ public class RtpJoinListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
 
-        // Delay 1 tick so the player is fully spawned and world is ready
+        // Delay so player is fully spawned/world loaded (avoid failed teleports).
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            // Check if this player has a pending cross-server RTP
             String worldName = plugin.getRtpPendingService().consume(p.getUniqueId());
-            if (worldName == null) {
-                return; // no pending RTP for this player
-            }
+            if (worldName == null || worldName.isBlank()) return;
 
-            plugin.getLogger().info("[RTP] Executing pending RTP for "
-                    + p.getName() + " in world=" + worldName);
+            plugin.getLogger().info("[RTP] Executing pending RTP for " + p.getName() + " in world=" + worldName);
 
-            // Use the shared local RTP helper from RtpCommand
             boolean ok = RtpCommand.doLocalRtp(plugin, p, worldName);
             if (!ok) {
-                plugin.getLogger().warning("[RTP] Failed to perform pending RTP for "
-                        + p.getName() + " in world=" + worldName);
+                plugin.getLogger().warning("[RTP] Failed to perform pending RTP for " + p.getName() + " in world=" + worldName);
+                // why: cooldown is NOT applied on failure; user can try again
+                return;
             }
+
+            // ✅ Apply cooldown only after a successful cross-server RTP
+            RtpCommand.applyCooldownNow(plugin, p);
         }, 1L);
     }
 }

@@ -61,7 +61,7 @@ public class TpaCommand implements OreoCommand {
         if (!(sender instanceof Player requester)) return true;
 
         if (args.length < 1) {
-            Lang.send(requester, "tpa.usage", Map.of("label", label), requester);
+            Lang.send(requester, "tpa.usage", null, Map.of("label", label));
             return true;
         }
 
@@ -76,7 +76,7 @@ public class TpaCommand implements OreoCommand {
         P(requester, id, "start");
 
         if (input.isEmpty()) {
-            Lang.send(requester, "tpa.usage", Map.of("label", label), requester);
+            Lang.send(requester, "tpa.usage", null, Map.of("label", label));
             D(id, "empty input");
             return true;
         }
@@ -87,17 +87,13 @@ public class TpaCommand implements OreoCommand {
         D(id, "localResolve=" + (local == null ? "null" : local.getName()) + " in " + ms(tLocal));
         if (local != null) {
             if (local.equals(requester)) {
-                Lang.send(requester, "tpa.self", null, requester);
+                Lang.send(requester, "tpa.self", null, null);
                 D(id, "self target");
                 return true;
             }
             teleportService.request(requester, local);
             // message "TPA sent to ..."
-            Lang.send(requester,
-                    "tpa.sent.local",
-                    Map.of("target", local.getName()),
-                    requester
-            );
+            Lang.send(requester, "tpa.sent.local", null, Map.of("target", local.getName()));
 
             D(id, "same-server request queued in " + ms(t0));
             P(requester, id, "same server ✓");
@@ -110,10 +106,7 @@ public class TpaCommand implements OreoCommand {
         var dir = plugin.getPlayerDirectory();
         if (dir == null) {
             D(id, "PlayerDirectory=null (Mongo storage not enabled?)");
-            Lang.send(requester, "tpa.not-found.generic",
-                    Map.of("input", input),
-                    requester
-            );
+            Lang.send(requester, "tpa.not-found.generic", null, Map.of("input", input));
             return true;
         }
 
@@ -136,10 +129,7 @@ public class TpaCommand implements OreoCommand {
         }
 
         if (targetUuid == null) {
-            Lang.send(requester, "tpa.not-found.name-hint",
-                    Map.of("input", input),
-                    requester
-            );
+            Lang.send(requester, "tpa.not-found.name-hint", null, Map.of("input", input));
             D(id, "no UUID; exit in " + ms(t0));
             return true;
         }
@@ -162,7 +152,7 @@ public class TpaCommand implements OreoCommand {
             D(id, "sameServerPresence -> UUID-online=" + (byId != null) + " in " + ms(tUuid));
             if (byId != null) {
                 if (byId.equals(requester)) {
-                    Lang.send(requester, "tpa.self", null, requester);
+                    Lang.send(requester, "tpa.self", null, null);
                     return true;
                 }
                 teleportService.request(requester, byId);
@@ -180,16 +170,10 @@ public class TpaCommand implements OreoCommand {
             if (broker != null) {
                 // PATCH: pass target name to handle cracked/offline UUIDs
                 broker.sendRequestToServer(requester, targetUuid, shownName, where);
-                Lang.send(requester, "tpa.sent.cross-server",
-                        Map.of("target", shownName, "server", where),
-                        requester
-                );
+                Lang.send(requester, "tpa.sent.cross-server", null, Map.of("target", shownName, "server", where));
                 D(id, "cross-server -> request sent via broker to " + where + " (name=" + shownName + ")");
             } else {
-                Lang.send(requester, "tpa.broker-unavailable",
-                        Map.of("target", shownName),
-                        requester
-                );
+                Lang.send(requester, "tpa.broker-unavailable", null, Map.of("target", shownName));
                 D(id, "cross-server -> broker null; cannot send request");
             }
 
@@ -215,10 +199,7 @@ public class TpaCommand implements OreoCommand {
             tryGlobalPing(plugin, targetUuid,
                     "§b" + requester.getName() + "§7 requested to teleport to you. Type §a/tpaccept§7 or §c/tpdeny§7.", id);
 
-            Lang.send(requester, "tpa.sent.global",
-                    Map.of("target", shownName),
-                    requester
-            );
+            Lang.send(requester, "tpa.sent.global", null, Map.of("target", shownName));
             D(id, "presence unknown -> GLOBAL request done in " + ms(t0));
             return true;
         }
@@ -229,7 +210,7 @@ public class TpaCommand implements OreoCommand {
         D(id, "lastChance UUID-online=" + (byId != null) + " in " + ms(tUuid));
         if (byId != null) {
             if (byId.equals(requester)) {
-                Lang.send(requester, "tpa.self", null, requester);
+                Lang.send(requester, "tpa.self", null, null);
                 return true;
             }
             teleportService.request(requester, byId);
@@ -238,10 +219,7 @@ public class TpaCommand implements OreoCommand {
             return true;
         }
 
-        Lang.send(requester, "tpa.not-found.generic",
-                Map.of("input", input),
-                requester
-        );
+        Lang.send(requester, "tpa.not-found.generic", null, Map.of("input", input));
         D(id, "final not found in " + ms(t0));
         return true;
     }

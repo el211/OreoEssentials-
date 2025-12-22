@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/AfeliusReloadCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -27,8 +28,7 @@ public class AfeliusReloadCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (args.length < 1 || !args[0].equalsIgnoreCase("reload")) {
-            Lang.send(sender, "admin.afelius.usage",
-                    Map.of("label", label), null);
+            Lang.send(sender, "admin.afelius.usage", null, Map.of("label", label));
             return true;
         }
 
@@ -47,8 +47,8 @@ public class AfeliusReloadCommand implements OreoCommand {
                 chatCfg.reloadCustomConfig();
                 Lang.send(sender, "admin.afelius.reloaded-chat", null, null);
             }
-            default -> Lang.send(sender, "admin.afelius.unknown-section",
-                    Map.of("sections", "all, config, chat-format"), null);
+            default -> Lang.send(sender, "admin.afelius.unknown-section", null,
+                    Map.of("sections", "all, config, chat-format"));
         }
         return true;
     }

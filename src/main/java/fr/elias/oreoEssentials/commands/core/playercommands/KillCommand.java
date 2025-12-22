@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +23,6 @@ public class KillCommand implements OreoCommand {
         // /kill -> self kill
         if (args.length == 0) {
             if (!(sender instanceof Player p)) {
-                // Console: keep simple usage text
                 sender.sendMessage("Usage: /" + label + " <player>");
                 return true;
             }
@@ -30,16 +30,16 @@ public class KillCommand implements OreoCommand {
             // Self kill permission
             if (!p.hasPermission("oreo.kill")) {
                 Lang.send(p, "kill.self.no-permission",
-                        Map.of(),
-                        p
+                        null,
+                        Collections.emptyMap()
                 );
                 return true;
             }
 
             p.setHealth(0.0);
             Lang.send(p, "kill.self.slain",
-                    Map.of(),
-                    p
+                    null,
+                    Collections.emptyMap()
             );
             return true;
         }
@@ -48,8 +48,8 @@ public class KillCommand implements OreoCommand {
         if (!sender.hasPermission("oreo.kill.others")) {
             if (sender instanceof Player p) {
                 Lang.send(p, "kill.others.no-permission",
-                        Map.of(),
-                        p
+                        null,
+                        Collections.emptyMap()
                 );
             } else {
                 sender.sendMessage("You lack permission to kill others.");
@@ -61,8 +61,8 @@ public class KillCommand implements OreoCommand {
         if (target == null) {
             if (sender instanceof Player p) {
                 Lang.send(p, "kill.target-not-found",
-                        Map.of(),
-                        p
+                        null,
+                        Collections.emptyMap()
                 );
             } else {
                 sender.sendMessage("Player not found.");
@@ -74,8 +74,8 @@ public class KillCommand implements OreoCommand {
 
         if (sender instanceof Player p) {
             Lang.send(p, "kill.others.killed",
-                    Map.of("player", target.getName()),
-                    p
+                    null,
+                    Map.of("player", target.getName())
             );
         } else {
             sender.sendMessage("Killed " + target.getName() + ".");

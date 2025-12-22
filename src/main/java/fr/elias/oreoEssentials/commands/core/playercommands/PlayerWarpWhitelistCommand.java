@@ -33,8 +33,10 @@ public class PlayerWarpWhitelistCommand implements CommandExecutor, TabCompleter
         }
 
         if (args.length < 3) {
-            Lang.send(player, "playerwarps.whitelist.usage",
-                    Map.of("label", label), player);
+            Lang.send(player,
+                    "playerwarps.whitelist.usage",
+                    null,
+                    Map.of("label", label));
             return true;
         }
 
@@ -47,8 +49,10 @@ public class PlayerWarpWhitelistCommand implements CommandExecutor, TabCompleter
         switch (action) {
             case "add" -> service.addToWhitelist(player, warpName, target);
             case "remove", "rem", "del" -> service.removeFromWhitelist(player, warpName, target);
-            default -> Lang.send(player, "playerwarps.whitelist.usage",
-                    Map.of("label", label), player);
+            default -> Lang.send(player,
+                    "playerwarps.whitelist.usage",
+                    null,
+                    Map.of("label", label));
         }
 
         return true;

@@ -1,14 +1,12 @@
 // File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/EcCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
-import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.enderchest.EnderChestService;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import fr.elias.oreoEssentials.util.Lang;
-import java.util.Map;
 
 import java.util.List;
 
@@ -32,15 +30,15 @@ public class EcCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
 
-        // Open the EC
+        // Open the Ender Chest GUI
         p.openInventory(ecService.createVirtualEc(p));
 
-        // Use: enderchest.command.opened-self
+        // Notify the player using Lang (vars map is null here)
         Lang.send(
                 p,
                 "enderchest.command.opened-self",
-                null,
-                p
+                ChatColor.translateAlternateColorCodes('&', "&dEnder Chest opened."),
+                null
         );
 
         if (!crossServer) {
@@ -48,6 +46,4 @@ public class EcCommand implements OreoCommand {
         }
         return true;
     }
-
-
 }

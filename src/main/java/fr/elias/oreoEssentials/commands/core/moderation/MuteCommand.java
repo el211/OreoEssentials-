@@ -36,15 +36,11 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (args.length < 2) {
-            // Usage via lang.yml
-            if (sender instanceof Player p) {
-                Lang.send(p, "moderation.mute.usage",
-                        Map.of("label", label),
-                        p
-                );
-            } else {
-                sender.sendMessage(ChatColor.YELLOW + "Usage: /" + label + " <player> <duration> [reason]");
-            }
+            // Usage via lang.yml (works for players and console)
+            Lang.send(sender,
+                    "moderation.mute.usage",
+                    "§eUsage: /%label% <player> <duration> [reason]",
+                    Map.of("label", label));
             return true;
         }
 
@@ -54,7 +50,7 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
         OfflinePlayer target = Bukkit.getOfflinePlayer(targetArg);
 
         // If Bukkit has no record, try PlayerDirectory to resolve UUID by name
-        if ((target == null || (target.getName() == null && !target.hasPlayedBefore()))) {
+        if (target == null || (target.getName() == null && !target.hasPlayedBefore())) {
             PlayerDirectory dir = OreoEssentials.get().getPlayerDirectory();
             if (dir != null) {
                 try {
@@ -62,29 +58,24 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
                     if (id != null) {
                         target = Bukkit.getOfflinePlayer(id);
                     }
-                } catch (Throwable ignored) {}
+                } catch (Throwable ignored) { }
             }
         }
 
         if (target == null || (target.getName() == null && !target.hasPlayedBefore())) {
-            if (sender instanceof Player p) {
-                Lang.send(p, "moderation.mute.player-not-found",
-                        Map.of("target", targetArg),
-                        p
-                );
-            } else {
-                sender.sendMessage(ChatColor.RED + "Player not found: " + targetArg);
-            }
+            Lang.send(sender,
+                    "moderation.mute.player-not-found",
+                    "§cPlayer not found: %target%",
+                    Map.of("target", targetArg));
             return true;
         }
 
         long durMs = MuteService.parseDurationToMillis(args[1]);
         if (durMs <= 0) {
-            if (sender instanceof Player p) {
-                Lang.send(p, "moderation.mute.invalid-duration", Map.of(), p);
-            } else {
-                sender.sendMessage(ChatColor.RED + "Invalid duration. Use like 30s, 10m, 2h, 1d or seconds.");
-            }
+            Lang.send(sender,
+                    "moderation.mute.invalid-duration",
+                    "§cInvalid duration. Use like 30s, 10m, 2h, 1d or seconds.",
+                    null);
             return true;
         }
 
@@ -105,57 +96,61 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
         }
 
         // Network broadcast of the mute "event" (so other servers also store the mute)
-        try {
-            if (sync != null) {
+        if (sync != null) {
+            try {
                 sync.broadcastMute(target.getUniqueId(), untilEpochMillis, reason, sender.getName());
+            } catch (Throwable t) {
+                Lang.send(sender,
+                        "moderation.mute.broadcast-failed",
+                        ChatColor.RED + "Warning: failed to broadcast mute to other servers.",
+                        null);
             }
-        } catch (Throwable t) {
-            sender.sendMessage(ChatColor.RED + "Warning: failed to broadcast mute to other servers.");
         }
 
-        // --- Human readable duration + reason suffix for lang placeholders ---
+        // --- Vars for lang strings ---
         String durationStr = MuteService.friendlyRemaining(durMs);
-        String reasonSuffix = reason.isEmpty()
-                ? ""
-                : " &7| Reason: &e" + reason;
-
         Map<String, String> vars = new HashMap<>();
         vars.put("target", target.getName());
         vars.put("staff", sender.getName());
         vars.put("duration", durationStr);
         vars.put("reason", reason);
-        vars.put("reason_suffix", reasonSuffix);
+        vars.put("reason_suffix", reason.isEmpty() ? "" : " &7| Reason: &e" + reason);
 
         // Feedback to executor
-        if (sender instanceof Player p) {
-            Lang.send(p, "moderation.mute.executor.success", vars, p);
-        } else {
-            // Console – format via Lang but without PAPI
-            String msg = Lang.msg("moderation.mute.executor.success", vars, null);
-            sender.sendMessage(msg);
-        }
+        Lang.send(sender,
+                "moderation.mute.executor.success",
+                "§aMuted §e%target% §7for §f%duration%%reason_suffix%§7.",
+                vars);
 
         // Feedback to target (if online)
-        Player p = target.getPlayer();
-        if (p != null && p.isOnline()) {
-            Lang.send(p, "moderation.mute.target.notified", vars, p);
+        Player onlineTarget = target.getPlayer();
+        if (onlineTarget != null && onlineTarget.isOnline()) {
+            Lang.send(onlineTarget,
+                    "moderation.mute.target.notified",
+                    "§cYou have been muted for §f%duration%§c.%reason_suffix%",
+                    vars);
         }
 
-        // --- Global broadcast to ALL players (this server + other servers) ---
-        String broadcastMsg = Lang.msg("moderation.mute.broadcast", vars, null);
+        // --- Local broadcast to ALL players and console (each recipient gets lang formatting) ---
+        for (Player pl : Bukkit.getOnlinePlayers()) {
+            Lang.send(pl,
+                    "moderation.mute.broadcast",
+                    "§6[Moderation] §e%target% §7was muted by §b%staff% §7for §f%duration%%reason_suffix%§7.",
+                    vars);
+        }
+        Lang.send(Bukkit.getConsoleSender(),
+                "moderation.mute.broadcast",
+                "[Moderation] %target% was muted by %staff% for %duration%%reason_suffix%.",
+                vars);
 
-        // Local broadcast
-        Bukkit.getOnlinePlayers().forEach(pl -> pl.sendMessage(broadcastMsg));
-        Bukkit.getConsoleSender().sendMessage(broadcastMsg);
-
-        // Cross-server broadcast (via ChatSyncManager)
+        // --- Cross-server broadcast (existing API expects a ready string) ---
         if (sync != null) {
             try {
-                // À implémenter dans ChatSyncManager (voir plus bas)
+                // Build a simple default string for the network, with %vars% replaced.
+                String networkDefault = "§6[Moderation] §e%target% §7was muted by §b%staff% §7for §f%duration%%reason_suffix%§7.";
+                String broadcastMsg = applyVars(networkDefault, vars);
                 sync.broadcastSystemMessage(broadcastMsg);
-            } catch (Throwable ignored) {
-                // ne casse pas la commande si la sync foire
-            }
+            } catch (Throwable ignored) { }
         }
 
         return true;
@@ -193,7 +188,7 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
                             }
                         }
                     }
-                } catch (Throwable ignored) {}
+                } catch (Throwable ignored) { }
             }
 
             return out.stream().limit(50).collect(Collectors.toList());
@@ -204,9 +199,21 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
             String partial = args[1].toLowerCase(Locale.ROOT);
             return List.of("30s", "1m", "5m", "10m", "30m", "1h", "2h", "1d").stream()
                     .filter(s -> s.toLowerCase(Locale.ROOT).startsWith(partial))
-                    .toList();
+                    .collect(Collectors.toList());
         }
 
         return Collections.emptyList();
+    }
+
+    /** Tiny helper to replace %vars% in the given template (for network broadcast fallback). */
+    private static String applyVars(String template, Map<String, String> vars) {
+        if (template == null) return "";
+        if (vars == null || vars.isEmpty()) return template;
+        String out = template;
+        for (Map.Entry<String, String> e : vars.entrySet()) {
+            String key = "%" + e.getKey() + "%";
+            out = out.replace(key, e.getValue() == null ? "" : e.getValue());
+        }
+        return out;
     }
 }

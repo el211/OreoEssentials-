@@ -58,17 +58,21 @@ public class WarpConfirmDeleteGui implements InventoryProvider {
                             try { dir.deleteWarp(warpName); } catch (Throwable ignored) {}
                         }
 
-                        Lang.send(p, "warp.delete.success",
-                                Map.of("warp", warpName),
-                                p
+                        Lang.send(
+                                p,
+                                "warp.delete.success",
+                                null,
+                                Map.of("warp", warpName)
                         );
 
                         p.closeInventory();
                         if (onConfirm != null) onConfirm.run();
                     } else {
-                        Lang.send(p, "warp.delete.failed",
-                                Map.of("warp", warpName),
-                                p
+                        Lang.send(
+                                p,
+                                "warp.delete.failed",
+                                null,
+                                Map.of("warp", warpName)
                         );
 
                         p.closeInventory();

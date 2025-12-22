@@ -39,6 +39,8 @@ features:
   oreoholograms:
     enabled: true
 
+    per-player: true        # enable per-player placeholders/permissions for TEXT holograms
+
   playervaults:
     enabled: true
 
@@ -111,3 +113,38 @@ features:
   spawn:
     cooldown: true        # Enable/disable spawn countdown
     cooldown-amount: 5    # Seconds before teleport; 0 or negative = instant
+
+
+  death-respawn:
+    enabled: true
+    # NORMAL        -> vanilla behavior
+    # GLOBAL_SPAWN  -> uses SpawnService.getSpawn() (same as /spawn)
+    # WORLD_SPAWN   -> current world's spawn
+    # CUSTOM        -> fixed location (with optional per-world overrides)
+    mode: GLOBAL_SPAWN
+    respect-bed-anchor: true
+
+    # Used only when mode: CUSTOM
+    custom:
+      world: "world"
+      x: 0.5
+      y: 64.0
+      z: 0.5
+      yaw: 0.0
+      pitch: 0.0
+
+    # Optional per-world overrides (only for mode: CUSTOM)
+    per-world:
+      world_nether:
+        world: "world_nether"
+        x: 10.5
+        y: 65.0
+        z: 10.5
+        yaw: 180.0
+        pitch: 0.0
+
+
+
+holograms:
+  text:
+    per-player: true        # enable per-player placeholders/permissions for TEXT holograms

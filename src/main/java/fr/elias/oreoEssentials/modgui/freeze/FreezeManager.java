@@ -1,12 +1,14 @@
-// package: fr.elias.oreoEssentials.modgui.freeze
+// File: src/main/java/fr/elias/oreoEssentials/modgui/freeze/FreezeManager.java
 package fr.elias.oreoEssentials.modgui.freeze;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import fr.elias.oreoEssentials.util.Lang;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class FreezeManager {
@@ -49,29 +51,52 @@ public class FreezeManager {
 
     public void freeze(Player target, Player staff, long seconds) {
         long until = System.currentTimeMillis() + (seconds * 1000L);
-        frozen.put(target.getUniqueId(),
-                new FreezeData(target.getUniqueId(),
+        frozen.put(
+                target.getUniqueId(),
+                new FreezeData(
+                        target.getUniqueId(),
                         staff == null ? null : staff.getUniqueId(),
-                        until));
-        Lang.send(target, "freeze.frozen", Map.of("seconds", Long.toString(seconds)), target);
+                        until
+                )
+        );
+
+        // why: correct Lang.send signature and MiniMessage default
+        Lang.send(
+                target,
+                "freeze.frozen",
+                "<red>You are frozen for <yellow>%seconds%</yellow>s.</red>",
+                Map.of("seconds", Long.toString(seconds))
+        );
     }
 
     public void unfreeze(Player target) {
         frozen.remove(target.getUniqueId());
-        Lang.send(target, "freeze.unfrozen", null, target);
+
+        // why: provide default; vars not needed
+        Lang.send(
+                target,
+                "freeze.unfrozen",
+                "<green>You are no longer frozen.</green>"
+        );
     }
 
     private void startTickTask() {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             long now = System.currentTimeMillis();
 
-            // clean & particles + actionbars
             for (Iterator<Map.Entry<UUID, FreezeData>> it = frozen.entrySet().iterator(); it.hasNext();) {
                 Map.Entry<UUID, FreezeData> e = it.next();
                 FreezeData data = e.getValue();
+
                 if (data.until <= now) {
                     Player t = Bukkit.getPlayer(e.getKey());
-                    if (t != null) Lang.send(t, "freeze.expired", null, t);
+                    if (t != null) {
+                        Lang.send(
+                                t,
+                                "freeze.expired",
+                                "<yellow>Your freeze has expired.</yellow>"
+                        );
+                    }
                     it.remove();
                     continue;
                 }
@@ -79,24 +104,26 @@ public class FreezeManager {
                 Player t = Bukkit.getPlayer(e.getKey());
                 if (t == null) continue;
 
-                // particle trail
+                // particle (visual feedback)
                 t.getWorld().spawnParticle(
                         org.bukkit.Particle.SNOWFLAKE,
                         t.getLocation().add(0, 0.1, 0),
                         6, 0.3, 0.1, 0.3, 0.01
                 );
 
-                // actionbar to staff (if online)
-                long rem = data.remainingMillis() / 1000L;
-                String msg = Lang.get("freeze.actionbar-staff", "&c[Frozen] &f%target% &7(%seconds%s)")
-                        .replace("%target%", t.getName())
-                        .replace("%seconds%", Long.toString(rem));
+                // staff actionbar with remaining seconds (Adventure)
+                long remSeconds = data.remainingMillis() / 1000L;
                 if (data.staff != null) {
                     Player s = Bukkit.getPlayer(data.staff);
-                    if (s != null) s.spigot().sendMessage(
-                            net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
-                            new net.md_5.bungee.api.chat.TextComponent(msg)
-                    );
+                    if (s != null && s.isOnline()) {
+                        s.sendActionBar(
+                                Lang.msgComp(
+                                        "freeze.actionbar-staff",
+                                        Map.of("target", t.getName(), "seconds", Long.toString(remSeconds)),
+                                        s
+                                )
+                        );
+                    }
                 }
             }
         }, 10L, 10L);

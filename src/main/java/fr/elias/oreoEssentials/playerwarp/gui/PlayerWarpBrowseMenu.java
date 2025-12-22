@@ -71,8 +71,8 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
                 // If password-protected for this player → open password prompt
                 if (isPasswordProtectedFor(player, warp)) {
                     Lang.send(player, "pw.password-required",
-                            Map.of("warp", warp.getName()),
-                            player);
+                            "",
+                            Map.of("warp", warp.getName()));
 
                     openPasswordChatPrompt(player, warp);
                     return;
@@ -82,8 +82,8 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
                 boolean ok = service.teleportToPlayerWarp(player, warp.getOwner(), warp.getName());
                 if (!ok) {
                     Lang.send(player, "pw.teleport-failed",
-                            Map.of("error", "unknown"),
-                            player);
+                            "",
+                            Map.of("error", "unknown"));
                 }
             });
         }
@@ -218,8 +218,8 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
 
         if (current == null) {
             Lang.send(player, "pw.not-found",
-                    Map.of("name", warp.getName().toLowerCase(Locale.ROOT)),
-                    player);
+                    "",
+                    Map.of("name", warp.getName().toLowerCase(Locale.ROOT)));
             OreoEssentials.get().getLogger().info(
                     "[OreoEssentials] [OreoEssentials] [PW/DEBUG] [CHAT] Warp no longer exists for "
                             + player.getName() + " warp=" + warp.getName()
@@ -244,8 +244,8 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
             boolean ok = service.teleportToPlayerWarp(player, current.getOwner(), current.getName());
             if (!ok) {
                 Lang.send(player, "pw.teleport-failed",
-                        Map.of("error", "unknown"),
-                        player);
+                        "",
+                        Map.of("error", "unknown"));
             }
             return;
         }
@@ -253,8 +253,8 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
         // Extra access checks (lock, whitelist, cost, perms, etc.) BEFORE we even compare
         if (!service.canUse(player, current)) {
             Lang.send(player, "pw.no-permission-warp",
-                    Map.of("name", current.getName()),
-                    player);
+                    "",
+                    Map.of("name", current.getName()));
             OreoEssentials.get().getLogger().info(
                     "[OreoEssentials] [OreoEssentials] [PW/DEBUG] [CHAT] Player " + player.getName()
                             + " failed canUse() check for warp='" + current.getName() + "'"

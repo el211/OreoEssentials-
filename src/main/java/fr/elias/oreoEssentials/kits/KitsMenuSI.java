@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.kits;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.Sounds; // use string-based sound helper
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
@@ -11,7 +12,6 @@ import fr.minuskube.inv.content.Pagination;
 import fr.minuskube.inv.content.SlotIterator;
 import fr.minuskube.inv.content.SlotPos;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
@@ -27,9 +27,9 @@ import java.util.*;
 public class KitsMenuSI implements InventoryProvider {
 
     // Simple toggles (no config dependency)
-    private static final boolean PREVIEW_ENABLED  = true;
-    private static final boolean SHOW_CMD_IN_PREVIEW = true;
-    private static final int     PREVIEW_ROWS     = 6;
+    private static final boolean PREVIEW_ENABLED      = true;
+    private static final boolean SHOW_CMD_IN_PREVIEW  = true;
+    private static final int     PREVIEW_ROWS         = 6;
 
     private final OreoEssentials plugin;
     private final KitsManager manager;
@@ -58,7 +58,7 @@ public class KitsMenuSI implements InventoryProvider {
     public void init(Player player, InventoryContents contents) {
         final boolean featureOn = manager.isEnabled();
 
-        // Fill background if configured
+        // Background fill
         if (manager.isMenuFill()) {
             Material m = Material.matchMaterial(manager.getFillMaterial());
             if (m == null) m = Material.GRAY_STAINED_GLASS_PANE;
@@ -68,7 +68,7 @@ public class KitsMenuSI implements InventoryProvider {
             contents.fill(ClickableItem.empty(filler));
         }
 
-        // Build ClickableItems for kits
+        // Build kit buttons
         List<ClickableItem> buttons = new ArrayList<>();
         List<Kit> kitList = new ArrayList<>(manager.getKits().values()); // stable ordering
 
@@ -112,19 +112,18 @@ public class KitsMenuSI implements InventoryProvider {
             buttons.add(ClickableItem.of(icon, e -> {
                 ClickType type = e.getClick();
 
-                // Right-click always opens preview (even when disabled)
+                // Right-click → preview (even when disabled)
                 if (PREVIEW_ENABLED && (type == ClickType.RIGHT || type == ClickType.SHIFT_RIGHT)) {
                     openPreview(player, kit);
                     return;
                 }
 
-                // Left-click claim path
+                // Left-click → claim
                 if (!manager.isEnabled()) {
                     player.sendMessage("§cKits are disabled.");
                     if (player.hasPermission("oreo.kits.admin")) {
                         player.sendMessage("§7Use §f/kits toggle §7to enable it.");
                     }
-                    // refresh to keep UI responsive
                     contents.inventory().open(player);
                     return;
                 }
@@ -134,37 +133,34 @@ public class KitsMenuSI implements InventoryProvider {
                 // Cooldown gate (unless bypass)
                 if (cdLeft > 0 && !player.hasPermission("oreo.kit.bypasscooldown")) {
                     if (Lang.getBool("kits.gui.sounds.denied.enabled", true)) {
-                        try {
-                            Sound s = Sound.valueOf(Lang.get("kits.gui.sounds.denied.sound", "BLOCK_NOTE_BLOCK_BASS"));
-                            float vol = (float) Lang.getDouble("kits.gui.sounds.denied.volume", 0.7);
-                            float pit = (float) Lang.getDouble("kits.gui.sounds.denied.pitch", 0.7);
-                            player.playSound(player.getLocation(), s, vol, pit);
-                        } catch (Throwable ignored) {}
+                        final String raw = Lang.get("kits.gui.sounds.denied.sound", "minecraft:block.note_block.bass");
+                        final float vol = (float) Lang.getDouble("kits.gui.sounds.denied.volume", 0.7);
+                        final float pit = (float) Lang.getDouble("kits.gui.sounds.denied.pitch", 0.7);
+                        Sounds.play(player, raw, vol, pit); // modern, no deprecations
                     }
 
                     Lang.send(
                             player,
                             "kits.cooldown",
+                            "",
                             Map.of(
                                     "kit_name", kit.getDisplayName(),
                                     "cooldown_left", Lang.timeHuman(cdLeft),
                                     "cooldown_left_raw", String.valueOf(cdLeft)
-                            ),
-                            player
+                            )
                     );
-                    contents.inventory().open(player);
-                    return;
+
+                    contents.inventory().open(player); // keep UI responsive
+                    return; // stop claim flow on cooldown
                 }
 
                 boolean handled = manager.claim(player, kit.getId());
 
                 if (handled && Lang.getBool("kits.gui.sounds.claim.enabled", true)) {
-                    try {
-                        Sound s = Sound.valueOf(Lang.get("kits.gui.sounds.claim.sound", "ENTITY_EXPERIENCE_ORB_PICKUP"));
-                        float vol = (float) Lang.getDouble("kits.gui.sounds.claim.volume", 0.8);
-                        float pit = (float) Lang.getDouble("kits.gui.sounds.claim.pitch", 1.2);
-                        player.playSound(player.getLocation(), s, vol, pit);
-                    } catch (Throwable ignored) {}
+                    final String raw = Lang.get("kits.gui.sounds.claim.sound", "minecraft:entity.experience_orb.pickup");
+                    final float vol = (float) Lang.getDouble("kits.gui.sounds.claim.volume", 0.8);
+                    final float pit = (float) Lang.getDouble("kits.gui.sounds.claim.pitch", 1.2);
+                    Sounds.play(player, raw, vol, pit); // modern, no deprecations
                 }
 
                 contents.inventory().open(player);
@@ -177,7 +173,7 @@ public class KitsMenuSI implements InventoryProvider {
         boolean anyFixed = manager.getKits().values().stream().anyMatch(k -> k.getSlot() != null);
 
         if (anyFixed) {
-            // 1) Place all fixed-slot kits first
+            // 1) Place fixed-slot kits first
             for (int i = 0; i < kitList.size(); i++) {
                 Kit k = kitList.get(i);
                 if (k.getSlot() == null) continue;
@@ -221,7 +217,7 @@ public class KitsMenuSI implements InventoryProvider {
             pagination.addToIterator(it);
         }
 
-        // ---------- Admin toggle lever (bottom row, slot 5) ----------
+        // Admin toggle lever (bottom row, slot 5)
         if (rows >= 2 && player.hasPermission("oreo.kits.admin")) {
             final int bottom = rows - 1;
             ItemStack lever = new ItemStack(Material.LEVER);
@@ -238,15 +234,14 @@ public class KitsMenuSI implements InventoryProvider {
             contents.set(bottom, 5, ClickableItem.of(lever, e -> {
                 boolean now = manager.toggleEnabled();
                 player.sendMessage("§7Kits feature is now " + (now ? "§aENABLED" : "§cDISABLED"));
-                // refresh
-                KitsMenuSI.open(plugin, manager, player);
+                KitsMenuSI.open(plugin, manager, player); // refresh
             }));
         }
     }
 
     @Override
     public void update(Player player, InventoryContents contents) {
-        // We reopen on click; nothing needed here per tick.
+        // Reopen on click; nothing needed per tick.
     }
 
     /* ------------------------ Preview GUI ------------------------ */

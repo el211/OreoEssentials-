@@ -9,6 +9,7 @@ import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -30,9 +31,11 @@ public class NearCommand implements OreoCommand {
             try {
                 radius = Math.max(1, Math.min(1000, Integer.parseInt(args[0])));
             } catch (NumberFormatException e) {
-                Lang.send(p, "near.radius-not-number",
-                        Map.of("input", args[0]),
-                        p
+                Lang.send(
+                        p,
+                        "near.radius-not-number",
+                        null,
+                        Map.of("input", args[0])
                 );
                 return true;
             }
@@ -48,14 +51,16 @@ public class NearCommand implements OreoCommand {
                 .collect(Collectors.toList());
 
         if (list.isEmpty()) {
-            Lang.send(p, "near.none",
-                    Map.of("radius", String.valueOf(radius)),
-                    p
+            Lang.send(
+                    p,
+                    "near.none",
+                    null,
+                    Map.of("radius", String.valueOf(radius))
             );
             return true;
         }
 
-        // Build the colored list, leave full sentence to lang.yml
+        // Build the colored list; keep the sentence in lang.yml
         String formattedList = list.stream()
                 .map(e -> ChatColor.AQUA + e.name
                         + ChatColor.GRAY + " ("
@@ -63,12 +68,14 @@ public class NearCommand implements OreoCommand {
                         + ChatColor.GRAY + ")")
                 .collect(Collectors.joining(ChatColor.GRAY + ", "));
 
-        Lang.send(p, "near.list",
+        Lang.send(
+                p,
+                "near.list",
+                null,
                 Map.of(
                         "radius", String.valueOf(radius),
                         "list", formattedList
-                ),
-                p
+                )
         );
         return true;
     }

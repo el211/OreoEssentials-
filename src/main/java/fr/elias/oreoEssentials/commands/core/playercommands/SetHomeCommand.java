@@ -38,16 +38,20 @@ public class SetHomeCommand implements OreoCommand {
         boolean ok = homes.setHome(p, rawName, p.getLocation());
         if (!ok) {
             int max = config.getMaxHomesFor(p);
-            Lang.send(p, "sethome.limit",
-                    Map.of("max", String.valueOf(max)),
-                    p
+            Lang.send(
+                    p,
+                    "sethome.limit",
+                    null,
+                    Map.of("max", String.valueOf(max))
             );
             return true;
         }
 
-        Lang.send(p, "sethome.set",
-                Map.of("name", key),
-                p
+        Lang.send(
+                p,
+                "sethome.set",
+                null,
+                Map.of("name", key)
         );
         return true;
     }
