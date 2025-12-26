@@ -1,10 +1,11 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/InvseeCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.cross.InvseeService;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -26,11 +27,14 @@ public class InvseeCommand implements OreoCommand, TabCompleter {
         if (!(sender instanceof Player viewer)) return true;
 
         if (!viewer.hasPermission(permission())) {
-            viewer.sendMessage(ChatColor.RED + "You lack permission.");
+            Lang.send(viewer, "invsee.no-permission",
+                    "<red>You lack permission.</red>");
             return true;
         }
+
         if (args.length < 1) {
-            viewer.sendMessage(ChatColor.RED + "Usage: /invsee <player>");
+            Lang.send(viewer, "invsee.usage",
+                    "<red>Usage: /invsee <player></red>");
             return true;
         }
 
@@ -38,13 +42,15 @@ public class InvseeCommand implements OreoCommand, TabCompleter {
         InvseeService invseeService = plugin.getInvseeService();
 
         if (invseeService == null) {
-            viewer.sendMessage(ChatColor.RED + "Invsee service is not available on this server.");
+            Lang.send(viewer, "invsee.not-available",
+                    "<red>Invsee service is not available on this server.</red>");
             return true;
         }
 
         UUID targetId = resolveTargetId(args[0]);
         if (targetId == null) {
-            viewer.sendMessage(ChatColor.RED + "Player not found.");
+            Lang.send(viewer, "invsee.not-found",
+                    "<red>Player not found.</red>");
             return true;
         }
 
@@ -63,8 +69,9 @@ public class InvseeCommand implements OreoCommand, TabCompleter {
         //  - fill/update it as InvseeStatePacket / InvseeEditPacket flow
         invseeService.openLocalViewer(viewer, targetId, targetName);
 
-        viewer.sendMessage(ChatColor.GRAY + "Opening live inventory of "
-                + ChatColor.AQUA + targetName + ChatColor.GRAY + " (cross-server)…");
+        Lang.send(viewer, "invsee.opening",
+                "<gray>Opening live inventory of <aqua>%player%</aqua> (cross-server)...</gray>",
+                Map.of("player", targetName));
 
         return true;
     }

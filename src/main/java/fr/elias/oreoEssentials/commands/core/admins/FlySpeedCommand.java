@@ -1,5 +1,7 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/FlySpeedCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -17,63 +19,92 @@ public final class FlySpeedCommand implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("§cOnly players can use /flyspeed (sets your own flight speed).");
+            Lang.send(sender, "admin.flyspeed.player-only",
+                    "<red>Only players can use /flyspeed (sets your own flight speed).</red>");
             return true;
         }
+
         if (!sender.hasPermission("oreo.flyspeed")) {
-            sender.sendMessage("§cYou don't have permission (oreo.flyspeed).");
+            Lang.send(sender, "admin.flyspeed.no-permission",
+                    "<red>You don't have permission (oreo.flyspeed).</red>");
             return true;
         }
 
         Player p = (Player) sender;
 
         if (args.length == 0) {
-            p.sendMessage("§eUsage: §f/flyspeed <1-10|reset>");
-            p.sendMessage("§7Example: §f/flyspeed 7");
+            Lang.send(p, "admin.flyspeed.usage",
+                    "<yellow>Usage: <white>/flyspeed <1-10|reset></white></yellow>");
+            Lang.send(p, "admin.flyspeed.example",
+                    "<gray>Example: <white>/flyspeed 7</white></gray>");
             return true;
         }
 
         if (args[0].equalsIgnoreCase("reset")) {
             trySetSpeed(p, 0.1f);
-            p.sendMessage("§aFly speed reset to §f0.1 §7(= level 1).");
+            Lang.send(p, "admin.flyspeed.reset",
+                    "<green>Fly speed reset to <white>0.1</white> <gray>(= level 1)</gray>.</green>");
             return true;
         }
 
         Integer level = parseInt(args[0]);
         if (level == null || level < 1 || level > 10) {
-            p.sendMessage("§cInvalid speed. Use a number §f1-10 §cor §freset§c.");
+            Lang.send(p, "admin.flyspeed.invalid",
+                    "<red>Invalid speed. Use a number <white>1-10</white> or <white>reset</white>.</red>");
             return true;
         }
 
         float speed = level / 10.0f; // 1→0.1f, 10→1.0f
         trySetSpeed(p, speed);
-        p.sendMessage("§aFly speed set to §f" + speed + " §7(§flevel " + level + "§7)."
-                + (p.getAllowFlight() ? "" : " §8(You’re not allowed to fly right now.)"));
+
+        if (p.getAllowFlight()) {
+            Lang.send(p, "admin.flyspeed.set",
+                    "<green>Fly speed set to <white>%speed%</white> <gray>(<white>level %level%</white>)</gray>.</green>",
+                    Map.of("speed", String.valueOf(speed), "level", String.valueOf(level)));
+        } else {
+            Lang.send(p, "admin.flyspeed.set-not-flying",
+                    "<green>Fly speed set to <white>%speed%</white> <gray>(<white>level %level%</white>)</gray>. <dark_gray>(You're not allowed to fly right now.)</dark_gray></green>",
+                    Map.of("speed", String.valueOf(speed), "level", String.valueOf(level)));
+        }
+
         return true;
     }
 
     private static Integer parseInt(String s) {
-        try { return Integer.parseInt(s); } catch (NumberFormatException e) { return null; }
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private static void trySetSpeed(Player p, float speed) {
         // Bukkit expects -1.0..1.0; we use 0.1..1.0
-        try { p.setFlySpeed(speed); }
-        catch (IllegalArgumentException ex) { p.setFlySpeed(Math.max(-1f, Math.min(1f, speed))); }
+        try {
+            p.setFlySpeed(speed);
+        } catch (IllegalArgumentException ex) {
+            p.setFlySpeed(Math.max(-1f, Math.min(1f, speed)));
+        }
     }
 
-    // ---- Tab complete ----
+    /* ---------------- Tab Complete ---------------- */
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
-        if (!(sender instanceof Player) || !sender.hasPermission("oreo.flyspeed")) return Collections.emptyList();
+        if (!(sender instanceof Player) || !sender.hasPermission("oreo.flyspeed")) {
+            return Collections.emptyList();
+        }
 
         if (args.length == 1) {
             List<String> base = new ArrayList<>();
             base.add("reset");
             base.addAll(SPEED_SUGGEST);
             String pref = args[0].toLowerCase(Locale.ROOT);
-            return base.stream().filter(s -> s.toLowerCase(Locale.ROOT).startsWith(pref)).collect(Collectors.toList());
+            return base.stream()
+                    .filter(s -> s.toLowerCase(Locale.ROOT).startsWith(pref))
+                    .collect(Collectors.toList());
         }
+
         return Collections.emptyList();
     }
 }

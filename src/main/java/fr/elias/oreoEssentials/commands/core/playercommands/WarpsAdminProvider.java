@@ -4,13 +4,13 @@ package fr.elias.oreoEssentials.commands.core.playercommands;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.services.WarpDirectory;
 import fr.elias.oreoEssentials.services.WarpService;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
 import fr.minuskube.inv.content.InventoryProvider;
 import fr.minuskube.inv.content.Pagination;
 import fr.minuskube.inv.content.SlotIterator;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -20,8 +20,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
-
-import static org.bukkit.ChatColor.*;
 
 public class WarpsAdminProvider implements InventoryProvider {
 
@@ -53,8 +51,8 @@ public class WarpsAdminProvider implements InventoryProvider {
         names.sort(String.CASE_INSENSITIVE_ORDER);
 
         // Header counter + refresh
-        contents.set(0, 4, ClickableItem.empty(counterItem(names.size())));
-        contents.set(0, 8, ClickableItem.of(refreshItem(), e ->
+        contents.set(0, 4, ClickableItem.empty(counterItem(p, names.size())));
+        contents.set(0, 8, ClickableItem.of(refreshItem(p), e ->
                 contents.inventory().open(p, contents.pagination().getPage())));
 
         // Build grid items
@@ -72,7 +70,7 @@ public class WarpsAdminProvider implements InventoryProvider {
             final String currentPerm = (dir == null ? null : dir.getWarpPermission(key));
             final boolean protectedMode = currentPerm != null && !currentPerm.isBlank();
 
-            ItemStack icon = warpAdminItem(displayName, server, loc, protectedMode, currentPerm);
+            ItemStack icon = warpAdminItem(p, displayName, server, loc, protectedMode, currentPerm);
 
             return ClickableItem.of(icon, e -> {
                 ClickType type = e.getClick();
@@ -84,11 +82,18 @@ public class WarpsAdminProvider implements InventoryProvider {
                 }
 
                 // Open actions GUI for all other clicks (LEFT/RIGHT/etc.)
+                String actionTitle = Lang.msgWithDefault(
+                        "warp.admin.gui.title",
+                        "<dark_aqua>Warp: <aqua>%warp%</aqua></dark_aqua>",
+                        Map.of("warp", displayName),
+                        p
+                );
+
                 SmartInventory.builder()
                         .id("oreo:warps_admin_actions:" + key)
                         .provider(new WarpAdminActionsProvider(warps, key))
                         .size(4, 9)
-                        .title(ChatColor.DARK_AQUA + "Warp: " + ChatColor.AQUA + displayName)
+                        .title(actionTitle)
                         .manager(OreoEssentials.get().getInvManager())
                         .build()
                         .open(p);
@@ -109,11 +114,22 @@ public class WarpsAdminProvider implements InventoryProvider {
 
         // Footer nav
         if (!pagination.isFirst()) {
-            contents.set(5, 0, ClickableItem.of(nav(Material.ARROW, YELLOW + "Previous Page"),
+            String prevName = Lang.msgWithDefault(
+                    "warp.admin.list.previous",
+                    "<yellow>Previous Page</yellow>",
+                    p
+            );
+            contents.set(5, 0, ClickableItem.of(nav(Material.ARROW, prevName),
                     e -> contents.inventory().open(p, pagination.previous().getPage())));
         }
+
         if (!pagination.isLast()) {
-            contents.set(5, 8, ClickableItem.of(nav(Material.ARROW, YELLOW + "Next Page"),
+            String nextName = Lang.msgWithDefault(
+                    "warp.admin.list.next",
+                    "<yellow>Next Page</yellow>",
+                    p
+            );
+            contents.set(5, 8, ClickableItem.of(nav(Material.ARROW, nextName),
                     e -> contents.inventory().open(p, pagination.next().getPage())));
         }
     }
@@ -139,27 +155,55 @@ public class WarpsAdminProvider implements InventoryProvider {
         return it;
     }
 
-    private ItemStack refreshItem() {
+    private ItemStack refreshItem(Player p) {
         ItemStack it = new ItemStack(Material.SUNFLOWER);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(YELLOW + "Refresh");
-            meta.setLore(List.of(GRAY + "Click to reload warps."));
+            String name = Lang.msgWithDefault(
+                    "warp.admin.list.refresh",
+                    "<yellow>Refresh</yellow>",
+                    p
+            );
+
+            String lore = Lang.msgWithDefault(
+                    "warp.admin.list.refresh-lore",
+                    "<gray>Click to reload warps.</gray>",
+                    p
+            );
+
+            meta.setDisplayName(name);
+            meta.setLore(List.of(lore));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             it.setItemMeta(meta);
         }
         return it;
     }
 
-    private ItemStack counterItem(int count) {
+    private ItemStack counterItem(Player p, int count) {
         ItemStack it = new ItemStack(Material.PAPER);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(ChatColor.GOLD + "Warps " + ChatColor.WHITE + "(" + count + ")");
-            List<String> lore = new ArrayList<>();
-            lore.add(GRAY + "Left/Right-click: " + WHITE + "Manage warp");
-            lore.add(GRAY + "Shift-Left or Middle-click: " + WHITE + "Quick Teleport");
-            meta.setLore(lore);
+            String name = Lang.msgWithDefault(
+                    "warp.admin.list.counter",
+                    "<gold>Warps <white>(%count%)</white></gold>",
+                    Map.of("count", String.valueOf(count)),
+                    p
+            );
+
+            String lore1 = Lang.msgWithDefault(
+                    "warp.admin.list.counter-lore.0",
+                    "<gray>Left/Right-click: <white>Manage warp</white></gray>",
+                    p
+            );
+
+            String lore2 = Lang.msgWithDefault(
+                    "warp.admin.list.counter-lore.1",
+                    "<gray>Shift-Left or Middle-click: <white>Quick Teleport</white></gray>",
+                    p
+            );
+
+            meta.setDisplayName(name);
+            meta.setLore(List.of(lore1, lore2));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             it.setItemMeta(meta);
         }
@@ -176,25 +220,79 @@ public class WarpsAdminProvider implements InventoryProvider {
         return it;
     }
 
-    private ItemStack warpAdminItem(String name, String server, Location loc, boolean protectedMode, String perm) {
+    private ItemStack warpAdminItem(Player p, String name, String server, Location loc,
+                                    boolean protectedMode, String perm) {
         ItemStack it = new ItemStack(Material.LODESTONE);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(ChatColor.AQUA + name);
+            String displayName = Lang.msgWithDefault(
+                    "warp.admin.list.warp-name",
+                    "<aqua>%name%</aqua>",
+                    Map.of("name", name),
+                    p
+            );
+
             List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.GRAY + "Server: " + ChatColor.YELLOW + server);
+
+            // Server line
+            lore.add(Lang.msgWithDefault(
+                    "warp.admin.list.warp-server",
+                    "<gray>Server: <yellow>%server%</yellow></gray>",
+                    Map.of("server", server),
+                    p
+            ));
+
+            // World and coordinates (if available)
             if (loc != null && loc.getWorld() != null) {
-                lore.add(ChatColor.GRAY + "World: " + ChatColor.YELLOW + loc.getWorld().getName());
-                lore.add(ChatColor.GRAY + "XYZ: " + ChatColor.YELLOW +
-                        fmt(loc.getX()) + " " + fmt(loc.getY()) + " " + fmt(loc.getZ()));
+                lore.add(Lang.msgWithDefault(
+                        "warp.admin.list.warp-world",
+                        "<gray>World: <yellow>%world%</yellow></gray>",
+                        Map.of("world", loc.getWorld().getName()),
+                        p
+                ));
+
+                lore.add(Lang.msgWithDefault(
+                        "warp.admin.list.warp-coords",
+                        "<gray>XYZ: <yellow>%coords%</yellow></gray>",
+                        Map.of("coords", fmt(loc.getX()) + " " + fmt(loc.getY()) + " " + fmt(loc.getZ())),
+                        p
+                ));
             }
+
             lore.add(" ");
-            lore.add(ChatColor.GRAY + "Permission: " + (protectedMode
-                    ? (ChatColor.GOLD + (perm == null || perm.isBlank() ? "(custom)" : perm))
-                    : (ChatColor.GREEN + "public")));
+
+            // Permission line
+            if (protectedMode) {
+                lore.add(Lang.msgWithDefault(
+                        "warp.admin.list.warp-perm-protected",
+                        "<gray>Permission: <gold>%perm%</gold></gray>",
+                        Map.of("perm", (perm == null || perm.isBlank() ? "(custom)" : perm)),
+                        p
+                ));
+            } else {
+                lore.add(Lang.msgWithDefault(
+                        "warp.admin.list.warp-perm-public",
+                        "<gray>Permission: <green>public</green></gray>",
+                        p
+                ));
+            }
+
             lore.add(" ");
-            lore.add(ChatColor.GREEN + "Click: " + ChatColor.WHITE + "Open actions");
-            lore.add(ChatColor.AQUA + "Shift-Left/Middle: " + ChatColor.WHITE + "Quick teleport");
+
+            // Action hints
+            lore.add(Lang.msgWithDefault(
+                    "warp.admin.list.warp-click",
+                    "<green>Click: <white>Open actions</white></green>",
+                    p
+            ));
+
+            lore.add(Lang.msgWithDefault(
+                    "warp.admin.list.warp-quick-tp",
+                    "<aqua>Shift-Left/Middle: <white>Quick teleport</white></aqua>",
+                    p
+            ));
+
+            meta.setDisplayName(displayName);
             meta.setLore(lore);
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             it.setItemMeta(meta);

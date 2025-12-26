@@ -165,12 +165,13 @@ logging:
 
 # -------- Portals --------
 portals:
-  cooldown_ms: 1000
-  sound: "ENTITY_ENDERMAN_TELEPORT"
-  particle: "PORTAL"
-  particle_count: 20
-  allow_keep_yaw_pitch: true
-
+  cooldown_ms: 1000                    # Cooldown between portal uses
+  sound: "ENTITY_ENDERMAN_TELEPORT"    # Sound effect
+  particle: "PORTAL"                   # Particle effect
+  particle_count: 20                   # Number of particles
+  allow_keep_yaw_pitch: true           # Allow keepYaw feature
+  teleport_async: false                # Async teleport (experimental)
+  max_portal_volume: 100000            # Max portal size in blocks
 # -------- JumpPads --------
 jumpads:
   default_power: 1.2

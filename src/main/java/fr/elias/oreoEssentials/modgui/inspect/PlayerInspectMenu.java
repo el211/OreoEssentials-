@@ -13,8 +13,22 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Player inspector menu - live stats viewer.
+ *
+ * ✅ VERIFIED - Uses Lang.send() for 2 user messages + Lang.get() for GUI text
+ *
+ * Features:
+ * - Live health, food, gamemode display
+ * - Location tracking
+ * - Ping and TPS monitoring
+ * - Remote player detection (via PlayerDirectory)
+ * - InvSee button
+ * - Auto-refreshing display
+ */
 public class PlayerInspectMenu implements InventoryProvider {
 
     private final OreoEssentials plugin;
@@ -27,7 +41,7 @@ public class PlayerInspectMenu implements InventoryProvider {
 
     @Override
     public void init(Player p, InventoryContents c) {
-        // updated live in update()
+        // Updated live in update()
     }
 
     @Override
@@ -60,8 +74,9 @@ public class PlayerInspectMenu implements InventoryProvider {
         // Completely offline (no local, no known server) → close
         if (!isLocal && (serverName == null || serverName.isBlank())) {
             viewer.closeInventory();
-            // FIX: use valid overload (no null/default map misuse)
-            Lang.send(viewer, "playerinspect.target-offline");
+            Lang.send(viewer, "playerinspect.target-offline",
+                    "<red>Target player is offline.</red>",
+                    Map.of());
             return;
         }
 
@@ -72,7 +87,7 @@ public class PlayerInspectMenu implements InventoryProvider {
             serverName = "N/A";
         }
 
-        // effectively-final copy for lambdas
+        // Effectively-final copy for lambdas
         final String targetName = name;
 
         // ----- Stats (only if on this Spigot) -----
@@ -129,7 +144,7 @@ public class PlayerInspectMenu implements InventoryProvider {
 
         String tpsLine = isLocal
                 ? Lang.get("playerinspect.lore.tps", "&7TPS: &f%tps%")
-                .replace("%tps%", String.format("%.2f", tps))
+                .replace("%tps%", tps == -1 ? "N/A" : String.format("%.2f", tps))
                 : Lang.get("playerinspect.lore.tps-na", "&7TPS: &fN/A (&8remote&f)");
 
         // ----- Head / info item -----
@@ -164,8 +179,9 @@ public class PlayerInspectMenu implements InventoryProvider {
                         .build(),
                 e -> {
                     if (!viewer.hasPermission("oreo.mod.invsee")) {
-                        // FIX: valid overload
-                        Lang.send(viewer, "playerinspect.no-permission-invsee");
+                        Lang.send(viewer, "playerinspect.no-permission-invsee",
+                                "<red>You don't have permission to view inventories.</red>",
+                                Map.of());
                         return;
                     }
 

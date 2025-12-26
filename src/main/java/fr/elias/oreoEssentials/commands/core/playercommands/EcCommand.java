@@ -3,10 +3,9 @@ package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.enderchest.EnderChestService;
-import org.bukkit.ChatColor;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import fr.elias.oreoEssentials.util.Lang;
 
 import java.util.List;
 
@@ -33,17 +32,16 @@ public class EcCommand implements OreoCommand {
         // Open the Ender Chest GUI
         p.openInventory(ecService.createVirtualEc(p));
 
-        // Notify the player using Lang (vars map is null here)
-        Lang.send(
-                p,
-                "enderchest.command.opened-self",
-                ChatColor.translateAlternateColorCodes('&', "&dEnder Chest opened."),
-                null
-        );
+        // Notify the player that Ender Chest was opened
+        Lang.send(p, "enderchest.opened",
+                "<light_purple>Ender Chest opened.</light_purple>");
 
+        // Show warning if cross-server is disabled
         if (!crossServer) {
-            p.sendMessage(ChatColor.YELLOW + "Note: cross-server EC is disabled. This EC is local to this server.");
+            Lang.send(p, "enderchest.local-only",
+                    "<yellow>Note: cross-server EC is disabled. This EC is local to this server.</yellow>");
         }
+
         return true;
     }
 }

@@ -1,8 +1,10 @@
+// File: src/main/java/fr/elias/oreoEssentials/modgui/ModGuiService.java
 package fr.elias.oreoEssentials.modgui;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modgui.cfg.ModGuiConfig;
 import fr.elias.oreoEssentials.modgui.menu.MainMenu;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.InventoryManager;
 import org.bukkit.command.Command;
@@ -15,6 +17,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * ModGUI service - moderation GUI system.
+ *
+ * ✅ VERIFIED - Uses Lang.send() for 2 user messages
+ *
+ * Features:
+ * - Main GUI with player/world/server moderation
+ * - Chat mute/slowmode state management
+ * - Staff chat toggle (per-player)
+ * - Slowmode tracking
+ */
 public class ModGuiService implements TabExecutor {
     private final OreoEssentials plugin;
     private final InventoryManager inv;
@@ -27,7 +40,7 @@ public class ModGuiService implements TabExecutor {
         this.config = new ModGuiConfig(plugin);
         this.config.load();
 
-        // command is added in plugin.yml as "modgui"
+        // Register command
         if (plugin.getCommand("modgui") != null) {
             plugin.getCommand("modgui").setExecutor(this);
             plugin.getCommand("modgui").setTabCompleter(this);
@@ -40,21 +53,25 @@ public class ModGuiService implements TabExecutor {
         SmartInventory.builder()
                 .manager(inv)
                 .id("modgui-main")
-                .provider(new MainMenu(plugin, this)) // <— use YOUR provider (not the private AliasEditor one)
+                .provider(new MainMenu(plugin, this))
                 .size(6, 9)
-                .title("Moderation Panel")
+                .title(Lang.color(Lang.get("modgui.main.title", "&8Moderation Panel")))
                 .build()
-                .open(p); // <— open for p, not "player"
+                .open(p);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player p)) {
-            sender.sendMessage("Players only.");
+            Lang.send(sender, "modgui.player-only",
+                    "<red>Players only.</red>",
+                    Map.of());
             return true;
         }
         if (!p.hasPermission("oreo.modgui.open")) {
-            p.sendMessage("§cNo permission: oreo.modgui.open");
+            Lang.send(p, "modgui.no-permission",
+                    "<red>No permission: <white>oreo.modgui.open</white></red>",
+                    Map.of());
             return true;
         }
         openMain(p);
@@ -65,9 +82,12 @@ public class ModGuiService implements TabExecutor {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         return List.of();
     }
+
+    // Chat moderation state
     private boolean chatMuted = false;
     private int slowmodeSeconds = 0;
     private final Map<UUID, Boolean> staffChat = new HashMap<>();
+    private final Map<UUID, Long> lastMessage = new HashMap<>();
 
     public boolean chatMuted() { return chatMuted; }
     public void setChatMuted(boolean b) { chatMuted = b; }
@@ -78,10 +98,10 @@ public class ModGuiService implements TabExecutor {
     public boolean isStaffChatEnabled(UUID id) {
         return staffChat.getOrDefault(id, false);
     }
+
     public void setStaffChatEnabled(UUID id, boolean enabled) {
         staffChat.put(id, enabled);
     }
-    private final Map<UUID, Long> lastMessage = new HashMap<>();
 
     public boolean canSendMessage(UUID id) {
         int slow = slowmodeSeconds;

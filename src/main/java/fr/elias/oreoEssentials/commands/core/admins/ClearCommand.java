@@ -29,51 +29,43 @@ public class ClearCommand implements OreoCommand {
         OreoEssentials plugin = OreoEssentials.get();
         PlayerDirectory directory = plugin.getPlayerDirectory();
 
-        // InventoryService via Bukkit ServicesManager (comme onDisable())
+        // InventoryService via Bukkit ServicesManager
         InventoryService invService = Bukkit.getServicesManager()
                 .load(InventoryService.class);
 
         if (invService == null) {
-            // Info au staff: pas de clear persistant
+            // Info to staff: no persistent clear available
             Lang.send(sender,
                     "admin.clear.no-service",
-                    null,
-                    null
-            );
-            // on peut quand même clear en live si le joueur est ici
+                    "<yellow>Note: Inventory service unavailable - clearing local only.</yellow>");
         }
 
-        // ---------- /clear (soi-même) ----------
+        // ---------- /clear (self) ----------
         if (args.length == 0) {
             if (!(sender instanceof Player p)) {
-                // Console doit préciser un joueur
+                // Console must specify a player
                 Lang.send(sender,
                         "admin.clear.console-usage",
-                        null,
-                        Map.of("label", label)
-                );
+                        "<red>Usage: /%label% <player></red>",
+                        Map.of("label", label));
                 return true;
             }
 
             UUID uuid = p.getUniqueId();
 
-            // 1) Clear inventaire live sur CE serveur
+            // 1) Clear live inventory on THIS server
             clearLiveInventory(p);
 
-            // 2) Clear persistant (Mongo/YAML) si service dispo
+            // 2) Clear persistent (Mongo/YAML) if service available
             if (invService != null) {
                 clearPersistentInventory(invService, uuid);
                 Lang.send(p,
                         "admin.clear.self.all-servers",
-                        null,
-                        null
-                );
+                        "<green>Inventory cleared on all servers.</green>");
             } else {
                 Lang.send(p,
                         "admin.clear.self.this-server",
-                        null,
-                        null
-                );
+                        "<green>Inventory cleared on this server.</green>");
             }
 
             return true;
@@ -83,61 +75,54 @@ public class ClearCommand implements OreoCommand {
         if (!sender.hasPermission("oreo.clear.others")) {
             Lang.send(sender,
                     "admin.clear.others-no-permission",
-                    null,
-                    null
-            );
+                    "<red>You don't have permission to clear other players' inventories.</red>");
             return true;
         }
 
         String targetName = args[0];
 
-        // 1) Résoudre cross-server via PlayerDirectory
+        // 1) Resolve cross-server via PlayerDirectory
         UUID targetUuid = directory.lookupUuidByName(targetName);
         if (targetUuid == null) {
             Lang.send(sender,
                     "admin.clear.target-not-found",
-                    null,
-                    Map.of("target", targetName)
-            );
+                    "<red>Player not found: <yellow>%target%</yellow></red>",
+                    Map.of("target", targetName));
             return true;
         }
 
-        // 2) Si le joueur est en ligne sur CE serveur, clear live
+        // 2) If player is online on THIS server, clear live
         Player online = Bukkit.getPlayer(targetUuid);
         if (online != null) {
             clearLiveInventory(online);
 
             if (invService != null) {
-                // Notifier le joueur: clear all servers
+                // Notify player: clear all servers
                 Lang.send(online,
                         "admin.clear.target-notified-all",
-                        null,
-                        Map.of("player", sender.getName())
-                );
+                        "<yellow>Your inventory was cleared on all servers by <aqua>%player%</aqua>.</yellow>",
+                        Map.of("player", sender.getName()));
             } else {
-                // Notifier le joueur: clear local uniquement
+                // Notify player: clear local only
                 Lang.send(online,
                         "admin.clear.target-notified-local",
-                        null,
-                        Map.of("player", sender.getName())
-                );
+                        "<yellow>Your inventory was cleared on this server by <aqua>%player%</aqua>.</yellow>",
+                        Map.of("player", sender.getName()));
             }
         }
 
-        // 3) Clear persistant (effet cross-server)
+        // 3) Clear persistent (cross-server effect)
         if (invService != null) {
             clearPersistentInventory(invService, targetUuid);
             Lang.send(sender,
                     "admin.clear.sender-confirm-all",
-                    null,
-                    Map.of("target", targetName)
-            );
+                    "<green>Cleared <aqua>%target%</aqua>'s inventory on all servers.</green>",
+                    Map.of("target", targetName));
         } else {
             Lang.send(sender,
                     "admin.clear.sender-confirm-local",
-                    null,
-                    Map.of("target", targetName)
-            );
+                    "<green>Cleared <aqua>%target%</aqua>'s inventory on this server.</green>",
+                    Map.of("target", targetName));
         }
 
         return true;
@@ -152,9 +137,9 @@ public class ClearCommand implements OreoCommand {
 
     private void clearPersistentInventory(InventoryService invService, UUID uuid) {
         InventoryService.Snapshot snap = new InventoryService.Snapshot();
-        snap.contents = new ItemStack[41]; // 41 slots: tous null => inventaire vide
-        snap.armor    = new ItemStack[4];  // 4 slots d'armure vides
-        snap.offhand  = null;              // main secondaire vide
+        snap.contents = new ItemStack[41]; // 41 slots: all null => empty inventory
+        snap.armor = new ItemStack[4];     // 4 armor slots empty
+        snap.offhand = null;               // offhand empty
 
         invService.save(uuid, snap);
     }

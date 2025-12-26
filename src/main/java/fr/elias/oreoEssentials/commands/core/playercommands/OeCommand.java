@@ -1,15 +1,17 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/OeCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
-import org.bukkit.ChatColor;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class OeCommand implements OreoCommand, org.bukkit.command.TabCompleter {
 
@@ -24,7 +26,9 @@ public class OeCommand implements OreoCommand, org.bukkit.command.TabCompleter {
         Player p = (Player) sender;
 
         if (args.length < 2 || !args[0].equalsIgnoreCase("server")) {
-            p.sendMessage(ChatColor.YELLOW + "Usage: /" + label + " server <servername>");
+            Lang.send(p, "oe.usage",
+                    "<yellow>Usage: /%label% server <servername></yellow>",
+                    Map.of("label", label));
             return true;
         }
 
@@ -36,19 +40,29 @@ public class OeCommand implements OreoCommand, org.bukkit.command.TabCompleter {
             out.writeUTF("Connect");
             out.writeUTF(targetServer);
             p.sendPluginMessage(OreoEssentials.get(), "BungeeCord", out.toByteArray());
-            p.sendMessage(ChatColor.GREEN + "Connecting you to " + ChatColor.AQUA + targetServer + ChatColor.GREEN + "…");
+
+            Lang.send(p, "oe.connecting",
+                    "<green>Connecting you to <aqua>%server%</aqua>...</green>",
+                    Map.of("server", targetServer));
         } catch (Throwable t) {
-            p.sendMessage(ChatColor.RED + "Could not connect you to " + targetServer + ". Is the proxy/channel configured?");
+            Lang.send(p, "oe.failed",
+                    "<red>Could not connect you to %server%. Is the proxy/channel configured?</red>",
+                    Map.of("server", targetServer));
         }
+
         return true;
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, org.bukkit.command.Command command, String alias, String[] args) {
-        if (!(sender instanceof Player) || !sender.hasPermission(permission())) return Collections.emptyList();
+        if (!(sender instanceof Player) || !sender.hasPermission(permission())) {
+            return Collections.emptyList();
+        }
+
         if (args.length == 1) {
             return List.of("server");
         }
+
         // (Optional) you could implement GetServers round-trip caching here for tab completion.
         return Collections.emptyList();
     }

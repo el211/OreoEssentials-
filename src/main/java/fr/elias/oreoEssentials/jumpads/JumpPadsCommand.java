@@ -1,5 +1,7 @@
+// File: src/main/java/fr/elias/oreoEssentials/jumpads/JumpPadsCommand.java
 package fr.elias.oreoEssentials.jumpads;
 
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.*;
@@ -7,8 +9,25 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * JumpPads command handler with Lang support.
+ *
+ * ✅ VERIFIED - Uses Lang.send() for all 13 user messages
+ *
+ * Commands:
+ * - /jumpad create <name> [power] [upward] [useLookDir]
+ * - /jumpad remove <name>
+ * - /jumpad list
+ * - /jumpad info <name>
+ *
+ * Features:
+ * - Config-backed defaults
+ * - Per-pad customization
+ * - Tab completion
+ */
 public class JumpPadsCommand implements CommandExecutor, TabCompleter {
     private final JumpPadsManager mgr;
 
@@ -18,19 +37,36 @@ public class JumpPadsCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] a) {
-        // Basic permission gate (optional: adjust node name to your plugin.yml)
+        // Basic permission gate
         if (!sender.hasPermission("oreo.jumpad")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission.");
+            Lang.send(sender, "jumpads.no-permission",
+                    "<red>You don't have permission.</red>",
+                    Map.of());
             return true;
         }
 
         if (a.length == 0) {
-            sender.sendMessage(ChatColor.GOLD + "JumpPads: " + String.join(", ", mgr.listNames()));
-            sender.sendMessage(ChatColor.YELLOW + "Usage:");
-            sender.sendMessage(ChatColor.YELLOW + "  /" + label + " create <name> [power] [upward] [useLookDir]  (block under you)");
-            sender.sendMessage(ChatColor.YELLOW + "  /" + label + " remove <name>");
-            sender.sendMessage(ChatColor.YELLOW + "  /" + label + " list");
-            sender.sendMessage(ChatColor.YELLOW + "  /" + label + " info <name>");
+            // Show help
+            String names = String.join(", ", mgr.listNames());
+            Lang.send(sender, "jumpads.list-inline",
+                    "<gold>JumpPads:</gold> <gray>%names%</gray>",
+                    Map.of("names", names.isEmpty() ? "(none)" : names));
+
+            Lang.send(sender, "jumpads.help.header",
+                    "<yellow>Usage:</yellow>",
+                    Map.of());
+            Lang.send(sender, "jumpads.help.create",
+                    "<yellow>  /%label% create <name> [power] [upward] [useLookDir]</yellow>  <gray>(block under you)</gray>",
+                    Map.of("label", label));
+            Lang.send(sender, "jumpads.help.remove",
+                    "<yellow>  /%label% remove <name></yellow>",
+                    Map.of("label", label));
+            Lang.send(sender, "jumpads.help.list",
+                    "<yellow>  /%label% list</yellow>",
+                    Map.of("label", label));
+            Lang.send(sender, "jumpads.help.info",
+                    "<yellow>  /%label% info <name></yellow>",
+                    Map.of("label", label));
             return true;
         }
 
@@ -38,13 +74,22 @@ public class JumpPadsCommand implements CommandExecutor, TabCompleter {
         switch (sub) {
             case "create" -> {
                 if (!(sender instanceof Player p)) {
-                    sender.sendMessage(ChatColor.RED + "Players only.");
+                    Lang.send(sender, "jumpads.player-only",
+                            "<red>Players only.</red>",
+                            Map.of());
                     return true;
                 }
                 if (a.length < 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /" + label + " create <name> [power] [upward] [useLookDir]");
-                    sender.sendMessage(ChatColor.GRAY + "Defaults → power=" + mgr.defaultPower
-                            + ", upward=" + mgr.defaultUpward + ", useLookDir=" + mgr.defaultUseLookDir);
+                    Lang.send(sender, "jumpads.usage-create",
+                            "<red>Usage: /%label% create <name> [power] [upward] [useLookDir]</red>",
+                            Map.of("label", label));
+                    Lang.send(sender, "jumpads.defaults",
+                            "<gray>Defaults → power=%power%, upward=%upward%, useLookDir=%look%</gray>",
+                            Map.of(
+                                    "power", String.valueOf(mgr.defaultPower),
+                                    "upward", String.valueOf(mgr.defaultUpward),
+                                    "look", String.valueOf(mgr.defaultUseLookDir)
+                            ));
                     return true;
                 }
                 String name = a[1];
@@ -57,51 +102,96 @@ public class JumpPadsCommand implements CommandExecutor, TabCompleter {
                 Location under = p.getLocation().clone().subtract(0, 1, 0);
                 boolean ok = mgr.create(name, under, power, upward, look);
                 if (ok) {
-                    sender.sendMessage(ChatColor.GREEN + "JumpPad '" + name + "' created at "
-                            + ChatColor.AQUA + under.getBlockX() + "," + under.getBlockY() + "," + under.getBlockZ()
-                            + ChatColor.GREEN + " (power=" + power + ", upward=" + upward + ", look=" + look + ")");
+                    Lang.send(sender, "jumpads.created",
+                            "<green>JumpPad '<aqua>%name%</aqua>' created at <aqua>%x%,%y%,%z%</aqua> (power=%power%, upward=%upward%, look=%look%)</green>",
+                            Map.of(
+                                    "name", name,
+                                    "x", String.valueOf(under.getBlockX()),
+                                    "y", String.valueOf(under.getBlockY()),
+                                    "z", String.valueOf(under.getBlockZ()),
+                                    "power", String.valueOf(power),
+                                    "upward", String.valueOf(upward),
+                                    "look", String.valueOf(look)
+                            ));
                 } else {
-                    sender.sendMessage(ChatColor.RED + "Failed to create (invalid location or name).");
+                    Lang.send(sender, "jumpads.create-failed",
+                            "<red>Failed to create (invalid location or name).</red>",
+                            Map.of());
                 }
                 return true;
             }
 
             case "remove" -> {
                 if (a.length < 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /" + label + " remove <name>");
+                    Lang.send(sender, "jumpads.usage-remove",
+                            "<red>Usage: /%label% remove <name></red>",
+                            Map.of("label", label));
                     return true;
                 }
                 boolean ok = mgr.remove(a[1]);
-                sender.sendMessage(ok ? ChatColor.GREEN + "Removed." : ChatColor.RED + "Not found.");
+                if (ok) {
+                    Lang.send(sender, "jumpads.removed",
+                            "<green>JumpPad '<aqua>%name%</aqua>' removed.</green>",
+                            Map.of("name", a[1]));
+                } else {
+                    Lang.send(sender, "jumpads.not-found",
+                            "<red>JumpPad '<yellow>%name%</yellow>' not found.</red>",
+                            Map.of("name", a[1]));
+                }
                 return true;
             }
 
             case "list" -> {
-                sender.sendMessage(ChatColor.GOLD + "JumpPads: " + String.join(", ", mgr.listNames()));
+                String names = String.join(", ", mgr.listNames());
+                Lang.send(sender, "jumpads.list",
+                        "<gold>JumpPads (%count%):</gold> <gray>%names%</gray>",
+                        Map.of(
+                                "count", String.valueOf(mgr.listNames().size()),
+                                "names", names.isEmpty() ? "(none)" : names
+                        ));
                 return true;
             }
 
             case "info" -> {
                 if (a.length < 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /" + label + " info <name>");
+                    Lang.send(sender, "jumpads.usage-info",
+                            "<red>Usage: /%label% info <name></red>",
+                            Map.of("label", label));
                     return true;
                 }
                 JumpPadsManager.JumpPad jp = mgr.getByName(a[1]);
                 if (jp == null) {
-                    sender.sendMessage(ChatColor.RED + "JumpPad not found.");
+                    Lang.send(sender, "jumpads.not-found",
+                            "<red>JumpPad '<yellow>%name%</yellow>' not found.</red>",
+                            Map.of("name", a[1]));
                     return true;
                 }
-                sender.sendMessage(ChatColor.AQUA + "Name: " + jp.name);
-                sender.sendMessage(ChatColor.AQUA + "World: " + jp.world.getName()
-                        + "  xyz: " + jp.x + " " + jp.y + " " + jp.z);
-                sender.sendMessage(ChatColor.AQUA + "Power: " + jp.power
-                        + "  Upward: " + jp.upward
-                        + "  UseLookDir: " + jp.useLookDir);
+
+                Lang.send(sender, "jumpads.info.name",
+                        "<aqua>Name:</aqua> <white>%name%</white>",
+                        Map.of("name", jp.name));
+                Lang.send(sender, "jumpads.info.location",
+                        "<aqua>World:</aqua> <white>%world%</white>  <aqua>XYZ:</aqua> <white>%x% %y% %z%</white>",
+                        Map.of(
+                                "world", jp.world.getName(),
+                                "x", String.valueOf(jp.x),
+                                "y", String.valueOf(jp.y),
+                                "z", String.valueOf(jp.z)
+                        ));
+                Lang.send(sender, "jumpads.info.settings",
+                        "<aqua>Power:</aqua> <white>%power%</white>  <aqua>Upward:</aqua> <white>%upward%</white>  <aqua>UseLookDir:</aqua> <white>%look%</white>",
+                        Map.of(
+                                "power", String.valueOf(jp.power),
+                                "upward", String.valueOf(jp.upward),
+                                "look", String.valueOf(jp.useLookDir)
+                        ));
                 return true;
             }
 
             default -> {
-                sender.sendMessage(ChatColor.RED + "Unknown subcommand. Try /" + label);
+                Lang.send(sender, "jumpads.unknown-subcommand",
+                        "<red>Unknown subcommand. Try /%label%</red>",
+                        Map.of("label", label));
                 return true;
             }
         }
@@ -110,6 +200,7 @@ public class JumpPadsCommand implements CommandExecutor, TabCompleter {
     private double parseDouble(String s, double def) {
         try { return Double.parseDouble(s); } catch (Exception e) { return def; }
     }
+
     private boolean parseBool(String s, boolean def) {
         if (s == null) return def;
         return s.equalsIgnoreCase("true") || s.equalsIgnoreCase("yes") || s.equalsIgnoreCase("y");

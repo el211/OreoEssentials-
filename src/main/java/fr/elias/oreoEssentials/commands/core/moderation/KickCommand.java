@@ -1,16 +1,17 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/KickCommand.java
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/moderation/KickCommand.java
 package fr.elias.oreoEssentials.commands.core.moderation;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.integration.DiscordModerationNotifier;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class KickCommand implements OreoCommand {
@@ -24,14 +25,20 @@ public class KickCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (args.length < 1) {
-            sender.sendMessage(ChatColor.YELLOW + "Usage: /" + label + " <player> [reason...]");
+            Lang.send(sender, "moderation.kick.usage",
+                    "<yellow>Usage: /%label% <player> [reason...]</yellow>",
+                    Map.of("label", label));
             return true;
         }
 
         String arg = args[0];
         String reason = args.length >= 2
                 ? String.join(" ", Arrays.copyOfRange(args, 1, args.length))
-                : "Kicked by an operator.";
+                : Lang.msgWithDefault(
+                "moderation.kick.default-reason",
+                "Kicked by an operator.",
+                sender instanceof Player ? (Player) sender : null
+        );
 
         OreoEssentials plugin = OreoEssentials.get();
         var dir = plugin.getPlayerDirectory();
@@ -40,10 +47,17 @@ public class KickCommand implements OreoCommand {
         // 1) LOCAL ONLINE first
         Player local = Bukkit.getPlayerExact(arg);
         if (local != null && local.isOnline()) {
-            local.kickPlayer(ChatColor.RED + reason);
+            String kickMsg = Lang.msgWithDefault(
+                    "moderation.kick.kick-message",
+                    "<red>%reason%</red>",
+                    Map.of("reason", reason),
+                    local
+            );
+            local.kickPlayer(kickMsg);
 
-            sender.sendMessage(ChatColor.GREEN + "Kicked " + ChatColor.AQUA + local.getName()
-                    + ChatColor.GREEN + ". Reason: " + ChatColor.YELLOW + reason);
+            Lang.send(sender, "moderation.kick.success",
+                    "<green>Kicked <aqua>%player%</aqua>. Reason: <yellow>%reason%</yellow></green>",
+                    Map.of("player", local.getName(), "reason", reason));
 
             notifyDiscord(local.getName(), local.getUniqueId(), reason, sender.getName());
             return true;
@@ -58,11 +72,14 @@ public class KickCommand implements OreoCommand {
 
         // Fallback: try parsing UUID
         if (uuid == null) {
-            try { uuid = UUID.fromString(arg); } catch (Throwable ignored) { }
+            try {
+                uuid = UUID.fromString(arg);
+            } catch (Throwable ignored) { }
         }
 
         if (uuid == null) {
-            sender.sendMessage(ChatColor.RED + "Player not found.");
+            Lang.send(sender, "moderation.kick.player-not-found",
+                    "<red>Player not found.</red>");
             return true;
         }
 
@@ -79,15 +96,17 @@ public class KickCommand implements OreoCommand {
         if (bridge != null) {
             bridge.kick(uuid, targetName, reason);
 
-            sender.sendMessage(ChatColor.GREEN + "Kick request sent for "
-                    + ChatColor.AQUA + targetName + ChatColor.GREEN + " (cross-server).");
+            Lang.send(sender, "moderation.kick.success-cross-server",
+                    "<green>Kick request sent for <aqua>%player%</aqua> (cross-server).</green>",
+                    Map.of("player", targetName));
 
             notifyDiscord(targetName, uuid, reason, sender.getName());
             return true;
         }
 
         // 5) If no bridge, fail safely
-        sender.sendMessage(ChatColor.RED + "Target is not on this server and cross-server mod bridge is unavailable.");
+        Lang.send(sender, "moderation.kick.no-bridge",
+                "<red>Target is not on this server and cross-server mod bridge is unavailable.</red>");
         return true;
     }
 
@@ -97,5 +116,4 @@ public class KickCommand implements OreoCommand {
             mod.notifyKick(name, uuid, reason, actor);
         }
     }
-
 }

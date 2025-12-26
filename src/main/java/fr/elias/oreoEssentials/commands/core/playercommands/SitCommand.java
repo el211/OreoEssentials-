@@ -52,29 +52,35 @@ public class SitCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) {
-            // Should be enforced by playerOnly(), but just in case
-            sender.sendMessage("Only players can use this command.");
+            Lang.send(sender, "sit.player-only",
+                    "<red>Only players can use this command.</red>");
             return true;
         }
 
         // If already sitting on one of our seats -> stand up (toggle behavior)
         if (isSitting(p)) {
             standUp(p);
-            Lang.send(p, "player.sit.stand", null, null);
+            Lang.send(p, "sit.stand",
+                    "<gray>You stood up.</gray>");
             return true;
         }
 
         // Basic state checks
         if (p.getVehicle() != null) {
-            Lang.send(p, "player.sit.already-riding", null, null);
+            Lang.send(p, "sit.already-riding",
+                    "<red>You're already riding something.</red>");
             return true;
         }
+
         if (!p.isOnGround()) {
-            Lang.send(p, "player.sit.not-on-ground", null, null);
+            Lang.send(p, "sit.not-on-ground",
+                    "<red>You must be on the ground to sit.</red>");
             return true;
         }
+
         if (p.isFlying() || p.isGliding()) {
-            Lang.send(p, "player.sit.not-while-flying", null, null);
+            Lang.send(p, "sit.not-while-flying",
+                    "<red>You can't sit while flying or gliding.</red>");
             return true;
         }
 
@@ -88,7 +94,8 @@ public class SitCommand implements OreoCommand {
         }
 
         if (blockBelow.getType() == Material.AIR) {
-            Lang.send(p, "player.sit.no-block", null, null);
+            Lang.send(p, "sit.no-block",
+                    "<red>There's no block to sit on.</red>");
             return true;
         }
 
@@ -138,13 +145,10 @@ public class SitCommand implements OreoCommand {
         // Mount the player
         seat.addPassenger(p);
 
-        // Feedback to player with simple placeholder
-        Lang.send(
-                p,
-                "player.sit.sat",
-                null,
-                Map.of("block", blockBelow.getType().name().toLowerCase())
-        );
+        // Feedback to player
+        Lang.send(p, "sit.sat",
+                "<green>You sat down on <yellow>%block%</yellow>.</green>",
+                Map.of("block", blockBelow.getType().name().toLowerCase()));
 
         return true;
     }

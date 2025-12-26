@@ -26,18 +26,22 @@ public class DisenchantCommand implements OreoCommand {
         Player p = (Player) sender;
 
         if (args.length < 1) {
-            Lang.send(p, "admin.disenchant.usage", null, Map.of("label", label));
+            Lang.send(p, "admin.disenchant.usage",
+                    "<yellow>Usage: /%label% <enchantment|all> [levels-to-remove]</yellow>",
+                    Map.of("label", label));
             return true;
         }
 
         ItemStack item = p.getInventory().getItemInMainHand();
         if (item == null || item.getType().isAir()) {
-            Lang.send(p, "admin.enchant.hold-item", null, null);
+            Lang.send(p, "admin.disenchant.hold-item",
+                    "<red>You must hold an item in your main hand.</red>");
             return true;
         }
 
         if (item.getEnchantments().isEmpty()) {
-            Lang.send(p, "admin.disenchant.none", null, null);
+            Lang.send(p, "admin.disenchant.none",
+                    "<red>This item has no enchantments.</red>");
             return true;
         }
 
@@ -46,18 +50,23 @@ public class DisenchantCommand implements OreoCommand {
         // Remove ALL enchantments
         if (target.equals("all") || target.equals("*")) {
             item.getEnchantments().keySet().forEach(item::removeEnchantment);
-            Lang.send(p, "admin.disenchant.all", null, null);
+            Lang.send(p, "admin.disenchant.all",
+                    "<green>All enchantments removed.</green>");
             return true;
         }
 
         Enchantment ench = resolve(target);
         if (ench == null) {
-            Lang.send(p, "admin.enchant.unknown", null, Map.of("input", args[0]));
+            Lang.send(p, "admin.disenchant.unknown",
+                    "<red>Unknown enchantment: <yellow>%input%</yellow></red>",
+                    Map.of("input", args[0]));
             return true;
         }
 
         if (!item.getEnchantments().containsKey(ench)) {
-            Lang.send(p, "admin.disenchant.not-present", null, Map.of("ench", enchKey(ench)));
+            Lang.send(p, "admin.disenchant.not-present",
+                    "<red>This item doesn't have <yellow>%ench%</yellow>.</red>",
+                    Map.of("ench", enchKey(ench)));
             return true;
         }
 
@@ -68,30 +77,34 @@ public class DisenchantCommand implements OreoCommand {
             try {
                 remove = Math.max(1, Integer.parseInt(args[1]));
             } catch (NumberFormatException ignored) {
-                // why: ignore invalid numbers, default to 1
+                // Ignore invalid numbers, default to 1
             }
         }
 
         int newLevel = current - remove;
 
         if (newLevel > 0) {
-            // reapply at reduced level
+            // Reapply at reduced level
             item.addUnsafeEnchantment(ench, newLevel);
-            Lang.send(p, "admin.disenchant.partial", null, Map.of(
-                    "ench", enchKey(ench),
-                    "removed", String.valueOf(remove),
-                    "remaining", String.valueOf(newLevel)
-            ));
+            Lang.send(p, "admin.disenchant.partial",
+                    "<green>Removed <white>%removed%</white> level(s) of <aqua>%ench%</aqua>. <white>%remaining%</white> level(s) remain.</green>",
+                    Map.of(
+                            "ench", enchKey(ench),
+                            "removed", String.valueOf(remove),
+                            "remaining", String.valueOf(newLevel)
+                    ));
         } else {
             item.removeEnchantment(ench);
-            Lang.send(p, "admin.disenchant.removed", null, Map.of("ench", enchKey(ench)));
+            Lang.send(p, "admin.disenchant.removed",
+                    "<green>Removed <aqua>%ench%</aqua> completely.</green>",
+                    Map.of("ench", enchKey(ench)));
         }
 
         return true;
     }
 
     private static String enchKey(Enchantment e) {
-        // prefer namespaced key string (e.g., minecraft:sharpness or plugin:custom)
+        // Prefer namespaced key string (e.g., minecraft:sharpness or plugin:custom)
         return e.getKey().toString();
     }
 
@@ -111,13 +124,14 @@ public class DisenchantCommand implements OreoCommand {
         Enchantment byMc = Enchantment.getByKey(NamespacedKey.minecraft(s));
         if (byMc != null) return byMc;
 
-        // Try matching by key key only (simple id)
+        // Try matching by key only (simple id)
         for (Enchantment e : Enchantment.values()) {
-            String simple = e.getKey().getKey(); // non-deprecated
+            String simple = e.getKey().getKey();
             if (simple.equalsIgnoreCase(s) || e.getKey().toString().equalsIgnoreCase(s)) {
                 return e;
             }
         }
+
         return null;
     }
 }

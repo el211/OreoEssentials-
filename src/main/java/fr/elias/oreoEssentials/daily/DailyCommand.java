@@ -1,6 +1,8 @@
+// File: src/main/java/fr/elias/oreoEssentials/daily/DailyCommand.java
 package fr.elias.oreoEssentials.daily;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.SmartInventory;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -12,6 +14,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
+ * Daily Rewards command handler.
+ *
+ * ✅ VERIFIED - Uses Lang.send() for 8 user messages
+ *
  * Player Commands:
  *  /daily             -> Opens the reward claim GUI (if enabled)
  *  /daily claim       -> Opens the reward claim GUI (if enabled)
@@ -47,16 +53,20 @@ public final class DailyCommand implements CommandExecutor, TabCompleter {
         // --- Admin toggle (allowed from console or in-game) ---
         if (args.length > 0 && args[0].equalsIgnoreCase("toggle")) {
             if (!sender.hasPermission("oreo.daily.admin")) {
-                sender.sendMessage(svc.color("&cYou don't have permission to toggle this feature."));
+                Lang.send(sender, "daily.no-permission-toggle",
+                        "<red>You don't have permission to toggle this feature.</red>",
+                        Map.of());
                 return true;
             }
+
             boolean now = svc.toggleEnabled();
-            // reflect in config and optionally persist
+            // Reflect in config and optionally persist
             cfg.setEnabled(now);
             try { cfg.save(); } catch (Throwable ignored) {}
 
-            String msg = svc.color(cfg.prefix + " &7Daily Rewards is now " + (now ? "&aENABLED" : "&cDISABLED"));
-            sender.sendMessage(msg);
+            Lang.send(sender, "daily.toggled",
+                    "<yellow>Daily Rewards is now %state%</yellow>",
+                    Map.of("state", now ? "<green>ENABLED</green>" : "<red>DISABLED</red>"));
             return true;
         }
 
@@ -68,20 +78,29 @@ public final class DailyCommand implements CommandExecutor, TabCompleter {
 
         // --- From here on, we require a player context ---
         if (!(sender instanceof Player p)) {
-            sender.sendMessage("This command must be run in-game.");
+            Lang.send(sender, "daily.players-only",
+                    "<red>This command must be run in-game.</red>",
+                    Map.of());
             return true;
         }
 
         if (!p.hasPermission("oreo.daily")) {
-            p.sendMessage(svc.color("&cYou don't have permission to use this."));
+            Lang.send(p, "daily.no-permission",
+                    "<red>You don't have permission to use this.</red>",
+                    Map.of());
             return true;
         }
 
         // If feature is disabled, inform player (and hint to admins)
         if (!svc.isEnabled()) {
-            p.sendMessage(svc.color(cfg.prefix + " &cDaily Rewards is currently disabled."));
+            Lang.send(p, "daily.disabled",
+                    "<red>Daily Rewards is currently disabled.</red>",
+                    Map.of());
+
             if (p.hasPermission("oreo.daily.admin")) {
-                p.sendMessage(svc.color("&7Use &f/" + label + " toggle &7to enable it."));
+                Lang.send(p, "daily.disabled-hint",
+                        "<gray>Use <white>/%command% toggle</white> to enable it.</gray>",
+                        Map.of("command", label));
             }
             return true;
         }
@@ -99,11 +118,16 @@ public final class DailyCommand implements CommandExecutor, TabCompleter {
 
     private void sendUsage(CommandSender sender, String label) {
         boolean admin = sender.hasPermission("oreo.daily.admin");
-        String base = svc.color("&7Usage: &f/" + label + " &7or &f/" + label + " claim &7or &f/" + label + " top");
+
         if (admin) {
-            base += svc.color(" &7or &f/" + label + " toggle");
+            Lang.send(sender, "daily.usage-admin",
+                    "<gray>Usage: <white>/%command%</white> or <white>/%command% claim</white> or <white>/%command% top</white> or <white>/%command% toggle</white></gray>",
+                    Map.of("command", label));
+        } else {
+            Lang.send(sender, "daily.usage",
+                    "<gray>Usage: <white>/%command%</white> or <white>/%command% claim</white> or <white>/%command% top</white></gray>",
+                    Map.of("command", label));
         }
-        sender.sendMessage(base);
     }
 
     private void showTop(CommandSender viewer) {

@@ -1,7 +1,8 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/NickCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
-import org.bukkit.ChatColor;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -9,6 +10,7 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -27,36 +29,51 @@ public class NickCommand implements OreoCommand, TabCompleter {
         Player p = (Player) sender;
 
         if (args.length < 1) {
-            p.sendMessage(ChatColor.YELLOW + "Usage: /" + label + " <newName>  or  /" + label + " unnick");
+            Lang.send(p, "nick.usage",
+                    "<yellow>Usage: /%label% <newName>  or  /%label% unnick</yellow>",
+                    Map.of("label", label));
             return true;
         }
 
-        // reset
+        // Reset nickname
         if (args[0].equalsIgnoreCase("unnick") || args[0].equalsIgnoreCase("reset")) {
             resetNick(p);
-            p.sendMessage(ChatColor.GREEN + "Your nickname has been reset.");
+            Lang.send(p, "nick.reset",
+                    "<green>Your nickname has been reset.</green>");
             return true;
         }
 
         String newName = args[0];
 
+        // Validate length
         if (newName.length() > MAX_LEN) {
-            p.sendMessage(ChatColor.RED + "Name too long (max " + MAX_LEN + " chars).");
-            return true;
-        }
-        if (!VALID.matcher(newName).matches()) {
-            p.sendMessage(ChatColor.RED + "Invalid name. Use letters, numbers, underscore (3–16).");
+            Lang.send(p, "nick.too-long",
+                    "<red>Name too long (max %max% chars).</red>",
+                    Map.of("max", String.valueOf(MAX_LEN)));
             return true;
         }
 
-        // Chat + TAB list (Bukkit API)
+        // Validate format
+        if (!VALID.matcher(newName).matches()) {
+            Lang.send(p, "nick.invalid",
+                    "<red>Invalid name. Use letters, numbers, underscore (3–16).</red>");
+            return true;
+        }
+
+        // Set nickname (Chat + TAB list via Bukkit API)
         try { p.setDisplayName(newName); } catch (Throwable ignored) {}
         try { p.setPlayerListName(newName); } catch (Throwable ignored) {}
 
-        p.sendMessage(ChatColor.GREEN + "You are now nicked as " + ChatColor.AQUA + newName + ChatColor.GREEN + ".");
+        Lang.send(p, "nick.set",
+                "<green>You are now nicked as <aqua>%nick%</aqua>.</green>",
+                Map.of("nick", newName));
+
         return true;
     }
 
+    /**
+     * Reset player's nickname to their real name
+     */
     private void resetNick(Player p) {
         String real = p.getName();
         try { p.setDisplayName(real); } catch (Throwable ignored) {}

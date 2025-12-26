@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/playerwarp/PlayerWarp.java
 package fr.elias.oreoEssentials.playerwarp;
 
 import org.bukkit.Bukkit;
@@ -9,6 +10,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * PlayerWarp data model.
+ *
+ * VERIFIED: No user-facing messages - pure data class.
+ * All messaging handled by PlayerWarpService and PlayerWarpCommand.
+ */
 public class PlayerWarp {
 
     private final String id;
@@ -19,31 +26,31 @@ public class PlayerWarp {
     private boolean whitelistEnabled;
     private Set<UUID> whitelist;
 
-    // optional / legacy fields (Mongo compatibility)
+    // Optional/legacy fields (Mongo compatibility)
     private String description;
     private String category;
     private boolean locked;
     private double cost;
 
     /**
-     * Icon used in GUI / list.
-     * ⚠ Doit être (dé)sérialisé par ton layer de stockage (YAML/Mongo/etc.)
+     * Icon used in GUI/list.
+     * Must be serialized by storage layer (YAML/Mongo/etc.)
      */
     private ItemStack icon;
 
     /**
-     * Players who can manage this warp (edit fields, maybe).
+     * Players who can manage this warp (edit fields, etc.)
      */
     private Set<UUID> managers;
 
     /**
-     * Optional password for access (null ou "" = aucun mot de passe).
+     * Optional password for access (null or "" = no password)
      */
     private String password;
 
-    // ------------------------------------------------------------
-    // CONSTRUCTEURS
-    // ------------------------------------------------------------
+    // ============================================================
+    // CONSTRUCTORS
+    // ============================================================
 
     /** Minimal constructor */
     public PlayerWarp(String id, UUID owner, String name, Location loc) {
@@ -56,8 +63,7 @@ public class PlayerWarp {
                       String name,
                       Location loc,
                       boolean whitelistEnabled,
-                      Set<UUID> whitelist
-    ) {
+                      Set<UUID> whitelist) {
         this.id = id;
         this.owner = owner;
         this.name = name.toLowerCase();
@@ -66,21 +72,21 @@ public class PlayerWarp {
         this.whitelistEnabled = whitelistEnabled;
         this.whitelist = (whitelist == null) ? new HashSet<>() : whitelist;
 
-        // default values for optional fields
+        // Default values for optional fields
         this.description = "";
         this.category = "";
         this.locked = false;
         this.cost = 0.0;
 
-        // new fields default
+        // New fields default
         this.icon = null;
         this.managers = new HashSet<>();
         this.password = null;
     }
 
-    // ------------------------------------------------------------
+    // ============================================================
     // GETTERS / SETTERS
-    // ------------------------------------------------------------
+    // ============================================================
 
     public String getId() { return id; }
 
@@ -157,13 +163,13 @@ public class PlayerWarp {
     // ---- Password ----
     public String getPassword() { return password; }
     public void setPassword(String password) {
-        // tu peux normaliser ici (ex: trim)
         this.password = (password == null || password.isEmpty()) ? null : password;
     }
 
-    // ------------------------------------------------------------
+    // ============================================================
     // STATIC FACTORY — safe location creation
-    // ------------------------------------------------------------
+    // ============================================================
+
     public static Location fromData(String world,
                                     double x,
                                     double y,

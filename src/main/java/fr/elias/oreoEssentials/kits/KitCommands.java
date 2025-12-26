@@ -1,14 +1,27 @@
+// File: src/main/java/fr/elias/oreoEssentials/kits/KitCommands.java
 package fr.elias.oreoEssentials.kits;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+/**
+ * Kits command handler with comprehensive Lang support.
+ *
+ * ✅ VERIFIED - All messages use Lang.send()
+ *
+ * Commands:
+ * - /kits [toggle] - Open GUI or toggle feature
+ * - /kit <name> - Claim a kit directly
+ */
 public class KitCommands implements CommandExecutor, TabCompleter {
+
     private final OreoEssentials plugin;
     private final KitsManager manager;
 
@@ -31,25 +44,51 @@ public class KitCommands implements CommandExecutor, TabCompleter {
         String cmd = command.getName().toLowerCase(Locale.ROOT);
 
         if (cmd.equals("kits")) {
-            // /kits toggle
+            // /kits toggle - Admin command
             if (args.length > 0 && args[0].equalsIgnoreCase("toggle")) {
                 if (!sender.hasPermission("oreo.kits.admin")) {
-                    sender.sendMessage("§cNo permission.");
+                    Lang.send(sender, "kits.no-permission",
+                            "<red>You don't have permission.</red>",
+                            Map.of());
                     return true;
                 }
+
                 boolean now = manager.toggleEnabled();
-                sender.sendMessage("§7Kits feature is now " + (now ? "§aENABLED" : "§cDISABLED"));
+                if (now) {
+                    Lang.send(sender, "kits.toggle-enabled",
+                            "<green>Kits feature is now <white>ENABLED</white>.</green>",
+                            Map.of());
+                } else {
+                    Lang.send(sender, "kits.toggle-disabled",
+                            "<yellow>Kits feature is now <white>DISABLED</white>.</yellow>",
+                            Map.of());
+                }
                 return true;
             }
 
-            if (!(sender instanceof Player p)) { sender.sendMessage("Only players."); return true; }
+            // /kits - Open GUI (player only)
+            if (!(sender instanceof Player p)) {
+                Lang.send(sender, "kits.player-only",
+                        "<red>Only players can use this command.</red>",
+                        Map.of());
+                return true;
+            }
 
-            if (!p.hasPermission("oreo.kits.open")) { p.sendMessage("§cNo permission."); return true; }
+            if (!p.hasPermission("oreo.kits.open")) {
+                Lang.send(p, "kits.no-permission",
+                        "<red>You don't have permission.</red>",
+                        Map.of());
+                return true;
+            }
 
             if (!manager.isEnabled()) {
-                p.sendMessage("§cKits are currently disabled.");
+                Lang.send(p, "kits.disabled",
+                        "<red>Kits are currently disabled.</red>",
+                        Map.of());
                 if (p.hasPermission("oreo.kits.admin")) {
-                    p.sendMessage("§7Use §f/kits toggle §7to enable it.");
+                    Lang.send(p, "kits.disabled.hint",
+                            "<gray>Use <white>%cmd%</white> to enable it.</gray>",
+                            Map.of("cmd", "/kits toggle"));
                 }
                 return true;
             }
@@ -60,19 +99,39 @@ public class KitCommands implements CommandExecutor, TabCompleter {
         }
 
         if (cmd.equals("kit")) {
-            if (!(sender instanceof Player p)) { sender.sendMessage("Only players."); return true; }
-            if (args.length < 1) { p.sendMessage("§eUsage: /kit <name>"); return true; }
+            // /kit <name> - Claim kit directly
+            if (!(sender instanceof Player p)) {
+                Lang.send(sender, "kits.player-only",
+                        "<red>Only players can use this command.</red>",
+                        Map.of());
+                return true;
+            }
+
+            if (args.length < 1) {
+                Lang.send(p, "kits.usage-kit",
+                        "<yellow>Usage: /kit <n></yellow>",
+                        Map.of());
+                return true;
+            }
 
             if (!manager.isEnabled()) {
-                p.sendMessage("§cKits are currently disabled.");
+                Lang.send(p, "kits.disabled",
+                        "<red>Kits are currently disabled.</red>",
+                        Map.of());
                 if (p.hasPermission("oreo.kits.admin")) {
-                    p.sendMessage("§7Use §f/kits toggle §7to enable it.");
+                    Lang.send(p, "kits.disabled.hint",
+                            "<gray>Use <white>%cmd%</white> to enable it.</gray>",
+                            Map.of("cmd", "/kits toggle"));
                 }
                 return true;
             }
 
             boolean handled = manager.claim(p, args[0]);
-            if (!handled) p.sendMessage("§cUnknown kit: §e" + args[0]);
+            if (!handled) {
+                Lang.send(p, "kits.unknown-kit",
+                        "<red>Unknown kit: <yellow>%kit_id%</yellow></red>",
+                        Map.of("kit_id", args[0]));
+            }
             return true;
         }
 
@@ -84,9 +143,11 @@ public class KitCommands implements CommandExecutor, TabCompleter {
         String name = command.getName().toLowerCase(Locale.ROOT);
 
         if (name.equals("kits")) {
-            if (args.length == 1) {
+            if (args.length == 1 && sender.hasPermission("oreo.kits.admin")) {
                 List<String> out = new ArrayList<>();
-                out.add("toggle");
+                if ("toggle".startsWith(args[0].toLowerCase(Locale.ROOT))) {
+                    out.add("toggle");
+                }
                 return out;
             }
             return List.of();

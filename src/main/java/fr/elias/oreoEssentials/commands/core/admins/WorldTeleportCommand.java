@@ -1,5 +1,7 @@
-// File: src/main/java/fr/elias/oreoEssentials/worlds/WorldTeleportCommand.java
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/WorldTeleportCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
+
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -18,12 +20,16 @@ public final class WorldTeleportCommand implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!sender.hasPermission("oreo.world")) {
-            sender.sendMessage("§cYou don't have permission (oreo.world).");
+            Lang.send(sender, "admin.world.no-permission",
+                    "<red>You don't have permission (oreo.world).</red>");
             return true;
         }
+
         if (args.length < 1) {
-            sender.sendMessage("§eUsage: §f/world <name|normal|nether|end|index> [playerName] [-s]");
-            sender.sendMessage("§7Examples: §f/world world_nether  §8|  §f/world nether  §8|  §f/world 2  §8|  §f/world end Steve -s");
+            Lang.send(sender, "admin.world.usage",
+                    "<yellow>Usage: <white>/world <n|normal|nether|end|index> [playerName] [-s]</white></yellow>");
+            Lang.send(sender, "admin.world.examples",
+                    "<gray>Examples: <white>/world world_nether</white>  <dark_gray>|</dark_gray>  <white>/world nether</white>  <dark_gray>|</dark_gray>  <white>/world 2</white>  <dark_gray>|</dark_gray>  <white>/world end Steve -s</white></gray>");
             return true;
         }
 
@@ -37,12 +43,15 @@ public final class WorldTeleportCommand implements TabExecutor {
             if (!(sender instanceof Player)) {
                 String candidate = firstNonFlag(args, 1);
                 if (candidate == null) {
-                    sender.sendMessage("§cConsole usage needs a target player: §f/world <name> <playerName> [-s]");
+                    Lang.send(sender, "admin.world.console-needs-player",
+                            "<red>Console usage needs a target player: <white>/world <n> <playerName> [-s]</white></red>");
                     return true;
                 }
                 target = Bukkit.getPlayerExact(candidate);
                 if (target == null) {
-                    sender.sendMessage("§cPlayer not found: §f" + candidate);
+                    Lang.send(sender, "admin.world.player-not-found",
+                            "<red>Player not found: <white>%player%</white></red>",
+                            Map.of("player", candidate));
                     return true;
                 }
             } else {
@@ -51,17 +60,21 @@ public final class WorldTeleportCommand implements TabExecutor {
                 if (candidate != null) {
                     target = Bukkit.getPlayerExact(candidate);
                     if (target == null) {
-                        sender.sendMessage("§cPlayer not found: §f" + candidate);
+                        Lang.send(sender, "admin.world.player-not-found",
+                                "<red>Player not found: <white>%player%</white></red>",
+                                Map.of("player", candidate));
                         return true;
                     }
                 }
             }
         }
+
         if (target == null) {
             if (sender instanceof Player) {
                 target = (Player) sender;
             } else {
-                sender.sendMessage("§cConsole must specify a target player: §f/world <name> <playerName> [-s]");
+                Lang.send(sender, "admin.world.console-must-specify",
+                        "<red>Console must specify a target player: <white>/world <n> <playerName> [-s]</white></red>");
                 return true;
             }
         }
@@ -69,14 +82,18 @@ public final class WorldTeleportCommand implements TabExecutor {
         // Resolve destination world by name/alias/index
         World dest = resolveWorld(args[0], target);
         if (dest == null) {
-            sender.sendMessage("§cWorld not found / unsupported: §f" + args[0]);
+            Lang.send(sender, "admin.world.world-not-found",
+                    "<red>World not found / unsupported: <white>%world%</white></red>",
+                    Map.of("world", args[0]));
             return true;
         }
 
         // Per-world permission: cmi.command.world.<worldName>
         String perWorldPerm = "cmi.command.world." + dest.getName();
         if (!sender.hasPermission(perWorldPerm)) {
-            sender.sendMessage("§cYou lack permission: §f" + perWorldPerm);
+            Lang.send(sender, "admin.world.no-world-permission",
+                    "<red>You lack permission: <white>%permission%</white></red>",
+                    Map.of("permission", perWorldPerm));
             return true;
         }
 
@@ -85,25 +102,37 @@ public final class WorldTeleportCommand implements TabExecutor {
 
         boolean ok = target.teleport(loc);
         if (!ok) {
-            sender.sendMessage("§cTeleport failed.");
+            Lang.send(sender, "admin.world.teleport-failed",
+                    "<red>Teleport failed.</red>");
             return true;
         }
 
+        // Notifications
         if (!silent) {
             if (sender != target) {
-                target.sendMessage("§aYou were teleported to §f" + dest.getName() + " §7by §f" + sender.getName());
+                Lang.send(target, "admin.world.target-notified",
+                        "<green>You were teleported to <white>%world%</white> by <white>%staff%</white></green>",
+                        Map.of("world", dest.getName(), "staff", sender.getName()));
             } else {
-                target.sendMessage("§aTeleported to §f" + dest.getName());
+                Lang.send(target, "admin.world.teleported-self",
+                        "<green>Teleported to <white>%world%</white></green>",
+                        Map.of("world", dest.getName()));
             }
         }
-        sender.sendMessage("§aTeleported §f" + target.getName() + " §7to §f" + dest.getName());
+
+        Lang.send(sender, "admin.world.teleported-other",
+                "<green>Teleported <white>%player%</white> to <white>%world%</white></green>",
+                Map.of("player", target.getName(), "world", dest.getName()));
+
         return true;
     }
 
-    // ---------- Helpers ----------
+    /* ---------------- Helpers ---------------- */
 
     private static boolean hasFlag(String[] args, String flag) {
-        for (String a : args) if (flag.equalsIgnoreCase(a)) return true;
+        for (String a : args) {
+            if (flag.equalsIgnoreCase(a)) return true;
+        }
         return false;
     }
 
@@ -142,28 +171,32 @@ public final class WorldTeleportCommand implements TabExecutor {
         }
 
         // Aliases normal/nether/end relative to a base world
-        World base = (contextPlayer != null ? contextPlayer.getWorld() : (Bukkit.getWorlds().isEmpty() ? null : Bukkit.getWorlds().get(0)));
+        World base = (contextPlayer != null
+                ? contextPlayer.getWorld()
+                : (Bukkit.getWorlds().isEmpty() ? null : Bukkit.getWorlds().get(0)));
         if (base == null) return null;
-        String baseName = stripDimSuffix(base.getName()); // e.g., "world" from "world", "world_nether", "world_the_end"
+
+        // e.g., "world" from "world", "world_nether", "world_the_end"
+        String baseName = stripDimSuffix(base.getName());
+
         switch (low) {
             case "normal":
             case "overworld":
-            case "daylight":
-            {
+            case "daylight": {
                 World w = Bukkit.getWorld(baseName);
                 if (w != null) return w;
             }
             break;
-            case "nether":
-            {
+
+            case "nether": {
                 World w = Bukkit.getWorld(baseName + "_nether");
                 if (w == null) w = firstByEnvironment(Environment.NETHER);
                 if (w != null) return w;
             }
             break;
+
             case "end":
-            case "the_end":
-            {
+            case "the_end": {
                 World w = Bukkit.getWorld(baseName + "_the_end");
                 if (w == null) w = firstByEnvironment(Environment.THE_END);
                 if (w != null) return w;
@@ -180,8 +213,12 @@ public final class WorldTeleportCommand implements TabExecutor {
     }
 
     private static String stripDimSuffix(String name) {
-        if (name.endsWith("_nether")) return name.substring(0, name.length() - "_nether".length());
-        if (name.endsWith("_the_end")) return name.substring(0, name.length() - "_the_end".length());
+        if (name.endsWith("_nether")) {
+            return name.substring(0, name.length() - "_nether".length());
+        }
+        if (name.endsWith("_the_end")) {
+            return name.substring(0, name.length() - "_the_end".length());
+        }
         return name;
     }
 
@@ -192,25 +229,33 @@ public final class WorldTeleportCommand implements TabExecutor {
         return null;
     }
 
-    // ---------- Tab Complete ----------
+    /* ---------------- Tab Complete ---------------- */
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
-        if (!sender.hasPermission("oreo.world")) return Collections.emptyList();
+        if (!sender.hasPermission("oreo.world")) {
+            return Collections.emptyList();
+        }
 
         if (args.length == 1) {
-            List<String> names = Bukkit.getWorlds().stream().map(World::getName).collect(Collectors.toList());
+            List<String> names = Bukkit.getWorlds().stream()
+                    .map(World::getName)
+                    .collect(Collectors.toList());
             names.addAll(Arrays.asList("normal", "nether", "end"));
+
             // Also offer numeric indices
             names.addAll(IntStream.rangeClosed(1, Math.max(3, Bukkit.getWorlds().size()))
-                    .mapToObj(String::valueOf).collect(Collectors.toList()));
+                    .mapToObj(String::valueOf)
+                    .collect(Collectors.toList()));
             return filter(names, args[0]);
         }
 
         if (args.length == 2) {
             List<String> pool = new ArrayList<>();
             pool.add("-s");
-            pool.addAll(Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList()));
+            pool.addAll(Bukkit.getOnlinePlayers().stream()
+                    .map(Player::getName)
+                    .collect(Collectors.toList()));
             return filter(pool, args[1]);
         }
 
@@ -223,6 +268,9 @@ public final class WorldTeleportCommand implements TabExecutor {
 
     private static List<String> filter(List<String> pool, String pref) {
         String p = pref == null ? "" : pref.toLowerCase(Locale.ROOT);
-        return pool.stream().distinct().filter(s -> s.toLowerCase(Locale.ROOT).startsWith(p)).collect(Collectors.toList());
+        return pool.stream()
+                .distinct()
+                .filter(s -> s.toLowerCase(Locale.ROOT).startsWith(p))
+                .collect(Collectors.toList());
     }
 }

@@ -4,13 +4,13 @@ package fr.elias.oreoEssentials.commands.core.playercommands;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.services.HomeService;
 import fr.elias.oreoEssentials.services.HomeService.StoredHome;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
 import fr.minuskube.inv.content.InventoryProvider;
 import fr.minuskube.inv.content.Pagination;
 import fr.minuskube.inv.content.SlotIterator;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -18,9 +18,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.bukkit.ChatColor.*;
 
 public class HomesGuiProvider implements InventoryProvider {
 
@@ -54,10 +51,10 @@ public class HomesGuiProvider implements InventoryProvider {
         int max = guessMaxHomes(p);
 
         // Header: counter in top-middle (slot 0,4)
-        contents.set(0, 4, ClickableItem.empty(counterItem(used, max)));
+        contents.set(0, 4, ClickableItem.empty(counterItem(p, used, max)));
 
         // Header right: refresh button (slot 0,8)
-        contents.set(0, 8, ClickableItem.of(refreshItem(), e -> {
+        contents.set(0, 8, ClickableItem.of(refreshItem(p), e -> {
             // Re-open same page
             contents.inventory().open(p, contents.pagination().getPage());
         }));
@@ -69,7 +66,7 @@ public class HomesGuiProvider implements InventoryProvider {
         ClickableItem[] items = names.stream().map(name -> {
             StoredHome sh = data.get(name);
             String server = (sh != null && sh.getServer() != null) ? sh.getServer() : homes.localServer();
-            ItemStack it = homeItem(name, server, sh);
+            ItemStack it = homeItem(p, name, server, sh);
             return ClickableItem.of(it, e -> {
                 switch (e.getClick()) {
                     case LEFT -> {
@@ -81,24 +78,10 @@ public class HomesGuiProvider implements InventoryProvider {
                         contents.inventory().close(p);
                         ConfirmDeleteGui.open(p, homes, name, () -> {
                             // onConfirm -> reopen current page refreshed
-                            SmartInventory.builder()
-                                    .id("oreo:homes")
-                                    .provider(new HomesGuiProvider(homes))
-                                    .size(6, 9)
-                                    .title(DARK_GREEN + "Your Homes")
-                                    .manager(OreoEssentials.get().getInvManager())
-                                    .build()
-                                    .open(p, pagination.getPage());
+                            reopenHomesGui(p, pagination.getPage());
                         }, () -> {
                             // onCancel -> reopen
-                            SmartInventory.builder()
-                                    .id("oreo:homes")
-                                    .provider(new HomesGuiProvider(homes))
-                                    .size(6, 9)
-                                    .title(DARK_GREEN + "Your Homes")
-                                    .manager(OreoEssentials.get().getInvManager())
-                                    .build()
-                                    .open(p, pagination.getPage());
+                            reopenHomesGui(p, pagination.getPage());
                         });
                     }
                     default -> {}
@@ -119,11 +102,11 @@ public class HomesGuiProvider implements InventoryProvider {
 
         // Footer (row 5): Prev (5, 0) | Next (5, 8)
         if (!pagination.isFirst()) {
-            contents.set(5, 0, ClickableItem.of(navItem(Material.ARROW, YELLOW + "Previous Page"), e ->
+            contents.set(5, 0, ClickableItem.of(navItem(p, Material.ARROW, "homes.gui.nav.previous"), e ->
                     contents.inventory().open(p, pagination.previous().getPage())));
         }
         if (!pagination.isLast()) {
-            contents.set(5, 8, ClickableItem.of(navItem(Material.ARROW, YELLOW + "Next Page"), e ->
+            contents.set(5, 8, ClickableItem.of(navItem(p, Material.ARROW, "homes.gui.nav.next"), e ->
                     contents.inventory().open(p, pagination.next().getPage())));
         }
     }
@@ -158,6 +141,21 @@ public class HomesGuiProvider implements InventoryProvider {
         return -1;
     }
 
+    private void reopenHomesGui(Player p, int page) {
+        String title = Lang.msgLegacy("homes.gui.title",
+                "<dark_green>Your Homes</dark_green>",
+                p);
+
+        SmartInventory.builder()
+                .id("oreo:homes")
+                .provider(new HomesGuiProvider(homes))
+                .size(6, 9)
+                .title(title)
+                .manager(OreoEssentials.get().getInvManager())
+                .build()
+                .open(p, page);
+    }
+
     /* ---------------- item builders ---------------- */
 
     private ItemStack filler() {
@@ -170,58 +168,90 @@ public class HomesGuiProvider implements InventoryProvider {
         return it;
     }
 
-    private ItemStack refreshItem() {
+    private ItemStack refreshItem(Player p) {
         ItemStack it = new ItemStack(Material.SUNFLOWER);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(YELLOW + "Refresh");
-            meta.setLore(List.of(GRAY + "Click to reload homes."));
+            meta.setDisplayName(Lang.msgLegacy("homes.gui.refresh.title",
+                    "<yellow>Refresh</yellow>", p));
+            meta.setLore(List.of(
+                    Lang.msgLegacy("homes.gui.refresh.lore",
+                            "<gray>Click to reload homes.</gray>", p)
+            ));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             it.setItemMeta(meta);
         }
         return it;
     }
 
-    private ItemStack counterItem(int used, int max) {
+    private ItemStack counterItem(Player p, int used, int max) {
         ItemStack it = new ItemStack(Material.PAPER);
         ItemMeta meta = it.getItemMeta();
         String cap = (max > 0) ? used + "/" + max : used + "/?";
         if (meta != null) {
-            meta.setDisplayName(ChatColor.GOLD + "Homes " + ChatColor.WHITE + "(" + cap + ")");
-            meta.setLore(List.of(ChatColor.GRAY + "Left-click a home to teleport.",
-                    ChatColor.GRAY + "Right-click a home to delete."));
+            meta.setDisplayName(Lang.msgLegacy("homes.gui.counter.title",
+                    "<gold>Homes <white>(%count%)</white></gold>",
+                    Map.of("count", cap),
+                    p));
+            meta.setLore(List.of(
+                    Lang.msgLegacy("homes.gui.counter.lore.0",
+                            "<gray>Left-click a home to teleport.</gray>", p),
+                    Lang.msgLegacy("homes.gui.counter.lore.1",
+                            "<gray>Right-click a home to delete.</gray>", p)
+            ));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             it.setItemMeta(meta);
         }
         return it;
     }
 
-    private ItemStack navItem(Material type, String name) {
+    private ItemStack navItem(Player p, Material type, String langKey) {
         ItemStack it = new ItemStack(type);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) {
+            String name = Lang.msgLegacy(langKey,
+                    "<yellow>Page</yellow>",
+                    p);
             meta.setDisplayName(name);
             it.setItemMeta(meta);
         }
         return it;
     }
 
-    private ItemStack homeItem(String name, String server, StoredHome sh) {
+    private ItemStack homeItem(Player p, String name, String server, StoredHome sh) {
         ItemStack it = new ItemStack(Material.ENDER_PEARL);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(ChatColor.AQUA + name);
+            meta.setDisplayName(Lang.msgLegacy("homes.gui.home.title",
+                    "<aqua>%name%</aqua>",
+                    Map.of("name", name),
+                    p));
 
             List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.GRAY + "Server: " + ChatColor.YELLOW + server);
+            lore.add(Lang.msgLegacy("homes.gui.home.lore.server",
+                    "<gray>Server: <yellow>%server%</yellow></gray>",
+                    Map.of("server", server),
+                    p));
+
             if (sh != null) {
-                lore.add(ChatColor.GRAY + "World: " + ChatColor.YELLOW + sh.getWorld());
-                lore.add(ChatColor.GRAY + "XYZ: " + ChatColor.YELLOW + fmt(sh.getX()) + " "
-                        + fmt(sh.getY()) + " " + fmt(sh.getZ()));
+                lore.add(Lang.msgLegacy("homes.gui.home.lore.world",
+                        "<gray>World: <yellow>%world%</yellow></gray>",
+                        Map.of("world", sh.getWorld()),
+                        p));
+
+                String coords = fmt(sh.getX()) + " " + fmt(sh.getY()) + " " + fmt(sh.getZ());
+                lore.add(Lang.msgLegacy("homes.gui.home.lore.coords",
+                        "<gray>XYZ: <yellow>%coords%</yellow></gray>",
+                        Map.of("coords", coords),
+                        p));
             }
+
             lore.add(" ");
-            lore.add(ChatColor.GREEN + "Left-Click: " + ChatColor.WHITE + "Teleport");
-            lore.add(ChatColor.RED + "Right-Click: " + ChatColor.WHITE + "Delete");
+            lore.add(Lang.msgLegacy("homes.gui.home.lore.left-click",
+                    "<green>Left-Click: <white>Teleport</white></green>", p));
+            lore.add(Lang.msgLegacy("homes.gui.home.lore.right-click",
+                    "<red>Right-Click: <white>Delete</white></red>", p));
+
             meta.setLore(lore);
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             it.setItemMeta(meta);

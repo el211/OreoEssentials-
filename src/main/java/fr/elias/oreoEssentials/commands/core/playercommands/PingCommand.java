@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/PingCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -21,12 +22,9 @@ public class PingCommand implements OreoCommand {
 
         int ping = p.getPing(); // 1.21 API
 
-        Lang.send(
-                p,
-                "ping.self",
-                null, // <-- def string (none)
-                Map.of("ping", String.valueOf(ping)) // <-- placeholders
-        );
+        Lang.send(p, "ping.self",
+                "<green>Your ping: <yellow>%ping%</yellow>ms</green>",
+                Map.of("ping", String.valueOf(ping)));
 
         return true;
     }

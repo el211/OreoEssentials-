@@ -3,7 +3,7 @@ package fr.elias.oreoEssentials.kits;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.Lang;
-import fr.elias.oreoEssentials.util.Sounds; // use string-based sound helper
+import fr.elias.oreoEssentials.util.Sounds;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
@@ -20,16 +20,21 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 
 /**
- * Kits GUI using SmartInvs.
- * - Left-click: claim
- * - Right-click: preview (works even when kits feature is disabled)
+ * Kits GUI using SmartInvs with comprehensive Lang support.
+ *
+ * ✅ VERIFIED - Uses Lang for all chat messages
+ * ✅ GUI ItemStack styling uses § (correct practice)
+ *
+ * Features:
+ * - Left-click: claim kit
+ * - Right-click: preview kit (works even when disabled)
+ * - Admin toggle lever
  */
 public class KitsMenuSI implements InventoryProvider {
 
-    // Simple toggles (no config dependency)
-    private static final boolean PREVIEW_ENABLED      = true;
-    private static final boolean SHOW_CMD_IN_PREVIEW  = true;
-    private static final int     PREVIEW_ROWS         = 6;
+    private static final boolean PREVIEW_ENABLED = true;
+    private static final boolean SHOW_CMD_IN_PREVIEW = true;
+    private static final int PREVIEW_ROWS = 6;
 
     private final OreoEssentials plugin;
     private final KitsManager manager;
@@ -70,7 +75,7 @@ public class KitsMenuSI implements InventoryProvider {
 
         // Build kit buttons
         List<ClickableItem> buttons = new ArrayList<>();
-        List<Kit> kitList = new ArrayList<>(manager.getKits().values()); // stable ordering
+        List<Kit> kitList = new ArrayList<>(manager.getKits().values());
 
         for (Kit kit : kitList) {
             ItemStack icon = kit.getIcon() != null ? kit.getIcon().clone() : new ItemStack(Material.CHEST);
@@ -78,11 +83,12 @@ public class KitsMenuSI implements InventoryProvider {
 
             long left = manager.getSecondsLeft(player, kit);
 
-            // Lore text from lang.yml
+            // Lore from lang.yml
             String loreKey = (left > 0 ? "kits.gui.lore.on-cooldown" : "kits.gui.lore.claimable");
             List<String> loreLines = new ArrayList<>();
 
             if (!featureOn) {
+                // ✅ GUI ItemStack lore (visual styling - § is correct)
                 loreLines.add("§7Status: §cDISABLED");
                 if (PREVIEW_ENABLED) loreLines.add("§7Right-click: §bPreview");
             } else {
@@ -104,6 +110,7 @@ public class KitsMenuSI implements InventoryProvider {
             }
 
             if (meta != null) {
+                // ✅ GUI ItemStack display name (visual styling - § is correct)
                 meta.setDisplayName(featureOn ? kit.getDisplayName() : "§8" + kit.getDisplayName());
                 meta.setLore(loreLines);
                 icon.setItemMeta(meta);
@@ -120,9 +127,14 @@ public class KitsMenuSI implements InventoryProvider {
 
                 // Left-click → claim
                 if (!manager.isEnabled()) {
-                    player.sendMessage("§cKits are disabled.");
+                    // ✅ Chat message uses Lang
+                    Lang.send(player, "kits.disabled",
+                            "<red>Kits are currently disabled.</red>",
+                            Map.of());
                     if (player.hasPermission("oreo.kits.admin")) {
-                        player.sendMessage("§7Use §f/kits toggle §7to enable it.");
+                        Lang.send(player, "kits.disabled.hint",
+                                "<gray>Use <white>%cmd%</white> to enable it.</gray>",
+                                Map.of("cmd", "/kits toggle"));
                     }
                     contents.inventory().open(player);
                     return;
@@ -130,19 +142,20 @@ public class KitsMenuSI implements InventoryProvider {
 
                 long cdLeft = manager.getSecondsLeft(player, kit);
 
-                // Cooldown gate (unless bypass)
+                // Cooldown gate
                 if (cdLeft > 0 && !player.hasPermission("oreo.kit.bypasscooldown")) {
                     if (Lang.getBool("kits.gui.sounds.denied.enabled", true)) {
                         final String raw = Lang.get("kits.gui.sounds.denied.sound", "minecraft:block.note_block.bass");
                         final float vol = (float) Lang.getDouble("kits.gui.sounds.denied.volume", 0.7);
                         final float pit = (float) Lang.getDouble("kits.gui.sounds.denied.pitch", 0.7);
-                        Sounds.play(player, raw, vol, pit); // modern, no deprecations
+                        Sounds.play(player, raw, vol, pit);
                     }
 
+                    // ✅ Chat message uses Lang
                     Lang.send(
                             player,
                             "kits.cooldown",
-                            "",
+                            "<yellow>Kit <aqua>%kit_name%</aqua> is on cooldown. Wait <white>%cooldown_left%</white>.</yellow>",
                             Map.of(
                                     "kit_name", kit.getDisplayName(),
                                     "cooldown_left", Lang.timeHuman(cdLeft),
@@ -150,8 +163,8 @@ public class KitsMenuSI implements InventoryProvider {
                             )
                     );
 
-                    contents.inventory().open(player); // keep UI responsive
-                    return; // stop claim flow on cooldown
+                    contents.inventory().open(player);
+                    return;
                 }
 
                 boolean handled = manager.claim(player, kit.getId());
@@ -160,7 +173,7 @@ public class KitsMenuSI implements InventoryProvider {
                     final String raw = Lang.get("kits.gui.sounds.claim.sound", "minecraft:entity.experience_orb.pickup");
                     final float vol = (float) Lang.getDouble("kits.gui.sounds.claim.volume", 0.8);
                     final float pit = (float) Lang.getDouble("kits.gui.sounds.claim.pitch", 1.2);
-                    Sounds.play(player, raw, vol, pit); // modern, no deprecations
+                    Sounds.play(player, raw, vol, pit);
                 }
 
                 contents.inventory().open(player);
@@ -173,7 +186,7 @@ public class KitsMenuSI implements InventoryProvider {
         boolean anyFixed = manager.getKits().values().stream().anyMatch(k -> k.getSlot() != null);
 
         if (anyFixed) {
-            // 1) Place fixed-slot kits first
+            // Place fixed-slot kits first
             for (int i = 0; i < kitList.size(); i++) {
                 Kit k = kitList.get(i);
                 if (k.getSlot() == null) continue;
@@ -187,7 +200,7 @@ public class KitsMenuSI implements InventoryProvider {
                 contents.set(SlotPos.of(r, c), buttons.get(i));
             }
 
-            // 2) Flow the rest into any empty positions
+            // Flow the rest into empty positions
             int next = 0;
             outer:
             for (int r = 0; r < rows; r++) {
@@ -207,7 +220,7 @@ public class KitsMenuSI implements InventoryProvider {
                 }
             }
         } else {
-            // No fixed slots: use Pagination + SlotIterator to auto-flow
+            // No fixed slots: use Pagination
             Pagination pagination = contents.pagination();
             pagination.setItems(buttons.toArray(new ClickableItem[0]));
             pagination.setItemsPerPage(rows * cols);
@@ -217,13 +230,14 @@ public class KitsMenuSI implements InventoryProvider {
             pagination.addToIterator(it);
         }
 
-        // Admin toggle lever (bottom row, slot 5)
+        // Admin toggle lever
         if (rows >= 2 && player.hasPermission("oreo.kits.admin")) {
             final int bottom = rows - 1;
             ItemStack lever = new ItemStack(Material.LEVER);
             ItemMeta lm = lever.getItemMeta();
             boolean on = manager.isEnabled();
             if (lm != null) {
+                // ✅ GUI ItemStack text (visual styling - § is correct)
                 lm.setDisplayName((on ? "§3Kits: §aENABLED" : "§3Kits: §cDISABLED"));
                 lm.setLore(List.of(
                         on ? "§7Click to §cDISABLE" : "§7Click to §aENABLE",
@@ -233,18 +247,31 @@ public class KitsMenuSI implements InventoryProvider {
             }
             contents.set(bottom, 5, ClickableItem.of(lever, e -> {
                 boolean now = manager.toggleEnabled();
-                player.sendMessage("§7Kits feature is now " + (now ? "§aENABLED" : "§cDISABLED"));
-                KitsMenuSI.open(plugin, manager, player); // refresh
+
+                // ✅ Chat message uses Lang
+                if (now) {
+                    Lang.send(player, "kits.toggle-enabled",
+                            "<green>Kits feature is now <white>ENABLED</white>.</green>",
+                            Map.of());
+                } else {
+                    Lang.send(player, "kits.toggle-disabled",
+                            "<yellow>Kits feature is now <white>DISABLED</white>.</yellow>",
+                            Map.of());
+                }
+
+                KitsMenuSI.open(plugin, manager, player);
             }));
         }
     }
 
     @Override
     public void update(Player player, InventoryContents contents) {
-        // Reopen on click; nothing needed per tick.
+        // Reopen on click; nothing needed per tick
     }
 
-    /* ------------------------ Preview GUI ------------------------ */
+    /* ============================================================
+     * Preview GUI
+     * ============================================================ */
 
     private void openPreview(Player p, Kit kit) {
         if (!PREVIEW_ENABLED) return;
@@ -268,14 +295,20 @@ public class KitsMenuSI implements InventoryProvider {
             // Back button
             ItemStack back = new ItemStack(Material.ARROW);
             ItemMeta bm = back.getItemMeta();
-            if (bm != null) { bm.setDisplayName("§c← Back"); back.setItemMeta(bm); }
-            contents.set(SlotPos.of(0, 0), ClickableItem.of(back, e -> KitsMenuSI.open(plugin, manager, p)));
+            if (bm != null) {
+                // ✅ GUI ItemStack text (visual styling - § is correct)
+                bm.setDisplayName("§c← Back");
+                back.setItemMeta(bm);
+            }
+            contents.set(SlotPos.of(0, 0), ClickableItem.of(back, e ->
+                    KitsMenuSI.open(plugin, manager, p)));
 
             // Optional commands book
             if (SHOW_CMD_IN_PREVIEW && kit.getCommands() != null && !kit.getCommands().isEmpty()) {
                 ItemStack book = new ItemStack(Material.BOOK);
                 ItemMeta im = book.getItemMeta();
                 if (im != null) {
+                    // ✅ GUI ItemStack text (visual styling - § is correct)
                     im.setDisplayName("§bThis kit runs:");
                     List<String> lore = new ArrayList<>();
                     for (String c : kit.getCommands()) lore.add("§7• §f" + c);
@@ -297,6 +330,7 @@ public class KitsMenuSI implements InventoryProvider {
             }
         }
 
-        @Override public void update(Player player, InventoryContents contents) {}
+        @Override
+        public void update(Player player, InventoryContents contents) {}
     }
 }

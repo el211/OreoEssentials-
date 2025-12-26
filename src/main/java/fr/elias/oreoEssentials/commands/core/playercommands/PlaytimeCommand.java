@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/PlaytimeCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.util.Lang;
@@ -43,53 +44,45 @@ public final class PlaytimeCommand implements CommandExecutor, TabCompleter {
         // /playtime
         // /playtime <player> (requires oreo.playtime.others)
 
-        // self
+        // Self playtime
         if (args.length == 0) {
             if (!(sender instanceof Player self)) {
-                // console only message – still fine as raw text
-                sender.sendMessage("Console must specify a player: /" + label + " <player>");
+                Lang.send(sender, "playtime.console-usage",
+                        "<red>Console must specify a player: /%label% <player></red>",
+                        Map.of("label", label));
                 return true;
             }
+
             long secs = vanillaPlaytimeSeconds(self);
             String time = fmt(secs);
 
-            Lang.send(self, "playtime.self", null,
+            Lang.send(self, "playtime.self",
+                    "<green>Your playtime: <yellow>%time%</yellow></green>",
                     Map.of("time", time));
             return true;
         }
 
-        // others
+        // Other player's playtime
         if (!sender.hasPermission("oreo.playtime.others")) {
-            if (sender instanceof Player p) {
-                Lang.send(p, "playtime.no-permission", null, null);
-            } else {
-                sender.sendMessage("§cYou don't have permission.");
-            }
+            Lang.send(sender, "playtime.no-permission",
+                    "<red>You don't have permission to view other players' playtime.</red>");
             return true;
         }
 
         Player target = Bukkit.getPlayerExact(args[0]);
         if (target == null) {
-            if (sender instanceof Player p) {
-                Lang.send(p, "playtime.player-not-found", null, null);
-            } else {
-                sender.sendMessage("§cPlayer not found.");
-            }
+            Lang.send(sender, "playtime.player-not-found",
+                    "<red>Player not found.</red>");
             return true;
         }
 
         long secs = vanillaPlaytimeSeconds(target);
         String time = fmt(secs);
 
-        if (sender instanceof Player p) {
-            Lang.send(p, "playtime.other", null,
-                    Map.of(
-                            "player", target.getName(),
-                            "time", time
-                    ));
-        } else {
-            sender.sendMessage("§b" + target.getName() + "§7's playtime: §f" + time);
-        }
+        Lang.send(sender, "playtime.other",
+                "<aqua>%player%</aqua><gray>'s playtime:</gray> <yellow>%time%</yellow>",
+                Map.of("player", target.getName(), "time", time));
+
         return true;
     }
 

@@ -8,8 +8,8 @@ import fr.elias.oreoEssentials.services.HomeService;
 import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.rabbitmq.packet.impl.HomeTeleportRequestPacket;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 /**
  * /homes           -> list homes (cross-server) + count
- * /homes <name>    -> teleport to that home (cross-server)
+ * /homes <n>    -> teleport to that home (cross-server)
  */
 public class HomesCommand implements OreoCommand {
 
@@ -55,25 +55,34 @@ public class HomesCommand implements OreoCommand {
             if (targetServer.equalsIgnoreCase(localServer)) {
                 Location loc = getHomeReflect(key, p);
                 if (loc == null) {
-                    p.sendMessage(ChatColor.RED + "Home not found: " + ChatColor.YELLOW + raw);
+                    Lang.send(p, "homes.not-found",
+                            "<red>Home not found: <yellow>%name%</yellow></red>",
+                            Map.of("name", raw));
+
                     var list = listNamesCrossServer(p); // cross-server suggestions
                     if (!list.isEmpty()) {
-                        p.sendMessage(ChatColor.GRAY + "Available: " + ChatColor.AQUA +
-                                String.join(ChatColor.GRAY + ", " + ChatColor.AQUA, list));
+                        String homes = String.join(", ", list);
+                        Lang.send(p, "homes.available",
+                                "<gray>Available:</gray> <aqua>%homes%</aqua>",
+                                Map.of("homes", homes));
                     }
                     return true;
                 }
                 p.teleport(loc);
-                p.sendMessage(ChatColor.GREEN + "Teleported to home " + ChatColor.AQUA + raw);
+                Lang.send(p, "homes.teleported",
+                        "<green>Teleported to home <aqua>%name%</aqua>.</green>",
+                        Map.of("name", raw));
                 return true;
             }
 
             // Remote -> use RabbitMQ + proxy switch
             var cs = OreoEssentials.get().getCrossServerSettings();
             if (!cs.homes()) {
-                p.sendMessage(ChatColor.RED + "Cross-server homes are disabled by server config.");
-                p.sendMessage(ChatColor.GRAY + "Use " + ChatColor.AQUA + "/server " + targetServer + ChatColor.GRAY
-                        + " then run " + ChatColor.AQUA + "/homes " + key);
+                Lang.send(p, "homes.cross-disabled",
+                        "<red>Cross-server homes are disabled by server config.</red>");
+                Lang.send(p, "homes.cross-disabled-manual",
+                        "<gray>Use <aqua>/server %server%</aqua> then run <aqua>/homes %name%</aqua>.</gray>",
+                        Map.of("server", targetServer, "name", key));
                 return true;
             }
 
@@ -84,19 +93,23 @@ public class HomesCommand implements OreoCommand {
                 HomeTeleportRequestPacket pkt = new HomeTeleportRequestPacket(p.getUniqueId(), key, targetServer, requestId);
                 pm.sendPacket(PacketChannel.individual(targetServer), pkt);
             } else {
-                p.sendMessage(ChatColor.RED + "Cross-server messaging is disabled. Ask an admin to enable RabbitMQ.");
-                p.sendMessage(ChatColor.GRAY + "You can still switch with " + ChatColor.AQUA + "/server " + targetServer
-                        + ChatColor.GRAY + " and run " + ChatColor.AQUA + "/homes " + key);
+                Lang.send(p, "homes.messaging-disabled",
+                        "<red>Cross-server messaging is disabled. Ask an admin to enable RabbitMQ.</red>");
+                Lang.send(p, "homes.messaging-disabled-manual",
+                        "<gray>You can still switch with <aqua>/server %server%</aqua> and run <aqua>/homes %name%</aqua>.</gray>",
+                        Map.of("server", targetServer, "name", key));
                 return true;
             }
 
             boolean switched = sendPlayerToServer(p, targetServer);
             if (switched) {
-                p.sendMessage(ChatColor.YELLOW + "Sending you to " + ChatColor.AQUA + targetServer
-                        + ChatColor.YELLOW + "… you'll be teleported to home " + ChatColor.AQUA + key
-                        + ChatColor.YELLOW + " on arrival.");
+                Lang.send(p, "homes.sending",
+                        "<yellow>Sending you to <aqua>%server%</aqua>... you'll be teleported to home <aqua>%name%</aqua> on arrival.</yellow>",
+                        Map.of("server", targetServer, "name", key));
             } else {
-                p.sendMessage(ChatColor.RED + "Failed to switch you to " + targetServer + ".");
+                Lang.send(p, "homes.switch-failed",
+                        "<red>Failed to switch you to %server%.</red>",
+                        Map.of("server", targetServer));
             }
             return true;
         }
@@ -107,14 +120,20 @@ public class HomesCommand implements OreoCommand {
         int max = maxHomes(p);
 
         if (used == 0) {
-            p.sendMessage(ChatColor.YELLOW + "You have no homes. Use " + ChatColor.AQUA + "/sethome <name>");
+            Lang.send(p, "homes.no-homes",
+                    "<yellow>You have no homes. Use <aqua>/sethome <n></aqua>.</yellow>");
             return true;
         }
 
         String cap = (max > 0) ? (used + "/" + max) : (used + "/?");
-        p.sendMessage(ChatColor.GOLD + "Homes (" + cap + "): "
-                + ChatColor.AQUA + String.join(ChatColor.GRAY + ", " + ChatColor.AQUA, list));
-        p.sendMessage(ChatColor.GRAY + "Tip: " + ChatColor.AQUA + "/homes <name>" + ChatColor.GRAY + " to teleport.");
+        String homesList = String.join(", ", list);
+
+        Lang.send(p, "homes.list",
+                "<gold>Homes (%count%):</gold> <aqua>%homes%</aqua>",
+                Map.of("count", cap, "homes", homesList));
+        Lang.send(p, "homes.tip",
+                "<gray>Tip: <aqua>/homes <n></aqua> to teleport.</gray>");
+
         return true;
     }
 

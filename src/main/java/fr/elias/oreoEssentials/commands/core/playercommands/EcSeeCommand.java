@@ -1,11 +1,12 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/EcSeeCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.enderchest.EnderChestService;
 import fr.elias.oreoEssentials.enderchest.EnderChestStorage;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -17,7 +18,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class EcSeeCommand implements OreoCommand, TabCompleter {
     @Override public String name() { return "ecsee"; }
@@ -31,11 +31,14 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
         if (!(sender instanceof Player viewer)) return true;
 
         if (!viewer.hasPermission(permission())) {
-            viewer.sendMessage(ChatColor.RED + "You lack permission.");
+            Lang.send(viewer, "ecsee.no-permission",
+                    "<red>You lack permission.</red>");
             return true;
         }
+
         if (args.length < 1) {
-            viewer.sendMessage(ChatColor.RED + "Usage: /ecsee <player>");
+            Lang.send(viewer, "ecsee.usage",
+                    "<red>Usage: /ecsee <player></red>");
             return true;
         }
 
@@ -45,7 +48,8 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
 
         UUID targetId = resolveTargetId(args[0]);
         if (targetId == null) {
-            viewer.sendMessage(ChatColor.RED + "Player not found.");
+            Lang.send(viewer, "ecsee.not-found",
+                    "<red>Player not found.</red>");
             return true;
         }
 
@@ -60,7 +64,8 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
 
         EnderChestService svc = Bukkit.getServicesManager().load(EnderChestService.class);
         if (svc == null) {
-            viewer.sendMessage(ChatColor.RED + "Ender chest storage is not configured.");
+            Lang.send(viewer, "ecsee.not-configured",
+                    "<red>Ender chest storage is not configured.</red>");
             return true;
         }
 
@@ -118,11 +123,13 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
         }
 
         // ---- Open proxy GUI with correct size ----
-        Inventory gui = Bukkit.createInventory(
-                null,
-                guiSize,
-                ChatColor.DARK_PURPLE + "Ender Chest " + ChatColor.GRAY + "(" + targetName + ")"
-        );
+        // Use Lang for GUI title
+        String guiTitle = Lang.msgLegacy("ecsee.gui.title",
+                "<dark_purple>Ender Chest</dark_purple> <gray>(%player%)</gray>",
+                Map.of("player", targetName),
+                viewer);
+
+        Inventory gui = Bukkit.createInventory(null, guiSize, guiTitle);
         gui.setContents(EnderChestStorage.clamp(contents, targetRows));
         viewer.openInventory(gui);
 
@@ -131,6 +138,7 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
         String finalSource = source;
         final int finalTargetRows = targetRows;
         final int finalGuiSize = guiSize;
+        final String finalTargetName = targetName;
 
         Listener l = new Listener() {
             @EventHandler(priority = EventPriority.MONITOR)
@@ -158,24 +166,29 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
                                 targetGui.setItem(i, edited[i]);
                             }
                             svc.saveFromInventory(liveNow, targetGui);
-                            if (debug) log.info("[ECSEE] Mirrored changes to target's VIRTUAL GUI. target=" + targetName);
+                            if (debug) log.info("[ECSEE] Mirrored changes to target's VIRTUAL GUI. target=" + finalTargetName);
                         } else {
                             // Only write to vanilla enderchest if it can fit (vanilla EC is max 27 slots)
                             ItemStack[] vanillaContents = Arrays.copyOf(edited, Math.min(27, edited.length));
                             liveNow.getEnderChest().setContents(vanillaContents);
-                            if (debug) log.info("[ECSEE] Wrote changes to target's VANILLA EC. target=" + targetName);
+                            if (debug) log.info("[ECSEE] Wrote changes to target's VANILLA EC. target=" + finalTargetName);
                         }
                     } catch (Throwable t) {
-                        log.warning("[ECSEE] Failed to push live changes for " + targetName + ": " + t.getMessage());
+                        log.warning("[ECSEE] Failed to push live changes for " + finalTargetName + ": " + t.getMessage());
                     }
                 }
 
                 if (debug) {
-                    log.info("[ECSEE] Saved " + countNonEmpty(edited) + " non-empty slots for " + targetName
+                    log.info("[ECSEE] Saved " + countNonEmpty(edited) + " non-empty slots for " + finalTargetName
                             + " (initialSource=" + finalSource + ")");
                 }
+
                 HandlerList.unregisterAll(this);
-                p.sendMessage(ChatColor.GREEN + "Saved changes to " + ChatColor.AQUA + targetName + ChatColor.GREEN + "'s ender chest.");
+
+                // Send success message using Lang
+                Lang.send(p, "ecsee.saved",
+                        "<green>Saved changes to <aqua>%player%</aqua>'s ender chest.</green>",
+                        Map.of("player", finalTargetName));
             }
         };
         Bukkit.getPluginManager().registerEvents(l, OreoEssentials.get());
@@ -213,7 +226,6 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
         // 4) Final fallback: your old resolver (Floodgate, etc.)
         return fr.elias.oreoEssentials.util.Uuids.resolve(arg);
     }
-
 
     @Override
     public List<String> onTabComplete(CommandSender sender,
@@ -254,5 +266,4 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
         // Limit to 50 suggestions for sanity
         return out.stream().limit(50).toList();
     }
-
 }

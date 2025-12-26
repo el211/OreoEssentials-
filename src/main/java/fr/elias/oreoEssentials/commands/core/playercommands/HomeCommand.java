@@ -9,7 +9,6 @@ import fr.elias.oreoEssentials.rabbitmq.packet.impl.HomeTeleportRequestPacket;
 import fr.elias.oreoEssentials.services.HomeService;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -45,7 +44,8 @@ public class HomeCommand implements OreoCommand, TabCompleter {
 
         // Feature toggle (settings.yml: features.home.enabled)
         if (!plugin.getSettingsConfig().isEnabled("home")) {
-            Lang.send(player, "home.disabled", null, Collections.emptyMap());
+            Lang.send(player, "home.disabled",
+                    "<red>Home feature is currently disabled.</red>");
             return true;
         }
 
@@ -54,22 +54,23 @@ public class HomeCommand implements OreoCommand, TabCompleter {
             List<String> names = crossServerNames(player.getUniqueId());
             if (names.isEmpty()) {
                 Lang.send(player, "home.no-homes",
-                        null,
+                        "<yellow>You have no homes. Use <aqua>%sethome%</aqua> to create one.</yellow>",
                         Map.of("sethome", "/sethome")
                 );
                 return true;
             }
 
+            // Format list with colors (names will be inserted as-is)
             String list = names.stream()
                     .sorted(String.CASE_INSENSITIVE_ORDER)
-                    .collect(Collectors.joining(ChatColor.GRAY + ", " + ChatColor.AQUA));
+                    .collect(Collectors.joining(", "));
 
             Lang.send(player, "home.list",
-                    null,
+                    "<gray>Your homes:</gray> <aqua>%homes%</aqua>",
                     Map.of("homes", list)
             );
             Lang.send(player, "home.tip",
-                    null,
+                    "<gray>Use <yellow>/%label% <name></yellow> to teleport.</gray>",
                     Map.of("label", label)
             );
             return true;
@@ -96,14 +97,18 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         if (targetServer.equalsIgnoreCase(localServer)) {
             // Local server: must exist locally
             if (homes.getHome(player.getUniqueId(), key) == null) {
-                Lang.send(player, "home.not-found", null, Map.of("name", raw));
+                Lang.send(player, "home.not-found",
+                        "<red>Home <yellow>%name%</yellow> not found.</red>",
+                        Map.of("name", raw));
                 suggestClosest(player, key);
                 return true;
             }
         } else {
             // Cross-server: must exist in cross-server index (homeServer must be set)
             if (homeServer == null || homeServer.isBlank()) {
-                Lang.send(player, "home.not-found", null, Map.of("name", raw));
+                Lang.send(player, "home.not-found",
+                        "<red>Home <yellow>%name%</yellow> not found.</red>",
+                        Map.of("name", raw));
                 suggestClosest(player, key);
                 return true;
             }
@@ -116,7 +121,7 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 Location loc = homes.getHome(player.getUniqueId(), key);
                 if (loc == null) {
                     Lang.send(player, "home.not-found",
-                            null,
+                            "<red>Home <yellow>%name%</yellow> not found.</red>",
                             Map.of("name", raw)
                     );
                     suggestClosest(player, key);
@@ -124,7 +129,7 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 }
                 player.teleport(loc);
                 Lang.send(player, "home.teleported",
-                        null,
+                        "<green>Teleported to home <yellow>%name%</yellow>.</green>",
                         Map.of("name", key)
                 );
             };
@@ -144,15 +149,11 @@ public class HomeCommand implements OreoCommand, TabCompleter {
             var cs = plugin.getCrossServerSettings();
             if (!cs.homes()) {
                 Lang.send(player, "home.cross-disabled",
-                        null,
-                        Collections.emptyMap()
+                        "<red>Cross-server homes are disabled.</red>"
                 );
                 Lang.send(player, "home.cross-disabled-tip",
-                        null,
-                        Map.of(
-                                "server", targetServer,
-                                "name", key
-                        )
+                        "<gray>Ask an admin to enable cross-server homes or use <yellow>/server %server%</yellow> then <yellow>/home %name%</yellow>.</gray>",
+                        Map.of("server", targetServer, "name", key)
                 );
                 return;
             }
@@ -172,15 +173,11 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 pm.sendPacket(targetChannel, pkt);
             } else {
                 Lang.send(player, "home.messaging-disabled",
-                        null,
-                        Collections.emptyMap()
+                        "<red>Cross-server messaging is disabled.</red>"
                 );
                 Lang.send(player, "home.messaging-disabled-tip",
-                        null,
-                        Map.of(
-                                "server", targetServer,
-                                "name", key
-                        )
+                        "<gray>Ask an admin to enable messaging or use <yellow>/server %server%</yellow> then <yellow>/home %name%</yellow>.</gray>",
+                        Map.of("server", targetServer, "name", key)
                 );
                 return;
             }
@@ -189,19 +186,16 @@ public class HomeCommand implements OreoCommand, TabCompleter {
             boolean switched = sendPlayerToServer(player, targetServer);
             if (switched) {
                 Lang.send(player, "home.sending",
-                        null,
-                        Map.of(
-                                "server", targetServer,
-                                "name", key
-                        )
+                        "<gray>Sending you to <yellow>%server%</yellow> for home <aqua>%name%</aqua>...</gray>",
+                        Map.of("server", targetServer, "name", key)
                 );
             } else {
                 Lang.send(player, "home.switch-failed",
-                        null,
+                        "<red>Failed to switch to server <yellow>%server%</yellow>.</red>",
                         Map.of("server", targetServer)
                 );
                 Lang.send(player, "home.switch-failed-tip",
-                        null,
+                        "<gray>Try <yellow>/server %server%</yellow> manually.</gray>",
                         Map.of("server", targetServer)
                 );
             }
@@ -271,13 +265,11 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 .filter(n -> n.toLowerCase(Locale.ROOT).contains(key.toLowerCase(Locale.ROOT)))
                 .limit(5)
                 .collect(Collectors.toList());
+
         if (!suggestions.isEmpty()) {
-            String joined = String.join(
-                    ChatColor.GRAY + ", " + ChatColor.AQUA,
-                    suggestions
-            );
+            String joined = String.join(", ", suggestions);
             Lang.send(p, "home.suggest",
-                    null,
+                    "<gray>Did you mean:</gray> <aqua>%suggestions%</aqua>",
                     Map.of("suggestions", joined)
             );
         }
@@ -301,10 +293,6 @@ public class HomeCommand implements OreoCommand, TabCompleter {
     /**
      * Shows a big title countdown on the player, cancels if he moves,
      * then runs the action at the end.
-     *
-     * Uses:
-     *  - home.cancelled-moved in lang.yml when the player moves.
-     *  - teleport.countdown.title / teleport.countdown.subtitle for the title text.
      */
     private void startCountdown(Player target, int seconds, String homeName, Runnable action) {
         final OreoEssentials plugin = OreoEssentials.get();
@@ -323,7 +311,7 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 if (hasBodyMoved(target, origin)) {
                     cancel();
                     Lang.send(target, "home.cancelled-moved",
-                            null,
+                            "<red>Teleport cancelled: you moved.</red>",
                             Map.of("name", homeName)
                     );
                     return;
@@ -335,14 +323,19 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                     return;
                 }
 
-                // FIXED: Use two-parameter version (no variables needed)
-                String title = Lang.msg("teleport.countdown.title", target);
-                String subtitle = Lang.msg("teleport.countdown.subtitle", target);
+                // Use Lang.msgWithDefault for title/subtitle with variables
+                String title = Lang.msgWithDefault(
+                        "teleport.countdown.title",
+                        "<yellow>Teleporting...</yellow>",
+                        target
+                );
 
-                // Now do the %seconds% replacement manually
-                if (subtitle != null) {
-                    subtitle = subtitle.replace("%seconds%", String.valueOf(remaining));
-                }
+                String subtitle = Lang.msgWithDefault(
+                        "teleport.countdown.subtitle",
+                        "<gray>In <white>%seconds%</white>s...</gray>",
+                        Map.of("seconds", String.valueOf(remaining)),
+                        target
+                );
 
                 target.sendTitle(title, subtitle, 0, 20, 0);
                 remaining--;
@@ -364,5 +357,4 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         // tolerance: 0.05 blocks
         return (dx * dx + dy * dy + dz * dz) > (0.05 * 0.05);
     }
-
 }

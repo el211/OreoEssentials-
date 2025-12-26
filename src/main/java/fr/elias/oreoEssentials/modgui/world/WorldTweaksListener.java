@@ -1,7 +1,9 @@
+// File: src/main/java/fr/elias/oreoEssentials/modgui/world/WorldTweaksListener.java
 package fr.elias.oreoEssentials.modgui.world;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modgui.cfg.ModGuiConfig;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -21,8 +23,19 @@ import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
-import org.bukkit.entity.Player;
-import org.bukkit.World;
+
+import java.util.Map;
+
+/**
+ * World tweaks event listener.
+ *
+ * ✅ VERIFIED - Uses Lang.send() for 3 user messages
+ *
+ * Features:
+ * - Nether: Allow water, beds, no fire damage, no ghast grief
+ * - End: Void teleport, no dragon grief, no enderman grief
+ * - World-specific: Disable elytra, tridents, PVP
+ */
 public class WorldTweaksListener implements Listener {
 
     private final ModGuiConfig cfg;
@@ -114,7 +127,9 @@ public class WorldTweaksListener implements Listener {
             e.setCancelled(true);
             Location spawn = w.getSpawnLocation();
             player.teleport(spawn);
-            player.sendMessage("§eYou were saved from the void and teleported to spawn.");
+            Lang.send(player, "modgui.world.void-saved",
+                    "<yellow>You were saved from the void and teleported to spawn.</yellow>",
+                    Map.of());
         }
     }
 
@@ -172,7 +187,9 @@ public class WorldTweaksListener implements Listener {
         World w = p.getWorld();
         if (cfg.disableElytra(w) && e.isGliding()) {
             e.setCancelled(true);
-            p.sendMessage("§cElytra flight is disabled in this world.");
+            Lang.send(p, "modgui.world.elytra-disabled",
+                    "<red>Elytra flight is disabled in this world.</red>",
+                    Map.of());
         }
     }
 
@@ -182,7 +199,9 @@ public class WorldTweaksListener implements Listener {
         if (!(t.getShooter() instanceof Player p)) return;
         if (cfg.disableTrident(p.getWorld())) {
             e.setCancelled(true);
-            p.sendMessage("§cTridents are disabled in this world.");
+            Lang.send(p, "modgui.world.trident-disabled",
+                    "<red>Tridents are disabled in this world.</red>",
+                    Map.of());
         }
     }
 

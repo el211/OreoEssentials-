@@ -4,12 +4,10 @@ package fr.elias.oreoEssentials.commands.core.playercommands;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -31,18 +29,17 @@ public class NearCommand implements OreoCommand {
             try {
                 radius = Math.max(1, Math.min(1000, Integer.parseInt(args[0])));
             } catch (NumberFormatException e) {
-                Lang.send(
-                        p,
-                        "near.radius-not-number",
-                        null,
-                        Map.of("input", args[0])
-                );
+                Lang.send(p, "near.radius-not-number",
+                        "<red>Radius must be a number. You entered: <yellow>%input%</yellow></red>",
+                        Map.of("input", args[0]));
                 return true;
             }
         }
 
         Location me = p.getLocation();
         int finalRadius = radius;
+
+        // Find nearby players
         var list = Bukkit.getOnlinePlayers().stream()
                 .filter(other -> other != p && other.getWorld().equals(p.getWorld()))
                 .map(other -> new Entry(other.getName(), other.getLocation().distance(me)))
@@ -51,37 +48,36 @@ public class NearCommand implements OreoCommand {
                 .collect(Collectors.toList());
 
         if (list.isEmpty()) {
-            Lang.send(
-                    p,
-                    "near.none",
-                    null,
-                    Map.of("radius", String.valueOf(radius))
-            );
+            Lang.send(p, "near.none",
+                    "<yellow>No players within <aqua>%radius%</aqua> blocks.</yellow>",
+                    Map.of("radius", String.valueOf(radius)));
             return true;
         }
 
-        // Build the colored list; keep the sentence in lang.yml
+        // Build formatted list with individual entry formatting
+        // Using msgWithDefault which has signature: (String key, String default, Map vars, Player viewer)
         String formattedList = list.stream()
-                .map(e -> ChatColor.AQUA + e.name
-                        + ChatColor.GRAY + " ("
-                        + ChatColor.YELLOW + String.format("%.1f", e.dist) + "m"
-                        + ChatColor.GRAY + ")")
-                .collect(Collectors.joining(ChatColor.GRAY + ", "));
+                .map(e -> Lang.msgWithDefault("near.entry.format",
+                        "<aqua>%name%</aqua> <gray>(<yellow>%distance%</yellow>m)</gray>",
+                        Map.of("name", e.name, "distance", String.format("%.1f", e.dist)),
+                        p))
+                .collect(Collectors.joining(
+                        Lang.msgWithDefault("near.entry.separator", "<gray>, </gray>", p)));
 
-        Lang.send(
-                p,
-                "near.list",
-                null,
-                Map.of(
-                        "radius", String.valueOf(radius),
-                        "list", formattedList
-                )
-        );
+        Lang.send(p, "near.list",
+                "<gray>Players within <aqua>%radius%</aqua> blocks:</gray> %list%",
+                Map.of("radius", String.valueOf(radius), "list", formattedList));
+
         return true;
     }
 
     private static final class Entry {
-        final String name; final double dist;
-        Entry(String n, double d) { name = n; dist = d; }
+        final String name;
+        final double dist;
+
+        Entry(String n, double d) {
+            name = n;
+            dist = d;
+        }
     }
 }

@@ -28,17 +28,15 @@ public class HealCommand implements OreoCommand {
         if (args.length >= 1) {
             target = Bukkit.getPlayerExact(args[0]);
             if (target == null) {
-                Lang.send(sender,
-                        "moderation.heal.not-found",
-                        "§cPlayer not found.",
+                Lang.send(sender, "moderation.heal.not-found",
+                        "<red>Player not found.</red>",
                         Map.of("target", args[0]));
                 return true;
             }
         } else {
             if (!(sender instanceof Player)) {
-                Lang.send(sender,
-                        "moderation.heal.console-usage",
-                        "§cUsage: /%label% <player>",
+                Lang.send(sender, "moderation.heal.console-usage",
+                        "<red>Usage: /%label% <player></red>",
                         Map.of("label", label));
                 return true;
             }
@@ -49,22 +47,23 @@ public class HealCommand implements OreoCommand {
         if (max <= 0) max = 20.0;
 
         // Apply healing
-        try { target.setHealth(Math.min(max, target.getHealthScale() > 0 ? target.getHealthScale() : max)); }
-        catch (Throwable ignored) { target.setHealth(max); }
+        try {
+            target.setHealth(Math.min(max, target.getHealthScale() > 0 ? target.getHealthScale() : max));
+        } catch (Throwable ignored) {
+            target.setHealth(max);
+        }
 
         target.setFireTicks(0);
 
-        Lang.send(target,
-                "moderation.heal.healed",
-                "§aHealed.",
-                null);
+        Lang.send(target, "moderation.heal.healed",
+                "<green>Healed.</green>");
 
         if (target != sender) {
-            Lang.send(sender,
-                    "moderation.heal.healed-other",
-                    "§eHealed §b%player%",
+            Lang.send(sender, "moderation.heal.healed-other",
+                    "<yellow>Healed <aqua>%player%</aqua></yellow>",
                     Map.of("player", target.getName()));
         }
+
         return true;
     }
 

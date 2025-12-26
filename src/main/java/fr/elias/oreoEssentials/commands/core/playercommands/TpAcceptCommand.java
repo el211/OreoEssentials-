@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/TpAcceptCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -89,7 +90,10 @@ public class TpAcceptCommand implements OreoCommand {
 
     private void P(Player p, String id, String msg) {
         if (dbg() && echo()) {
-            p.sendMessage("§8[§bTPA§8/§7" + id + "§8] §7" + msg);
+            // Use Lang for debug messages too
+            Lang.send(p, "tpa.debug.echo",
+                    "<dark_gray>[<aqua>TPA</aqua>/<gray>%id%</gray>]</dark_gray> <gray>%message%</gray>",
+                    Map.of("id", id, "message", msg));
         }
     }
 
@@ -141,7 +145,8 @@ public class TpAcceptCommand implements OreoCommand {
             Player requester = tpa.getRequester(target);
             if (requester == null || !requester.isOnline()) {
                 D(id, "no requester found for target=" + target.getName());
-                Lang.send(target, "tpa.accept.none", null, Map.of());
+                Lang.send(target, "tpa.accept.none",
+                        "<red>No pending teleport requests.</red>");
                 return true;
             }
 
@@ -150,7 +155,8 @@ public class TpAcceptCommand implements OreoCommand {
             return true;
         } catch (Throwable t) {
             E(id, "local countdown / teleportService.accept threw", t);
-            Lang.send(target, "tpa.accept.failed", null, Map.of());
+            Lang.send(target, "tpa.accept.failed",
+                    "<red>Failed to accept teleport request.</red>");
             return true;
         }
     }
@@ -231,13 +237,20 @@ public class TpAcceptCommand implements OreoCommand {
                 }
 
                 // Show countdown to the REQUESTER (the one who did /tpa <player>)
-                String title = Lang.msg("teleport.countdown.title", requester);
-                String subtitle = Lang.msg("teleport.countdown.subtitle", requester);
-                if (subtitle != null) {
-                    subtitle = subtitle.replace("%seconds%", String.valueOf(remain));
-                }
-                requester.sendTitle(title, subtitle, 0, 20, 0);
+                String title = Lang.msgWithDefault(
+                        "teleport.countdown.title",
+                        "<yellow>Teleporting...</yellow>",
+                        requester
+                );
 
+                String subtitle = Lang.msgWithDefault(
+                        "teleport.countdown.subtitle",
+                        "<gray>In <white>%seconds%</white>s...</gray>",
+                        Map.of("seconds", String.valueOf(remain)),
+                        requester
+                );
+
+                requester.sendTitle(title, subtitle, 0, 20, 0);
                 remain--;
             }
         }.runTaskTimer(plugin, 0L, 20L);
@@ -254,9 +267,11 @@ public class TpAcceptCommand implements OreoCommand {
         P(target, id, "local accept " + (ok ? "✓" : "–"));
 
         if (!ok) {
-            Lang.send(target, "tpa.accept.none", null, Map.of());
+            Lang.send(target, "tpa.accept.none",
+                    "<red>No pending teleport requests.</red>");
             if (dbg()) {
-                Lang.send(target, "tpa.accept.debug-hint", null, Map.of());
+                Lang.send(target, "tpa.accept.debug-hint",
+                        "<gray>Debug: No request found in TeleportService.</gray>");
             }
         }
     }

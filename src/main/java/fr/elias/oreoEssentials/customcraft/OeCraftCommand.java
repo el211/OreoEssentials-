@@ -43,13 +43,13 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
         // ---- Reload (console OK) ----
         if (sub.equals("reload")) {
             if (!sender.hasPermission("oreo.craft")) {
-                send(sender, "economy.errors.no-permission",
+                send(sender, "customcraft.errors.no-permission",
                         "<red>You don't have permission.</red>", Map.of());
                 return true;
             }
             service.loadAllAndRegister();
             send(sender, "customcraft.messages.reloaded",
-                    "%prefix% <green>Custom recipes reloaded.</green>", Map.of());
+                    "<green>Custom recipes reloaded.</green>", Map.of());
             return true;
         }
 
@@ -57,7 +57,7 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
         if (sub.equals("list")) {
             var names = new TreeSet<>(service.allNames());
             send(sender, "customcraft.messages.list",
-                    "%prefix% <gray>Loaded:</gray> <white>%count%</white> <gray>(%names%)</gray>",
+                    "<yellow>Recipes</yellow> (<white>%count%</white>): <gray>%names%</gray>",
                     Map.of("count", String.valueOf(names.size()), "names", String.join(", ", names)));
             return true;
         }
@@ -65,34 +65,38 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
         // ---- Delete (console OK) ----
         if (sub.equals("delete")) {
             if (!sender.hasPermission("oreo.craft")) {
-                send(sender, "economy.errors.no-permission",
+                send(sender, "customcraft.errors.no-permission",
                         "<red>You don't have permission.</red>", Map.of());
                 return true;
             }
             if (args.length < 2) {
-                sendRaw(sender, "<red>Usage:</red> /" + label + " delete <name>");
+                send(sender, "customcraft.errors.usage-delete",
+                        "<red>Usage:</red> /%label% delete <n>",
+                        Map.of("label", label));
                 return true;
             }
             String name = sanitize(args[1]);
             boolean ok = service.delete(name);
             if (ok) {
                 send(sender, "customcraft.messages.deleted",
-                        "%prefix% <green>Deleted recipe <yellow>%name%</yellow>.</green>",
+                        "<green>Deleted recipe <yellow>%name%</yellow>.</green>",
                         Map.of("name", name));
             } else {
                 send(sender, "customcraft.messages.invalid",
-                        "%prefix% <red>Invalid recipe.</red>", Map.of());
+                        "<red>Recipe not found: <yellow>%name%</yellow>.</red>",
+                        Map.of("name", name));
             }
             return true;
         }
 
         // ---- Everything below requires a Player (GUI) ----
         if (!(sender instanceof Player p)) {
-            sendRaw(sender, "<red>This subcommand requires a player.</red>");
+            send(sender, "customcraft.errors.player-only",
+                    "<red>This subcommand requires a player.</red>", Map.of());
             return true;
         }
         if (!p.hasPermission("oreo.craft")) {
-            send(p, "economy.errors.no-permission",
+            send(p, "customcraft.errors.no-permission",
                     "<red>You don't have permission.</red>", Map.of());
             return true;
         }
@@ -106,7 +110,9 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
         // ---- Craft <name> (open editor / create-or-edit) ----
         if (sub.equals("craft")) {
             if (args.length < 2) {
-                sendRaw(p, "<red>Usage:</red> /" + label + " craft <name>");
+                send(p, "customcraft.errors.usage-craft",
+                        "<red>Usage:</red> /%label% craft <n>",
+                        Map.of("label", label));
                 return true;
             }
             String name = sanitize(args[1]);
@@ -114,7 +120,9 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        sendRaw(sender, "<red>Unknown subcommand.</red> <yellow>Use</yellow> /" + label + " help");
+        send(sender, "customcraft.errors.unknown-subcommand",
+                "<red>Unknown subcommand.</red> <yellow>Use</yellow> /%label% help",
+                Map.of("label", label));
         return true;
     }
 
@@ -123,13 +131,24 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendUsage(CommandSender sender, String label) {
-        // MiniMessage for player; plain text fallback for console
-        sendRaw(sender, "<yellow>Usage:</yellow>");
-        sendRaw(sender, "<yellow>/" + label + " browse</yellow> <gray>→ open recipe browser (GUI)</gray>");
-        sendRaw(sender, "<yellow>/" + label + " craft <name></yellow> <gray>→ open designer GUI</gray>");
-        sendRaw(sender, "<yellow>/" + label + " list</yellow> <gray>→ list recipe names</gray>");
-        sendRaw(sender, "<yellow>/" + label + " reload</yellow> <gray>→ reload recipes.yml & re-register</gray>");
-        sendRaw(sender, "<yellow>/" + label + " delete <name></yellow> <gray>→ delete a recipe</gray>");
+        // Build usage from lang keys for better i18n
+        send(sender, "customcraft.help.header",
+                "<yellow>OreoEssentials Custom Crafting</yellow>", Map.of());
+        send(sender, "customcraft.help.browse",
+                "<yellow>/%label% browse</yellow> <gray>→ open recipe browser (GUI)</gray>",
+                Map.of("label", label));
+        send(sender, "customcraft.help.craft",
+                "<yellow>/%label% craft <n></yellow> <gray>→ open designer GUI</gray>",
+                Map.of("label", label));
+        send(sender, "customcraft.help.list",
+                "<yellow>/%label% list</yellow> <gray>→ list recipe names</gray>",
+                Map.of("label", label));
+        send(sender, "customcraft.help.reload",
+                "<yellow>/%label% reload</yellow> <gray>→ reload recipes.yml & re-register</gray>",
+                Map.of("label", label));
+        send(sender, "customcraft.help.delete",
+                "<yellow>/%label% delete <n></yellow> <gray>→ delete a recipe</gray>",
+                Map.of("label", label));
     }
 
     /* ---------------- Tab Completion ---------------- */
@@ -168,12 +187,6 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
             String plain = PLAIN.serialize(MM.deserialize(raw));
             to.sendMessage(plain);
         }
-    }
-
-    /** Send a raw MiniMessage string (no lang key). */
-    private static void sendRaw(CommandSender to, String rawMiniMsg) {
-        if (to instanceof Player p) p.sendMessage(MM.deserialize(rawMiniMsg));
-        else to.sendMessage(PLAIN.serialize(MM.deserialize(rawMiniMsg)));
     }
 
     /** Build a MiniMessage component from lang + vars (+PAPI if player). */

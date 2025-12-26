@@ -15,6 +15,18 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
 
+/**
+ * EnderChest service - cross-server ender chest storage.
+ *
+ * ✅ VERIFIED - Uses Lang.send() for 1 user message + Lang.get()/getList() for GUI
+ *
+ * Features:
+ * - Virtual ender chest GUI (6 rows)
+ * - Permission-based slot limits
+ * - Locked slot barriers with PDC markers
+ * - Cross-server storage backend
+ * - Offline player support
+ */
 public class EnderChestService {
 
     public static final String TITLE = Lang.color(Lang.get("enderchest.gui.title", "&5Ender Chest"));
@@ -36,7 +48,9 @@ public class EnderChestService {
         p.openInventory(createVirtualEc(p));
     }
 
-    /** Build a 6-row GUI; only the first N slots are usable, rest are barriers. */
+    /**
+     * Build a 6-row GUI; only the first N slots are usable, rest are barriers.
+     */
     public Inventory createVirtualEc(Player p) {
         int allowedSlots = resolveSlots(p);
         int rowsForStorage = Math.max(1, (int) Math.ceil(allowedSlots / 9.0));
@@ -46,7 +60,7 @@ public class EnderChestService {
         // Load previously saved items (we store only the "used capacity" part)
         ItemStack[] stored = storage.load(p.getUniqueId(), rowsForStorage);
         if (stored != null) {
-            // put only into the first allowedSlots
+            // Put only into the first allowedSlots
             for (int i = 0; i < Math.min(stored.length, allowedSlots); i++) {
                 inv.setItem(i, stored[i]);
             }
@@ -59,7 +73,9 @@ public class EnderChestService {
         return inv;
     }
 
-    /** Save only the first N slots; ignore locked area entirely. */
+    /**
+     * Save only the first N slots; ignore locked area entirely.
+     */
     public void saveFromInventory(Player p, Inventory inv) {
         try {
             int allowed = resolveSlots(p);
@@ -93,21 +109,31 @@ public class EnderChestService {
             storage.save(uuid, MAX_ROWS, existing);
         } catch (Throwable t) {
             plugin.getLogger().warning("[EC] Save failed for " + p.getUniqueId() + ": " + t.getMessage());
-            // why: default text from lang; no variables here
-            Lang.send(p, "enderchest.storage.save-failed", null, java.util.Map.of());
+            Lang.send(p, "enderchest.storage.save-failed",
+                    "<red>Failed to save your ender chest. Please contact an administrator.</red>",
+                    Map.of());
         }
     }
 
-    // in EnderChestService
-    public ItemStack[] loadFor(java.util.UUID uuid, int rows) {
+    /**
+     * Load ender chest contents for any UUID (used by EcSeeMenu).
+     */
+    public ItemStack[] loadFor(UUID uuid, int rows) {
         return storage.load(uuid, rows);
     }
-    public void saveFor(java.util.UUID uuid, int rows, ItemStack[] contents) {
+
+    /**
+     * Save ender chest contents for any UUID (used by EcSeeMenu).
+     */
+    public void saveFor(UUID uuid, int rows, ItemStack[] contents) {
         storage.save(uuid, rows, contents);
     }
 
     /* ---------------- permissions / slots ---------------- */
 
+    /**
+     * Resolve how many slots this player should have based on permissions.
+     */
     public int resolveSlots(Player p) {
         int slots = config.getDefaultSlots();
         Map<String, Integer> ranks = config.getRankSlots();
@@ -120,14 +146,32 @@ public class EnderChestService {
         return Math.max(1, Math.min(slots, MAX_SIZE));
     }
 
+    /**
+     * Resolve slots for offline player based on stored data.
+     */
+    public int resolveSlotsOffline(UUID uuid) {
+        ItemStack[] stored = storage.load(uuid, 6);
+        if (stored == null) {
+            return Math.max(1, Math.min(config.getDefaultSlots(), MAX_SIZE));
+        }
+        int slots = Math.min(stored.length, MAX_SIZE);
+        if (slots <= 0) slots = config.getDefaultSlots();
+        return Math.max(1, Math.min(slots, MAX_SIZE));
+    }
+
     /* ---------------- listener helpers ---------------- */
 
-    /** Whether a raw slot (0..53) is locked for this player. */
+    /**
+     * Whether a raw slot (0..53) is locked for this player.
+     */
     public boolean isLockedSlot(Player p, int rawSlot) {
         if (rawSlot < 0 || rawSlot >= MAX_SIZE) return false;
         return rawSlot >= resolveSlots(p);
     }
 
+    /**
+     * Check if an ItemStack is a lock barrier (has PDC marker).
+     */
     public boolean isLockItem(ItemStack it) {
         if (it == null || it.getType() != Material.BARRIER) return false;
         try {
@@ -135,9 +179,15 @@ public class EnderChestService {
             if (meta == null) return false;
             Integer mark = meta.getPersistentDataContainer().get(LOCK_KEY, PersistentDataType.INTEGER);
             return mark != null && mark == 1;
-        } catch (Throwable ignored) { return false; }
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
+    /**
+     * Create a locked barrier item with localized name/lore.
+     * Uses Lang.get() and Lang.getList() for internationalization.
+     */
     private ItemStack lockedBarrierItem(int allowedSlots) {
         ItemStack b = new ItemStack(Material.BARRIER);
         ItemMeta m = b.getItemMeta();
@@ -153,19 +203,10 @@ public class EnderChestService {
             }
             m.setLore(lore);
 
+            // Mark as lock item with PDC
             m.getPersistentDataContainer().set(LOCK_KEY, PersistentDataType.INTEGER, 1);
             b.setItemMeta(m);
         }
         return b;
-    }
-
-    public int resolveSlotsOffline(UUID uuid) {
-        ItemStack[] stored = storage.load(uuid, 6);
-        if (stored == null) {
-            return Math.max(1, Math.min(config.getDefaultSlots(), MAX_SIZE));
-        }
-        int slots = Math.min(stored.length, MAX_SIZE);
-        if (slots <= 0) slots = config.getDefaultSlots();
-        return Math.max(1, Math.min(slots, MAX_SIZE));
     }
 }

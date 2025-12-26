@@ -1,12 +1,12 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/InvlookCommand.java
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/invlook/InvlookCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands.invlook;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.cross.InvseeService;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.elias.oreoEssentials.util.Uuids;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -56,13 +56,15 @@ public final class InvlookCommand implements OreoCommand, TabCompleter {
 
         // Permission
         if (!viewer.hasPermission(permission())) {
-            viewer.sendMessage(ChatColor.RED + "You lack permission.");
+            Lang.send(viewer, "invlook.no-permission",
+                    "<red>You lack permission.</red>");
             return true;
         }
 
         // Args
         if (args.length != 1) {
-            viewer.sendMessage(ChatColor.RED + "Usage: /invlook <player>");
+            Lang.send(viewer, "invlook.usage",
+                    "<red>Usage: /invlook <player></red>");
             return true;
         }
 
@@ -70,14 +72,16 @@ public final class InvlookCommand implements OreoCommand, TabCompleter {
         final InvseeService invseeService = plugin.getInvseeService();
 
         if (invseeService == null) {
-            viewer.sendMessage(ChatColor.RED + "Invsee service is not available on this server.");
+            Lang.send(viewer, "invlook.service-unavailable",
+                    "<red>Invsee service is not available on this server.</red>");
             return true;
         }
 
         // Resolve target UUID
         final UUID targetId = resolveTargetId(args[0]);
         if (targetId == null) {
-            viewer.sendMessage(ChatColor.RED + "Player not found.");
+            Lang.send(viewer, "invlook.player-not-found",
+                    "<red>Player not found.</red>");
             return true;
         }
 
@@ -90,9 +94,9 @@ public final class InvlookCommand implements OreoCommand, TabCompleter {
         // Open the same live cross-server viewer as /invsee
         invseeService.openLocalViewer(viewer, targetId, targetName);
 
-        viewer.sendMessage(ChatColor.GRAY + "Opening read-only inventory of "
-                + ChatColor.AQUA + targetName
-                + ChatColor.GRAY + " (cross-server)…");
+        Lang.send(viewer, "invlook.opening",
+                "<gray>Opening read-only inventory of <aqua>%player%</aqua> (cross-server)...</gray>",
+                Map.of("player", targetName));
 
         return true;
     }

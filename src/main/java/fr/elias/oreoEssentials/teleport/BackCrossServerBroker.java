@@ -1,4 +1,4 @@
-// src/main/java/fr/elias/oreoEssentials/teleport/BackCrossServerBroker.java
+// File: src/main/java/fr/elias/oreoEssentials/teleport/BackCrossServerBroker.java
 package fr.elias.oreoEssentials.teleport;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -8,6 +8,7 @@ import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.rabbitmq.packet.event.PacketSubscriber;
 import fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.BackTeleportPacket;
 import fr.elias.oreoEssentials.services.TeleportService;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.elias.oreoEssentials.util.ProxyMessenger;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -29,7 +30,7 @@ public class BackCrossServerBroker implements Listener {
     private final ProxyMessenger proxyMessenger;
     private final String localServer;
 
-    // playerUuid -> BackLocation à appliquer dès qu'il est sur ce serveur
+    // playerUuid -> BackLocation to apply when they arrive on this server
     private final Map<UUID, BackLocation> pendingBacks = new ConcurrentHashMap<>();
 
     public BackCrossServerBroker(OreoEssentials plugin,
@@ -43,10 +44,10 @@ public class BackCrossServerBroker implements Listener {
         this.proxyMessenger = proxyMessenger;
         this.localServer = localServer;
 
-        // écoute join
+        // listen to join events
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
-        // subscribe au packet dédié au /back
+        // subscribe to /back packet
         packetManager.subscribe(
                 BackTeleportPacket.class,
                 (PacketSubscriber<BackTeleportPacket>) (channel, pkt) -> handleIncomingBack(pkt)
@@ -54,20 +55,22 @@ public class BackCrossServerBroker implements Listener {
     }
 
     /**
-     * Appelé par TeleportService.teleportToServerLocation quand le BackLocation est sur un autre serveur.
+     * Called by TeleportService.teleportToServerLocation when BackLocation is on another server.
      */
     public void requestCrossServerBack(Player player, BackLocation loc) {
         if (player == null || loc == null) return;
         if (packetManager == null || !packetManager.isInitialized()) {
-            player.sendMessage("§cCross-server messaging is not available; cannot /back across servers.");
+            Lang.send(player, "teleport.back.cross-server.no-messaging",
+                    "<red>Cross-server messaging is not available; cannot /back across servers.</red>");
             return;
         }
         if (loc.getServer() == null || loc.getServer().isBlank()) {
-            player.sendMessage("§cBack location has no target server.");
+            Lang.send(player, "teleport.back.cross-server.no-server",
+                    "<red>Back location has no target server.</red>");
             return;
         }
 
-        // On crée le packet avec les coordonnées
+        // Create packet with coordinates
         BackTeleportPacket pkt = new BackTeleportPacket(
                 player.getUniqueId(),
                 loc.getServer(),
@@ -79,24 +82,26 @@ public class BackCrossServerBroker implements Listener {
                 loc.getPitch()
         );
 
-        // on l'envoie sur le canal individuel du serveur cible
+        // send to individual channel of target server
         packetManager.sendPacket(
                 PacketChannel.individual(loc.getServer()),
                 pkt
         );
 
-        // on switch le joueur sur ce serveur via proxy
+        // switch player to that server via proxy
         proxyMessenger.sendToServer(player, loc.getServer());
 
-        player.sendMessage("§7Teleporting back to your previous location on §b" + loc.getServer() + "§7…");
+        Lang.send(player, "teleport.back.cross-server.jumping",
+                "<gray>Teleporting back to your previous location on <aqua>%server%</aqua>…</gray>",
+                Map.of("server", loc.getServer()));
     }
 
-    // appelé sur le serveur DESTINATION quand le packet est reçu
+    // called on DESTINATION server when packet is received
     private void handleIncomingBack(BackTeleportPacket pkt) {
         if (pkt == null) return;
 
         if (!localServer.equalsIgnoreCase(pkt.getServer())) {
-            // sécurité : si jamais le packet arrive sur le mauvais serveur
+            // safety: if packet arrives on wrong server
             return;
         }
 
@@ -115,10 +120,10 @@ public class BackCrossServerBroker implements Listener {
 
         Player p = Bukkit.getPlayer(playerId);
         if (p != null && p.isOnline()) {
-            // le joueur est déjà là (cas rare), on TP direct
+            // player already here (rare case), teleport immediately
             teleportToBackNow(p, backLoc);
         } else {
-            // sinon on stocke et on attend son join
+            // store and wait for their join
             pendingBacks.put(playerId, backLoc);
         }
     }
@@ -135,11 +140,16 @@ public class BackCrossServerBroker implements Listener {
     private void teleportToBackNow(Player p, BackLocation loc) {
         World w = Bukkit.getWorld(loc.getWorldName());
         if (w == null) {
-            p.sendMessage("§cTeleport failed: world §e" + loc.getWorldName() + "§c is not loaded.");
+            Lang.send(p, "teleport.back.cross-server.world-not-loaded",
+                    "<red>Teleport failed: world <yellow>%world%</yellow> is not loaded.</red>",
+                    Map.of("world", loc.getWorldName()));
             return;
         }
+
         Location bLoc = new Location(w, loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
         teleportService.teleportSilently(p, bLoc);
-        p.sendMessage("§aTeleported back.");
+
+        Lang.send(p, "teleport.back.cross-server.success",
+                "<green>Teleported back.</green>");
     }
 }

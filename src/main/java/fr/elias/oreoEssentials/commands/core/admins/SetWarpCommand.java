@@ -17,7 +17,9 @@ import java.util.Map;
 public class SetWarpCommand implements OreoCommand {
     private final WarpService warps;
 
-    public SetWarpCommand(WarpService warps) { this.warps = warps; }
+    public SetWarpCommand(WarpService warps) {
+        this.warps = warps;
+    }
 
     @Override public String name() { return "setwarp"; }
     @Override public List<String> aliases() { return List.of(); }
@@ -28,8 +30,9 @@ public class SetWarpCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (args.length < 1) {
-            // def=null, vars go in 4th param
-            Lang.send(sender, "warps.usage.setwarp", null, Map.of("label", label));
+            Lang.send(sender, "admin.setwarp.usage",
+                    "<yellow>Usage: /%label% <name></yellow>",
+                    Map.of("label", label));
             return true;
         }
 
@@ -37,16 +40,22 @@ public class SetWarpCommand implements OreoCommand {
         String name = args[0].trim().toLowerCase(Locale.ROOT);
 
         warps.setWarp(name, p.getLocation());
-        Lang.send(p, "warps.set", null, Map.of("warp", name));
 
-        // record owner server if directory exists (cross-server)
+        Lang.send(p, "admin.setwarp.set",
+                "<green>Warp <aqua>%warp%</aqua> has been set.</green>",
+                Map.of("warp", name));
+
+        // Record owner server if directory exists (cross-server)
         WarpDirectory warpDir = OreoEssentials.get().getWarpDirectory();
         if (warpDir != null) {
             String local = OreoEssentials.get().getConfig().getString("server.name", Bukkit.getServer().getName());
             warpDir.setWarpServer(name, local);
-            // why: informational hint for cross-server ownership
-            p.sendMessage("§7(Cross-server) Warp owner set to §b" + local + "§7.");
+
+            Lang.send(p, "admin.setwarp.cross-server-info",
+                    "<gray>(Cross-server) Warp owner set to <aqua>%server%</aqua>.</gray>",
+                    Map.of("server", local));
         }
+
         return true;
     }
 }

@@ -1,14 +1,15 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/WarpsPlayerProvider.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.services.WarpDirectory;
 import fr.elias.oreoEssentials.services.WarpService;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.content.InventoryContents;
 import fr.minuskube.inv.content.InventoryProvider;
 import fr.minuskube.inv.content.Pagination;
 import fr.minuskube.inv.content.SlotIterator;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -17,18 +18,19 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.bukkit.ChatColor.*;
 
 public class WarpsPlayerProvider implements InventoryProvider {
 
     private final WarpService warps;
 
-    public WarpsPlayerProvider(WarpService warps) { this.warps = warps; }
+    public WarpsPlayerProvider(WarpService warps) {
+        this.warps = warps;
+    }
 
     @Override
-    public void init(Player p, InventoryContents contents) { draw(p, contents); }
+    public void init(Player p, InventoryContents contents) {
+        draw(p, contents);
+    }
 
     @Override
     public void update(Player p, InventoryContents contents) {}
@@ -44,8 +46,8 @@ public class WarpsPlayerProvider implements InventoryProvider {
         names.sort(String.CASE_INSENSITIVE_ORDER);
 
         // Header + refresh
-        contents.set(0, 4, ClickableItem.empty(counterItem(names.size())));
-        contents.set(0, 8, ClickableItem.of(refreshItem(), e ->
+        contents.set(0, 4, ClickableItem.empty(counterItem(p, names.size())));
+        contents.set(0, 8, ClickableItem.of(refreshItem(p), e ->
                 contents.inventory().open(p, contents.pagination().getPage())));
 
         ClickableItem[] items = names.stream().map(displayName -> {
@@ -55,15 +57,18 @@ public class WarpsPlayerProvider implements InventoryProvider {
 
             Location loc = null;
             if (server.equalsIgnoreCase(localServer)) {
-                try { loc = warps.getWarp(key); } catch (Throwable ignored) {}
+                try {
+                    loc = warps.getWarp(key);
+                } catch (Throwable ignored) {}
             }
 
             final boolean allowed = warps.canUse(p, key);
-            ItemStack icon = warpPlayerItem(displayName, server, loc, allowed);
+            ItemStack icon = warpPlayerItem(p, displayName, server, loc, allowed);
 
             return ClickableItem.of(icon, e -> {
                 if (!allowed) {
-                    p.sendMessage(ChatColor.RED + "You don't have permission for this warp.");
+                    Lang.send(p, "warp.player.no-permission",
+                            "<red>You don't have permission for this warp.</red>");
                     return;
                 }
                 // Uses the admin teleport helper to keep behavior consistent (local/cross-server)
@@ -83,11 +88,22 @@ public class WarpsPlayerProvider implements InventoryProvider {
         pagination.addToIterator(it);
 
         if (!pagination.isFirst()) {
-            contents.set(5, 0, ClickableItem.of(nav(Material.ARROW, YELLOW + "Previous Page"),
+            String prevName = Lang.msgWithDefault(
+                    "warp.player.list.previous",
+                    "<yellow>Previous Page</yellow>",
+                    p
+            );
+            contents.set(5, 0, ClickableItem.of(nav(Material.ARROW, prevName),
                     e -> contents.inventory().open(p, pagination.previous().getPage())));
         }
+
         if (!pagination.isLast()) {
-            contents.set(5, 8, ClickableItem.of(nav(Material.ARROW, YELLOW + "Next Page"),
+            String nextName = Lang.msgWithDefault(
+                    "warp.player.list.next",
+                    "<yellow>Next Page</yellow>",
+                    p
+            );
+            contents.set(5, 8, ClickableItem.of(nav(Material.ARROW, nextName),
                     e -> contents.inventory().open(p, pagination.next().getPage())));
         }
     }
@@ -104,28 +120,56 @@ public class WarpsPlayerProvider implements InventoryProvider {
     private ItemStack filler() {
         ItemStack it = new ItemStack(Material.LIGHT_BLUE_STAINED_GLASS_PANE);
         ItemMeta meta = it.getItemMeta();
-        if (meta != null) { meta.setDisplayName(" "); it.setItemMeta(meta); }
+        if (meta != null) {
+            meta.setDisplayName(" ");
+            it.setItemMeta(meta);
+        }
         return it;
     }
 
-    private ItemStack refreshItem() {
+    private ItemStack refreshItem(Player p) {
         ItemStack it = new ItemStack(Material.SUNFLOWER);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(YELLOW + "Refresh");
-            meta.setLore(List.of(GRAY + "Click to reload warps."));
+            String name = Lang.msgWithDefault(
+                    "warp.player.list.refresh",
+                    "<yellow>Refresh</yellow>",
+                    p
+            );
+
+            String lore = Lang.msgWithDefault(
+                    "warp.player.list.refresh-lore",
+                    "<gray>Click to reload warps.</gray>",
+                    p
+            );
+
+            meta.setDisplayName(name);
+            meta.setLore(List.of(lore));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             it.setItemMeta(meta);
         }
         return it;
     }
 
-    private ItemStack counterItem(int count) {
+    private ItemStack counterItem(Player p, int count) {
         ItemStack it = new ItemStack(Material.PAPER);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(ChatColor.GOLD + "Warps " + ChatColor.WHITE + "(" + count + ")");
-            meta.setLore(List.of(GRAY + "Left-click: " + WHITE + "Teleport"));
+            String name = Lang.msgWithDefault(
+                    "warp.player.list.counter",
+                    "<gold>Warps <white>(%count%)</white></gold>",
+                    Map.of("count", String.valueOf(count)),
+                    p
+            );
+
+            String lore = Lang.msgWithDefault(
+                    "warp.player.list.counter-lore",
+                    "<gray>Left-click: <white>Teleport</white></gray>",
+                    p
+            );
+
+            meta.setDisplayName(name);
+            meta.setLore(List.of(lore));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             it.setItemMeta(meta);
         }
@@ -135,26 +179,79 @@ public class WarpsPlayerProvider implements InventoryProvider {
     private ItemStack nav(Material type, String name) {
         ItemStack it = new ItemStack(type);
         ItemMeta meta = it.getItemMeta();
-        if (meta != null) { meta.setDisplayName(name); it.setItemMeta(meta); }
+        if (meta != null) {
+            meta.setDisplayName(name);
+            it.setItemMeta(meta);
+        }
         return it;
     }
 
-    private ItemStack warpPlayerItem(String name, String server, Location loc, boolean allowed) {
+    private ItemStack warpPlayerItem(Player p, String name, String server, Location loc, boolean allowed) {
         ItemStack it = new ItemStack(allowed ? Material.LODESTONE : Material.BARRIER);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName((allowed ? ChatColor.AQUA : ChatColor.DARK_RED) + name);
-            List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.GRAY + "Server: " + ChatColor.YELLOW + server);
-            if (loc != null) {
-                lore.add(ChatColor.GRAY + "World: " + ChatColor.YELLOW + loc.getWorld().getName());
-                lore.add(ChatColor.GRAY + "XYZ: " + ChatColor.YELLOW +
-                        fmt(loc.getX()) + " " + fmt(loc.getY()) + " " + fmt(loc.getZ()));
+            String displayName;
+            if (allowed) {
+                displayName = Lang.msgWithDefault(
+                        "warp.player.list.warp-name-allowed",
+                        "<aqua>%name%</aqua>",
+                        Map.of("name", name),
+                        p
+                );
+            } else {
+                displayName = Lang.msgWithDefault(
+                        "warp.player.list.warp-name-locked",
+                        "<dark_red>%name%</dark_red>",
+                        Map.of("name", name),
+                        p
+                );
             }
+
+            List<String> lore = new ArrayList<>();
+
+            // Server line
+            lore.add(Lang.msgWithDefault(
+                    "warp.player.list.warp-server",
+                    "<gray>Server: <yellow>%server%</yellow></gray>",
+                    Map.of("server", server),
+                    p
+            ));
+
+            // World and coordinates (if available)
+            if (loc != null) {
+                lore.add(Lang.msgWithDefault(
+                        "warp.player.list.warp-world",
+                        "<gray>World: <yellow>%world%</yellow></gray>",
+                        Map.of("world", loc.getWorld().getName()),
+                        p
+                ));
+
+                lore.add(Lang.msgWithDefault(
+                        "warp.player.list.warp-coords",
+                        "<gray>XYZ: <yellow>%coords%</yellow></gray>",
+                        Map.of("coords", fmt(loc.getX()) + " " + fmt(loc.getY()) + " " + fmt(loc.getZ())),
+                        p
+                ));
+            }
+
             lore.add(" ");
-            lore.add(allowed
-                    ? ChatColor.GREEN + "Left-Click: " + ChatColor.WHITE + "Teleport"
-                    : ChatColor.RED + "You don't have access.");
+
+            // Action hint
+            if (allowed) {
+                lore.add(Lang.msgWithDefault(
+                        "warp.player.list.warp-click",
+                        "<green>Left-Click: <white>Teleport</white></green>",
+                        p
+                ));
+            } else {
+                lore.add(Lang.msgWithDefault(
+                        "warp.player.list.warp-locked",
+                        "<red>You don't have access.</red>",
+                        p
+                ));
+            }
+
+            meta.setDisplayName(displayName);
             meta.setLore(lore);
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             it.setItemMeta(meta);

@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/PlayerWarpWhitelistCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.playerwarp.PlayerWarp;
@@ -28,14 +29,14 @@ public class PlayerWarpWhitelistCommand implements CommandExecutor, TabCompleter
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("Only players may use this command.");
+            Lang.send(sender, "playerwarps.whitelist.player-only",
+                    "<red>Only players may use this command.</red>");
             return true;
         }
 
         if (args.length < 3) {
-            Lang.send(player,
-                    "playerwarps.whitelist.usage",
-                    null,
+            Lang.send(player, "playerwarps.whitelist.usage",
+                    "<yellow>Usage: /%label% <add|remove> <warpname> <player></yellow>",
                     Map.of("label", label));
             return true;
         }
@@ -49,10 +50,8 @@ public class PlayerWarpWhitelistCommand implements CommandExecutor, TabCompleter
         switch (action) {
             case "add" -> service.addToWhitelist(player, warpName, target);
             case "remove", "rem", "del" -> service.removeFromWhitelist(player, warpName, target);
-            default -> Lang.send(player,
-                    "playerwarps.whitelist.usage",
-                    null,
-                    Map.of("label", label));
+            default -> Lang.send(player, "playerwarps.whitelist.invalid-action",
+                    "<red>Invalid action. Use <yellow>add</yellow> or <yellow>remove</yellow>.</red>");
         }
 
         return true;

@@ -7,7 +7,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -23,63 +22,45 @@ public class KillCommand implements OreoCommand {
         // /kill -> self kill
         if (args.length == 0) {
             if (!(sender instanceof Player p)) {
-                sender.sendMessage("Usage: /" + label + " <player>");
+                Lang.send(sender, "kill.console-usage",
+                        "<red>Usage: /%label% <player></red>",
+                        Map.of("label", label));
                 return true;
             }
 
             // Self kill permission
             if (!p.hasPermission("oreo.kill")) {
                 Lang.send(p, "kill.self.no-permission",
-                        null,
-                        Collections.emptyMap()
-                );
+                        "<red>You don't have permission to kill yourself.</red>");
                 return true;
             }
 
             p.setHealth(0.0);
             Lang.send(p, "kill.self.slain",
-                    null,
-                    Collections.emptyMap()
-            );
+                    "<gray>You have been slain.</gray>");
             return true;
         }
 
         // /kill <player> -> kill others
         if (!sender.hasPermission("oreo.kill.others")) {
-            if (sender instanceof Player p) {
-                Lang.send(p, "kill.others.no-permission",
-                        null,
-                        Collections.emptyMap()
-                );
-            } else {
-                sender.sendMessage("You lack permission to kill others.");
-            }
+            Lang.send(sender, "kill.others.no-permission",
+                    "<red>You lack permission to kill others.</red>");
             return true;
         }
 
         Player target = Bukkit.getPlayerExact(args[0]);
         if (target == null) {
-            if (sender instanceof Player p) {
-                Lang.send(p, "kill.target-not-found",
-                        null,
-                        Collections.emptyMap()
-                );
-            } else {
-                sender.sendMessage("Player not found.");
-            }
+            Lang.send(sender, "kill.target-not-found",
+                    "<red>Player not found.</red>");
             return true;
         }
 
         target.setHealth(0.0);
 
-        if (sender instanceof Player p) {
-            Lang.send(p, "kill.others.killed",
-                    null,
-                    Map.of("player", target.getName())
-            );
-        } else {
-            sender.sendMessage("Killed " + target.getName() + ".");
-        }
+        Lang.send(sender, "kill.others.killed",
+                "<gray>Killed <yellow>%player%</yellow>.</gray>",
+                Map.of("player", target.getName()));
+
         return true;
     }
 }

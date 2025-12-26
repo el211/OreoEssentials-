@@ -21,7 +21,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public final class RecipeListMenu implements InventoryProvider {
     private final Plugin plugin;
@@ -32,17 +31,21 @@ public final class RecipeListMenu implements InventoryProvider {
     private static final LegacyComponentSerializer LEGACY_SEC = LegacyComponentSerializer.legacySection();
 
     private RecipeListMenu(Plugin plugin, InventoryManager invMgr, CustomCraftingService service) {
-        this.plugin = plugin; this.invMgr = invMgr; this.service = service;
+        this.plugin = plugin;
+        this.invMgr = invMgr;
+        this.service = service;
     }
 
     public static SmartInventory open(Player p, Plugin plugin, InventoryManager invMgr, CustomCraftingService service) {
-        String title = i18nLegacy("customcraft.browse.title", "<#00bcd4><bold>OreoCraft</bold></#00bcd4> <gray>—</gray> <white>Recipes</white>",
-                Map.of("name", ""), p);
+        String title = i18nLegacy("customcraft.browse.title",
+                "<#00bcd4><bold>OreoCraft</bold></#00bcd4> <gray>—</gray> <white>Recipes</white>",
+                Map.of(), p);
+
         SmartInventory inv = SmartInventory.builder()
                 .id("oecraft:browse")
                 .provider(new RecipeListMenu(plugin, invMgr, service))
                 .size(6, 9)
-                .title(title)                // inventory title requires String
+                .title(title)
                 .manager(invMgr)
                 .build();
         inv.open(p);
@@ -52,11 +55,17 @@ public final class RecipeListMenu implements InventoryProvider {
     @Override
     public void init(Player player, InventoryContents contents) {
         ItemStack border = ui(Material.GRAY_STAINED_GLASS_PANE, " ");
-        for (int r = 0; r < 6; r++) for (int c = 0; c < 9; c++) contents.set(r, c, ClickableItem.empty(border));
+        for (int r = 0; r < 6; r++) {
+            for (int c = 0; c < 9; c++) {
+                contents.set(r, c, ClickableItem.empty(border));
+            }
+        }
 
         contents.set(0, 4, ClickableItem.empty(ui(
                 Material.BOOK,
-                i18nLegacy("customcraft.browse.hint", "<yellow>Click a recipe to edit</yellow>", Map.of(), player)
+                i18nLegacy("customcraft.browse.hint",
+                        "<yellow>Click a recipe to edit</yellow>",
+                        Map.of(), player)
         )));
 
         Pagination pag = contents.pagination();
@@ -74,14 +83,17 @@ public final class RecipeListMenu implements InventoryProvider {
 
                 String perm = service.getPermissionFor(name)
                         .orElse(Lang.get("customcraft.format.permission.none", "<gray>None</gray>"));
-                // display name
+
+                // Display name
                 m.setDisplayName(i18nLegacyInline("<aqua>" + name + "</aqua>"));
 
-                // lore (MiniMessage → legacy)
+                // Lore (MiniMessage → legacy)
                 List<String> loreTemplate = langList("customcraft.browse.icon-lore",
-                        List.of("<gray>Mode:</gray> <white>%mode%</white>",
+                        List.of(
+                                "<gray>Mode:</gray> <white>%mode%</white>",
                                 "<gray>Perm:</gray> <white>%permission_or_none%</white>",
-                                "<green>Click to edit</green>"));
+                                "<green>Click to edit</green>"
+                        ));
 
                 List<String> lore = new ArrayList<>(loreTemplate.size());
                 for (String line : loreTemplate) {
@@ -92,6 +104,7 @@ public final class RecipeListMenu implements InventoryProvider {
                 m.setLore(lore);
                 icon.setItemMeta(m);
             }
+
             items.add(ClickableItem.of(icon, (InventoryClickEvent e) -> {
                 Player clicker = (Player) e.getWhoClicked();
                 CraftDesignerMenu.build(plugin, invMgr, service, name).open(clicker);
@@ -108,28 +121,47 @@ public final class RecipeListMenu implements InventoryProvider {
         si.blacklist(4, 0); si.blacklist(4, 8);
         pag.addToIterator(si);
 
+        // Previous page button
         contents.set(5, 3, ClickableItem.of(
-                ui(Material.ARROW, i18nLegacy("customcraft.browse.prev", "<yellow>Previous</yellow>", Map.of(), player)),
+                ui(Material.ARROW,
+                        i18nLegacy("customcraft.browse.prev",
+                                "<yellow>Previous</yellow>",
+                                Map.of(), player)),
                 (InventoryClickEvent e) -> {
                     Player p = (Player) e.getWhoClicked();
-                    if (!pag.isFirst()) invMgr.getInventory(p).ifPresent(inv -> inv.open(p, pag.getPage() - 1));
+                    if (!pag.isFirst()) {
+                        invMgr.getInventory(p).ifPresent(inv -> inv.open(p, pag.getPage() - 1));
+                    }
                 }));
+
+        // Next page button
         contents.set(5, 5, ClickableItem.of(
-                ui(Material.ARROW, i18nLegacy("customcraft.browse.next", "<yellow>Next</yellow>", Map.of(), player)),
+                ui(Material.ARROW,
+                        i18nLegacy("customcraft.browse.next",
+                                "<yellow>Next</yellow>",
+                                Map.of(), player)),
                 (InventoryClickEvent e) -> {
                     Player p = (Player) e.getWhoClicked();
-                    invMgr.getInventory(p).ifPresent(inv -> inv.open(p, pag.getPage() + 1));
+                    if (!pag.isLast()) {
+                        invMgr.getInventory(p).ifPresent(inv -> inv.open(p, pag.getPage() + 1));
+                    }
                 }));
     }
 
-    @Override public void update(Player player, InventoryContents contents) { /* no-op */ }
+    @Override
+    public void update(Player player, InventoryContents contents) {
+        /* no-op */
+    }
 
-    /* ---------------- helpers ---------------- */
+    /* ---------------- Helpers ---------------- */
 
     private static ItemStack ui(Material m, String name) {
         ItemStack it = new ItemStack(m);
         ItemMeta meta = it.getItemMeta();
-        if (meta != null) { meta.setDisplayName(name); it.setItemMeta(meta); }
+        if (meta != null) {
+            meta.setDisplayName(name);
+            it.setItemMeta(meta);
+        }
         return it;
     }
 
@@ -141,24 +173,36 @@ public final class RecipeListMenu implements InventoryProvider {
             if (v == null) break;
             out.add(v);
         }
-        if (out.isEmpty() && def != null) out.addAll(def);
+        if (out.isEmpty() && def != null) {
+            out.addAll(def);
+        }
         return out;
     }
 
-    // ---- MiniMessage → legacy helpers (GUIs require String) ----
-    private static String i18nLegacy(String key, String def, Map<String,String> vars, Player p) {
+    /* ---------------- MiniMessage → Legacy Helpers (GUIs require String) ---------------- */
+
+    private static String i18nLegacy(String key, String def, Map<String, String> vars, Player p) {
         String raw = Lang.get(key, def);
-        if (vars != null) for (var e : vars.entrySet()) raw = raw.replace("%" + e.getKey() + "%", e.getValue());
+        if (vars != null) {
+            for (var e : vars.entrySet()) {
+                raw = raw.replace("%" + e.getKey() + "%", e.getValue());
+            }
+        }
         raw = applyPapi(p, raw);
         return LEGACY_SEC.serialize(MM.deserialize(raw));
     }
+
     private static String i18nLegacyInline(String raw) {
         return LEGACY_SEC.serialize(MM.deserialize(raw == null ? "" : raw));
     }
+
     private static String applyPapi(Player p, String raw) {
         if (raw == null) return "";
-        try { if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) return PlaceholderAPI.setPlaceholders(p, raw); }
-        catch (Throwable ignored) {}
+        try {
+            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                return PlaceholderAPI.setPlaceholders(p, raw);
+            }
+        } catch (Throwable ignored) {}
         return raw;
     }
 }

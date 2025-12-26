@@ -1,12 +1,13 @@
+// File: src/main/java/fr/elias/oreoEssentials/portals/PortalsManager.java
 package fr.elias.oreoEssentials.portals;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.util.BoundingBox;
 
 import java.io.File;
@@ -22,13 +23,15 @@ public class PortalsManager {
         public final BoundingBox box;
         public final Location destination;
         public final boolean keepYawPitch;
+        public final String permission; // null or empty = no permission required
 
-        public Portal(String name, World world, BoundingBox box, Location destination, boolean keepYawPitch) {
+        public Portal(String name, World world, BoundingBox box, Location destination, boolean keepYawPitch, String permission) {
             this.name = name;
             this.world = world;
             this.box = box;
             this.destination = destination;
             this.keepYawPitch = keepYawPitch;
+            this.permission = permission;
         }
 
         public boolean contains(Location loc) {
@@ -37,9 +40,14 @@ public class PortalsManager {
                     && loc.getWorld().equals(world)
                     && box.contains(loc.toVector());
         }
+
+        public boolean hasPermission(Player p) {
+            return permission == null || permission.isEmpty() || p.hasPermission(permission);
+        }
     }
 
-    private final OreoEssentials plugin;    private final File file;
+    private final OreoEssentials plugin;
+    private final File file;
     private final FileConfiguration cfg;
 
     // runtime maps
@@ -47,6 +55,7 @@ public class PortalsManager {
     private final Map<UUID, Location> pos1 = new ConcurrentHashMap<>();
     private final Map<UUID, Location> pos2 = new ConcurrentHashMap<>();
     private final Map<UUID, Long> cooldown = new ConcurrentHashMap<>();
+    private final Map<UUID, String> lastPortalDenied = new ConcurrentHashMap<>(); // prevent spam
 
     // --- Config-backed options ---
     private final boolean enabled;
@@ -55,6 +64,8 @@ public class PortalsManager {
     private final String particleName;
     private final int particleCount;
     private final boolean allowKeepYawPitch;
+    private final boolean teleportAsync;
+    private final int maxPortalVolume; // prevent massive portals
 
     public PortalsManager(OreoEssentials plugin) {
         this.plugin = plugin;
@@ -67,6 +78,8 @@ public class PortalsManager {
         this.particleName = c.getString("portals.particle", "PORTAL");
         this.particleCount = c.getInt("portals.particle_count", 20);
         this.allowKeepYawPitch = c.getBoolean("portals.allow_keep_yaw_pitch", true);
+        this.teleportAsync = c.getBoolean("portals.teleport_async", false);
+        this.maxPortalVolume = c.getInt("portals.max_portal_volume", 100000);
 
         // data file
         this.file = new File(plugin.getDataFolder(), "portals.yml");
@@ -86,30 +99,77 @@ public class PortalsManager {
         return new TreeSet<>(portals.keySet());
     }
 
-    public void setPos1(Player p, Location l) { pos1.put(p.getUniqueId(), l.clone()); }
-    public void setPos2(Player p, Location l) { pos2.put(p.getUniqueId(), l.clone()); }
+    public void setPos1(Player p, Location l) {
+        pos1.put(p.getUniqueId(), l.clone());
+    }
 
-    public Location getPos1(Player p) { return pos1.get(p.getUniqueId()); }
-    public Location getPos2(Player p) { return pos2.get(p.getUniqueId()); }
+    public void setPos2(Player p, Location l) {
+        pos2.put(p.getUniqueId(), l.clone());
+    }
 
-    public Portal get(String name) { return portals.get(name.toLowerCase(Locale.ROOT)); }
+    public Location getPos1(Player p) {
+        return pos1.get(p.getUniqueId());
+    }
 
-    public boolean create(String name, Player creator, Location dest, boolean keepYawPitch) {
+    public Location getPos2(Player p) {
+        return pos2.get(p.getUniqueId());
+    }
+
+    public Portal get(String name) {
+        return portals.get(name.toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * Create a portal with permission support.
+     * @return null on success, error message on failure
+     */
+    public String create(String name, Player creator, Location dest, boolean keepYawPitch, String permission) {
         Location a = pos1.get(creator.getUniqueId());
         Location b = pos2.get(creator.getUniqueId());
-        if (a == null || b == null || a.getWorld() == null || b.getWorld() == null) return false;
-        if (!a.getWorld().equals(b.getWorld())) return false;
+
+        if (a == null || b == null) {
+            return "Both pos1 and pos2 must be set";
+        }
+
+        if (a.getWorld() == null || b.getWorld() == null) {
+            return "Invalid world for pos1 or pos2";
+        }
+
+        if (!a.getWorld().equals(b.getWorld())) {
+            return "pos1 and pos2 must be in the same world";
+        }
 
         World w = a.getWorld();
         BoundingBox box = BoundingBox.of(a, b);
 
+        // Volume check
+        double volume = box.getVolume();
+        if (volume > maxPortalVolume) {
+            return "Portal too large (max volume: " + maxPortalVolume + " blocks)";
+        }
+
+        if (volume < 1) {
+            return "Portal too small (minimum 1 block)";
+        }
+
         String key = name.toLowerCase(Locale.ROOT);
-        Portal portal = new Portal(name, w, box, dest.clone(), keepYawPitch);
+
+        // Check for existing portal
+        if (portals.containsKey(key)) {
+            return "Portal with that name already exists";
+        }
+
+        Portal portal = new Portal(name, w, box, dest.clone(), keepYawPitch, permission);
         portals.put(key, portal);
 
         savePortal(portal);
         saveFile();
-        return true;
+
+        // Clear pos markers after successful creation
+        pos1.remove(creator.getUniqueId());
+        pos2.remove(creator.getUniqueId());
+
+        return null; // success
     }
 
     public boolean remove(String name) {
@@ -125,13 +185,25 @@ public class PortalsManager {
         portals.clear();
         ConfigurationSection root = cfg.getConfigurationSection("portals");
         if (root == null) return;
+
+        int loaded = 0;
+        int failed = 0;
+
         for (String key : root.getKeys(false)) {
             try {
                 ConfigurationSection s = root.getConfigurationSection(key);
-                if (s == null) continue;
+                if (s == null) {
+                    failed++;
+                    continue;
+                }
+
                 String worldName = s.getString("world");
                 World w = Bukkit.getWorld(worldName);
-                if (w == null) continue;
+                if (w == null) {
+                    plugin.getLogger().warning("Portal '" + key + "' world not loaded: " + worldName);
+                    failed++;
+                    continue;
+                }
 
                 double x1 = s.getDouble("box.x1");
                 double y1 = s.getDouble("box.y1");
@@ -143,21 +215,33 @@ public class PortalsManager {
 
                 String dw = s.getString("dest.world");
                 World dworld = Bukkit.getWorld(dw);
+                if (dworld == null) {
+                    plugin.getLogger().warning("Portal '" + key + "' destination world not loaded: " + dw);
+                    failed++;
+                    continue;
+                }
+
                 double dx = s.getDouble("dest.x");
                 double dy = s.getDouble("dest.y");
                 double dz = s.getDouble("dest.z");
                 float yaw = (float) s.getDouble("dest.yaw", 0f);
                 float pitch = (float) s.getDouble("dest.pitch", 0f);
                 boolean keep = s.getBoolean("keepYawPitch", false);
+                String perm = s.getString("permission", null);
 
-                if (dworld == null) continue;
                 Location dest = new Location(dworld, dx, dy, dz, yaw, pitch);
 
-                portals.put(key.toLowerCase(Locale.ROOT), new Portal(s.getString("name", key), w, box, dest, keep));
+                portals.put(key.toLowerCase(Locale.ROOT),
+                        new Portal(s.getString("name", key), w, box, dest, keep, perm));
+                loaded++;
             } catch (Throwable t) {
                 plugin.getLogger().warning("Failed to load portal " + key + ": " + t.getMessage());
+                failed++;
             }
         }
+
+        plugin.getLogger().info("[Portals] Loaded " + loaded + " portal(s)" +
+                (failed > 0 ? " (" + failed + " failed)" : ""));
     }
 
     private void savePortal(Portal p) {
@@ -178,50 +262,107 @@ public class PortalsManager {
         cfg.set(base + "dest.yaw", p.destination.getYaw());
         cfg.set(base + "dest.pitch", p.destination.getPitch());
         cfg.set(base + "keepYawPitch", p.keepYawPitch);
+        if (p.permission != null && !p.permission.isEmpty()) {
+            cfg.set(base + "permission", p.permission);
+        }
     }
 
     private void saveFile() {
-        try { cfg.save(file); }
-        catch (IOException e) { plugin.getLogger().severe("Failed to save portals.yml: " + e.getMessage()); }
+        try {
+            cfg.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to save portals.yml: " + e.getMessage());
+        }
     }
 
-    /** Teleport if inside any portal (simple O(n) scan, fast enough for dozens). */
+    /** Teleport if inside any portal (optimized O(n) scan). */
     public void tickMove(Player p, Location to) {
-        if (!enabled || to == null) return;
+        if (!enabled || to == null || p == null) return;
 
         long now = System.currentTimeMillis();
-        Long cd = cooldown.get(p.getUniqueId());
-        if (cd != null && now < cd) return; // cooldown
+        UUID pid = p.getUniqueId();
+
+        // Cooldown check
+        Long cd = cooldown.get(pid);
+        if (cd != null && now < cd) return;
 
         for (Portal portal : portals.values()) {
             if (portal.contains(to)) {
+                // Permission check
+                if (!portal.hasPermission(p)) {
+                    // Anti-spam: only send message once per portal
+                    String lastDenied = lastPortalDenied.get(pid);
+                    if (!portal.name.equals(lastDenied)) {
+                        Lang.send(p, "portals.no-portal-permission",
+                                "<red>You don't have permission to use this portal.</red>");
+                        lastPortalDenied.put(pid, portal.name);
+
+                        // Clear denial cache after 5 seconds
+                        Bukkit.getScheduler().runTaskLater(plugin,
+                                () -> lastPortalDenied.remove(pid, portal.name),
+                                100L);
+                    }
+                    return;
+                }
+
                 Location dest = portal.destination.clone();
                 if (allowKeepYawPitch && portal.keepYawPitch) {
                     dest.setYaw(p.getLocation().getYaw());
                     dest.setPitch(p.getLocation().getPitch());
                 }
 
-                // FX (configurable)
-                try {
-                    if (soundName != null && !soundName.isEmpty()) {
-                        p.getWorld().playSound(p.getLocation(), Sound.valueOf(soundName), 1f, 1f);
-                    }
-                    if (particleName != null && !particleName.isEmpty() && particleCount > 0) {
-                        p.getWorld().spawnParticle(
-                                Particle.valueOf(particleName),
-                                p.getLocation(), particleCount,
-                                0.25, 0.5, 0.25, 0.01
-                        );
-                    }
-                } catch (IllegalArgumentException ignored) {
-                    // bad enum names in config; ignore FX
+                // Effects (configurable)
+                playEffects(p, to);
+
+                // Apply cooldown to avoid bounce or recursive portals
+                cooldown.put(pid, now + Math.max(0, cooldownMs));
+
+                // Clear denial cache on successful teleport
+                lastPortalDenied.remove(pid);
+
+                // Teleport (async or sync)
+                if (teleportAsync) {
+                    Bukkit.getScheduler().runTask(plugin, () -> p.teleport(dest));
+                } else {
+                    p.teleport(dest);
                 }
 
-                // apply cooldown to avoid bounce or recursive portals
-                cooldown.put(p.getUniqueId(), now + Math.max(0, cooldownMs));
-                p.teleport(dest);
                 return;
             }
         }
+    }
+
+    private void playEffects(Player p, Location loc) {
+        try {
+            // Sound
+            if (soundName != null && !soundName.isEmpty()) {
+                try {
+                    Sound sound = Sound.valueOf(soundName);
+                    p.getWorld().playSound(loc, sound, 1f, 1f);
+                } catch (IllegalArgumentException e) {
+                    plugin.getLogger().warning("Invalid sound name in config: " + soundName);
+                }
+            }
+
+            // Particles
+            if (particleName != null && !particleName.isEmpty() && particleCount > 0) {
+                try {
+                    Particle particle = Particle.valueOf(particleName);
+                    p.getWorld().spawnParticle(
+                            particle,
+                            loc, particleCount,
+                            0.25, 0.5, 0.25, 0.01
+                    );
+                } catch (IllegalArgumentException e) {
+                    plugin.getLogger().warning("Invalid particle name in config: " + particleName);
+                }
+            }
+        } catch (Throwable t) {
+            // Silently ignore effects errors
+        }
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 }

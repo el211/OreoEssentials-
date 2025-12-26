@@ -1,9 +1,9 @@
-// src/main/java/fr/elias/oreoEssentials/commands/core/ServerProxyCommand.java
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/ServerProxyCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.elias.oreoEssentials.util.ProxyMessenger;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -26,21 +26,30 @@ public class ServerProxyCommand implements OreoCommand, org.bukkit.command.TabCo
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         Player p = (Player) sender;
+
         if (args.length < 1) {
-            sender.sendMessage(ChatColor.YELLOW + "Usage: /" + label + " <server-name>");
+            Lang.send(sender, "server.usage",
+                    "<yellow>Usage: /%label% <server-name></yellow>",
+                    Map.of("label", label));
             return true;
         }
+
         String target = args[0];
 
         // Try to send immediately; if we don't have it cached yet, we'll still attempt the switch.
         proxy.connect(p, target);
-        sender.sendMessage(ChatColor.GRAY + "Connecting to " + ChatColor.AQUA + target + ChatColor.GRAY + "...");
+
+        Lang.send(sender, "server.connecting",
+                "<gray>Connecting to <aqua>%server%</aqua>...</gray>",
+                Map.of("server", target));
+
         return true;
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, org.bukkit.command.Command command, String alias, String[] args) {
         if (!sender.hasPermission(permission())) return Collections.emptyList();
+
         if (args.length == 1) {
             // Kick off a refresh (async response updates cache)
             proxy.requestServers();
@@ -50,6 +59,7 @@ public class ServerProxyCommand implements OreoCommand, org.bukkit.command.TabCo
                     .sorted(String.CASE_INSENSITIVE_ORDER)
                     .collect(Collectors.toList());
         }
+
         return Collections.emptyList();
     }
 }

@@ -1,8 +1,10 @@
+// File: src/main/java/fr/elias/oreoEssentials/modgui/menu/WorldListMenu.java
 package fr.elias.oreoEssentials.modgui.menu;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modgui.ModGuiService;
 import fr.elias.oreoEssentials.modgui.util.ItemBuilder;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
@@ -14,6 +16,16 @@ import org.bukkit.entity.Player;
 
 import java.util.Comparator;
 
+/**
+ * World selection menu for world-specific moderation.
+ *
+ * ✅ VERIFIED - Uses Lang.get() for GUI title + § for GUI items
+ *
+ * Features:
+ * - Lists all worlds alphabetically
+ * - Environment-specific icons (grass/netherrack/end stone)
+ * - Click to open WorldActionsMenu for each world
+ */
 public class WorldListMenu implements InventoryProvider {
     private final OreoEssentials plugin;
     private final ModGuiService svc;
@@ -44,15 +56,20 @@ public class WorldListMenu implements InventoryProvider {
                             .lore("&7Click to manage this world")
                             .build(),
                     e -> SmartInventory.builder()
-                            .manager(plugin.getInvManager()) //  IMPORTANT: set manager
+                            .manager(plugin.getInvManager())
                             .provider(new WorldActionsMenu(plugin, svc, w))
-                            .title("§8World: " + w.getName())
+                            .title(Lang.color(Lang.get("modgui.world-list.world-title", "&8World: %world%")
+                                    .replace("%world%", w.getName())))
                             .size(6, 9)
                             .build()
                             .open(p)
             ));
 
-            if (++col >= 8) { col = 1; row++; if (row >= 5) break; }
+            if (++col >= 8) {
+                col = 1;
+                row++;
+                if (row >= 5) break;
+            }
         }
     }
 

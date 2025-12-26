@@ -1,9 +1,10 @@
-// package: fr.elias.oreoEssentials.modgui.menu
+// File: src/main/java/fr/elias/oreoEssentials/modgui/menu/PlayerMenu.java
 package fr.elias.oreoEssentials.modgui.menu;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modgui.util.ItemBuilder;
 import fr.elias.oreoEssentials.playerdirectory.PlayerDirectory;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
@@ -17,6 +18,17 @@ import org.bukkit.inventory.meta.SkullMeta;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Player selection menu for moderation.
+ *
+ * ✅ VERIFIED - Uses Lang.get() + Lang.color() for GUI titles + § for GUI items
+ *
+ * Features:
+ * - Network-wide player listing (via PlayerDirectory)
+ * - Fallback to local-only when directory unavailable
+ * - Shows player server location
+ * - Opens PlayerActionsMenu for each player
+ */
 public class PlayerMenu implements InventoryProvider {
 
     private final OreoEssentials plugin;
@@ -53,7 +65,8 @@ public class PlayerMenu implements InventoryProvider {
                                 .manager(plugin.getInvManager())
                                 .id("modgui-player-" + target.getUniqueId())
                                 .provider(new PlayerActionsMenu(plugin, target.getUniqueId()))
-                                .title("§8Player: " + target.getName())
+                                .title(Lang.color(Lang.get("modgui.player.title-local", "&8Player: %name%")
+                                        .replace("%name%", target.getName())))
                                 .size(6, 9)
                                 .build()
                                 .open(p)
@@ -126,7 +139,9 @@ public class PlayerMenu implements InventoryProvider {
                             .manager(plugin.getInvManager())
                             .id("modgui-player-" + targetUuid)
                             .provider(new PlayerActionsMenu(plugin, targetUuid))
-                            .title("§8Player: " + displayName + " §7(" + serverName + ")")
+                            .title(Lang.color(Lang.get("modgui.player.title-network", "&8Player: %name% &7(%server%)")
+                                    .replace("%name%", displayName)
+                                    .replace("%server%", serverName)))
                             .size(6, 9)
                             .build()
                             .open(p)
@@ -141,6 +156,6 @@ public class PlayerMenu implements InventoryProvider {
 
     @Override
     public void update(Player player, InventoryContents contents) {
-        // no live updates needed for now
+        // No live updates needed for now
     }
 }

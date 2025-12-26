@@ -1,8 +1,10 @@
+// File: src/main/java/fr/elias/oreoEssentials/modgui/menu/WorldWhitelistMenu.java
 package fr.elias.oreoEssentials.modgui.menu;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modgui.ModGuiService;
 import fr.elias.oreoEssentials.modgui.util.ItemBuilder;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
@@ -16,6 +18,18 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * World-specific whitelist configuration menu.
+ *
+ * ✅ VERIFIED - Uses Lang.get() for GUI title + § for GUI items
+ *
+ * Features:
+ * - Enable/disable whitelist for specific world
+ * - Add/remove players from whitelist
+ * - Visual feedback (white=whitelisted, black=not whitelisted)
+ * - Auto-refresh on changes
+ * - Back button to return to world actions
+ */
 public class WorldWhitelistMenu implements InventoryProvider {
     private final OreoEssentials plugin;
     private final ModGuiService svc;
@@ -31,7 +45,7 @@ public class WorldWhitelistMenu implements InventoryProvider {
     public void init(Player p, InventoryContents c) {
         boolean enabled = svc.cfg().worldWhitelistEnabled(world);
 
-        // Toggle whitelist
+        // Toggle whitelist enabled/disabled
         c.set(1, 4, ClickableItem.of(
                 new ItemBuilder(enabled ? Material.LIME_DYE : Material.GRAY_DYE)
                         .name("&fWhitelist: " + (enabled ? "&aENABLED" : "&cDISABLED"))
@@ -40,7 +54,7 @@ public class WorldWhitelistMenu implements InventoryProvider {
                 e -> {
                     svc.cfg().setWorldWhitelistEnabled(world, !enabled);
                     if (e.getWhoClicked() instanceof Player viewer) {
-                        c.inventory().open(viewer); // refresh
+                        c.inventory().open(viewer); // Refresh
                     }
                 }
         ));
@@ -52,9 +66,10 @@ public class WorldWhitelistMenu implements InventoryProvider {
                         .lore("&7Return to world actions")
                         .build(),
                 e -> SmartInventory.builder()
-                        .manager(plugin.getInvManager()) // IMPORTANT
+                        .manager(plugin.getInvManager())
                         .provider(new WorldActionsMenu(plugin, svc, world))
-                        .title("§8World: " + world.getName())
+                        .title(Lang.color(Lang.get("modgui.world-whitelist.back-title", "&8World: %world%")
+                                .replace("%world%", world.getName())))
                         .size(6, 9)
                         .build()
                         .open(p)
@@ -85,7 +100,7 @@ public class WorldWhitelistMenu implements InventoryProvider {
                             svc.cfg().addWorldWhitelist(world, t.getUniqueId());
                         }
                         if (e.getWhoClicked() instanceof Player viewer) {
-                            c.inventory().open(viewer); // refresh
+                            c.inventory().open(viewer); // Refresh
                         }
                     }
             ));

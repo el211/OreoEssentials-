@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/WarpsAdminCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -7,9 +8,9 @@ import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.rabbitmq.packet.impl.WarpTeleportRequestPacket;
 import fr.elias.oreoEssentials.services.WarpDirectory;
 import fr.elias.oreoEssentials.services.WarpService;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.SmartInventory;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -18,6 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 public class WarpsAdminCommand implements OreoCommand {
@@ -29,7 +31,7 @@ public class WarpsAdminCommand implements OreoCommand {
     }
 
     @Override public String name() { return "warpsadmin"; }
-    @Override public List<String> aliases() { return List.of("warpsgui", "warpguiadmin"); } // renamed from /warpsgui
+    @Override public List<String> aliases() { return List.of("warpsgui", "warpguiadmin"); }
     @Override public String permission() { return "oreo.warps.admin"; }
     @Override public String usage() { return ""; }
     @Override public boolean playerOnly() { return true; }
@@ -38,11 +40,17 @@ public class WarpsAdminCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
 
+        String title = Lang.msgWithDefault(
+                "warp.admin.list.title",
+                "<dark_aqua>Warps (Admin)</dark_aqua>",
+                p
+        );
+
         SmartInventory.builder()
                 .id("oreo:warps_admin")
                 .provider(new WarpsAdminProvider(warps))
                 .size(6, 9)
-                .title(ChatColor.DARK_AQUA + "Warps (Admin)")
+                .title(title)
                 .manager(OreoEssentials.get().getInvManager())
                 .build()
                 .open(p);
@@ -64,19 +72,26 @@ public class WarpsAdminCommand implements OreoCommand {
         if (targetServer.equalsIgnoreCase(localServer)) {
             Location l = warps.getWarp(key);
             if (l == null) {
-                p.sendMessage(ChatColor.RED + "Warp not found: " + ChatColor.YELLOW + warpName);
+                Lang.send(p, "warp.admin.not-found",
+                        "<red>Warp not found: <yellow>%warp%</yellow></red>",
+                        Map.of("warp", warpName));
                 return false;
             }
+
             p.teleport(l);
-            p.sendMessage(ChatColor.GREEN + "Teleported to warp " + ChatColor.AQUA + warpName + ChatColor.GREEN + ".");
+            Lang.send(p, "warp.admin.teleported",
+                    "<green>Teleported to warp <aqua>%warp%</aqua>.</green>",
+                    Map.of("warp", warpName));
             return true;
         }
 
         var cs = plugin.getCrossServerSettings();
         if (!cs.warps()) {
-            p.sendMessage(ChatColor.RED + "Cross-server warps are disabled by server config.");
-            p.sendMessage(ChatColor.GRAY + "Use " + ChatColor.AQUA + "/server " + targetServer + ChatColor.GRAY
-                    + " then " + ChatColor.AQUA + "/warp " + key);
+            Lang.send(p, "warp.cross-disabled",
+                    "<red>Cross-server warps are disabled by server config.</red>");
+            Lang.send(p, "warp.cross-disabled-tip",
+                    "<gray>Use <aqua>/server %server%</aqua> then run <aqua>/warp %warp%</aqua></gray>",
+                    Map.of("server", targetServer, "warp", key));
             return false;
         }
 
@@ -86,8 +101,11 @@ public class WarpsAdminCommand implements OreoCommand {
             WarpTeleportRequestPacket pkt = new WarpTeleportRequestPacket(p.getUniqueId(), key, targetServer, requestId);
             pm.sendPacket(PacketChannel.individual(targetServer), pkt);
         } else {
-            p.sendMessage(ChatColor.RED + "Cross-server messaging is disabled. Ask an admin to enable RabbitMQ.");
-            p.sendMessage(ChatColor.GRAY + "You can still /server " + targetServer + ChatColor.GRAY + " then /warp " + key);
+            Lang.send(p, "warp.messaging-disabled",
+                    "<red>Cross-server messaging is disabled.</red>");
+            Lang.send(p, "warp.messaging-disabled-tip",
+                    "<gray>Use <aqua>/server %server%</aqua> then run <aqua>/warp %warp%</aqua></gray>",
+                    Map.of("server", targetServer, "warp", key));
             return false;
         }
 
@@ -101,22 +119,33 @@ public class WarpsAdminCommand implements OreoCommand {
             out.writeUTF("Connect");
             out.writeUTF(serverName);
             p.sendPluginMessage(OreoEssentials.get(), "BungeeCord", b.toByteArray());
-            p.sendMessage(ChatColor.YELLOW + "Sending you to " + ChatColor.AQUA + serverName
-                    + ChatColor.YELLOW + "… (teleport on arrival).");
+
+            Lang.send(p, "warp.admin.sending",
+                    "<yellow>Sending you to <aqua>%server%</aqua>... (teleport on arrival).</yellow>",
+                    Map.of("server", serverName));
             return true;
         } catch (Exception ex) {
             Bukkit.getLogger().warning("[OreoEssentials] Connect plugin message failed: " + ex.getMessage());
-            p.sendMessage(ChatColor.RED + "Failed to switch you to " + serverName + ".");
+            Lang.send(p, "warp.admin.switch-failed",
+                    "<red>Failed to switch you to %server%.</red>",
+                    Map.of("server", serverName));
             return false;
         }
     }
+
     /** Helper so other classes can reopen the admin GUI at a specific page. */
     public static void openAdmin(Player p, WarpService warps, int page) {
+        String title = Lang.msgWithDefault(
+                "warp.admin.list.title",
+                "<dark_aqua>Warps (Admin)</dark_aqua>",
+                p
+        );
+
         SmartInventory inv = SmartInventory.builder()
                 .id("oreo:warps_admin")
                 .provider(new WarpsAdminProvider(warps))
                 .size(6, 9)
-                .title(ChatColor.DARK_AQUA + "Warps (Admin)")
+                .title(title)
                 .manager(OreoEssentials.get().getInvManager())
                 .build();
         inv.open(p, Math.max(0, page));

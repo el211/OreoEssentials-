@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 
 /**
  * MiniMessage-first lang with legacy-& bridge + PAPI + console fallback + GUI helpers.
- * Now with Map-based variable replacement support.
+ * Now with Map-based variable replacement support and consistent color handling.
  */
 public final class Lang {
 
@@ -128,6 +128,7 @@ public final class Lang {
 
     /**
      * Get message with variable replacement support.
+     * Returns legacy string (§-codes) suitable for GUI titles/lore.
      * @param key Lang key
      * @param vars Variables to replace (can be null)
      * @param viewer Player for PAPI (can be null)
@@ -135,7 +136,7 @@ public final class Lang {
      */
     public static String msg(String key, Map<?, ?> vars, Player viewer) {
         String resolved = rawOrDefault(key, null, vars, viewer);
-        return LEGACY_SEC.serialize(toComponent(resolved));
+        return toLegacy(resolved);
     }
 
     /**
@@ -158,7 +159,7 @@ public final class Lang {
      */
     public static String msgWithDefault(String key, String def, Map<?, ?> vars, Player viewer) {
         String resolved = rawOrDefault(key, def, vars, viewer);
-        return LEGACY_SEC.serialize(toComponent(resolved));
+        return toLegacy(resolved);
     }
 
     /**
@@ -175,7 +176,6 @@ public final class Lang {
     /**
      * DEPRECATED: Old signature for backwards compatibility.
      * Use msg(key, viewer) or msgWithDefault(key, def, viewer) instead.
-     * This overload exists to catch old code patterns.
      */
     @Deprecated
     public static String msg(String key, String def, Player viewer) {
@@ -226,17 +226,27 @@ public final class Lang {
 
     /** Legacy string for GUI (inventory titles/lore). */
     public static String msgLegacy(String key, Map<?, ?> vars, Player papiFor) {
-        return LEGACY_SEC.serialize(msgComp(key, vars, papiFor));
+        return toLegacy(raw(key, vars, papiFor));
     }
 
     public static String msgLegacy(String key, Player papiFor) {
-        return msgLegacy(key, null, papiFor);
+        return msgLegacy(key, (String) null, papiFor);
+    }
+
+    /** Legacy string for GUI with default and no variables. */
+    public static String msgLegacy(String key, String def, Player papiFor) {
+        return toLegacy(rawOrDefault(key, def, null, papiFor));
+    }
+
+    /** Legacy string for GUI with default AND variables. */
+    public static String msgLegacy(String key, String def, Map<?, ?> vars, Player papiFor) {
+        return toLegacy(rawOrDefault(key, def, vars, papiFor));
     }
 
     /** GUI helper: MM or & → legacy (for titles/buttons). */
     public static String ui(String key, String def, Map<?, ?> vars, Player p) {
         String resolved = rawOrDefault(key, def, vars, p);
-        return LEGACY_SEC.serialize(toComponent(resolved));
+        return toLegacy(resolved);
     }
 
     public static String ui(String key, String def, Player p) {
@@ -253,7 +263,7 @@ public final class Lang {
         }
         if (raw.isEmpty() && def != null) raw.addAll(def);
         List<String> out = new ArrayList<>(raw.size());
-        for (String line : raw) out.add(LEGACY_SEC.serialize(toComponent(applyPapiMaybe(p, line))));
+        for (String line : raw) out.add(toLegacy(applyPapiMaybe(p, line)));
         return out;
     }
 
@@ -263,7 +273,7 @@ public final class Lang {
     }
 
     public static String parseToLegacy(String raw, Player p) {
-        return LEGACY_SEC.serialize(parse(raw, p));
+        return toLegacy(applyPapiMaybe(p, raw));
     }
 
     /* ============================= SENDING ============================= */
@@ -317,10 +327,13 @@ public final class Lang {
 
     /* ============================= HUMANIZED TIME ============================= */
 
-    /** Humanize duration (ms) using simple units; override strings via lang if desired. */
-    public static String timeHuman(long millis) {
-        if (millis < 0) millis = 0;
-        long seconds = millis / 1000;
+    /**
+     * Humanize duration (seconds) using simple units; override strings via lang if desired.
+     * @param seconds Duration in seconds
+     * @return Human-readable string like "3 days, 2 hours and 15 minutes"
+     */
+    public static String timeHuman(long seconds) {
+        if (seconds < 0) seconds = 0;
         long d = seconds / 86400; seconds %= 86400;
         long h = seconds / 3600;  seconds %= 3600;
         long m = seconds / 60;    long s = seconds % 60;
@@ -348,29 +361,47 @@ public final class Lang {
     /* ============================= MISC ============================= */
 
     /** Color utility: MiniMessage/legacy → legacy-§ with hex preserved. */
-    public static String color(String s) { return LEGACY_HEX.serialize(toComponent(s)); }
+    public static String color(String s) { return toLegacy(s); }
 
     /* ============================= CORE CONVERSION ============================= */
 
-    /** MM-first parse with legacy-& bridge; no-italic by default (Minecraft UI norm). */
+    /**
+     * MM-first parse with legacy-& bridge; no-italic by default (Minecraft UI norm).
+     * This is the central method that handles both MiniMessage and legacy color codes.
+     */
     public static Component toComponent(String input) {
         if (input == null || input.isEmpty()) return Component.empty();
 
         String normalized = input.replace('§', '&');
+
+        // Detect if this contains legacy codes (& or §)
         if (AMP_OR_SECTION.matcher(normalized).find()) {
+            // Convert legacy codes to MiniMessage, then parse
             String mm = legacyToMiniMessage(normalized);
             try {
                 return MM.deserialize(mm, baseResolvers()).decoration(TextDecoration.ITALIC, false);
             } catch (Throwable t) {
+                // Fallback to pure legacy parsing
                 return LEGACY_AMP.deserialize(normalized).decoration(TextDecoration.ITALIC, false);
             }
         }
 
+        // Pure MiniMessage (no legacy codes detected)
         try {
             return MM.deserialize(normalized, baseResolvers()).decoration(TextDecoration.ITALIC, false);
         } catch (Throwable t) {
+            // Ultimate fallback: plain text
             return Component.text(normalized).decoration(TextDecoration.ITALIC, false);
         }
+    }
+
+    /**
+     * Convert input (MiniMessage or legacy) to legacy § string.
+     * This preserves hex colors using the §x§R§R§G§G§B§B format.
+     */
+    public static String toLegacy(String input) {
+        if (input == null || input.isEmpty()) return "";
+        return LEGACY_HEX.serialize(toComponent(input));
     }
 
     /** Legacy (&, §, &#, &x&… hex) → MiniMessage tags. */

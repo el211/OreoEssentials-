@@ -5,11 +5,14 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.trade.TradeConfig;
 import fr.elias.oreoEssentials.trade.TradeService;
 import fr.elias.oreoEssentials.trade.TradeSession;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
 import fr.minuskube.inv.content.InventoryProvider;
 import fr.minuskube.inv.content.SlotPos;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -18,10 +21,9 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.ChatColor;
-
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -39,6 +41,9 @@ public final class TradeMenu implements InventoryProvider {
     private final TradeService service;
     private final TradeMenuRegistry reg;
 
+    private static final MiniMessage MM = MiniMessage.miniMessage();
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
+
     /** Locals on THIS server (either may be null if remote). */
     private final Player a; // side A if local here (may be null)
     private final Player b; // side B if local here (may be null)
@@ -46,11 +51,9 @@ public final class TradeMenu implements InventoryProvider {
     private final SmartInventory invA;
     private final SmartInventory invB;
 
-    // 3×3 offer zones (rows 2..4; columns: A=2..4, B=6..8)
-// 3×3 offer zones (rows 2..4; columns: A=1..3, B=5..7) – column 4 kept for divider
+    // 3×3 offer zones (rows 2..4; columns: A=1..3, B=5..7) – column 4 kept for divider
     private static final int[] A_AREA_SLOTS = slotsOfRect(2, 1, 3, 3); // left: cols 1,2,3
     private static final int[] B_AREA_SLOTS = slotsOfRect(2, 5, 3, 3); // right: cols 5,6,7
-
 
     // last snapshots to detect local edits
     private final ItemStack[] lastSnapshotA = new ItemStack[9];
@@ -64,9 +67,8 @@ public final class TradeMenu implements InventoryProvider {
         this.a = aLocal;
         this.b = bLocal;
 
-
         String rawTitle = config.guiTitle
-                .replace("<you>",  (a != null ? a.getName() : "You"))
+                .replace("<you>", (a != null ? a.getName() : "You"))
                 .replace("<them>", (b != null ? b.getName() : "Them"));
         String title = legacy(rawTitle);
 
@@ -74,7 +76,6 @@ public final class TradeMenu implements InventoryProvider {
                 .provider(this)
                 .size(6, 9)
                 .title(title)
-
                 .id("trade:" + (a != null ? a.getUniqueId() : UUID.randomUUID())
                         + ":" + (b != null ? b.getUniqueId() : UUID.randomUUID()))
                 .manager(plugin.getInvManager())
@@ -85,20 +86,25 @@ public final class TradeMenu implements InventoryProvider {
                 .provider(this)
                 .size(6, 9)
                 .title(title)
-
                 .id("trade:" + (b != null ? b.getUniqueId() : UUID.randomUUID())
                         + ":" + (a != null ? a.getUniqueId() : UUID.randomUUID()))
                 .manager(plugin.getInvManager())
                 .closeable(true)
                 .build();
     }
+
     private String legacy(String text) {
         if (text == null) return "";
-        return ChatColor.translateAlternateColorCodes('&', text);
+        try {
+            return LEGACY.serialize(MM.deserialize(text));
+        } catch (Throwable t) {
+            return text;
+        }
     }
 
-
-    public OreoEssentials getPlugin() { return plugin; }
+    public OreoEssentials getPlugin() {
+        return plugin;
+    }
 
     /** Open both viewers (if local) and register in registry. */
     public void openForBoth() {
@@ -112,8 +118,17 @@ public final class TradeMenu implements InventoryProvider {
                     invB.open(b);
                     registerViewer(b);
                 }
-                if (a != null) a.sendMessage("§aOpening trade GUI with §f" + (b != null ? b.getName() : "player") + "§a…");
-                if (b != null) b.sendMessage("§aOpening trade GUI with §f" + (a != null ? a.getName() : "player") + "§a…");
+
+                if (a != null) {
+                    Lang.send(a, "trade.opening",
+                            "<green>Opening trade GUI with <white>%partner%</white>…</green>",
+                            Map.of("partner", b != null ? b.getName() : "player"));
+                }
+                if (b != null) {
+                    Lang.send(b, "trade.opening",
+                            "<green>Opening trade GUI with <white>%partner%</white>…</green>",
+                            Map.of("partner", a != null ? a.getName() : "player"));
+                }
             } catch (Throwable t) {
                 sendFail(a, t);
                 sendFail(b, t);
@@ -164,11 +179,19 @@ public final class TradeMenu implements InventoryProvider {
         }
 
         // Headers (player heads)
-        if (a != null) contents.set(1, 1, ClickableItem.empty(playerHead(a.getUniqueId(), "§e" + a.getName())));
-        if (b != null) contents.set(1, 7, ClickableItem.empty(playerHead(b.getUniqueId(), "§e" + b.getName())));
+// Headers (player heads)
+        if (a != null) {
+            String aName = Lang.get("trade.player-name", "<yellow>%name%</yellow>")
+                    .replace("%name%", a.getName());
+            contents.set(1, 1, ClickableItem.empty(playerHead(a.getUniqueId(), legacy(aName))));
+        }
+        if (b != null) {
+            String bName = Lang.get("trade.player-name", "<yellow>%name%</yellow>")
+                    .replace("%name%", b.getName());
+            contents.set(1, 7, ClickableItem.empty(playerHead(b.getUniqueId(), legacy(bName))));
+        }
 
-        // Divider
-// Divider (material + name from trade.yml)
+        // Divider (material + name from trade.yml)
         ItemStack divider = new ItemStack(config.dividerMaterial);
         ItemMeta dMeta = divider.getItemMeta();
         if (dMeta != null) {
@@ -180,7 +203,6 @@ public final class TradeMenu implements InventoryProvider {
         contents.set(2, 4, dividerItem);
         contents.set(3, 4, dividerItem);
         contents.set(4, 4, dividerItem);
-
 
         // Info (placeholder)
         contents.set(1, 4, ClickableItem.empty(new ItemStack(Material.BOOK)));
@@ -214,11 +236,11 @@ public final class TradeMenu implements InventoryProvider {
 
         // 1) Push local edits from viewer's zone
         if (isAViewer) mirrorEdits(viewer, top, A_AREA_SLOTS, lastSnapshotA);
-        else           mirrorEdits(viewer, top, B_AREA_SLOTS, lastSnapshotB);
+        else mirrorEdits(viewer, top, B_AREA_SLOTS, lastSnapshotB);
 
         // 2) Paint opponent area from session (read-only ghost items)
         ItemStack[] other = isAViewer ? sess.viewOfferB() : sess.viewOfferA();
-        int[] otherSlots  = isAViewer ? B_AREA_SLOTS : A_AREA_SLOTS;
+        int[] otherSlots = isAViewer ? B_AREA_SLOTS : A_AREA_SLOTS;
 
         Bukkit.getScheduler().runTask(plugin, () -> {
             for (int i = 0; i < otherSlots.length; i++) {
@@ -228,7 +250,7 @@ public final class TradeMenu implements InventoryProvider {
                 if (!isSame(have, want)) top.setItem(slot, want);
             }
 
-            boolean myReady  = isAViewer ? sess.isReadyA() : sess.isReadyB();
+            boolean myReady = isAViewer ? sess.isReadyA() : sess.isReadyB();
             boolean othReady = isAViewer ? sess.isReadyB() : sess.isReadyA();
 
             contents.set(5, 2, confirmButton(viewer, myReady));
@@ -268,7 +290,7 @@ public final class TradeMenu implements InventoryProvider {
 
             // Paint opponent area from session
             ItemStack[] other = viewerIsA ? sess.viewOfferB() : sess.viewOfferA();
-            int[] otherSlots  = viewerIsA ? B_AREA_SLOTS : A_AREA_SLOTS;
+            int[] otherSlots = viewerIsA ? B_AREA_SLOTS : A_AREA_SLOTS;
 
             for (int i = 0; i < otherSlots.length; i++) {
                 int slot = otherSlots[i];
@@ -277,7 +299,7 @@ public final class TradeMenu implements InventoryProvider {
                 if (!isSame(have, want)) top.setItem(slot, want);
             }
 
-            boolean myReady  = viewerIsA ? sess.isReadyA() : sess.isReadyB();
+            boolean myReady = viewerIsA ? sess.isReadyA() : sess.isReadyB();
             boolean othReady = viewerIsA ? sess.isReadyB() : sess.isReadyA();
 
             // Buttons (replace items directly)
@@ -325,7 +347,6 @@ public final class TradeMenu implements InventoryProvider {
                 if (sid != null) {
                     TradeSession sess = service.getSession(sid);
                     if (sess != null) {
-                        // keep index i (0..8 for the 3×3); TradeSession maps it to the correct side
                         sess.playerSetOfferSlot(viewer.getUniqueId(), i, now);
                     }
                 }
@@ -362,12 +383,20 @@ public final class TradeMenu implements InventoryProvider {
     }
 
     private static ItemStack safeGet(Inventory inv, int slot) {
-        try { return inv.getItem(slot); } catch (Throwable t) { return null; }
+        try {
+            return inv.getItem(slot);
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     private static ItemStack cloneOrNull(ItemStack it) {
         if (it == null || it.getType() == Material.AIR || it.getAmount() <= 0) return null;
-        try { return it.clone(); } catch (Throwable t) { return null; }
+        try {
+            return it.clone();
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     private static boolean isSame(ItemStack a, ItemStack b) {
@@ -381,7 +410,11 @@ public final class TradeMenu implements InventoryProvider {
     }
 
     private static void sendFail(Player p, Throwable t) {
-        if (p != null) p.sendMessage("§cFailed to open trade: " + (t != null ? t.getMessage() : "unknown"));
+        if (p != null) {
+            Lang.send(p, "trade.failed-to-open",
+                    "<red>Failed to open trade: <yellow>%error%</yellow></red>",
+                    Map.of("error", t != null ? t.getMessage() : "unknown"));
+        }
     }
 
     // ------------------------------------------------------------------------
@@ -396,7 +429,6 @@ public final class TradeMenu implements InventoryProvider {
                 if (sid != null) {
                     TradeSession sess = service.getSession(sid);
                     if (sess != null) {
-                        // We are on main thread in SmartInvs handlers, but being extra safe is fine too:
                         Bukkit.getScheduler().runTask(plugin, () -> sess.playerToggleConfirm(viewer.getUniqueId()));
                     }
                 }
@@ -405,7 +437,6 @@ public final class TradeMenu implements InventoryProvider {
                 viewer.playSound(viewer.getLocation(), config.confirmSound, 1, 1);
             } catch (Throwable ignored) {}
         });
-
     }
 
     private ItemStack buildConfirmIcon(boolean ready) {
@@ -416,8 +447,6 @@ public final class TradeMenu implements InventoryProvider {
             meta.setDisplayName(legacy(raw));
             it.setItemMeta(meta);
         }
-
-
         return it;
     }
 
@@ -428,7 +457,6 @@ public final class TradeMenu implements InventoryProvider {
             meta.setDisplayName(legacy(config.cancelText));
             it.setItemMeta(meta);
         }
-
 
         return ClickableItem.of(it, e -> {
             try {
@@ -449,11 +477,16 @@ public final class TradeMenu implements InventoryProvider {
         ItemStack it = new ItemStack(partnerReady ? Material.LIME_CONCRETE : Material.RED_DYE);
         var meta = it.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(partnerReady ? "§aPartner Ready" : "§cPartner Not Ready");
+            String text = Lang.get(
+                    partnerReady ? "trade.partner-ready" : "trade.partner-not-ready",
+                    partnerReady ? "<green>Partner Ready</green>" : "<red>Partner Not Ready</red>"
+            );
+            meta.setDisplayName(legacy(text));
             it.setItemMeta(meta);
         }
         return it;
     }
+
     /** Replace both sides' offer areas with neutral placeholders to visually lock the UI. */
     public void replaceOffersWithPlaceholdersSafely() {
         try {
@@ -461,16 +494,14 @@ public final class TradeMenu implements InventoryProvider {
             ItemStack ph = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
             ItemMeta im = ph.getItemMeta();
             if (im != null) {
-                im.setDisplayName("§7Locked");
+                String text = Lang.get("trade.locked", "<gray>Locked</gray>");
+                im.setDisplayName(legacy(text));
                 ph.setItemMeta(im);
             }
 
-            // If you already have arrays/lists of offer-slot indices, fill them here.
-            // Example placeholders (REPLACE with your actual slot indices if you have them):
-            int[] offerSlotsA = getOfferSlotsAOrEmpty(); // implement below
-            int[] offerSlotsB = getOfferSlotsBOrEmpty(); // implement below
+            int[] offerSlotsA = getOfferSlotsAOrEmpty();
+            int[] offerSlotsB = getOfferSlotsBOrEmpty();
 
-            // Paint on main thread
             Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
                 try {
                     for (int s : offerSlotsA) setItemSafelyA(s, ph);
@@ -495,13 +526,8 @@ public final class TradeMenu implements InventoryProvider {
         } catch (Throwable ignored) {}
     }
 
-    /* -------------------------- helpers (stub-safe) -------------------------- */
+    /* -------------------------- Helpers (stub-safe) -------------------------- */
 
-    /**
-     * Return the exact slot indices of A's 3×3 offer area in your inventory layout.
-     * If you already have something like `OFFER_SLOTS_A`, just return it here.
-     * Leaving empty keeps things as no-op but compiles safely.
-     */
     private int[] getOfferSlotsAOrEmpty() {
         return A_AREA_SLOTS;
     }
@@ -510,26 +536,19 @@ public final class TradeMenu implements InventoryProvider {
         return B_AREA_SLOTS;
     }
 
-
-    /**
-     * Safely set an item into player A’s inventory view at an absolute slot.
-     * Wire these to whatever you already use to paint items in the menu (SmartInvs, etc.).
-     */
     private void setItemSafelyA(int slot, ItemStack stack) {
         try {
-            // If you use SmartInvs, this might be `contents.set(slot, ClickableItem.empty(stack))`
-            // or if you manage a Bukkit Inventory directly, do: inventory.setItem(slot, stack)
             // TODO: plug into your existing painter for side A
         } catch (Throwable ignored) {}
     }
 
-    /** Safely set an item into player B’s view. */
     private void setItemSafelyB(int slot, ItemStack stack) {
         try {
             // TODO: plug into your existing painter for side B
         } catch (Throwable ignored) {}
     }
-    // --- helpers expected by TradeMenuRegistry ---
+
+    // --- Helpers expected by TradeMenuRegistry ---
 
     /** Factory used by the registry to build a menu from a TradeSession. */
     public static TradeMenu createForSession(TradeSession session) {
@@ -559,14 +578,11 @@ public final class TradeMenu implements InventoryProvider {
     public boolean isOpenFor(UUID viewerId) {
         Player p = (viewerId != null ? Bukkit.getPlayer(viewerId) : null);
         if (p == null || !p.isOnline() || p.getOpenInventory() == null) return false;
-        // Compare by SmartInvs container identity if possible; fall back to title check.
         try {
-            // SmartInvs 1.3+ exposes Manager#getInventory(p) sometimes; title check is simplest/portable:
             String title = p.getOpenInventory().getTitle();
             return title != null && title.contains("Trade: ");
         } catch (Throwable ignored) {
             return false;
         }
     }
-
 }

@@ -1,6 +1,8 @@
+// File: src/main/java/fr/elias/oreoEssentials/daily/DailyMenu.java
 package fr.elias.oreoEssentials.daily;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
@@ -15,6 +17,19 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Daily Rewards GUI menu.
+ *
+ * ✅ VERIFIED - Uses Lang.send() for 2 user messages + svc.color() for GUI items (correct)
+ *
+ * Features:
+ * - Paginated reward display
+ * - Custom positioning support
+ * - Live streak tracking
+ * - Admin toggle button
+ * - Auto-refresh on claim
+ * - Feature flag integration
+ */
 public final class DailyMenu implements InventoryProvider {
 
     private final OreoEssentials plugin;
@@ -64,7 +79,7 @@ public final class DailyMenu implements InventoryProvider {
         final int currentStreak = svc.getStreak(p.getUniqueId());
         final int todayIndex    = svc.nextDayIndex(currentStreak);
 
-        //  feature flag snapshot for this render
+        // Feature flag snapshot for this render
         final boolean featureOn = svc.isEnabled();
 
         // Grid buffer (usable area only)
@@ -137,11 +152,14 @@ public final class DailyMenu implements InventoryProvider {
             final boolean isReadyFinal = isReadyToday;
 
             final ClickableItem ci = ClickableItem.of(item, e -> {
-                //  short-circuit when disabled
+                // Short-circuit when disabled
                 if (!svc.isEnabled()) {
-                    p.sendMessage(svc.color("&cDaily Rewards is disabled."));
+                    Lang.send(p, "daily.gui.disabled",
+                            "<red>Daily Rewards is disabled.</red>",
+                            Map.of());
                     return;
                 }
+
                 if (dayNumFinal == todayIndex && isReadyFinal) {
                     final boolean ok = svc.claim(p);
                     if (ok && cfg.closeOnClaim) {
@@ -209,7 +227,7 @@ public final class DailyMenu implements InventoryProvider {
                 contents.set(bottom, 4, ClickableItem.empty(stats));
             }
 
-            //  Admin toggle button at slot 5
+            // Admin toggle button at slot 5
             if (p.hasPermission("oreo.daily.admin")) {
                 final ItemStack lever = new ItemStack(Material.LEVER);
                 final ItemMeta lm = lever.getItemMeta();
@@ -224,10 +242,14 @@ public final class DailyMenu implements InventoryProvider {
                 }
                 contents.set(bottom, 5, ClickableItem.of(lever, e -> {
                     boolean now = svc.toggleEnabled();
-                    // reflect in config and persist
+                    // Reflect in config and persist
                     cfg.setEnabled(now);
                     try { cfg.save(); } catch (Throwable ignored) {}
-                    p.sendMessage(svc.color(cfg.prefix + " &7Daily Rewards is now " + (now ? "&aENABLED" : "&cDISABLED")));
+
+                    Lang.send(p, "daily.gui.toggled",
+                            "<yellow>Daily Rewards is now %state%</yellow>",
+                            Map.of("state", now ? "<green>ENABLED</green>" : "<red>DISABLED</red>"));
+
                     new DailyMenu(plugin, cfg, svc, rewards, page).inventory(p).open(p); // refresh view
                 }));
             }

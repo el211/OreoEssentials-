@@ -13,6 +13,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.cacheddata.CachedMetaData;
@@ -206,20 +207,29 @@ public final class AsyncChatListener implements Listener {
                     );
                     Component out = MM.deserialize(fmt, all);
 
+                    // 🔥 LOCAL BROADCAST - Display the Component properly
                     Bukkit.getServer().sendMessage(out);
+
+                    // 🔥 DISCORD - Send plain text
                     maybeDiscord(live.getName(), PlainTextComponentSerializer.plainText().serialize(out));
-                    maybeSync(sender, serverName, live.getName(), fmt);
+
+                    // 🔥 CROSS-SERVER SYNC - Send as JSON Component
+                    String jsonComponent = GsonComponentSerializer.gson().serialize(out);
+                    maybeSync(sender, serverName, live.getName(), jsonComponent);
+
                 } catch (Throwable t) {
+                    Bukkit.getLogger().warning("[Chat] MiniMessage parse error: " + t.getMessage());
                     String plain = stripTags(fmt);
                     Bukkit.broadcast(Component.text(plain));
                     maybeDiscord(live.getName(), plain);
-                    maybeSync(sender, serverName, live.getName(), fmt);
+                    maybeSync(sender, serverName, live.getName(), plain);
                 }
             } else {
+                // Legacy mode
                 String legacy = ChatColor.translateAlternateColorCodes('&', fmt);
                 Bukkit.broadcastMessage(legacy);
                 maybeDiscord(live.getName(), ChatColor.stripColor(legacy));
-                maybeSync(sender, serverName, live.getName(), fmt);
+                maybeSync(sender, serverName, live.getName(), legacy);
             }
         });
     }
@@ -270,15 +280,21 @@ public final class AsyncChatListener implements Listener {
         return out;
     }
 
-    private void maybeSync(UUID uuid, String server, String name, String formatted) {
-        try { if (sync != null) sync.publishMessage(uuid, server, name, formatted); }
-        catch (Throwable ex) { Bukkit.getLogger().severe("[ChatSync] publish failed: " + ex.getMessage()); }
+    private void maybeSync(UUID uuid, String server, String name, String serializedComponent) {
+        try {
+            if (sync != null) {
+                sync.publishMessage(uuid, server, name, serializedComponent);
+            }
+        }
+        catch (Throwable ex) {
+            Bukkit.getLogger().severe("[ChatSync] Publish failed: " + ex.getMessage());
+        }
     }
 
     private void maybeDiscord(String username, String content) {
         if (!discordEnabled || discordWebhookUrl.isEmpty()) return;
         try { new DiscordWebhook(OreoEssentials.get(), discordWebhookUrl).sendAsync(username, content); }
-        catch (Throwable ex) { Bukkit.getLogger().warning("[Discord] send failed: " + ex.getMessage()); }
+        catch (Throwable ex) { Bukkit.getLogger().warning("[Discord] Send failed: " + ex.getMessage()); }
     }
 
     /* ---------- extra player placeholders ---------- */
@@ -333,38 +349,8 @@ public final class AsyncChatListener implements Listener {
             for (Group g : u.getInheritedGroups(u.getQueryOptions())) {
                 if (g != null) return g.getName();
             }
+
         } catch (Throwable ignored) {}
         return "default";
-    }
-
-    /* ---- OPTIONAL: glyph support if you ever want <glyph:...> in formats ---- */
-
-    private TagResolver glyphTagResolver(Player self) {
-        String glyph = resolveGlyph(self);
-        Component icon = Component.text(glyph).style(s -> s.font(headFontKey));
-        return TagResolver.resolver("glyph", (args, ctx) -> net.kyori.adventure.text.minimessage.tag.Tag.inserting(icon));
-    }
-
-    private String resolveGlyph(Player self) {
-        if (self == null) return headDefaultGlyph;
-        try {
-            LuckPerms lp = LuckPermsProvider.get();
-            User u = lp.getPlayerAdapter(Player.class).getUser(self);
-            if (u != null) {
-                String meta = u.getCachedData().getMetaData().getMetaValue("chat-glyph");
-                if (meta != null && !meta.isBlank()) return meta;
-                String primary = u.getPrimaryGroup();
-                if (primary != null) {
-                    String v = headGlyphs.get(primary.toLowerCase(Locale.ROOT));
-                    if (v != null && !v.isBlank()) return v;
-                }
-                for (Group g : u.getInheritedGroups(u.getQueryOptions())) {
-                    if (g == null) continue;
-                    String v = headGlyphs.get(g.getName().toLowerCase(Locale.ROOT));
-                    if (v != null && !v.isBlank()) return v;
-                }
-            }
-        } catch (Throwable ignored) {}
-        return headDefaultGlyph;
     }
 }

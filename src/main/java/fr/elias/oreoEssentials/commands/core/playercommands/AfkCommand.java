@@ -1,9 +1,9 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/AfkCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
-import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.services.AfkService;
-import org.bukkit.ChatColor;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -26,9 +26,9 @@ public class AfkCommand implements OreoCommand {
 
         boolean nowAfk = afk.toggleAfk(p);
         if (nowAfk) {
-            p.sendMessage(ChatColor.YELLOW + "You are now AFK.");
+            Lang.send(p, "afk.now-afk", "<yellow>You are now AFK.</yellow>");
         } else {
-            p.sendMessage(ChatColor.GREEN + "You are no longer AFK.");
+            Lang.send(p, "afk.no-longer-afk", "<green>You are no longer AFK.</green>");
         }
         return true;
     }

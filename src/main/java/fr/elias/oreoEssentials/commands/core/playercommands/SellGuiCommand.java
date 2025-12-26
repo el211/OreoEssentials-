@@ -1,7 +1,9 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/SellGuiCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -17,9 +19,8 @@ public class SellGuiCommand implements OreoCommand {
 
     @Override public String name() { return "sellgui"; }
     @Override public List<String> aliases() { return List.of("sell"); }
-
     @Override public String permission() { return "oreo.sellgui"; }
-    @Override public String usage() { return "/sellgui"; }
+    @Override public String usage() { return ""; }
     @Override public boolean playerOnly() { return true; }
 
     @Override
@@ -27,7 +28,8 @@ public class SellGuiCommand implements OreoCommand {
         if (!(sender instanceof Player p)) return true;
 
         if (plugin.getSellGuiManager() == null) {
-            sender.sendMessage("SellGUI is not initialized.");
+            Lang.send(sender, "sellgui.not-initialized",
+                    "<red>SellGUI is not initialized.</red>");
             return true;
         }
 

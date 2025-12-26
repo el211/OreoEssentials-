@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.services.HomeService;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.*;
@@ -25,44 +26,70 @@ public class OtherHomesListCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!sender.hasPermission("oreo.homes.other")) {
-            sender.sendMessage("§cYou don’t have permission.");
-            return true;
-        }
-        if (args.length < 1) {
-            sender.sendMessage("§eUsage: §6/" + label + " <player>");
+            Lang.send(sender, "admin.otherhomes.no-permission",
+                    "<red>You don't have permission.</red>");
             return true;
         }
 
-        // --- resolve the RIGHT UUID for the target name ---
+        if (args.length < 1) {
+            Lang.send(sender, "admin.otherhomes.usage",
+                    "<yellow>Usage: <gold>/%label% <player></gold></yellow>",
+                    Map.of("label", label));
+            return true;
+        }
+
+        // Resolve the RIGHT UUID for the target name
         final String inputName = args[0];
         final UUID owner = resolveTargetUUID(inputName);
         if (owner == null) {
-            sender.sendMessage("§cUnknown player: §e" + inputName);
+            Lang.send(sender, "admin.otherhomes.player-not-found",
+                    "<red>Unknown player: <yellow>%player%</yellow></red>",
+                    Map.of("player", inputName));
             return true;
         }
+
         OfflinePlayer target = Bukkit.getOfflinePlayer(owner);
+        String ownerName = target.getName() != null ? target.getName() : owner.toString();
 
         Map<String, HomeInfo> homes = fetchHomesReflectively(owner);
         if (homes.isEmpty()) {
-            sender.sendMessage("§7" + (target.getName() != null ? target.getName() : owner) + " §7has no homes.");
+            Lang.send(sender, "admin.otherhomes.no-homes",
+                    "<gray>%player% has no homes.</gray>",
+                    Map.of("player", ownerName));
             return true;
         }
 
-        sender.sendMessage("§6Homes of §e" + (target.getName() != null ? target.getName() : owner) + "§6:");
+        Lang.send(sender, "admin.otherhomes.header",
+                "<gold>Homes of <yellow>%player%</yellow>:</gold>",
+                Map.of("player", ownerName));
+
         for (var e : homes.entrySet()) {
             HomeInfo h = e.getValue();
-            sender.sendMessage(String.format(
-                    " §8- §b%s§7 @ §f%s§7 (%.1f, %.1f, %.1f) §8[server: %s]",
-                    e.getKey(), h.world, h.x, h.y, h.z, h.server
-            ));
+            Lang.send(sender, "admin.otherhomes.entry",
+                    " <dark_gray>-</dark_gray> <aqua>%name%</aqua> <gray>@ <white>%world%</white> (%.1f, %.1f, %.1f) <dark_gray>[server: %server%]</dark_gray></gray>",
+                    Map.of(
+                            "name", e.getKey(),
+                            "world", h.world,
+                            "x", String.format("%.1f", h.x),
+                            "y", String.format("%.1f", h.y),
+                            "z", String.format("%.1f", h.z),
+                            "server", h.server
+                    ));
         }
-        sender.sendMessage("§7Tip: §e/otherhome " + (target.getName() != null ? target.getName() : owner) + " <home>");
+
+        Lang.send(sender, "admin.otherhomes.tip",
+                "<gray>Tip: <yellow>/otherhome %player% <home></yellow></gray>",
+                Map.of("player", ownerName));
+
         return true;
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
-        if (!sender.hasPermission("oreo.homes.other")) return Collections.emptyList();
+        if (!sender.hasPermission("oreo.homes.other")) {
+            return Collections.emptyList();
+        }
+
         if (args.length == 1) {
             String p = args[0].toLowerCase(Locale.ROOT);
             return Bukkit.getOnlinePlayers().stream()
@@ -71,10 +98,11 @@ public class OtherHomesListCommand implements CommandExecutor, TabCompleter {
                     .sorted(String.CASE_INSENSITIVE_ORDER)
                     .collect(Collectors.toList());
         }
+
         return Collections.emptyList();
     }
 
-    /* ---------------- UUID resolution ---------------- */
+    /* ---------------- UUID Resolution ---------------- */
 
     /**
      * Resolve the UUID for a player name using:
@@ -91,14 +119,14 @@ public class OtherHomesListCommand implements CommandExecutor, TabCompleter {
 
         // 2) try PlayerDirectory if Oreo has it
         try {
-            Object dir = plugin.getPlayerDirectory(); // method exists in OreoEssentials
+            Object dir = plugin.getPlayerDirectory();
             if (dir != null) {
                 try {
                     Method m = dir.getClass().getMethod("lookupUuidByName", String.class);
                     Object res = m.invoke(dir, inputName);
                     if (res instanceof UUID) return (UUID) res;
                 } catch (NoSuchMethodException ignored) {
-                    // directory present but doesn’t expose helper; fall through
+                    // directory present but doesn't expose helper; fall through
                 } catch (Throwable t) {
                     plugin.getLogger().warning("[OtherHomesList] PlayerDirectory lookup failed: " + t.getMessage());
                 }
@@ -115,7 +143,7 @@ public class OtherHomesListCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    /* ---------------- Homes fetch (reflection-only) ---------------- */
+    /* ---------------- Homes Fetch (Reflection-Only) ---------------- */
 
     @SuppressWarnings("unchecked")
     private Map<String, HomeInfo> fetchHomesReflectively(UUID owner) {
@@ -159,12 +187,14 @@ public class OtherHomesListCommand implements CommandExecutor, TabCompleter {
         if (dto == null) return null;
         try {
             // Expected getters: getWorld(), getX(), getY(), getZ(), optional getServer()
-            String world  = invokeString(dto, "getWorld", "world");
-            double x      = invokeDouble(dto, "getX", 0.0);
-            double y      = invokeDouble(dto, "getY", 0.0);
-            double z      = invokeDouble(dto, "getZ", 0.0);
+            String world = invokeString(dto, "getWorld", "world");
+            double x = invokeDouble(dto, "getX", 0.0);
+            double y = invokeDouble(dto, "getY", 0.0);
+            double z = invokeDouble(dto, "getZ", 0.0);
             String server = tryInvokeString(dto, "getServer");
-            if (server == null || server.isBlank()) server = Bukkit.getServer().getName();
+            if (server == null || server.isBlank()) {
+                server = Bukkit.getServer().getName();
+            }
             return new HomeInfo(name, world, x, y, z, server);
         } catch (Throwable t) {
             plugin.getLogger().warning("[OtherHomesList] DTO read failed for '" + name + "': " + t.getMessage());
@@ -173,7 +203,11 @@ public class OtherHomesListCommand implements CommandExecutor, TabCompleter {
     }
 
     private String tryInvokeString(Object o, String method) {
-        try { return invokeString(o, method, null); } catch (Throwable ignored) { return null; }
+        try {
+            return invokeString(o, method, null);
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     private String invokeString(Object o, String method, String def) throws Exception {
@@ -193,8 +227,14 @@ public class OtherHomesListCommand implements CommandExecutor, TabCompleter {
         final String world;
         final double x, y, z;
         final String server;
+
         HomeInfo(String name, String world, double x, double y, double z, String server) {
-            this.name = name; this.world = world; this.x = x; this.y = y; this.z = z; this.server = server;
+            this.name = name;
+            this.world = world;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.server = server;
         }
     }
 }

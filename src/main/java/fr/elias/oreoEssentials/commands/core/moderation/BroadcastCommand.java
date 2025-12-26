@@ -1,6 +1,8 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/moderation/BroadcastCommand.java
 package fr.elias.oreoEssentials.commands.core.moderation;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -33,14 +35,21 @@ public class BroadcastCommand implements OreoCommand {
         // Colors: hex first, then legacy &
         String msg = translateColors(raw);
 
-        String prefix = ChatColor.GOLD + "[Broadcast] " + ChatColor.RESET;
+        // Get prefix from lang (with default)
+        String prefix = Lang.msgWithDefault(
+                "moderation.broadcast.prefix",
+                "<gold>[Broadcast]</gold> ",
+                sender instanceof Player ? (Player) sender : null
+        );
 
         // Send to players
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.sendMessage(prefix + msg);
         }
+
         // Also log to console (stripped)
         Bukkit.getConsoleSender().sendMessage(prefix + ChatColor.stripColor(msg));
+
         return true;
     }
 

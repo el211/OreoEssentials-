@@ -1,4 +1,4 @@
-// src/main/java/fr/elias/oreoEssentials/playerwarp/PlayerWarpCrossServerBroker.java
+// File: src/main/java/fr/elias/oreoEssentials/playerwarp/PlayerWarpCrossServerBroker.java
 package fr.elias.oreoEssentials.playerwarp;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -29,6 +29,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *  - receives PlayerWarpTeleportRequestPacket
  *  - if player online -> teleport immediately
  *  - else -> store pending; teleport on next PlayerJoinEvent
+ *
+ * VERIFIED: No user-facing messages - only logging.
+ * All user messages handled by PlayerWarpService.
  */
 public final class PlayerWarpCrossServerBroker implements Listener {
 
@@ -38,7 +41,7 @@ public final class PlayerWarpCrossServerBroker implements Listener {
     private final ProxyMessenger proxyMessenger;
     private final String localServerName;
 
-    // pending teleports keyed by player UUID
+    // Pending teleports keyed by player UUID
     private final Map<UUID, PendingWarp> pending = new ConcurrentHashMap<>();
 
     public PlayerWarpCrossServerBroker(OreoEssentials plugin,
@@ -101,6 +104,8 @@ public final class PlayerWarpCrossServerBroker implements Listener {
      * Handles packets on the TARGET server.
      */
     private void handleIncoming(PlayerWarpTeleportRequestPacket pkt) {
+        if (pkt == null) return;
+
         // Only act if WE are the targetServer
         if (pkt.getTargetServer() != null
                 && !pkt.getTargetServer().isBlank()
@@ -110,7 +115,7 @@ public final class PlayerWarpCrossServerBroker implements Listener {
         }
 
         UUID playerId = pkt.getPlayerId();
-        UUID ownerId  = pkt.getOwnerId();
+        UUID ownerId = pkt.getOwnerId();
         String warpName = pkt.getWarpName();
 
         plugin.getLogger().info("[PW/XSRV@" + localServerName + "] Received teleport request "
@@ -133,8 +138,7 @@ public final class PlayerWarpCrossServerBroker implements Listener {
 
     private void safeTeleport(Player p, UUID ownerId, String warpName) {
         try {
-            // You implement this method inside PlayerWarpService
-            // (or adapt to your existing API)
+            // PlayerWarpService handles all user messages
             boolean ok = playerWarpService.teleportToPlayerWarp(p, ownerId, warpName);
             if (!ok) {
                 plugin.getLogger().warning("[PW/XSRV@" + localServerName + "] Failed to teleport "

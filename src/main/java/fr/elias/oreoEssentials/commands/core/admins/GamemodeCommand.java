@@ -3,14 +3,15 @@ package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.services.VisitorService;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompleter {
 
@@ -36,7 +37,9 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
         String m = args[0].toLowerCase(Locale.ROOT);
         Mode mode = Mode.fromString(m);
         if (mode == null) {
-            sender.sendMessage(ChatColor.RED + "Unknown mode: " + m);
+            Lang.send(sender, "admin.gamemode.unknown",
+                    "<red>Unknown mode: <yellow>%mode%</yellow></red>",
+                    Map.of("mode", m));
             return true;
         }
 
@@ -44,12 +47,14 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
         Player target;
         if (args.length >= 2) {
             if (!sender.hasPermission("oreo.gamemode.others")) {
-                sender.sendMessage("§cYou don't have permission to change others' gamemode.");
+                Lang.send(sender, "admin.gamemode.no-permission-others",
+                        "<red>You don't have permission to change others' gamemode.</red>");
                 return true;
             }
             target = Bukkit.getPlayerExact(args[1]);
             if (target == null) {
-                sender.sendMessage("§cPlayer not found.");
+                Lang.send(sender, "admin.gamemode.player-not-found",
+                        "<red>Player not found.</red>");
                 return true;
             }
         } else {
@@ -61,16 +66,23 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
         applyMode(target, mode);
 
         if (target == sender) {
-            sender.sendMessage("§aGamemode set to §b" + mode.display + "§a.");
+            Lang.send(sender, "admin.gamemode.self",
+                    "<green>Gamemode set to <aqua>%mode%</aqua>.</green>",
+                    Map.of("mode", mode.display));
         } else {
-            sender.sendMessage("§aSet §b" + target.getName() + "§a to §b" + mode.display + "§a.");
-            target.sendMessage("§aYour gamemode was set to §b" + mode.display + "§a by §e" + sender.getName());
+            Lang.send(sender, "admin.gamemode.other",
+                    "<green>Set <aqua>%target%</aqua> to <aqua>%mode%</aqua>.</green>",
+                    Map.of("target", target.getName(), "mode", mode.display));
+            Lang.send(target, "admin.gamemode.notified",
+                    "<green>Your gamemode was set to <aqua>%mode%</aqua> by <yellow>%staff%</yellow></green>",
+                    Map.of("mode", mode.display, "staff", sender.getName()));
         }
+
         return true;
     }
 
     private void applyMode(Player p, Mode mode) {
-        // Clear “visitor” by default, re-enable only if choosing visitor
+        // Clear "visitor" by default, re-enable only if choosing visitor
         visitors.setVisitor(p.getUniqueId(), false);
 
         switch (mode) {
@@ -115,7 +127,8 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
         }
     }
 
-    /* ---- Tab completion ---- */
+    /* ---------------- Tab Completion ---------------- */
+
     @Override
     public java.util.List<String> onTabComplete(CommandSender sender, org.bukkit.command.Command cmd, String alias, String[] args) {
         if (args.length == 1) {
@@ -125,6 +138,7 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
                     "s", "c", "a", "sp", "v"
             );
         }
+
         if (args.length == 2 && sender.hasPermission("oreo.gamemode.others")) {
             String pfx = args[1].toLowerCase(Locale.ROOT);
             return Bukkit.getOnlinePlayers().stream()
@@ -133,6 +147,7 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
                     .sorted(String.CASE_INSENSITIVE_ORDER)
                     .toList();
         }
+
         return java.util.List.of();
     }
 }

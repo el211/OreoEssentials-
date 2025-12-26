@@ -34,22 +34,32 @@ public class TphereCommand implements OreoCommand, org.bukkit.command.TabComplet
         Player self = (Player) sender;
 
         if (args.length < 1) {
-            Lang.send(self, "admin.tphere.usage", null, Map.of("label", label));
+            Lang.send(self, "admin.tphere.usage",
+                    "<yellow>Usage: /%label% <player></yellow>",
+                    Map.of("label", label));
             return true;
         }
 
         Player target = Bukkit.getPlayerExact(args[0]);
         if (target == null) {
-            Lang.send(self, "admin.tphere.not-found", null, Map.of("target", args[0]));
+            Lang.send(self, "admin.tphere.not-found",
+                    "<red>Player not found: <yellow>%target%</yellow>.</red>",
+                    Map.of("target", args[0]));
             return true;
         }
 
         target.teleport(self.getLocation());
 
-        Lang.send(self, "admin.tphere.brought", null, Map.of("target", target.getName()));
+        Lang.send(self, "admin.tphere.brought",
+                "<green>Brought <aqua>%target%</aqua> to you.</green>",
+                Map.of("target", target.getName()));
+
         if (!target.equals(self)) {
-            Lang.send(target, "admin.tphere.notice", null, Map.of("player", self.getName()));
+            Lang.send(target, "admin.tphere.notice",
+                    "<yellow>You were teleported to <aqua>%player%</aqua>.</yellow>",
+                    Map.of("player", self.getName()));
         }
+
         return true;
     }
 

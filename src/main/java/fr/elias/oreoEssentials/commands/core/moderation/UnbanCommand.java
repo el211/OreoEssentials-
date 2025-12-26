@@ -1,12 +1,12 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/UnbanCommand.java
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/moderation/UnbanCommand.java
 package fr.elias.oreoEssentials.commands.core.moderation;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.BanEntry;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 
@@ -23,7 +23,9 @@ public class UnbanCommand implements OreoCommand, org.bukkit.command.TabComplete
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (args.length < 1) {
-            sender.sendMessage(ChatColor.YELLOW + "Usage: /" + label + " <player>");
+            Lang.send(sender, "moderation.unban.usage",
+                    "<yellow>Usage: /%label% <player></yellow>",
+                    Map.of("label", label));
             return true;
         }
 
@@ -33,7 +35,9 @@ public class UnbanCommand implements OreoCommand, org.bukkit.command.TabComplete
         // Find a matching ban entry (case-insensitive)
         BanEntry match = findBanEntry(nameBans, query);
         if (match == null) {
-            sender.sendMessage(ChatColor.GRAY + query + " is not banned.");
+            Lang.send(sender, "moderation.unban.not-banned",
+                    "<gray>%player% is not banned.</gray>",
+                    Map.of("player", query));
             return true;
         }
 
@@ -41,7 +45,9 @@ public class UnbanCommand implements OreoCommand, org.bukkit.command.TabComplete
         String exactName = match.getTarget();
         nameBans.pardon(exactName);
 
-        sender.sendMessage(ChatColor.GREEN + "Unbanned " + ChatColor.AQUA + exactName + ChatColor.GREEN + ".");
+        Lang.send(sender, "moderation.unban.success",
+                "<green>Unbanned <aqua>%player%</aqua>.</green>",
+                Map.of("player", exactName));
 
         // Discord notify (if configured)
         var mod = OreoEssentials.get().getDiscordMod();

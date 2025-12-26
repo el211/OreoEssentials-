@@ -2,12 +2,14 @@
 package fr.elias.oreoEssentials.trade;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Map;
 import java.util.UUID;
 
 public final class TradeCommand implements CommandExecutor {
@@ -20,7 +22,8 @@ public final class TradeCommand implements CommandExecutor {
         this.service = service;
     }
 
-    /* ----------------------------- Debug helpers ----------------------------- */
+    /* ----------------------------- Debug Helpers ----------------------------- */
+
     private boolean dbg() {
         try {
             return service != null && service.getConfig() != null && service.getConfig().debugDeep;
@@ -28,30 +31,38 @@ public final class TradeCommand implements CommandExecutor {
             return false;
         }
     }
-    private void log(String msg) { if (dbg()) plugin.getLogger().info(msg); }
+
+    private void log(String msg) {
+        if (dbg()) plugin.getLogger().info(msg);
+    }
 
     /* ----------------------------- Command ----------------------------- */
+
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String lbl, String[] args) {
         if (!(sender instanceof Player p)) {
-            sender.sendMessage("Players only.");
+            Lang.send(sender, "trade.player-only",
+                    "<red>Players only.</red>");
             return true;
         }
 
         if (plugin.getTradeService() == null) {
-            p.sendMessage("§cTrading is currently disabled.");
+            Lang.send(p, "trade.disabled",
+                    "<red>Trading is currently disabled.</red>");
             log("[TRADE] /trade denied: service null");
             return true;
         }
 
         if (!p.hasPermission("oreo.trade")) {
-            p.sendMessage("§cYou don't have permission.");
+            Lang.send(p, "trade.no-permission",
+                    "<red>You don't have permission.</red>");
             log("[TRADE] /trade denied: no permission for " + p.getName());
             return true;
         }
 
         if (args.length != 1) {
-            p.sendMessage("§eUsage: /trade <player>");
+            Lang.send(p, "trade.usage",
+                    "<yellow>Usage: /trade <player></yellow>");
             log("[TRADE] /trade bad usage by " + p.getName());
             return true;
         }
@@ -72,7 +83,8 @@ public final class TradeCommand implements CommandExecutor {
 
         // Local self-check
         if (localTarget != null && localTarget.getUniqueId().equals(p.getUniqueId())) {
-            p.sendMessage("§cYou cannot trade with yourself.");
+            Lang.send(p, "trade.self",
+                    "<red>You cannot trade with yourself.</red>");
             log("[TRADE] /trade self-invite blocked for " + p.getName());
             return true;
         }
@@ -115,7 +127,9 @@ public final class TradeCommand implements CommandExecutor {
             log("[TRADE] remote invite unavailable: broker or messaging missing.");
         }
 
-        p.sendMessage("§cPlayer not found here. §7If this is a cross-server trade, type §b/trade " + targetName + " §7on the server where you received the invite.");
+        Lang.send(p, "trade.not-found-cross-server",
+                "<red>Player not found here.</red> <gray>If this is a cross-server trade, type <aqua>/trade %player%</aqua> on the server where you received the invite.</gray>",
+                Map.of("player", targetName));
         return true;
     }
 }

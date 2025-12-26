@@ -1,14 +1,16 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/moderation/GodCommand.java
 package fr.elias.oreoEssentials.commands.core.moderation;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.services.GodService;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 public class GodCommand implements OreoCommand {
@@ -29,44 +31,69 @@ public class GodCommand implements OreoCommand {
         // /god -> self (must be a player)
         if (args.length == 0) {
             if (!(sender instanceof Player p)) {
-
-
-
-                sender.sendMessage(ChatColor.YELLOW + "Usage: /" + label + " <player>");
+                Lang.send(sender, "moderation.god.usage",
+                        "<yellow>Usage: /%label% <player></yellow>",
+                        Map.of("label", label));
                 return true;
             }
+
             boolean enabled = toggleAndApply(p, p.getUniqueId());
-            p.sendMessage(enabled
-                    ? ChatColor.GREEN + "God mode " + ChatColor.AQUA + "enabled" + ChatColor.GREEN + ". You are now unbeatable."
-                    : ChatColor.RED + "God mode " + ChatColor.AQUA + "disabled" + ChatColor.RED + ".");
+
+            if (enabled) {
+                Lang.send(p, "moderation.god.self-enabled",
+                        "<green>God mode <aqua>enabled</aqua>. You are now unbeatable.</green>");
+            } else {
+                Lang.send(p, "moderation.god.self-disabled",
+                        "<red>God mode <aqua>disabled</aqua>.</red>");
+            }
             return true;
         }
 
         // /god <player> -> others
         if (!sender.hasPermission("oreo.god.others")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission to toggle god for others.");
+            Lang.send(sender, "moderation.god.no-permission-others",
+                    "<red>You don't have permission to toggle god for others.</red>");
             return true;
         }
 
         Player target = findOnlinePlayer(args[0]);
         if (target == null) {
-            sender.sendMessage(ChatColor.RED + "Player not found or not online: " + ChatColor.YELLOW + args[0]);
+            Lang.send(sender, "moderation.god.player-not-found",
+                    "<red>Player not found or not online: <yellow>%player%</yellow></red>",
+                    Map.of("player", args[0]));
             return true;
         }
 
         boolean enabled = toggleAndApply(target, target.getUniqueId());
-        target.sendMessage(enabled
-                ? ChatColor.GREEN + "An admin enabled your god mode."
-                : ChatColor.RED + "An admin disabled your god mode.");
-        sender.sendMessage(enabled
-                ? ChatColor.GREEN + "Enabled god mode for " + ChatColor.AQUA + target.getName() + ChatColor.GREEN + "."
-                : ChatColor.RED + "Disabled god mode for " + ChatColor.AQUA + target.getName() + ChatColor.RED + ".");
+
+        // Notify target
+        if (enabled) {
+            Lang.send(target, "moderation.god.target-enabled",
+                    "<green>An admin enabled your god mode.</green>");
+        } else {
+            Lang.send(target, "moderation.god.target-disabled",
+                    "<red>An admin disabled your god mode.</red>");
+        }
+
+        // Notify sender
+        if (enabled) {
+            Lang.send(sender, "moderation.god.other-enabled",
+                    "<green>Enabled god mode for <aqua>%player%</aqua>.</green>",
+                    Map.of("player", target.getName()));
+        } else {
+            Lang.send(sender, "moderation.god.other-disabled",
+                    "<red>Disabled god mode for <aqua>%player%</aqua>.</red>",
+                    Map.of("player", target.getName()));
+        }
+
         return true;
     }
 
     private boolean toggleAndApply(Player target, UUID uuid) {
         boolean enabled = god.toggle(uuid);
-        try { target.setInvulnerable(enabled); } catch (Throwable ignored) {}
+        try {
+            target.setInvulnerable(enabled);
+        } catch (Throwable ignored) {}
 
         if (enabled) {
             target.setHealth(Math.min(target.getMaxHealth(), target.getMaxHealth()));

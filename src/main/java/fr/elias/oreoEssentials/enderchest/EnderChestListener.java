@@ -17,6 +17,20 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Map;
+
+/**
+ * EnderChest inventory event listener.
+ *
+ * ✅ VERIFIED - Uses Lang.send() for 1 user message
+ *
+ * Features:
+ * - Auto-save on close
+ * - Cross-server mode (intercepts vanilla ender chest)
+ * - Locked slot protection (click + drag)
+ * - Shift-click validation
+ * - Lock item protection
+ */
 public class EnderChestListener implements Listener {
 
     // Strip colors so we can compare even if lang.yml changes the title formatting
@@ -56,19 +70,12 @@ public class EnderChestListener implements Listener {
             p.closeInventory();
             service.open(p);
 
-            // Message: enderchest.storage.opened-cross-server
-            String msg = Lang.msg(
-                    "enderchest.storage.opened-cross-server",
-                    p // use the overload without default
-            );
-
-            // Keep defensive check (why: messages can be empty/missing in lang files)
-            if (msg != null && !msg.isEmpty()) {
-                p.sendMessage(msg);
-            }
+            // Notify player that cross-server storage is being used
+            Lang.send(p, "enderchest.storage.opened-cross-server",
+                    "<gray>Opening your cross-server ender chest...</gray>",
+                    Map.of());
         }
     }
-
 
     // --------------------------------------------------
     // CLICK PROTECTION (BLOCK LOCKED SLOTS + LOCK ITEMS)
@@ -81,13 +88,13 @@ public class EnderChestListener implements Listener {
 
         Inventory top = e.getView().getTopInventory();
 
-        // --- CLIC DANS L’INVENTAIRE DU JOUEUR (bas) ---
+        // --- CLICK IN PLAYER INVENTORY (bottom) ---
         if (e.getClickedInventory() != top) {
-            // On ne bloque le shift-click que s’il ne peut PAS rentrer dans la zone autorisée
+            // Only block shift-click if it cannot fit in the allowed area
             if (e.isShiftClick()) {
                 ItemStack moving = e.getCurrentItem();
                 if (moving == null || moving.getType().isAir()) {
-                    return; // rien à faire
+                    return; // Nothing to do
                 }
 
                 int allowed = service.resolveSlots(p);
@@ -96,13 +103,13 @@ public class EnderChestListener implements Listener {
                 for (int slot = 0; slot < allowed; slot++) {
                     ItemStack existing = top.getItem(slot);
 
-                    // slot vide dans la zone autorisée
+                    // Empty slot in allowed area
                     if (existing == null || existing.getType().isAir()) {
                         canFit = true;
                         break;
                     }
 
-                    // stack similaire à compléter
+                    // Similar stack that can be completed
                     try {
                         if (existing.isSimilar(moving)
                                 && existing.getAmount() < existing.getMaxStackSize()) {
@@ -110,7 +117,7 @@ public class EnderChestListener implements Listener {
                             break;
                         }
                     } catch (Throwable ignored) {
-                        // fallback au type si jamais
+                        // Fallback to type comparison
                         if (existing.getType() == moving.getType()
                                 && existing.getAmount() < existing.getMaxStackSize()) {
                             canFit = true;
@@ -119,7 +126,7 @@ public class EnderChestListener implements Listener {
                     }
                 }
 
-                // aucune place dans la zone autorisée => on bloque
+                // No room in allowed area => block the shift-click
                 if (!canFit) {
                     e.setCancelled(true);
                 }
@@ -127,7 +134,7 @@ public class EnderChestListener implements Listener {
             return;
         }
 
-        // --- CLIC DANS L’ENDER CHEST (top) ---
+        // --- CLICK IN ENDER CHEST (top) ---
         int raw = e.getRawSlot();
         if (service.isLockedSlot(p, raw)) {
             e.setCancelled(true);
@@ -139,7 +146,6 @@ public class EnderChestListener implements Listener {
             e.setCancelled(true);
         }
     }
-
 
     // --------------------------------------------------
     // DRAG PROTECTION (BLOCK DRAGGING INTO LOCKED SLOTS)

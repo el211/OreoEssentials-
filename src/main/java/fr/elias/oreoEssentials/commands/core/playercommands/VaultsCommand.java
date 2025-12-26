@@ -1,12 +1,14 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/VaultsCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
-import org.bukkit.ChatColor;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Map;
 
 public final class VaultsCommand implements OreoCommand {
 
@@ -19,13 +21,15 @@ public final class VaultsCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) {
-            sender.sendMessage(ChatColor.RED + "Players only.");
+            Lang.send(sender, "vaults.player-only",
+                    "<red>Players only.</red>");
             return true;
         }
 
         var svc = OreoEssentials.get().getPlayervaultsService();
         if (svc == null || !svc.enabled()) {
-            p.sendMessage(ChatColor.RED + "PlayerVaults are disabled.");
+            Lang.send(p, "vaults.disabled",
+                    "<red>PlayerVaults are disabled.</red>");
             return true;
         }
 
@@ -41,8 +45,11 @@ public final class VaultsCommand implements OreoCommand {
             if (id <= 0) throw new NumberFormatException();
             svc.openVault(p, id);
         } catch (NumberFormatException ex) {
-            p.sendMessage(ChatColor.RED + "Usage: /" + label + " " + usage());
+            Lang.send(p, "vaults.usage",
+                    "<red>Usage: /%label% %usage%</red>",
+                    Map.of("label", label, "usage", usage()));
         }
+
         return true;
     }
 }

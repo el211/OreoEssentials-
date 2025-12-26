@@ -2,19 +2,18 @@
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.services.HomeService;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
 import fr.minuskube.inv.content.InventoryProvider;
 import fr.minuskube.inv.content.SlotPos;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import static org.bukkit.ChatColor.*;
-
 import java.util.List;
+import java.util.Map;
 
 public class ConfirmDeleteGui implements InventoryProvider {
 
@@ -31,39 +30,54 @@ public class ConfirmDeleteGui implements InventoryProvider {
     }
 
     public static void open(Player p, HomeService homes, String homeName, Runnable onConfirm, Runnable onCancel) {
+        // Use Lang for GUI title - automatically converts to legacy § format
+        String title = Lang.msgLegacy("homes.delete.title",
+                "<dark_red>Delete '%home%'?</dark_red>",
+                Map.of("home", homeName),
+                p);
+
         SmartInventory.builder()
                 .id("oreo:homes:confirm")
                 .provider(new ConfirmDeleteGui(homes, homeName, onConfirm, onCancel))
                 .size(3, 9)
-                .title(ChatColor.DARK_RED + "Delete '" + homeName + "'?")
+                .title(title)
                 .manager(fr.elias.oreoEssentials.OreoEssentials.get().getInvManager())
                 .build()
                 .open(p);
-
     }
 
     @Override
     public void init(Player p, InventoryContents contents) {
-        // Text item center top
-        contents.set(0, 4, fr.minuskube.inv.ClickableItem.empty(infoItem(homeName)));
+        // Text item center top - info about what's being deleted
+        contents.set(0, 4, fr.minuskube.inv.ClickableItem.empty(infoItem(p, homeName)));
 
-        // YES (green concrete) at (1,3)
+        // YES button (green concrete) at row 1, column 3
         contents.set(SlotPos.of(1, 3), fr.minuskube.inv.ClickableItem.of(
-                actionItem(Material.GREEN_CONCRETE, GREEN + "Yes, delete"),
+                actionItem(p, Material.GREEN_CONCRETE,
+                        Lang.msgLegacy("homes.delete.yes", "<green>Yes, delete</green>", p)),
                 e -> {
+                    // Delete the home
                     boolean ok = homes.delHome(p.getUniqueId(), homeName.toLowerCase());
+
+                    // Send feedback message using Lang
                     if (ok) {
-                        p.sendMessage(ChatColor.RED + "Deleted home " + ChatColor.YELLOW + homeName + ChatColor.RED + ".");
+                        Lang.send(p, "homes.delete.success",
+                                "<red>Deleted home <yellow>%home%</yellow>.</red>",
+                                Map.of("home", homeName));
                     } else {
-                        p.sendMessage(ChatColor.RED + "Failed to delete home " + ChatColor.YELLOW + homeName + ChatColor.RED + ".");
+                        Lang.send(p, "homes.delete.failed",
+                                "<red>Failed to delete home <yellow>%home%</yellow>.</red>",
+                                Map.of("home", homeName));
                     }
+
                     p.closeInventory();
                     if (onConfirm != null) onConfirm.run();
                 }));
 
-        // NO (red concrete) at (1,5)
+        // NO button (red concrete) at row 1, column 5
         contents.set(SlotPos.of(1, 5), fr.minuskube.inv.ClickableItem.of(
-                actionItem(Material.RED_CONCRETE, RED + "No, cancel"),
+                actionItem(p, Material.RED_CONCRETE,
+                        Lang.msgLegacy("homes.delete.no", "<red>No, cancel</red>", p)),
                 e -> {
                     p.closeInventory();
                     if (onCancel != null) onCancel.run();
@@ -71,30 +85,50 @@ public class ConfirmDeleteGui implements InventoryProvider {
     }
 
     @Override
-    public void update(Player player, InventoryContents contents) {}
+    public void update(Player player, InventoryContents contents) {
+        // No updates needed for this static confirmation GUI
+    }
 
-    /* --------------- items --------------- */
+    /* --------------- Helper Methods for Creating Items --------------- */
 
-    private ItemStack infoItem(String name) {
+    /**
+     * Creates the informational item (paper) shown at the top of the GUI.
+     */
+    private ItemStack infoItem(Player p, String name) {
         ItemStack it = new ItemStack(Material.PAPER);
         ItemMeta meta = it.getItemMeta();
-        if (meta != null) {                                   // <-- add
-            meta.setDisplayName(ChatColor.GOLD + "Delete Home");
-            meta.setLore(List.of(ChatColor.GRAY + "Are you sure you want to delete",
-                    ChatColor.YELLOW + name + ChatColor.GRAY + "?"));
+        if (meta != null) {
+            // Use Lang for display name
+            String displayName = Lang.msgLegacy("homes.delete.info.title",
+                    "<gold>Delete Home</gold>", p);
+            meta.setDisplayName(displayName);
+
+            // Use Lang for lore - note the variable replacement for home name
+            List<String> lore = List.of(
+                    Lang.msgLegacy("homes.delete.info.lore.0",
+                            "<gray>Are you sure you want to delete</gray>", p),
+                    Lang.msgLegacy("homes.delete.info.lore.1",
+                            "<yellow>%home%</yellow><gray>?</gray>",
+                            Map.of("home", name),
+                            p)
+            );
+            meta.setLore(lore);
             it.setItemMeta(meta);
-        }                                                     // <-- add
+        }
         return it;
     }
 
-    private ItemStack actionItem(Material mat, String title) {
+    /**
+     * Creates an action button item (YES/NO concrete blocks).
+     */
+    private ItemStack actionItem(Player p, Material mat, String title) {
         ItemStack it = new ItemStack(mat);
         ItemMeta meta = it.getItemMeta();
-        if (meta != null) {                                   // <-- add
+        if (meta != null) {
+            // Title already formatted by Lang.msgLegacy in init()
             meta.setDisplayName(title);
             it.setItemMeta(meta);
-        }                                                     // <-- add
+        }
         return it;
     }
-
 }

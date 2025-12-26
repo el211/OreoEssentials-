@@ -2,7 +2,7 @@
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
-import org.bukkit.ChatColor;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -13,6 +13,7 @@ import org.bukkit.inventory.RecipeChoice;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class CookCommand implements OreoCommand {
 
@@ -28,14 +29,16 @@ public class CookCommand implements OreoCommand {
 
         ItemStack hand = p.getInventory().getItemInMainHand();
         if (hand == null || hand.getType().isAir() || hand.getAmount() <= 0) {
-            p.sendMessage(ChatColor.RED + "Hold the item you want to smelt in your main hand.");
+            Lang.send(p, "cook.no-item",
+                    "<red>Hold the item you want to smelt in your main hand.</red>");
             return true;
         }
 
         // Find a matching cooking recipe (furnace / smoker / blast furnace / campfire)
         CookingRecipe<?> match = findCookingRecipeFor(hand);
         if (match == null) {
-            p.sendMessage(ChatColor.RED + "No smelting recipe found for that item.");
+            Lang.send(p, "cook.no-recipe",
+                    "<red>No smelting recipe found for that item.</red>");
             return true;
         }
 
@@ -48,7 +51,8 @@ public class CookCommand implements OreoCommand {
                 try {
                     request = Math.max(1, Integer.parseInt(args[0]));
                 } catch (NumberFormatException ex) {
-                    p.sendMessage(ChatColor.RED + "Amount must be a number or 'max'.");
+                    Lang.send(p, "cook.invalid-amount",
+                            "<red>Amount must be a number or 'max'.</red>");
                     return true;
                 }
             }
@@ -58,7 +62,8 @@ public class CookCommand implements OreoCommand {
 
         int canCook = Math.min(request, hand.getAmount());
         if (canCook <= 0) {
-            p.sendMessage(ChatColor.RED + "Nothing to smelt.");
+            Lang.send(p, "cook.nothing-to-smelt",
+                    "<red>Nothing to smelt.</red>");
             return true;
         }
 
@@ -89,18 +94,32 @@ public class CookCommand implements OreoCommand {
         // Drop leftovers if inv full
         if (!leftover.isEmpty()) {
             leftover.values().forEach(it -> p.getWorld().dropItemNaturally(p.getLocation(), it));
-            p.sendMessage(ChatColor.YELLOW + "Your inventory was full; dropped some smelted items at your feet.");
+            Lang.send(p, "cook.inventory-full",
+                    "<yellow>Your inventory was full; dropped some smelted items at your feet.</yellow>");
         }
 
+        // Play sound effect
         p.playSound(p.getLocation(), Sound.BLOCK_FURNACE_FIRE_CRACKLE, 0.8f, 1.0f);
-        p.sendMessage(ChatColor.GREEN + "Smelted "
-                + ChatColor.AQUA + canCook + ChatColor.GREEN + " → "
-                + ChatColor.AQUA + totalOut + ChatColor.GREEN + " "
-                + ChatColor.GRAY + resultProto.getType().name().toLowerCase().replace('_', ' ') + ChatColor.GREEN + ".");
+
+        // Format item name nicely (replace underscores with spaces, lowercase)
+        String itemName = resultProto.getType().name().toLowerCase().replace('_', ' ');
+
+        // Send success message with variables
+        Lang.send(p, "cook.success",
+                "<green>Smelted <aqua>%input%</aqua> → <aqua>%output%</aqua> <gray>%item%</gray>.</green>",
+                Map.of(
+                        "input", String.valueOf(canCook),
+                        "output", String.valueOf(totalOut),
+                        "item", itemName
+                ));
 
         return true;
     }
 
+    /**
+     * Find a cooking recipe that matches the input item.
+     * Searches all recipe types: furnace, smoker, blast furnace, campfire.
+     */
     private CookingRecipe<?> findCookingRecipeFor(ItemStack input) {
         Iterator<Recipe> it = org.bukkit.Bukkit.recipeIterator();
         while (it.hasNext()) {
@@ -112,7 +131,7 @@ public class CookCommand implements OreoCommand {
                         return cr;
                     }
                 } catch (Throwable ignored) {
-                    // some custom choices may throw on test; skip
+                    // Some custom choices may throw on test; skip gracefully
                 }
             }
         }

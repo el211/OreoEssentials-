@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/OtherHomeCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -6,8 +7,8 @@ import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.rabbitmq.packet.impl.OtherHomeTeleportRequestPacket;
 import fr.elias.oreoEssentials.services.HomeService;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -39,18 +40,25 @@ public class OtherHomeCommand implements OreoCommand, org.bukkit.command.TabComp
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player admin)) return true;
+
         if (!sender.hasPermission("oreo.homes.other")) {
-            sender.sendMessage(ChatColor.RED + "You don’t have permission.");
+            Lang.send(sender, "admin.otherhome.no-permission",
+                    "<red>You don't have permission.</red>");
             return true;
         }
+
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.YELLOW + "Usage: " + ChatColor.GOLD + "/" + label + " <player> <home>");
+            Lang.send(sender, "admin.otherhome.usage",
+                    "<yellow>Usage: <gold>/%label% <player> <home></gold></yellow>",
+                    Map.of("label", label));
             return true;
         }
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
         if (target == null || (target.getName() == null && !target.hasPlayedBefore())) {
-            sender.sendMessage(ChatColor.RED + "Unknown player: " + ChatColor.YELLOW + args[0]);
+            Lang.send(sender, "admin.otherhome.player-not-found",
+                    "<red>Unknown player: <yellow>%player%</yellow></red>",
+                    Map.of("player", args[0]));
             return true;
         }
 
@@ -66,32 +74,42 @@ public class OtherHomeCommand implements OreoCommand, org.bukkit.command.TabComp
         if (targetServer.equalsIgnoreCase(localServer)) {
             Location loc = homes.getHome(ownerId, homeName);
             if (loc == null) {
-                sender.sendMessage(ChatColor.RED + "Home not found: " + ChatColor.YELLOW + args[1]);
+                Lang.send(sender, "admin.otherhome.not-found",
+                        "<red>Home not found: <yellow>%home%</yellow></red>",
+                        Map.of("home", args[1]));
                 return true;
             }
+
             World w = loc.getWorld();
             if (w == null) {
-                sender.sendMessage(ChatColor.RED + "World not loaded: " + ChatColor.YELLOW + (loc.getWorld() != null ? loc.getWorld().getName() : "null"));
+                Lang.send(sender, "admin.otherhome.world-not-loaded",
+                        "<red>World not loaded: <yellow>%world%</yellow></red>",
+                        Map.of("world", loc.getWorld() != null ? loc.getWorld().getName() : "null"));
                 return true;
             }
+
             admin.teleport(loc);
-            sender.sendMessage(ChatColor.GREEN + "Teleported to " + ChatColor.AQUA
-                    + (target.getName() != null ? target.getName() : ownerId) + ChatColor.GREEN
-                    + "’s home " + ChatColor.AQUA + homeName + ChatColor.GREEN + ".");
+
+            String ownerName = target.getName() != null ? target.getName() : ownerId.toString();
+            Lang.send(sender, "admin.otherhome.teleported",
+                    "<green>Teleported to <aqua>%owner%</aqua>'s home <aqua>%home%</aqua>.</green>",
+                    Map.of("owner", ownerName, "home", homeName));
             return true;
         }
 
         // 3) Cross-server disabled?
         var cs = plugin.getCrossServerSettings();
         if (!cs.homes()) {
-            sender.sendMessage(ChatColor.RED + "Cross-server homes are disabled by server config.");
-            sender.sendMessage(ChatColor.GRAY + "Use " + ChatColor.AQUA + "/server " + targetServer
-                    + ChatColor.GRAY + " then run " + ChatColor.AQUA + "/otherhome "
-                    + (target.getName() != null ? target.getName() : ownerId) + " " + homeName);
+            String ownerName = target.getName() != null ? target.getName() : ownerId.toString();
+            Lang.send(sender, "admin.otherhome.cross-disabled",
+                    "<red>Cross-server homes are disabled by server config.</red>");
+            Lang.send(sender, "admin.otherhome.cross-disabled-manual",
+                    "<gray>Use <aqua>/server %server%</aqua> then run <aqua>/otherhome %owner% %home%</aqua></gray>",
+                    Map.of("server", targetServer, "owner", ownerName, "home", homeName));
             return true;
         }
 
-        // 4) Publish to the target server’s INDIVIDUAL channel (same as /home)
+        // 4) Publish to the target server's INDIVIDUAL channel
         PacketManager pm = plugin.getPacketManager();
         if (pm != null && pm.isInitialized()) {
             final String requestId = java.util.UUID.randomUUID().toString();
@@ -110,27 +128,34 @@ public class OtherHomeCommand implements OreoCommand, org.bukkit.command.TabComp
                     + " -> target=" + targetServer
                     + " requestId=" + requestId);
         } else {
-            sender.sendMessage(ChatColor.RED + "Cross-server messaging is disabled. Ask an admin to enable RabbitMQ.");
-            sender.sendMessage(ChatColor.GRAY + "You can still switch with " + ChatColor.AQUA + "/server " + targetServer
-                    + ChatColor.GRAY + " and run " + ChatColor.AQUA + "/otherhome "
-                    + (target.getName() != null ? target.getName() : ownerId) + " " + homeName);
+            String ownerName = target.getName() != null ? target.getName() : ownerId.toString();
+            Lang.send(sender, "admin.otherhome.messaging-disabled",
+                    "<red>Cross-server messaging is disabled. Ask an admin to enable RabbitMQ.</red>");
+            Lang.send(sender, "admin.otherhome.messaging-disabled-manual",
+                    "<gray>You can still switch with <aqua>/server %server%</aqua> and run <aqua>/otherhome %owner% %home%</aqua></gray>",
+                    Map.of("server", targetServer, "owner", ownerName, "home", homeName));
             return true;
         }
 
-        // 5) Switch the admin (subject) to the target server (same as /home)
+        // 5) Switch the admin to the target server
+        String ownerName = target.getName() != null ? target.getName() : ownerId.toString();
+
         if (sendPlayerToServer(admin, targetServer)) {
-            sender.sendMessage(ChatColor.YELLOW + "Sending you to " + ChatColor.AQUA + targetServer
-                    + ChatColor.YELLOW + "… you’ll be teleported to "
-                    + ChatColor.AQUA + (target.getName() != null ? target.getName() : ownerId)
-                    + ChatColor.YELLOW + "’s home " + ChatColor.AQUA + homeName + ChatColor.YELLOW + " on arrival.");
+            Lang.send(sender, "admin.otherhome.sending",
+                    "<yellow>Sending you to <aqua>%server%</aqua>… you'll be teleported to <aqua>%owner%</aqua>'s home <aqua>%home%</aqua> on arrival.</yellow>",
+                    Map.of("server", targetServer, "owner", ownerName, "home", homeName));
         } else {
-            sender.sendMessage(ChatColor.RED + "Failed to switch you to " + targetServer + ".");
-            sender.sendMessage(ChatColor.GRAY + "Make sure that server name matches your proxy config.");
+            Lang.send(sender, "admin.otherhome.switch-failed",
+                    "<red>Failed to switch you to %server%.</red>",
+                    Map.of("server", targetServer));
+            Lang.send(sender, "admin.otherhome.switch-failed-tip",
+                    "<gray>Make sure that server name matches your proxy config.</gray>");
         }
+
         return true;
     }
 
-    /* ---------- tab completion ---------- */
+    /* ---------- Tab Completion ---------- */
 
     @Override
     public List<String> onTabComplete(CommandSender sender, org.bukkit.command.Command cmd, String alias, String[] args) {
@@ -145,6 +170,7 @@ public class OtherHomeCommand implements OreoCommand, org.bukkit.command.TabComp
                     .sorted(String.CASE_INSENSITIVE_ORDER)
                     .collect(Collectors.toList());
         }
+
         if (args.length == 2) {
             OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
             if (target == null) return List.of();
@@ -153,26 +179,29 @@ public class OtherHomeCommand implements OreoCommand, org.bukkit.command.TabComp
                     .sorted(String.CASE_INSENSITIVE_ORDER)
                     .collect(Collectors.toList());
         }
+
         return List.of();
     }
 
-    /* ---------- helpers ---------- */
+    /* ---------- Helpers ---------- */
 
     private Set<String> safeHomesOf(UUID owner) {
         try {
             Set<String> s = homes.homes(owner);
             return (s == null) ? Collections.emptySet() : s;
-        } catch (Throwable t) { return Collections.emptySet(); }
+        } catch (Throwable t) {
+            return Collections.emptySet();
+        }
     }
 
     private String resolveHomeServer(UUID ownerId, String homeName) {
-        // Prefer dedicated method if your HomeService has it:
+        // Prefer dedicated method if your HomeService has it
         try {
             Method m = homes.getClass().getMethod("homeServer", UUID.class, String.class);
             Object v = m.invoke(homes, ownerId, homeName);
             if (v != null) return v.toString();
         } catch (NoSuchMethodException ignored) {
-            // fall back to listHomes/getHomes + getServer()
+            // Fall back to listHomes/getHomes + getServer()
             try {
                 Method m = homes.getClass().getMethod("listHomes", UUID.class);
                 Object res = m.invoke(homes, ownerId);
@@ -198,12 +227,16 @@ public class OtherHomeCommand implements OreoCommand, org.bukkit.command.TabComp
         if (dto == null) return null;
         try {
             Method gs = dto.getClass().getMethod("getServer");
-            Object v  = gs.invoke(dto);
+            Object v = gs.invoke(dto);
             return v == null ? null : v.toString();
-        } catch (Throwable ignored) { return null; }
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
-    private static String normalize(String s) { return s == null ? "" : s.trim().toLowerCase(Locale.ROOT); }
+    private static String normalize(String s) {
+        return s == null ? "" : s.trim().toLowerCase(Locale.ROOT);
+    }
 
     private boolean sendPlayerToServer(Player p, String serverName) {
         try {

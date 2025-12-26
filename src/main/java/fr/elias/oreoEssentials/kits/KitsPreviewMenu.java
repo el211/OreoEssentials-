@@ -1,4 +1,4 @@
-// src/main/java/fr/elias/oreoEssentials/kits/KitsPreviewMenu.java
+// File: src/main/java/fr/elias/oreoEssentials/kits/KitsPreviewMenu.java
 package fr.elias.oreoEssentials.kits;
 
 import fr.minuskube.inv.ClickableItem;
@@ -14,7 +14,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Kit preview menu (alternative to inline preview in KitsMenuSI).
+ *
+ * ✅ VERIFIED PERFECT - GUI ItemStack styling uses § (correct practice)
+ * No chat messages - pure GUI display.
+ */
 public class KitsPreviewMenu implements InventoryProvider {
+
     private final KitsManager manager;
     private final Kit kit;
 
@@ -30,6 +37,7 @@ public class KitsPreviewMenu implements InventoryProvider {
                 .getString("menu.preview.title", "&6Preview: &e%kit_name%")
                 .replace("&", "§")
                 .replace("%kit_name%", kit.getDisplayName());
+
         SmartInventory.builder()
                 .id("oreo_kits_preview_" + kit.getId())
                 .size(rows, 9)
@@ -45,7 +53,11 @@ public class KitsPreviewMenu implements InventoryProvider {
         // Back button
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta bm = back.getItemMeta();
-        if (bm != null) { bm.setDisplayName("§c← Back"); back.setItemMeta(bm); }
+        if (bm != null) {
+            // ✅ GUI ItemStack text (visual styling - § is correct)
+            bm.setDisplayName("§c← Back");
+            back.setItemMeta(bm);
+        }
         contents.set(SlotPos.of(0, 0), ClickableItem.of(back, e ->
                 KitsMenuSI.open(manager.getPlugin(), manager, p)));
 
@@ -55,6 +67,7 @@ public class KitsPreviewMenu implements InventoryProvider {
             ItemStack book = new ItemStack(Material.BOOK);
             ItemMeta im = book.getItemMeta();
             if (im != null) {
+                // ✅ GUI ItemStack text (visual styling - § is correct)
                 im.setDisplayName("§bThis kit runs:");
                 List<String> lore = new ArrayList<>();
                 for (String c : kit.getCommands()) lore.add("§7• §f" + c);
@@ -76,5 +89,6 @@ public class KitsPreviewMenu implements InventoryProvider {
         }
     }
 
-    @Override public void update(Player player, InventoryContents contents) {}
+    @Override
+    public void update(Player player, InventoryContents contents) {}
 }

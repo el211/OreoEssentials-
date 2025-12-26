@@ -26,25 +26,32 @@ public class EnchantCommand implements OreoCommand {
         Player p = (Player) sender;
 
         if (args.length < 1) {
-            Lang.send(p, "admin.enchant.usage", null, Map.of("label", label));
+            Lang.send(p, "admin.enchant.usage",
+                    "<yellow>Usage: /%label% <enchantment> [level] [unsafe] [ignoreConflicts]</yellow>",
+                    Map.of("label", label));
             return true;
         }
 
         ItemStack item = p.getInventory().getItemInMainHand();
         if (item == null || item.getType().isAir()) {
-            Lang.send(p, "admin.enchant.hold-item", null, null);
+            Lang.send(p, "admin.enchant.hold-item",
+                    "<red>You must hold an item in your main hand.</red>");
             return true;
         }
 
         Enchantment ench = resolve(args[0]);
         if (ench == null) {
-            Lang.send(p, "admin.enchant.unknown", null, Map.of("input", args[0]));
+            Lang.send(p, "admin.enchant.unknown",
+                    "<red>Unknown enchantment: <yellow>%input%</yellow></red>",
+                    Map.of("input", args[0]));
             return true;
         }
 
         int level = 1;
         if (args.length >= 2) {
-            try { level = Integer.parseInt(args[1]); } catch (NumberFormatException ignored) {}
+            try {
+                level = Integer.parseInt(args[1]);
+            } catch (NumberFormatException ignored) {}
         }
 
         boolean unsafe = args.length >= 3 && args[2].equalsIgnoreCase("unsafe");
@@ -52,17 +59,20 @@ public class EnchantCommand implements OreoCommand {
 
         int max = ench.getMaxLevel();
         if (level < 1) level = 1;
+
         if (level > max && !(unsafe || sender.hasPermission("oreo.enchant.unsafe"))) {
-            Lang.send(p, "admin.enchant.too-high", null,
-                    Map.of("ench", enchKey(ench), "max", String.valueOf(max)));
+            Lang.send(p, "admin.enchant.too-high",
+                    "<red>Level <yellow>%level%</yellow> is too high for <aqua>%ench%</aqua> (max: <white>%max%</white>). Use 'unsafe' parameter or oreo.enchant.unsafe permission.</red>",
+                    Map.of("ench", enchKey(ench), "max", String.valueOf(max), "level", String.valueOf(level)));
             return true;
         }
 
         if (!ignore && !sender.hasPermission("oreo.enchant.ignoreconflicts")) {
             for (Enchantment ex : item.getEnchantments().keySet()) {
                 if (ex.conflictsWith(ench)) {
-                    Lang.send(p, "admin.enchant.conflict", null,
-                            Map.of("with", enchKey(ex)));
+                    Lang.send(p, "admin.enchant.conflict",
+                            "<red><aqua>%ench%</aqua> conflicts with existing <aqua>%with%</aqua>. Use 'ignoreConflicts' parameter or oreo.enchant.ignoreconflicts permission.</red>",
+                            Map.of("ench", enchKey(ench), "with", enchKey(ex)));
                     return true;
                 }
             }
@@ -74,12 +84,15 @@ public class EnchantCommand implements OreoCommand {
             } else {
                 item.addEnchantment(ench, Math.min(level, max));
             }
-            Lang.send(p, "admin.enchant.applied", null,
+            Lang.send(p, "admin.enchant.applied",
+                    "<green>Applied <aqua>%ench%</aqua> <white>%level%</white> to your item.</green>",
                     Map.of("ench", enchKey(ench), "level", String.valueOf(level)));
         } catch (Exception ex) {
-            Lang.send(p, "admin.enchant.failed", null,
+            Lang.send(p, "admin.enchant.failed",
+                    "<red>Failed to apply enchantment: <yellow>%reason%</yellow></red>",
                     Map.of("reason", ex.getMessage() == null ? "unknown" : ex.getMessage()));
         }
+
         return true;
     }
 
@@ -111,6 +124,7 @@ public class EnchantCommand implements OreoCommand {
                 return e;
             }
         }
+
         return null;
     }
 }

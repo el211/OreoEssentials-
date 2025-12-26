@@ -1,19 +1,22 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/ReplyCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
-
-
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.services.MessageService;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Map;
 
 public class ReplyCommand implements OreoCommand {
     private final MessageService messages;
 
-    public ReplyCommand(MessageService messages) { this.messages = messages; }
+    public ReplyCommand(MessageService messages) {
+        this.messages = messages;
+    }
 
     @Override public String name() { return "r"; }
     @Override public List<String> aliases() { return List.of("reply"); }
@@ -21,18 +24,49 @@ public class ReplyCommand implements OreoCommand {
     @Override public String usage() { return "<message...>"; }
     @Override public boolean playerOnly() { return true; }
 
-    @Override public boolean execute(CommandSender sender, String label, String[] args) {
-        if (args.length < 1) return false;
+    @Override
+    public boolean execute(CommandSender sender, String label, String[] args) {
+        if (args.length < 1) {
+            Lang.send(sender, "reply.usage",
+                    "<red>Usage: /%label% <message...></red>",
+                    Map.of("label", label));
+            return true;
+        }
+
         Player p = (Player) sender;
+
+        // Get last conversation partner
         var last = messages.getLast(p.getUniqueId());
-        if (last == null) { p.sendMessage("§cNo one to reply to."); return true; }
+        if (last == null) {
+            Lang.send(p, "reply.no-one",
+                    "<red>No one to reply to.</red>");
+            return true;
+        }
+
+        // Check if they're still online
         Player target = Bukkit.getPlayer(last);
-        if (target == null) { p.sendMessage("§cThat player is offline."); return true; }
+        if (target == null) {
+            Lang.send(p, "reply.offline",
+                    "<red>That player is offline.</red>");
+            return true;
+        }
+
+        // Build message
         String msg = String.join(" ", args);
-        target.sendMessage("§7[§dMSG§7] §b" + p.getName() + "§7: §f" + msg);
-        p.sendMessage("§7[§dMSG§7] §f-> §b" + target.getName() + "§7: §f" + msg);
+
+        // Send to target: [MSG] SenderName: message
+        Lang.send(target, "msg.receive",
+                "<gray>[<light_purple>MSG</light_purple>] <aqua>%sender%</aqua>: <white>%message%</white></gray>",
+                Map.of("sender", p.getName(), "message", msg));
+
+        // Send confirmation to sender: [MSG] -> TargetName: message
+        Lang.send(p, "msg.send",
+                "<gray>[<light_purple>MSG</light_purple>] <white>-></white> <aqua>%target%</aqua>: <white>%message%</white></gray>",
+                Map.of("target", target.getName(), "message", msg));
+
+        // Record for future /reply
         messages.record(p, target);
+
         return true;
     }
 }
-

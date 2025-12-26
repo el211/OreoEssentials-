@@ -1,7 +1,8 @@
-// package: fr.elias.oreoEssentials.modgui.notes
+// File: src/main/java/fr/elias/oreoEssentials/modgui/notes/NotesChatListener.java
 package fr.elias.oreoEssentials.modgui.notes;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
@@ -11,12 +12,20 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Player notes chat listener.
+ *
+ * ✅ VERIFIED - Uses Lang.send() for 3 user messages
+ *
+ * Captures chat input for adding notes to players.
+ * Staff types in chat after clicking "Add Note" button.
+ */
 public class NotesChatListener implements Listener {
 
     private final OreoEssentials plugin;
     private final PlayerNotesManager manager;
 
-    // staff -> target
+    // staff -> target mapping
     private final Map<UUID, UUID> pending = new ConcurrentHashMap<>();
 
     public NotesChatListener(OreoEssentials plugin, PlayerNotesManager manager) {
@@ -27,7 +36,9 @@ public class NotesChatListener implements Listener {
 
     public void startNote(Player staff, UUID target) {
         pending.put(staff.getUniqueId(), target);
-        staff.sendMessage("§eType the note in chat. §7(Or type 'cancel' to abort)");
+        Lang.send(staff, "modgui.notes.prompt",
+                "<yellow>Type the note in chat.</yellow> <gray>(Or type 'cancel' to abort)</gray>",
+                Map.of());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -38,11 +49,17 @@ public class NotesChatListener implements Listener {
         e.setCancelled(true);
         UUID target = pending.remove(staffId);
         String msg = e.getMessage();
+
         if (msg.equalsIgnoreCase("cancel")) {
-            e.getPlayer().sendMessage("§cNote cancelled.");
+            Lang.send(e.getPlayer(), "modgui.notes.cancelled",
+                    "<red>Note cancelled.</red>",
+                    Map.of());
             return;
         }
+
         manager.addNote(target, e.getPlayer().getName(), msg);
-        e.getPlayer().sendMessage("§aNote added.");
+        Lang.send(e.getPlayer(), "modgui.notes.added",
+                "<green>Note added.</green>",
+                Map.of());
     }
 }

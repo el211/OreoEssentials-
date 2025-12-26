@@ -1,3 +1,4 @@
+// File: src/main/java/fr/elias/oreoEssentials/teleport/TpCrossServerBroker.java
 package fr.elias.oreoEssentials.teleport;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -6,6 +7,7 @@ import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.TpJumpPacket;
 import fr.elias.oreoEssentials.services.TeleportService;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.elias.oreoEssentials.util.ProxyMessenger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -57,7 +59,6 @@ public class TpCrossServerBroker implements Listener {
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
         // subscribe to TpJumpPacket (for this server)
-        // we use the individual channel for this server
         packetManager.subscribe(
                 TpJumpPacket.class,
                 (PacketSubscriber<TpJumpPacket>) (channel, pkt) -> handleIncomingJump(pkt)
@@ -71,7 +72,8 @@ public class TpCrossServerBroker implements Listener {
                                      String destServer) {
         if (admin == null || targetUuid == null || destServer == null || destServer.isBlank()) return;
         if (packetManager == null || !packetManager.isInitialized()) {
-            admin.sendMessage("§cCross-server messaging is not available; cannot /tp across servers.");
+            Lang.send(admin, "teleport.cross-server.no-messaging",
+                    "<red>Cross-server messaging is not available; cannot /tp across servers.</red>");
             return;
         }
 
@@ -90,17 +92,16 @@ public class TpCrossServerBroker implements Listener {
         // switch admin to that server via proxy
         proxyMessenger.sendToServer(admin, destServer);
 
-        admin.sendMessage("§7Teleporting to §b" + targetName + "§7 on §b" + destServer + "§7…");
+        Lang.send(admin, "teleport.cross-server.jumping",
+                "<gray>Teleporting to <aqua>%target%</aqua> on <aqua>%server%</aqua>…</gray>",
+                Map.of("target", targetName, "server", destServer));
     }
 
     /** Handles packet on destination server. */
     private void handleIncomingJump(TpJumpPacket pkt) {
         if (pkt == null) return;
 
-        // This packet is delivered to *every* node that subscribes;
-        // but because we sent it to PacketChannel.individual(destServer),
-        // only the right server will actually get it.
-        UUID adminId  = pkt.getAdminUuid();
+        UUID adminId = pkt.getAdminUuid();
         UUID targetId = pkt.getTargetUuid();
 
         if (adminId == null || targetId == null) return;
@@ -111,7 +112,9 @@ public class TpCrossServerBroker implements Listener {
         if (admin != null && admin.isOnline() && target != null && target.isOnline()) {
             // Already both here: teleport immediately
             teleportService.teleportSilently(admin, target);
-            admin.sendMessage("§aTeleported to §b" + target.getName() + "§a.");
+            Lang.send(admin, "teleport.cross-server.arrived",
+                    "<green>Teleported to <aqua>%target%</aqua>.</green>",
+                    Map.of("target", target.getName()));
         } else {
             // Wait for admin to join this server
             pendingJumps.put(adminId, targetId);
@@ -129,11 +132,14 @@ public class TpCrossServerBroker implements Listener {
 
         Player target = Bukkit.getPlayer(targetId);
         if (target == null || !target.isOnline()) {
-            p.sendMessage("§cTeleport failed: target player is no longer online.");
+            Lang.send(p, "teleport.cross-server.target-offline",
+                    "<red>Teleport failed: target player is no longer online.</red>");
             return;
         }
 
         teleportService.teleportSilently(p, target);
-        p.sendMessage("§aTeleported to §b" + target.getName() + "§a.");
+        Lang.send(p, "teleport.cross-server.arrived",
+                "<green>Teleported to <aqua>%target%</aqua>.</green>",
+                Map.of("target", target.getName()));
     }
 }

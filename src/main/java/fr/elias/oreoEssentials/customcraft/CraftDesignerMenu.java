@@ -54,7 +54,7 @@ public final class CraftDesignerMenu implements InventoryProvider {
                 .id("oecraft:" + recipeName)
                 .provider(menu)
                 .size(5, 9)
-                .title(title)                       // inventory title = String (legacy)
+                .title(title)
                 .manager(invMgr)
                 .closeable(true)
                 .listener(new InventoryListener<>(InventoryCloseEvent.class, e -> {
@@ -66,23 +66,33 @@ public final class CraftDesignerMenu implements InventoryProvider {
     @Override
     public void init(Player player, InventoryContents contents) {
         var filler = ui(Material.GRAY_STAINED_GLASS_PANE, " ");
-        for (int r = 0; r < 5; r++) for (int c = 0; c < 9; c++) contents.set(r, c, ClickableItem.empty(filler));
+        for (int r = 0; r < 5; r++) {
+            for (int c = 0; c < 9; c++) {
+                contents.set(r, c, ClickableItem.empty(filler));
+            }
+        }
 
         // Delete button
         drawDeleteButton(contents, player);
 
         // Labels
         contents.set(0, 2, ClickableItem.empty(ui(Material.BOOK,
-                i18nLegacy("customcraft.gui.labels.ingredients", "<yellow>Ingredients (3×3)</yellow>", Map.of(), player))));
+                i18nLegacy("customcraft.gui.labels.ingredients",
+                        "<yellow>Ingredients (3×3)</yellow>",
+                        Map.of(), player))));
         contents.set(0, 6, ClickableItem.empty(ui(Material.EMERALD,
-                i18nLegacy("customcraft.gui.labels.result", "<green>Result →</green>", Map.of(), player))));
+                i18nLegacy("customcraft.gui.labels.result",
+                        "<green>Result →</green>",
+                        Map.of(), player))));
 
-        // Load existing
+        // Load existing recipe
         service.get(recipeName).ifPresent(r -> {
             ItemStack[] g = r.getGrid();
-            for (int i = 0; i < 9; i++) grid[i] = (g[i] == null || g[i].getType().isAir()) ? null : g[i].clone();
-            result     = (r.getResult() == null || r.getResult().getType().isAir()) ? null : r.getResult().clone();
-            shapeless  = r.isShapeless();
+            for (int i = 0; i < 9; i++) {
+                grid[i] = (g[i] == null || g[i].getType().isAir()) ? null : g[i].clone();
+            }
+            result = (r.getResult() == null || r.getResult().getType().isAir()) ? null : r.getResult().clone();
+            shapeless = r.isShapeless();
             permission = r.getPermission();
         });
 
@@ -98,40 +108,65 @@ public final class CraftDesignerMenu implements InventoryProvider {
             }
         }
 
-        // Result
+        // Result slot
         redrawResult(contents);
     }
 
-    @Override public void update(Player player, InventoryContents contents) { /* no-op */ }
+    @Override
+    public void update(Player player, InventoryContents contents) {
+        /* no-op */
+    }
 
-    /* ---------------- UI pieces ---------------- */
+    /* ---------------- UI Pieces ---------------- */
 
     private void drawDeleteButton(InventoryContents contents, Player player) {
         ItemStack it = new ItemStack(Material.BARRIER);
         ItemMeta m = it.getItemMeta();
         if (m != null) {
-            m.setDisplayName(i18nLegacy("customcraft.gui.delete.name", "<red>Delete this recipe</red>", Map.of(), player));
+            m.setDisplayName(i18nLegacy("customcraft.gui.delete.name",
+                    "<red>Delete this recipe</red>",
+                    Map.of(), player));
 
             List<String> lore = langList("customcraft.gui.delete.lore",
-                    List.of("<gray>Click:</gray> <white>Info</white>", "<gray>SHIFT+Click:</gray> <red>CONFIRM deletion</red>"));
+                    List.of(
+                            "<gray>Click:</gray> <white>Info</white>",
+                            "<gray>SHIFT+Click:</gray> <red>CONFIRM deletion</red>"
+                    ));
             m.setLore(lore.stream().map(CraftDesignerMenu::mmInlineToLegacy).toList());
             it.setItemMeta(m);
         }
+
         contents.set(0, 0, ClickableItem.of(it, (InventoryClickEvent e) -> {
+            Player p = (Player) e.getWhoClicked();
+
             if (!e.isShiftClick()) {
-                Component msg = MM.deserialize(Lang.get("customcraft.messages.delete-hint",
-                                "%prefix%<yellow>Tip:</yellow> Hold <bold>SHIFT</bold> and click to delete <red>%name%</red>.")
-                        .replace("%name%", recipeName));
-                ((Player) e.getWhoClicked()).sendMessage(msg);
+                // Show hint
+                Component msg = MM.deserialize(
+                        Lang.get("customcraft.messages.delete-hint",
+                                        "<yellow>Tip:</yellow> Hold <bold>SHIFT</bold> and click the barrier to delete <red>%name%</red>.")
+                                .replace("%name%", recipeName)
+                );
+                p.sendMessage(msg);
                 return;
             }
+
+            // Delete recipe
             boolean ok = service.delete(recipeName);
-            if (ok) ((Player) e.getWhoClicked()).sendMessage(MM.deserialize(
-                    Lang.get("customcraft.messages.deleted", "%prefix%<green>Recipe <yellow>%name%</yellow> has been deleted.</green>")
-                            .replace("%name%", recipeName)));
-            else ((Player) e.getWhoClicked()).sendMessage(MM.deserialize(
-                    Lang.get("customcraft.messages.invalid", "%prefix%<red>Invalid recipe. You need a result item and at least one ingredient.</red>")));
-            e.getWhoClicked().closeInventory();
+            if (ok) {
+                Component msg = MM.deserialize(
+                        Lang.get("customcraft.messages.deleted",
+                                        "<green>Deleted recipe <yellow>%name%</yellow>.</green>")
+                                .replace("%name%", recipeName)
+                );
+                p.sendMessage(msg);
+            } else {
+                Component msg = MM.deserialize(
+                        Lang.get("customcraft.messages.invalid",
+                                "<red>Invalid recipe.</red>")
+                );
+                p.sendMessage(msg);
+            }
+            p.closeInventory();
         }));
     }
 
@@ -139,19 +174,33 @@ public final class CraftDesignerMenu implements InventoryProvider {
         ItemStack it = new ItemStack(shapeless ? Material.SLIME_BALL : Material.REDSTONE);
         ItemMeta m = it.getItemMeta();
         if (m != null) {
-            String nameKey = shapeless ? "customcraft.gui.mode.shapeless-name" : "customcraft.gui.mode.shaped-name";
-            String nameDef = shapeless ? "<green>Mode: SHAPELESS</green>" : "<aqua>Mode: SHAPED</aqua>";
+            String nameKey = shapeless
+                    ? "customcraft.gui.mode.shapeless-name"
+                    : "customcraft.gui.mode.shaped-name";
+            String nameDef = shapeless
+                    ? "<green>Mode: SHAPELESS</green>"
+                    : "<aqua>Mode: SHAPED</aqua>";
             String name = i18nLegacy(nameKey, nameDef, Map.of(), null);
 
             List<String> lore = new ArrayList<>();
-            lore.add(mmInlineToLegacy(Lang.get("customcraft.gui.mode.lore-common", "<gray>Click to toggle.</gray>")));
-            lore.add(mmInlineToLegacy(Lang.get(shapeless ? "customcraft.gui.mode.lore-shapeless" : "customcraft.gui.mode.lore-shaped",
-                    shapeless ? "<gray>Order doesn't matter.</gray>" : "<gray>Layout matters.</gray>")));
+            lore.add(mmInlineToLegacy(
+                    Lang.get("customcraft.gui.mode.lore-common",
+                            "<gray>Click to toggle.</gray>")
+            ));
+            lore.add(mmInlineToLegacy(
+                    Lang.get(shapeless
+                                    ? "customcraft.gui.mode.lore-shapeless"
+                                    : "customcraft.gui.mode.lore-shaped",
+                            shapeless
+                                    ? "<gray>Order doesn't matter.</gray>"
+                                    : "<gray>Layout matters.</gray>")
+            ));
 
             m.setDisplayName(name);
             m.setLore(lore);
             it.setItemMeta(m);
         }
+
         contents.set(0, 4, ClickableItem.of(it, (InventoryClickEvent e) -> {
             shapeless = !shapeless;
             drawModeToggle(contents);
@@ -165,19 +214,34 @@ public final class CraftDesignerMenu implements InventoryProvider {
         ItemMeta m = it.getItemMeta();
         if (m != null) {
             if (hasPerm) {
-                m.setDisplayName(i18nLegacy("customcraft.gui.permission.required-name", "<gold>Permission required</gold>", Map.of(), null));
+                m.setDisplayName(i18nLegacy("customcraft.gui.permission.required-name",
+                        "<gold>Permission required</gold>",
+                        Map.of(), null));
+
                 List<String> lore = langList("customcraft.gui.permission.required-lore",
-                        List.of("<gray>Node:</gray> <yellow>%permission%</yellow>", "<gray>Click to make it</gray> <green>Public</green>"));
+                        List.of(
+                                "<gray>Node:</gray> <yellow>%permission%</yellow>",
+                                "<gray>Click to make it</gray> <green>Public</green>"
+                        ));
                 final String p = permission;
-                m.setLore(lore.stream().map(s -> mmInlineToLegacy(s.replace("%permission%", p))).toList());
+                m.setLore(lore.stream()
+                        .map(s -> mmInlineToLegacy(s.replace("%permission%", p)))
+                        .toList());
             } else {
-                m.setDisplayName(i18nLegacy("customcraft.gui.permission.public-name", "<green>Public</green>", Map.of(), null));
+                m.setDisplayName(i18nLegacy("customcraft.gui.permission.public-name",
+                        "<green>Public</green>",
+                        Map.of(), null));
+
                 List<String> lore = langList("customcraft.gui.permission.public-lore",
-                        List.of("<gray>No permission required.</gray>", "<gray>Click to require a default node.</gray>"));
+                        List.of(
+                                "<gray>No permission required.</gray>",
+                                "<gray>Click to require a default node.</gray>"
+                        ));
                 m.setLore(lore.stream().map(CraftDesignerMenu::mmInlineToLegacy).toList());
             }
             it.setItemMeta(m);
         }
+
         contents.set(0, 8, ClickableItem.of(it, (InventoryClickEvent e) -> {
             boolean nowHas = permission != null && !permission.isBlank();
             permission = nowHas ? null : "oreo.craft.use." + recipeName.toLowerCase(Locale.ROOT);
@@ -187,6 +251,7 @@ public final class CraftDesignerMenu implements InventoryProvider {
 
     private void redrawGridCell(InventoryContents contents, SlotPos pos, int idx) {
         ItemStack display = (grid[idx] == null) ? new ItemStack(Material.AIR) : grid[idx].clone();
+
         contents.set(pos, ClickableItem.of(display, (InventoryClickEvent e) -> {
             ItemStack cursor = e.getWhoClicked().getItemOnCursor();
             ItemStack previous = grid[idx];
@@ -204,6 +269,7 @@ public final class CraftDesignerMenu implements InventoryProvider {
 
     private void redrawResult(InventoryContents contents) {
         ItemStack display = (result == null) ? new ItemStack(Material.AIR) : result.clone();
+
         contents.set(2, 7, ClickableItem.of(display, (InventoryClickEvent e) -> {
             ItemStack cursor = e.getWhoClicked().getItemOnCursor();
             ItemStack old = result;
@@ -221,44 +287,58 @@ public final class CraftDesignerMenu implements InventoryProvider {
 
     private ItemStack[] snapshotGrid() {
         ItemStack[] out = new ItemStack[9];
-        for (int i = 0; i < 9; i++) out[i] = (grid[i] == null) ? null : grid[i].clone();
+        for (int i = 0; i < 9; i++) {
+            out[i] = (grid[i] == null) ? null : grid[i].clone();
+        }
         return out;
     }
 
     private void saveOnClose(Player player) {
         CustomRecipe rec = new CustomRecipe(
-                recipeName, snapshotGrid(),
+                recipeName,
+                snapshotGrid(),
                 result == null ? null : result.clone(),
-                shapeless, permission
+                shapeless,
+                permission
         );
+
         boolean ok = service.saveAndRegister(rec);
         if (ok) {
-            String mode = shapeless ? Lang.get("customcraft.format.mode.shapeless", "Shapeless")
+            String mode = shapeless
+                    ? Lang.get("customcraft.format.mode.shapeless", "Shapeless")
                     : Lang.get("customcraft.format.mode.shaped", "Shaped");
+
             String permNote = (permission == null || permission.isBlank())
                     ? Lang.get("customcraft.format.permission.note-public", "<gray>(public)</gray>")
-                    : Lang.get("customcraft.format.permission.note-required", "<gold>perm</gold> <yellow>%permission%</yellow>").replace("%permission%", permission);
+                    : Lang.get("customcraft.format.permission.note-required", "<gold>perm</gold> <yellow>%permission%</yellow>")
+                    .replace("%permission%", permission);
 
             String msg = Lang.get("customcraft.messages.saved",
-                            "%prefix%<green>Recipe <yellow>%name%</yellow> has been saved (<white>%mode%</white>) %perm_note%.</green>")
+                            "<green>Recipe <yellow>%name%</yellow> has been saved (<white>%mode%</white>) %perm_note%.</green>")
                     .replace("%name%", recipeName)
                     .replace("%mode%", mode)
                     .replace("%perm_note%", permNote);
+
             player.sendMessage(MM.deserialize(applyPapi(player, msg)));
         } else {
-            player.sendMessage(MM.deserialize(Lang.get("customcraft.messages.invalid",
-                    "%prefix%<red>Invalid recipe. You need a result item and at least one ingredient.</red>")));
+            player.sendMessage(MM.deserialize(
+                    Lang.get("customcraft.messages.invalid",
+                            "<red>Invalid recipe. You need a result item and at least one ingredient.</red>")
+            ));
         }
     }
+
+    /* ---------------- Helpers ---------------- */
 
     private static ItemStack ui(Material m, String name) {
         ItemStack it = new ItemStack(m);
         ItemMeta meta = it.getItemMeta();
-        if (meta != null) { meta.setDisplayName(name); it.setItemMeta(meta); }
+        if (meta != null) {
+            meta.setDisplayName(name);
+            it.setItemMeta(meta);
+        }
         return it;
     }
-
-    /* ---------------- helpers ---------------- */
 
     private static List<String> langList(String basePath, List<String> def) {
         List<String> out = new ArrayList<>();
@@ -267,13 +347,19 @@ public final class CraftDesignerMenu implements InventoryProvider {
             if (v == null) break;
             out.add(v);
         }
-        if (out.isEmpty() && def != null) out.addAll(def);
+        if (out.isEmpty() && def != null) {
+            out.addAll(def);
+        }
         return out;
     }
 
-    private static String i18nLegacy(String key, String def, Map<String,String> vars, Player p) {
+    private static String i18nLegacy(String key, String def, Map<String, String> vars, Player p) {
         String raw = Lang.get(key, def);
-        if (vars != null) for (var e : vars.entrySet()) raw = raw.replace("%" + e.getKey() + "%", e.getValue());
+        if (vars != null) {
+            for (var e : vars.entrySet()) {
+                raw = raw.replace("%" + e.getKey() + "%", e.getValue());
+            }
+        }
         raw = applyPapi(p, raw);
         return LEGACY_SEC.serialize(MM.deserialize(raw));
     }
@@ -284,8 +370,11 @@ public final class CraftDesignerMenu implements InventoryProvider {
 
     private static String applyPapi(Player p, String raw) {
         if (raw == null) return "";
-        try { if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) return PlaceholderAPI.setPlaceholders(p, raw); }
-        catch (Throwable ignored) {}
+        try {
+            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                return PlaceholderAPI.setPlaceholders(p, raw);
+            }
+        } catch (Throwable ignored) {}
         return raw;
     }
 }

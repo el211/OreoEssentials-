@@ -1,8 +1,9 @@
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/DeathBackCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.services.DeathBackService;
-import org.bukkit.ChatColor;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -17,7 +18,7 @@ public class DeathBackCommand implements OreoCommand {
     }
 
     @Override public String name() { return "deathback"; }
-    @Override public List<String> aliases() { return List.of("backdeath","db"); }
+    @Override public List<String> aliases() { return List.of("backdeath", "db"); }
     @Override public String permission() { return "oreo.deathback"; }
     @Override public String usage() { return ""; }
     @Override public boolean playerOnly() { return true; }
@@ -25,19 +26,28 @@ public class DeathBackCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         Player p = (Player) sender;
+
+        // Check if player has a death location stored
         Location loc = deathBack.getLastDeath(p.getUniqueId());
         if (loc == null) {
-            p.sendMessage(ChatColor.RED + "No death location stored.");
+            Lang.send(p, "deathback.no-location",
+                    "<red>No death location stored.</red>");
             return true;
         }
+
+        // Attempt teleport
         boolean ok = p.teleport(loc);
         if (ok) {
-            p.sendMessage(ChatColor.GREEN + "Teleported to your last death.");
+            Lang.send(p, "deathback.success",
+                    "<green>Teleported to your last death.</green>");
+
             // Optional: clear after use
             // deathBack.clear(p.getUniqueId());
         } else {
-            p.sendMessage(ChatColor.RED + "Teleport failed.");
+            Lang.send(p, "deathback.failed",
+                    "<red>Teleport failed.</red>");
         }
+
         return true;
     }
 }

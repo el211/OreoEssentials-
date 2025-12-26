@@ -1,4 +1,4 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/UnmuteCommand.java
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/moderation/UnmuteCommand.java
 package fr.elias.oreoEssentials.commands.core.moderation;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -6,13 +6,12 @@ import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.integration.DiscordModerationNotifier;
 import fr.elias.oreoEssentials.services.chatservices.MuteService;
 import fr.elias.oreoEssentials.util.ChatSyncManager;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class UnmuteCommand implements OreoCommand, org.bukkit.command.TabCompleter {
 
@@ -33,23 +32,31 @@ public class UnmuteCommand implements OreoCommand, org.bukkit.command.TabComplet
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (args.length < 1) {
-            sender.sendMessage(ChatColor.YELLOW + "Usage: /" + label + " <player>");
+            Lang.send(sender, "moderation.unmute.usage",
+                    "<yellow>Usage: /%label% <player></yellow>",
+                    Map.of("label", label));
             return true;
         }
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
         if (target == null || (target.getName() == null && !target.hasPlayedBefore())) {
-            sender.sendMessage(ChatColor.RED + "Player not found: " + args[0]);
+            Lang.send(sender, "moderation.unmute.player-not-found",
+                    "<red>Player not found: %player%</red>",
+                    Map.of("player", args[0]));
             return true;
         }
 
         boolean wasMuted = mutes.unmute(target.getUniqueId());
         if (!wasMuted) {
-            sender.sendMessage(ChatColor.GRAY + target.getName() + " is not muted.");
+            Lang.send(sender, "moderation.unmute.not-muted",
+                    "<gray>%player% is not muted.</gray>",
+                    Map.of("player", target.getName()));
             return true;
         }
 
-        sender.sendMessage(ChatColor.GREEN + "Unmuted " + ChatColor.AQUA + target.getName() + ChatColor.GREEN + ".");
+        Lang.send(sender, "moderation.unmute.success",
+                "<green>Unmuted <aqua>%player%</aqua>.</green>",
+                Map.of("player", target.getName()));
 
         // Tell other servers
         try {
@@ -69,8 +76,10 @@ public class UnmuteCommand implements OreoCommand, org.bukkit.command.TabComplet
         // Notify player if online
         var p = target.getPlayer();
         if (p != null && p.isOnline()) {
-            p.sendMessage(ChatColor.GREEN + "You have been unmuted.");
+            Lang.send(p, "moderation.unmute.notified",
+                    "<green>You have been unmuted.</green>");
         }
+
         return true;
     }
 
@@ -121,5 +130,4 @@ public class UnmuteCommand implements OreoCommand, org.bukkit.command.TabComplet
 
         return Collections.emptyList();
     }
-
 }

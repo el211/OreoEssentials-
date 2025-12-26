@@ -1,12 +1,12 @@
-// src/main/java/fr/elias/oreoEssentials/commands/core/BanCommand.java
+// File: src/main/java/fr/elias/oreoEssentials/commands/core/moderation/BanCommand.java
 package fr.elias.oreoEssentials.commands.core.moderation;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.integration.DiscordModerationNotifier;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -27,25 +27,37 @@ public class BanCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (args.length < 1) {
-            sender.sendMessage(ChatColor.YELLOW + "Usage: /" + label + " <player> [duration] [reason]");
-            sender.sendMessage(ChatColor.GRAY + "Duration examples: 10m, 2h, 3d4h, 1w");
+            Lang.send(sender, "moderation.ban.usage",
+                    "<yellow>Usage: /%label% <player> [duration] [reason]</yellow>",
+                    Map.of("label", label));
+            Lang.send(sender, "moderation.ban.usage-examples",
+                    "<gray>Duration examples: 10m, 2h, 3d4h, 1w</gray>");
             return true;
         }
 
         String targetName = args[0];
         OfflinePlayer target = resolvePlayer(targetName);
         if (target == null || (target.getName() == null && !target.hasPlayedBefore())) {
-            sender.sendMessage(ChatColor.RED + "Player not found: " + targetName);
+            Lang.send(sender, "moderation.ban.player-not-found",
+                    "<red>Player not found: %player%</red>",
+                    Map.of("player", targetName));
             return true;
         }
 
         Date expires = null;
-        String reason = "Banned by an operator.";
+        String reason = Lang.msgWithDefault(
+                "moderation.ban.default-reason",
+                "Banned by an operator.",
+                sender instanceof Player ? (Player) sender : null
+        );
+
         if (args.length >= 2) {
             Long ms = parseDurationMillis(args[1]);
             if (ms != null) {
                 expires = new Date(System.currentTimeMillis() + ms);
-                if (args.length >= 3) reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+                if (args.length >= 3) {
+                    reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+                }
             } else {
                 reason = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
             }
@@ -58,15 +70,36 @@ public class BanCommand implements OreoCommand {
         if (target.isOnline()) {
             Player p = target.getPlayer();
             if (p != null) {
-                p.kickPlayer(ChatColor.RED + reason +
-                        (expires != null ? ChatColor.GRAY + "\nUntil: " + expires : ""));
+                String kickMsg;
+                if (expires != null) {
+                    kickMsg = Lang.msgWithDefault(
+                            "moderation.ban.kick-message-temp",
+                            "<red>%reason%</red>\n<gray>Until: %expires%</gray>",
+                            Map.of("reason", reason, "expires", expires.toString()),
+                            p
+                    );
+                } else {
+                    kickMsg = Lang.msgWithDefault(
+                            "moderation.ban.kick-message-perm",
+                            "<red>%reason%</red>",
+                            Map.of("reason", reason),
+                            p
+                    );
+                }
+                p.kickPlayer(kickMsg);
             }
         }
 
         // Feedback to staff
-        sender.sendMessage(ChatColor.GREEN + "Banned " + ChatColor.AQUA + target.getName() +
-                (expires != null ? ChatColor.GREEN + " until " + ChatColor.YELLOW + expires : "") +
-                ChatColor.GREEN + ". Reason: " + ChatColor.YELLOW + reason);
+        if (expires != null) {
+            Lang.send(sender, "moderation.ban.success-temp",
+                    "<green>Banned <aqua>%player%</aqua> until <yellow>%expires%</yellow>. Reason: <yellow>%reason%</yellow></green>",
+                    Map.of("player", target.getName(), "expires", expires.toString(), "reason", reason));
+        } else {
+            Lang.send(sender, "moderation.ban.success-perm",
+                    "<green>Banned <aqua>%player%</aqua> permanently. Reason: <yellow>%reason%</yellow></green>",
+                    Map.of("player", target.getName(), "reason", reason));
+        }
 
         // Discord notification
         DiscordModerationNotifier mod = OreoEssentials.get().getDiscordMod();

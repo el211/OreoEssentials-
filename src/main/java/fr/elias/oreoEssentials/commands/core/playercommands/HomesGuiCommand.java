@@ -7,15 +7,16 @@ import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.rabbitmq.packet.impl.HomeTeleportRequestPacket;
 import fr.elias.oreoEssentials.services.HomeService;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.SmartInventory;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class HomesGuiCommand implements OreoCommand {
@@ -36,15 +37,19 @@ public class HomesGuiCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
 
+        // Use Lang for GUI title
+        String title = Lang.msgLegacy("homes.gui.title",
+                "<dark_green>Your Homes</dark_green>",
+                p);
+
         // Open inventory
         SmartInventory inv = SmartInventory.builder()
                 .id("oreo:homes")
                 .provider(new HomesGuiProvider(homes))
                 .size(6, 9)
-                .title(ChatColor.DARK_GREEN + "Your Homes")
+                .title(title)
                 .manager(OreoEssentials.get().getInvManager())
                 .build();
-
 
         inv.open(p);
         return true;
@@ -61,19 +66,25 @@ public class HomesGuiCommand implements OreoCommand {
         if (targetServer.equalsIgnoreCase(localServer)) {
             var loc = homes.getHome(p.getUniqueId(), key);
             if (loc == null) {
-                p.sendMessage(ChatColor.RED + "Home not found: " + ChatColor.YELLOW + homeName);
+                Lang.send(p, "homes.gui.not-found",
+                        "<red>Home not found: <yellow>%name%</yellow></red>",
+                        Map.of("name", homeName));
                 return false;
             }
             p.teleport(loc);
-            p.sendMessage(ChatColor.GREEN + "Teleported to " + ChatColor.AQUA + homeName + ChatColor.GREEN + ".");
+            Lang.send(p, "homes.gui.teleported",
+                    "<green>Teleported to <aqua>%name%</aqua>.</green>",
+                    Map.of("name", homeName));
             return true;
         }
 
         var cs = OreoEssentials.get().getCrossServerSettings();
         if (!cs.homes()) {
-            p.sendMessage(ChatColor.RED + "Cross-server homes are disabled by server config.");
-            p.sendMessage(ChatColor.GRAY + "Use " + ChatColor.AQUA + "/server " + targetServer + ChatColor.GRAY
-                    + " then /home " + key);
+            Lang.send(p, "homes.gui.cross-disabled",
+                    "<red>Cross-server homes are disabled by server config.</red>");
+            Lang.send(p, "homes.gui.cross-disabled-manual",
+                    "<gray>Use <aqua>/server %server%</aqua> then <aqua>/home %name%</aqua>.</gray>",
+                    Map.of("server", targetServer, "name", key));
             return false;
         }
 
@@ -84,8 +95,11 @@ public class HomesGuiCommand implements OreoCommand {
             HomeTeleportRequestPacket pkt = new HomeTeleportRequestPacket(p.getUniqueId(), key, targetServer, requestId);
             pm.sendPacket(PacketChannel.individual(targetServer), pkt);
         } else {
-            p.sendMessage(ChatColor.RED + "Cross-server messaging is disabled. Ask an admin to enable RabbitMQ.");
-            p.sendMessage(ChatColor.GRAY + "You can still /server " + targetServer + ChatColor.GRAY + " then /home " + key);
+            Lang.send(p, "homes.gui.messaging-disabled",
+                    "<red>Cross-server messaging is disabled. Ask an admin to enable RabbitMQ.</red>");
+            Lang.send(p, "homes.gui.messaging-disabled-manual",
+                    "<gray>You can still <aqua>/server %server%</aqua> then <aqua>/home %name%</aqua>.</gray>",
+                    Map.of("server", targetServer, "name", key));
             return false;
         }
 
@@ -99,12 +113,16 @@ public class HomesGuiCommand implements OreoCommand {
             out.writeUTF("Connect");
             out.writeUTF(serverName);
             p.sendPluginMessage(OreoEssentials.get(), "BungeeCord", b.toByteArray());
-            p.sendMessage(ChatColor.YELLOW + "Sending you to " + ChatColor.AQUA + serverName
-                    + ChatColor.YELLOW + "… (teleport on arrival).");
+
+            Lang.send(p, "homes.gui.sending",
+                    "<yellow>Sending you to <aqua>%server%</aqua>... (teleport on arrival).</yellow>",
+                    Map.of("server", serverName));
             return true;
         } catch (Exception ex) {
             Bukkit.getLogger().warning("[OreoEssentials] Connect plugin message failed: " + ex.getMessage());
-            p.sendMessage(ChatColor.RED + "Failed to switch you to " + serverName + ".");
+            Lang.send(p, "homes.gui.switch-failed",
+                    "<red>Failed to switch you to %server%.</red>",
+                    Map.of("server", serverName));
             return false;
         }
     }
