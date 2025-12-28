@@ -1462,6 +1462,12 @@ daily:
   gui:
     disabled: "<red>Daily Rewards is disabled.</red>"
     toggled: "<yellow>Daily Rewards is now %state%</yellow>"
+
+
+
+
+
+
 # ============================================================================
 # NOTES
 # ============================================================================

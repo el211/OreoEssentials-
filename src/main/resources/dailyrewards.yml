@@ -1,10 +1,11 @@
 # ===================== Daily Rewards (Mongo) =====================
 Storage:
   Mongo:
-    Enabled: false
-    Uri: "mongodb://localhost:27017"
+    Enabled: true
+    Uri: "mongodb://reconomy:ELIASps4@88.99.150.35:25580/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.5.3"
     Database: "oreo"
-    Collection: "daily_rewards"
+    Collection: "oreo_"
+
 
 General:
   Enabled: true            # <—  master ON/OFF switch for Daily Rewards

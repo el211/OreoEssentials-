@@ -10,6 +10,8 @@ features:
   tpa:
     debug: false
     debug-echo-to-player: false
+
+
 tradedebug: true
 
 server:

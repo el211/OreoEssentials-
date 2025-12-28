@@ -12,7 +12,7 @@ public final class CustomRecipe {
     private final ItemStack result;
     private final String name;
     private final boolean shapeless;
-    private final String permission;    // null/blank => no permission required
+    private final String permission;
 
     /* ---------------- Constructors ---------------- */
 
