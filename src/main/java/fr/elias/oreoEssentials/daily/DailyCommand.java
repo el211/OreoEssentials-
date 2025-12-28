@@ -54,8 +54,7 @@ public final class DailyCommand implements CommandExecutor, TabCompleter {
         if (args.length > 0 && args[0].equalsIgnoreCase("toggle")) {
             if (!sender.hasPermission("oreo.daily.admin")) {
                 Lang.send(sender, "daily.no-permission-toggle",
-                        "<red>You don't have permission to toggle this feature.</red>",
-                        Map.of());
+                        "<red>You don't have permission to toggle this feature.</red>");
                 return true;
             }
 
@@ -79,23 +78,20 @@ public final class DailyCommand implements CommandExecutor, TabCompleter {
         // --- From here on, we require a player context ---
         if (!(sender instanceof Player p)) {
             Lang.send(sender, "daily.players-only",
-                    "<red>This command must be run in-game.</red>",
-                    Map.of());
+                    "<red>This command must be run in-game.</red>");
             return true;
         }
 
         if (!p.hasPermission("oreo.daily")) {
             Lang.send(p, "daily.no-permission",
-                    "<red>You don't have permission to use this.</red>",
-                    Map.of());
+                    "<red>You don't have permission to use this.</red>");
             return true;
         }
 
         // If feature is disabled, inform player (and hint to admins)
         if (!svc.isEnabled()) {
             Lang.send(p, "daily.disabled",
-                    "<red>Daily Rewards is currently disabled.</red>",
-                    Map.of());
+                    "<red>Daily Rewards is currently disabled.</red>");
 
             if (p.hasPermission("oreo.daily.admin")) {
                 Lang.send(p, "daily.disabled-hint",
@@ -158,18 +154,33 @@ public final class DailyCommand implements CommandExecutor, TabCompleter {
         rows.sort(Comparator.comparingInt(Row::streak).reversed()
                 .thenComparingDouble(Row::hours).reversed());
 
-        // Render top 10
-        viewer.sendMessage(svc.color("&8&m-------------------------"));
-        viewer.sendMessage(svc.color("&b&lDaily &fTop Streaks"));
+        // Render top 10 using Lang for better formatting
+        Player p = viewer instanceof Player ? (Player) viewer : null;
+
+        Lang.sendRaw(viewer, Lang.color("&8&m-------------------------"));
+        Lang.sendRaw(viewer, Lang.msgLegacy("daily.top.title", "&b&lDaily &fTop Streaks", p));
+
         int i = 1;
         List<Row> top = rows.stream().limit(10).collect(Collectors.toList());
+
         for (Row r : top) {
-            viewer.sendMessage(svc.color("&7#&f" + (i++) + " &b" + r.name()
-                    + " &8» &aStreak: &f" + r.streak()
-                    + " &8(&7" + String.format(java.util.Locale.US, "%.1f", r.hours()) + "h&8)"));
+            Lang.sendRaw(viewer, Lang.msgLegacy("daily.top.row",
+                    "&7#&f" + i + " &b%player% &8» &aStreak: &f%streak% &8(&7%hours%h&8)",
+                    Map.of(
+                            "rank", String.valueOf(i),
+                            "player", r.name(),
+                            "streak", String.valueOf(r.streak()),
+                            "hours", String.format(Locale.US, "%.1f", r.hours())
+                    ),
+                    p));
+            i++;
         }
-        if (top.isEmpty()) viewer.sendMessage(svc.color("&7No data yet."));
-        viewer.sendMessage(svc.color("&8&m-------------------------"));
+
+        if (top.isEmpty()) {
+            Lang.sendRaw(viewer, Lang.msgLegacy("daily.top.empty", "&7No data yet.", p));
+        }
+
+        Lang.sendRaw(viewer, Lang.color("&8&m-------------------------"));
     }
 
     @Override

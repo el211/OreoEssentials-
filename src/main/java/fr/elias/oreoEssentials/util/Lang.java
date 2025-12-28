@@ -22,19 +22,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * MiniMessage-first lang with legacy-& bridge + PAPI + console fallback + GUI helpers.
- * Now with Map-based variable replacement support and consistent color handling.
+ * Multi-language MiniMessage-first lang system with:
+ * - MiniMessage support (gradients, hover, click, etc.)
+ * - Legacy color code bridge (&, §, &#hex)
+ * - PlaceholderAPI integration
+ * - Multi-language support (lang_en.yml, lang_fr.yml, etc.)
+ * - Map-based variable replacement (%var%)
+ * - Console fallback (plain text)
+ * - GUI helpers (legacy § codes for inventory titles)
  */
 public final class Lang {
 
     private static OreoEssentials plugin;
     private static YamlConfiguration cfg;
+    private static String currentLanguage = "en";
 
     /** RAW MiniMessage, never pre-serialized (to keep hover/gradient possible). */
     private static String prefixRaw = "";
@@ -64,41 +72,164 @@ public final class Lang {
     public static void init(OreoEssentials pl) {
         plugin = Objects.requireNonNull(pl, "plugin");
 
-        File f = new File(plugin.getDataFolder(), "lang.yml");
-        if (!f.exists()) plugin.saveResource("lang.yml", false);
-        cfg = YamlConfiguration.loadConfiguration(f);
+        // Create lang/ directory if it doesn't exist
+        File langFolder = new File(plugin.getDataFolder(), "lang");
+        if (!langFolder.exists()) {
+            langFolder.mkdirs();
+        }
 
-        // Merge defaults from jar (fills missing keys; preserves user edits)
-        YamlConfiguration defCfg = new YamlConfiguration();
-        try (InputStream is = plugin.getResource("lang.yml")) {
-            if (is != null) {
-                defCfg = YamlConfiguration.loadConfiguration(new InputStreamReader(is, StandardCharsets.UTF_8));
+        // Get language from config.yml
+        currentLanguage = plugin.getConfig().getString("language", "en").toLowerCase();
+
+        // Check if old lang.yml exists (migration path)
+        File oldLangFile = new File(plugin.getDataFolder(), "lang.yml");
+        File newLangFile = new File(langFolder, "lang_" + currentLanguage + ".yml");
+
+        if (oldLangFile.exists()) {
+            if (!newLangFile.exists()) {
+                // Auto-migrate: copy old lang.yml to new lang_<language>.yml
+                try {
+                    java.nio.file.Files.copy(
+                            oldLangFile.toPath(),
+                            newLangFile.toPath()
+                    );
+                    plugin.getLogger().info("╔════════════════════════════════════════════════════════╗");
+                    plugin.getLogger().info("║  [Lang] Auto-Migration Complete!                      ║");
+                    plugin.getLogger().info("║                                                        ║");
+                    plugin.getLogger().info("║  Migrated: lang.yml → lang/lang_" + currentLanguage + ".yml            ║");
+                    plugin.getLogger().info("║                                                        ║");
+                    plugin.getLogger().info("║  Your custom messages have been preserved.            ║");
+                    plugin.getLogger().info("║  You can safely delete the old lang.yml file.          ║");
+                    plugin.getLogger().info("╚════════════════════════════════════════════════════════╝");
+                } catch (Exception e) {
+                    plugin.getLogger().warning("[Lang] Failed to auto-migrate lang.yml: " + e.getMessage());
+                    plugin.getLogger().warning("[Lang] Please manually copy your messages to lang/lang_" + currentLanguage + ".yml");
+                }
             } else {
-                plugin.getLogger().warning("[Lang] Default lang.yml wasn't found in JAR.");
+                // Migration already done, just warn
+                plugin.getLogger().warning("╔════════════════════════════════════════════════════════╗");
+                plugin.getLogger().warning("║  NOTICE: lang.yml is deprecated!                       ║");
+                plugin.getLogger().warning("║                                                        ║");
+                plugin.getLogger().warning("║  The plugin now uses lang/lang_<code>.yml files.       ║");
+                plugin.getLogger().warning("║  Your old lang.yml is no longer used.                  ║");
+                plugin.getLogger().warning("║                                                        ║");
+                plugin.getLogger().warning("║  You can safely delete: lang.yml                       ║");
+                plugin.getLogger().warning("║  Active language file: lang/lang_" + currentLanguage + ".yml         ║");
+                plugin.getLogger().warning("╚════════════════════════════════════════════════════════╝");
+            }
+        }
+
+        // Extract all bundled lang files from JAR
+        extractBundledLangFiles(langFolder);
+
+        // Load the selected language file
+        loadLanguageFile(currentLanguage);
+
+        plugin.getLogger().info("[Lang] Loaded language: " + currentLanguage);
+    }
+
+    public static void reload() {
+        if (plugin == null) return;
+
+        // Reload config to get latest language setting
+        plugin.reloadConfig();
+        currentLanguage = plugin.getConfig().getString("language", "en").toLowerCase();
+
+        // Reload the language file
+        loadLanguageFile(currentLanguage);
+
+        plugin.getLogger().info("[Lang] Reloaded language: " + currentLanguage);
+    }
+
+    /**
+     * Extract all bundled lang_*.yml files from the JAR to the lang/ folder.
+     */
+    private static void extractBundledLangFiles(File langFolder) {
+        String[] bundledLangs = {"en", "fr", "es", "de", "pt", "nl", "it", "ru", "zh", "ja"};
+
+        for (String lang : bundledLangs) {
+            String fileName = "lang_" + lang + ".yml";
+            File targetFile = new File(langFolder, fileName);
+
+            // Only extract if file doesn't exist (preserve user edits)
+            if (!targetFile.exists()) {
+                try (InputStream is = plugin.getResource("lang/" + fileName)) {
+                    if (is != null) {
+                        Files.copy(is, targetFile.toPath());
+                        plugin.getLogger().info("[Lang] Extracted " + fileName);
+                    }
+                } catch (IOException e) {
+                    plugin.getLogger().warning("[Lang] Failed to extract " + fileName + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+     * Load a language file with fallback to English.
+     */
+    private static void loadLanguageFile(String language) {
+        File langFolder = new File(plugin.getDataFolder(), "lang");
+        File langFile = new File(langFolder, "lang_" + language + ".yml");
+
+        // Fallback to English if requested language doesn't exist
+        if (!langFile.exists()) {
+            plugin.getLogger().warning("[Lang] Language file not found: lang_" + language + ".yml");
+            plugin.getLogger().warning("[Lang] Falling back to English (lang_en.yml)");
+            langFile = new File(langFolder, "lang_en.yml");
+            currentLanguage = "en";
+        }
+
+        // Load the file
+        cfg = YamlConfiguration.loadConfiguration(langFile);
+
+        // Merge defaults from the bundled file in JAR
+        try (InputStream is = plugin.getResource("lang/lang_" + currentLanguage + ".yml")) {
+            if (is != null) {
+                YamlConfiguration defCfg = YamlConfiguration.loadConfiguration(
+                        new InputStreamReader(is, StandardCharsets.UTF_8)
+                );
+
+                boolean changed = false;
+                for (String key : defCfg.getKeys(true)) {
+                    Object defVal = defCfg.get(key);
+                    if (defVal instanceof ConfigurationSection) continue;
+                    if (!cfg.contains(key)) {
+                        cfg.set(key, defVal);
+                        changed = true;
+                    }
+                }
+
+                if (changed) {
+                    try {
+                        cfg.save(langFile);
+                        plugin.getLogger().info("[Lang] Merged missing keys into " + langFile.getName());
+                    } catch (IOException e) {
+                        plugin.getLogger().warning("[Lang] Failed to save merged lang file: " + e.getMessage());
+                    }
+                }
             }
         } catch (Exception ex) {
-            plugin.getLogger().warning("[Lang] Failed to read default lang.yml: " + ex.getMessage());
-        }
-        if (defCfg != null) {
-            boolean changed = false;
-            for (String key : defCfg.getKeys(true)) {
-                Object defVal = defCfg.get(key);
-                if (defVal instanceof ConfigurationSection) continue;
-                if (!cfg.contains(key)) { cfg.set(key, defVal); changed = true; }
-            }
-            if (changed) {
-                try { cfg.save(f); }
-                catch (IOException e) { plugin.getLogger().warning("[Lang] Save merged lang.yml failed: " + e.getMessage()); }
-            }
+            plugin.getLogger().warning("[Lang] Failed to read default lang file from JAR: " + ex.getMessage());
         }
 
         prefixRaw = get("general.prefix", "");
     }
 
-    public static void reload() {
-        File f = new File(Objects.requireNonNull(plugin).getDataFolder(), "lang.yml");
-        cfg = YamlConfiguration.loadConfiguration(f);
-        prefixRaw = get("general.prefix", "");
+    /**
+     * Get the current language code (e.g., "en", "fr", "es").
+     */
+    public static String getCurrentLanguage() {
+        return currentLanguage;
+    }
+
+    /**
+     * Set the language at runtime (useful for /oe reload or admin commands).
+     */
+    public static void setLanguage(String lang) {
+        currentLanguage = lang.toLowerCase();
+        loadLanguageFile(currentLanguage);
+        plugin.getLogger().info("[Lang] Switched to language: " + currentLanguage);
     }
 
     /* ============================= LOW-LEVEL GETTERS ============================= */
@@ -368,6 +499,12 @@ public final class Lang {
     /**
      * MM-first parse with legacy-& bridge; no-italic by default (Minecraft UI norm).
      * This is the central method that handles both MiniMessage and legacy color codes.
+     *
+     * ✅ SUPPORTS:
+     * - MiniMessage tags: <gradient:#00FF00:#0000FF>text</gradient>
+     * - Hover/Click events: <hover:show_text:'tooltip'>text</hover>
+     * - Legacy codes: &a, &l, &#FF0000
+     * - Hex colors: &x&F&F&0&0&0&0 or &#FF0000
      */
     public static Component toComponent(String input) {
         if (input == null || input.isEmpty()) return Component.empty();

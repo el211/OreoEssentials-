@@ -1,6 +1,8 @@
-// File: src/main/java/fr/elias/oreoEssentials/util/MojangSkinFetcher.java
+// src/main/java/fr/elias/oreoEssentials/util/MojangSkinFetcher.java
 package fr.elias.oreoEssentials.util;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.bukkit.Bukkit;
 import org.bukkit.profile.PlayerProfile;
 
@@ -8,83 +10,117 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-/**
- * UUID lookups via Mojang API (minimal regex),
- * then let Bukkit fetch textures via PlayerProfile#update().
- */
 public final class MojangSkinFetcher {
 
     private MojangSkinFetcher() {}
 
-    /* ---------- tiny HTTP helper ---------- */
-    private static String readUrl(String url) throws Exception {
-        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
-        conn.setConnectTimeout(5000);
-        conn.setReadTimeout(7000);
-        conn.setRequestProperty("User-Agent", "OreoEssentials/skin-fetcher");
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-            StringBuilder sb = new StringBuilder();
-            String ln;
-            while ((ln = br.readLine()) != null) sb.append(ln);
-            return sb.toString();
-        }
-    }
-
-    // {"id":"<32 hex>","name":"..."}
-    private static final Pattern UUID_ID =
-            Pattern.compile("\"id\"\\s*:\\s*\"([0-9a-fA-F]{32})\"");
-
-    /** Fetch UUID for a given username, or null if not found. */
-    public static UUID fetchUuid(String name) {
+    /**
+     * Fetch UUID from Mojang API by username.
+     * @param username Player name
+     * @return UUID or null if not found
+     */
+    public static UUID fetchUuid(String username) {
         try {
-            String body = readUrl("https://api.mojang.com/users/profiles/minecraft/" + name);
-            Matcher m = UUID_ID.matcher(body);
-            if (!m.find()) return null;
-            String raw = m.group(1);
-            return fromFlatUuid(raw);
-        } catch (Exception ignored) {
+            URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + username);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+
+            if (conn.getResponseCode() != 200) {
+                SkinDebug.log("MojangAPI: UUID fetch failed for " + username + " (HTTP " + conn.getResponseCode() + ")");
+                return null;
+            }
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+
+            JsonObject json = JsonParser.parseString(response.toString()).getAsJsonObject();
+            String id = json.get("id").getAsString();
+
+            // Format UUID (insert dashes)
+            String formatted = id.replaceFirst(
+                    "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})",
+                    "$1-$2-$3-$4-$5"
+            );
+
+            UUID uuid = UUID.fromString(formatted);
+            SkinDebug.log("MojangAPI: UUID for " + username + " = " + uuid);
+            return uuid;
+
+        } catch (Exception e) {
+            SkinDebug.log("MojangAPI: Error fetching UUID for " + username + ": " + e.getMessage());
             return null;
         }
     }
 
     /**
-     * Create a Bukkit PlayerProfile and try to populate it with textures.
-     * Returns the (possibly updated) profile. Never throws; may return a profile
-     * without textures if Mojang is unavailable.
+     * Fetch player profile with textures from Mojang session server.
+     * This method BLOCKS while fetching - should be called async!
+     *
+     * @param uuid Player UUID
+     * @param name Player name
+     * @return PlayerProfile with textures, or null
      */
-    public static PlayerProfile fetchProfileWithTextures(UUID uuid, String nameForProfile) {
-        if (uuid == null) return null;
+    public static PlayerProfile fetchProfileWithTextures(UUID uuid, String name) {
         try {
-            PlayerProfile prof = Bukkit.getServer().createPlayerProfile(uuid, nameForProfile);
-            // Try to complete the profile (fills textures, etc.). Do a short, bounded wait.
-            try {
-                prof = prof.update().get(5, TimeUnit.SECONDS);
-            } catch (Throwable ignored) {
-                // If update fails or times out, just return the partial profile.
+            // Create profile
+            PlayerProfile profile = Bukkit.createPlayerProfile(uuid, name);
+
+            // ✅ FIX: Use wildcard capture for the CompletableFuture
+            CompletableFuture<? extends PlayerProfile> future = profile.update();
+
+            // Block and wait (max 10 seconds)
+            PlayerProfile updated = future.get(10, TimeUnit.SECONDS);
+
+            if (updated == null || updated.getTextures() == null || updated.getTextures().getSkin() == null) {
+                SkinDebug.log("MojangAPI: Profile update returned no textures for " + name);
+                return null;
             }
-            return prof;
-        } catch (Throwable ignored) {
+
+            SkinDebug.log("MojangAPI: Successfully fetched profile for " + name);
+            return updated;
+
+        } catch (java.util.concurrent.TimeoutException e) {
+            SkinDebug.log("MojangAPI: Timeout fetching profile for " + name);
+            return null;
+        } catch (Exception e) {
+            SkinDebug.log("MojangAPI: Error fetching profile: " + e.getMessage());
             return null;
         }
     }
 
-    /* ---------- helpers ---------- */
-    private static String flatUuid(UUID u) {
-        return u.toString().replace("-", "");
-    }
+    /**
+     * Fetch profile asynchronously (non-blocking).
+     * Use this in commands to avoid freezing the server.
+     *
+     * @param uuid Player UUID
+     * @param name Player name
+     * @param callback Called with the result on the main thread
+     */
+    public static void fetchProfileAsync(UUID uuid, String name,
+                                         java.util.function.Consumer<PlayerProfile> callback) {
+        // Run the blocking fetch on async thread
+        Bukkit.getScheduler().runTaskAsynchronously(
+                fr.elias.oreoEssentials.OreoEssentials.get(),
+                () -> {
+                    PlayerProfile profile = fetchProfileWithTextures(uuid, name);
 
-    private static UUID fromFlatUuid(String s) {
-        // turn 32-hex into dashed UUID
-        return UUID.fromString(
-                s.replaceFirst("(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{12})",
-                        "$1-$2-$3-$4-$5")
+                    // Return result on main thread
+                    Bukkit.getScheduler().runTask(
+                            fr.elias.oreoEssentials.OreoEssentials.get(),
+                            () -> callback.accept(profile)
+                    );
+                }
         );
     }
 }

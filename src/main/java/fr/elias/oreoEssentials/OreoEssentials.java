@@ -1514,13 +1514,41 @@ public final class OreoEssentials extends JavaPlugin {
                 this
         );
 
-        // --- Jails ---
-        this.jailService = new fr.elias.oreoEssentials.jail.JailService(this);
+        // --- Jails (with MongoDB or YAML storage based on config) ---
+        fr.elias.oreoEssentials.jail.JailStorage jailStorage;
+
+        boolean useMongoForJails = getConfig().getBoolean("Jail.Storage.Mongo.Enabled", false);
+
+        if (useMongoForJails && "mongodb".equalsIgnoreCase(essentialsStorage) && this.homesMongoClient != null) {
+            // Use MongoDB for cross-server jail synchronization
+            String mongoDb = getConfig().getString("storage.mongo.database", "oreo");
+
+            jailStorage = new fr.elias.oreoEssentials.jail.MongoJailStorage(
+                    getConfig().getString("storage.mongo.uri", "mongodb://localhost:27017"),
+                    mongoDb
+            );
+            getLogger().info("[Jails] Using MongoDB storage (cross-server enabled).");
+        } else {
+            // Use YAML for single-server setups
+            jailStorage = new fr.elias.oreoEssentials.jail.YamlJailStorage(this);
+            getLogger().info("[Jails] Using YAML storage (single-server only).");
+        }
+
+        // Create service with chosen storage
+        this.jailService = new fr.elias.oreoEssentials.jail.JailService(this, jailStorage);
         this.jailService.enable();
+
+        // Register listeners
         getServer().getPluginManager().registerEvents(
                 new fr.elias.oreoEssentials.jail.JailGuardListener(jailService),
                 this
         );
+        getServer().getPluginManager().registerEvents(
+                new fr.elias.oreoEssentials.jail.JailJoinListener(jailService),
+                this
+        );
+
+        getLogger().info("[Jails] System initialized with " + jailStorage.getClass().getSimpleName());
         // --- Player Warps (/pw) ---
         PlayerWarpCommand pwCmd = null;
         if (this.playerWarpService != null) {
@@ -1661,12 +1689,23 @@ public final class OreoEssentials extends JavaPlugin {
             getCommand("otherhomes").setExecutor(c);
             getCommand("otherhomes").setTabCompleter(c);
         }
-        if (getCommand("jail") != null)
-            getCommand("jail").setExecutor(new fr.elias.oreoEssentials.jail.commands.JailCommand(jailService));
-        if (getCommand("jailedit") != null)
-            getCommand("jailedit").setExecutor(new fr.elias.oreoEssentials.jail.commands.JailEditCommand(jailService));
-        if (getCommand("jaillist") != null)
-            getCommand("jaillist").setExecutor(new fr.elias.oreoEssentials.jail.commands.JailListCommand(jailService));
+        if (getCommand("jail") != null) {
+            var jailCmd = new fr.elias.oreoEssentials.jail.commands.JailCommand(jailService);
+            getCommand("jail").setExecutor(jailCmd);
+            getCommand("jail").setTabCompleter(new fr.elias.oreoEssentials.jail.commands.JailCommandTabCompleter(jailService));
+        }
+
+        if (getCommand("jailedit") != null) {
+            var jailEditCmd = new fr.elias.oreoEssentials.jail.commands.JailEditCommand(jailService);
+            getCommand("jailedit").setExecutor(jailEditCmd);
+            getCommand("jailedit").setTabCompleter(new fr.elias.oreoEssentials.jail.commands.JailEditCommandTabCompleter(jailService));
+        }
+
+        if (getCommand("jaillist") != null) {
+            var jailListCmd = new fr.elias.oreoEssentials.jail.commands.JailListCommand(jailService);
+            getCommand("jaillist").setExecutor(jailListCmd);
+            getCommand("jaillist").setTabCompleter(new fr.elias.oreoEssentials.jail.commands.JailListCommandTabCompleter(jailService));
+        }
 
         // /aliaseditor registration
         if (getCommand("aliaseditor") != null) {

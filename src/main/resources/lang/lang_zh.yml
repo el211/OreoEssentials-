@@ -1,0 +1,1420 @@
+# ============================================================================
+# OREOESSENTIALS - 完整生产环境 LANG.YML (简体中文)
+# ============================================================================
+# 从综合颜色系统统一项目生成
+# 涵盖11个验证会话中的102+个已验证文件
+#
+# 格式: MiniMessage (例如: <red>, <green>, <#RRGGBB>)
+# 文档: https://docs.advntr.dev/minimessage/format.html
+#
+# 常用变量:
+#   %player%, %target%    - 玩家名称
+#   %server%, %world%     - 服务器/世界名称
+#   %label%               - 命令标签
+#   %amount%, %balance%   - 数值
+#   %name%, %warp%, %home% - 位置名称
+#   %id%                  - 数字标识符
+# ============================================================================
+
+# ============================================================================
+# 通用消息
+# ============================================================================
+
+general:
+  prefix: '<gold><bold>Oreo</bold></gold><white><bold>Essentials</bold></white> <dark_gray>»</dark_gray> '
+  no-permission: "<red>你没有权限。</red>"
+  player-only: "<red>只有玩家可以使用此命令。</red>"
+  console-only: "<red>只有控制台可以使用此命令。</red>"
+  invalid-player: "<red>未找到玩家 <yellow>%player%</yellow>。</red>"
+  player-offline: "<red>玩家 <yellow>%player%</yellow> 不在线。</red>"
+  reload-success: "<green>配置重载成功。</green>"
+  reload-failed: "<red>配置重载失败。</red>"
+  command-cooldown: "<yellow>你需要等待 <white>%time%</white> 才能再次使用此命令。</yellow>"
+
+# ============================================================================
+# 礼包系统 (已验证6个文件)
+# ============================================================================
+
+kits:
+  # 核心消息 (KitsManager.java - 9次Lang调用)
+  unknown-kit: "<red>未知礼包: <yellow>%kit_id%</yellow></red>"
+  disabled: "<red>礼包目前已禁用。</red>"
+  disabled-hint: "<gray>使用 <white>%cmd%</white> 来启用。</gray>"
+
+  # 权限
+  no-permission: "<red>你没有权限。</red>"
+  no-permission-claim: "<red>你没有权限领取礼包。</red>"
+  no-permission-specific: "<red>你没有 <yellow>%kit_name%</yellow> 礼包的权限。需要: <white>%perm%</white></red>"
+
+  # 冷却时间
+  cooldown: "<yellow>礼包 <aqua>%kit_name%</aqua> 正在冷却中。请等待 <white>%cooldown_left%</white>。</yellow>"
+  bypass-cooldown: "<green>绕过 <aqua>%kit_name%</aqua> 的冷却时间。</green>"
+
+  # 成功
+  claimed: "<green>你已领取 <aqua>%kit_name%</aqua> 礼包!</green>"
+  commands-ran: "<gray>已执行 <aqua>%kit_name%</aqua> 的命令。</gray>"
+
+  # 命令 (KitCommands.java - 8次Lang调用)
+  player-only: "<red>只有玩家可以使用此命令。</red>"
+  usage-kit: "<yellow>用法: /kit <n></yellow>"
+  toggle-enabled: "<green>礼包功能现已 <white>启用</white>。</green>"
+  toggle-disabled: "<yellow>礼包功能现已 <white>禁用</white>。</yellow>"
+
+  # GUI说明 (KitsMenuSI.java - 5次Lang调用)
+  gui:
+    lore:
+      claimable: "<green>✓ 可以领取!</green>\n<gray>冷却: <white>无</white></gray>"
+      on-cooldown: "<yellow>⏱ 冷却中</yellow>\n<gray>等待: <white>%cooldown_left%</white></gray>"
+    sounds:
+      claim:
+        enabled: true
+        sound: "minecraft:entity.experience_orb.pickup"
+        volume: 0.8
+        pitch: 1.2
+      denied:
+        enabled: true
+        sound: "minecraft:block.note_block.bass"
+        volume: 0.7
+        pitch: 0.7
+
+# ============================================================================
+# 玩家传送点系统 (已验证10个文件 - 65+个Lang键)
+# ============================================================================
+
+# 服务级别消息 (PlayerWarpService.java - 15次Lang调用)
+playerwarps:
+  no-permission-base: "<red>你没有使用玩家传送点的权限。</red>"
+  only-players-sub: "<red>只有玩家可以使用 /%sub%。</red>"
+
+  teleport:
+    not-found: "<red>未找到传送点 <yellow>%name%</yellow>。</red>"
+    no-permission: "<red>你没有使用 <yellow>%name%</yellow> 的权限。</red>"
+    local: "<green>已传送到传送点</green> <yellow>%name%</yellow>。"
+    cross-disabled: "<gray>跨服务器传送点已禁用。本地传送到 <white>%name%</white>。</gray>"
+    messaging-disabled: "<gray>消息离线。本地传送到 <white>%name%</white>。</gray>"
+    cross-send: "<gray>正在将你发送到服务器</gray> <yellow>%server%</yellow> <gray>以使用传送点</gray> <white>%name%</white>…"
+
+  whitelist:
+    not-found: "<red>未找到传送点 <yellow>%name%</yellow>。</red>"
+    not-enabled: "<red><yellow>%name%</yellow> 未启用白名单。</red>"
+    player-not-found: "<red>未找到目标玩家。</red>"
+    already: "<yellow>%target%</yellow> 已在 <white>%name%</white> 的白名单中。"
+    added: "<green>已将</green> <yellow>%target%</yellow> <green>添加到</green> <white>%name%</white> <green>的白名单。</green>"
+    not-in: "<red><yellow>%target%</yellow> 不在 <white>%name%</white> 的白名单中。</red>"
+    removed: "<green>已将</green> <yellow>%target%</yellow> <green>从</green> <white>%name%</white> <green>的白名单中移除。</green>"
+    enabled: "<green>已为 <white>%warp%</white> 启用白名单。</green>"
+    disabled: "<yellow>已为 <white>%warp%</white> 禁用白名单。</yellow>"
+    not-owner: "<red>你不是 <yellow>%warp%</yellow> 的所有者。</red>"
+
+# 命令消息 (PlayerWarpCommand.java - 50+次Lang调用)
+pw:
+  # 帮助
+  help-header: "<gold><bold>玩家传送点帮助</bold></gold>"
+  help-body: |
+    <yellow>/%label% set <n></yellow> <gray>- 创建传送点</gray>
+    <yellow>/%label% remove <n></yellow> <gray>- 移除你的传送点</gray>
+    <yellow>/%label% list [玩家]</yellow> <gray>- 列出传送点</gray>
+    <yellow>/%label% gui</yellow> <gray>- 浏览所有传送点</gray>
+    <yellow>/%label% mywarps</yellow> <gray>- 管理你的传送点</gray>
+    <yellow>/%label% <warp></yellow> <gray>- 传送到传送点</gray>
+  help-footer: "<gray>使用 <yellow>/%label% help</yellow> 获取更多信息。</gray>"
+
+  # 权限 (20+个键)
+  no-permission-base: "<red>你没有使用玩家传送点的权限。</red>"
+  no-permission-set: "<red>你没有设置传送点的权限。</red>"
+  no-permission-remove: "<red>你没有移除传送点的权限。</red>"
+  no-permission-list: "<red>你没有列出传送点的权限。</red>"
+  no-permission-warp: "<red>你没有使用 <yellow>%name%</yellow> 的权限。</red>"
+  no-permission-amount: "<red>你没有权限。</red>"
+  no-permission-rtp: "<red>你没有权限。</red>"
+  no-permission-near: "<red>你没有权限。</red>"
+  no-permission-reset: "<red>你没有权限。</red>"
+  no-permission-rename: "<red>你没有权限。</red>"
+  no-permission-setowner: "<red>你没有权限。</red>"
+  no-permission-removeall: "<red>你没有权限。</red>"
+  no-permission-reload: "<red>你没有权限。</red>"
+  no-permission-addwarps: "<red>你没有权限。</red>"
+  no-permission-whitelist: "<red>你没有权限。</red>"
+  no-permission-desc: "<red>你没有权限。</red>"
+  no-permission-category: "<red>你没有权限。</red>"
+  no-permission-lock: "<red>你没有权限。</red>"
+  no-permission-icon: "<red>你没有权限。</red>"
+  no-permission-cost: "<red>你没有权限。</red>"
+  no-permission-managers: "<red>你没有权限。</red>"
+  no-permission-password: "<red>你没有权限。</red>"
+
+  # 用法消息 (15+个键)
+  usage-set: "<yellow>用法: /%label% set <n></yellow>"
+  usage-remove: "<yellow>用法: /%label% remove <warp></yellow>"
+  usage-reset: "<yellow>用法: /%label% reset <warp></yellow>"
+  usage-rename: "<yellow>用法: /%label% rename <warp> <新名称></yellow>"
+  usage-setowner: "<yellow>用法: /%label% setowner <warp> <玩家></yellow>"
+  usage-removeall: "<yellow>用法: /%label% removeall <玩家></yellow>"
+  usage-addwarps: "<yellow>用法: /%label% addwarps <玩家> <数量></yellow>"
+  usage-whitelist: "<yellow>用法: /%label% whitelist <enable|disable|list|set|remove> <warp> [玩家]</yellow>"
+  usage-whitelist-set: "<yellow>用法: /%label% whitelist set <warp> <玩家></yellow>"
+  usage-whitelist-remove: "<yellow>用法: /%label% whitelist remove <warp> <玩家></yellow>"
+  usage-desc: "<yellow>用法: /%label% desc <warp> [描述...]</yellow>"
+  usage-category: "<yellow>用法: /%label% category <warp> [类别]</yellow>"
+  usage-lock: "<yellow>用法: /%label% lock <warp> [on|off|toggle]</yellow>"
+  usage-icon: "<yellow>用法: /%label% icon <warp> [clear]</yellow>"
+  usage-cost: "<yellow>用法: /%label% cost <warp> <金额></yellow>"
+  usage-managers: "<yellow>用法: /%label% managers <warp> [玩家]</yellow>"
+  usage-password: "<yellow>用法: /%label% password <warp> <密码|off></yellow>"
+  usage-use: "<yellow>用法: /%label% use <warp> [密码]</yellow>"
+
+  # 设置传送点
+  limit-reached: "<red>你已达到传送点上限 (<white>%limit%</white>)。</red>"
+  already-exists: "<red>你已有名为 <yellow>%name%</yellow> 的传送点。</red>"
+  set-success: "<green>传送点 <aqua>%name%</aqua> 已创建。</green>"
+
+  # 移除传送点
+  not-found-owner: "<red>你没有名为 <yellow>%name%</yellow> 的传送点。</red>"
+  not-found: "<red>未找到传送点 <yellow>%name%</yellow>。</red>"
+  remove-success: "<green>传送点 <aqua>%name%</aqua> 已移除。</green>"
+  remove-failed: "<red>移除传送点 <yellow>%name%</yellow> 失败。</red>"
+
+  # 列表
+  list-header: "<gold><yellow>%owner%</yellow> 的传送点:</gold>"
+  list-empty: "<gray>未找到传送点。</gray>"
+  list-entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua>"
+  list-footer: "<gray>───────────────────────</gray>"
+  list-target-offline: "<red>玩家 <yellow>%player%</yellow> 不在线。</red>"
+
+  # 数量
+  amount-console-usage: "<red>用法: /pw amount <玩家></red>"
+  amount-target-offline: "<red>玩家 <yellow>%player%</yellow> 不在线。</red>"
+  amount-self: "<green>你有 <white>%amount%</white> 个传送点。</green>"
+  amount-other: "<green><yellow>%player%</yellow> 有 <white>%amount%</white> 个传送点。</green>"
+
+  # RTP
+  rtp-none: "<red>没有可用于随机传送的传送点。</red>"
+  rtp-none-usable: "<red>没有你可以访问的传送点。</red>"
+
+  # 附近
+  near-none: "<gray>在 <white>%radius%</white> 格内未找到传送点。</gray>"
+  near-page-empty: "<red>第 <yellow>%page%</yellow> 页为空。</red>"
+
+  # 重置
+  reset-success: "<green>传送点 <aqua>%name%</aqua> 已重置到你的当前位置。</green>"
+  reset-failed: "<red>重置传送点 <yellow>%name%</yellow> 失败。</red>"
+
+  # 重命名
+  rename-success: "<green>已将 <yellow>%old%</yellow> 重命名为 <aqua>%name%</aqua>。</green>"
+  rename-failed: "<red>将 <yellow>%old%</yellow> 重命名为 <yellow>%name%</yellow> 失败。</red>"
+
+  # 设置所有者
+  setowner-success: "<green>传送点 <aqua>%warp%</aqua> 已转让给 <yellow>%player%</yellow>。</green>"
+  setowner-failed: "<red>转让传送点 <yellow>%warp%</yellow> 失败。</red>"
+  player-resolve-failed: "<red>无法解析玩家 <yellow>%player%</yellow>。</red>"
+
+  # 全部移除
+  removeall-success: "<green>已从 <yellow>%player%</yellow> 移除 <white>%amount%</white> 个传送点。</green>"
+
+  # 重载
+  reload-success: "<green>配置已重载。</green>"
+
+  # 添加传送点
+  addwarps-invalid-amount: "<red>无效的金额。</red>"
+  addwarps-success: "<green>已为 <yellow>%player%</yellow> 添加 <white>%amount%</white> 个额外传送点槽位。总额外: <white>%total%</white>。</green>"
+
+  # 白名单
+  whitelist-added: "<green>已将 <yellow>%player%</yellow> 添加到 <white>%warp%</white> 的白名单。</green>"
+  whitelist-removed: "<green>已将 <yellow>%player%</yellow> 从 <white>%warp%</white> 的白名单中移除。</green>"
+  whitelist-already: "<yellow>%player%</yellow> 已在 <white>%warp%</white> 的白名单中。"
+  whitelist-not-found: "<red><yellow>%player%</yellow> 不在 <white>%warp%</white> 的白名单中。</red>"
+
+  # 描述
+  desc-empty: "<gray>传送点 <white>%warp%</white> 没有描述。</gray>"
+  desc-show: "<gold><aqua>%warp%</aqua> 的描述:</gold> <white>%desc%</white>"
+  desc-cleared: "<green>已清除 <aqua>%warp%</aqua> 的描述。</green>"
+  desc-set: "<green>已将 <aqua>%warp%</aqua> 的描述设置为: <white>%desc%</white></green>"
+
+  # 类别
+  category-empty: "<gray>传送点 <white>%warp%</white> 没有类别。</gray>"
+  category-show: "<gold><aqua>%warp%</aqua> 的类别:</gold> <white>%category%</white>"
+  category-cleared: "<green>已清除 <aqua>%warp%</aqua> 的类别。</green>"
+  category-set: "<green>已将 <aqua>%warp%</aqua> 的类别设置为: <white>%category%</white></green>"
+
+  # 锁定
+  locked: "<green>传送点 <aqua>%warp%</aqua> 已锁定。</green>"
+  unlocked: "<green>传送点 <aqua>%warp%</aqua> 已解锁。</green>"
+
+  # 图标
+  icon-no-item: "<red>你必须在主手持有物品。</red>"
+  icon-set: "<green>已为 <aqua>%warp%</aqua> 设置图标。</green>"
+  icon-cleared: "<green>已清除 <aqua>%warp%</aqua> 的图标。</green>"
+
+  # 费用
+  cost-invalid: "<red>无效的金额: <yellow>%input%</yellow></red>"
+  cost-cleared: "<green>已清除 <aqua>%warp%</aqua> 的费用 (现在免费)。</green>"
+  cost-set: "<green>已将 <aqua>%warp%</aqua> 的费用设置为 <yellow>$%amount%</yellow>。</green>"
+  cost-not-enough: "<red>余额不足 (需要 <white>$%amount%</white>)。</red>"
+  cost-charged: "<gray>已收费</gray> <yellow>$%amount%</yellow> <gray>(支付给</gray> <white>%owner%</white><gray>)。</gray>"
+
+  # 管理员
+  managers-player-not-found: "<red>未找到玩家 <yellow>%player%</yellow>。</red>"
+  manager-added: "<green>已将 <yellow>%player%</yellow> 添加为 <white>%warp%</white> 的管理员。</green>"
+  manager-removed: "<green>已将 <yellow>%player%</yellow> 从 <white>%warp%</white> 的管理员中移除。</green>"
+
+  # 密码
+  password-required: "<red>传送点 <yellow>%warp%</yellow> 需要密码。</red> <gray>使用: <white>/pw use %warp% <密码></white></gray>"
+  password-wrong: "<red><yellow>%warp%</yellow> 的密码错误。</red>"
+  password-cleared: "<green>已清除 <aqua>%warp%</aqua> 的密码。</green>"
+  password-set: "<green>已为 <aqua>%warp%</aqua> 设置密码。</green>"
+  password-placeholder-set: "<green>已为 <aqua>%warp%</aqua> 设置默认密码 '<white>%password%</white>'。使用 <yellow>/pw password %warp% <你的密码></yellow> 更改。</green>"
+
+  # 传送
+  teleport-failed: "<red>传送失败。</red>"
+  teleported: "<green>已传送到玩家传送点 <aqua>%name%</aqua>。</green>"
+  sending: "<yellow>正在将你发送到 <aqua>%server%</aqua>... 到达时你将被传送到玩家传送点 <aqua>%warp%</aqua>。</yellow>"
+  messaging-disabled: "<red>跨服务器消息已禁用。</red>"
+
+# ============================================================================
+# 玩家保险箱系统 (已验证2个GUI文件 - 1个Lang键)
+# ============================================================================
+
+playervaults:
+  # 访问锁定的保险箱时拒绝权限 (VaultMenu.java)
+  deny: "<red>你没有权限访问保险箱 <yellow>%id%</yellow>。</red>"
+
+  # 可选成功消息
+  opened: "<green>保险箱 <aqua>%id%</aqua> 已打开。</green>"
+  saved: "<gray>保险箱 <white>%id%</white> 已自动保存。</gray>"
+
+# ============================================================================
+# 传送系统 (TPA, HOME, SPAWN, WARP, BACK)
+# ============================================================================
+
+teleport:
+  # 共享倒计时
+  countdown:
+    title: "<yellow>传送中...</yellow>"
+    subtitle: "<gray><white>%seconds%</white>秒后...</gray>"
+
+  # 跨服务器传送 (/tp 管理员命令)
+  cross-server:
+    no-messaging: "<red>跨服务器消息不可用; 无法在服务器间使用 /tp。</red>"
+    jumping: "<gray>传送到 <aqua>%server%</aqua> 上的 <aqua>%target%</aqua>…</gray>"
+    arrived: "<green>已传送到 <aqua>%target%</aqua>。</green>"
+    target-offline: "<red>传送失败: 目标玩家已不在线。</red>"
+
+  # 跨服务器 /back
+  back:
+    cross-server:
+      no-messaging: "<red>跨服务器消息不可用; 无法在服务器间使用 /back。</red>"
+      no-server: "<red>返回位置没有目标服务器。</red>"
+      jumping: "<gray>传送到你在 <aqua>%server%</aqua> 的上一个位置…</gray>"
+      world-not-loaded: "<red>传送失败: 世界 <yellow>%world%</yellow> 未加载。</red>"
+      success: "<green>已返回。</green>"
+
+# TPA系统
+tpa:
+  usage: "<red>用法: /%label% <玩家></red>"
+  self: "<red>你不能向自己发送TPA。</red>"
+
+  not-found:
+    name-hint: "<red>玩家 <white>%input%</white> 不在线。<gray>(如果他们在另一个服务器上,请使用确切的Minecraft名称。)</gray></red>"
+    generic: "<red>未找到在线玩家 <white>%input%</white>。<gray>(可能离线或在另一个代理集群上。)</gray></red>"
+
+  sent:
+    local: "<green>已向 <aqua>%target%</aqua> 发送TPA。</green>"
+    cross-server: "<gray>已向 <aqua>%server%</aqua> 上的 <aqua>%target%</aqua> 发送请求。可以使用 </gray><green>/tpaccept</green><gray>。</gray>"
+    global: "<gray>我们已在网络上向 <white>%target%</white> 广播了你的请求。如果在线,可以使用 </gray><green>/tpaccept</green><gray>。</gray>"
+
+  request-target: "<aqua>%player%</aqua> <yellow>想要传送到你这里。</yellow> <green>/tpaccept</green> <yellow>或</yellow> <red>/tpdeny</red> <yellow>(<white>%timeout%</white>秒)</yellow>"
+
+  broker-unavailable: "<red>跨服务器TPA代理目前不可用。<gray>请让 </gray><white>%target%</white><gray> 直接加入你的服务器。</gray></red>"
+
+  accept:
+    none: "<red>没有待处理的传送请求。</red>"
+    failed: "<red>接受传送请求失败。</red>"
+    debug-hint: "<gray>调试: 在TeleportService中未找到请求。</gray>"
+
+  # 调试回显
+  debug:
+    echo: "<dark_gray>[<aqua>TPA</aqua>/<gray>%id%</gray>]</dark_gray> <gray>%message%</gray>"
+
+# 家系统
+home:
+  disabled: "<red>家功能目前已禁用。</red>"
+  no-homes: "<yellow>你没有家。使用 <aqua>%sethome%</aqua> 创建一个。</yellow>"
+  list: "<gray>你的家:</gray> <aqua>%homes%</aqua>"
+  tip: "<gray>使用 <yellow>/%label% <名称></yellow> 传送。</gray>"
+  not-found: "<red>未找到家 <yellow>%name%</yellow>。</red>"
+  suggest: "<gray>你是否想要:</gray> <aqua>%suggestions%</aqua>"
+  teleported: "<green>已传送到家 <yellow>%name%</yellow>。</green>"
+  cancelled-moved: "<red>传送已取消: 你移动了。</red>"
+  cross-disabled: "<red>跨服务器家已禁用。</red>"
+  cross-disabled-tip: "<gray>请管理员启用跨服务器家或使用 <yellow>/server %server%</yellow> 然后 <yellow>/home %name%</yellow>。</gray>"
+  messaging-disabled: "<red>跨服务器消息已禁用。</red>"
+  messaging-disabled-tip: "<gray>请管理员启用消息或使用 <yellow>/server %server%</yellow> 然后 <yellow>/home %name%</yellow>。</gray>"
+  sending: "<gray>正在将你发送到 <yellow>%server%</yellow> 以使用家 <aqua>%name%</aqua>...</gray>"
+  switch-failed: "<red>切换到服务器 <yellow>%server%</yellow> 失败。</red>"
+  switch-failed-tip: "<gray>手动尝试 <yellow>/server %server%</yellow>。</gray>"
+
+homes:
+  not-found: "<red>未找到家: <yellow>%name%</yellow></red>"
+  available: "<gray>可用:</gray> <aqua>%homes%</aqua>"
+  teleported: "<green>已传送到家 <aqua>%name%</aqua>。</green>"
+  cross-disabled: "<red>跨服务器家已被服务器配置禁用。</red>"
+  cross-disabled-manual: "<gray>使用 <aqua>/server %server%</aqua> 然后执行 <aqua>/homes %name%</aqua>。</gray>"
+  messaging-disabled: "<red>跨服务器消息已禁用。请管理员启用RabbitMQ。</red>"
+  messaging-disabled-manual: "<gray>你仍可以使用 <aqua>/server %server%</aqua> 切换并执行 <aqua>/homes %name%</aqua>。</gray>"
+  sending: "<yellow>正在将你发送到 <aqua>%server%</aqua>... 到达时你将被传送到家 <aqua>%name%</aqua>。</yellow>"
+  switch-failed: "<red>切换到 %server% 失败。</red>"
+  no-homes: "<yellow>你没有家。使用 <aqua>/sethome <名称></aqua>。</yellow>"
+  list: "<gold>家 (%count%):</gold> <aqua>%homes%</aqua>"
+  tip: "<gray>提示: <aqua>/homes <名称></aqua> 传送。</gray>"
+
+  gui:
+    title: "<dark_green>你的家</dark_green>"
+    not-found: "<red>未找到家: <yellow>%name%</yellow></red>"
+    teleported: "<green>已传送到 <aqua>%name%</aqua>。</green>"
+    cross-disabled: "<red>跨服务器家已被服务器配置禁用。</red>"
+    cross-disabled-manual: "<gray>使用 <aqua>/server %server%</aqua> 然后 <aqua>/home %name%</aqua>。</gray>"
+    messaging-disabled: "<red>跨服务器消息已禁用。请管理员启用RabbitMQ。</red>"
+    messaging-disabled-manual: "<gray>你仍可以使用 <aqua>/server %server%</aqua> 然后 <aqua>/home %name%</aqua>。</gray>"
+    sending: "<yellow>正在将你发送到 <aqua>%server%</aqua>... (到达时传送)。</yellow>"
+    switch-failed: "<red>切换到 %server% 失败。</red>"
+
+    refresh:
+      title: "<yellow>刷新</yellow>"
+      lore: "<gray>点击重载家。</gray>"
+
+    counter:
+      title: "<gold>家 <white>(%count%)</white></gold>"
+      lore:
+        0: "<gray>左键点击家以传送。</gray>"
+        1: "<gray>右键点击家以删除。</gray>"
+
+    nav:
+      previous: "<yellow>上一页</yellow>"
+      next: "<yellow>下一页</yellow>"
+
+    home:
+      title: "<aqua>%name%</aqua>"
+      lore:
+        server: "<gray>服务器: <yellow>%server%</yellow></gray>"
+        world: "<gray>世界: <yellow>%world%</yellow></gray>"
+        coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+        left-click: "<green>左键: <white>传送</white></green>"
+        right-click: "<red>右键: <white>删除</white></red>"
+
+  delete:
+    title: "<dark_red>删除 '%home%'?</dark_red>"
+    yes: "<green>是的,删除</green>"
+    no: "<red>不,取消</red>"
+    success: "<red>家 <yellow>%home%</yellow> 已删除。</red>"
+    failed: "<red>删除家 <yellow>%home%</yellow> 失败。</red>"
+    info:
+      title: "<gold>删除家</gold>"
+      lore:
+        0: "<gray>你确定要删除</gray>"
+        1: "<yellow>%home%</yellow><gray>吗?</gray>"
+
+# Sethome
+sethome:
+  limit: "<red>你已达到家的上限 <yellow>%max%</yellow>。</red>"
+  set: "<green>家 <yellow>%name%</yellow> 已设置。</green>"
+
+# Delhome
+delhome:
+  usage: "<yellow>用法: /%label% <名称></yellow>"
+  removed: "<green>家 <yellow>%name%</yellow> 已移除。</green>"
+  not-found: "<red>没有名为 <yellow>%name%</yellow> 的家。</red>"
+
+# 出生点系统
+spawn:
+  disabled: "<red>出生点命令目前已禁用。</red>"
+  not-set: "<red>出生点位置未设置。</red>"
+  teleported: "<green>已传送到出生点。</green>"
+  cancelled-moved: "<red>传送已取消: 你移动了。</red>"
+  teleport-failed: "<red>传送失败: %error%</red>"
+  cross-disabled: "<red>跨服务器出生点已禁用。</red>"
+  cross-disabled-tip: "<gray>请管理员启用跨服务器出生点或使用 <yellow>/server %server%</yellow> 然后 <yellow>/spawn</yellow>。</gray>"
+  messaging-disabled: "<red>跨服务器消息已禁用。</red>"
+  messaging-disabled-tip: "<gray>请管理员启用消息或使用 <yellow>/server %server%</yellow> 然后 <yellow>/spawn</yellow>。</gray>"
+  sending: "<gray>正在将你发送到 <yellow>%server%</yellow> 以使用出生点...</gray>"
+  switch-failed: "<red>切换到服务器 <yellow>%server%</yellow> 失败。</red>"
+
+# 传送点系统
+warp:
+  list-empty: "<yellow>传送点: <gray>(无)</gray></yellow>"
+  list: "<yellow>传送点:</yellow> <gray>%warps%</gray>"
+
+  no-permission: "<red>你没有此传送点的权限。</red>"
+  no-permission-with-node: "<red>你没有此传送点的权限。<gray>(%permission%)</gray></red>"
+  no-permission-others: "<red>你没有传送其他玩家的权限。</red>"
+
+  console-usage: "<red>控制台用法: /warp <warp> <玩家></red>"
+  player-not-found: "<red>玩家 '<yellow>%player%</yellow>' 不在线。</red>"
+
+  not-found: "<red>未找到传送点。</red>"
+  teleport-failed: "<red>传送失败: <gray>%error%</gray></red>"
+
+  teleported: "<green>已传送到传送点 <aqua>%warp%</aqua>。</green>"
+  teleported-other: "<green>已将 <yellow>%player%</yellow> 传送到传送点 <aqua>%warp%</aqua>。</green>"
+  cancelled-moved: "<red>传送到传送点 <yellow>%warp%</yellow> 已取消: 你移动了。</red>"
+
+  cross-disabled: "<red>跨服务器传送点已被服务器配置禁用。</red>"
+  cross-disabled-tip: "<gray>使用 <aqua>/server %server%</aqua> 然后执行 <aqua>/warp %warp%</aqua></gray>"
+  messaging-disabled: "<red>跨服务器消息已禁用。</red>"
+  messaging-disabled-tip: "<gray>使用 <aqua>/server %server%</aqua> 然后执行 <aqua>/warp %warp%</aqua></gray>"
+  sending: "<yellow>正在将你发送到 <aqua>%server%</aqua>... 到达时你将被传送到传送点 <aqua>%warp%</aqua>。</yellow>"
+  sending-other: "<green>正在将 <yellow>%player%</yellow> 发送到 <aqua>%server%</aqua> (传送点 <yellow>%warp%</yellow>)。</green>"
+  switch-failed: "<red>切换到 %server% 失败。</red>"
+
+  delete:
+    title: "<dark_red>删除 '%warp%'?</dark_red>"
+    yes: "<green>是的,删除</green>"
+    no: "<red>不,取消</red>"
+    success: "<red>传送点 <yellow>%warp%</yellow> 已删除。</red>"
+    failed: "<red>删除传送点 <yellow>%warp%</yellow> 失败。</red>"
+    info:
+      title: "<gold>删除传送点</gold>"
+      lore:
+        0: "<gray>你确定要删除</gray>"
+        1: "<yellow>%warp%</yellow><gray>吗?</gray>"
+
+  admin:
+    list:
+      title: "<dark_aqua>传送点 (管理员)</dark_aqua>"
+      refresh: "<yellow>刷新</yellow>"
+      refresh-lore: "<gray>点击重载传送点。</gray>"
+      counter: "<gold>传送点 <white>(%count%)</white></gold>"
+      counter-lore:
+        0: "<gray>左键/右键: <white>管理传送点</white></gray>"
+        1: "<gray>Shift-左键或中键: <white>快速传送</white></gray>"
+      previous: "<yellow>上一页</yellow>"
+      next: "<yellow>下一页</yellow>"
+      warp-name: "<aqua>%name%</aqua>"
+      warp-server: "<gray>服务器: <yellow>%server%</yellow></gray>"
+      warp-world: "<gray>世界: <yellow>%world%</yellow></gray>"
+      warp-coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+      warp-perm-protected: "<gray>权限: <gold>%perm%</gold></gray>"
+      warp-perm-public: "<gray>权限: <green>公开</green></gray>"
+      warp-click: "<green>点击: <white>打开操作</white></green>"
+      warp-quick-tp: "<aqua>Shift-左键/中键: <white>快速传送</white></aqua>"
+
+    gui:
+      title: "<dark_aqua>传送点: <aqua>%warp%</aqua></dark_aqua>"
+      info:
+        server: "<gray>服务器: <yellow>%server%</yellow></gray>"
+        permission-open: "<gray>权限: <green>开放 (所有人)</green></gray>"
+        permission-required: "<gray>权限: <yellow>%permission%</yellow></gray>"
+      teleport: "<green>传送</green>"
+      set-permission: "<aqua>设置/更改权限</aqua>"
+      make-public: "<green>设为公开 (清除权限)</green>"
+      rename: "<gold>重命名传送点</gold>"
+      delete: "<red>删除传送点</red>"
+      back: "<red>← 返回</red>"
+
+    prompt:
+      permission: "<yellow>在聊天中输入传送点 <aqua>%warp%</aqua> 的权限 (或输入 <white>cancel</white>)。</yellow>"
+      rename: "<yellow>在聊天中输入传送点 <aqua>%warp%</aqua> 的新名称 (或输入 <white>cancel</white>)。</yellow>"
+      cancelled: "<gray>操作已取消。</gray>"
+
+    directory-unavailable: "<red>WarpDirectory不可用; 无法修改权限。</red>"
+    permission-cleared: "<green>权限已清除。传送点现在是公开的。</green>"
+    permission-set: "<green>权限已设置为 <yellow>%permission%</yellow>。</green>"
+    rename-empty: "<red>名称不能为空。</red>"
+    rename-failed: "<red>重命名传送点失败。</red>"
+    rename-success: "<green>传送点已重命名为 <aqua>%new_name%</aqua>。</green>"
+    not-found: "<red>未找到传送点: <yellow>%warp%</yellow></red>"
+    teleported: "<green>已传送到传送点 <aqua>%warp%</aqua>。</green>"
+    sending: "<yellow>正在将你发送到 <aqua>%server%</aqua>... (到达时传送)。</yellow>"
+    switch-failed: "<red>切换到 %server% 失败。</red>"
+
+  player:
+    no-permission: "<red>你没有此传送点的权限。</red>"
+    list:
+      refresh: "<yellow>刷新</yellow>"
+      refresh-lore: "<gray>点击重载传送点。</gray>"
+      counter: "<gold>传送点 <white>(%count%)</white></gold>"
+      counter-lore: "<gray>左键: <white>传送</white></gray>"
+      previous: "<yellow>上一页</yellow>"
+      next: "<yellow>下一页</yellow>"
+      warp-name-allowed: "<aqua>%name%</aqua>"
+      warp-name-locked: "<dark_red>%name%</dark_red>"
+      warp-server: "<gray>服务器: <yellow>%server%</yellow></gray>"
+      warp-world: "<gray>世界: <yellow>%world%</yellow></gray>"
+      warp-coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+      warp-click: "<green>左键: <white>传送</white></green>"
+      warp-locked: "<red>你没有访问权限。</red>"
+
+  head:
+    usage: "<yellow>用法: /<white>%label% <玩家></white></yellow>"
+    fetching: "<gray>正在获取 <white>%target%</white> 的头颅...</gray>"
+    cannot-resolve: "<red>未找到玩家 <white>%target%</white>。</red>"
+    fetch-failed: "<red>获取 <white>%target%</white> 的头颅失败。</red>"
+    item-name: "<aqua>%target%</aqua><gray> 的头颅</gray>"
+    dropped: "<yellow>头颅已给予! <gray>(掉落在你脚下 - 背包已满)</gray></yellow>"
+    given: "<green>已给予 <white>%target%</white> 的头颅!</green>"
+
+# RTP系统
+rtp:
+  disabled: "<red>随机传送目前已禁用。</red>"
+  cooldown-wait: "<red>你需要等待 <yellow>%seconds%</yellow>秒才能使用 /%label%。</red>"
+  no-world: "<red>未找到用于随机传送的有效世界。</red>"
+  cross-switch: "<gray>正在将你切换到 <aqua>%server%</aqua> 以在 <aqua>%world%</aqua> 中随机传送...</gray>"
+  not-configured: "<red>此服务器未配置随机传送。</red>"
+  world-not-loaded: "<red>世界 <yellow>%world%</yellow> 在此服务器上未加载。</red>"
+  not-allowed-world: "<red>此世界不允许随机传送。</red>"
+  trying: "<gray>正在 <aqua>%world%</aqua> 中尝试随机传送到 <aqua>%radius%</aqua> 格内...</gray>"
+  no-safe-spot: "<red>找不到安全地点。请重试。</red>"
+  teleported: "<green>已传送到 <aqua>%world%</aqua> 的 <aqua>%x%</aqua>, <aqua>%y%</aqua>, <aqua>%z%</aqua>。</green>"
+  failed: "<red>传送失败。</red>"
+  cancelled-moved: "<red>RTP已取消: 你移动了。</red>"
+  warmup:
+    title: "<yellow>%seconds%</yellow>"
+    subtitle: "<gray>随机传送中...</gray>"
+
+# Deathback
+deathback:
+  no-location: "<red>没有保存的死亡位置。</red>"
+  success: "<green>已传送到你的上次死亡位置。</green>"
+  failed: "<red>传送失败。</red>"
+
+# ============================================================================
+# 经济系统
+# ============================================================================
+
+economy:
+  currency:
+    symbol: "$"
+    name: "元"
+    name_plural: "元"
+
+  errors:
+    not-a-number: "<red>无效的金额。</red>"
+    amount-not-positive: "<red>金额必须为正数。</red>"
+    player-not-found: "<red>未找到玩家: <yellow>%target%</yellow>。</red>"
+    no-economy: "<red>经济不可用。</red>"
+    no-permission: "<red>你没有权限。</red>"
+
+  money:
+    usage:
+      view: "<yellow>用法: /money [玩家]</yellow>"
+      admin: "<yellow>用法: /money <give|take|set> <玩家> <金额></yellow>"
+    view-self: "<gray>你的余额: <green>%currency_symbol%%balance_formatted%</green></gray>"
+    view-other: "<gray>%target% 的余额: <green>%currency_symbol%%balance_formatted%</green></gray>"
+    give:
+      sender: "<green>已给予 <yellow>%target%</yellow> <white>%currency_symbol%%amount_formatted%</white>。</green>"
+      receiver: "<green>你收到了 <white>%currency_symbol%%amount_formatted%</white>。新余额: <green>%currency_symbol%%balance_formatted%</green>。</green>"
+    take:
+      sender: "<green>已从 <yellow>%target%</yellow> 扣除 <white>%currency_symbol%%amount_formatted%</white>。</green>"
+      receiver: "<red><bold>%currency_symbol%%amount_formatted%</bold></red> <gray>已从你的余额中扣除。新余额: <green>%currency_symbol%%balance_formatted%</green>。</gray>"
+    set:
+      sender: "<green>已将 <yellow>%target%</yellow> 的余额设置为 <white>%currency_symbol%%amount_formatted%</white>。</green>"
+      receiver: "<gray>你的余额已设置为 <green>%currency_symbol%%amount_formatted%</green>。</gray>"
+
+  pay:
+    usage: "<yellow>用法: /pay <玩家> <金额></yellow>"
+    self: "<red>你不能支付给自己。</red>"
+    success-sender: "<green>已支付 <aqua>%target%</aqua> <gray>%currency_symbol%%amount_formatted%</gray>。</green>"
+    success-receiver: "<green>你从 <aqua>%player%</aqua> 收到了 <gray>%currency_symbol%%amount_formatted%</gray>。</green>"
+    fail-insufficient: "<red>你没有足够的 <white>%currency_symbol%%amount_formatted%</white>。</red>"
+
+  format:
+    thousands-separator: ","
+    decimal-separator: "."
+    decimals: 2
+
+# ============================================================================
+# 管理系统
+# ============================================================================
+
+moderation:
+  # Ban
+  ban:
+    usage: "<yellow>用法: /%label% <玩家> [时长] [原因]</yellow>"
+    usage-examples: "<gray>时长示例: 10m, 2h, 3d4h, 1w</gray>"
+    player-not-found: "<red>未找到玩家: %player%</red>"
+    default-reason: "被管理员封禁。"
+    kick-message-temp: "<red>%reason%</red>\n<gray>直到: %expires%</gray>"
+    kick-message-perm: "<red>%reason%</red>"
+    success-temp: "<green>已封禁 <aqua>%player%</aqua> 直到 <yellow>%expires%</yellow>。原因: <yellow>%reason%</yellow></green>"
+    success-perm: "<green>已永久封禁 <aqua>%player%</aqua>。原因: <yellow>%reason%</yellow></green>"
+
+  # Broadcast
+  broadcast:
+    prefix: "<gold>[公告]</gold> "
+
+  # 上帝模式
+  god:
+    usage: "<yellow>用法: /%label% <玩家></yellow>"
+    self-enabled: "<green>上帝模式 <aqua>已启用</aqua>。你现在是无敌的。</green>"
+    self-disabled: "<red>上帝模式 <aqua>已禁用</aqua>。</red>"
+    no-permission-others: "<red>你没有权限为其他人切换上帝模式。</red>"
+    player-not-found: "<red>未找到玩家或不在线: <yellow>%player%</yellow></red>"
+    target-enabled: "<green>管理员已为你启用上帝模式。</green>"
+    target-disabled: "<red>管理员已为你禁用上帝模式。</red>"
+    other-enabled: "<green>已为 <aqua>%player%</aqua> 启用上帝模式。</green>"
+    other-disabled: "<red>已为 <aqua>%player%</aqua> 禁用上帝模式。</red>"
+
+  # Heal
+  heal:
+    console-usage: "<red>用法: /%label% <玩家></red>"
+    not-found: "<red>未找到玩家。</red>"
+    healed: "<green>已治愈。</green>"
+    healed-other: "<yellow>已治愈 <aqua>%player%</aqua>。</yellow>"
+
+  # Kick
+  kick:
+    usage: "<yellow>用法: /%label% <玩家> [原因...]</yellow>"
+    default-reason: "被管理员踢出。"
+    kick-message: "<red>%reason%</red>"
+    player-not-found: "<red>未找到玩家。</red>"
+    success: "<green>已踢出 <aqua>%player%</aqua>。原因: <yellow>%reason%</yellow></green>"
+    success-cross-server: "<green>已发送踢出 <aqua>%player%</aqua> 的请求 (跨服务器)。</green>"
+    no-bridge: "<red>目标不在此服务器上且跨服务器管理桥不可用。</red>"
+
+  # Mute
+  mute:
+    usage: "<yellow>用法: /%label% <玩家> <时长> [原因]</yellow>"
+    player-not-found: "<red>未找到玩家: %target%</red>"
+    invalid-duration: "<red>无效的时长。使用如 30s, 10m, 2h, 1d 或秒数。</red>"
+    broadcast-failed: "<red>警告: 向其他服务器广播禁言失败。</red>"
+    reason-suffix: " <gray>| 原因: <yellow>%reason%</yellow></gray>"
+    executor:
+      success: "<green>已禁言 <yellow>%target%</yellow> <white>%duration%</white>%reason_suffix%。</green>"
+    target:
+      notified: "<red>你已被禁言 <white>%duration%</white>.%reason_suffix%</red>"
+    broadcast: "<gold>[管理]</gold> <yellow>%target%</yellow> <gray>被</gray> <aqua>%staff%</aqua> <gray>禁言</gray> <white>%duration%</white>%reason_suffix%<gray>。</gray>"
+    broadcast-console: "[管理] %target% 被 %staff% 禁言 %duration%%reason_suffix%。"
+
+  # Unban
+  unban:
+    usage: "<yellow>用法: /%label% <玩家></yellow>"
+    not-banned: "<gray>%player% 未被封禁。</gray>"
+    success: "<green>已解禁 <aqua>%player%</aqua>。</green>"
+
+  # Unmute
+  unmute:
+    usage: "<yellow>用法: /%label% <玩家></yellow>"
+    player-not-found: "<red>未找到玩家: %player%</red>"
+    not-muted: "<gray>%player% 未被禁言。</gray>"
+    success: "<green>已解除 <aqua>%player%</aqua> 的禁言。</green>"
+    notified: "<green>你已被解除禁言。</green>"
+
+  # Vanish
+  vanish:
+    enabled: "<green>你现在是隐身的。</green>"
+    disabled: "<yellow>你现在是可见的。</yellow>"
+
+# ============================================================================
+# 聊天和消息
+# ============================================================================
+
+chat:
+  cleared-by: "<red>聊天已被 <yellow>%actor%</yellow> 清空。</red>"
+  global-muted: "<red>全局聊天已被 <yellow>%actor%</yellow> 禁言。</red>"
+  global-unmuted: "<green>全局聊天已解除禁言。</green>"
+  slowmode-set: "<yellow>慢速模式现在是 <gold>%seconds%</gold>秒 <gray>(网络)</gray>。</yellow>"
+
+# 私信
+msg:
+  usage: "<red>用法: /%label% <玩家> <消息...></red>"
+  not-found: "<red>未找到玩家。</red>"
+  receive: "<gray>[<light_purple>私信</light_purple>] <aqua>%sender%</aqua>: <white>%message%</white></gray>"
+  send: "<gray>[<light_purple>私信</light_purple>] <white>-></white> <aqua>%target%</aqua>: <white>%message%</white></gray>"
+
+# Reply
+reply:
+  usage: "<red>用法: /%label% <消息...></red>"
+  no-one: "<red>没有人可以回复。</red>"
+  offline: "<red>该玩家已离线。</red>"
+# ============================================================================
+# 实用工具命令
+# ============================================================================
+
+# AFK
+afk:
+  now-afk: "<yellow>你现在是AFK状态。</yellow>"
+  no-longer-afk: "<green>你不再是AFK状态。</green>"
+
+# Anvil
+anvil:
+  title: "<dark_gray>铁砧</dark_gray>"
+
+# Cook
+cook:
+  no-item: "<red>请在主手持有要熔炼的物品。</red>"
+  no-recipe: "<red>未找到该物品的熔炼配方。</red>"
+  invalid-amount: "<red>数量必须是数字或 'max'。</red>"
+  nothing-to-smelt: "<red>没有可熔炼的物品。</red>"
+  inventory-full: "<yellow>你的背包已满; 一些熔炼物品已掉落在你脚下。</yellow>"
+  success: "<green>已熔炼 <aqua>%input%</aqua> → <aqua>%output%</aqua> <gray>%item%</gray>。</green>"
+
+# Ender Chest
+ec:
+  title: "<dark_purple>末影箱</dark_purple>"
+
+ecsee:
+  no-permission: "<red>你没有权限。</red>"
+  usage: "<red>用法: /ecsee <玩家></red>"
+  not-found: "<red>未找到玩家。</red>"
+  not-configured: "<red>末影箱存储未配置。</red>"
+  gui:
+    title: "<dark_purple>末影箱</dark_purple> <gray>(%player%)</gray>"
+  saved: "<green>已保存对 <aqua>%player%</aqua> 末影箱的更改。</green>"
+
+# Feed
+feed:
+  not-found: "<red>未找到玩家。</red>"
+  console-self: "<red>控制台无法喂养自己。请指定玩家。</red>"
+  fed: "<green>已喂养。</green>"
+  fed-other: "<yellow>已喂养 <aqua>%player%</aqua>。</yellow>"
+
+# Furnace
+furnace:
+  title: "<gold>⚒</gold> <dark_gray>熔炉</dark_gray> <gold>⚒</gold>"
+
+# Invsee
+invsee:
+  no-permission: "<red>你没有权限。</red>"
+  usage: "<red>用法: /invsee <玩家></red>"
+  not-available: "<red>Invsee服务在此服务器上不可用。</red>"
+  not-found: "<red>未找到玩家。</red>"
+  opening: "<gray>正在打开 <aqua>%player%</aqua> 的实时背包 (跨服务器)...</gray>"
+
+# Invlook
+invlook:
+  no-permission: "<red>你没有权限。</red>"
+  usage: "<red>用法: /invlook <玩家></red>"
+  service-unavailable: "<red>Invsee服务在此服务器上不可用。</red>"
+  player-not-found: "<red>未找到玩家。</red>"
+  opening: "<gray>正在打开 <aqua>%player%</aqua> 的只读背包 (跨服务器)...</gray>"
+
+# Kill
+kill:
+  console-usage: "<red>用法: /%label% <玩家></red>"
+  self:
+    no-permission: "<red>你没有权限杀死自己。</red>"
+    slain: "<gray>你被杀死了。</gray>"
+  others:
+    no-permission: "<red>你没有权限杀死其他人。</red>"
+    killed: "<gray>已杀死 <yellow>%player%</yellow>。</gray>"
+  target-not-found: "<red>未找到玩家。</red>"
+
+# Near
+near:
+  radius-not-number: "<red>半径必须是数字。你输入的是: <yellow>%input%</yellow></red>"
+  none: "<yellow>在 <aqua>%radius%</aqua> 格内没有玩家。</yellow>"
+  list: "<gray>在 <aqua>%radius%</aqua> 格内的玩家:</gray> %list%"
+  entry:
+    format: "<aqua>%name%</aqua> <gray>(<yellow>%distance%</yellow>米)</gray>"
+    separator: "<gray>, </gray>"
+
+# Nick
+nick:
+  usage: "<yellow>用法: /%label% <新名称>  或  /%label% unnick</yellow>"
+  reset: "<green>你的昵称已重置。</green>"
+  too-long: "<red>名称太长 (最多 %max% 个字符)。</red>"
+  invalid: "<red>无效的名称。使用字母、数字、下划线 (3–16)。</red>"
+  set: "<green>你现在的昵称是 <aqua>%nick%</aqua>。</green>"
+
+# Ping
+ping:
+  self: "<green>你的延迟: <yellow>%ping%</yellow>毫秒</green>"
+
+# Playtime
+playtime:
+  console-usage: "<red>控制台必须指定玩家: /%label% <玩家></red>"
+  self: "<green>你的游戏时长: <yellow>%time%</yellow></green>"
+  other: "<aqua>%player%</aqua><gray> 游戏时长:</gray> <yellow>%time%</yellow>"
+  no-permission: "<red>你没有权限查看其他玩家的游戏时长。</red>"
+  player-not-found: "<red>未找到玩家。</red>"
+
+# Realname
+realname:
+  usage: "<red>用法: /realname <昵称></red>"
+  found: "<gold>%nickname%</gold> <gray>是</gray> <aqua>%realname%</aqua>"
+  not-found: "<red>未找到使用该昵称的玩家。</red>"
+
+# Seen
+seen:
+  usage: "<red>用法: /seen <玩家></red>"
+  no-data: "<red>没有玩家 <yellow>%player%</yellow> 的数据。</red>"
+  online: "<green>%player% 目前在线。</green>"
+  never-joined: "<yellow>%player% 从未加入过。</yellow>"
+  last-seen: "<gold>%player%</gold> <gray>上次在线时间</gray> <aqua>%timestamp%</aqua> <gray>(</gray><yellow>%ago%</yellow> <gray>前)</gray>"
+
+# Sell GUI
+sellgui:
+  not-initialized: "<red>SellGUI未初始化。</red>"
+
+# Server
+server:
+  usage: "<yellow>用法: /%label% <服务器名></yellow>"
+  connecting: "<gray>正在连接到 <aqua>%server%</aqua>...</gray>"
+
+# Sit
+sit:
+  player-only: "<red>只有玩家可以使用此命令。</red>"
+  stand: "<gray>你站起来了。</gray>"
+  already-riding: "<red>你已经在骑乘某物。</red>"
+  not-on-ground: "<red>你必须在地面上才能坐下。</red>"
+  not-while-flying: "<red>你不能在飞行或滑翔时坐下。</red>"
+  no-block: "<red>没有可坐的方块。</red>"
+  sat: "<green>你坐在了 <yellow>%block%</yellow> 上。</green>"
+
+# UUID
+uuid:
+  usage: "<yellow>用法: /%label% <玩家></yellow>"
+  no-permission-others: "<red>你没有权限查看其他人的UUID。</red>"
+  show: "<gold><aqua>%player%</aqua> 的UUID:</gold> <aqua>%uuid%</aqua>"
+  bedrock: "<gray>基岩版UUID: <aqua>%bedrock_uuid%</aqua></gray>"
+
+# Vaults
+vaults:
+  player-only: "<red>仅限玩家。</red>"
+  disabled: "<red>玩家保险箱已禁用。</red>"
+  usage: "<red>用法: /%label% %usage%</red>"
+
+# ============================================================================
+# 管理员命令
+# ============================================================================
+
+admin:
+  # Tphere
+  tphere:
+    usage: "<yellow>用法: /%label% <玩家></yellow>"
+    not-found: "<red>未找到玩家: <yellow>%target%</yellow>。</red>"
+    brought: "<green>已将 <aqua>%target%</aqua> 传送到你这里。</green>"
+    notice: "<yellow>你被 <aqua>%player%</aqua> 传送了。</yellow>"
+
+  # Weather
+  weather:
+    no-permission: "<red>你没有权限 (oreo.weather)。</red>"
+    no-worlds: "<red>未解析目标世界。</red>"
+    success: "<green>已将 <white>%world%</white> 的天气设置为 <white>%type%</white>。</green>"
+    success-duration: "<green>已将 <white>%world%</white> 的天气设置为 <white>%type%</white> 持续 <white>%seconds%</white>秒。</green>"
+    success-locked: "<green>已将 <white>%world%</white> 的天气设置为 <white>%type%</white> <dark_gray>(已锁定)</dark_gray>。</green>"
+    success-duration-locked: "<green>已将 <white>%world%</white> 的天气设置为 <white>%type%</white> 持续 <white>%seconds%</white>秒 <dark_gray>(已锁定)</dark_gray>。</green>"
+    tip-unlock: "<dark_gray>提示: /weather %type% unlock %world%</dark_gray>"
+    usage:
+      header: "<yellow>用法:</yellow>"
+      format: "<white>/%label% <sun|rain|storm> [lock|seconds] [world|all]</white>"
+      examples: "<gray>示例: <white>/sun</white> <dark_gray>|</dark_gray> <white>/rain</white> <dark_gray>|</dark_gray> <white>/storm</white> <dark_gray>|</dark_gray> <white>/sun lock</white> <dark_gray>|</dark_gray> <white>/sun 120</white> <dark_gray>|</dark_gray> <white>/sun world</white></gray>"
+
+  # World
+  world:
+    no-permission: "<red>你没有权限 (oreo.world)。</red>"
+    no-world-permission: "<red>你没有权限: <white>%permission%</white></red>"
+    usage: "<yellow>用法: <white>/world <n|normal|nether|end|index> [玩家名] [-s]</white></yellow>"
+    examples: "<gray>示例: <white>/world world_nether</white>  <dark_gray>|</dark_gray>  <white>/world nether</white>  <dark_gray>|</dark_gray>  <white>/world 2</white>  <dark_gray>|</dark_gray>  <white>/world end Steve -s</white></gray>"
+    console-needs-player: "<red>控制台使用需要目标玩家: <white>/world <n> <玩家名> [-s]</white></red>"
+    console-must-specify: "<red>控制台必须指定目标玩家: <white>/world <n> <玩家名> [-s]</white></red>"
+    player-not-found: "<red>未找到玩家: <white>%player%</white></red>"
+    world-not-found: "<red>未找到世界 / 不支持: <white>%world%</white></red>"
+    teleport-failed: "<red>传送失败。</red>"
+    teleported-self: "<green>已传送到 <white>%world%</white></green>"
+    teleported-other: "<green>已将 <white>%player%</white> 传送到 <white>%world%</white></green>"
+    target-notified: "<green>你被 <white>%staff%</white> 传送到 <white>%world%</white></green>"
+
+  # TP
+  tp:
+    usage: "<red>用法: /tp <玩家></red>"
+    self: "<red>你已经是你自己了。</red>"
+    not-found: "<red>未找到在线玩家。</red>"
+    not-found-no-directory: "<red>未找到在线玩家。<gray>(跨服务器目录不可用。)</gray></red>"
+    no-broker: "<red>跨服务器传送代理不可用; 无法在服务器间使用 /tp。</red>"
+    teleported: "<green>已传送到 <aqua>%target%</aqua>。</green>"
+
+  # Setwarp
+  setwarp:
+    usage: "<yellow>用法: /%label% <n></yellow>"
+    set: "<green>传送点 <aqua>%warp%</aqua> 已设置。</green>"
+    cross-server-info: "<gray>(跨服务器) 传送点所有者设置为 <aqua>%server%</aqua>。</gray>"
+
+  # Setspawn
+  setspawn:
+    set: "<green>出生点已设置。</green>"
+    cross-server-info: "<gray>(跨服务器) 出生点所有者设置为 <aqua>%server%</aqua>。</gray>"
+
+  # Reload
+  reload:
+    settings: "<green>✔ 已重载 <white>settings.yml</white> <gray>(+ 跨服务器设置)</gray></green>"
+    settings-skip: "<yellow>• 跳过 settings.yml / 跨服务器: <gray>%error%</gray></yellow>"
+    config: "<green>✔ 已重载 <white>config.yml</white></green>"
+    config-fail: "<red>✘ 重载 config.yml 失败: <gray>%error%</gray></red>"
+    lang: "<green>✔ 已重载 <white>lang.yml</white></green>"
+    lang-skip: "<yellow>• 跳过 lang.yml: <gray>%error%</gray></yellow>"
+    chat: "<green>✔ 已重载 <white>chat-format.yml</white> <gray>(通过 /afelius reload all)</gray></green>"
+    chat-skip: "<yellow>• 跳过 chat-format.yml: <gray>%error%</gray></yellow>"
+    tab: "<green>✔ 已重载 <white>tab.yml</white></green>"
+    tab-skip: "<yellow>• 跳过 tab.yml: <gray>%error%</gray></yellow>"
+    kits: "<green>✔ 已重载 <white>kits.yml</white></green>"
+    kits-skip: "<yellow>• 跳过 kits.yml: <gray>%error%</gray></yellow>"
+    rtp: "<green>✔ 已重载 <white>rtp.yml</white></green>"
+    rtp-skip: "<yellow>• 跳过 rtp.yml: <gray>%error%</gray></yellow>"
+    enderchest: "<green>✔ 已重载 <white>enderchest.yml</white></green>"
+    enderchest-skip: "<yellow>• 跳过 enderchest.yml (无重载钩子)</yellow>"
+    bossbar: "<green>✔ 已重载 <white>bossbar</white></green>"
+    bossbar-skip: "<yellow>• 跳过 bossbar (服务不可用)</yellow>"
+    bossbar-fail: "<red>✘ 重载 bossbar 失败: <gray>%error%</gray></red>"
+    scoreboard: "<green>✔ 已重载 <white>scoreboard</white> <gray>(配置 + 实时更新)</gray></green>"
+    scoreboard-skip: "<yellow>• 跳过 scoreboard (服务不可用)</yellow>"
+    scoreboard-fail: "<red>✘ 重载 scoreboard 失败: <gray>%error%</gray></red>"
+    discord: "<green>✔ 已重载 <white>discord集成</white></green>"
+    discord-skip: "<yellow>• 跳过 discord集成 (无重载钩子)</yellow>"
+    healthbars: "<green>✔ 已重载 <white>生物血条</white></green>"
+    healthbars-disabled: "<yellow>• 生物血条在配置中已禁用</yellow>"
+    healthbars-skip: "<yellow>• 跳过生物血条: <gray>%error%</gray></yellow>"
+    playervaults: "<green>✔ 已重载 <white>playervaults</white> <gray>(%storage%)</gray></green>"
+    playervaults-skip: "<yellow>• 跳过 playervaults (服务不可用)</yellow>"
+    playervaults-fail: "<red>✘ 重载 playervaults 失败: <gray>%error%</gray></red>"
+    summary: "<gray>重载完成: <green>%ok% 成功</green>, <yellow>%skip% 跳过</yellow>。(<white>%ms% 毫秒</white>)</gray>"
+    note: "<dark_gray>(某些模块尚不支持热重载; 可能需要重启服务器。)</dark_gray>"
+
+  # Otherhome
+  otherhome:
+    no-permission: "<red>你没有权限。</red>"
+    usage: "<yellow>用法: <gold>/%label% <玩家> <家></gold></yellow>"
+    player-not-found: "<red>未知玩家: <yellow>%player%</yellow></red>"
+    not-found: "<red>未找到家: <yellow>%home%</yellow></red>"
+    world-not-loaded: "<red>世界未加载: <yellow>%world%</yellow></red>"
+    teleported: "<green>已传送到 <aqua>%owner%</aqua> 的家 <aqua>%home%</aqua>。</green>"
+    cross-disabled: "<red>跨服务器家已被服务器配置禁用。</red>"
+    cross-disabled-manual: "<gray>使用 <aqua>/server %server%</aqua> 然后执行 <aqua>/otherhome %owner% %home%</aqua></gray>"
+    messaging-disabled: "<red>跨服务器消息已禁用。请管理员启用RabbitMQ。</red>"
+    messaging-disabled-manual: "<gray>你仍可以使用 <aqua>/server %server%</aqua> 切换并执行 <aqua>/otherhome %owner% %home%</aqua></gray>"
+    sending: "<yellow>正在将你发送到 <aqua>%server%</aqua>… 到达时你将被传送到 <aqua>%owner%</aqua> 的家 <aqua>%home%</aqua>。</yellow>"
+    switch-failed: "<red>切换到 %server% 失败。</red>"
+    switch-failed-tip: "<gray>确保服务器名称与代理配置匹配。</gray>"
+
+  # Otherhomes
+  otherhomes:
+    no-permission: "<red>你没有权限。</red>"
+    usage: "<yellow>用法: <gold>/%label% <玩家></gold></yellow>"
+    player-not-found: "<red>未知玩家: <yellow>%player%</yellow></red>"
+    no-homes: "<gray>%player% 没有家。</gray>"
+    header: "<gold><yellow>%player%</yellow> 的家:</gold>"
+    entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua> <gray>@ <white>%world%</white> (%x%, %y%, %z%) <dark_gray>[服务器: %server%]</dark_gray></gray>"
+    tip: "<gray>提示: <yellow>/otherhome %player% <家></yellow></gray>"
+
+  # Clear
+  clear:
+    no-service: "<yellow>警告: 背包服务不可用 - 仅本地清空。</yellow>"
+    console-usage: "<red>用法: /%label% <玩家></red>"
+    others-no-permission: "<red>你没有权限清空其他玩家的背包。</red>"
+    target-not-found: "<red>未找到玩家: <yellow>%target%</yellow></red>"
+    self:
+      all-servers: "<green>已在所有服务器上清空背包。</green>"
+      this-server: "<green>已在此服务器上清空背包。</green>"
+    target-notified-all: "<yellow>你的背包已被 <aqua>%player%</aqua> 在所有服务器上清空。</yellow>"
+    target-notified-local: "<yellow>你的背包已被 <aqua>%player%</aqua> 在此服务器上清空。</yellow>"
+    sender-confirm-all: "<green>已在所有服务器上清空 <aqua>%target%</aqua> 的背包。</green>"
+    sender-confirm-local: "<green>已在此服务器上清空 <aqua>%target%</aqua> 的背包。</green>"
+
+  # Delwarp
+  delwarp:
+    usage: "<yellow>用法: /%label% <n></yellow>"
+    deleted: "<green>传送点 <aqua>%warp%</aqua> 已删除。</green>"
+    not-found: "<red>未找到传送点: <yellow>%warp%</yellow></red>"
+
+  # Disenchant
+  disenchant:
+    usage: "<yellow>用法: /%label% <附魔|all> [要移除的等级]</yellow>"
+    hold-item: "<red>你必须在主手持有物品。</red>"
+    none: "<red>此物品没有附魔。</red>"
+    unknown: "<red>未知的附魔: <yellow>%input%</yellow></red>"
+    not-present: "<red>此物品没有 <yellow>%ench%</yellow>。</red>"
+    all: "<green>已移除所有附魔。</green>"
+    partial: "<green>已移除 <aqua>%ench%</aqua> 的 <white>%removed%</white> 级。剩余 <white>%remaining%</white> 级。</green>"
+    removed: "<green>已完全移除 <aqua>%ench%</aqua>。</green>"
+
+  # Fly
+  fly:
+    console-usage: "<red>用法: /%label% <玩家></red>"
+    not-found: "<red>未找到玩家: <yellow>%target%</yellow></red>"
+    enabled: "<green>飞行 <aqua>已启用</aqua>。</green>"
+    disabled: "<red>飞行 <aqua>已禁用</aqua>。</red>"
+    toggled-other: "<green>已将 <aqua>%target%</aqua> 的飞行设置为 <aqua>%state%</aqua>。</green>"
+
+  # Enchant
+  enchant:
+    usage: "<yellow>用法: /%label% <附魔> [等级] [unsafe] [ignoreConflicts]</yellow>"
+    hold-item: "<red>你必须在主手持有物品。</red>"
+    unknown: "<red>未知的附魔: <yellow>%input%</yellow></red>"
+    too-high: "<red>等级 <yellow>%level%</yellow> 对于 <aqua>%ench%</aqua> 太高 (最大: <white>%max%</white>)。使用 'unsafe' 参数或 oreo.enchant.unsafe 权限。</red>"
+    conflict: "<red><aqua>%ench%</aqua> 与现有的 <aqua>%with%</aqua> 冲突。使用 'ignoreConflicts' 参数或 oreo.enchant.ignoreconflicts 权限。</red>"
+    applied: "<green>已将 <aqua>%ench%</aqua> <white>%level%</white> 级应用到你的物品上。</green>"
+    failed: "<red>应用附魔失败: <yellow>%reason%</yellow></red>"
+
+  # Flyspeed
+  flyspeed:
+    player-only: "<red>只有玩家可以使用 /flyspeed (设置自己的飞行速度)。</red>"
+    no-permission: "<red>你没有权限 (oreo.flyspeed)。</red>"
+    usage: "<yellow>用法: <white>/flyspeed <1-10|reset></white></yellow>"
+    example: "<gray>示例: <white>/flyspeed 7</white></gray>"
+    invalid: "<red>无效的速度。使用数字 <white>1-10</white> 或 <white>reset</white>。</red>"
+    reset: "<green>飞行速度已重置为 <white>0.1</white> <gray>(= 等级 1)</gray>。</green>"
+    set: "<green>飞行速度已设置为 <white>%speed%</white> <gray>(<white>等级 %level%</white>)</gray>。</green>"
+    set-not-flying: "<green>飞行速度已设置为 <white>%speed%</white> <gray>(<white>等级 %level%</white>)</gray>。<dark_gray>(你目前没有飞行权限。)</dark_gray></green>"
+
+  # Gamemode
+  gamemode:
+    unknown: "<red>未知模式: <yellow>%mode%</yellow></red>"
+    no-permission-others: "<red>你没有权限更改其他人的游戏模式。</red>"
+    player-not-found: "<red>未找到玩家。</red>"
+    self: "<green>游戏模式已设置为 <aqua>%mode%</aqua>。</green>"
+    other: "<green>已将 <aqua>%target%</aqua> 设置为 <aqua>%mode%</aqua>。</green>"
+    notified: "<green>你的游戏模式已被 <yellow>%staff%</yellow> 设置为 <aqua>%mode%</aqua></green>"
+
+# ============================================================================
+# 交易系统
+# ============================================================================
+
+trade:
+  opening: "<green>正在与 <white>%partner%</white> 打开交易GUI…</green>"
+  failed-to-open: "<red>打开交易失败: <yellow>%error%</yellow></red>"
+  player-name: "<yellow>%name%</yellow>"
+  partner-ready: "<green>对方已准备</green>"
+  partner-not-ready: "<red>对方未准备</red>"
+  locked: "<gray>已锁定</gray>"
+  player-only: "<red>仅限玩家。</red>"
+  disabled: "<red>交易目前已禁用。</red>"
+  no-permission: "<red>你没有权限。</red>"
+  usage: "<yellow>用法: /trade <玩家></yellow>"
+  self: "<red>你不能与自己交易。</red>"
+  not-found-cross-server: "<red>未在此处找到玩家。</red> <gray>如果这是跨服务器交易，请在收到邀请的服务器上输入 <aqua>/trade %player%</aqua>。</gray>"
+
+# ============================================================================
+# 计分板系统
+# ============================================================================
+
+scoreboard:
+  enabled: "<green>计分板已启用。</green>"
+  disabled: "<yellow>计分板已禁用。</yellow>"
+  disabled-in-world: "<red>此世界已禁用计分板。</red>"
+
+# ============================================================================
+# 传送门系统
+# ============================================================================
+
+portals:
+  player-only: "<red>仅限玩家。</red>"
+  no-permission: "<red>你没有权限。</red>"
+  no-portal-permission: "<red>你没有权限使用此传送门。</red>"
+  unknown-subcommand: "<red>未知子命令。使用 <yellow>/%label% help</yellow></red>"
+
+  pos1-set: "<green>传送门 pos1 已设置在 <aqua>%location%</aqua></green>"
+  pos2-set: "<green>传送门 pos2 已设置在 <aqua>%location%</aqua></green>"
+
+  create:
+    usage: "<yellow>用法: /%label% create <n> <世界> <x> <y> <z> [keepYaw] [permission]</yellow>"
+    world-not-found: "<red>未找到世界: <yellow>%world%</yellow></red>"
+    invalid-coords: "<red>无效的坐标。</red>"
+    failed: "<red>失败: <yellow>%error%</yellow></red>"
+    success: "<green>传送门 <aqua>%name%</aqua> → <white>%location%</white> 已创建</green>"
+
+  remove:
+    usage: "<yellow>用法: /%label% remove <n></yellow>"
+    success: "<green>传送门 <aqua>%name%</aqua> 已移除。</green>"
+    not-found: "<red>未找到传送门: <yellow>%name%</yellow></red>"
+
+  list:
+    empty: "<gray>未配置传送门。</gray>"
+    header: "<gold>传送门 (%count%):</gold>"
+    entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua> <gray>→ <white>%dest%</white></gray>"
+
+  info:
+    usage: "<yellow>用法: /%label% info <n></yellow>"
+    not-found: "<red>未找到传送门: <yellow>%name%</yellow></red>"
+    header: "<gold>传送门信息: <aqua>%name%</aqua></gold>"
+    world: " <gray>世界:</gray> <white>%world%</white>"
+    destination: " <gray>目的地:</gray> <white>%dest%</white>"
+    keep-yaw: " <gray>保持Yaw/Pitch:</gray> <white>%keep%</white>"
+    permission: " <gray>权限:</gray> <white>%perm%</white>"
+
+  reload:
+    success: "<green>传送门已重载。已加载 <white>%count%</white> 个传送门。</green>"
+
+  help:
+    header: "<gold><bold>传送门帮助</bold></gold>"
+    pos1: " <yellow>/%label% pos1</yellow> <gray>- 设置传送门角1</gray>"
+    pos2: " <yellow>/%label% pos2</yellow> <gray>- 设置传送门角2</gray>"
+    create: " <yellow>/%label% create <n> <世界> <x> <y> <z> [keepYaw] [perm]</yellow>"
+    remove: " <yellow>/%label% remove <n></yellow> <gray>- 删除传送门</gray>"
+    list: " <yellow>/%label% list</yellow> <gray>- 列出所有传送门</gray>"
+    info: " <yellow>/%label% info <n></yellow> <gray>- 查看传送门详情</gray>"
+    reload: " <yellow>/%label% reload</yellow> <gray>- 重载 portals.yml</gray>"
+
+# ============================================================================
+# 自定义合成系统
+# ============================================================================
+
+customcraft:
+  errors:
+    no-permission: "<red>你没有权限。</red>"
+    player-only: "<red>此子命令需要玩家。</red>"
+    unknown-subcommand: "<red>未知子命令。</red> <yellow>使用</yellow> /%label% help"
+    usage-craft: "<red>用法:</red> /%label% craft <n>"
+    usage-delete: "<red>用法:</red> /%label% delete <n>"
+
+  help:
+    header: "<yellow>OreoEssentials 自定义合成</yellow>"
+    browse: "<yellow>/%label% browse</yellow> <gray>→ 打开配方浏览器 (GUI)</gray>"
+    craft: "<yellow>/%label% craft <n></yellow> <gray>→ 打开设计器GUI</gray>"
+    list: "<yellow>/%label% list</yellow> <gray>→ 列出配方名称</gray>"
+    reload: "<yellow>/%label% reload</yellow> <gray>→ 重载 recipes.yml 并重新注册</gray>"
+    delete: "<yellow>/%label% delete <n></yellow> <gray>→ 删除配方</gray>"
+
+  messages:
+    saved: "<green>配方 <yellow>%name%</yellow> 已保存 (<white>%mode%</white>) %perm_note%。</green>"
+    invalid: "<red>未找到配方: <yellow>%name%</yellow>。</red>"
+    deleted: "<green>配方 <yellow>%name%</yellow> 已删除。</green>"
+    reloaded: "<green>自定义配方已重载。</green>"
+    list: "<yellow>配方</yellow> (<white>%count%</white>): <gray>%names%</gray>"
+
+  browse:
+    title: "<#00bcd4><bold>OreoCraft</bold></#00bcd4> <gray>—</gray> <white>配方</white>"
+    hint: "<yellow>点击配方进行编辑</yellow>"
+    icon-lore:
+      0: "<gray>模式:</gray> <white>%mode%</white>"
+      1: "<gray>权限:</gray> <white>%permission_or_none%</white>"
+      2: "<green>点击编辑</green>"
+    prev: "<yellow>上一页</yellow>"
+    next: "<yellow>下一页</yellow>"
+
+  format:
+    mode:
+      shaped: "有序"
+      shapeless: "无序"
+    permission:
+      none: "<gray>无</gray>"
+
+# ============================================================================
+# 其他命令 (OE)
+# ============================================================================
+
+oe:
+  usage: "<yellow>用法: /%label% server <服务器名></yellow>"
+  connecting: "<green>正在连接到 <aqua>%server%</aqua>...</green>"
+  failed: "<red>无法连接到 %server%。代理/频道是否已配置?</red>"
+
+# ============================================================================
+# 时间格式 (用于持续时间显示)
+# ============================================================================
+
+time:
+  years: "%value%年"
+  months: "%value%月"
+  weeks: "%value%周"
+  days: "%value%天"
+  hours: "%value%小时"
+  minutes: "%value%分钟"
+  seconds: "%value%秒"
+
+# ============================================================================
+# 跳跃板系统
+# ============================================================================
+
+jumpads:
+  # 权限
+  no-permission: "<red>你没有权限。</red>"
+  player-only: "<red>仅限玩家。</red>"
+
+  # 帮助
+  list-inline: "<gold>跳跃板:</gold> <gray>%names%</gray>"
+  help:
+    header: "<yellow>用法:</yellow>"
+    create: "<yellow>  /%label% create <n> [power] [upward] [useLookDir]</yellow>  <gray>(你下方的方块)</gray>"
+    remove: "<yellow>  /%label% remove <n></yellow>"
+    list: "<yellow>  /%label% list</yellow>"
+    info: "<yellow>  /%label% info <n></yellow>"
+
+  # Create
+  usage-create: "<red>用法: /%label% create <n> [power] [upward] [useLookDir]</red>"
+  defaults: "<gray>默认 → power=%power%, upward=%upward%, useLookDir=%look%</gray>"
+  created: "<green>跳跃板 '<aqua>%name%</aqua>' 已在 <aqua>%x%,%y%,%z%</aqua> 创建 (power=%power%, upward=%upward%, look=%look%)</green>"
+  create-failed: "<red>创建失败 (无效的位置或名称)。</red>"
+
+  # Remove
+  usage-remove: "<red>用法: /%label% remove <n></red>"
+  removed: "<green>跳跃板 '<aqua>%name%</aqua>' 已移除。</green>"
+  not-found: "<red>未找到跳跃板 '<yellow>%name%</yellow>'。</red>"
+
+  # List
+  list: "<gold>跳跃板 (%count%):</gold> <gray>%names%</gray>"
+
+  # Info
+  usage-info: "<red>用法: /%label% info <n></red>"
+  info:
+    name: "<aqua>名称:</aqua> <white>%name%</white>"
+    location: "<aqua>世界:</aqua> <white>%world%</white>  <aqua>XYZ:</aqua> <white>%x% %y% %z%</white>"
+    settings: "<aqua>Power:</aqua> <white>%power%</white>  <aqua>Upward:</aqua> <white>%upward%</white>  <aqua>UseLookDir:</aqua> <white>%look%</white>"
+
+  # 未知子命令
+  unknown-subcommand: "<red>未知子命令。尝试 /%label%</red>"
+
+# ============================================================================
+# MODGUI系统
+# ============================================================================
+
+modgui:
+  # 命令
+  player-only: "<red>仅限玩家。</red>"
+  no-permission: "<red>无权限: <white>oreo.modgui.open</white></red>"
+
+  # 主菜单
+  main:
+    title: "&8管理面板"
+    player:
+      name: "&e玩家管理"
+      lore:
+        - "&7管理个别玩家"
+        - "&7查看笔记、禁言、封禁等"
+    world:
+      name: "&a世界管理"
+      lore:
+        - "&7配置世界设置"
+        - "&7下界/末地调整、PVP等"
+    server:
+      name: "&c服务器管理"
+      lore:
+        - "&7服务器范围控制"
+        - "&7聊天、性能工具"
+    titles:
+      player: "&8玩家管理"
+      world: "&8选择世界"
+      server: "&8服务器管理"
+
+  # 玩家菜单
+  player:
+    title-local: "&8玩家: %name%"
+    title-network: "&8玩家: %name% &7(%server%)"
+
+  # 玩家操作菜单
+  actions:
+    bridge-unavailable: "<red>跨服务器管理桥不可用。</red>"
+    ecsee-title: "&8末影箱: %name%"
+    inspect-title: "&8检查: %name%"
+    notes-title: "&8笔记: %name%"
+    ip-alts-title: "&8IP和小号: %name%"
+
+  # 玩家笔记
+  notes:
+    prompt: "<yellow>在聊天中输入笔记。</yellow> <gray>(或输入 'cancel' 取消)</gray>"
+    cancelled: "<red>笔记已取消。</red>"
+    added: "<green>笔记已添加。</green>"
+
+  # 性能工具
+  perf:
+    kill-mobs: "<green>已从所有世界移除 <yellow>%count%</yellow> 只怪物。</green>"
+    clear-items: "<green>已从所有世界移除 <yellow>%count%</yellow> 个掉落物品。</green>"
+    clear-tnt: "<green>已从所有世界移除 <yellow>%count%</yellow> 个已激活的TNT。</green>"
+
+  # 聊天管理
+  chat:
+    cleared: "<green>聊天已清空。</green>"
+    clear-broadcast: "<red>聊天已被 <yellow>%actor%</yellow> 清空。</red>"
+    muted: "<red>全局聊天已被 <yellow>%actor%</yellow> 禁言。</red>"
+    unmuted: "<green>全局聊天已解除禁言。</green>"
+    slowmode-set: "<yellow>慢速模式已设置为 <gold>%seconds%</gold>秒</yellow>"
+    staff-enabled: "<green>员工聊天已启用。</green>"
+    staff-disabled: "<red>员工聊天已禁用。</red>"
+    service-unavailable: "<red>ModGUI服务不可用。</red>"
+
+  # 世界调整
+  world:
+    elytra-disabled: "<red>此世界已禁用鞘翅飞行。</red>"
+    trident-disabled: "<red>此世界已禁用三叉戟。</red>"
+    void-saved: "<yellow>你已从虚空中获救并传送到出生点。</yellow>"
+
+  # 服务器菜单
+  server:
+    difficulty-set: "<yellow>难度已设置为 <gold>%difficulty%</gold></yellow>"
+    gamemode-set: "<yellow>默认游戏模式现在是 <gold>%gamemode%</gold></yellow>"
+    whitelist-toggled: "<yellow>白名单现在是 %state%</yellow>"
+    spawn-cooldown: "<red>请等待一秒再次生成。</red>"
+    spawn-peaceful: "<red>无法在 <green>和平</green> 难度生成敌对生物。</red>"
+    spawned: "<green>已生成 <yellow>%count%</yellow> 个 <gray>%type%</gray>。</green>"
+    tps-title: "&8TPS和性能"
+    chat-title: "&8聊天管理"
+    perf-title: "&8性能工具"
+
+  # 世界操作菜单
+  world-actions:
+    time-set: "<yellow>时间已设置为 <gold>%time%</gold></yellow>"
+    weather-set: "<yellow>天气已设置为 <gold>%weather%</gold></yellow>"
+    spawn-set: "<green>世界出生点已设置为 <white>%x% %y% %z%</white></green>"
+    border-set: "<yellow>世界边界已设置为 <gold>%size%</gold></yellow>"
+    gamerules-title: "&8游戏规则: %world%"
+    whitelist-title: "&8白名单: %world%"
+    banned-mobs-title: "&8禁止生物: %world%"
+
+  # 禁止生物菜单
+  banned-mobs:
+    banned: "<red>%mob%</red> <gray>现在在</gray> <white>%world%</white> <gray>中</gray> <red>被禁止</red>"
+    allowed: "<green>%mob%</green> <gray>现在在</gray> <white>%world%</white> <gray>中</gray> <green>被允许</green>"
+
+  # 世界列表菜单
+  world-list:
+    world-title: "&8世界: %world%"
+
+  # 世界白名单菜单
+  world-whitelist:
+    back-title: "&8世界: %world%"
+
+  # EcSee (末影箱查看器) 菜单
+  ecsee:
+    service-missing: "<red>末影箱服务缺失。</red>"
+    title: "&b编辑 &e%target% 的末影箱"
+
+# 玩家检查 (实时统计查看器)
+playerinspect:
+  target-offline: "<red>目标玩家已离线。</red>"
+  no-permission-invsee: "<red>你没有权限查看背包。</red>"
+  head-name: "&b%player% &7(&e%server%&7)"
+  invsee-name: "&b查看背包"
+  invsee-lore1: "&7点击打开"
+  invsee-lore2: "&7%player% 的背包"
+  lore:
+    health: "&7生命: &c%current%&7/&c%max%"
+    health-na: "&7生命: &f不可用 (&8远程&f)"
+    food: "&7饥饿: &e%food%"
+    food-na: "&7饥饿: &f不可用 (&8远程&f)"
+    gamemode: "&7模式: &f%gm%"
+    world: "&7世界/服务器: &a%world%"
+    location: "&7位置: &f%x% %y% %z%"
+    location-na: "&7位置: &f不可用 (&8远程&f)"
+    ping: "&7延迟: &f%ping%"
+    ping-na: "&7延迟: &f不可用 (&8远程&f)"
+    tps: "&7TPS: &f%tps%"
+    tps-na: "&7TPS: &f不可用 (&8远程&f)"
+
+enderchest:
+  storage:
+    opened-cross-server: "<gray>正在打开你的跨服务器末影箱...</gray>"
+    save-failed: "<red>保存你的末影箱失败。请联系管理员。</red>"
+
+  gui:
+    title: "&5末影箱"
+    locked-slot-name: "&c已锁定槽位"
+    locked-slot-lore:
+      - "&7你已解锁 &f%slots% &7个槽位。"
+      - "&7升级你的等级以解锁更多!"
+
+daily:
+  no-permission-toggle: "<red>你没有权限切换此功能。</red>"
+  no-permission: "<red>你没有权限使用此功能。</red>"
+  players-only: "<red>此命令必须在游戏中执行。</red>"
+  disabled: "<red>每日奖励目前已禁用。</red>"
+  disabled-hint: "<gray>使用 <white>/%command% toggle</white> 启用。</gray>"
+  toggled: "<yellow>每日奖励现在是 %state%</yellow>"
+  usage: "<gray>用法: <white>/%command%</white> 或 <white>/%command% claim</white> 或 <white>/%command% top</white></gray>"
+  usage-admin: "<gray>用法: <white>/%command%</white> 或 <white>/%command% claim</white> 或 <white>/%command% top</white> 或 <white>/%command% toggle</white></gray>"
+
+  top:
+    title: "&b&l每日 &f连续排行榜"
+    row: "&7#&f%rank% &b%player% &8» &a连续: &f%streak% &8(&7%hours%小时&8)"
+    empty: "&7暂无数据。"
+
+  # GUI消息
+  gui:
+    disabled: "<red>每日奖励已禁用。</red>"
+    toggled: "<yellow>每日奖励现在是 %state%</yellow>"

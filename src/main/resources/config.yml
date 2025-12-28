@@ -16,6 +16,8 @@ server:
   # Unique logical name for THIS server (used to tag who "owns" a home)
   name: "survival-1"
 
+language: en  # Options: en, fr, es, de, pt
+
 
 # -------- Essentials data store (homes/warps/spawn/back) --------
 essentials:
@@ -78,7 +80,21 @@ bossbar:
   progress: 1.0         # 0.0..1.0
   update-ticks: 40      # re-render every 2s (20 ticks = 1s)
 
+# ==================== JAIL SYSTEM ====================
+Jail:
+  Storage:
+    Mongo:
+      # Set to true for cross-server jail synchronization
+      # Set to false to use local YAML storage (single server only)
+      Enabled: false
 
+      # MongoDB connection URI (only used if Mongo.Enabled is true)
+      Uri: "mongodb://localhost:27017"
+
+      # Database name (only used if Mongo.Enabled is true)
+      Database: "oreo"
+
+      # Collections: "jails" and "jail_sentences" (auto-created)
 
 
 # -------- Scoreboard (sidebar) --------

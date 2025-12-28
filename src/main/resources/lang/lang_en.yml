@@ -543,6 +543,15 @@ warp:
       warp-click: "<green>Left-Click: <white>Teleport</white></green>"
       warp-locked: "<red>You don't have access.</red>"
 
+  head:
+    usage: "<yellow>Usage: /<white>%label% <player></white></yellow>"
+    fetching: "<gray>Fetching head for <white>%target%</white>...</gray>"
+    cannot-resolve: "<red>Player <white>%target%</white> not found.</red>"
+    fetch-failed: "<red>Failed to fetch head for <white>%target%</white>.</red>"
+    item-name: "<aqua>%target%</aqua><gray>'s Head</gray>"
+    dropped: "<yellow>Head given! <gray>(Dropped at your feet - inventory full)</gray></yellow>"
+    given: "<green>Given <white>%target%</white>'s head!</green>"
+
 # RTP System
 rtp:
   disabled: "<red>Random teleport is currently disabled.</red>"
@@ -1436,16 +1445,19 @@ enderchest:
 
 
 daily:
-  # Command messages
   no-permission-toggle: "<red>You don't have permission to toggle this feature.</red>"
-  toggled: "<yellow>Daily Rewards is now %state%</yellow>"
-  players-only: "<red>This command must be run in-game.</red>"
   no-permission: "<red>You don't have permission to use this.</red>"
+  players-only: "<red>This command must be run in-game.</red>"
   disabled: "<red>Daily Rewards is currently disabled.</red>"
   disabled-hint: "<gray>Use <white>/%command% toggle</white> to enable it.</gray>"
+  toggled: "<yellow>Daily Rewards is now %state%</yellow>"
   usage: "<gray>Usage: <white>/%command%</white> or <white>/%command% claim</white> or <white>/%command% top</white></gray>"
   usage-admin: "<gray>Usage: <white>/%command%</white> or <white>/%command% claim</white> or <white>/%command% top</white> or <white>/%command% toggle</white></gray>"
 
+  top:
+    title: "&b&lDaily &fTop Streaks"
+    row: "&7#&f%rank% &b%player% &8» &aStreak: &f%streak% &8(&7%hours%h&8)"
+    empty: "&7No data yet."
   # GUI messages
   gui:
     disabled: "<red>Daily Rewards is disabled.</red>"
