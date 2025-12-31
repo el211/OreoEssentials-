@@ -16,18 +16,20 @@ import java.util.UUID;
  *  - Streak computation
  *  - Reward execution
  *  - Runtime enable/disable toggle
+ *
+ * Updated to use unified storage interface (supports both MongoDB and file storage)
  */
 public final class DailyService {
 
     private final OreoEssentials plugin;
     private final DailyConfig cfg;
-    private final DailyMongoStore store;
+    private final DailyStorage store;
     private final RewardsConfig rewards;
 
     /** Master ON/OFF switch, live-togglable (GUI or command). */
     private volatile boolean featureEnabled;
 
-    public DailyService(OreoEssentials plugin, DailyConfig cfg, DailyMongoStore store, RewardsConfig rewards) {
+    public DailyService(OreoEssentials plugin, DailyConfig cfg, DailyStorage store, RewardsConfig rewards) {
         this.plugin = plugin;
         this.cfg = cfg;
         this.store = store;
@@ -55,8 +57,8 @@ public final class DailyService {
     public boolean canClaimToday(Player p) {
         if (!featureEnabled) return false;
 
-        DailyMongoStore.Record rec = store.ensure(p.getUniqueId(), p.getName());
-        LocalDate last = rec.lastClaimDate();
+        DailyStorage.Record rec = store.ensure(p.getUniqueId(), p.getName());
+        LocalDate last = rec.getLastClaimDate();
         if (last == null) return true;
 
         // Current implementation: both modes behave as calendar-day gating.
@@ -68,8 +70,8 @@ public final class DailyService {
      * Current streak for a UUID (0 if no record).
      */
     public int getStreak(UUID u) {
-        DailyMongoStore.Record r = store.get(u);
-        return (r == null) ? 0 : r.streak;
+        DailyStorage.Record r = store.get(u);
+        return (r == null) ? 0 : r.getStreak();
     }
 
     /**
@@ -100,9 +102,9 @@ public final class DailyService {
             return false;
         }
 
-        DailyMongoStore.Record r = store.ensure(p.getUniqueId(), p.getName());
+        DailyStorage.Record r = store.ensure(p.getUniqueId(), p.getName());
         LocalDate t = today();
-        LocalDate last = r.lastClaimDate();
+        LocalDate last = r.getLastClaimDate();
 
         // Already claimed today
         if (last != null && t.isEqual(last)) return false;
@@ -114,18 +116,18 @@ public final class DailyService {
         } else {
             long gapDays = Duration.between(last.atStartOfDay(), t.atStartOfDay()).toDays();
             if (gapDays == 1) {
-                newStreak = r.streak + 1; // consecutive
+                newStreak = r.getStreak() + 1; // consecutive
             } else if (cfg.pauseStreakWhenMissed) {
-                newStreak = r.streak;     // hold
+                newStreak = r.getStreak();     // hold
             } else if (cfg.skipMissedDays) {
-                newStreak = r.streak + 1; // skip gaps, keep growing
+                newStreak = r.getStreak() + 1; // skip gaps, keep growing
             } else {
                 newStreak = 1;            // reset
             }
         }
 
         // Determine which reward day to grant (based on streak BEFORE update)
-        int dayToAward = nextDayIndex(r.streak);
+        int dayToAward = nextDayIndex(r.getStreak());
         RewardsConfig.DayDef def = rewards.day(dayToAward);
 
         // Persist first (upsert)

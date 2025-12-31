@@ -45,7 +45,7 @@ public final class BossBarService implements Listener {
     private void readConfig() {
         var cfg = plugin.getConfig().getConfigurationSection("bossbar");
 
-        // 🔄 NEW toggle source (master toggle from settings.yml)
+        //toggle source (master toggle from settings.yml)
         this.enabled = plugin.getSettingsConfig().bossbarEnabled();
 
         this.text     = cfg != null ? cfg.getString("text", "<gradient:#FF1493:#00FF7F>Welcome</gradient> {player}")

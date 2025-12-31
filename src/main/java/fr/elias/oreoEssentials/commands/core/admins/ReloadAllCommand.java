@@ -278,6 +278,25 @@ public final class ReloadAllCommand implements OreoCommand {
                     "<red>✘ Failed reloading playervaults: <gray>%error%</gray></red>",
                     Map.of("error", t.getMessage()));
         }
+// 13) Nametags
+        try {
+            var nametagMgr = plugin.getNametagManager();
+            if (nametagMgr != null) {
+                nametagMgr.reload(plugin.getSettingsConfig().raw());  // ← FIXED
+                Lang.send(sender, "admin.reload.nametags",
+                        "<green>✔ Reloaded <white>nametags</white> <gray>(config + live refresh)</gray></green>");
+                ok++;
+            } else {
+                Lang.send(sender, "admin.reload.nametags-skip",
+                        "<yellow>• Skipped nametags (service unavailable)</yellow>");
+                skip++;
+            }
+        } catch (Throwable t) {
+            Lang.send(sender, "admin.reload.nametags-fail",
+                    "<red>✘ Failed reloading nametags: <gray>%error%</gray></red>",
+                    Map.of("error", t.getMessage()));
+        }
+
 
         // Summary
         long took = System.currentTimeMillis() - start;

@@ -1,4 +1,6 @@
-// File: src/main/java/fr/elias/oreoEssentials/chat/AsyncChatListener.java
+// COMPLETE AsyncChatListener.java with WORKING hover support
+// This version adds hover AFTER gradient is applied by walking the component tree
+
 package fr.elias.oreoEssentials.chat;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -8,6 +10,8 @@ import fr.elias.oreoEssentials.util.ChatSyncManager;
 import fr.elias.oreoEssentials.util.DiscordWebhook;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextReplacementConfig;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -58,6 +62,10 @@ public final class AsyncChatListener implements Listener {
     private final boolean bannedWordsEnabled;
     private final List<String> bannedWords;
 
+    // ★ NEW: Hover configuration
+    private final boolean hoverEnabled;
+    private final List<String> hoverLines;
+
     // optional glyphs (kept for <glyph:...>, independent of <head:...>)
     private final Key headFontKey;
     private final String headDefaultGlyph;
@@ -91,6 +99,16 @@ public final class AsyncChatListener implements Listener {
         this.papiApplyToFormat = conf.getBoolean("chat.papi.apply-to-format", true);
         this.papiApplyToMessage = conf.getBoolean("chat.papi.apply-to-message", true);
 
+        // ★ NEW: Hover configuration
+        this.hoverEnabled = conf.getBoolean("chat.hover.enabled", true);
+        this.hoverLines = conf.getStringList("chat.hover.lines");
+        if (hoverLines.isEmpty()) {
+            // Default hover lines
+            hoverLines.add("<gold>Player: <white>%player_name%</white></gold>");
+            hoverLines.add("<gray>Health: <white>%player_health%/%player_max_health%</white></gray>");
+            hoverLines.add("<yellow>Ping: <white>%player_ping%ms</white></yellow>");
+        }
+
         // optional glyph config (not used by <head>)
         Key font = Key.key("minecraft:default");
         String defGlyph = "\u25A0";
@@ -114,6 +132,10 @@ public final class AsyncChatListener implements Listener {
         var settings = OreoEssentials.get().getSettingsConfig();
         this.bannedWordsEnabled = settings.bannedWordsEnabled();
         this.bannedWords = settings.bannedWords();
+
+        // Log hover status
+        Bukkit.getLogger().info("[Chat] Hover support: " + (hoverEnabled ? "ENABLED" : "DISABLED")
+                + " (" + hoverLines.size() + " lines)");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -199,13 +221,28 @@ public final class AsyncChatListener implements Listener {
             // 6) Render & broadcast
             if (useMiniMessage) {
                 try {
-                    TagResolver all = TagResolver.resolver(
+                    // ★ Create hover component FIRST
+                    Component hoverComponent = hoverEnabled ? createHoverComponent(live) : null;
+
+                    // Build message normally (without worrying about hover preservation)
+                    TagResolver allResolvers = TagResolver.resolver(
                             Placeholder.parsed("chat_message", msgForPlaceholder),
                             Placeholder.unparsed("player_name", live.getName()),
                             Placeholder.unparsed("player_displayname", displayName(live)),
                             playerPlaceholders(live)
                     );
-                    Component out = MM.deserialize(fmt, all);
+
+                    Component out = MM.deserialize(fmt, allResolvers);
+
+                    // ★ NOW manually add hover to the name section AFTER gradient is applied
+                    if (hoverEnabled && hoverComponent != null) {
+                        out = addHoverToNameSection(out, hoverComponent, live.getName());
+                    }
+
+                    // ★ Also add hover to any player names mentioned in the chat message itself
+                    if (hoverEnabled) {
+                        out = addHoverToPlayerNamesInMessage(out, live);
+                    }
 
                     // 🔥 LOCAL BROADCAST - Display the Component properly
                     Bukkit.getServer().sendMessage(out);
@@ -219,6 +256,7 @@ public final class AsyncChatListener implements Listener {
 
                 } catch (Throwable t) {
                     Bukkit.getLogger().warning("[Chat] MiniMessage parse error: " + t.getMessage());
+                    t.printStackTrace();
                     String plain = stripTags(fmt);
                     Bukkit.broadcast(Component.text(plain));
                     maybeDiscord(live.getName(), plain);
@@ -232,6 +270,174 @@ public final class AsyncChatListener implements Listener {
                 maybeSync(sender, serverName, live.getName(), legacy);
             }
         });
+    }
+
+    /* ★ NEW: Add hover to the name section by walking the component tree */
+    private Component addHoverToNameSection(Component message, Component hoverComponent, String playerName) {
+        // The player name appears between "∘" and "»" in the component tree
+        // We need to find the component that contains the name letters and add hover to it
+
+        List<Component> children = new ArrayList<>(message.children());
+        boolean modified = false;
+
+        for (int i = 0; i < children.size(); i++) {
+            Component child = children.get(i);
+            String childText = PlainTextComponentSerializer.plainText().serialize(child);
+
+            // Check if this component contains the player name
+            // (gradient splits it, so check if it contains most of the letters)
+            if (childText.contains(playerName) ||
+                    (childText.length() > 3 && playerName.contains(childText))) {
+
+                // Add hover to this child AND all its descendants
+                Component withHover = addHoverRecursive(child, hoverComponent);
+                children.set(i, withHover);
+                modified = true;
+                break;
+            }
+        }
+
+        if (modified) {
+            return message.children(children);
+        }
+
+        return message;
+    }
+
+    /* ★ NEW: Recursively add hover to a component and all its children */
+    private Component addHoverRecursive(Component component, Component hoverComponent) {
+        // Add hover to this component
+        Component withHover = component.hoverEvent(HoverEvent.showText(hoverComponent));
+
+        // If it has children, add hover to them too
+        if (!component.children().isEmpty()) {
+            List<Component> newChildren = new ArrayList<>();
+            for (Component child : component.children()) {
+                newChildren.add(addHoverRecursive(child, hoverComponent));
+            }
+            withHover = withHover.children(newChildren);
+        }
+
+        return withHover;
+    }
+
+    /* ★ NEW: Add hover to player names mentioned in chat messages (not the sender's name) */
+    private Component addHoverToPlayerNamesInMessage(Component message, Player sender) {
+        for (Player target : Bukkit.getOnlinePlayers()) {
+            // Skip the sender (their name already has hover from the main method)
+            if (target.getUniqueId().equals(sender.getUniqueId())) {
+                continue;
+            }
+
+            final String targetName = target.getName();
+
+            // Create hover component for this player
+            Component hoverComponent = createHoverComponent(target);
+
+            // Try exact username match
+            Pattern exactPattern = Pattern.compile("\\b" + Pattern.quote(targetName) + "\\b");
+
+            message = message.replaceText(TextReplacementConfig.builder()
+                    .match(exactPattern)
+                    .replacement((matchResult, builder) -> {
+                        return builder.hoverEvent(HoverEvent.showText(hoverComponent));
+                    })
+                    .build());
+        }
+
+        return message;
+    }
+
+    /* ★ NEW: Create hover component for a player */
+    private Component createHoverComponent(Player player) {
+        // Build hover text from config
+        StringBuilder hoverText = new StringBuilder();
+
+        for (int i = 0; i < hoverLines.size(); i++) {
+            String line = hoverLines.get(i);
+            line = replaceHoverPlaceholders(line, player);
+            hoverText.append(line);
+            if (i < hoverLines.size() - 1) {
+                hoverText.append("\n");
+            }
+        }
+
+        try {
+            Component result = MM.deserialize(hoverText.toString(), createHoverPlaceholders(player));
+            return result;
+        } catch (Exception e) {
+            Bukkit.getLogger().warning("[Chat] Failed to parse hover text: " + e.getMessage());
+            return Component.text(hoverText.toString());
+        }
+    }
+
+    /* ★ NEW: Replace placeholders in hover text */
+    private String replaceHoverPlaceholders(String text, Player player) {
+        // Apply PlaceholderAPI if available
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            try {
+                text = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, text);
+            } catch (Throwable ignored) {}
+        }
+
+        // Basic placeholders
+        text = text.replace("%player_name%", player.getName());
+        text = text.replace("%player_displayname%", player.getDisplayName());
+        text = text.replace("%player_uuid%", player.getUniqueId().toString());
+        text = text.replace("%player_health%", String.valueOf((int) Math.ceil(player.getHealth())));
+        text = text.replace("%player_max_health%", String.valueOf((int) Math.ceil(player.getMaxHealth())));
+        text = text.replace("%player_level%", String.valueOf(player.getLevel()));
+        text = text.replace("%player_ping%", String.valueOf(getPingSafe(player)));
+        text = text.replace("%player_world%", player.getWorld().getName());
+        text = text.replace("%player_x%", String.format(Locale.ENGLISH, "%.1f", player.getLocation().getX()));
+        text = text.replace("%player_y%", String.format(Locale.ENGLISH, "%.1f", player.getLocation().getY()));
+        text = text.replace("%player_z%", String.format(Locale.ENGLISH, "%.1f", player.getLocation().getZ()));
+        text = text.replace("%player_gamemode%", player.getGameMode().name());
+
+        // LuckPerms placeholders
+        text = text.replace("%luckperms_prefix%", getLuckPermsPrefix(player));
+        text = text.replace("%luckperms_suffix%", getLuckPermsSuffix(player));
+        text = text.replace("%luckperms_primary_group%", resolvePrimaryGroup(player));
+
+        return text;
+    }
+
+    /* ★ NEW: Create tag resolvers for hover text */
+    private TagResolver createHoverPlaceholders(Player player) {
+        return TagResolver.resolver(
+                Placeholder.unparsed("player_name", player.getName()),
+                Placeholder.unparsed("player_displayname", player.getDisplayName()),
+                Placeholder.unparsed("player_uuid", player.getUniqueId().toString()),
+                Placeholder.unparsed("player_health", String.valueOf((int) Math.ceil(player.getHealth()))),
+                Placeholder.unparsed("player_max_health", String.valueOf((int) Math.ceil(player.getMaxHealth()))),
+                Placeholder.unparsed("player_level", String.valueOf(player.getLevel())),
+                Placeholder.unparsed("player_ping", String.valueOf(getPingSafe(player))),
+                Placeholder.unparsed("player_world", player.getWorld().getName()),
+                Placeholder.unparsed("player_gamemode", player.getGameMode().name()),
+                Placeholder.unparsed("luckperms_primary_group", resolvePrimaryGroup(player))
+        );
+    }
+
+    private String getLuckPermsPrefix(Player player) {
+        try {
+            LuckPerms lp = LuckPermsProvider.get();
+            CachedMetaData meta = lp.getPlayerAdapter(Player.class).getMetaData(player);
+            String prefix = meta.getPrefix();
+            return prefix != null ? prefix : "";
+        } catch (Throwable ignored) {
+            return "";
+        }
+    }
+
+    private String getLuckPermsSuffix(Player player) {
+        try {
+            LuckPerms lp = LuckPermsProvider.get();
+            CachedMetaData meta = lp.getPlayerAdapter(Player.class).getMetaData(player);
+            String suffix = meta.getSuffix();
+            return suffix != null ? suffix : "";
+        } catch (Throwable ignored) {
+            return "";
+        }
     }
 
     /* ---------------- helpers ---------------- */

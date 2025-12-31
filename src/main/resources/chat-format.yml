@@ -9,9 +9,40 @@ chat:
   papi:
     apply-to-format: true      # resolve %vault_eco_balance%, %luckperms_prefix%, etc.
     apply-to-message: true     # allow %placeholders% inside the player's message
+  # Hover configuration :
+  hover:
+    enabled: true
+    lines:
+      - "<gradient:#FFD700:#FFA500><bold>%player_name%</bold></gradient>"
+      - ""
+      - "<gray>━━━━━━━━━━━━━━━━━━━━</gray>"
+      - ""
+      - "<gold>⚔ Stats:</gold>"
+      - "  <red>❤</red> Health: <white>%player_health%/%player_max_health%</white>"
+      - "  <green>✦</green> Level: <white>%player_level%</white>"
+      - "  <aqua>⚡</aqua> Ping: <white>%player_ping%ms</white>"
+      - ""
+      - "<gold>🌍 Location:</gold>"
+      - "  <gray>World:</gray> <white>%player_world%</white>"
+      - "  <gray>Coords:</gray> <white>%player_x%, %player_y%, %player_z%</white>"
+      - ""
+      - "<gold>👤 Info:</gold>"
+      - "  <gray>Rank:</gray> <white>%luckperms_primary_group%</white>"
+      - "  <gray>Mode:</gray> <white>%player_gamemode%</white>"
+      - ""
+      - "<gray>━━━━━━━━━━━━━━━━━━━━</gray>"
 
+  # Alternative simple configuration:
+  # hover:
+  #   enabled: true
+  #   lines:
+  #     - "<gold>%player_name%</gold>"
+  #     - "<gray>Health: %player_health%</gray>"
+  #     - "<yellow>Ping: %player_ping%ms</yellow>"
   # Optional glyphs (only if you ever use <glyph:...>)
+
   head:
+
     font: "oreo:heads"
     default-glyph: "\uE001"
     glyphs:

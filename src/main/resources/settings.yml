@@ -148,3 +148,21 @@ features:
 holograms:
   text:
     per-player: true        # enable per-player placeholders/permissions for TEXT holograms
+
+
+nametag: #THIS FEATURE IS NOT WORKING YET ITS UNDER DEVELOPPEMENT DOE NOT USE IT YET
+  # Enable/disable custom nametags
+  enabled: false
+
+  # Use MiniMessage for formatting (gradients, colors, etc.)
+  use-minimessage: true
+
+  # How often to update nametags (in ticks, 20 ticks = 1 second)
+  update-interval-ticks: 100  # 5 seconds
+
+  # Nametag lines (displayed from top to bottom)
+  lines:
+    - "<gradient:#FFD700:#FFA500><bold>%luckperms_primary_group%</bold></gradient>"
+    - "<white>%player_name%</white>"
+    - "<gray>❤ %player_health%/%player_max_health%</gray>"
+

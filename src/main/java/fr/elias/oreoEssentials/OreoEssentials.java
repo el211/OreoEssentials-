@@ -11,6 +11,7 @@ import fr.elias.oreoEssentials.commands.core.playercommands.back.BackService;
 import fr.elias.oreoEssentials.cross.InvlookListener;
 import fr.elias.oreoEssentials.cross.InvlookManager;
 import fr.elias.oreoEssentials.migration.commands.ZEssentialsHomesImportCommand;
+import fr.elias.oreoEssentials.nametag.PlayerNametagManager;
 import fr.elias.oreoEssentials.playerwarp.*;
 import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpCommand;
 import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpTabCompleter;
@@ -274,6 +275,8 @@ public final class OreoEssentials extends JavaPlugin {
 
     // Playtime
     private fr.elias.oreoEssentials.playtime.PlaytimeTracker playtimeTracker;
+    private PlayerNametagManager nametagManager;
+
 
     @Override
     public void onEnable() {
@@ -619,25 +622,41 @@ public final class OreoEssentials extends JavaPlugin {
         );
         this.freezeManager = new FreezeManager(this);
 
-        // -------- Daily (Mongo) + rewards.yml loader (NEW) --------
+            // -------- Daily Rewards (unified storage: MongoDB or file-based) --------
         var dailyCfg = new fr.elias.oreoEssentials.daily.DailyConfig(this);
         dailyCfg.load();
 
-        this.dailyStore = new fr.elias.oreoEssentials.daily.DailyMongoStore(this, dailyCfg);
-        if (dailyCfg.mongo.enabled) this.dailyStore.connect();
+            // Create storage (automatically selects MongoDB or file storage based on config)
+        fr.elias.oreoEssentials.daily.DailyStorage dailyStorage =
+                fr.elias.oreoEssentials.daily.DailyStorage.create(this, dailyCfg);
 
+        // Load rewards configuration
         var dailyRewardsCfg = new fr.elias.oreoEssentials.daily.RewardsConfig(this);
         dailyRewardsCfg.load();
 
-        var dailySvc = new fr.elias.oreoEssentials.daily.DailyService(this, dailyCfg, this.dailyStore, dailyRewardsCfg);
+        // Create service with unified storage
+        var dailySvc = new fr.elias.oreoEssentials.daily.DailyService(
+                this,
+                dailyCfg,
+                dailyStorage,
+                dailyRewardsCfg
+        );
 
-
-        // Register /daily (claim GUI, claim, top)
-        var dailyCmd = new fr.elias.oreoEssentials.daily.DailyCommand(this, dailyCfg, dailySvc, dailyRewardsCfg);
+        // Register /daily command (claim GUI, claim, top)
+        var dailyCmd = new fr.elias.oreoEssentials.daily.DailyCommand(
+                this,
+                dailyCfg,
+                dailySvc,
+                dailyRewardsCfg
+        );
         if (getCommand("daily") != null) {
             getCommand("daily").setExecutor(dailyCmd);
             getCommand("daily").setTabCompleter(dailyCmd);
         }
+
+        getLogger().info("[Daily] Rewards system initialized with "
+                + (dailyCfg.mongo.enabled ? "MongoDB" : "file-based")
+                + " storage.");
 
         // -------- Moderation core needed by chat --------
         muteService = new MuteService(this);
@@ -1970,7 +1989,23 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[OreoHolograms] Disabled by settings.yml.");
         }
 
-
+        // --- PlayerNametagManager (custom nametags above heads) ---
+        if (settingsConfig.getRoot().getBoolean("nametag.enabled", true)) {
+            try {
+                this.nametagManager = new PlayerNametagManager(
+                        this,
+                        getSettingsConfig().raw()
+                );
+                getLogger().info("[Nametag] Custom nametags initialized");
+            } catch (Exception e) {
+                getLogger().severe("[Nametag] Failed to initialize: " + e.getMessage());
+                e.printStackTrace();
+                this.nametagManager = null;
+            }
+        } else {
+            this.nametagManager = null;
+            getLogger().info("[Nametag] Disabled by settings.yml");
+        }
         // -------- PlaceholderAPI hook (optional; reflection) --------
         tryRegisterPlaceholderAPI();
 
@@ -2157,6 +2192,16 @@ public final class OreoEssentials extends JavaPlugin {
             }
         } catch (Exception ignored) {}
         dailyStore = null;
+        try { if (dailyStore != null) dailyStore.close(); } catch (Exception ignored) {}
+        try { if (tradeService != null) tradeService.cancelAll(); } catch (Throwable ignored) {}
+
+        // ★ ADD THIS HERE ★
+        // Shutdown nametag manager
+        try {
+            if (nametagManager != null) {
+                nametagManager.shutdown();
+            }
+        } catch (Exception ignored) {}
         this.healthBarListener = null;
 
         getLogger().info("OreoEssentials disabled.");
@@ -2340,6 +2385,9 @@ public final class OreoEssentials extends JavaPlugin {
     }
     public fr.elias.oreoEssentials.playtime.PlaytimeTracker getPlaytimeTracker() {
         return this.playtimeTracker;
+    }
+    public PlayerNametagManager getNametagManager() {
+        return nametagManager;
     }
     public SettingsConfig getSettings() {
         return settings;
