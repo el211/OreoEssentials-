@@ -1,6 +1,5 @@
-// PlayerNametagManager.java - TEAMS ONLY VERSION
-// WORKAROUND: Don't use customName when scoreboard sidebar is active
-// This fixes the issue where sidebar scoreboards hide customName
+// PlayerNametagManager.java - SCOREBOARD-INTEGRATED VERSION
+// CRITICAL FIX: Works WITH ScoreboardService by adding teams to existing scoreboards
 
 package fr.elias.oreoEssentials.nametag;
 
@@ -22,21 +21,19 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scoreboard.DisplaySlot;
-import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-import java.util.List;
-
 /**
- * TEAMS-ONLY Nametag Manager
+ * SCOREBOARD-INTEGRATED Nametag Manager
  *
- * CRITICAL FIX: When scoreboard sidebar is active, Minecraft HIDES customName!
- * This version uses ONLY scoreboard teams for nametags.
+ * This version works WITH ScoreboardService by:
+ * 1. Adding teams to the player's EXISTING scoreboard (not creating a new one)
+ * 2. Running at MONITOR priority (after scoreboard is set up)
+ * 3. Never calling p.setScoreboard() (lets ScoreboardService manage that)
  *
- * LIMITATION: Teams can only have prefix (16 chars) + name + suffix (16 chars)
- * No multi-line nametags possible with this approach, but it WORKS with scoreboards!
+ * CRITICAL: Teams are added to whatever scoreboard the player currently has.
+ * This ensures nametags work WITH the sidebar scoreboard, not against it.
  */
 public class PlayerNametagManager implements Listener {
 
@@ -47,19 +44,15 @@ public class PlayerNametagManager implements Listener {
 
     // Configuration
     private boolean enabled;
-    private List<String> nametagLines;
-    private int updateInterval;
-
-    // Team settings
     private String teamPrefix;
     private String teamSuffix;
+    private int updateInterval;
 
     // Update task
     private BukkitRunnable updateTask;
 
     public PlayerNametagManager(OreoEssentials plugin, FileConfiguration config) {
-        Bukkit.getLogger().info("[Nametag] Initializing TEAMS-ONLY nametag system...");
-        Bukkit.getLogger().info("[Nametag] (CustomName disabled due to scoreboard conflicts)");
+        Bukkit.getLogger().info("[Nametag] Initializing SCOREBOARD-INTEGRATED system...");
 
         this.plugin = plugin;
         this.config = config;
@@ -70,14 +63,14 @@ public class PlayerNametagManager implements Listener {
             Bukkit.getPluginManager().registerEvents(this, plugin);
             startUpdateTask();
 
-            // Update all online players (delayed)
+            // Initial update (delayed to let scoreboard service initialize)
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     updateNametag(player);
                 }
-            }, 20L);
+            }, 40L); // 2 seconds
 
-            Bukkit.getLogger().info("[Nametag] Teams-only system enabled!");
+            Bukkit.getLogger().info("[Nametag] Team-based nametags enabled!");
             Bukkit.getLogger().info("[Nametag] - Prefix: " + teamPrefix);
             Bukkit.getLogger().info("[Nametag] - Suffix: " + teamSuffix);
         }
@@ -85,29 +78,9 @@ public class PlayerNametagManager implements Listener {
 
     private void loadConfig() {
         this.enabled = config.getBoolean("nametag.enabled", true);
-        this.nametagLines = config.getStringList("nametag.lines");
         this.updateInterval = config.getInt("nametag.update-interval-ticks", 100);
-
-        // Team prefix/suffix
         this.teamPrefix = config.getString("nametag.team-prefix", "&6[%luckperms_primary_group%] &f");
-        this.teamSuffix = config.getString("nametag.team-suffix", "");
-
-        // Convert first line to team prefix if configured
-        if (!nametagLines.isEmpty() && teamPrefix.equals("&6[%luckperms_primary_group%] &f")) {
-            // Try to convert MiniMessage to legacy for team prefix
-            String firstLine = nametagLines.get(0);
-            try {
-                Component comp = mm.deserialize(firstLine
-                        .replace("%luckperms_primary_group%", "GROUP")
-                        .replace("%player_name%", "NAME"));
-                String legacyStr = legacy.serialize(comp);
-                // Keep it under 16 chars
-                if (legacyStr.length() <= 16) {
-                    teamPrefix = legacyStr.replace("GROUP", "%luckperms_primary_group%")
-                            .replace("NAME", "%player_name%");
-                }
-            } catch (Exception ignored) {}
-        }
+        this.teamSuffix = config.getString("nametag.team-suffix", " &c❤%player_health%");
     }
 
     private void startUpdateTask() {
@@ -119,7 +92,9 @@ public class PlayerNametagManager implements Listener {
             @Override
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
-                    updateNametag(player);
+                    try {
+                        updateNametag(player);
+                    } catch (Exception ignored) {}
                 }
             }
         };
@@ -127,78 +102,96 @@ public class PlayerNametagManager implements Listener {
         updateTask.runTaskTimer(plugin, 20L, updateInterval);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    /**
+     * CRITICAL: Run at MONITOR priority (AFTER ScoreboardService sets up scoreboard)
+     * This ensures we add teams to the CORRECT scoreboard instance
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (!enabled) return;
 
         Player player = event.getPlayer();
 
-        // Delay to let ScoreboardService create scoreboard first
+        // Delay to let ScoreboardService fully initialize
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (player.isOnline()) {
                 updateNametag(player);
+
+                // Also update this player's team on EVERYONE ELSE's scoreboard
+                updatePlayerForAllViewers(player);
             }
-        }, 10L);
+        }, 25L); // Run after ScoreboardService's 2-tick delay
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         if (!enabled) return;
 
-        Player player = event.getPlayer();
-
-        // Remove from team
-        try {
-            removeFromTeam(player);
-        } catch (Exception ignored) {}
+        // Remove from all viewers' scoreboards
+        removePlayerFromAllScoreboards(event.getPlayer());
     }
 
     /**
-     * Update nametag using ONLY teams
-     * CustomName is NOT used because it conflicts with scoreboard sidebar
+     * Update nametag for a player
+     * CRITICAL: Uses player's EXISTING scoreboard (set by ScoreboardService)
      */
     public void updateNametag(Player player) {
         if (!enabled || player == null || !player.isOnline()) return;
 
         try {
-            updateTeamNametag(player);
+            // Clear customName (conflicts with scoreboard)
+            if (player.customName() != null) {
+                player.customName(null);
+                player.setCustomNameVisible(false);
+            }
+
+            // Update this player's team on THEIR OWN scoreboard
+            updateTeamOnScoreboard(player, player.getScoreboard());
+
+            // Update this player's team on EVERYONE ELSE's scoreboard
+            updatePlayerForAllViewers(player);
+
         } catch (Exception e) {
-            Bukkit.getLogger().warning("[Nametag] Failed to update nametag for " + player.getName() + ": " + e.getMessage());
+            Bukkit.getLogger().warning("[Nametag] Failed to update for " + player.getName() + ": " + e.getMessage());
         }
     }
 
     /**
-     * Set team prefix/suffix for nametag
-     * This works even when scoreboard sidebar is active!
+     * CRITICAL: Add this player's team to EVERYONE's scoreboard
+     * This is why other players can see your nametag!
      */
-    private void updateTeamNametag(Player player) {
-        try {
-            // Get player's CURRENT scoreboard (from ScoreboardService)
-            Scoreboard sb = player.getScoreboard();
+    private void updatePlayerForAllViewers(Player target) {
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            if (viewer == target) continue; // Already updated above
 
-            if (sb == null) {
-                sb = Bukkit.getScoreboardManager().getMainScoreboard();
-            }
-
-            // Check if player has sidebar active
-            boolean hasSidebar = false;
-            for (Objective obj : sb.getObjectives()) {
-                if (obj.getDisplaySlot() == DisplaySlot.SIDEBAR) {
-                    hasSidebar = true;
-                    break;
+            try {
+                Scoreboard viewerBoard = viewer.getScoreboard();
+                if (viewerBoard != null) {
+                    updateTeamOnScoreboard(target, viewerBoard);
                 }
-            }
+            } catch (Exception ignored) {}
+        }
+    }
 
-            // Create unique team name
+    /**
+     * Update a player's team on a specific scoreboard
+     * @param player The player whose nametag we're setting
+     * @param scoreboard The scoreboard to add the team to
+     */
+    private void updateTeamOnScoreboard(Player player, Scoreboard scoreboard) {
+        if (scoreboard == null) return;
+
+        try {
+            // Unique team name per player
             String teamName = "nt_" + player.getName().toLowerCase();
             if (teamName.length() > 16) {
                 teamName = teamName.substring(0, 16);
             }
 
-            // Get or create team ON THE PLAYER'S CURRENT SCOREBOARD
-            Team team = sb.getTeam(teamName);
+            // Get or create team ON THIS SPECIFIC SCOREBOARD
+            Team team = scoreboard.getTeam(teamName);
             if (team == null) {
-                team = sb.registerNewTeam(teamName);
+                team = scoreboard.registerNewTeam(teamName);
             }
 
             // Add player to team
@@ -206,19 +199,15 @@ public class PlayerNametagManager implements Listener {
                 team.addEntry(player.getName());
             }
 
-            // Replace placeholders and convert to legacy color codes
+            // Replace placeholders
             String prefix = replacePlaceholders(this.teamPrefix, player);
             String suffix = replacePlaceholders(this.teamSuffix, player);
 
-            // Convert MiniMessage to legacy if needed
-            prefix = convertToLegacy(prefix, player);
-            suffix = convertToLegacy(suffix, player);
-
-            // Apply legacy color codes
+            // Convert to legacy color codes
             prefix = ChatColor.translateAlternateColorCodes('&', prefix);
             suffix = ChatColor.translateAlternateColorCodes('&', suffix);
 
-            // Truncate to 16 chars (Minecraft limitation)
+            // Truncate to 16 chars
             if (prefix.length() > 16) {
                 prefix = prefix.substring(0, 16);
             }
@@ -226,56 +215,41 @@ public class PlayerNametagManager implements Listener {
                 suffix = suffix.substring(0, 16);
             }
 
+            // Set prefix/suffix
             team.setPrefix(prefix);
             team.setSuffix(suffix);
 
+            // Make visible
+            team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
+
         } catch (Exception e) {
-            Bukkit.getLogger().warning("[Nametag] Team update failed for " + player.getName() + ": " + e.getMessage());
+            Bukkit.getLogger().warning("[Nametag] Failed to update team for " + player.getName()
+                    + " on scoreboard: " + e.getMessage());
         }
     }
 
     /**
-     * Try to convert MiniMessage tags to legacy color codes
+     * Remove player from all scoreboards
      */
-    private String convertToLegacy(String text, Player player) {
-        if (text == null || text.isEmpty()) return "";
+    private void removePlayerFromAllScoreboards(Player player) {
+        String teamName = "nt_" + player.getName().toLowerCase();
+        if (teamName.length() > 16) {
+            teamName = teamName.substring(0, 16);
+        }
 
-        // If it contains MiniMessage tags, try to convert
-        if (text.contains("<") && text.contains(">")) {
+        for (Player online : Bukkit.getOnlinePlayers()) {
             try {
-                Component comp = mm.deserialize(text);
-                text = legacy.serialize(comp);
-            } catch (Exception e) {
-                // Failed to parse MiniMessage, keep original
-            }
-        }
+                Scoreboard sb = online.getScoreboard();
+                if (sb == null) continue;
 
-        return text;
-    }
-
-    /**
-     * Remove player from their team
-     */
-    private void removeFromTeam(Player player) {
-        try {
-            Scoreboard sb = player.getScoreboard();
-            if (sb == null) return;
-
-            String teamName = "nt_" + player.getName().toLowerCase();
-            if (teamName.length() > 16) {
-                teamName = teamName.substring(0, 16);
-            }
-
-            Team team = sb.getTeam(teamName);
-            if (team == null) return;
-
-            team.removeEntry(player.getName());
-
-            if (team.getEntries().isEmpty()) {
-                team.unregister();
-            }
-        } catch (Exception e) {
-            // Silently fail
+                Team team = sb.getTeam(teamName);
+                if (team != null) {
+                    team.removeEntry(player.getName());
+                    if (team.getEntries().isEmpty()) {
+                        team.unregister();
+                    }
+                }
+            } catch (Exception ignored) {}
         }
     }
 
@@ -297,8 +271,13 @@ public class PlayerNametagManager implements Listener {
         text = text.replace("%player_displayname%", player.getDisplayName());
 
         try {
-            text = text.replace("%player_health%", String.valueOf((int) Math.ceil(player.getHealth())));
-            text = text.replace("%player_max_health%", String.valueOf((int) Math.ceil(player.getMaxHealth())));
+            double health = player.getHealth();
+            String healthStr = String.format("%.1f", health);
+            text = text.replace("%player_health%", healthStr);
+
+            double maxHealth = player.getMaxHealth();
+            String maxHealthStr = String.format("%.1f", maxHealth);
+            text = text.replace("%player_max_health%", maxHealthStr);
         } catch (Exception ignored) {}
 
         text = text.replace("%player_level%", String.valueOf(player.getLevel()));
@@ -381,9 +360,7 @@ public class PlayerNametagManager implements Listener {
             Bukkit.getLogger().info("[Nametag] Reload complete!");
         } else {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                try {
-                    removeFromTeam(player);
-                } catch (Exception ignored) {}
+                removePlayerFromAllScoreboards(player);
             }
 
             Bukkit.getLogger().info("[Nametag] Disabled.");
@@ -403,9 +380,7 @@ public class PlayerNametagManager implements Listener {
     }
 
     public void disableNametag(Player player) {
-        try {
-            removeFromTeam(player);
-        } catch (Exception ignored) {}
+        removePlayerFromAllScoreboards(player);
     }
 
     public boolean isEnabled() {
@@ -420,9 +395,7 @@ public class PlayerNametagManager implements Listener {
         }
 
         for (Player player : Bukkit.getOnlinePlayers()) {
-            try {
-                removeFromTeam(player);
-            } catch (Exception ignored) {}
+            removePlayerFromAllScoreboards(player);
         }
 
         Bukkit.getLogger().info("[Nametag] Shutdown complete.");

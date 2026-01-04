@@ -150,20 +150,9 @@ holograms:
     per-player: true        # enable per-player placeholders/permissions for TEXT holograms
 
 
-
 nametag:
   enabled: true
-  use-minimessage: true
   update-interval-ticks: 100
-
-  # These lines are ONLY visible on vanilla clients
-  lines:
-    - "<gradient:#FFD700:#FFA500><bold>%luckperms_primary_group%</bold></gradient>"
-    - "<white>%player_name%</white>"
-    - "<gray>❤ %player_health%/%player_max_health%</gray>"
-
-  # For modded clients (Feather/Lunar/Badlion)
-  team-compatibility: true
   team-prefix: "&6[%luckperms_primary_group%] &f"
-  team-suffix: " &c❤%player_health%"  # Add health to suffix
+  team-suffix: " &c❤%player_health%"
 
