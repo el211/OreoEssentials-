@@ -1989,7 +1989,7 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[OreoHolograms] Disabled by settings.yml.");
         }
 
-        // --- PlayerNametagManager (custom nametags above heads) ---
+        // --- PlayerNametagManager (custom nametags above heads) ---//
         if (settingsConfig.getRoot().getBoolean("nametag.enabled", true)) {
             try {
                 this.nametagManager = new PlayerNametagManager(
