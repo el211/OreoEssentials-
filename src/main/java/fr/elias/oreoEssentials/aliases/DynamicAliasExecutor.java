@@ -150,19 +150,19 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
                 changed = true;
             }
 
-            // cooldown:<n>?!   (treat as required; if still cooling -> SKIP this step)
+            // cooldown:<n>?!
             if (startsWithWordIgnoreCase(s, "cooldown:")) {
                 String rem = s.substring("cooldown:".length()).trim();
                 int end = findDirectiveEnd(rem);
                 String val = rem.substring(0, end).trim();
-                // allow suffix ?! but we ignore flags for simplicity (required anyway)
+
                 val = val.replaceAll("[?!]+$", "");
                 perLineCooldown = (int) Math.max(0, parseDoubleSafe(val, 0d));
                 s = rem.substring(end).trim();
                 changed = true;
             }
 
-            // moneycost:<amount>?!   (withdraw from Vault; if not enough -> SKIP this step)
+            // moneycost:<amount>?!
             if (startsWithWordIgnoreCase(s, "moneycost:")) {
                 String rem = s.substring("moneycost:".length()).trim();
                 int end = findDirectiveEnd(rem);
@@ -185,7 +185,6 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
 
         } while (changed && !s.isEmpty());
 
-        // If we collected a delay, push it
         if (pendingDelayTicks > 0) {
             out.add(new DelayStep(pendingDelayTicks));
         }
@@ -198,7 +197,6 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
             try { expanded = PlaceholderAPI.setPlaceholders(p, expanded); } catch (Throwable ignored) {}
         }
 
-        // QoL: keep your give shorthand
         expanded = maybeExpandShorthandGive(expanded, sender);
 
         out.add(new CommandStep(expanded, runAsOverride, perLineCooldown, inlineChecks, moneyCost, lineIndex));
@@ -274,11 +272,7 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
         }
 
         if (!ok) {
-            // We don't stop the whole plan; continue to next
-            // (Change behavior here if you want fail-fast)
         }
-
-        // proceed
         runStepsRecursive(sender, player, plan, i + 1);
     }
 

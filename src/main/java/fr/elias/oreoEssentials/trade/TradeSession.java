@@ -281,16 +281,13 @@ public final class TradeSession {
      * Cross-server synchronization (session-local)
      * ====================================================================== */
 
-    /**
-     * Apply a remote state if newer. Must be called on main thread.
-     * The service computed new arrays/readiness + version for us.
-     */
+
     public void applyRemoteState(ItemStack[] newA, ItemStack[] newB, boolean readyA, boolean readyB, long newVersion) {
         log("[TRADE] applyRemoteState NEW v=" + newVersion + " (old " + version
                 + "), Aready=" + readyA + " Bready=" + readyB);
 
         if (newVersion <= version) return;        // stale
-        if (uiLocked || completed) return;        // ignore late edits during/after finish
+        if (uiLocked || completed) return;
         if (isClosingOrClosed()) return;
         copy18(newA, offerA);
         copy18(newB, offerB);
@@ -377,7 +374,6 @@ public final class TradeSession {
     public long getVersion() { return version; }
 
     // Offer views (treat as read-only by callers)
-// Offer views (return clones so external code cannot mutate internal arrays)
     public ItemStack[] viewOfferA() { return offerA.clone(); }
     public ItemStack[] viewOfferB() { return offerB.clone(); }
 

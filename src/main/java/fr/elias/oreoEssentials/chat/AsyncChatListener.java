@@ -234,23 +234,18 @@ public final class AsyncChatListener implements Listener {
 
                     Component out = MM.deserialize(fmt, allResolvers);
 
-                    // ★ NOW manually add hover to the name section AFTER gradient is applied
                     if (hoverEnabled && hoverComponent != null) {
                         out = addHoverToNameSection(out, hoverComponent, live.getName());
                     }
 
-                    // ★ Also add hover to any player names mentioned in the chat message itself
                     if (hoverEnabled) {
                         out = addHoverToPlayerNamesInMessage(out, live);
                     }
 
-                    // 🔥 LOCAL BROADCAST - Display the Component properly
                     Bukkit.getServer().sendMessage(out);
 
-                    // 🔥 DISCORD - Send plain text
                     maybeDiscord(live.getName(), PlainTextComponentSerializer.plainText().serialize(out));
 
-                    // 🔥 CROSS-SERVER SYNC - Send as JSON Component
                     String jsonComponent = GsonComponentSerializer.gson().serialize(out);
                     maybeSync(sender, serverName, live.getName(), jsonComponent);
 
@@ -284,12 +279,9 @@ public final class AsyncChatListener implements Listener {
             Component child = children.get(i);
             String childText = PlainTextComponentSerializer.plainText().serialize(child);
 
-            // Check if this component contains the player name
-            // (gradient splits it, so check if it contains most of the letters)
             if (childText.contains(playerName) ||
                     (childText.length() > 3 && playerName.contains(childText))) {
 
-                // Add hover to this child AND all its descendants
                 Component withHover = addHoverRecursive(child, hoverComponent);
                 children.set(i, withHover);
                 modified = true;
@@ -304,12 +296,9 @@ public final class AsyncChatListener implements Listener {
         return message;
     }
 
-    /* ★ NEW: Recursively add hover to a component and all its children */
     private Component addHoverRecursive(Component component, Component hoverComponent) {
-        // Add hover to this component
         Component withHover = component.hoverEvent(HoverEvent.showText(hoverComponent));
 
-        // If it has children, add hover to them too
         if (!component.children().isEmpty()) {
             List<Component> newChildren = new ArrayList<>();
             for (Component child : component.children()) {
@@ -321,20 +310,16 @@ public final class AsyncChatListener implements Listener {
         return withHover;
     }
 
-    /* ★ NEW: Add hover to player names mentioned in chat messages (not the sender's name) */
     private Component addHoverToPlayerNamesInMessage(Component message, Player sender) {
         for (Player target : Bukkit.getOnlinePlayers()) {
-            // Skip the sender (their name already has hover from the main method)
             if (target.getUniqueId().equals(sender.getUniqueId())) {
                 continue;
             }
 
             final String targetName = target.getName();
 
-            // Create hover component for this player
             Component hoverComponent = createHoverComponent(target);
 
-            // Try exact username match
             Pattern exactPattern = Pattern.compile("\\b" + Pattern.quote(targetName) + "\\b");
 
             message = message.replaceText(TextReplacementConfig.builder()
@@ -348,9 +333,7 @@ public final class AsyncChatListener implements Listener {
         return message;
     }
 
-    /* ★ NEW: Create hover component for a player */
     private Component createHoverComponent(Player player) {
-        // Build hover text from config
         StringBuilder hoverText = new StringBuilder();
 
         for (int i = 0; i < hoverLines.size(); i++) {

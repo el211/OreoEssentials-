@@ -52,7 +52,6 @@ public final class ItemBuilder {
         return this;
     }
 
-    /** Add a single enchant (unsafe by default for flexibility in GUIs). */
     public ItemBuilder enchant(Enchantment ench, int level, boolean unsafe) {
         if (unsafe) {
             item.addUnsafeEnchantment(ench, level);
@@ -62,7 +61,6 @@ public final class ItemBuilder {
         return this;
     }
 
-    /** Add any flags you want to hide. */
     public ItemBuilder flags(ItemFlag... flags) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
