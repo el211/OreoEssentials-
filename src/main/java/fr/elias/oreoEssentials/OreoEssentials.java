@@ -185,7 +185,6 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.tab.TabListManager getTabListManager() { return tabListManager; }
     private fr.elias.oreoEssentials.bossbar.BossBarService bossBarService;
     public fr.elias.oreoEssentials.bossbar.BossBarService getBossBarService() { return bossBarService; }
-    // top-level fields
     private ModBridge modBridge;
 
 
@@ -346,13 +345,10 @@ public final class OreoEssentials extends JavaPlugin {
 
         // -------------------------------------------------
         // 2. ECONOMY BOOTSTRAP + VAULT REGISTRATION
-        //    (BEFORE ANY OTHER PLUGIN TOUCHES ECONOMY)
         // -------------------------------------------------
         // Your internal economy layer:
         this.ecoBootstrap = new EconomyBootstrap(this);
         this.ecoBootstrap.enable();
-
-        // to ChestShop or anything else that depends on Vault.
         if (economyEnabled) {
             this.database = null;
 
@@ -449,7 +445,7 @@ public final class OreoEssentials extends JavaPlugin {
                         20L * 300   // every 5 min
                 );
 
-                // Register money/pay/cheque commands NOW via CommandManager
+                // Register money/pay/cheque commands via CommandManager
                 if (this.database != null) {
                     var moneyCmd  = new MoneyCommand(this);
                     var payCmd    = new fr.elias.oreoEssentials.commands.ecocommands.PayCommand();
@@ -460,7 +456,6 @@ public final class OreoEssentials extends JavaPlugin {
                             .register(payCmd)
                             .register(chequeCmd);
 
-                    // Optional: keep extra tab-completers if they are NOT inside the command classes
                     if (getCommand("money") != null) {
                         getCommand("money").setTabCompleter(new MoneyTabCompleter(this));
                     }
@@ -503,7 +498,6 @@ public final class OreoEssentials extends JavaPlugin {
 
         // Locales
         Lang.init(this);
-        // --- Kits (fully optional) ---
         boolean kitsFeature   = settingsConfig.kitsEnabled();
         boolean kitsRegister  = settingsConfig.kitsCommandsEnabled();
 
@@ -515,13 +509,11 @@ public final class OreoEssentials extends JavaPlugin {
                 new fr.elias.oreoEssentials.kits.KitCommands(this, this.kitsManager); // registers /kits and /kit
                 getLogger().info("[Kits] Loaded " + this.kitsManager.getKits().size() + " kits from kits.yml");
             } else {
-                // make absolutely sure the labels are free
                 unregisterCommandHard("kits");
                 unregisterCommandHard("kit");
                 getLogger().info("[Kits] Module loaded, but commands are NOT registered.");
             }
         } else {
-            // module fully off: free command labels so other plugins can use them
             unregisterCommandHard("kits");
             unregisterCommandHard("kit");
             this.kitsManager = null;
@@ -533,7 +525,6 @@ public final class OreoEssentials extends JavaPlugin {
         this.aliasService = new fr.elias.oreoEssentials.aliases.AliasService(this);
         this.aliasService.load();
         this.aliasService.applyRuntimeRegistration();
-        // -------- Proxy plugin messaging (server switching) --------
         // -------- Proxy plugin messaging (server switching) --------
         getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
         getServer().getMessenger().registerOutgoingPluginChannel(this, "bungeecord:main");
@@ -671,7 +662,6 @@ public final class OreoEssentials extends JavaPlugin {
 
         // -------- MOBS Health bar --------
         try {
-            // Soft-hook UltimateChristmas (may be null)
             fr.elias.ultimateChristmas.UltimateChristmas xmasHook = null;
             try {
                 var maybe = getServer().getPluginManager().getPlugin("UltimateChristmas");
@@ -948,7 +938,6 @@ public final class OreoEssentials extends JavaPlugin {
 
         // ---- EnderChest config + storage (respect cross-server.enderchest + storage mode)
         this.ecConfig = new fr.elias.oreoEssentials.enderchest.EnderChestConfig(this);
-        // Constructor already calls reload(), so no extra call needed.
 
         final boolean crossServerEc =
                 settingsConfig.featureOption("cross-server", "enderchest", true);
@@ -1083,7 +1072,7 @@ public final class OreoEssentials extends JavaPlugin {
                 packetManager.init();
                 registerAllPacketsDeterministically(packetManager);
                 try {
-                    // If PacketManager exposes registryChecksum(), log it; otherwise no-op
+
                     getLogger().info("[RABBIT] Packet registry checksum=" + packetManager.registryChecksum());
                 } catch (Throwable ignored) {}
 
@@ -1419,7 +1408,6 @@ public final class OreoEssentials extends JavaPlugin {
         } else {
             getLogger().info("[Vaults] PlayerVaults disabled by config or storage unavailable.");
         }
-        // Initialize RTP config (constructor calls reload())
         // ---- RTP config (local + cross-server aware)
         this.rtpPendingService = new RtpPendingService();     // 1) data holder
         this.rtpConfig         = new RtpConfig(this);         // 2) load rtp.yml
@@ -1446,7 +1434,6 @@ public final class OreoEssentials extends JavaPlugin {
         }
 
         // RTP cross-server bridge (/rtp) ---
-        // Only useful if RabbitMQ is up AND cross-server RTP is enabled in rtp.yml
 
         if (packetManager != null && packetManager.isInitialized()
                 && this.rtpConfig != null && this.rtpConfig.isCrossServerEnabled()) {
@@ -2010,7 +1997,6 @@ public final class OreoEssentials extends JavaPlugin {
             this.nametagManager = null;
             getLogger().info("[Nametag] Disabled by settings.yml");
         }
-        // -------- PlaceholderAPI hook (optional; reflection) --------
         tryRegisterPlaceholderAPI();
 
         getLogger().info("OreoEssentials enabled.");
@@ -2164,9 +2150,7 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().warning("[SHUTDOWN] Error while saving inventories on shutdown: " + t.getMessage());
         }
 
-        // -------------------------------------------------
-        // 2) Cancel des tâches et shutdown des services
-        // -------------------------------------------------
+
         org.bukkit.Bukkit.getScheduler().cancelTasks(this);
 
         try { if (teleportService != null) teleportService.shutdown(); } catch (Exception ignored) {}
