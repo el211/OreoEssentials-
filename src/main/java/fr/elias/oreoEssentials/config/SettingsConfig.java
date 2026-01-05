@@ -170,7 +170,9 @@ public class SettingsConfig {
 
     // Mobs healthbar
     public boolean mobsEnabled() { return isEnabled("mobs"); }
-
+    public boolean worldShardingEnabled() {
+        return getRoot().getBoolean("features.world-sharding.enabled", false);
+    }
     public boolean mobsHealthbarEnabled() {
         return mobsEnabled() && featureOption("mobs", "healthbar", true);
     }

@@ -117,6 +117,8 @@ public final class OreoEssentials extends JavaPlugin {
     private static OreoEssentials instance;
     public static OreoEssentials get() { return instance; }
     private MuteService muteService;
+    // Add with other fields (around line 100-200)
+    private fr.elias.oreoEssentials.shards.OreoShardsModule shardsModule;
     public MuteService getMuteService() { return muteService; }
     // Economy bridge (internal) — distinct from Vault Economy
     private MongoClient homesMongoClient;
@@ -792,7 +794,6 @@ public final class OreoEssentials extends JavaPlugin {
         boolean pwCross   = (pwRoot == null) || pwRoot.getBoolean("cross-server", true);
 
         // -------- Essentials storage selection (Homes/Warps/Spawn/Back) --------
-        // Also sets up cross-server directories when using MongoDB
         switch (essentialsStorage) {
             case "mongodb" -> {
                 String uri = getConfig().getString("storage.mongo.uri", "mongodb://localhost:27017");
@@ -1988,7 +1989,22 @@ public final class OreoEssentials extends JavaPlugin {
             this.oreoHolograms = null;
             getLogger().info("[OreoHolograms] Disabled by settings.yml.");
         }
+        // -------- World  --------
+        if (settingsConfig.worldShardingEnabled()) {
+            try {
+                this.shardsModule = new fr.elias.oreoEssentials.shards.OreoShardsModule(this);
+                this.shardsModule.enable();
+                getLogger().info("[Sharding] World sharding enabled (seamless shard transfers).");
+            } catch (Throwable t) {
+                this.shardsModule = null;
+                getLogger().warning("[Sharding] Failed to initialize: " + t.getMessage());
+            }
+        } else {
+            this.shardsModule = null;
+            getLogger().info("[Sharding] Disabled by settings.yml.");
+        }
 
+        getLogger().info("OreoEssentials enabled.");
         // --- PlayerNametagManager (custom nametags above heads) ---//
         if (settingsConfig.getRoot().getBoolean("nametag.enabled", true)) {
             try {
@@ -2183,6 +2199,8 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (oreoHolograms != null) oreoHolograms.unload(); } catch (Exception ignored) {}
         try { if (dailyStore != null) dailyStore.close(); } catch (Exception ignored) {}
         try { if (tradeService != null) tradeService.cancelAll(); } catch (Throwable ignored) {}
+        // Add with other shutdown code (around line 800+)
+        try { if (shardsModule != null) shardsModule.disable(); } catch (Exception ignored) {}
         // -------------------------------------------------
         // Invlook safety cleanup (avoid ghost read-only)
         // -------------------------------------------------
@@ -2398,7 +2416,10 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.rtp.RtpCrossServerBridge getRtpBridge() {
         return rtpBridge;
     }
-
+    // Add with other getters at the bottom
+    public fr.elias.oreoEssentials.shards.OreoShardsModule getShardsModule() {
+        return shardsModule;
+    }
     public EconomyBootstrap getEcoBootstrap() { return ecoBootstrap; }
     public Economy getVaultEconomy() { return vaultEconomy; }
 }

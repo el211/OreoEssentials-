@@ -1,5 +1,9 @@
 features:
 
+  world-sharding:
+    enabled: false  # Set to true when ready to use
+
+
   bossbar:
     enabled: true
 
