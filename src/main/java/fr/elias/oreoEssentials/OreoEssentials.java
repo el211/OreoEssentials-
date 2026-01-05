@@ -294,8 +294,7 @@ public final class OreoEssentials extends JavaPlugin {
 
         getLogger().info("[BOOT] OreoEssentials starting up…");
 
-        // We'll need these values everywhere, so grab them ASAP.
-        this.configService = new ConfigService(this); // we pull this early now
+        this.configService = new ConfigService(this);
         final String essentialsStorage = getConfig().getString("essentials.storage", "yaml").toLowerCase();
 
         final String economyType       = getConfig().getString("economy.type", "none").toLowerCase();
@@ -355,7 +354,6 @@ public final class OreoEssentials extends JavaPlugin {
         this.ecoBootstrap = new EconomyBootstrap(this);
         this.ecoBootstrap.enable();
 
-        // We'll set up DB + Vault provider right now so it's available
         // to ChestShop or anything else that depends on Vault.
         if (economyEnabled) {
             this.database = null;
@@ -404,7 +402,6 @@ public final class OreoEssentials extends JavaPlugin {
             }
 
             if (this.database != null) {
-                // We EXPECT Vault to already be on the server, since other plugins depend on it.
                 if (getServer().getPluginManager().getPlugin("Vault") == null) {
                     getLogger().severe("[ECON] Vault not found but economy.enabled=true. Disabling plugin.");
                     getServer().getPluginManager().disablePlugin(this);
@@ -616,7 +613,6 @@ public final class OreoEssentials extends JavaPlugin {
                 new fr.elias.oreoEssentials.trade.ui.TradeInventoryCloseListener(this), this);
 
 
-        // (you had this listener registration twice; keeping it once is enough, but we won't delete it)
         getServer().getPluginManager().registerEvents(
                 new fr.elias.oreoEssentials.customcraft.CustomCraftingListener(customCraftingService),
                 this
@@ -1101,7 +1097,7 @@ public final class OreoEssentials extends JavaPlugin {
                                 this,
                                 packetManager,
                                 localServerName,
-                                null // temp, we set the real service just after
+                                null
                         );
                         this.invseeService = new fr.elias.oreoEssentials.cross.InvseeService(
                                 this,
@@ -2198,7 +2194,6 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (oreoHolograms != null) oreoHolograms.unload(); } catch (Exception ignored) {}
         try { if (dailyStore != null) dailyStore.close(); } catch (Exception ignored) {}
         try { if (tradeService != null) tradeService.cancelAll(); } catch (Throwable ignored) {}
-        // Add with other shutdown code (around line 800+)
         try { if (shardsModule != null) shardsModule.disable(); } catch (Exception ignored) {}
         // -------------------------------------------------
         // Invlook safety cleanup (avoid ghost read-only)
@@ -2212,7 +2207,6 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (dailyStore != null) dailyStore.close(); } catch (Exception ignored) {}
         try { if (tradeService != null) tradeService.cancelAll(); } catch (Throwable ignored) {}
 
-        // ★ ADD THIS HERE ★
         // Shutdown nametag manager
         try {
             if (nametagManager != null) {
@@ -2415,7 +2409,6 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.rtp.RtpCrossServerBridge getRtpBridge() {
         return rtpBridge;
     }
-    // Add with other getters at the bottom
     public fr.elias.oreoEssentials.shards.OreoShardsModule getShardsModule() {
         return shardsModule;
     }
