@@ -147,37 +147,3 @@ public class OreoShardsModule {
     }
 }
 
-/**
- * INTEGRATION EXAMPLE:
- *
- * In your main OreoEssentials class:
- *
- * public class OreoEssentials extends JavaPlugin {
- *
- *     private OreoShardsModule shardsModule;
- *
- *     @Override
- *     public void onEnable() {
- *         // ... your existing code ...
- *
- *         // Initialize sharding
- *         shardsModule = new OreoShardsModule(this);
- *         shardsModule.enable();
- *     }
- *
- *     @Override
- *     public void onDisable() {
- *         // ... your existing code ...
- *
- *         // Shutdown sharding
- *         if (shardsModule != null) {
- *             shardsModule.disable();
- *         }
- *     }
- *
- *     // Getter for other modules
- *     public OreoShardsModule getShards() {
- *         return shardsModule;
- *     }
- * }
- */
