@@ -142,8 +142,7 @@ public final class OreoEssentials extends JavaPlugin {
     private fr.elias.oreoEssentials.playervaults.PlayerVaultsConfig playerVaultsConfig;
     private fr.elias.oreoEssentials.modgui.ModGuiService modGuiService;
     public fr.elias.oreoEssentials.modgui.ModGuiService getModGuiService() { return modGuiService; }
-    // File: src/main/java/fr/elias/oreoEssentials/OreoEssentials.java
-// Add a field + getter:
+
     private fr.elias.oreoEssentials.holograms.perplayer_nms.PerPlayerTextDisplayService perPlayerTextDisplayService;
     public fr.elias.oreoEssentials.holograms.perplayer_nms.PerPlayerTextDisplayService getPerPlayerTextDisplayService() {
         return perPlayerTextDisplayService;
