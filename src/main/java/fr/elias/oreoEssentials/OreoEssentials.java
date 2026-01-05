@@ -117,7 +117,6 @@ public final class OreoEssentials extends JavaPlugin {
     private static OreoEssentials instance;
     public static OreoEssentials get() { return instance; }
     private MuteService muteService;
-    // Add with other fields (around line 100-200)
     private fr.elias.oreoEssentials.shards.OreoShardsModule shardsModule;
     public MuteService getMuteService() { return muteService; }
     // Economy bridge (internal) — distinct from Vault Economy
@@ -228,7 +227,6 @@ public final class OreoEssentials extends JavaPlugin {
     private boolean economyEnabled;
     private boolean redisEnabled;
     private boolean rabbitEnabled;
-    // with other fields
     private fr.elias.oreoEssentials.trade.TradeCrossServerBroker tradeBroker;
     public fr.elias.oreoEssentials.trade.TradeCrossServerBroker getTradeBroker() { return tradeBroker; }
 
@@ -1076,7 +1074,6 @@ public final class OreoEssentials extends JavaPlugin {
         if (rabbitEnabled) {
             RabbitMQSender rabbit = new RabbitMQSender(getConfig().getString("rabbitmq.uri"));
 
-            // Make sure OfflinePlayerCache exists before any packet handlers / consumers start
             if (this.offlinePlayerCache == null) {
                 this.offlinePlayerCache = new OfflinePlayerCache();
             }
@@ -1117,9 +1114,6 @@ public final class OreoEssentials extends JavaPlugin {
                     getLogger().info("[INVSEE] Cross-server Invsee disabled (invSyncEnabled=false).");
                 }
 
-
-
-                // now you can subscribe channels & handlers safely
                 packetManager.subscribeChannel(PacketChannels.GLOBAL);
                 packetManager.subscribeChannel(
                         fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel.individual(localServerName)
@@ -1143,7 +1137,6 @@ public final class OreoEssentials extends JavaPlugin {
                     getLogger().info("[INVSEE] Subscribed Invsee packets on RabbitMQ.");
                 }
 
-                // your existing generic packet subscriptions...
                 packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket.class,
                         new RemoteMessagePacketHandler()
@@ -1204,7 +1197,7 @@ public final class OreoEssentials extends JavaPlugin {
             this.invseeService = null;
         }
 
-// ---- Cross-server Moderation Bridge (kill/kick/ban via Rabbit) ----
+        // ---- Cross-server Moderation Bridge (kill/kick/ban via Rabbit) ----
         if (packetManager != null && packetManager.isInitialized()) {
             this.modBridge = new ModBridge(
                     this,
@@ -1217,7 +1210,7 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[MOD-BRIDGE] Cross-server moderation bridge disabled (PacketManager unavailable).");
         }
 
-// ---- Cross-server Trade broker (only if Rabbit AND tradeService AND enabled in settings) ----
+        // ---- Cross-server Trade broker (only if Rabbit AND tradeService AND enabled in settings) ----
         if (packetManager != null
                 && packetManager.isInitialized()
                 && this.tradeService != null
@@ -1295,7 +1288,7 @@ public final class OreoEssentials extends JavaPlugin {
         this.godService       = new GodService();
 
 
-// --- TPA cross-server broker (single initialization; no duplicates) ---
+        // --- TPA cross-server broker (single initialization; no duplicates) ---
         if (packetManager != null && packetManager.isInitialized()) {
             this.tpaBroker = new fr.elias.oreoEssentials.teleport.TpaCrossServerBroker(
                     this,

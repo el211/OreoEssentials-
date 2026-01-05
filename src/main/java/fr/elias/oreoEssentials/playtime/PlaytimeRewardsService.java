@@ -195,7 +195,7 @@ public final class PlaytimeRewardsService {
         plugin.getLogger().info("[Prewards] Stopped.");
     }
 
-    /* ------------ Toggle API (NEW) ------------ */
+    /* ------------ Toggle API ------------ */
 
     public boolean isEnabled() { return enabled; }
 
