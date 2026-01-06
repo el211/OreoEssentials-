@@ -321,6 +321,13 @@ commands:
     permission: oreo.cook
     usage: "/cook [amount|max]"
 
+
+  shard:
+    description: Manage world sharding
+    usage: /shard <create|info|list|setup|reload>
+    permission: oreo.shard.admin
+    aliases: [ shards, worldshard ]
+
   clear:
     description: Clear inventory (/clear or /ci [player])
     aliases: [ ci ]
@@ -921,6 +928,10 @@ permissions:
 
   oreo.warps.admin:
     description: Use the admin warps GUI (delete/toggle permission)
+    default: op
+
+  oreo.shard.admin:
+    description: Access to shard management commands
     default: op
 
   oreo.warp.delete:

@@ -75,28 +75,26 @@ public class ShardManager {
 
         // Check X boundaries
         if (localX < buffer) {
-            // Near left edge
             targetShardX = currentShardX - 1;
         } else if (localX > shardSize - buffer) {
-            // Near right edge
             targetShardX = currentShardX + 1;
         }
 
         // Check Z boundaries
         if (localZ < buffer) {
-            // Near top edge
             targetShardZ = currentShardZ - 1;
         } else if (localZ > shardSize - buffer) {
-            // Near bottom edge
             targetShardZ = currentShardZ + 1;
         }
 
         // If we've moved to a different shard
         if (targetShardX != currentShardX || targetShardZ != currentShardZ) {
-            // Format: "shard-X-Z" (e.g., "shard-0-1")
-            String targetShardId = String.format("shard-%d-%d", targetShardX, targetShardZ);
+            // FIX: Use Math.abs() to handle negative coordinates properly
+            int absX = Math.abs(targetShardX);
+            int absZ = Math.abs(targetShardZ);
 
-            // Don't transfer if target is same as current
+            String targetShardId = String.format("shard-%d-%d", absX, absZ);
+
             if (!targetShardId.equals(currentShardId)) {
                 return targetShardId;
             }
@@ -174,20 +172,8 @@ public class ShardManager {
      * Example: "shard-0-1" -> "smp-01" (based on config)
      */
     private String resolveShardToServerName(String shardId) {
-        // This would use your config mapping
-        // For now, simple example:
-
-        // Grid format: "shard-X-Z" -> "smp-X-Z"
-        if (shardId.startsWith("shard-") && !shardId.contains("ring")) {
-            return shardId.replace("shard-", "smp-");
-        }
-
-        // Radial format: "shard-ring-N" -> "smp-ring-N"
-        if (shardId.startsWith("shard-ring-")) {
-            return shardId.replace("shard-", "smp-");
-        }
-
-        // Fallback: return as-is
+        // Velocity expects the exact shard ID names from config.toml
+        // No transformation needed - just return as-is
         return shardId;
     }
 
