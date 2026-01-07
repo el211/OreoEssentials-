@@ -38,6 +38,15 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <!-- Relocate libby to avoid conflicts -->
+                            <relocations>
+                                <relocation>
+                                    <pattern>net.byteflux.libby</pattern>
+                                    <shadedPattern>fr.elias.oreoessentials.libs.libby</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -54,6 +63,10 @@
         <repository>
             <id>papermc-repo</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>AlessioDP</id>
+            <url>https://repo.alessiodp.com/releases/</url>
         </repository>
         <repository>
             <id>smartinvs-repo</id>
@@ -110,10 +123,17 @@
             <artifactId>FancySitula</artifactId>
             <version>0.0.13</version>
         </dependency>
+        <!-- Runtime dependency loader -->
+        <dependency>
+            <groupId>net.byteflux</groupId>
+            <artifactId>libby-bukkit</artifactId> <!-- Replace bukkit if you're using another platform -->
+            <version>1.3.1</version>
+        </dependency>
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-sync</artifactId>
             <version>5.1.0</version>
+            <scope>provided</scope> <!-- ADD THIS -->
         </dependency>
         <dependency>
             <groupId>com.github.retrooper</groupId>
@@ -164,6 +184,7 @@
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>5.1.0</version>
+            <scope>provided</scope> <!-- ADD THIS -->
         </dependency>
 
         <!-- Gson for JSON serialization -->
@@ -196,12 +217,14 @@
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
             <version>5.15.0</version>
+            <scope>provided</scope> <!-- ADD THIS -->
         </dependency>
         <!-- PostgreSQL JDBC Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.4</version>
+            <scope>provided</scope> <!-- ADD THIS -->
         </dependency>
         <dependency>
             <groupId>net.luckperms</groupId>
@@ -215,11 +238,6 @@
             <version>1.0</version>
             <scope>system</scope>
             <systemPath>${basedir}/libs/UltimateChristmas-3.0-SNAPSHOT.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>org.redisson</groupId>
-            <artifactId>redisson</artifactId>
-            <version>3.22.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.MilkBowl</groupId>

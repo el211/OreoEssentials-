@@ -275,7 +275,76 @@ public final class OreoEssentials extends JavaPlugin {
     private fr.elias.oreoEssentials.playtime.PlaytimeTracker playtimeTracker;
     private PlayerNametagManager nametagManager;
 
+    @Override
+    public void onLoad() {
+        // Load external libraries at runtime BEFORE plugin enables
+        loadExternalLibraries();
+    }
 
+    private void loadExternalLibraries() {
+        try {
+            net.byteflux.libby.BukkitLibraryManager libraryManager =
+                    new net.byteflux.libby.BukkitLibraryManager(this);
+
+            libraryManager.addMavenCentral();
+
+            // MongoDB BSON (required by mongodb-driver-sync)
+            libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
+                    .groupId("org.mongodb")
+                    .artifactId("bson")
+                    .version("5.1.0")
+                    .build());
+
+            // MongoDB driver core (required by mongodb-driver-sync)
+            libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
+                    .groupId("org.mongodb")
+                    .artifactId("mongodb-driver-core")
+                    .version("5.1.0")
+                    .build());
+
+            // MongoDB
+            libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
+                    .groupId("org.mongodb")
+                    .artifactId("mongodb-driver-sync")
+                    .version("5.1.0")
+                    .build());
+
+            // Apache Commons Pool2 (required by Jedis)
+            libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
+                    .groupId("org.apache.commons")
+                    .artifactId("commons-pool2")
+                    .version("2.12.0")
+                    .build());
+
+            // Redis (Jedis)
+            libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
+                    .groupId("redis.clients")
+                    .artifactId("jedis")
+                    .version("5.1.0")
+                    .build());
+
+            // PostgreSQL
+            libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
+                    .groupId("org.postgresql")
+                    .artifactId("postgresql")
+                    .version("42.7.4")
+                    .build());
+
+            // RabbitMQ
+            libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
+                    .groupId("com.rabbitmq")
+                    .artifactId("amqp-client")
+                    .version("5.15.0")
+                    .build());
+
+            getLogger().info("[LibraryLoader] All dependencies loaded successfully!");
+
+        } catch (Exception e) {
+            getLogger().severe("[LibraryLoader] FAILED to load dependencies: " + e.getMessage());
+            e.printStackTrace();
+            getServer().getPluginManager().disablePlugin(this);
+        }
+    }
     @Override
     public void onEnable() {
 
