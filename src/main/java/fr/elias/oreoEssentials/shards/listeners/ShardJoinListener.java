@@ -92,9 +92,10 @@ public class ShardJoinListener implements Listener {
                 player.setFlying(true);
             }
 
-            // 7. Restore speeds
-            player.setFlySpeed(snapshot.flySpeed);
-            player.setWalkSpeed(snapshot.walkSpeed);
+            // 7. Restore speeds (force defaults to fix any freeze bugs)
+            player.setFlySpeed(snapshot.flySpeed > 0 ? snapshot.flySpeed : 0.1f);
+            player.setWalkSpeed(snapshot.walkSpeed > 0 ? snapshot.walkSpeed : 0.2f);
+
 
             // 8. Restore other state
             player.setFireTicks(snapshot.fireTicks);

@@ -1,9 +1,7 @@
 package fr.elias.oreoEssentials.shards;
 
 import fr.elias.oreoEssentials.shards.config.ShardConfig;
-import fr.elias.oreoEssentials.shards.listeners.BorderDetectionListener;
-import fr.elias.oreoEssentials.shards.listeners.CombatTracker;
-import fr.elias.oreoEssentials.shards.listeners.ShardJoinListener;
+import fr.elias.oreoEssentials.shards.listeners.*;
 import fr.elias.oreoEssentials.shards.redis.ShardHandoffManager;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -90,7 +88,11 @@ public class OreoShardsModule {
                 borderListener,
                 plugin
         );
-
+        // Register chunk preload listener
+        plugin.getServer().getPluginManager().registerEvents(
+                new ChunkPreloadListener(plugin, redisConfig.host, redisConfig.port, redisConfig.password),
+                plugin
+        );
         plugin.getServer().getPluginManager().registerEvents(
                 new CombatTracker(borderListener),
                 plugin

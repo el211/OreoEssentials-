@@ -1,11 +1,9 @@
 package fr.elias.oreoEssentials.shards;
 
-
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 import fr.elias.oreoEssentials.shards.config.ShardConfig;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import redis.clients.jedis.Jedis;
 
 /**
  * Manages shard boundaries and player transfers via Velocity
@@ -16,13 +14,24 @@ public class ShardManager {
     private final ShardConfig config;
     private final String currentShardId;
 
+    // Redis connection info (from shards.yml)
+    private final String redisHost;
+    private final int redisPort;
+    private final String redisPassword;
+
     public ShardManager(Plugin plugin, ShardConfig config, String currentShardId) {
         this.plugin = plugin;
         this.config = config;
         this.currentShardId = currentShardId;
 
-        // Register Velocity messaging channel
-        plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, "BungeeCord");
+        // Get Redis config from shards.yml
+        ShardConfig.RedisConfig redisConfig = config.getRedis();
+        this.redisHost = redisConfig.host;
+        this.redisPort = redisConfig.port;
+        this.redisPassword = redisConfig.password;
+
+        // We don't need BungeeCord channel anymore - using Redis instead!
+        // plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, "BungeeCord");
     }
 
     /**
@@ -87,13 +96,10 @@ public class ShardManager {
             targetShardZ = currentShardZ + 1;
         }
 
-        // If we've moved to a different shard
+            // If we've moved to a different shard
         if (targetShardX != currentShardX || targetShardZ != currentShardZ) {
-            // FIX: Use Math.abs() to handle negative coordinates properly
-            int absX = Math.abs(targetShardX);
-            int absZ = Math.abs(targetShardZ);
-
-            String targetShardId = String.format("shard-%d-%d", absX, absZ);
+            // Don't use Math.abs() - we need to preserve negative coordinates!
+            String targetShardId = String.format("shard-%d-%d", targetShardX, targetShardZ);
 
             if (!targetShardId.equals(currentShardId)) {
                 return targetShardId;
@@ -140,41 +146,57 @@ public class ShardManager {
     }
 
     /**
-     * Transfer player to target shard via Velocity
-     * Uses BungeeCord plugin messaging channel
+     * Transfer player to target shard via Velocity (SEAMLESS!)
+     * Sends Redis message to Velocity plugin for seamless transfer
      */
     public void transferPlayerToShard(Player player, String targetShard) {
-        // Get actual server name from shard ID (from config)
-        String targetServerName = resolveShardToServerName(targetShard);
-
-        if (targetServerName == null) {
-            plugin.getLogger().warning("Could not resolve shard ID to server name: " + targetShard);
-            return;
-        }
-
-        // Send player to target server via Velocity
-        ByteArrayDataOutput out = ByteStreams.newDataOutput();
-        out.writeUTF("Connect");
-        out.writeUTF(targetServerName);
-
-        player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
-
-        plugin.getLogger().info(String.format(
-                "Transferring %s to shard %s (server: %s)",
-                player.getName(),
+        // Send Redis message to Velocity for seamless transfer
+        String message = String.format("%s|%s|%.2f|%.2f|%.2f",
+                player.getUniqueId(),
                 targetShard,
-                targetServerName
-        ));
+                player.getLocation().getX(),
+                player.getLocation().getY(),
+                player.getLocation().getZ()
+        );
+
+        // Publish to Redis (Velocity will handle the seamless transfer)
+        try (Jedis redis = new Jedis(redisHost, redisPort)) {
+            if (redisPassword != null && !redisPassword.isEmpty()) {
+                redis.auth(redisPassword);
+            }
+
+            redis.publish("shard_transfer_requests", message);
+
+            plugin.getLogger().info(String.format(
+                    "[ShardTransfer] Requested seamless transfer for %s to %s via Redis",
+                    player.getName(),
+                    targetShard
+            ));
+        } catch (Exception e) {
+            plugin.getLogger().severe("[ShardTransfer] Failed to send Redis transfer request: " + e.getMessage());
+            e.printStackTrace();
+
+            // Fallback to old direct transfer if Redis fails
+            fallbackDirectTransfer(player, targetShard);
+        }
     }
 
     /**
-     * Convert shard ID to actual server name
-     * Example: "shard-0-1" -> "smp-01" (based on config)
+     * Fallback to old direct transfer if Redis fails
      */
-    private String resolveShardToServerName(String shardId) {
-        // Velocity expects the exact shard ID names from config.toml
-        // No transformation needed - just return as-is
-        return shardId;
+    private void fallbackDirectTransfer(Player player, String targetShard) {
+        plugin.getLogger().warning("[ShardTransfer] Using fallback direct transfer (will show loading screen)");
+
+        com.google.common.io.ByteArrayDataOutput out = com.google.common.io.ByteStreams.newDataOutput();
+        out.writeUTF("Connect");
+        out.writeUTF(targetShard);
+
+        player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
+
+        // Register channel if not already registered
+        if (!plugin.getServer().getMessenger().isOutgoingChannelRegistered(plugin, "BungeeCord")) {
+            plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, "BungeeCord");
+        }
     }
 
     /**

@@ -8,7 +8,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.util.Vector;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -147,50 +146,28 @@ public class BorderDetectionListener implements Listener {
         }
 
         try {
-            // 1. Freeze player
-            freezePlayer(player);
-
-            // 2. Save snapshot to Redis
+            // Save snapshot to Redis (includes position, velocity, health, etc.)
             boolean saved = handoffManager.saveHandoff(player, targetShard);
 
             if (!saved) {
-                // Failed to save - abort
-                unfreezePlayer(player);
+                // Failed to save - abort transfer
                 handoffManager.releaseLock(uuid);
                 return;
             }
 
-            // 3. Send to target shard via Velocity
+            // Send to target shard via Velocity (seamless!)
             shardManager.transferPlayerToShard(player, targetShard);
 
-            // 4. Set cooldown (prevents immediate return)
+            // Set cooldown (prevents immediate return transfer)
             handoffManager.setCooldown(uuid, config.getTransferCooldown());
 
-            // Note: Lock is released on target server after successful restore
+            // Note: Lock is released on target server after successful restore in ShardJoinListener
 
         } catch (Exception e) {
-            // Something went wrong - cleanup
-            unfreezePlayer(player);
+            // Something went wrong - cleanup and release lock
             handoffManager.releaseLock(uuid);
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Freeze player during transfer (prevents movement artifacts)
-     */
-    private void freezePlayer(Player player) {
-        player.setVelocity(new Vector(0, 0, 0));
-        player.setWalkSpeed(0f);
-        player.setFlySpeed(0f);
-    }
-
-    /**
-     * Unfreeze player (used if transfer fails)
-     */
-    private void unfreezePlayer(Player player) {
-        player.setWalkSpeed(0.2f); // Default walk speed
-        player.setFlySpeed(0.1f);  // Default fly speed
     }
 
     /**

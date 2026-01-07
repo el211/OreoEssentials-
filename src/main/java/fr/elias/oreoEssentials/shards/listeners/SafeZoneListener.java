@@ -1,5 +1,6 @@
-package fr.elias.oreoEssentials.shards;
+package fr.elias.oreoEssentials.shards.listeners;
 
+import fr.elias.oreoEssentials.shards.ShardManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
