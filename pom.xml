@@ -39,7 +39,6 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <!-- Relocate libby to avoid conflicts -->
                             <relocations>
                                 <relocation>
                                     <pattern>net.byteflux.libby</pattern>
@@ -123,17 +122,16 @@
             <artifactId>FancySitula</artifactId>
             <version>0.0.13</version>
         </dependency>
-        <!-- Runtime dependency loader -->
         <dependency>
             <groupId>net.byteflux</groupId>
-            <artifactId>libby-bukkit</artifactId> <!-- Replace bukkit if you're using another platform -->
+            <artifactId>libby-bukkit</artifactId>
             <version>1.3.1</version>
         </dependency>
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-sync</artifactId>
             <version>5.1.0</version>
-            <scope>provided</scope> <!-- ADD THIS -->
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.retrooper</groupId>
@@ -146,7 +144,6 @@
             <artifactId>triumph-gui</artifactId>
             <version>3.1.13</version>
         </dependency>
-        <!-- ProtocolLib - Now from Maven repo instead of system path -->
         <dependency>
             <groupId>com.comphenix.protocol</groupId>
             <artifactId>ProtocolLib</artifactId>
@@ -165,7 +162,6 @@
             <version>1.15.0</version>
             <scope>provided</scope>
         </dependency>
-        <!-- Adventure MiniMessage  -->
         <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-text-minimessage</artifactId>
@@ -179,22 +175,17 @@
             <version>4.0.15</version>
             <groupId>dev.lone.itemsadder</groupId>
         </dependency>
-        <!-- Redis (Jedis) for ultra-fast handoff -->
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>5.1.0</version>
-            <scope>provided</scope> <!-- ADD THIS -->
+            <scope>provided</scope>
         </dependency>
-
-        <!-- Gson for JSON serialization -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.10.1</version>
         </dependency>
-
-        <!-- Spigot/Paper API  -->
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
@@ -212,19 +203,17 @@
             <artifactId>bukkit-smart-invs</artifactId>
             <version>1.3.5</version>
         </dependency>
-        <!-- RabbitMQ Java Client -->
         <dependency>
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
             <version>5.15.0</version>
-            <scope>provided</scope> <!-- ADD THIS -->
+            <scope>provided</scope>
         </dependency>
-        <!-- PostgreSQL JDBC Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.4</version>
-            <scope>provided</scope> <!-- ADD THIS -->
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>net.luckperms</groupId>

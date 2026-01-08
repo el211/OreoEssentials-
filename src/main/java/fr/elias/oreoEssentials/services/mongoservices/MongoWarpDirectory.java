@@ -22,14 +22,10 @@ public class MongoWarpDirectory implements WarpDirectory {
 
     private final MongoCollection<Document> col;
 
-    /**
-     * @param collectionName e.g. prefix + "warp_directory"
-     */
+
     public MongoWarpDirectory(MongoClient client, String dbName, String collectionName) {
         this.col = client.getDatabase(dbName).getCollection(collectionName);
-        // Unique by lower-cased name
         col.createIndex(Indexes.ascending(F_NAME), new IndexOptions().unique(true));
-        // (Optional) quick lookups by server
         try {
             col.createIndex(Indexes.ascending(F_SERVER));
         } catch (Throwable ignored) {}
@@ -39,7 +35,6 @@ public class MongoWarpDirectory implements WarpDirectory {
         return s == null ? "" : s.trim().toLowerCase(Locale.ROOT);
     }
 
-    /* ---------------- server owner ---------------- */
 
     @Override
     public void setWarpServer(String warpName, String server) {
@@ -69,7 +64,6 @@ public class MongoWarpDirectory implements WarpDirectory {
         col.deleteOne(Filters.eq(F_NAME, key(warpName)));
     }
 
-    /* ---------------- per-warp permission ---------------- */
 
     @Override
     public String getWarpPermission(String warpName) {
@@ -92,7 +86,6 @@ public class MongoWarpDirectory implements WarpDirectory {
             );
             return;
         }
-        // Set/Upsert permission
         col.updateOne(
                 Filters.eq(F_NAME, n),
                 Updates.combine(

@@ -171,11 +171,7 @@ public class MongoStorage implements StorageApi {
                 .collect(Collectors.toCollection(java.util.LinkedHashSet::new));
     }
 
-    /**
-     *  structured listing used by /otherhomes and /otherhome
-     * This legacy store only keeps a LocUtil doc; it doesn't store "server",
-     * so we fill it with the current server name.
-     */
+
     @Override
     public Map<String, HomeService.StoredHome> listHomes(UUID owner) {
         Map<String, HomeService.StoredHome> out = new LinkedHashMap<>();
@@ -211,9 +207,7 @@ public class MongoStorage implements StorageApi {
         return n == null ? 0.0 : n.doubleValue();
     }
 
-    /* ---------------- last location ---------------- */
 
-    /* ---------------- last location (compat + new /back) ---------------- */
 
     @Override
     public void setLast(UUID uuid, Location loc) {
@@ -233,8 +227,6 @@ public class MongoStorage implements StorageApi {
             );
         }
 
-        // 2)  also update the cross-server /back data via StorageApi default
-        // -> this will convert Location -> Map and call setBackData(...)
         StorageApi.super.setLast(uuid, loc);
     }
 

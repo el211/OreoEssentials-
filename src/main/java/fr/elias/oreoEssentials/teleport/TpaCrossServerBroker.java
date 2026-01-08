@@ -24,14 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Cross-server /tpa handshake (requester -> target):
- * 1) REQUESTER server sends TpaRequestPacket to TARGET server (GLOBAL or per-server).
- * 2) TARGET runs /tpaccept -> send TpaSummonPacket to REQUESTER server to move requester to TARGET server.
- * 3) On PlayerJoin at TARGET: finalize by teleporting requester to target's live location (delayed a few ticks).
- *
- * Robust to mixed online/offline/cracked UUIDs by also matching the target by name.
- */
+
 public final class TpaCrossServerBroker implements Listener {
 
     private final OreoEssentials plugin;
@@ -40,15 +33,11 @@ public final class TpaCrossServerBroker implements Listener {
     private final ProxyMessenger proxy;
     private final String localServer;
 
-    /** targetUuid(actual on this server) -> pending meta (who wants to TP to this target) */
     private final Map<UUID, Pending> pendingForTarget = new ConcurrentHashMap<>();
-    /** requesterUuid -> targetUuid (arrival marker ON THIS SERVER after server switch) */
     private final Map<UUID, UUID> pendingArrival = new ConcurrentHashMap<>();
 
-    /** Default expiry window; configurable: features.tpa.expire-seconds (default 60s) */
     private final long expireMs;
 
-    /** Enable offline/cracked UUID compatibility fallback (name-based matching). */
     private final boolean offlineUuidCompat;
 
     public TpaCrossServerBroker(
@@ -72,13 +61,12 @@ public final class TpaCrossServerBroker implements Listener {
         } catch (Throwable ignored) {}
         this.expireMs = cfgSec * 1000L;
 
-        boolean compat = true; // default ON
+        boolean compat = true;
         try {
             compat = plugin.getConfig().getBoolean("features.tpa.offline-uuid-compat", true);
         } catch (Throwable ignored) {}
         this.offlineUuidCompat = compat;
 
-        // Subscribe to packets
         if (pm != null && pm.isInitialized()) {
             pm.subscribe(TpaRequestPacket.class, this::onTpaRequest);
             pm.subscribe(TpaSummonPacket.class, this::onTpaSummon);
@@ -87,18 +75,12 @@ public final class TpaCrossServerBroker implements Listener {
             dbg("PacketManager not initialized; cross-server TPA disabled on this node.");
         }
 
-        // Bukkit listeners
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
-        // Periodic cleanup of expired entries
         Bukkit.getScheduler().runTaskTimer(plugin, this::purgeExpired, 20L * 30, 20L * 30);
     }
 
-    /* ====================================================================== */
-    /*                               PUBLIC API                               */
-    /* ====================================================================== */
 
-    // ---- Backwards-compatible overloads (old call sites keep working) ----
     public void sendRequestToServer(Player requester, UUID targetUuid, String destServer) {
         sendRequestToServer(requester, targetUuid, "", destServer);
     }
@@ -107,7 +89,6 @@ public final class TpaCrossServerBroker implements Listener {
         sendRequestGlobal(requester, targetUuid, "");
     }
 
-    // ---- New API that also carries the target's name (fixes cracked/offline mixes) ----
     public void sendRequestToServer(Player requester, UUID targetUuid, String targetName, String destServer) {
         if (!isMessagingReady() || requester == null) return;
         long now = System.currentTimeMillis();
@@ -140,10 +121,7 @@ public final class TpaCrossServerBroker implements Listener {
                 + " target=" + targetUuid + (targetName != null && !targetName.isBlank() ? " (" + targetName + ")" : ""));
     }
 
-    /**
-     * Called by /tpaccept on the TARGET server.
-     * @return true if a cross-server pending was handled.
-     */
+
     public boolean acceptCrossServer(Player target) {
         if (target == null) return false;
 
@@ -164,10 +142,8 @@ public final class TpaCrossServerBroker implements Listener {
             return true;
         }
 
-        // Mark arrival expectation on THIS server
         pendingArrival.put(p.requesterUuid, target.getUniqueId());
 
-        // Ask requester's current server to move them here
         if (isMessagingReady()) {
             pm.sendPacket(
                     PacketChannel.individual(p.fromServer),
@@ -211,11 +187,7 @@ public final class TpaCrossServerBroker implements Listener {
         return pendingForTarget.containsKey(target.getUniqueId());
     }
 
-    /* ====================================================================== */
-    /*                              PACKET HANDLERS                           */
-    /* ====================================================================== */
 
-    /** Handles incoming request ON THE TARGET'S SERVER. */
     private void onTpaRequest(PacketChannel channel, TpaRequestPacket pkt) {
         if (pkt == null) return;
 
@@ -225,14 +197,11 @@ public final class TpaCrossServerBroker implements Listener {
             return;
         }
 
-        // Resolve target: UUID -> fallback by name (for cracked/offline/floodgate cases)
         Player target = resolveTarget(pkt.getTargetUuid(), pkt.getTargetName());
         if (target == null) {
-            // Not our server OR we couldn't reconcile UUID/name — ignore silently
             return;
         }
 
-        // Store pending
         Pending p = new Pending();
         p.requesterUuid = pkt.getRequesterUuid();
         p.requesterName = pkt.getRequesterName();
@@ -257,7 +226,6 @@ public final class TpaCrossServerBroker implements Listener {
                 + " fromServer=" + p.fromServer + " expiresAt=" + p.expiresAt);
     }
 
-    /** Handles "summon the requester to target's server" ON THE REQUESTER'S SERVER. */
     private void onTpaSummon(PacketChannel channel, TpaSummonPacket pkt) {
         if (pkt == null) return;
 
@@ -267,14 +235,12 @@ public final class TpaCrossServerBroker implements Listener {
             return;
         }
 
-        // Read cooldown from settings.yml
         var root = plugin.getSettingsConfig().getRoot();
         var sec  = root.getConfigurationSection("features.tpa");
 
         boolean enabled = sec != null && sec.getBoolean("cooldown", false);
         int seconds     = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
 
-        // If no cooldown configured -> old instant behavior
         if (!enabled || seconds <= 0) {
             boolean ok = connectToServer(requester, pkt.getDestServer());
             if (ok) {
@@ -291,7 +257,6 @@ public final class TpaCrossServerBroker implements Listener {
             return;
         }
 
-        //  Cross-server cooldown for the REQUESTER
         final String destServer = pkt.getDestServer();
         final Location origin = requester.getLocation().clone();
 
@@ -309,7 +274,6 @@ public final class TpaCrossServerBroker implements Listener {
                     return;
                 }
 
-                // Cancel if requester moved (allow head movement only)
                 if (hasBodyMoved(requester, origin)) {
                     Lang.send(
                             requester,
@@ -340,13 +304,12 @@ public final class TpaCrossServerBroker implements Listener {
                     return;
                 }
 
-                String title = Lang.msg( // this overload exists (deprecated but fine)  :contentReference[oaicite:2]{index=2}
+                String title = Lang.msg(
                         "teleport.countdown.title",
                         "<yellow>Teleporting…</yellow>",
                         requester
                 );
 
-// ✅ replace the invalid call with msgWithDefault(...)
                 String subtitle = Lang.msgWithDefault(
                         "teleport.countdown.subtitle",
                         "<gray>Teleporting in <white>%seconds%</white>s…</gray>",
@@ -362,14 +325,11 @@ public final class TpaCrossServerBroker implements Listener {
 
     private boolean hasBodyMoved(Player p, Location origin) {
         Location now = p.getLocation();
-        // Same block X/Z = we consider this "no movement" (can move head)
         return now.getBlockX() != origin.getBlockX()
                 || now.getBlockZ() != origin.getBlockZ();
     }
 
-    /* ====================================================================== */
-    /*                              ARRIVAL FINALIZE                          */
-    /* ====================================================================== */
+
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
@@ -387,7 +347,6 @@ public final class TpaCrossServerBroker implements Listener {
             return;
         }
 
-        // Delay a few ticks so the player fully spawns and the target chunk is loaded
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             try {
                 Location to = target.getLocation();
@@ -404,15 +363,12 @@ public final class TpaCrossServerBroker implements Listener {
         pendingArrival.remove(e.getPlayer().getUniqueId());
     }
 
-    /* ====================================================================== */
-    /*                                   UTIL                                 */
-    /* ====================================================================== */
+
 
     private boolean isMessagingReady() {
         return pm != null && pm.isInitialized();
     }
 
-    /** Resolve the target player on THIS server, handling offline/cracked UUID and name fallback. */
     private Player resolveTarget(UUID targetUuid, String targetName) {
         // 1) UUID direct (works in online-mode & when UUIDs match)
         Player p = Bukkit.getPlayer(targetUuid);
@@ -420,7 +376,6 @@ public final class TpaCrossServerBroker implements Listener {
 
         if (!offlineUuidCompat) return null;
 
-        // 2) Name from the packet (best signal for cracked/offline mixes)
         if (targetName != null && !targetName.isBlank()) {
             Player byExact = Bukkit.getPlayerExact(targetName);
             if (byExact != null) return byExact;
@@ -430,7 +385,6 @@ public final class TpaCrossServerBroker implements Listener {
             }
         }
 
-        // 3) Directory fallback (UUID -> lastKnownName -> online match)
         try {
             var dir = plugin.getPlayerDirectory();
             if (dir != null) {
@@ -446,11 +400,9 @@ public final class TpaCrossServerBroker implements Listener {
             }
         } catch (Throwable ignored) {}
 
-        // Not found on this node.
         return null;
     }
 
-    /** Try common method names on ProxyMessenger via reflection. */
     private boolean connectToServer(Player player, String server) {
         try {
             for (String m : new String[]{"connect", "send", "sendToServer"}) {
@@ -485,7 +437,6 @@ public final class TpaCrossServerBroker implements Listener {
         }
     }
 
-    /** Remove expired entries from pendingForTarget. */
     private void purgeExpired() {
         long now = System.currentTimeMillis();
         int removed = 0;

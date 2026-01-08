@@ -18,15 +18,7 @@ import org.bukkit.World;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Mongo-backed implementation of StorageApi.
- * Collections:
- *   - {prefix}homes(uuid,name,server,world,worldName,x,y,z,yaw,pitch)
- *   - {prefix}warps(name,world,worldName,x,y,z,yaw,pitch)
- *   - {prefix}meta: type=spawn or type=last, plus fields:
- *        - spawn: world,worldName,x,y,z,yaw,pitch
- *        - last: uuid,world,worldName,x,y,z,yaw,pitch
- */
+
 public class MongoHomesStorage implements StorageApi {
 
     private final MongoCollection<Document> homesCol;

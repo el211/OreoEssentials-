@@ -12,12 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * RabbitMQ-based PacketSender implementation.
- * - Publishes to queues by name (default exchange, routingKey = queue).
- * - Declares queues durable, non-exclusive, non-autoDelete.
- * - Automatically reconnects and re-subscribes consumers.
- */
+
 public class RabbitMQSender implements PacketSender {
 
     private final String connectionString;
@@ -26,28 +21,25 @@ public class RabbitMQSender implements PacketSender {
     private volatile Channel channel;
 
     private final List<IncomingPacketListener> listeners = new ArrayList<>();
-    /** List of queue names we are consuming from (for re-subscription after reconnect). */
     private final List<String> queues = new ArrayList<>();
 
     public RabbitMQSender(String connectionString) {
         this.connectionString = connectionString;
     }
 
-    /* ==================== PacketSender ==================== */
 
     @Override
     public void sendPacket(PacketChannel packetChannel, byte[] content) {
         try {
             ensureConnected();
             for (String id : packetChannel) {
-                // publish via default exchange directly to queue "id"
                 this.channel.basicPublish("", id, null, content);
             }
             System.out.println("[OreoEssentials]  Sent RabbitMQ message");
         } catch (IOException e) {
             System.err.println("[OreoEssentials] ❌ Failed to send RabbitMQ message.");
             e.printStackTrace();
-            reconnect(); // best effort
+            reconnect();
         }
     }
 
@@ -76,9 +68,7 @@ public class RabbitMQSender implements PacketSender {
         }
     }
 
-    /* ==================== Connection lifecycle ==================== */
 
-    /** Ensure we have an open connection + channel (with automatic recovery config). */
     private synchronized void ensureConnected() {
         try {
             if (connection != null && connection.isOpen() && channel != null && channel.isOpen()) return;
@@ -90,7 +80,6 @@ public class RabbitMQSender implements PacketSender {
         }
     }
 
-    /** Attempt a reconnect (close first, then connect and rebind). */
     private void reconnect() {
         System.err.println("[OreoEssentials] 🔄 Attempting to reconnect to RabbitMQ...");
         close();
@@ -107,7 +96,6 @@ public class RabbitMQSender implements PacketSender {
         }
     }
 
-    /** Create connection/channel and declare already-known queues (no consumers yet). */
     public boolean connect() {
         try {
             ConnectionFactory factory = new ConnectionFactory();
@@ -131,7 +119,6 @@ public class RabbitMQSender implements PacketSender {
         }
     }
 
-    /** Close channel & connection. */
     public void close() {
         try {
             if (channel != null) {
@@ -147,48 +134,39 @@ public class RabbitMQSender implements PacketSender {
         }
     }
 
-    /* ==================== Internals ==================== */
 
     private void declareQueue(String name) throws IOException {
         // durable = true, exclusive = false, autoDelete = false
         this.channel.queueDeclare(name, true, false, false, null);
     }
 
-    /** Start a consumer for a given queue name. */
     private void startConsumer(String queue) throws IOException {
-        // manual ack; requeue on exception
         this.channel.basicConsume(queue, false, (consumerTag, delivery) -> {
             try {
                 byte[] content = delivery.getBody();
                 handleIncomingPacket(queue, content);
-                // ack only AFTER successful dispatch
                 this.channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
             } catch (Exception ex) {
                 try {
                     this.channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
                 } catch (IOException ioEx) {
-                    // log & swallow to avoid consumer crash loops
                     System.err.println("[OreoEssentials] ❌ basicNack failed: " + ioEx.getMessage());
                 }
-                // rethrow to keep visibility in logs
                 throw ex;
             }
         }, consumerTag -> {
-            // cancel callback (no-op)
         });
     }
 
-    /** Rebind consumers for all previously registered queues (used after reconnect). */
     private void rebindAllConsumers() throws IOException {
         for (String q : queues) {
-            declareQueue(q);   // idempotent
-            startConsumer(q);  // re-attach consumer
+            declareQueue(q);
+            startConsumer(q);
         }
     }
 
     private void handleIncomingPacket(String queueId, byte[] content) {
         try {
-            // Use PacketChannels.individual(...) (not PacketChannel.individual)
             PacketChannel logical = PacketChannels.individual(queueId);
             List<IncomingPacketListener> snapshot;
             synchronized (listeners) {

@@ -18,11 +18,7 @@ public final class MojangSkinFetcher {
 
     private MojangSkinFetcher() {}
 
-    /**
-     * Fetch UUID from Mojang API by username.
-     * @param username Player name
-     * @return UUID or null if not found
-     */
+
     public static UUID fetchUuid(String username) {
         try {
             URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + username);
@@ -63,14 +59,7 @@ public final class MojangSkinFetcher {
         }
     }
 
-    /**
-     * Fetch player profile with textures from Mojang session server.
-     * This method BLOCKS while fetching - should be called async!
-     *
-     * @param uuid Player UUID
-     * @param name Player name
-     * @return PlayerProfile with textures, or null
-     */
+
     public static PlayerProfile fetchProfileWithTextures(UUID uuid, String name) {
         try {
             // Create profile
@@ -99,14 +88,7 @@ public final class MojangSkinFetcher {
         }
     }
 
-    /**
-     * Fetch profile asynchronously (non-blocking).
-     * Use this in commands to avoid freezing the server.
-     *
-     * @param uuid Player UUID
-     * @param name Player name
-     * @param callback Called with the result on the main thread
-     */
+
     public static void fetchProfileAsync(UUID uuid, String name,
                                          java.util.function.Consumer<PlayerProfile> callback) {
         // Run the blocking fetch on async thread

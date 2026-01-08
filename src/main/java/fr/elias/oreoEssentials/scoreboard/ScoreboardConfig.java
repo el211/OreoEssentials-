@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/scoreboard/ScoreboardConfig.java
 package fr.elias.oreoEssentials.scoreboard;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -9,18 +8,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/** Immutable view of scoreboard settings loaded from config.yml (section: scoreboard). */
 public final class ScoreboardConfig {
 
     private final boolean enabled;
     private final boolean defaultEnabled;
     private final long updateTicks;
-
     private final List<String> titleFrames;
     private final long titleFrameTicks;
-
     private final List<String> lines;
-
     private final Set<String> worldsWhitelist;
     private final Set<String> worldsBlacklist;
 
@@ -44,11 +39,9 @@ public final class ScoreboardConfig {
         this.worldsBlacklist = bl;
     }
 
-    /** Reads the `scoreboard:` section from config.yml and builds a config object. */
     public static ScoreboardConfig load(OreoEssentials plugin) {
         ConfigurationSection root = plugin.getConfig().getConfigurationSection("scoreboard");
         if (root == null) {
-            // Hard defaults if section missing
             return new ScoreboardConfig(
                     false, true, 20L,
                     List.of("&d&lOreo&f&lEssentials"),
@@ -63,7 +56,6 @@ public final class ScoreboardConfig {
         boolean defaultEnabled = root.getBoolean("default-enabled", true);
         long updateTicks = Math.max(1L, root.getLong("update-ticks", 20L));
 
-        // Title frames
         ConfigurationSection titleSec = root.getConfigurationSection("title");
         List<String> frames = new ArrayList<>();
         long frameTicks = 10L;
@@ -74,13 +66,11 @@ public final class ScoreboardConfig {
         }
         if (frames.isEmpty()) frames.add("&d&lOreo&f&lEssentials");
 
-        // Lines
         List<String> lines = root.getStringList("lines");
         if (lines == null || lines.isEmpty()) {
             lines = List.of("&7Player: &f{player}", "&7Online: &f%server_online%");
         }
 
-        // Worlds filters
         Set<String> wl = new HashSet<>(root.getStringList("worlds.whitelist"));
         Set<String> bl = new HashSet<>(root.getStringList("worlds.blacklist"));
 
@@ -91,16 +81,12 @@ public final class ScoreboardConfig {
         );
     }
 
-    // Getters used by ScoreboardService
     public boolean enabled() { return enabled; }
     public boolean defaultEnabled() { return defaultEnabled; }
     public long updateTicks() { return updateTicks; }
-
     public List<String> titleFrames() { return titleFrames; }
     public long titleFrameTicks() { return titleFrameTicks; }
-
     public List<String> lines() { return lines; }
-
     public Set<String> worldsWhitelist() { return worldsWhitelist; }
     public Set<String> worldsBlacklist() { return worldsBlacklist; }
 }

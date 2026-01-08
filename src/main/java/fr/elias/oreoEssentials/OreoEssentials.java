@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/OreoEssentials.java
 package fr.elias.oreoEssentials;
 
 import fr.elias.oreoEssentials.bossbar.BossBarService;
@@ -17,7 +16,6 @@ import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpCommand;
 import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpTabCompleter;
 import fr.elias.oreoEssentials.rtp.listeners.RtpJoinListener;
 
-// Core commands (essentials-like)
 import fr.elias.oreoEssentials.commands.completion.*;
 import fr.elias.oreoEssentials.commands.core.playercommands.*;
 import fr.elias.oreoEssentials.commands.core.admins.*;
@@ -60,46 +58,37 @@ import fr.elias.oreoEssentials.listeners.SitListener;
 import fr.elias.oreoEssentials.commands.core.admins.MoveCommand;
 
 import fr.elias.oreoEssentials.services.yaml.YamlPlayerWarpStorage;
-// Tab completion
 
-// Economy commands
 import fr.elias.oreoEssentials.commands.ecocommands.MoneyCommand;
 import fr.elias.oreoEssentials.commands.ecocommands.completion.MoneyTabCompleter;
 import fr.elias.oreoEssentials.rtp.RtpConfig;
 
-// Databases / Cache
 import fr.elias.oreoEssentials.database.JsonEconomyDatabase;
 import fr.elias.oreoEssentials.database.MongoDBManager;
 import fr.elias.oreoEssentials.database.PlayerEconomyDatabase;
 import fr.elias.oreoEssentials.database.PostgreSQLManager;
 import fr.elias.oreoEssentials.database.RedisManager;
 
-// Economy bootstrap (internal bridge)
 import fr.elias.oreoEssentials.economy.EconomyBootstrap;
 
-// Listeners
 import fr.elias.oreoEssentials.listeners.*;
 
-// Offline cache
 import fr.elias.oreoEssentials.offline.OfflinePlayerCache;
 import  fr.elias.oreoEssentials.cross.ModBridge ;
-// RabbitMQ
+
 import fr.elias.oreoEssentials.rabbitmq.PacketChannels;
 import fr.elias.oreoEssentials.rabbitmq.handler.PlayerJoinPacketHandler;
 import fr.elias.oreoEssentials.rabbitmq.handler.PlayerQuitPacketHandler;
 import fr.elias.oreoEssentials.rabbitmq.handler.RemoteMessagePacketHandler;
 import fr.elias.oreoEssentials.rabbitmq.sender.RabbitMQSender;
 
-// Services
 import fr.minuskube.inv.InventoryManager;
 
-// Chat
 import fr.elias.oreoEssentials.chat.AsyncChatListener;
 import fr.elias.oreoEssentials.chat.CustomConfig;
 import fr.elias.oreoEssentials.chat.FormatManager;
 import fr.elias.oreoEssentials.util.ChatSyncManager;
 
-// Vault
 import fr.elias.oreoEssentials.util.ProxyMessenger;
 import fr.elias.oreoEssentials.vault.VaultEconomyProvider;
 import net.milkbowl.vault.economy.Economy;
@@ -113,13 +102,11 @@ import java.util.Map;
 
 public final class OreoEssentials extends JavaPlugin {
 
-    // Singleton
     private static OreoEssentials instance;
     public static OreoEssentials get() { return instance; }
     private MuteService muteService;
     private fr.elias.oreoEssentials.shards.OreoShardsModule shardsModule;
     public MuteService getMuteService() { return muteService; }
-    // Economy bridge (internal) — distinct from Vault Economy
     private MongoClient homesMongoClient;
     private fr.elias.oreoEssentials.config.SettingsConfig settingsConfig;
     public fr.elias.oreoEssentials.config.SettingsConfig getSettingsConfig() { return settingsConfig; }
@@ -131,11 +118,9 @@ public final class OreoEssentials extends JavaPlugin {
     private EconomyBootstrap ecoBootstrap;
     private fr.elias.oreoEssentials.integration.DiscordModerationNotifier discordMod;
     public fr.elias.oreoEssentials.integration.DiscordModerationNotifier getDiscordMod() { return discordMod; }
-    private fr.elias.oreoEssentials.services.HomeDirectory homeDirectory; // cross-server directory
-    // Essentials services
+    private fr.elias.oreoEssentials.services.HomeDirectory homeDirectory;
     private fr.elias.oreoEssentials.teleport.TpCrossServerBroker tpBroker;
     public fr.elias.oreoEssentials.teleport.TpCrossServerBroker getTpBroker() { return tpBroker; }
-    // Portals + JumpPads + PlayerVaults
     private fr.elias.oreoEssentials.portals.PortalsManager portals;
     private fr.elias.oreoEssentials.jumpads.JumpPadsManager jumpPads;
     private fr.elias.oreoEssentials.playervaults.PlayerVaultsConfig playerVaultsConfig;
@@ -164,7 +149,6 @@ public final class OreoEssentials extends JavaPlugin {
     private WarpService warpService;
     private HomeService homeService;
     private TeleportService teleportService;
-    // Player warps (cross-server via Mongo)
     private PlayerWarpService playerWarpService;
     private PlayerWarpDirectory playerWarpDirectory;
     private BackService backService;
@@ -187,19 +171,14 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.bossbar.BossBarService getBossBarService() { return bossBarService; }
     private ModBridge modBridge;
 
-
-    // Economy / messaging stack
     private PlayerEconomyDatabase database;
     private RedisManager redis;
     private OfflinePlayerCache offlinePlayerCache;
     private RtpPendingService rtpPendingService;
 
-    // Vault provider reference (optional)
     private Economy vaultEconomy;
-    // PlayerVaults
     private fr.elias.oreoEssentials.playervaults.PlayerVaultsService playervaultsService;
     public fr.elias.oreoEssentials.playervaults.PlayerVaultsService getPlayervaultsService() { return playervaultsService; }
-    // Cross-server Invsee (live inventory viewer)
     private fr.elias.oreoEssentials.cross.InvseeService invseeService;
     private fr.elias.oreoEssentials.cross.InvseeCrossServerBroker invseeBroker;
     private fr.elias.oreoEssentials.teleport.BackCrossServerBroker backBroker;
@@ -211,33 +190,27 @@ public final class OreoEssentials extends JavaPlugin {
     }
 
     private KillallLogger killallLogger;
-    // Interactive Commands
     private fr.elias.oreoEssentials.ic.ICManager icManager;
     public fr.elias.oreoEssentials.ic.ICManager getIcManager() { return icManager; }
     private fr.elias.oreoEssentials.events.EventConfig eventConfig;
     private fr.elias.oreoEssentials.events.DeathMessageService deathMessages;
-    // Playtime Rewards
     private fr.elias.oreoEssentials.playtime.PlaytimeRewardsService playtimeRewards;
     public fr.elias.oreoEssentials.playtime.PlaytimeRewardsService getPlaytimeRewards() { return playtimeRewards; }
     private IpTracker ipTracker;
     private SettingsConfig settings;
 
-    // Toggles
     private boolean economyEnabled;
     private boolean redisEnabled;
     private boolean rabbitEnabled;
     private fr.elias.oreoEssentials.trade.TradeCrossServerBroker tradeBroker;
     public fr.elias.oreoEssentials.trade.TradeCrossServerBroker getTradeBroker() { return tradeBroker; }
 
-    // RabbitMQ packet manager (optional)
     private PacketManager packetManager;
     private InvlookManager invlookManager;
 
-    // Chat system (Afelius -> merged)
     private CustomConfig chatConfig;
     private FormatManager chatFormatManager;
     private ChatSyncManager chatSyncManager;
-    // trade
     private fr.elias.oreoEssentials.trade.TradeConfig tradeConfig;
     private fr.elias.oreoEssentials.trade.TradeService tradeService;
     public fr.elias.oreoEssentials.trade.TradeService getTradeService() { return tradeService; }
@@ -246,18 +219,14 @@ public final class OreoEssentials extends JavaPlugin {
     private fr.elias.oreoEssentials.config.CrossServerSettings crossServerSettings;
     public fr.elias.oreoEssentials.config.CrossServerSettings getCrossServerSettings() { return crossServerSettings; }
 
-    // RTP + EnderChest
     private fr.elias.oreoEssentials.enderchest.EnderChestConfig ecConfig;
     private fr.elias.oreoEssentials.enderchest.EnderChestService ecService;
     public fr.elias.oreoEssentials.enderchest.EnderChestService getEnderChestService() { return ecService; }
     private RtpConfig rtpConfig;
     public RtpConfig getRtpConfig() { return rtpConfig; }
-    // RTP cooldowns (per-player, in millis)
     private final java.util.Map<java.util.UUID, Long> rtpCooldownCache = new java.util.concurrent.ConcurrentHashMap<>();
 
-    //  Cross-server RTP bridge (used by RtpCommand)
     private fr.elias.oreoEssentials.rtp.RtpCrossServerBridge rtpBridge;
-
 
     private ScoreboardService scoreboardService;
     private fr.elias.oreoEssentials.mobs.HealthBarListener healthBarListener;
@@ -271,13 +240,11 @@ public final class OreoEssentials extends JavaPlugin {
     public CustomCraftingService getCustomCraftingService() { return customCraftingService; }
     private fr.elias.oreoEssentials.holograms.OreoHolograms oreoHolograms;
 
-    // Playtime
     private fr.elias.oreoEssentials.playtime.PlaytimeTracker playtimeTracker;
     private PlayerNametagManager nametagManager;
 
     @Override
     public void onLoad() {
-        // Load external libraries at runtime BEFORE plugin enables
         loadExternalLibraries();
     }
 
@@ -288,49 +255,42 @@ public final class OreoEssentials extends JavaPlugin {
 
             libraryManager.addMavenCentral();
 
-            // MongoDB BSON (required by mongodb-driver-sync)
             libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
                     .groupId("org.mongodb")
                     .artifactId("bson")
                     .version("5.1.0")
                     .build());
 
-            // MongoDB driver core (required by mongodb-driver-sync)
             libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
                     .groupId("org.mongodb")
                     .artifactId("mongodb-driver-core")
                     .version("5.1.0")
                     .build());
 
-            // MongoDB
             libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
                     .groupId("org.mongodb")
                     .artifactId("mongodb-driver-sync")
                     .version("5.1.0")
                     .build());
 
-            // Apache Commons Pool2 (required by Jedis)
             libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
                     .groupId("org.apache.commons")
                     .artifactId("commons-pool2")
                     .version("2.12.0")
                     .build());
 
-            // Redis (Jedis)
             libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
                     .groupId("redis.clients")
                     .artifactId("jedis")
                     .version("5.1.0")
                     .build());
 
-            // PostgreSQL
             libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
                     .groupId("org.postgresql")
                     .artifactId("postgresql")
                     .version("42.7.4")
                     .build());
 
-            // RabbitMQ
             libraryManager.loadLibrary(net.byteflux.libby.Library.builder()
                     .groupId("com.rabbitmq")
                     .artifactId("amqp-client")
@@ -345,18 +305,16 @@ public final class OreoEssentials extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
         }
     }
+
     @Override
     public void onEnable() {
 
-        // -------------------------------------------------
-        // 0. BASE SINGLETON + CONFIG
-        // -------------------------------------------------
         instance = this;
         saveDefaultConfig();
         fr.elias.oreoEssentials.config.LegacySettingsMigrator.migrate(this);
 
         this.settingsConfig = new fr.elias.oreoEssentials.config.SettingsConfig(this);
-        this.settings = this.settingsConfig; // keep both names valid
+        this.settings = this.settingsConfig;
 
         getLogger().info("[BOOT] OreoEssentials starting up…");
 
@@ -372,14 +330,13 @@ public final class OreoEssentials extends JavaPlugin {
         this.invlookManager = new InvlookManager();
 
         this.crossServerSettings = fr.elias.oreoEssentials.config.CrossServerSettings.load(this);
-        final String localServerName = configService.serverName(); // unified server id
+        final String localServerName = configService.serverName();
 
         this.killallLogger = new KillallLogger(this);
-        this.freezeService = new FreezeService(); // constructeur sans argument
+        this.freezeService = new FreezeService();
         getServer().getPluginManager().registerEvents(
                 new FreezeListener(freezeService), this
         );
-        // -------- Commands (manager then registrations) --------
         this.commands = new CommandManager(this);
         this.invlookManager = new InvlookManager();
         getServer().getPluginManager().registerEvents(new InvlookListener(this), this);
@@ -392,9 +349,6 @@ public final class OreoEssentials extends JavaPlugin {
                         + " server.name=" + localServerName
         );
 
-        // -------------------------------------------------
-        // 1. REDIS (needed before economy DB in our design)
-        // -------------------------------------------------
         if (redisEnabled) {
             this.redis = new RedisManager(
                     getConfig().getString("redis.host", "localhost"),
@@ -407,15 +361,10 @@ public final class OreoEssentials extends JavaPlugin {
                 getLogger().info("[REDIS] Connected.");
             }
         } else {
-            // Dummy instance prevents null checks in economy / db classes
             this.redis = new RedisManager("", 6379, "");
             getLogger().info("[REDIS] Disabled.");
         }
 
-        // -------------------------------------------------
-        // 2. ECONOMY BOOTSTRAP + VAULT REGISTRATION
-        // -------------------------------------------------
-        // Your internal economy layer:
         this.ecoBootstrap = new EconomyBootstrap(this);
         this.ecoBootstrap.enable();
         if (economyEnabled) {
@@ -452,7 +401,7 @@ public final class OreoEssentials extends JavaPlugin {
                 }
                 case "json" -> {
                     JsonEconomyDatabase mgr = new JsonEconomyDatabase(this, redis);
-                    boolean ok = mgr.connect("", "", ""); // JSON ignores args
+                    boolean ok = mgr.connect("", "", "");
                     if (!ok) {
                         getLogger().severe("[ECON] JSON init failed. Disabling plugin.");
                         getServer().getPluginManager().disablePlugin(this);
@@ -461,7 +410,7 @@ public final class OreoEssentials extends JavaPlugin {
                     this.database = mgr;
                 }
                 case "none" -> this.database = null;
-                default -> { /* leave null for unknown */ }
+                default -> { }
             }
 
             if (this.database != null) {
@@ -471,7 +420,6 @@ public final class OreoEssentials extends JavaPlugin {
                     return;
                 }
 
-                // Unregister any stale provider just in case
                 try {
                     getServer().getServicesManager().unregister(
                             net.milkbowl.vault.economy.Economy.class,
@@ -479,7 +427,6 @@ public final class OreoEssentials extends JavaPlugin {
                     );
                 } catch (Throwable ignored) {}
 
-                // Register OUR provider into Vault at the highest priority.
                 VaultEconomyProvider vaultProvider = new VaultEconomyProvider(this);
                 getServer().getServicesManager().register(
                         net.milkbowl.vault.economy.Economy.class,
@@ -488,7 +435,6 @@ public final class OreoEssentials extends JavaPlugin {
                         org.bukkit.plugin.ServicePriority.Highest
                 );
 
-                // Cache the provider for fast access later
                 var rsp = getServer().getServicesManager()
                         .getRegistration(net.milkbowl.vault.economy.Economy.class);
                 if (rsp == null) {
@@ -498,23 +444,19 @@ public final class OreoEssentials extends JavaPlugin {
                     getLogger().info("[ECON] Vault economy integration enabled at HIGHEST priority.");
                 }
 
-                // Listeners for economy player data + join/quit sync
                 Bukkit.getPluginManager().registerEvents(new PlayerDataListener(this), this);
                 Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
 
-                // Offline player cache
                 this.offlinePlayerCache = new OfflinePlayerCache();
 
-                // Warm cache now + schedule refresh
                 this.database.populateCache(offlinePlayerCache);
                 Bukkit.getScheduler().runTaskTimerAsynchronously(
                         this,
                         () -> this.database.populateCache(offlinePlayerCache),
-                        20L * 60,   // after 1 min
-                        20L * 300   // every 5 min
+                        20L * 60,
+                        20L * 300
                 );
 
-                // Register money/pay/cheque commands via CommandManager
                 if (this.database != null) {
                     var moneyCmd  = new MoneyCommand(this);
                     var payCmd    = new fr.elias.oreoEssentials.commands.ecocommands.PayCommand();
@@ -540,7 +482,6 @@ public final class OreoEssentials extends JavaPlugin {
                     }
                 }
 
-
             } else {
                 getLogger().warning("[ECON] Enabled but no database selected/connected; economy commands unavailable.");
             }
@@ -550,11 +491,6 @@ public final class OreoEssentials extends JavaPlugin {
             this.vaultEconomy = null;
         }
 
-        // -------------------------------------------------
-        // 3. EARLY MISC BOOT (stuff you had before this point)
-        // -------------------------------------------------
-
-        // Make sure ClearLag config exists very early (so schedulers can start later)
         try {
             java.io.File f = new java.io.File(getDataFolder(), "clearlag.yml");
             if (!f.exists()) {
@@ -565,17 +501,15 @@ public final class OreoEssentials extends JavaPlugin {
         fr.elias.oreoEssentials.util.SkinRefresherBootstrap.init(this);
         fr.elias.oreoEssentials.util.SkinDebug.init(this);
 
-        // Locales
         Lang.init(this);
         boolean kitsFeature   = settingsConfig.kitsEnabled();
         boolean kitsRegister  = settingsConfig.kitsCommandsEnabled();
-
 
         if (kitsFeature) {
             this.kitsManager = new fr.elias.oreoEssentials.kits.KitsManager(this);
 
             if (kitsRegister) {
-                new fr.elias.oreoEssentials.kits.KitCommands(this, this.kitsManager); // registers /kits and /kit
+                new fr.elias.oreoEssentials.kits.KitCommands(this, this.kitsManager);
                 getLogger().info("[Kits] Loaded " + this.kitsManager.getKits().size() + " kits from kits.yml");
             } else {
                 unregisterCommandHard("kits");
@@ -589,32 +523,24 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[Kits] Module disabled by config; commands unregistered.");
         }
 
-
-        // --- Alias editor boot ---
         this.aliasService = new fr.elias.oreoEssentials.aliases.AliasService(this);
         this.aliasService.load();
         this.aliasService.applyRuntimeRegistration();
-        // -------- Proxy plugin messaging (server switching) --------
         getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
         getServer().getMessenger().registerOutgoingPluginChannel(this, "bungeecord:main");
         this.proxyMessenger = new ProxyMessenger(this);
-        ProxyMessenger proxyMessenger = this.proxyMessenger; // reuse local var below
+        ProxyMessenger proxyMessenger = this.proxyMessenger;
         getLogger().info("[BOOT] Registered proxy plugin messaging channels.");
 
-
-        // -------- UI/Managers created early --------
         this.invManager = new InventoryManager(this);
         this.invManager.init();
-        // -------- SellGUI (SmartInvs) --------
         this.sellGuiManager = new fr.elias.oreoEssentials.sellgui.SellGuiManager(this, this.invManager);
 
-        // --- Server Management GUI (ModGUI) ---
         try {
             this.modGuiService = new fr.elias.oreoEssentials.modgui.ModGuiService(this);
             getLogger().info("[ModGUI] Server management GUI ready (/modgui).");
 
-            // World tweaks (Nether/End, Elytra, Trident, PvP per world, etc.)
-            new WorldTweaksListener(this);  // self-registers in constructor
+            new WorldTweaksListener(this);
         } catch (Throwable t) {
             getLogger().warning("[ModGUI] Failed to init: " + t.getMessage());
             this.modGuiService = null;
@@ -624,14 +550,11 @@ public final class OreoEssentials extends JavaPlugin {
         notesChat = new NotesChatListener(this, notesManager);
         ipTracker = new IpTracker(this);
 
-        // --- Trade (/trade) ---
         this.tradeConfig = new fr.elias.oreoEssentials.trade.TradeConfig(this);
 
         if (this.tradeConfig.enabled && settingsConfig.tradeEnabled()) {
-            // service
             this.tradeService = new fr.elias.oreoEssentials.trade.TradeService(this, this.tradeConfig);
 
-            // command
             if (getCommand("trade") != null) {
                 getCommand("trade").setExecutor(
                         new fr.elias.oreoEssentials.trade.TradeCommand(this, this.tradeService)
@@ -651,9 +574,6 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[Trade] Disabled (trade.yml or settings.yml).");
         }
 
-
-
-        // === Custom Crafting (SmartInvs GUI) ===
         this.customCraftingService = new CustomCraftingService(this);
         this.customCraftingService.loadAllAndRegister();
 
@@ -670,26 +590,21 @@ public final class OreoEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new fr.elias.oreoEssentials.trade.ui.TradeInventoryCloseListener(this), this);
 
-
         getServer().getPluginManager().registerEvents(
                 new fr.elias.oreoEssentials.customcraft.CustomCraftingListener(customCraftingService),
                 this
         );
         this.freezeManager = new FreezeManager(this);
 
-            // -------- Daily Rewards (unified storage: MongoDB or file-based) --------
         var dailyCfg = new fr.elias.oreoEssentials.daily.DailyConfig(this);
         dailyCfg.load();
 
-            // Create storage (automatically selects MongoDB or file storage based on config)
         fr.elias.oreoEssentials.daily.DailyStorage dailyStorage =
                 fr.elias.oreoEssentials.daily.DailyStorage.create(this, dailyCfg);
 
-        // Load rewards configuration
         var dailyRewardsCfg = new fr.elias.oreoEssentials.daily.RewardsConfig(this);
         dailyRewardsCfg.load();
 
-        // Create service with unified storage
         var dailySvc = new fr.elias.oreoEssentials.daily.DailyService(
                 this,
                 dailyCfg,
@@ -697,7 +612,6 @@ public final class OreoEssentials extends JavaPlugin {
                 dailyRewardsCfg
         );
 
-        // Register /daily command (claim GUI, claim, top)
         var dailyCmd = new fr.elias.oreoEssentials.daily.DailyCommand(
                 this,
                 dailyCfg,
@@ -713,14 +627,12 @@ public final class OreoEssentials extends JavaPlugin {
                 + (dailyCfg.mongo.enabled ? "MongoDB" : "file-based")
                 + " storage.");
 
-        // -------- Moderation core needed by chat --------
         muteService = new MuteService(this);
         getServer().getPluginManager().registerEvents(
                 new fr.elias.oreoEssentials.listeners.MuteListener(muteService),
                 this
         );
 
-        // -------- Discord moderation notifier (separate config)
         if (settingsConfig.discordModerationEnabled()) {
             this.discordMod = new fr.elias.oreoEssentials.integration.DiscordModerationNotifier(this);
             getLogger().info("[DiscordMod] Discord moderation integration enabled (settings.yml).");
@@ -729,7 +641,6 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[DiscordMod] Disabled by settings.yml (features.discord-moderation.enabled=false).");
         }
 
-        // -------- MOBS Health bar --------
         try {
             fr.elias.ultimateChristmas.UltimateChristmas xmasHook = null;
             try {
@@ -756,15 +667,11 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().warning("[MOBS] Unexpected failure booting health bars: " + t.getMessage());
         }
 
-
-
-        // -------- KILLALL Recorder commands --------
         var killExec = new KillallRecorderCommand(this, killallLogger);
         getCommand("killallr").setExecutor(killExec);
         getCommand("killallr").setTabCompleter(killExec);
         getCommand("killallrlog").setExecutor(new KillallLogViewCommand(killallLogger));
 
-        // -------- ClearLag Module (manager + command) --------
         if (settingsConfig.clearLagEnabled()) {
             try {
                 this.clearLag = new ClearLagManager(this);
@@ -789,17 +696,12 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[OreoLag] Disabled by settings.yml.");
         }
 
-
-        // -------- Chat system (Afelius merge) --------
         this.chatConfig = new fr.elias.oreoEssentials.chat.CustomConfig(this, "chat-format.yml");
         this.chatFormatManager = new fr.elias.oreoEssentials.chat.FormatManager(chatConfig);
 
-        // Custom join messages
         getServer().getPluginManager().registerEvents(new JoinMessagesListener(this), this);
         getServer().getPluginManager().registerEvents(new QuitMessagesListener(this), this);
 
-
-        // Chat sync via RabbitMQ (optional) — init before listener, pass mute service
         boolean chatSyncEnabled = chatConfig.getCustomConfig().getBoolean("MongoDB_rabbitmq.enabled", false);
         String chatRabbitUri    = chatConfig.getCustomConfig().getString("MongoDB_rabbitmq.rabbitmq.uri", "");
         try {
@@ -811,11 +713,10 @@ public final class OreoEssentials extends JavaPlugin {
             this.chatSyncManager = new ChatSyncManager(false, "", muteService);
         }
 
-        // Discord relay (controlled by settings.yml master toggle + chat-format.yml)
         boolean discordEnabled = false;
         String discordWebhookUrl = "";
 
-        if (getSettingsConfig().chatDiscordBridgeEnabled()) { // ← NEW master toggle check
+        if (getSettingsConfig().chatDiscordBridgeEnabled()) {
             var chatRoot = chatConfig.getCustomConfig().getConfigurationSection("chat.discord");
             if (chatRoot != null) {
                 discordEnabled = chatRoot.getBoolean("enabled", false);
@@ -823,7 +724,6 @@ public final class OreoEssentials extends JavaPlugin {
             }
         }
 
-        // Register async chat listener (mute-aware)
         getServer().getPluginManager().registerEvents(
                 new AsyncChatListener(
                         chatFormatManager,
@@ -836,16 +736,12 @@ public final class OreoEssentials extends JavaPlugin {
                 this
         );
 
-
-        // Conversations / auto messages
         getServer().getPluginManager().registerEvents(new ConversationListener(this), this);
         new fr.elias.oreoEssentials.tasks.AutoMessageScheduler(this).start();
-        // PlayerWarps flags (used in all storage modes)
         var pwRoot = settingsConfig.getRoot().getConfigurationSection("playerwarps");
         boolean pwEnabled = (pwRoot == null) || pwRoot.getBoolean("enabled", true);
         boolean pwCross   = (pwRoot == null) || pwRoot.getBoolean("cross-server", true);
 
-        // -------- Essentials storage selection (Homes/Warps/Spawn/Back) --------
         switch (essentialsStorage) {
             case "mongodb" -> {
                 String uri = getConfig().getString("storage.mongo.uri", "mongodb://localhost:27017");
@@ -862,8 +758,7 @@ public final class OreoEssentials extends JavaPlugin {
                         configService.serverName()
                 );
                 getServer().getPluginManager().registerEvents(dirListener, this);
-                dirListener.backfillOnline(); // optional
-                // after dirListener.backfillOnline();
+                dirListener.backfillOnline();
                 try {
                     new fr.elias.oreoEssentials.playerdirectory.DirectoryHeartbeat(
                             this.playerDirectory,
@@ -874,13 +769,12 @@ public final class OreoEssentials extends JavaPlugin {
                     getLogger().warning("[PlayerDirectory] Heartbeat failed to start: " + t.getMessage());
                 }
 
-                // (Optional) migration helper
                 try {
                     MongoHomesMigrator.run(
                             this.homesMongoClient,
                             dbName,
                             prefix,
-                            org.bukkit.Bukkit.getServer().getName(), // legacy
+                            org.bukkit.Bukkit.getServer().getName(),
                             localServerName,
                             getLogger()
                     );
@@ -888,12 +782,10 @@ public final class OreoEssentials extends JavaPlugin {
                     getLogger().info("[STORAGE] MongoHomesMigrator skipped.");
                 }
 
-                // Mongo-backed StorageApi
                 this.storage = new MongoHomesStorage(
                         this.homesMongoClient, dbName, prefix, localServerName
                 );
 
-                // Cross-server directories
                 this.homeDirectory = new MongoHomeDirectory(
                         this.homesMongoClient, dbName, prefix + "home_directory"
                 );
@@ -913,7 +805,6 @@ public final class OreoEssentials extends JavaPlugin {
                 }
                 {
                     {
-                        // --- PlayerWarps (Mongo only, optional cross-server) ---
                         var settingsRoot = this.settingsConfig.getRoot();
                         var pwSection = settingsRoot.getConfigurationSection("playerwarps");
 
@@ -969,8 +860,8 @@ public final class OreoEssentials extends JavaPlugin {
                 this.spawnDirectory = null;
 
                 if (pwEnabled) {
-                    PlayerWarpStorage pwStorage = new YamlPlayerWarpStorage(this); // local file
-                    this.playerWarpService      = new PlayerWarpService(pwStorage, null); // directory = null
+                    PlayerWarpStorage pwStorage = new YamlPlayerWarpStorage(this);
+                    this.playerWarpService      = new PlayerWarpService(pwStorage, null);
                     this.playerWarpDirectory    = null;
                     getLogger().info("[PlayerWarps] Enabled with local YAML storage (essentials.storage=json, no cross-server).");
                 } else {
@@ -989,7 +880,7 @@ public final class OreoEssentials extends JavaPlugin {
                 this.spawnDirectory = null;
 
                 if (pwEnabled) {
-                    PlayerWarpStorage pwStorage = new YamlPlayerWarpStorage(this); // local YAML
+                    PlayerWarpStorage pwStorage = new YamlPlayerWarpStorage(this);
                     this.playerWarpService      = new PlayerWarpService(pwStorage, null);
                     this.playerWarpDirectory    = null;
                     getLogger().info("[PlayerWarps] Enabled with local YAML storage (no cross-server).");
@@ -1002,10 +893,8 @@ public final class OreoEssentials extends JavaPlugin {
                 getLogger().info("[STORAGE] Using YAML.");
             }
 
-
         }
 
-        // ---- EnderChest config + storage (respect cross-server.enderchest + storage mode)
         this.ecConfig = new fr.elias.oreoEssentials.enderchest.EnderChestConfig(this);
 
         final boolean crossServerEc =
@@ -1044,9 +933,6 @@ public final class OreoEssentials extends JavaPlugin {
                 org.bukkit.plugin.ServicePriority.Normal
         );
 
-
-
-        // --- Player Sync bootstrap ---
         final boolean invSyncEnabled = settingsConfig.featureOption("cross-server", "inventory", true);
 
         fr.elias.oreoEssentials.playersync.PlayerSyncStorage invStorage;
@@ -1077,14 +963,12 @@ public final class OreoEssentials extends JavaPlugin {
                 this
         );
 
-
-        // --- expose InventoryService so /invsee works for offline & cross-server ---
         fr.elias.oreoEssentials.services.InventoryService invSvc =
                 new fr.elias.oreoEssentials.services.InventoryService() {
                     @Override
                     public Snapshot load(java.util.UUID uuid) {
                         try {
-                            var s = invStorage.load(uuid); // Mongo or YAML depending on config
+                            var s = invStorage.load(uuid);
                             if (s == null) return null;
                             Snapshot snap = new Snapshot();
                             snap.contents = s.inventory;
@@ -1123,12 +1007,10 @@ public final class OreoEssentials extends JavaPlugin {
                 this
         );
 
-        // -------- Essentials Services --------
         this.spawnService = new SpawnService(storage);
         this.warpService  = new WarpService(storage, this.warpDirectory);
         this.homeService  = new HomeService(this.storage, this.configService, this.homeDirectory);
 
-        // -------- RabbitMQ (optional cross-server signaling) --------
         if (rabbitEnabled) {
             RabbitMQSender rabbit = new RabbitMQSender(getConfig().getString("rabbitmq.uri"));
 
@@ -1145,7 +1027,6 @@ public final class OreoEssentials extends JavaPlugin {
                     getLogger().info("[RABBIT] Packet registry checksum=" + packetManager.registryChecksum());
                 } catch (Throwable ignored) {}
 
-            // ---- Cross-server Invsee broker + service ----
                 if (invSyncEnabled) {
                     try {
                         this.invseeBroker = new fr.elias.oreoEssentials.cross.InvseeCrossServerBroker(
@@ -1158,7 +1039,7 @@ public final class OreoEssentials extends JavaPlugin {
                                 this,
                                 invseeBroker
                         );
-                        this.invseeBroker.setService(invseeService); // ★ IMPORTANT ★
+                        this.invseeBroker.setService(invseeService);
 
                         getLogger().info("[INVSEE] Cross-server Invsee broker + service ready.");
                     } catch (Throwable t) {
@@ -1178,7 +1059,6 @@ public final class OreoEssentials extends JavaPlugin {
                 );
                 getLogger().info("[RABBIT] Subscribed to individual channel for this server: " + localServerName);
 
-                // --- Invsee packets (only if broker is active) ---
                 if (this.invseeBroker != null) {
                     packetManager.subscribe(
                             fr.elias.oreoEssentials.cross.InvseeOpenRequestPacket.class,
@@ -1200,14 +1080,12 @@ public final class OreoEssentials extends JavaPlugin {
                         new RemoteMessagePacketHandler()
                 );
 
-                // --- Trade packets ---
                 packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeStartPacket.class,
                         (fr.elias.oreoEssentials.rabbitmq.packet.event.PacketSubscriber<
                                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeStartPacket>
                                 ) new fr.elias.oreoEssentials.rabbitmq.handler.trade.TradeStartPacketHandler(this)
                 );
-
                 packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerJoinPacket.class,
                         new PlayerJoinPacketHandler(this)
@@ -1264,7 +1142,6 @@ public final class OreoEssentials extends JavaPlugin {
             this.invseeService = null;
         }
 
-        // ---- Cross-server Moderation Bridge (kill/kick/ban via Rabbit) ----
         if (packetManager != null && packetManager.isInitialized()) {
             this.modBridge = new ModBridge(
                     this,
@@ -1277,7 +1154,6 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[MOD-BRIDGE] Cross-server moderation bridge disabled (PacketManager unavailable).");
         }
 
-        // ---- Cross-server Trade broker (only if Rabbit AND tradeService AND enabled in settings) ----
         if (packetManager != null
                 && packetManager.isInitialized()
                 && this.tradeService != null
@@ -1295,15 +1171,12 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[TRADE] Cross-server trade broker disabled (PacketManager unavailable, trade disabled, or settings.yml).");
         }
 
-
-        // -------- Cross-server teleport brokers --------
         if (packetManager != null && packetManager.isInitialized()) {
 
             final var cs = this.getCrossServerSettings();
             final boolean anyCross =
                     cs.homes() || cs.warps() || cs.spawn() || cs.economy();
 
-            // Only bind RabbitMQ channels if at least one cross-server feature is enabled
             if (anyCross) {
                 packetManager.subscribeChannel(
                         fr.elias.oreoEssentials.rabbitmq.PacketChannels.GLOBAL
@@ -1317,7 +1190,6 @@ public final class OreoEssentials extends JavaPlugin {
                 getLogger().info("[RABBIT] All cross-server features disabled by config; skipping channel subscriptions.");
             }
 
-            // Spawn/Warp broker
             if (cs.spawn() || cs.warps()) {
                 new fr.elias.oreoEssentials.teleport.CrossServerTeleportBroker(
                         this,
@@ -1331,7 +1203,6 @@ public final class OreoEssentials extends JavaPlugin {
                 getLogger().info("[BROKER] CrossServerTeleportBroker disabled by config (spawn & warps off).");
             }
 
-            // Home broker (only if enabled)
             if (cs.homes()) {
                 this.homeTpBroker = new fr.elias.oreoEssentials.homes.HomeTeleportBroker(
                         this,
@@ -1347,15 +1218,12 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().warning("[BROKER] Brokers not started: PacketManager unavailable.");
         }
 
-        // -------- Core services --------
         this.backService      = new BackService(storage);
         this.messageService   = new MessageService();
         this.teleportService  = new TeleportService(this, backService, configService);
         this.deathBackService = new DeathBackService();
         this.godService       = new GodService();
 
-
-        // --- TPA cross-server broker (single initialization; no duplicates) ---
         if (packetManager != null && packetManager.isInitialized()) {
             this.tpaBroker = new fr.elias.oreoEssentials.teleport.TpaCrossServerBroker(
                     this,
@@ -1369,7 +1237,6 @@ public final class OreoEssentials extends JavaPlugin {
             this.tpaBroker = null;
             getLogger().info("[BROKER] TPA cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
-        // ---  TP cross-server broker (admin /tp) ---
         if (packetManager != null && packetManager.isInitialized()) {
             this.tpBroker = new fr.elias.oreoEssentials.teleport.TpCrossServerBroker(
                     this, this.teleportService, this.packetManager, proxyMessenger, configService.serverName()
@@ -1379,7 +1246,6 @@ public final class OreoEssentials extends JavaPlugin {
             this.tpBroker = null;
             getLogger().info("[BROKER] TP cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
-        // ---  TP cross-server broker (admin /tp) ---
         if (packetManager != null && packetManager.isInitialized()) {
             this.tpBroker = new fr.elias.oreoEssentials.teleport.TpCrossServerBroker(
                     this,
@@ -1393,7 +1259,6 @@ public final class OreoEssentials extends JavaPlugin {
             this.tpBroker = null;
             getLogger().info("[BROKER] TP cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
-        // ---  Back cross-server broker (/back) ---
         if (packetManager != null && packetManager.isInitialized() && proxyMessenger != null) {
             this.backBroker = new fr.elias.oreoEssentials.teleport.BackCrossServerBroker(
                     this,
@@ -1408,7 +1273,6 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[BROKER] Back cross-server broker disabled (PacketManager unavailable or proxyMessenger null).");
         }
 
-        // ---  PlayerWarp cross-server broker (/pw) ---
         if (packetManager != null
                 && packetManager.isInitialized()
                 && playerWarpService != null
@@ -1431,14 +1295,12 @@ public final class OreoEssentials extends JavaPlugin {
                     + "(packetManager or playerWarpService or proxyMessenger missing).");
         }
 
-        // -------- Moderation listeners --------
         VanishService vanishService = new VanishService(this);
         getServer().getPluginManager().registerEvents(
                 new fr.elias.oreoEssentials.listeners.VanishListener(vanishService, this),
                 this
         );
 
-        // Track locations for /back + /deathback + god protection
         getServer().getPluginManager().registerEvents(
                 new PlayerTrackingListener(backService),
                 this
@@ -1454,7 +1316,6 @@ public final class OreoEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new fr.elias.oreoEssentials.rtp.listeners.DeathRespawnListener(this), this
         );
-            // -------- Portals --------
         this.portals = new fr.elias.oreoEssentials.portals.PortalsManager(this);
         getServer().getPluginManager().registerEvents(
                 new fr.elias.oreoEssentials.portals.PortalsListener(this.portals),
@@ -1466,7 +1327,6 @@ public final class OreoEssentials extends JavaPlugin {
             getCommand("portal").setTabCompleter(portalCmd);
         }
 
-        // -------- JumpPads --------
         this.jumpPads = new fr.elias.oreoEssentials.jumpads.JumpPadsManager(this);
         getServer().getPluginManager().registerEvents(
                 new fr.elias.oreoEssentials.jumpads.JumpPadsListener(this.jumpPads),
@@ -1478,7 +1338,6 @@ public final class OreoEssentials extends JavaPlugin {
             getCommand("jumpad").setTabCompleter(jumpCmd);
         }
 
-        // --- PlayerVaults ---
         this.playerVaultsConfig = new fr.elias.oreoEssentials.playervaults.PlayerVaultsConfig(this);
         this.playervaultsService = new fr.elias.oreoEssentials.playervaults.PlayerVaultsService(this);
         if (this.playervaultsService.enabled()) {
@@ -1486,11 +1345,10 @@ public final class OreoEssentials extends JavaPlugin {
         } else {
             getLogger().info("[Vaults] PlayerVaults disabled by config or storage unavailable.");
         }
-        // ---- RTP config (local + cross-server aware)
-        this.rtpPendingService = new RtpPendingService();     // 1) data holder
-        this.rtpConfig         = new RtpConfig(this);         // 2) load rtp.yml
+        this.rtpPendingService = new RtpPendingService();
+        this.rtpConfig         = new RtpConfig(this);
 
-        getServer().getPluginManager().registerEvents(        // 3) listener
+        getServer().getPluginManager().registerEvents(
                 new RtpJoinListener(this),
                 this
         );
@@ -1504,14 +1362,11 @@ public final class OreoEssentials extends JavaPlugin {
             unregisterCommandHard("wild");
             getLogger().info("[RTP] Disabled by rtp.yml (enabled=false).");
         } else {
-            // Use a single instance for executor + tab-completer
             var rtpCmd = new fr.elias.oreoEssentials.commands.core.playercommands.RtpCommand();
             this.commands.register(rtpCmd);
 
             getLogger().info("[RTP] Enabled — /rtp registered with tab-completion.");
         }
-
-        // RTP cross-server bridge (/rtp) ---
 
         if (packetManager != null && packetManager.isInitialized()
                 && this.rtpConfig != null && this.rtpConfig.isCrossServerEnabled()) {
@@ -1532,7 +1387,6 @@ public final class OreoEssentials extends JavaPlugin {
                     + "(PacketManager missing or cross-server RTP off).");
         }
 
-        // --- BossBar (controlled by config: bossbar.enabled)
         if (settingsConfig.bossbarEnabled()) {
             this.bossBarService = new BossBarService(this);
             this.bossBarService.start();
@@ -1543,8 +1397,6 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[BossBar] Disabled by settings.yml.");
         }
 
-
-        // --- Scoreboard (controlled by settings.yml: features.scoreboard.enabled)
         if (settingsConfig.scoreboardEnabled()) {
             ScoreboardConfig sbCfg = ScoreboardConfig.load(this);
             this.scoreboardService = new ScoreboardService(this, sbCfg);
@@ -1557,7 +1409,6 @@ public final class OreoEssentials extends JavaPlugin {
             unregisterCommandHard("sb");
         }
 
-        // --- TAB list (controlled by settings.yml: features.tab.enabled)
         if (settingsConfig.tabEnabled()) {
             this.tabListManager = new fr.elias.oreoEssentials.tab.TabListManager(this);
             this.tabListManager.start();
@@ -1576,24 +1427,20 @@ public final class OreoEssentials extends JavaPlugin {
         var muteCmd   = new MuteCommand(muteService, chatSyncManager);
         var unmuteCmd = new UnmuteCommand(muteService, chatSyncManager);
 
-        // Nick (has completer)
         var nickCmd = new fr.elias.oreoEssentials.commands.core.playercommands.NickCommand();
         this.commands.register(nickCmd);
 
-        // --- AFK service
         var afkService = new fr.elias.oreoEssentials.services.AfkService();
         getServer().getPluginManager().registerEvents(
                 new fr.elias.oreoEssentials.listeners.AfkListener(afkService),
                 this
         );
 
-        // --- Jails (with MongoDB or YAML storage based on config) ---
         fr.elias.oreoEssentials.jail.JailStorage jailStorage;
 
         boolean useMongoForJails = getConfig().getBoolean("Jail.Storage.Mongo.Enabled", false);
 
         if (useMongoForJails && "mongodb".equalsIgnoreCase(essentialsStorage) && this.homesMongoClient != null) {
-            // Use MongoDB for cross-server jail synchronization
             String mongoDb = getConfig().getString("storage.mongo.database", "oreo");
 
             jailStorage = new fr.elias.oreoEssentials.jail.MongoJailStorage(
@@ -1602,16 +1449,13 @@ public final class OreoEssentials extends JavaPlugin {
             );
             getLogger().info("[Jails] Using MongoDB storage (cross-server enabled).");
         } else {
-            // Use YAML for single-server setups
             jailStorage = new fr.elias.oreoEssentials.jail.YamlJailStorage(this);
             getLogger().info("[Jails] Using YAML storage (single-server only).");
         }
 
-        // Create service with chosen storage
         this.jailService = new fr.elias.oreoEssentials.jail.JailService(this, jailStorage);
         this.jailService.enable();
 
-        // Register listeners
         getServer().getPluginManager().registerEvents(
                 new fr.elias.oreoEssentials.jail.JailGuardListener(jailService),
                 this
@@ -1622,13 +1466,11 @@ public final class OreoEssentials extends JavaPlugin {
         );
 
         getLogger().info("[Jails] System initialized with " + jailStorage.getClass().getSimpleName());
-        // --- Player Warps (/pw) ---
         PlayerWarpCommand pwCmd = null;
         if (this.playerWarpService != null) {
             pwCmd = new PlayerWarpCommand(this.playerWarpService);
         }
 
-        // /pwwhitelist command for managing warp whitelists
         if (getCommand("pwwhitelist") != null && this.playerWarpService != null) {
             PlayerWarpWhitelistCommand pwwCmd = new PlayerWarpWhitelistCommand(this.playerWarpService);
             getCommand("pwwhitelist").setExecutor(pwwCmd);
@@ -1638,90 +1480,84 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[PlayerWarps] /pwwhitelist not registered (command missing in plugin.yml or playerWarpService=null).");
         }
 
-        // Registeration of all remaining commands
         this.commands
-                .register(new SpawnCommand(spawnService)) //go to spawn command
-                .register(new SetSpawnCommand(spawnService)) //set spawn command
-                .register(new BackCommand(backService, teleportService, this)) // go back command
-                .register(new WarpCommand(warpService)) //go to warps
-                .register(new SetWarpCommand(warpService)) //setwarps
-                .register(new WarpsCommand(warpService))      // <- Player GUI /warps
-                .register(new WarpsAdminCommand(warpService)) // <- Admin GUI /warpsadmin (was /warpsgui)                .
-                .register(new HomeCommand(homeService)) //home command
-                .register(new DelWarpCommand(warpService)) //delete warps
-                .register(new SetHomeCommand(homeService, configService)) //sethome commamnd
-                .register(new DelHomeCommand(homeService)) //delete home command
-                .register(new TpaCommand(teleportService)) //tpa command
-                .register(new TpAcceptCommand(teleportService)) //tpaacept command
-                .register(new TpDenyCommand(teleportService)) //tpdeny command
-                .register(new FlyCommand()) //fly command here
-                .register(new HealCommand()) //heal command
-                .register(new FeedCommand()) //feed command
-                .register(new MsgCommand(messageService)) //msg command
-                .register(new ReplyCommand(messageService)) //reply command
-                .register(new BroadcastCommand()) //broadcast command
-                .register(new HomesCommand(homeService)) //homes command
-                .register(new HomesGuiCommand(homeService)) //homes gui command
-                .register(new DeathBackCommand(deathBackService)) //deathback command
-                .register(new GodCommand(godService)) //god command
-                .register(new AfeliusReloadCommand(this, chatConfig)) //afelius reload command
-                .register(new VanishCommand(vanishService)) // vanish command
-                .register(new BanCommand()) //ban command
-                .register(new KickCommand()) //kick command
-                .register(new FreezeCommand(freezeService)) // freeze command
-                .register(new EnchantCommand()) //enchant command
-                .register(new DisenchantCommand()) //disenchant command
-                .register(muteCmd) //mute command
-                .register(new UnbanCommand()) //unban command
-                .register(unmuteCmd) //unmute command
-                .register(new OeCommand()) //oecommand
-                .register(new ServerProxyCommand(proxyMessenger)) //server command
-                .register(new SkinCommand()) //skin command ( not being used yet)
-                .register(new CloneCommand()) //clone command ( not implemented fully yet )
-                .register(new fr.elias.oreoEssentials.playersync.PlayerSyncCommand(this, playerSyncService, invSyncEnabled)) //player synch class
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.EcCommand(this.ecService, crossServerEc)) //cross server enderchests
-                .register(new HeadCommand()) //head command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.SellGuiCommand(this)) //sellgui command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.AfkCommand(afkService)) //afk command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.TrashCommand()) //trash command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.WorkbenchCommand()) //workbench command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.AnvilCommand()) //anvill command
-                .register(new ClearCommand()) //clear commmand
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.SeenCommand()) //seen command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.PingCommand())  //ping command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.HatCommand()) //hat command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.RealNameCommand()) //realname command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.FurnaceCommand()) //furnace command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.NearCommand()) //near command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.KillCommand()) //kill command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.InvseeCommand()) //invseee command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.invlook.InvlookCommand()) //invlook command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.CookCommand()) //cook command
-                .register(new fr.elias.oreoEssentials.commands.ecocommands.BalanceCommand(this)) //balance command
-                .register(new fr.elias.oreoEssentials.commands.ecocommands.BalTopCommand(this)) //baltop command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.EcSeeCommand()) //ecsee commmand
-                .register(new fr.elias.oreoEssentials.commands.core.admins.ReloadAllCommand()) //reload all command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.VaultsCommand()) //vaults command
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.UuidCommand())//uuid command
+                .register(new SpawnCommand(spawnService))
+                .register(new SetSpawnCommand(spawnService))
+                .register(new BackCommand(backService, teleportService, this))
+                .register(new WarpCommand(warpService))
+                .register(new SetWarpCommand(warpService))
+                .register(new WarpsCommand(warpService))
+                .register(new WarpsAdminCommand(warpService))
+                .register(new HomeCommand(homeService))
+                .register(new DelWarpCommand(warpService))
+                .register(new SetHomeCommand(homeService, configService))
+                .register(new DelHomeCommand(homeService))
+                .register(new TpaCommand(teleportService))
+                .register(new TpAcceptCommand(teleportService))
+                .register(new TpDenyCommand(teleportService))
+                .register(new FlyCommand())
+                .register(new HealCommand())
+                .register(new FeedCommand())
+                .register(new MsgCommand(messageService))
+                .register(new ReplyCommand(messageService))
+                .register(new BroadcastCommand())
+                .register(new HomesCommand(homeService))
+                .register(new HomesGuiCommand(homeService))
+                .register(new DeathBackCommand(deathBackService))
+                .register(new GodCommand(godService))
+                .register(new AfeliusReloadCommand(this, chatConfig))
+                .register(new VanishCommand(vanishService))
+                .register(new BanCommand())
+                .register(new KickCommand())
+                .register(new FreezeCommand(freezeService))
+                .register(new EnchantCommand())
+                .register(new DisenchantCommand())
+                .register(muteCmd)
+                .register(new UnbanCommand())
+                .register(unmuteCmd)
+                .register(new OeCommand())
+                .register(new ServerProxyCommand(proxyMessenger))
+                .register(new SkinCommand())
+                .register(new CloneCommand())
+                .register(new fr.elias.oreoEssentials.playersync.PlayerSyncCommand(this, playerSyncService, invSyncEnabled))
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.EcCommand(this.ecService, crossServerEc))
+                .register(new HeadCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.SellGuiCommand(this))
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.AfkCommand(afkService))
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.TrashCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.WorkbenchCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.AnvilCommand())
+                .register(new ClearCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.SeenCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.PingCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.HatCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.RealNameCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.FurnaceCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.NearCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.KillCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.InvseeCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.invlook.InvlookCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.CookCommand())
+                .register(new fr.elias.oreoEssentials.commands.ecocommands.BalanceCommand(this))
+                .register(new fr.elias.oreoEssentials.commands.ecocommands.BalTopCommand(this))
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.EcSeeCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.admins.ReloadAllCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.VaultsCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.UuidCommand())
                 .register(new TpCommand(teleportService))
                 .register(new ZEssentialsHomesImportCommand(this, storage, homeDirectory))
-                .register(new MoveCommand(teleportService)); // /move <player> [target]
-        // Register /pw if service is available
+                .register(new MoveCommand(teleportService));
         if (pwCmd != null) {
             this.commands.register(pwCmd);
         }
-        // -------- Tab completion wiring --------
         if (getCommand("oeserver") != null) {
             getCommand("oeserver").setTabCompleter(new ServerProxyCommand(proxyMessenger));
         }
         getCommand("kick").setTabCompleter(new KickTabCompleter(this));
-        // /clear & /ci cross-server tab completion
         if (getCommand("clear") != null) {
             getCommand("clear").setTabCompleter(new ClearTabCompleter(this));
         }
 
-
-        // /tpa → only ONLINE (network-wide)
         TpaTabCompleter tpaCompleter = new TpaTabCompleter(this);
         if (getCommand("tpa") != null) {
             getCommand("tpa").setTabCompleter(tpaCompleter);
@@ -1732,17 +1568,14 @@ public final class OreoEssentials extends JavaPlugin {
             );
         }
 
-        // /tp → ONLINE + OFFLINE (local + network)
         TpTabCompleter tpCompleter = new TpTabCompleter(this);
         if (getCommand("tp") != null) {
             getCommand("tp").setTabCompleter(tpCompleter);
         }
 
-        // /move still uses online-only suggestion (same as /tpa)
         if (getCommand("move") != null) {
             getCommand("move").setTabCompleter(tpaCompleter);
         }
-
 
         if (getCommand("balance") != null) {
             getCommand("balance").setTabCompleter((sender, cmd, alias, args) -> {
@@ -1780,7 +1613,6 @@ public final class OreoEssentials extends JavaPlugin {
             getCommand("jaillist").setTabCompleter(new fr.elias.oreoEssentials.jail.commands.JailListCommandTabCompleter(jailService));
         }
 
-        // /aliaseditor registration
         if (getCommand("aliaseditor") != null) {
             var aliasCmd = new fr.elias.oreoEssentials.aliases.AliasEditorCommand(aliasService, invManager);
             getCommand("aliaseditor").setExecutor(aliasCmd);
@@ -1789,7 +1621,7 @@ public final class OreoEssentials extends JavaPlugin {
 
         if (getCommand("otherhome") != null) {
             var otherHome = new fr.elias.oreoEssentials.commands.core.admins.OtherHomeCommand(this, homeService);
-            this.commands.register(otherHome); // uses CommandManager (OreoCommand)
+            this.commands.register(otherHome);
             getCommand("otherhome").setTabCompleter(otherHome);
         }
 
@@ -1798,7 +1630,6 @@ public final class OreoEssentials extends JavaPlugin {
                 new fr.elias.oreoEssentials.listeners.VisitorGuardListener(visitorService),
                 this
         );
-        // Sit command + listener (fully controlled by settings.yml)
         if (settingsConfig.sitEnabled()) {
             this.commands.register(new SitCommand());
             getServer().getPluginManager().registerEvents(new SitListener(), this);
@@ -1806,8 +1637,6 @@ public final class OreoEssentials extends JavaPlugin {
         } else {
             getLogger().info("[Sit] Disabled by settings.yml — /sit not registered at all.");
         }
-
-
 
         var gmCmd = new fr.elias.oreoEssentials.commands.core.admins.GamemodeCommand(visitorService);
         this.getCommands().register(gmCmd);
@@ -1900,12 +1729,9 @@ public final class OreoEssentials extends JavaPlugin {
             getCommand("storm").setTabCompleter(weatherCmd);
         }
 
-        // --- Event system ---
         this.eventConfig   = new fr.elias.oreoEssentials.events.EventConfig(getDataFolder());
         this.deathMessages = new fr.elias.oreoEssentials.events.DeathMessageService(getDataFolder());
 
-        // --- Playtime (per-server) + Rewards
-// --- Playtime (per-server) + Rewards
         this.playtimeTracker = new fr.elias.oreoEssentials.playtime.PlaytimeTracker(this);
 
         this.playtimeRewards = new fr.elias.oreoEssentials.playtime.PlaytimeRewardsService(
@@ -1913,12 +1739,9 @@ public final class OreoEssentials extends JavaPlugin {
                 playtimeTracker
         );
 
-        // Let the service load its own file first
         this.playtimeRewards.init();
 
-        // Now override with settings.yml toggle
         if (!settingsConfig.playtimeRewardsEnabled()) {
-            // turns it off (cancels tasks + listeners and writes settings.enable=false)
             this.playtimeRewards.setEnabled(false);
             getLogger().info("[Prewards] Disabled by settings.yml (playtime-rewards.enabled=false).");
         } else {
@@ -1936,7 +1759,6 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().warning("[Prewards] Command 'prewards' not found in plugin.yml; skipping registration.");
         }
 
-        // Playtime cmd
         var playtimeCmd = new fr.elias.oreoEssentials.commands.core.playercommands.PlaytimeCommand();
         if (getCommand("playtime") != null) {
             getCommand("playtime").setExecutor(playtimeCmd);
@@ -1952,28 +1774,23 @@ public final class OreoEssentials extends JavaPlugin {
         if (getCommand("oevents") != null) {
             getCommand("oevents").setExecutor(eventCmd);
             getCommand("oevents").setTabCompleter(eventCmd);
-        }// Only wire per-player text if enabled in settings and Display API is present
+        }
         if (settingsConfig.getRoot().getBoolean("holograms.text.per-player", false)) {
             try {
-                Class.forName("org.bukkit.entity.Display"); // requires Paper/Folia
+                Class.forName("org.bukkit.entity.Display");
 
-                // 1) Load NMS bridge
                 fr.elias.oreoEssentials.holograms.nms.NmsHologramBridge nms =
                         fr.elias.oreoEssentials.holograms.nms.NmsBridgeLoader.loadOrThrow();
 
-                // 2) Start the per-player service (field exists with getter)
                 this.perPlayerTextDisplayService =
                         new fr.elias.oreoEssentials.holograms.perplayer_nms.PerPlayerTextDisplayService(this, nms);
 
-                // 3) Register cleanup listener
                 getServer().getPluginManager().registerEvents(
                         new fr.elias.oreoEssentials.holograms.perplayer_nms.PerPlayerTextDisplayListener(
                                 this.perPlayerTextDisplayService
                         ),
                         this
                 );
-
-                // 4) Tick it (lightweight, every 10 ticks)
                 getServer().getScheduler().runTaskTimer(this, () -> {
                     try { perPlayerTextDisplayService.tick(); }
                     catch (Throwable t) { getLogger().warning("[PerPlayerTextDisplay] tick failed: " + t.getMessage()); }
@@ -1987,11 +1804,8 @@ public final class OreoEssentials extends JavaPlugin {
             }
         }
 
-        // --- OreoHolograms (NEW MODULE, settings toggle) ---
-
         if (settingsConfig.oreoHologramsEnabled()) {
             try {
-                // sanity check: requires Paper/Folia Display entities
                 try {
                     Class.forName("org.bukkit.entity.Display");
                 } catch (ClassNotFoundException x) {
@@ -2000,9 +1814,8 @@ public final class OreoEssentials extends JavaPlugin {
                 }
 
                 this.oreoHolograms = new fr.elias.oreoEssentials.holograms.OreoHolograms(this);
-                this.oreoHolograms.load(); // loads & respawns holograms
+                this.oreoHolograms.load();
 
-                // Command registration
                 fr.elias.oreoEssentials.holograms.OreoHologramCommand holoCmd =
                         new fr.elias.oreoEssentials.holograms.OreoHologramCommand(this.oreoHolograms);
 
@@ -2021,14 +1834,13 @@ public final class OreoEssentials extends JavaPlugin {
                     getLogger().warning("[OreoHolograms] No command entry found. Add ohologram or hologram in plugin.yml.");
                 }
 
-                // Tick update
                 Bukkit.getScheduler().runTaskTimer(
                         this,
                         () -> {
                             try { this.oreoHolograms.tickAll(); } catch (Throwable ignored) {}
                         },
                         20L, 20L
-                ); // every 1 second
+                );
 
                 getLogger().info("[OreoHolograms] Enabled from settings.yml.");
             } catch (Throwable t) {
@@ -2036,13 +1848,11 @@ public final class OreoEssentials extends JavaPlugin {
                 getLogger().warning("[OreoHolograms] Failed to initialize: " + t.getMessage());
             }
         } else {
-            // Fully disabled
             unregisterCommandHard("ohologram");
             unregisterCommandHard("hologram");
             this.oreoHolograms = null;
             getLogger().info("[OreoHolograms] Disabled by settings.yml.");
         }
-        // -------- World  --------
         if (settingsConfig.worldShardingEnabled()) {
             try {
                 this.shardsModule = new fr.elias.oreoEssentials.shards.OreoShardsModule(this);
@@ -2058,7 +1868,6 @@ public final class OreoEssentials extends JavaPlugin {
         }
 
         getLogger().info("OreoEssentials enabled.");
-        // --- PlayerNametagManager (custom nametags above heads) ---//
         if (settingsConfig.getRoot().getBoolean("nametag.enabled", true)) {
             try {
                 this.nametagManager = new PlayerNametagManager(
@@ -2080,13 +1889,11 @@ public final class OreoEssentials extends JavaPlugin {
         getLogger().info("OreoEssentials enabled.");
     }
 
-
     public fr.elias.oreoEssentials.playervaults.PlayerVaultsService getPlayerVaultsService() {
         return playervaultsService;
     }
 
     private void registerAllPacketsDeterministically(PacketManager pm) {
-        // --- Core/Generic packets ---
 
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket.class,
@@ -2130,7 +1937,6 @@ public final class OreoEssentials extends JavaPlugin {
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerWarpTeleportRequestPacket::new
         );
 
-        // --- Trade packets ---
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeStartPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeStartPacket::new
@@ -2160,7 +1966,6 @@ public final class OreoEssentials extends JavaPlugin {
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeClosePacket::new
         );
 
-        // --- TP / TPA packets ---
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.TpJumpPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.TpJumpPacket::new
@@ -2188,9 +1993,6 @@ public final class OreoEssentials extends JavaPlugin {
         );
     }
 
-
-
-
     public boolean isMessagingAvailable() {
         return packetManager != null && packetManager.isInitialized();
     }
@@ -2199,10 +2001,6 @@ public final class OreoEssentials extends JavaPlugin {
     public void onDisable() {
         getLogger().info("[SHUTDOWN] OreoEssentials disabling…");
 
-        // -------------------------------------------------
-        // 1) Sauvegarder tous les inventaires en ligne
-        //    (très important avec Velocity / restart brutal)
-        // -------------------------------------------------
         try {
             fr.elias.oreoEssentials.services.InventoryService invSvc =
                     org.bukkit.Bukkit.getServicesManager().load(
@@ -2236,7 +2034,6 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().warning("[SHUTDOWN] Error while saving inventories on shutdown: " + t.getMessage());
         }
 
-
         org.bukkit.Bukkit.getScheduler().cancelTasks(this);
 
         try { if (teleportService != null) teleportService.shutdown(); } catch (Exception ignored) {}
@@ -2258,9 +2055,6 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (dailyStore != null) dailyStore.close(); } catch (Exception ignored) {}
         try { if (tradeService != null) tradeService.cancelAll(); } catch (Throwable ignored) {}
         try { if (shardsModule != null) shardsModule.disable(); } catch (Exception ignored) {}
-        // -------------------------------------------------
-        // Invlook safety cleanup (avoid ghost read-only)
-        // -------------------------------------------------
         try {
             if (invlookManager != null) {
                 invlookManager.clear();
@@ -2270,7 +2064,6 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (dailyStore != null) dailyStore.close(); } catch (Exception ignored) {}
         try { if (tradeService != null) tradeService.cancelAll(); } catch (Throwable ignored) {}
 
-        // Shutdown nametag manager
         try {
             if (nametagManager != null) {
                 nametagManager.shutdown();
@@ -2281,11 +2074,6 @@ public final class OreoEssentials extends JavaPlugin {
         getLogger().info("OreoEssentials disabled.");
     }
 
-
-
-    /* ----------------------------- Helpers ----------------------------- */
-
-    /** Optional PlaceholderAPI hook using reflection. */
     private void tryRegisterPlaceholderAPI() {
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
             getLogger().info("PlaceholderAPI not found; skipping placeholders.");
@@ -2303,7 +2091,6 @@ public final class OreoEssentials extends JavaPlugin {
         }
     }
 
-    /* ----------------------------- Getters ----------------------------- */
     public IpTracker getIpTracker() { return ipTracker; }
     public FreezeManager getFreezeManager() { return freezeManager; }
     public PlayerNotesManager getNotesManager() { return notesManager; }
@@ -2315,9 +2102,7 @@ public final class OreoEssentials extends JavaPlugin {
     public HomeService getHomeService() { return homeService; }
     public PlayerWarpService getPlayerWarpService() { return playerWarpService; }
     public PlayerWarpDirectory getPlayerWarpDirectory() { return playerWarpDirectory; }
-    public InvlookManager getInvlookManager() {
-        return invlookManager;
-    }
+    public InvlookManager getInvlookManager() { return invlookManager; }
     public TeleportService getTeleportService() { return teleportService; }
     public BackService getBackService() { return backService; }
     public MessageService getMessageService() { return messageService; }
@@ -2326,12 +2111,8 @@ public final class OreoEssentials extends JavaPlugin {
     public CommandManager getCommands() { return commands; }
     public ChatSyncManager getChatSyncManager() { return chatSyncManager; }
     public fr.elias.oreoEssentials.mobs.HealthBarListener getHealthBarListener() { return healthBarListener; }
-
-    public FreezeService getFreezeService() {
-        return freezeService;
-    }
+    public FreezeService getFreezeService() { return freezeService; }
     public fr.elias.oreoEssentials.chat.CustomConfig getChatConfig() { return chatConfig; }
-
     public WarpDirectory getWarpDirectory() { return warpDirectory; }
     public SpawnDirectory getSpawnDirectory() { return spawnDirectory; }
     private fr.elias.oreoEssentials.playerdirectory.PlayerDirectory playerDirectory;
@@ -2345,18 +2126,14 @@ public final class OreoEssentials extends JavaPlugin {
     public PlayerEconomyDatabase getDatabase() { return database; }
     public PacketManager getPacketManager() { return packetManager; }
     public ScoreboardService getScoreboardService() { return scoreboardService; }
-    public fr.elias.oreoEssentials.homes.HomeTeleportBroker getHomeTeleportBroker() {
-        return homeTpBroker;
-    }
+    public fr.elias.oreoEssentials.homes.HomeTeleportBroker getHomeTeleportBroker() { return homeTpBroker; }
+
     @SuppressWarnings("unchecked")
     private void unregisterCommandHard(String label) {
         try {
-            // 1) Get commandMap from the actual server implementation (CraftServer)
             Object craftServer = getServer();
-
             org.bukkit.command.CommandMap commandMap = null;
 
-            // Try a public method first (some forks expose it)
             try {
                 var m = craftServer.getClass().getMethod("getCommandMap");
                 Object res = m.invoke(craftServer);
@@ -2365,7 +2142,6 @@ public final class OreoEssentials extends JavaPlugin {
                 }
             } catch (Throwable ignored) {}
 
-            // Fallback: reflect field "commandMap"
             if (commandMap == null) {
                 var f = craftServer.getClass().getDeclaredField("commandMap");
                 f.setAccessible(true);
@@ -2377,13 +2153,10 @@ public final class OreoEssentials extends JavaPlugin {
 
             if (!(commandMap instanceof org.bukkit.command.SimpleCommandMap map)) return;
 
-            // 2) Access knownCommands
             var f2 = org.bukkit.command.SimpleCommandMap.class.getDeclaredField("knownCommands");
             f2.setAccessible(true);
-            Map<String, org.bukkit.command.Command> known =
-                    (Map<String, Command>) f2.get(map);
+            Map<String, org.bukkit.command.Command> known = (Map<String, Command>) f2.get(map);
 
-            // 3) Remove plain + namespaced entries only if they belong to THIS plugin
             String lower = label.toLowerCase(java.util.Locale.ROOT);
 
             known.entrySet().removeIf(e -> {
@@ -2394,19 +2167,15 @@ public final class OreoEssentials extends JavaPlugin {
                 if (!(cmd instanceof org.bukkit.command.PluginCommand pc)) return false;
 
                 try {
-                    // PluginCommand#getPlugin exists on Bukkit/Spigot/Paper
                     return pc.getPlugin() == this;
                 } catch (Throwable ignored) {
                     return false;
                 }
             });
 
-        } catch (Throwable ignored) {
-            // keep silent: unregister is best-effort
-        }
+        } catch (Throwable ignored) {}
     }
 
-    // Playtime Rewards service getter (name expected by PlaceholderAPIHook)
     public fr.elias.oreoEssentials.playtime.PlaytimeRewardsService getPlaytimeRewardsService() {
         return this.playtimeRewards;
     }
@@ -2425,10 +2194,6 @@ public final class OreoEssentials extends JavaPlugin {
         }
     }
 
-    /**
-     * Safe helper for logging / cross-server tags.
-     * Tries configService.serverName(), then Bukkit server name, then "UNKNOWN".
-     */
     public String getServerNameSafe() {
         try {
             if (configService != null) {
@@ -2437,45 +2202,28 @@ public final class OreoEssentials extends JavaPlugin {
                     return name;
                 }
             }
-        } catch (Throwable ignored) {
-        }
+        } catch (Throwable ignored) {}
 
         try {
             String bukkitName = getServer().getName();
             if (bukkitName != null && !bukkitName.isBlank()) {
                 return bukkitName;
             }
-        } catch (Throwable ignored) {
-        }
+        } catch (Throwable ignored) {}
 
         return "UNKNOWN";
     }
 
-    public ModBridge getModBridge() {
-        return modBridge;
-    }
-    public java.util.Map<java.util.UUID, Long> getRtpCooldownCache() {
-        return rtpCooldownCache;
-    }
-    public fr.elias.oreoEssentials.playtime.PlaytimeTracker getPlaytimeTracker() {
-        return this.playtimeTracker;
-    }
-    public PlayerNametagManager getNametagManager() {
-        return nametagManager;
-    }
-    public SettingsConfig getSettings() {
-        return settings;
-    }
-    public RtpPendingService getRtpPendingService() {
-        return rtpPendingService;
-    }
-    public fr.elias.oreoEssentials.rtp.RtpCrossServerBridge getRtpBridge() {
-        return rtpBridge;
-    }
-    public fr.elias.oreoEssentials.shards.OreoShardsModule getShardsModule() {
-        return shardsModule;
-    }
+    public ModBridge getModBridge() { return modBridge; }
+    public java.util.Map<java.util.UUID, Long> getRtpCooldownCache() { return rtpCooldownCache; }
+    public fr.elias.oreoEssentials.playtime.PlaytimeTracker getPlaytimeTracker() { return this.playtimeTracker; }
+    public PlayerNametagManager getNametagManager() { return nametagManager; }
+    public SettingsConfig getSettings() { return settings; }
+    public RtpPendingService getRtpPendingService() { return rtpPendingService; }
+    public fr.elias.oreoEssentials.rtp.RtpCrossServerBridge getRtpBridge() { return rtpBridge; }
+    public fr.elias.oreoEssentials.shards.OreoShardsModule getShardsModule() { return shardsModule; }
     public EconomyBootstrap getEcoBootstrap() { return ecoBootstrap; }
     public Economy getVaultEconomy() { return vaultEconomy; }
 }
+
 

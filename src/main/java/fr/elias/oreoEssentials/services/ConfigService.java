@@ -17,20 +17,17 @@ public class ConfigService {
         c.addDefault("homes.permissionBased", true);
         c.addDefault("tpa.timeoutSeconds", 60);
 
-        // storage defaults
         c.addDefault("storage.useMongo", false);
         c.addDefault("storage.mongo.uri", "mongodb://localhost:27017");
         c.addDefault("storage.mongo.database", "oreo");
         c.addDefault("storage.mongo.collectionPrefix", "oreo_");
 
-        // server identity default (fallback to Bukkit name if not set)
         c.addDefault("server.name", Bukkit.getServer().getName());
 
         c.options().copyDefaults(true);
         plugin.saveConfig();
     }
 
-    //  single source of truth for server id ----
     public String serverName() {
         return plugin.getConfig().getString("server.name", Bukkit.getServer().getName());
     }

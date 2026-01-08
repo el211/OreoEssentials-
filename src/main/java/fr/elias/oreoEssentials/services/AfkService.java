@@ -8,12 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Simple AFK service:
- * - Tracks AFK players
- * - Adds "[AFK]" prefix ONCE in tablist
- * - Restores original tablist name when AFK is removed
- */
+
 public class AfkService {
 
     // Who is AFK right now
@@ -26,20 +21,13 @@ public class AfkService {
         return afkPlayers.contains(player.getUniqueId());
     }
 
-    /**
-     * Toggle AFK state for a player.
-     *
-     * @return true if now AFK, false if no longer AFK.
-     */
+
     public boolean toggleAfk(Player player) {
         boolean nowAfk = !isAfk(player);
         setAfk(player, nowAfk);
         return nowAfk;
     }
 
-    /**
-     * Explicitly set AFK state.
-     */
     public void setAfk(Player player, boolean afk) {
         UUID id = player.getUniqueId();
 
@@ -54,9 +42,7 @@ public class AfkService {
         refreshTabName(player);
     }
 
-    /**
-     * Should be called on quit to clean memory.
-     */
+
     public void handleQuit(Player player) {
         UUID id = player.getUniqueId();
         afkPlayers.remove(id);
@@ -67,9 +53,7 @@ public class AfkService {
         setAfk(player, false);
     }
 
-    /**
-     * Applies the correct tablist name according to AFK state.
-     */
+
     private void refreshTabName(Player player) {
         UUID id = player.getUniqueId();
         String base = originalTabNames.getOrDefault(id, safeTabName(player));
@@ -82,9 +66,6 @@ public class AfkService {
         }
     }
 
-    /**
-     * Some plugins / forks can return null for player list name.
-     */
     private String safeTabName(Player player) {
         String listName = player.getPlayerListName();
         if (listName == null || listName.isEmpty()) {

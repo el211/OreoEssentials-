@@ -11,7 +11,6 @@ import java.net.URL;
 public final class SkinUtil {
     private SkinUtil() {}
 
-    /** Prefer a live online profile; returns null if not found. */
     public static PlayerProfile onlineProfileOf(String name) {
         try {
             var p = Bukkit.getPlayerExact(name);
@@ -27,7 +26,6 @@ public final class SkinUtil {
         }
     }
 
-    /** Copy only textures from src -> dst. */
     public static void copyTextures(PlayerProfile src, PlayerProfile dst) {
         if (src == null || dst == null) {
             SkinDebug.log("copyTextures: src/dst null");
@@ -57,7 +55,6 @@ public final class SkinUtil {
         }
     }
 
-    /** Try set a display name on the profile (not chat/tab). */
     public static boolean setProfileName(PlayerProfile profile, String name) {
         try {
             if (profile == null || name == null) return false;
@@ -71,7 +68,6 @@ public final class SkinUtil {
         }
     }
 
-    /** Apply the profile to the player. */
     public static boolean applyProfile(Player player, PlayerProfile newProfile) {
         try {
             var m = player.getClass().getMethod("setPlayerProfile", PlayerProfile.class);

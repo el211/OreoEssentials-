@@ -66,9 +66,7 @@ public class YamlStorage implements StorageApi {
         });
     }
 
-    /* ---------------------------------------------------------------------- */
-    /*                        /back global storage                        */
-    /* ---------------------------------------------------------------------- */
+
 
     @Override
     public void setBackData(UUID uuid, Map<String, Object> data) {
@@ -90,9 +88,7 @@ public class YamlStorage implements StorageApi {
         return (sec != null ? sec.getValues(false) : null);
     }
 
-    /* ---------------------------------------------------------------------- */
-    /*                         Spawn / Warps (unchanged)                      */
-    /* ---------------------------------------------------------------------- */
+
 
     @Override
     public void setSpawn(Location loc) {
@@ -139,9 +135,6 @@ public class YamlStorage implements StorageApi {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    /* ---------------------------------------------------------------------- */
-    /*                                  Homes                                  */
-    /* ---------------------------------------------------------------------- */
 
     @Override
     public boolean setHome(UUID uuid, String name, Location loc) {
@@ -209,9 +202,6 @@ public class YamlStorage implements StorageApi {
         return out;
     }
 
-    /* ---------------------------------------------------------------------- */
-    /*                           LAST LOCATION (compat)                        */
-    /* ---------------------------------------------------------------------- */
 
     @Override
     public void setLast(UUID uuid, Location loc) {
@@ -237,9 +227,7 @@ public class YamlStorage implements StorageApi {
         return LocUtil.read(player(uuid).getConfigurationSection("lastLocation"));
     }
 
-    /* ---------------------------------------------------------------------- */
-    /*                          Save / Flush / Close                           */
-    /* ---------------------------------------------------------------------- */
+
 
     private void savePlayer(UUID uuid) {
         File f = new File(dataDir, uuid + ".yml");

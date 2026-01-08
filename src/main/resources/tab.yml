@@ -1,64 +1,71 @@
 tab:
-  # Deprecated, only kept for backwards compat (real toggle is settings.yml -> features.tab.enabled)
   enabled: true
 
   use-placeholderapi: true
-  interval-ticks: 100
+  interval-ticks: 20
 
   network:
     all-servers: true
 
   header: |-
-    &8&m------------------------------\n
-    &6&lOREO&f&lESSENTIALS &7| &f%oe_network_online%&7/&f%server_max_players%\n
-    &7Local: &a%oe_local_online% &8| &7TPS: &a%server_tps_1%  &7Ping: &a%player_ping%
+    %animations_<tag interval=20>
+    &8&m------------------------------
+    |
+    &9&m------------------------------
+    </tag>%
+    %animations_<tag interval=20>
+    &9&lOREO&b&lESSENTIALS &7| &f%oe_network_online%&7/&f%server_max_players%
+    |
+    &b&lOREO&9&lESSENTIALS &7| &f%oe_network_online%&7/&f%server_max_players%
+    </tag>%
+    %animations_<tag interval=20>
+    &7Local: &9%oe_local_online% &8| &7TPS: &a%server_tps_1%  &7Ping: &b%player_ping%ms
+    |
+    &7Local: &b%oe_local_online% &8| &7TPS: &a%server_tps_1%  &7Ping: &9%player_ping%ms
+    </tag>%
+
   footer: |-
-    &8&m------------------------------\n
-    &7Welcome, &f%player_displayname%&7!  &8|  &7Balance: &a$%vault_eco_balance_formatted%\n
-    &7Discord: &fdiscord.gg/oreo  &8•  &7Store: &fstore.oreo.net
+    %animations_<tag interval=25>
+    &8&m------------------------------
+    |
+    &9&m------------------------------
+    </tag>%
+    %animations_<tag interval=25>
+    &7Welcome, &f%player_displayname%&7!  &8|  &7Balance: &9$%vault_eco_balance_formatted%
+    |
+    &7Welcome, &f%player_displayname%&7!  &8|  &7Balance: &b$%vault_eco_balance_formatted%
+    </tag>%
+    %animations_<tag interval=25>
+    &7Discord: &9discord.gg/oreo  &8•  &7Store: &9store.oreo.net
+    |
+    &7Discord: &bdiscord.gg/oreo  &8•  &7Store: &bstore.oreo.net
+    </tag>%
 
   title:
     enabled: true
     show-on-join: true
-    text: "&6&lWelcome, &e%player_displayname%&6!"
-    subtitle: "&7Enjoy your stay on &f%server_name%"
+    text: "%animations_<tag interval=10>&9&lWelcome, &b%player_displayname%&9!|&b&lWelcome, &9%player_displayname%&b!</tag>%"
+    subtitle: "&7Enjoy your stay on &b%server_name%"
     fade-in: 10
     stay: 60
     fade-out: 10
 
   name-format:
-    enabled: true          # turn ON so Oreo controls names
+    enabled: true
     use-rank-formats: true
     rank-key: "%luckperms_primary_group%"
 
-    #  what you want AFTER the name
-    # You can put anything here (or leave it empty):
-    #   - ""                        -> nothing
-    #   - " &7(%server_name%)"      -> server name
-    #   - " &8- &7%player_world%"   -> world name
-    server-tag: " &7(%server_name%)"
+    server-tag: " &8(&9%server_name%&8)"
 
-    # Use %oe_server_tag% in your pattern wherever you want the suffix
-    pattern: "&7[%luckperms_prefix%&7]&r %nick_or_name%%oe_server_tag%"
+    pattern: "&8[&9⚖&8]&r %luckperms_prefix%&r %nick_or_name%%oe_server_tag%"
 
     rank-formats:
-      default: "&7[%luckperms_prefix%&7]&r %nick_or_name%%oe_server_tag%"
-      owner: "&4&lOWNER &r%nick_or_name%%oe_server_tag%"
-      admin: "&c&lADMIN &r%nick_or_name%%oe_server_tag%"
-      mod: "&2&lMOD &r%nick_or_name%%oe_server_tag%"
-      vip: "&6⭐ &r%nick_or_name%%oe_server_tag%"
+      default: "&8[&9⚖&8]&r %luckperms_prefix%&r %nick_or_name%%oe_server_tag%"
+      owner: "&8[&b⚖&8]&r %luckperms_prefix%&r %nick_or_name%%oe_server_tag%"
+      admin: "&8[&b⚖&8]&r %luckperms_prefix%&r %nick_or_name%%oe_server_tag%"
+      mod: "&8[&9⚖&8]&r %luckperms_prefix%&r %nick_or_name%%oe_server_tag%"
+      vip: "&8[&b⚖&8]&r %luckperms_prefix%&r %nick_or_name%%oe_server_tag%"
 
     enforce-max-length: true
     max-length: 16
     overflow: "TRIM"
-
-  per-world:
-  # world_nether:
-  #   header: "&c&lNETHER\n&7%player_name%"
-  #   footer: "&7Beware of lava!"
-  #   name-format:
-  #     enabled: true
-  #     use-rank-formats: true
-  #     rank-key: "%luckperms_primary_group%"
-  #     rank-formats:
-  #       default: "&c[NETHER]&r %nick_or_name%"

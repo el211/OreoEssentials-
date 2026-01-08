@@ -19,10 +19,7 @@ public final class RetryTeleporter {
         this.log = plugin.getLogger();
     }
 
-    /**
-     * Try multiple times on the main thread: now, +2t, +10t.
-     * If the player isn’t at (roughly) the target after a step, re-apply.
-     */
+
     public void applyWithRetries(UUID playerId, Supplier<Location> targetSupplier, String tag) {
         // 0 ticks
         runOnce(playerId, targetSupplier, tag, 0);
