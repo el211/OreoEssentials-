@@ -17,7 +17,7 @@ public final class TradeConfirmPacket extends Packet {
         this.sessionId = sessionId;
         this.confirmerId = confirmerId;
     }
-
+  //
     public UUID getSessionId()  { return sessionId; }
     public UUID getConfirmerId(){ return confirmerId; }
 
