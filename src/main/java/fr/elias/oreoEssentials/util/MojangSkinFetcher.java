@@ -43,7 +43,6 @@ public final class MojangSkinFetcher {
             JsonObject json = JsonParser.parseString(response.toString()).getAsJsonObject();
             String id = json.get("id").getAsString();
 
-            // Format UUID (insert dashes)
             String formatted = id.replaceFirst(
                     "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})",
                     "$1-$2-$3-$4-$5"
@@ -62,13 +61,10 @@ public final class MojangSkinFetcher {
 
     public static PlayerProfile fetchProfileWithTextures(UUID uuid, String name) {
         try {
-            // Create profile
             PlayerProfile profile = Bukkit.createPlayerProfile(uuid, name);
 
-            // ✅ FIX: Use wildcard capture for the CompletableFuture
             CompletableFuture<? extends PlayerProfile> future = profile.update();
 
-            // Block and wait (max 10 seconds)
             PlayerProfile updated = future.get(10, TimeUnit.SECONDS);
 
             if (updated == null || updated.getTextures() == null || updated.getTextures().getSkin() == null) {
@@ -91,13 +87,11 @@ public final class MojangSkinFetcher {
 
     public static void fetchProfileAsync(UUID uuid, String name,
                                          java.util.function.Consumer<PlayerProfile> callback) {
-        // Run the blocking fetch on async thread
         Bukkit.getScheduler().runTaskAsynchronously(
                 fr.elias.oreoEssentials.OreoEssentials.get(),
                 () -> {
                     PlayerProfile profile = fetchProfileWithTextures(uuid, name);
 
-                    // Return result on main thread
                     Bukkit.getScheduler().runTask(
                             fr.elias.oreoEssentials.OreoEssentials.get(),
                             () -> callback.accept(profile)

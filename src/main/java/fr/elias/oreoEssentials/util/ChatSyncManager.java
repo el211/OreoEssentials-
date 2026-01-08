@@ -32,14 +32,10 @@
         private Channel rabbitChannel;
         private boolean enabled;
 
-        /* ----------------------------- Ctors ----------------------------- */
-
-        /** Back-compat constructor (no mute checks on receive). */
         public ChatSyncManager(boolean enabled, String rabbitUri) {
             this(enabled, rabbitUri, null);
         }
 
-        /** Preferred constructor with local mute checks on receive. */
         public ChatSyncManager(boolean enabled, String rabbitUri, MuteService muteService) {
             this.enabled = enabled;
             this.muteService = muteService;
@@ -49,7 +45,6 @@
             try {
                 ConnectionFactory factory = new ConnectionFactory();
                 factory.setUri(rabbitUri);
-                // optional: automatic recovery helps if broker restarts
                 factory.setAutomaticRecoveryEnabled(true);
                 factory.setNetworkRecoveryInterval(5000);
 
@@ -66,12 +61,7 @@
             }
         }
 
-        /* ----------------------------- Chat publish ----------------------------- */
 
-        /**
-         * Publish a chat message. Includes sender UUID so remote servers can apply their mute rules.
-         * Payload: serverUUID;;playerUUID;;base64(name);;base64(message)
-         */
         public void publishMessage(UUID playerId, String serverName, String playerName, String message) {
             if (!enabled) return;
 
@@ -85,20 +75,16 @@
             }
         }
 
-        /** Legacy publish (without UUID) – kept to avoid breaking old callers; discouraged. */
         @Deprecated
         public void publishMessage(String serverName, String playerName, String message) {
             publishMessage(new UUID(0L, 0L), serverName, playerName, message);
         }
 
-        /* ----------------------------- Control broadcast ----------------------------- */
 
-        /** Broadcast a mute to all servers. */
         public void broadcastMute(UUID playerId, long untilEpochMillis, String reason, String by) {
             if (!enabled) return;
 
             try {
-                // CTRL;;MUTE;;serverId;;playerUUID;;untilMillis;;b64(reason);;b64(by)
                 String payload = "CTRL;;MUTE;;" + SERVER_ID
                         + ";;" + playerId
                         + ";;" + untilEpochMillis
@@ -110,12 +96,10 @@
             }
         }
 
-        /** Broadcast chat control (global mute, slowmode, clear chat…) */
         public void broadcastChatControl(String type, String value, String actorName) {
             if (!enabled) return;
 
             try {
-                // CTRL;;CHAT;;type;;serverId;;b64(value);;b64(actor)
                 String payload = "CTRL;;CHAT;;"
                         + nullSafe(type)
                         + ";;" + SERVER_ID
@@ -151,7 +135,6 @@
             if (!enabled) return;
 
             try {
-                // CHANSYS;;serverId;;b64(server);;b64(channel);;b64(message)
                 String payload = EX_CHANNEL_SYS
                         + ";;" + SERVER_ID
                         + ";;" + b64(nullSafe(server))
@@ -207,25 +190,21 @@
 
                     Bukkit.getLogger().info("[ChatSync] Received message: " + msg.substring(0, Math.min(100, msg.length())));
 
-                    // ---- Control messages (mute/unmute + chat control) ----
                     if (msg.startsWith("CTRL;;")) {
                         handleControlMessage(msg);
                         return;
                     }
 
-                    // ---- Channel system messages (CHANSYS) ----
                     if (msg.startsWith(EX_CHANNEL_SYS + ";;")) {
                         handleChannelSystem(msg);
                         return;
                     }
 
-                    // ---- Channel user messages (CHANMSG) ----
                     if (msg.startsWith(EX_CHANNEL_MSG + ";;")) {
                         handleChannelMessage(msg);
                         return;
                     }
 
-                    // ---- Legacy simple chat messages ----
                     handleLegacyChat(msg);
                 };
 
@@ -236,15 +215,13 @@
             }
         }
 
-        /* ----------------------------- Message Handlers ----------------------------- */
 
         private void handleControlMessage(String msg) {
             String[] parts = msg.split(";;", 8);
             if (parts.length < 2) return;
 
-            String action = parts[1]; // "MUTE", "UNMUTE" or "CHAT"
+            String action = parts[1];
 
-            // ======== CHAT CONTROL (GLOBAL_MUTE, SLOWMODE, CLEAR_CHAT) ========
             if ("CHAT".equalsIgnoreCase(action)) {
                 if (parts.length < 6) return;
 
@@ -319,11 +296,9 @@
                 return;
             }
 
-            // ======== LEGACY MUTE / UNMUTE CONTROL ========
             if (parts.length >= 4) {
                 String originServer = parts[2];
 
-                // 🔥 FIX: Check loopback IMMEDIATELY
                 if (SERVER_ID.toString().equals(originServer)) {
                     Bukkit.getLogger().info("[ChatSync] Ignoring own MUTE/UNMUTE message");
                     return;
@@ -350,13 +325,11 @@
         }
 
         private void handleChannelSystem(String msg) {
-            // CHANSYS;;serverId;;b64(server);;b64(channel);;b64(message)
             String[] parts = msg.split(";;", 5);
             if (parts.length < 5) return;
 
             String originServerId = parts[1];
 
-            // 🔥 FIX: Check loopback IMMEDIATELY
             if (SERVER_ID.toString().equals(originServerId)) {
                 Bukkit.getLogger().info("[ChatSync] Ignoring own channel system message");
                 return;
@@ -375,13 +348,11 @@
         }
 
         private void handleChannelMessage(String msg) {
-            // CHANMSG;;serverId;;senderUUID;;b64(server);;b64(senderName);;b64(channel);;b64(message)
             String[] parts = msg.split(";;", 7);
             if (parts.length < 7) return;
 
             String originServerId = parts[1];
 
-            // 🔥 FIX: Check loopback IMMEDIATELY
             if (SERVER_ID.toString().equals(originServerId)) {
                 Bukkit.getLogger().info("[ChatSync] Ignoring own channel message");
                 return;
@@ -418,7 +389,6 @@
 
             String originServerId = split[0];
 
-            // 🔥 FIX: Check loopback IMMEDIATELY - This is the key fix!
             if (SERVER_ID.toString().equals(originServerId)) {
                 Bukkit.getLogger().info("[ChatSync] Ignoring own legacy chat message (loopback prevented)");
                 return;
@@ -433,7 +403,6 @@
                 senderUuid = UUID.fromString(senderUuidStr);
             } catch (Exception ignored) {}
 
-            // Mute check
             if (muteService != null && senderUuid != null && muteService.isMuted(senderUuid)) {
                 Bukkit.getLogger().info("[ChatSync] Blocked muted player message: " + senderUuid);
                 return;
@@ -443,15 +412,12 @@
 
             Bukkit.getLogger().info("[ChatSync] Processing legacy chat from other server: " + decodedMessage.substring(0, Math.min(50, decodedMessage.length())));
 
-            // 🔥 TRY TO DESERIALIZE AS COMPONENT (MiniMessage mode)
             Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
                 try {
-                    // Attempt to deserialize as JSON Component (from MiniMessage server)
                     Component component = GsonComponentSerializer.gson().deserialize(decodedMessage);
                     Bukkit.getServer().sendMessage(component);
                     Bukkit.getLogger().info("[ChatSync] Displayed as Component");
                 } catch (Exception e) {
-                    // Fallback: treat as plain/legacy text
                     Bukkit.getOnlinePlayers().forEach(player -> {
                         player.sendMessage(decodedMessage);
                     });
@@ -460,7 +426,6 @@
             });
         }
 
-        /* ----------------------------- Lifecycle ----------------------------- */
 
         public void close() {
             safeClose();
@@ -475,7 +440,6 @@
             } catch (Exception ignored) {}
         }
 
-        /* ----------------------------- Helpers ----------------------------- */
 
         private static String b64(String s) {
             if (s == null) s = "";

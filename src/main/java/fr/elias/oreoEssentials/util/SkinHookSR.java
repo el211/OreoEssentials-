@@ -11,8 +11,6 @@ public final class SkinHookSR {
         return Bukkit.getPluginManager().getPlugin("SkinsRestorer") != null
                 || Bukkit.getPluginManager().getPlugin("SkinsRestorerX") != null;
     }
-
-    /** Try to apply a skin by player name via SkinsRestorer. Returns true if invoked OK. */
     public static boolean applySkinByName(Player player, String skinName) {
         try {
             // API: net.skinsrestorer.api.SkinsRestorerProvider.get().getSkinApplier(player).applySkin(player, skinName);

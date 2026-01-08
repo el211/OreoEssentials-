@@ -33,30 +33,20 @@ public class SettingsConfig {
         cfg = YamlConfiguration.loadConfiguration(file);
     }
 
-    /** Direct access if needed. */
     public FileConfiguration raw() {
         return cfg;
     }
 
-    // ----------------------------------------------------------------
-    // Generic system
-    // ----------------------------------------------------------------
 
-    /** Checks whether a feature is enabled in settings.yml. */
     public boolean isEnabled(String featureKey) {
         return cfg.getBoolean("features." + featureKey + ".enabled", true);
     }
 
-    /** Reads a nested boolean option inside a feature (example: chat.discord-bridge) */
     public boolean featureOption(String featureKey, String subKey, boolean def) {
         return cfg.getBoolean("features." + featureKey + "." + subKey, def);
     }
 
-    // ----------------------------------------------------------------
-    // Typed helpers (explicit API for main systems)
-    // ----------------------------------------------------------------
 
-    // Kits
     public boolean kitsEnabled() { return isEnabled("kits"); }
 
     public boolean kitsCommandsEnabled() {
@@ -70,8 +60,6 @@ public class SettingsConfig {
         return featureOption("trade", "cross-server", true);
     }
 
-    // Chat + Discord bridge
-    /** Master toggle for Oreo chat handling based on features.chat.enabled. */
     public boolean chatEnabled() {
         return isEnabled("chat");
     }
@@ -79,8 +67,6 @@ public class SettingsConfig {
     public boolean chatDiscordBridgeEnabled() {
         return featureOption("chat", "discord-bridge", false);
     }
-
-    // 🔴 Banned words (chat)
     public boolean bannedWordsEnabled() {
         // Prefer root "chat.banned-words" if present, else "features.chat.banned-words"
         String baseKey;
