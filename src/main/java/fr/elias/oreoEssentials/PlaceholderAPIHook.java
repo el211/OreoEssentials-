@@ -51,6 +51,14 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             if (economy == null) return "0";
             return String.valueOf(economy.getBalance(player));
         }
+        if (id.equals("balance_formatted")) {
+            if (economy == null) return "0";
+            double bal = economy.getBalance(player);
+
+            java.text.DecimalFormat df = new java.text.DecimalFormat("#,##0.##");
+            return df.format(bal);
+        }
+
         /* ---------------- SERVER NICKNAMES ---------------- */
         if (id.equals("server_name")) {
             return Bukkit.getServer().getName();

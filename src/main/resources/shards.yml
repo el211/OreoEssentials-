@@ -2,7 +2,7 @@
 # Seamless world sharding like Donut SMP
 
 sharding:
-  enabled: true
+  enabled: false
   proxy: VELOCITY  # VELOCITY or BUNGEECORD
 
   # Transfer cooldown (prevents rapid back-and-forth exploits)
