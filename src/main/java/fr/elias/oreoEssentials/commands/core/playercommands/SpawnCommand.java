@@ -48,27 +48,44 @@ public class SpawnCommand implements OreoCommand {
         }
 
         final String localServer = plugin.getConfigService().serverName();
-        final SpawnDirectory spawnDir = plugin.getSpawnDirectory();
-        String targetServer = (spawnDir != null ? spawnDir.getSpawnServer() : localServer);
-        if (targetServer == null || targetServer.isBlank()) targetServer = localServer;
+        var cs = plugin.getCrossServerSettings();
+
+        // Determine target server based on cross-server setting
+        String targetServer = localServer; // Default to local server
+
+        // Only check SpawnDirectory if cross-server spawn is enabled
+        if (cs.spawn()) {
+            final SpawnDirectory spawnDir = plugin.getSpawnDirectory();
+            if (spawnDir != null) {
+                String remoteServer = spawnDir.getSpawnServer();
+                if (remoteServer != null && !remoteServer.isBlank()) {
+                    targetServer = remoteServer;
+                }
+            }
+        }
 
         log.info("[SpawnCmd] Player=" + p.getName() + " UUID=" + p.getUniqueId()
                 + " localServer=" + localServer
                 + " targetServer=" + targetServer
-                + " spawnDir=" + (spawnDir == null ? "null" : "ok"));
+                + " crossServerEnabled=" + cs.spawn());
 
         // Local spawn -> cooldown + teleport on this server
         if (targetServer.equalsIgnoreCase(localServer)) {
             return handleLocalSpawn(plugin, p, log);
         }
 
-        // Respect cross-server toggle for spawn
-        var cs = plugin.getCrossServerSettings();
-        if (!cs.spawn()) {
-            Lang.send(p, "spawn.cross-disabled",
-                    "<red>Cross-server spawn is disabled.</red>");
-            Lang.send(p, "spawn.cross-disabled-tip",
-                    "<gray>Ask an admin to enable cross-server spawn or use <yellow>/server %server%</yellow> then <yellow>/spawn</yellow>.</gray>",
+        // At this point, targetServer is remote and cross-server is enabled
+        // (otherwise targetServer would equal localServer)
+
+        final PacketManager pm = plugin.getPacketManager();
+        log.info("[SpawnCmd] Remote spawn. pm=" + (pm == null ? "null" : "ok")
+                + " pm.init=" + (pm != null && pm.isInitialized()));
+
+        if (pm == null || !pm.isInitialized()) {
+            Lang.send(p, "spawn.messaging-disabled",
+                    "<red>Cross-server messaging is disabled.</red>");
+            Lang.send(p, "spawn.messaging-disabled-tip",
+                    "<gray>Ask an admin to enable messaging or use <yellow>/server %server%</yellow> then <yellow>/spawn</yellow>.</gray>",
                     Map.of("server", targetServer));
             return true;
         }
@@ -90,7 +107,11 @@ public class SpawnCommand implements OreoCommand {
             log.warning("[SpawnCmd] Local spawn not set.");
             return true;
         }
-
+        // AJOUTER CE LOG POUR DEBUG
+        log.info("[SpawnCmd] Spawn location: world=" + spawnLoc.getWorld().getName()
+                + " x=" + spawnLoc.getX()
+                + " y=" + spawnLoc.getY()
+                + " z=" + spawnLoc.getZ());
         // Read cooldown from settings.yml: features.spawn.cooldown / cooldown-amount
         ConfigurationSection sec =
                 plugin.getSettingsConfig().getRoot().getConfigurationSection("features.spawn");

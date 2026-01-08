@@ -1217,6 +1217,15 @@ public final class OreoEssentials extends JavaPlugin {
                         new PlayerQuitPacketHandler(this)
                 );
                 packetManager.subscribe(
+                        fr.elias.oreoEssentials.rabbitmq.packet.impl.DeathMessagePacket.class,
+                        new fr.elias.oreoEssentials.rabbitmq.handler.DeathMessagePacketHandler(this)
+                );
+
+                packetManager.subscribe(
+                        fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeInvitePacket.class,
+                        new fr.elias.oreoEssentials.rabbitmq.handler.trade.TradeInvitePacketHandler(this)
+                );
+                packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeInvitePacket.class,
                         new fr.elias.oreoEssentials.rabbitmq.handler.trade.TradeInvitePacketHandler(this)
                 );
@@ -2111,7 +2120,15 @@ public final class OreoEssentials extends JavaPlugin {
                 fr.elias.oreoEssentials.cross.InvseeEditPacket.class,
                 fr.elias.oreoEssentials.cross.InvseeEditPacket::new
         );
+        pm.registerPacket(
+                fr.elias.oreoEssentials.rabbitmq.packet.impl.DeathMessagePacket.class,
+                fr.elias.oreoEssentials.rabbitmq.packet.impl.DeathMessagePacket::new
+        );
 
+        pm.registerPacket(
+                fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerWarpTeleportRequestPacket.class,
+                fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerWarpTeleportRequestPacket::new
+        );
 
         // --- Trade packets ---
         pm.registerPacket(
