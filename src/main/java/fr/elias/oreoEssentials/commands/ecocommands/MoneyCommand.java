@@ -24,7 +24,7 @@ import java.util.UUID;
 public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
 
     private final OreoEssentials plugin;
-    private final Economy vault; // may be null
+    private final Economy vault;
 
     public MoneyCommand(OreoEssentials plugin) {
         this.plugin = plugin;
