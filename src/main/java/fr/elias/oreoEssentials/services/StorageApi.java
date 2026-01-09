@@ -3,7 +3,6 @@ package fr.elias.oreoEssentials.services;
 import fr.elias.oreoEssentials.commands.core.playercommands.back.BackLocation;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import fr.elias.oreoEssentials.services.HomeService;
 
 import java.util.Map;
 import java.util.Set;
@@ -11,8 +10,17 @@ import java.util.UUID;
 
 public interface StorageApi {
 
-    void setSpawn(Location loc);
-    Location getSpawn();
+
+    void setSpawn(String server, Location loc);
+    Location getSpawn(String server);
+
+    default void setSpawn(Location loc) {
+        setSpawn(Bukkit.getServer().getName(), loc);
+    }
+
+    default Location getSpawn() {
+        return getSpawn(Bukkit.getServer().getName());
+    }
 
 
     void setWarp(String name, Location loc);
@@ -20,27 +28,28 @@ public interface StorageApi {
     Location getWarp(String name);
     Set<String> listWarps();
 
+
+
     boolean setHome(UUID uuid, String name, Location loc);
     boolean delHome(UUID uuid, String name);
     Location getHome(UUID uuid, String name);
     Set<String> homes(UUID uuid);
-    Map<String, HomeService.StoredHome> listHomes(UUID owner);
+    Map<String, fr.elias.oreoEssentials.services.HomeService.StoredHome> listHomes(UUID owner);
 
 
     void setBackData(UUID uuid, Map<String, Object> data);
-
-
     Map<String, Object> getBackData(UUID uuid);
 
-
     default void setLast(UUID uuid, Location loc) {
-        // on garde une compat simple : on n'enregistre pas de "server" ici
         if (loc == null) {
             setBackData(uuid, null);
             return;
         }
+
+        String server = Bukkit.getServer().getName();
+
         Map<String, Object> data = Map.of(
-                "server", null, // inconnu avec cette API
+                "server", server,
                 "world", loc.getWorld() != null ? loc.getWorld().getName() : "",
                 "x", loc.getX(),
                 "y", loc.getY(),
@@ -58,14 +67,14 @@ public interface StorageApi {
         BackLocation b = BackLocation.fromMap(map);
 
         String current = Bukkit.getServer().getName();
-        if (b.getServer().equalsIgnoreCase(current)) {
+        String lastServer = b.getServer();
+
+        if (lastServer != null && lastServer.equalsIgnoreCase(current)) {
             return b.toLocalLocation();
         }
 
-        return new Location(null, 0, 0, 0);
+        return null;
     }
-
-
 
     void flush();
     void close();

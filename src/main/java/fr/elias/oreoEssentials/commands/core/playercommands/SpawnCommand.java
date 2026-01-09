@@ -85,9 +85,9 @@ public class SpawnCommand implements OreoCommand {
 
         return handleRemoteSpawn(plugin, p, localServer, targetServer, log);
     }
-
     private boolean handleLocalSpawn(OreoEssentials plugin, Player p, java.util.logging.Logger log) {
-        Location spawnLoc = spawn.getSpawn();
+        String localServer = plugin.getConfigService().serverName();
+        Location spawnLoc = spawn.getSpawn(localServer);
         if (spawnLoc == null) {
             Lang.send(p, "spawn.not-set",
                     "<red>Spawn location is not set.</red>");

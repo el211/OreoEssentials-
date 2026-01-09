@@ -42,18 +42,46 @@ public class MongoHomesStorage implements StorageApi {
     /* ---------------- spawn ---------------- */
 
     @Override
+    public void setSpawn(String server, Location loc) {
+        String s = (server == null ? "" : server.trim().toLowerCase(Locale.ROOT));
+        Document key = new Document("type", "spawn").append("server", s);
+
+        metaCol.replaceOne(
+                key,
+                new Document(key).append("data", toDoc(loc)),
+                new ReplaceOptions().upsert(true)
+        );
+    }
+
+    @Override
+    public Location getSpawn(String server) {
+        String s = (server == null ? "" : server.trim().toLowerCase(Locale.ROOT));
+
+        Document d = metaCol.find(Filters.and(
+                Filters.eq("type", "spawn"),
+                Filters.eq("server", s)
+        )).first();
+
+        if (d != null) {
+            return fromDoc(d.get("data", Document.class));
+        }
+
+        // LEGACY fallback (old global spawn)
+        Document legacy = metaCol.find(Filters.eq("type", "spawn")).first();
+        if (legacy == null) return null;
+        return fromDoc(legacy.get("data", Document.class));
+    }
+
+    @Override
     public void setSpawn(Location loc) {
-        Document key = new Document("type", "spawn");
-        metaCol.replaceOne(key, key.append("data", toDoc(loc)), new ReplaceOptions().upsert(true));
+        setSpawn(Bukkit.getServer().getName(), loc);
     }
 
     @Override
     public Location getSpawn() {
-        Document d = metaCol.find(Filters.eq("type", "spawn")).first();
-        if (d == null) return null;
-        Document data = d.get("data", Document.class);
-        return fromDoc(data);
+        return getSpawn(Bukkit.getServer().getName());
     }
+
     @Override
     public void setBackData(UUID uuid, Map<String, Object> data) {
         if (data == null) {

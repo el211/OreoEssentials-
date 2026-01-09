@@ -89,21 +89,27 @@ public class MongoStorage implements StorageApi {
 
 
 
-
-
-
     /* ---------------- spawn ---------------- */
 
-    @Override public void setSpawn(Location loc) {
-        Document d = new Document("_id", "spawn").append("loc", LocUtil.toDoc(loc));
-        colSpawn.replaceOne(eq("_id", "spawn"), d, new com.mongodb.client.model.ReplaceOptions().upsert(true));
+    @Override
+    public void setSpawn(String server, Location loc) {
+        String id = "spawn:" + (server == null ? "" : server.trim().toLowerCase(Locale.ROOT));
+        Document d = new Document("_id", id).append("loc", LocUtil.toDoc(loc));
+        colSpawn.replaceOne(eq("_id", id), d, new com.mongodb.client.model.ReplaceOptions().upsert(true));
     }
 
-    @Override public Location getSpawn() {
-        Document d = colSpawn.find(eq("_id", "spawn")).first();
-        if (d == null) return null;
-        return LocUtil.fromDoc(d.get("loc", Document.class));
+    @Override
+    public Location getSpawn(String server) {
+        String id = "spawn:" + (server == null ? "" : server.trim().toLowerCase(Locale.ROOT));
+        Document d = colSpawn.find(eq("_id", id)).first();
+        if (d != null) return LocUtil.fromDoc(d.get("loc", Document.class));
+
+        // LEGACY fallback
+        Document legacy = colSpawn.find(eq("_id", "spawn")).first();
+        if (legacy == null) return null;
+        return LocUtil.fromDoc(legacy.get("loc", Document.class));
     }
+
 
     /* ---------------- warps ---------------- */
 

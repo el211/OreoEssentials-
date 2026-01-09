@@ -30,15 +30,15 @@ public class SetSpawnCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         Player p = (Player) sender;
 
-        spawn.setSpawn(p.getLocation());
+        String local = OreoEssentials.get().getConfigService().serverName();
+
+        spawn.setSpawn(local, p.getLocation());
 
         Lang.send(p, "admin.setspawn.set",
                 "<green>Spawn set.</green>");
 
-        // Record owner server if directory exists (cross-server)
         SpawnDirectory spawnDir = OreoEssentials.get().getSpawnDirectory();
         if (spawnDir != null) {
-            String local = OreoEssentials.get().getConfig().getString("server.name", Bukkit.getServer().getName());
             spawnDir.setSpawnServer(local);
 
             Lang.send(p, "admin.setspawn.cross-server-info",
@@ -48,4 +48,5 @@ public class SetSpawnCommand implements OreoCommand {
 
         return true;
     }
+
 }

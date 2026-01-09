@@ -91,17 +91,26 @@ public class YamlStorage implements StorageApi {
 
 
     @Override
-    public void setSpawn(Location loc) {
-        var sec = spawn.getConfigurationSection("spawn");
-        if (sec == null) sec = spawn.createSection("spawn");
+    public void setSpawn(String server, Location loc) {
+        String key = (server == null ? "" : server.trim().toLowerCase(Locale.ROOT));
+
+        ConfigurationSection sec = spawn.getConfigurationSection("spawns." + key);
+        if (sec == null) sec = spawn.createSection("spawns." + key);
+
         LocUtil.write(sec, loc);
         saveSpawn();
     }
 
     @Override
-    public Location getSpawn() {
+    public Location getSpawn(String server) {
+        String key = (server == null ? "" : server.trim().toLowerCase(Locale.ROOT));
+
+        Location loc = LocUtil.read(spawn.getConfigurationSection("spawns." + key));
+        if (loc != null) return loc;
+
         return LocUtil.read(spawn.getConfigurationSection("spawn"));
     }
+
 
     @Override
     public void setWarp(String name, Location loc) {
