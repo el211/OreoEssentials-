@@ -29,14 +29,11 @@ public class EcCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
 
-        // Open the Ender Chest GUI
         p.openInventory(ecService.createVirtualEc(p));
 
-        // Notify the player that Ender Chest was opened
         Lang.send(p, "enderchest.opened",
                 "<light_purple>Ender Chest opened.</light_purple>");
 
-        // Show warning if cross-server is disabled
         if (!crossServer) {
             Lang.send(p, "enderchest.local-only",
                     "<yellow>Note: cross-server EC is disabled. This EC is local to this server.</yellow>");

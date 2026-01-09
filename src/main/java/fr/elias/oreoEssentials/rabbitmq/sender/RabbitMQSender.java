@@ -73,7 +73,6 @@ public class RabbitMQSender implements PacketSender {
         try {
             if (connection != null && connection.isOpen() && channel != null && channel.isOpen()) return;
             connect();
-            // After fresh connect, re-declare and re-bind consumers for previously registered queues
             rebindAllConsumers();
         } catch (Exception e) {
             throw new IllegalStateException("RabbitMQ not connected and reconnect failed", e);

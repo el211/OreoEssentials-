@@ -36,7 +36,6 @@ public class ServerProxyCommand implements OreoCommand, org.bukkit.command.TabCo
 
         String target = args[0];
 
-        // Try to send immediately; if we don't have it cached yet, we'll still attempt the switch.
         proxy.connect(p, target);
 
         Lang.send(sender, "server.connecting",

@@ -37,12 +37,10 @@ public class HomesGuiCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
 
-        // Use Lang for GUI title
         String title = Lang.msgLegacy("homes.gui.title",
                 "<dark_green>Your Homes</dark_green>",
                 p);
 
-        // Open inventory
         SmartInventory inv = SmartInventory.builder()
                 .id("oreo:homes")
                 .provider(new HomesGuiProvider(homes))
@@ -55,7 +53,6 @@ public class HomesGuiCommand implements OreoCommand {
         return true;
     }
 
-    /* ---------------- helpers exposed for provider ---------------- */
 
     static boolean crossServerTeleport(HomeService homes, Player p, String homeName) {
         final String key = homeName.toLowerCase();

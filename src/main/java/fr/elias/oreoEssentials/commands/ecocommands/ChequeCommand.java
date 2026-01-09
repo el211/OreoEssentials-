@@ -25,18 +25,10 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
 
-/**
- * Creates and redeems paper "cheques" for money.
- * Works with your Database first; falls back to Vault if present.
- *
- * Lang usage:
- * - Send strings with Lang.msg(key, vars, viewer) to get PAPI + MiniMessage/& support.
- * - For console/plain usage, pass viewer = null.
- */
 public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
 
     private final OreoEssentials plugin;
-    private final Economy vault; // may be null
+    private final Economy vault;
     private final NamespacedKey chequeKey;
 
     public ChequeCommand(OreoEssentials plugin) {
@@ -47,7 +39,6 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    /* ================= Bukkit CommandExecutor ================= */
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -57,7 +48,6 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
             return true;
         }
 
-        // accept both new and legacy perms
         boolean canCreate = player.hasPermission("oreo.cheque.create") || player.hasPermission("rabbiteconomy.cheque.create");
         boolean canRedeem = player.hasPermission("oreo.cheque.redeem") || player.hasPermission("rabbiteconomy.cheque.redeem");
 
@@ -84,7 +74,6 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
                 return true;
             }
 
-            // Prefer your database
             if (plugin.getDatabase() != null) {
                 UUID id = player.getUniqueId();
                 Async.run(() -> {
@@ -108,7 +97,6 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
                 return true;
             }
 
-            // Vault fallback
             if (vault != null) {
                 double bal = vault.getBalance(player);
                 if (bal + 1e-9 < amount) {
@@ -148,7 +136,6 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
         return true;
     }
 
-    /* ================= Right-click redeem ================= */
 
     @EventHandler
     public void onUseCheque(PlayerInteractEvent e) {
@@ -166,7 +153,6 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
         redeemCheque(p, item, amt);
     }
 
-    /* ================= Core logic ================= */
 
     private void redeemCheque(Player player, ItemStack item, double amount) {
         // DB preferred
@@ -186,7 +172,6 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
             return;
         }
 
-        // Vault fallback
         if (vault != null) {
             vault.depositPlayer(player, amount);
             removeOne(item);
@@ -229,7 +214,6 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
         stack.setAmount(Math.max(0, amt - 1));
     }
 
-    /* ================= Util ================= */
 
     private void runSync(Runnable r) {
         if (Bukkit.isPrimaryThread()) r.run();
@@ -261,7 +245,6 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
         return Lang.get("economy.currency.symbol", "$");
     }
 
-    /* ================= OreoCommand ================= */
 
     @Override public String name() { return "cheque"; }
     @Override public List<String> aliases() { return List.of(); }
@@ -271,7 +254,6 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        // Delegate to Bukkit's path to preserve behavior
         return onCommand(sender, null, label, args);
     }
 }

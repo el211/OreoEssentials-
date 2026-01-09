@@ -245,7 +245,7 @@ public final class LegacySettingsMigrator {
                                                      String oldPath,
                                                      FileConfiguration targetCfg,
                                                      String newPath) {
-        FileConfiguration root = plugin.getConfig(); // old config.yml
+        FileConfiguration root = plugin.getConfig();
         if (!root.isSet(oldPath)) return false;
         if (targetCfg.isSet(newPath)) return false;
 

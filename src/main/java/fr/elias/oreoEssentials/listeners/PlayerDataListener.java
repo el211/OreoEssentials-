@@ -15,7 +15,6 @@ public class PlayerDataListener implements Listener {
 
     public PlayerDataListener(OreoEssentials plugin) {
         this.plugin = plugin;
-        // ❌ remove: Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     @EventHandler

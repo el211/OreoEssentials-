@@ -14,20 +14,6 @@ import org.bukkit.entity.Player;
 
 import java.util.Arrays;
 
-/**
- * World gamerules configuration menu.
- *
- * ✅ VERIFIED PERFECT - Pure GUI display (uses § for ItemStack display, which is correct)
- *
- * Features:
- * - Toggle boolean gamerules (doDaylightCycle, doWeatherCycle, etc.)
- * - Cycle integer gamerules (randomTickSpeed)
- * - Live value display
- * - Auto-refresh on change
- * - Persists to config
- *
- * No user chat messages - pure GUI interaction.
- */
 public class WorldGamerulesMenu implements InventoryProvider {
     private final OreoEssentials plugin;
     private final ModGuiService svc;

@@ -22,7 +22,6 @@ public class AnvilCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
 
-        // Use Lang for GUI title - it automatically converts to legacy § format
         String title = Lang.msgLegacy("anvil.title", "<dark_gray>Anvil</dark_gray>", p);
 
         Inventory anvil = Bukkit.createInventory(p, InventoryType.ANVIL, title);

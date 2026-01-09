@@ -11,14 +11,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * ItemStack builder utility for GUI creation.
- *
- * ✅ VERIFIED PERFECT - GUI utility (uses § for visual styling, which is correct)
- *
- * This is a helper class for building ItemStacks for GUI menus.
- * Using § color codes here is the correct practice for GUI item display.
- */
+
 public final class ItemBuilder {
     private final ItemStack item;
 

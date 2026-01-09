@@ -17,17 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * ModGUI service - moderation GUI system.
- *
- * ✅ VERIFIED - Uses Lang.send() for 2 user messages
- *
- * Features:
- * - Main GUI with player/world/server moderation
- * - Chat mute/slowmode state management
- * - Staff chat toggle (per-player)
- * - Slowmode tracking
- */
+
 public class ModGuiService implements TabExecutor {
     private final OreoEssentials plugin;
     private final InventoryManager inv;

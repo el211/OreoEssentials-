@@ -30,21 +30,19 @@ public final class OeTimeCommand implements TabExecutor {
         String mode = args[0].toLowerCase(Locale.ROOT);
         Long ticks = null;
 
-        if (mode.equals("day"))      ticks = 1000L;   // ~07:00
-        else if (mode.equals("night")) ticks = 13000L; // ~19:00
+        if (mode.equals("day"))      ticks = 1000L;
+        else if (mode.equals("night")) ticks = 13000L;
         else {
-            // specific hour 1..23 => map to ticks (simple 1k ticks per hour)
             try {
                 int h = Integer.parseInt(mode);
                 if (h < 1 || h > 23) throw new NumberFormatException();
-                ticks = (h * 1000L) % 24000L; // simple mapping
+                ticks = (h * 1000L) % 24000L;
             } catch (NumberFormatException e) {
                 sender.sendMessage("§cInvalid time: §f" + mode + " §7(use §fday§7, §fnight§7, or hour §f1-23§7).");
                 return true;
             }
         }
 
-        // Resolve worlds
         List<World> targets;
         if (args.length >= 2) {
             String w = args[1];

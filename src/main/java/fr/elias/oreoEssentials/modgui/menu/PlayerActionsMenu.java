@@ -27,24 +27,10 @@ import fr.elias.oreoEssentials.modgui.invsee.InvSeeMenu;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Player actions menu - moderation actions for a specific player.
- *
- * ✅ VERIFIED - Uses Lang.send() for 2 user messages + § for GUI items
- *
- * Features:
- * - Ban, mute, kick, heal, feed, kill
- * - Inventory inspection (InvSee, EcSee)
- * - Freeze, vanish, gamemode toggle
- * - Player notes, IP/alts lookup
- * - Live stats inspector
- *
- * All actions use cross-server ModBridge when available.
- */
+
 public class PlayerActionsMenu implements InventoryProvider {
     private final OreoEssentials plugin;
     private final UUID target;
-    /** Optional back action supplied by caller (can be null). */
     private final Runnable onBack;
 
     public PlayerActionsMenu(OreoEssentials plugin, UUID target) {

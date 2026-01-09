@@ -40,7 +40,6 @@ public class SpawnCommand implements OreoCommand {
         final var log = plugin.getLogger();
         if (!(sender instanceof Player p)) return true;
 
-        // Feature toggle (settings.yml: features.spawn.enabled)
         if (!plugin.getSettingsConfig().isEnabled("spawn")) {
             Lang.send(p, "spawn.disabled",
                     "<red>Spawn command is currently disabled.</red>");
@@ -50,10 +49,8 @@ public class SpawnCommand implements OreoCommand {
         final String localServer = plugin.getConfigService().serverName();
         var cs = plugin.getCrossServerSettings();
 
-        // Determine target server based on cross-server setting
         String targetServer = localServer; // Default to local server
 
-        // Only check SpawnDirectory if cross-server spawn is enabled
         if (cs.spawn()) {
             final SpawnDirectory spawnDir = plugin.getSpawnDirectory();
             if (spawnDir != null) {
@@ -69,13 +66,10 @@ public class SpawnCommand implements OreoCommand {
                 + " targetServer=" + targetServer
                 + " crossServerEnabled=" + cs.spawn());
 
-        // Local spawn -> cooldown + teleport on this server
         if (targetServer.equalsIgnoreCase(localServer)) {
             return handleLocalSpawn(plugin, p, log);
         }
 
-        // At this point, targetServer is remote and cross-server is enabled
-        // (otherwise targetServer would equal localServer)
 
         final PacketManager pm = plugin.getPacketManager();
         log.info("[SpawnCmd] Remote spawn. pm=" + (pm == null ? "null" : "ok")
@@ -90,15 +84,9 @@ public class SpawnCommand implements OreoCommand {
             return true;
         }
 
-        // Remote spawn -> cooldown on current server, then packet + proxy switch
         return handleRemoteSpawn(plugin, p, localServer, targetServer, log);
     }
 
-    /**
-     * Local spawn (targetServer == localServer).
-     * Applies cooldown (if enabled) and then teleports the player to spawn.
-     * OPs bypass the cooldown.
-     */
     private boolean handleLocalSpawn(OreoEssentials plugin, Player p, java.util.logging.Logger log) {
         Location spawnLoc = spawn.getSpawn();
         if (spawnLoc == null) {
@@ -107,21 +95,17 @@ public class SpawnCommand implements OreoCommand {
             log.warning("[SpawnCmd] Local spawn not set.");
             return true;
         }
-        // AJOUTER CE LOG POUR DEBUG
         log.info("[SpawnCmd] Spawn location: world=" + spawnLoc.getWorld().getName()
                 + " x=" + spawnLoc.getX()
                 + " y=" + spawnLoc.getY()
                 + " z=" + spawnLoc.getZ());
-        // Read cooldown from settings.yml: features.spawn.cooldown / cooldown-amount
         ConfigurationSection sec =
                 plugin.getSettingsConfig().getRoot().getConfigurationSection("features.spawn");
         boolean enabled = sec != null && sec.getBoolean("cooldown", false);
         int seconds     = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
 
-        // OP bypass
         boolean bypassCooldown = p.isOp();
 
-        // No cooldown configured OR OP -> immediate teleport (legacy behavior)
         if (bypassCooldown || !enabled || seconds <= 0) {
             try {
                 p.teleport(spawnLoc);
@@ -138,7 +122,6 @@ public class SpawnCommand implements OreoCommand {
             return true;
         }
 
-        // Cooldown enabled: countdown with "no movement" rule (no block movement)
         final Location origin = p.getLocation().clone();
 
         new BukkitRunnable() {
@@ -152,7 +135,6 @@ public class SpawnCommand implements OreoCommand {
                     return;
                 }
 
-                // Cancel if player moved to another block/world (head rotation allowed)
                 if (hasBodyMoved(p, origin)) {
                     cancel();
                     Lang.send(p, "spawn.cancelled-moved",
@@ -177,7 +159,6 @@ public class SpawnCommand implements OreoCommand {
                     return;
                 }
 
-                // Show countdown to the player
                 String title = Lang.msgWithDefault(
                         "teleport.countdown.title",
                         "<yellow>Teleporting...</yellow>",
@@ -199,11 +180,7 @@ public class SpawnCommand implements OreoCommand {
         return true;
     }
 
-    /**
-     * Remote spawn: countdown on current server, then send SpawnTeleportRequestPacket
-     * + proxy switch via plugin messaging.
-     * OPs bypass the cooldown.
-     */
+
     private boolean handleRemoteSpawn(OreoEssentials plugin,
                                       Player p,
                                       String localServer,
@@ -223,18 +200,15 @@ public class SpawnCommand implements OreoCommand {
             return true;
         }
 
-        // Read cooldown from settings.yml: features.spawn.cooldown / cooldown-amount
         ConfigurationSection sec =
                 plugin.getSettingsConfig().getRoot().getConfigurationSection("features.spawn");
         boolean enabled = sec != null && sec.getBoolean("cooldown", false);
         int seconds     = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
 
-        // OP bypass
         boolean bypassCooldown = p.isOp();
 
         final String requestId = UUID.randomUUID().toString();
 
-        // If no cooldown configured OR OP -> behave like before (instant request + server switch)
         if (bypassCooldown || !enabled || seconds <= 0) {
             plugin.getLogger().info("[SPAWN/SEND] (no cooldown"
                     + (bypassCooldown ? " / OP bypass" : "")
@@ -264,7 +238,6 @@ public class SpawnCommand implements OreoCommand {
             return true;
         }
 
-        // Cooldown enabled: countdown on current server, then send packet + switch.
         final Location origin = p.getLocation().clone();
 
         plugin.getLogger().info("[SPAWN/SEND] (cooldown) from=" + localServer
@@ -284,7 +257,6 @@ public class SpawnCommand implements OreoCommand {
                     return;
                 }
 
-                // Cancel if player moved to another block/world (head rotation allowed)
                 if (hasBodyMoved(p, origin)) {
                     cancel();
                     Lang.send(p, "spawn.cancelled-moved",
@@ -319,7 +291,6 @@ public class SpawnCommand implements OreoCommand {
                     return;
                 }
 
-                // Show countdown to the player
                 String title = Lang.msgWithDefault(
                         "teleport.countdown.title",
                         "<yellow>Teleporting...</yellow>",
@@ -341,7 +312,6 @@ public class SpawnCommand implements OreoCommand {
         return true;
     }
 
-    /** Bungee/Velocity plugin message switch */
     private boolean sendPlayerToServer(Player p, String serverName) {
         final var plugin = OreoEssentials.get();
         final var log = plugin.getLogger();
@@ -359,9 +329,6 @@ public class SpawnCommand implements OreoCommand {
         }
     }
 
-    /**
-     * Check if player moved to another block/world (head rotation allowed).
-     */
     private boolean hasBodyMoved(Player p, Location origin) {
         Location now = p.getLocation();
         return !now.getWorld().equals(origin.getWorld())

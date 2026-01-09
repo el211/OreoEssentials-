@@ -52,7 +52,7 @@ public final class RecipesStorage {
         cfg.set(base + ".result", r.getResult());
         cfg.set(base + ".grid", r.asList());
         cfg.set(base + ".shapeless", r.isShapeless());
-        cfg.set(base + ".permission", r.getPermission()); // may be null => removed
+        cfg.set(base + ".permission", r.getPermission());
         cfg.save(file);
     }
 

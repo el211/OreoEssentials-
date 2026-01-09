@@ -16,19 +16,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Player inspector menu - live stats viewer.
- *
- * ✅ VERIFIED - Uses Lang.send() for 2 user messages + Lang.get() for GUI text
- *
- * Features:
- * - Live health, food, gamemode display
- * - Location tracking
- * - Ping and TPS monitoring
- * - Remote player detection (via PlayerDirectory)
- * - InvSee button
- * - Auto-refreshing display
- */
+
 public class PlayerInspectMenu implements InventoryProvider {
 
     private final OreoEssentials plugin;

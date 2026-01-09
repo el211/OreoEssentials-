@@ -50,7 +50,6 @@ public class TpAcceptCommand implements OreoCommand {
         return true;
     }
 
-    // ---- debug helpers (same pattern as /tpa) ----
     private static String traceId() {
         return Long.toString(ThreadLocalRandom.current().nextLong(2176782336L), 36)
                 .toUpperCase(Locale.ROOT);
@@ -112,10 +111,7 @@ public class TpAcceptCommand implements OreoCommand {
 
         D(id, "enter player=" + target.getName() + " server=" + server);
 
-        // ===========================================================
-        // 1) Cross-server accept path
-        //    (unchanged logic; broker handles everything)
-        // ===========================================================
+
         try {
             var broker = OreoEssentials.get().getTpaBroker();
             if (broker == null) {
@@ -136,12 +132,7 @@ public class TpAcceptCommand implements OreoCommand {
             E(id, "broker.acceptCrossServer threw", t);
         }
 
-        // ===========================================================
-        // 2) Local same-server accept path
-        //    Now goes through a countdown based on settings.yml
-        // ===========================================================
         try {
-            //  find the requester (player who did /tpa <target>)
             Player requester = tpa.getRequester(target);
             if (requester == null || !requester.isOnline()) {
                 D(id, "no requester found for target=" + target.getName());
@@ -161,21 +152,7 @@ public class TpAcceptCommand implements OreoCommand {
         }
     }
 
-    /**
-     * Starts a countdown before actually performing the local TPA accept.
-     * Reads:
-     *
-     * features:
-     *   tpa:
-     *     cooldown: true
-     *     cooldown-amount: 5
-     *
-     * During the countdown:
-     * - If the target (/tpaccept user) disconnects → cancel.
-     * - If the requester (/tpa user) disconnects → cancel.
-     * - If the requester moves to another block or world → cancel.
-     *   (head rotation allowed, we only check block coordinates/world)
-     */
+
     private void startTpaAcceptCountdown(Player target, Player requester, String traceId) {
         OreoEssentials plugin = OreoEssentials.get();
 
@@ -194,7 +171,6 @@ public class TpAcceptCommand implements OreoCommand {
 
         D(traceId, "starting TPA accept cooldown: " + seconds + "s");
 
-        // Store the starting block position of the requester (the one who did /tpa)
         final Location startLoc = requester.getLocation().clone();
 
         new BukkitRunnable() {
@@ -202,7 +178,6 @@ public class TpAcceptCommand implements OreoCommand {
 
             @Override
             public void run() {
-                // If either player goes offline, cancel
                 if (!target.isOnline()) {
                     D(traceId, "target offline during countdown; cancel");
                     cancel();
@@ -215,7 +190,6 @@ public class TpAcceptCommand implements OreoCommand {
                     return;
                 }
 
-                // Check if requester moved (block coords or world changed)
                 Location now = requester.getLocation();
                 if (!now.getWorld().equals(startLoc.getWorld())
                         || now.getBlockX() != startLoc.getBlockX()
@@ -224,7 +198,6 @@ public class TpAcceptCommand implements OreoCommand {
 
                     D(traceId, "requester moved during countdown; cancelling TPA");
                     cancel();
-                    // Cancel the pending request and notify both players
                     tpa.cancelRequestDueToMovement(target, requester);
                     return;
                 }
@@ -236,7 +209,6 @@ public class TpAcceptCommand implements OreoCommand {
                     return;
                 }
 
-                // Show countdown to the REQUESTER (the one who did /tpa <player>)
                 String title = Lang.msgWithDefault(
                         "teleport.countdown.title",
                         "<yellow>Teleporting...</yellow>",
@@ -256,10 +228,7 @@ public class TpAcceptCommand implements OreoCommand {
         }.runTaskTimer(plugin, 0L, 20L);
     }
 
-    /**
-     * Original local accept logic, extracted from execute() so it can be reused
-     * both with and without countdown.
-     */
+
     private void runLocalAccept(Player target, String id) {
         long t2 = System.nanoTime();
         boolean ok = tpa.accept(target);

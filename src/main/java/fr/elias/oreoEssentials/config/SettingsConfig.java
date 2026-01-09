@@ -96,21 +96,15 @@ public class SettingsConfig {
                 .toList();
     }
 
-    // Player Vaults
     public boolean playerVaultsEnabled() { return isEnabled("playervaults"); }
 
-    // Economy
     public boolean economyEnabled() { return isEnabled("economy"); }
 
-    // Portals
     public boolean portalsEnabled() { return isEnabled("portals"); }
 
-    // JumpPads
     public boolean jumpPadsEnabled() { return isEnabled("jumppads"); }
 
-    // RTP
     public boolean rtpEnabled() { return isEnabled("rtp"); }
-    // RTP warmup (title countdown like /home)
     public boolean rtpWarmupEnabled() {
         if (cfg.isSet("features.rtp.warmup")) {
             return cfg.getBoolean("features.rtp.warmup", false);
@@ -129,32 +123,24 @@ public class SettingsConfig {
     }
 
 
-    // Bossbar
     public boolean bossbarEnabled() { return isEnabled("bossbar"); }
 
-    // Scoreboard
     public boolean scoreboardEnabled() { return isEnabled("scoreboard"); }
 
-    // Sit
     public boolean sitEnabled() { return isEnabled("sit"); }
 
     public boolean getBoolean(String path, boolean def) {
         return cfg.getBoolean(path, def);
     }
 
-    // Playtime Rewards
     public boolean playtimeRewardsEnabled() { return isEnabled("playtime-rewards"); }
 
-    // Discord Moderation
     public boolean discordModerationEnabled() { return isEnabled("discord-moderation"); }
 
-    // OreoHolograms
     public boolean oreoHologramsEnabled() { return isEnabled("oreoholograms"); }
 
-    // ClearLag
     public boolean clearLagEnabled() { return isEnabled("clearlag"); }
 
-    // Mobs healthbar
     public boolean mobsEnabled() { return isEnabled("mobs"); }
     public boolean worldShardingEnabled() {
         return getRoot().getBoolean("features.world-sharding.enabled", false);
@@ -163,12 +149,10 @@ public class SettingsConfig {
         return mobsEnabled() && featureOption("mobs", "healthbar", true);
     }
 
-    // TAB
     public boolean tabEnabled() {
         return isEnabled("tab");
     }
 
-    // Alias used by CrossServerSettings
     public FileConfiguration getRoot() {
         return cfg;
     }

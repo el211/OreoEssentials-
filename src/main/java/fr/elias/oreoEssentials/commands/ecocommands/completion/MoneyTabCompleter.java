@@ -20,9 +20,8 @@ public class MoneyTabCompleter implements TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        // /money <action> [player] [amount]
 
-        // -------- arg 1: action (give/take/set) ----------
+
         if (args.length == 1) {
             List<String> completions = new ArrayList<>();
 
@@ -43,19 +42,16 @@ public class MoneyTabCompleter implements TabCompleter {
                     .toList();
         }
 
-        // -------- arg 2: player name ----------
         if (args.length == 2) {
             String prefix = args[1].toLowerCase(Locale.ROOT);
             Set<String> names = new HashSet<>();
 
-            // 1) Local online players
             for (Player p : Bukkit.getOnlinePlayers()) {
                 if (p.getName() != null) {
                     names.add(p.getName());
                 }
             }
 
-            // 2) Network-online players via PlayerDirectory
             PlayerDirectory dir = plugin.getPlayerDirectory(); // adjust getter name if needed
             if (dir != null) {
                 names.addAll(dir.suggestOnlineNames(prefix, 80));
@@ -67,7 +63,6 @@ public class MoneyTabCompleter implements TabCompleter {
                     .toList();
         }
 
-        // -------- arg 3: amount ----------
         if (args.length == 3) {
             List<String> amounts = List.of("100", "500", "1000", "5000", "10000");
             String prefix = args[2];

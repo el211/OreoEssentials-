@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/packet/impl/TpaBringPacket.java
 package fr.elias.oreoEssentials.rabbitmq.packet.impl;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
@@ -7,7 +6,6 @@ import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteOutputStream;
 
 import java.util.UUID;
 
-/** Instructs the requester's CURRENT server to connect them to targetServer. */
 public class TpaBringPacket extends Packet {
     private UUID requesterUuid;
     private String targetServer; // where to connect the requester

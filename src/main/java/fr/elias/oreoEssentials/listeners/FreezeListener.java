@@ -19,7 +19,6 @@ public class FreezeListener implements Listener {
     public void onMove(PlayerMoveEvent e) {
         Player p = e.getPlayer();
         if (!service.isFrozen(p.getUniqueId())) return;
-        // Allow head rotation but prevent position change
         if (e.getFrom().getX() != e.getTo().getX() || e.getFrom().getZ() != e.getTo().getZ() || e.getFrom().getY() != e.getTo().getY()) {
             e.setTo(e.getFrom().clone().setDirection(e.getTo().getDirection()));
         }
@@ -32,7 +31,6 @@ public class FreezeListener implements Listener {
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent e) {
         if (!service.isFrozen(e.getPlayer().getUniqueId())) return;
-        // allow a couple of harmless commands
         String msg = e.getMessage().toLowerCase();
         if (msg.startsWith("/msg") || msg.startsWith("/tell") || msg.startsWith("/r") || msg.startsWith("/reply")) return;
         e.setCancelled(true);

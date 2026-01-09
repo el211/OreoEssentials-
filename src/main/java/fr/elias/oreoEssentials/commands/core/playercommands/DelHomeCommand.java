@@ -26,7 +26,6 @@ public class DelHomeCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (args.length < 1) {
-            // Show usage message with proper MiniMessage format
             Lang.send(sender,
                     "delhome.usage",
                     "<yellow>Usage: /%label% <name></yellow>",
@@ -37,7 +36,6 @@ public class DelHomeCommand implements OreoCommand {
         Player p = (Player) sender;
         String rawName = args[0];
 
-        // Attempt to delete the home
         if (homes.delHome(p.getUniqueId(), rawName)) {
             Lang.send(p,
                     "delhome.removed",

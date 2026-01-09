@@ -30,7 +30,6 @@ public class ConfirmDeleteWarpGui implements InventoryProvider {
     }
 
     public static void open(Player p, WarpService warps, String warpName, Runnable onConfirm, Runnable onCancel) {
-        // Use Lang for GUI title - automatically converts to legacy § format
         String title = Lang.msgLegacy("warps.delete.title",
                 "<dark_red>Delete '%warp%'?</dark_red>",
                 Map.of("warp", warpName),
@@ -48,18 +47,14 @@ public class ConfirmDeleteWarpGui implements InventoryProvider {
 
     @Override
     public void init(Player p, InventoryContents contents) {
-        // Info item at top center
         contents.set(0, 4, fr.minuskube.inv.ClickableItem.empty(infoItem(p, warpName)));
 
-        // YES button (green concrete) at row 1, column 3
         contents.set(SlotPos.of(1, 3), fr.minuskube.inv.ClickableItem.of(
                 actionItem(p, Material.GREEN_CONCRETE,
                         Lang.msgLegacy("warps.delete.yes", "<green>Yes, delete</green>", p)),
                 e -> {
-                    // Delete the warp
                     boolean ok = warps.delWarp(warpName.toLowerCase());
 
-                    // Send feedback message using Lang
                     if (ok) {
                         Lang.send(p, "warps.delete.success",
                                 "<red>Deleted warp <yellow>%warp%</yellow>.</red>",
@@ -74,7 +69,6 @@ public class ConfirmDeleteWarpGui implements InventoryProvider {
                     if (onConfirm != null) onConfirm.run();
                 }));
 
-        // NO button (red concrete) at row 1, column 5
         contents.set(SlotPos.of(1, 5), fr.minuskube.inv.ClickableItem.of(
                 actionItem(p, Material.RED_CONCRETE,
                         Lang.msgLegacy("warps.delete.no", "<red>No, cancel</red>", p)),
@@ -86,24 +80,17 @@ public class ConfirmDeleteWarpGui implements InventoryProvider {
 
     @Override
     public void update(Player player, InventoryContents contents) {
-        // No updates needed for this static confirmation GUI
     }
 
-    /* --------------- Helper Methods for Creating Items --------------- */
 
-    /**
-     * Creates the informational item (paper) shown at the top of the GUI.
-     */
     private ItemStack infoItem(Player p, String name) {
         ItemStack it = new ItemStack(Material.PAPER);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) {
-            // Use Lang for display name
             String displayName = Lang.msgLegacy("warps.delete.info.title",
                     "<gold>Delete Warp</gold>", p);
             meta.setDisplayName(displayName);
 
-            // Use Lang for lore - note the variable replacement for warp name
             List<String> lore = List.of(
                     Lang.msgLegacy("warps.delete.info.lore.0",
                             "<gray>Are you sure you want to delete</gray>", p),
@@ -118,14 +105,11 @@ public class ConfirmDeleteWarpGui implements InventoryProvider {
         return it;
     }
 
-    /**
-     * Creates an action button item (YES/NO concrete blocks).
-     */
+
     private ItemStack actionItem(Player p, Material mat, String title) {
         ItemStack it = new ItemStack(mat);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) {
-            // Title already formatted by Lang.msgLegacy in init()
             meta.setDisplayName(title);
             it.setItemMeta(meta);
         }

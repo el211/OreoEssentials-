@@ -22,10 +22,8 @@ public class FurnaceCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
 
-        // Use Lang for GUI title - automatically converts to legacy § format
         String title = Lang.msgLegacy("furnace.title", "<dark_gray>Furnace</dark_gray>", p);
 
-        // Open a portable Furnace GUI (no block required)
         Inventory inv = Bukkit.createInventory(p, InventoryType.FURNACE, title);
         p.openInventory(inv);
 

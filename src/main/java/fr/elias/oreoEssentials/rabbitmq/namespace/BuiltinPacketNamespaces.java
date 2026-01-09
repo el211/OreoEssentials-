@@ -15,7 +15,6 @@ public final class BuiltinPacketNamespaces {
     // Register your built-in namespaces here
     public static final PacketNamespace ECONOMY = add(new EconomyPacketNamespace());
 
-    /** PacketRegistry will later call namespace.registerInto(this) lazily. */
     public static Collection<PacketNamespace> getNamespaces() {
         return NAMESPACE_BY_ID.values();
     }
@@ -27,7 +26,6 @@ public final class BuiltinPacketNamespaces {
                     "Namespace with id " + ns.getNamespaceId() + " is already registered"
             );
         }
-        // DO NOT call ns.registerPackets() here — it’s lazy & protected.
         return ns;
     }
 }

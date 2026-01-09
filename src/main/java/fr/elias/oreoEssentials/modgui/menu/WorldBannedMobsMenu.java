@@ -22,18 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-/**
- * World-specific banned mobs menu.
- *
- * ✅ VERIFIED - Uses Lang.send() for 2 user messages + § for GUI items
- *
- * Features:
- * - Toggle ban status for any mob type
- * - Visual glow for banned mobs
- * - Sound feedback on toggle
- * - Comprehensive mob list (all Minecraft entities)
- * - Per-world configuration
- */
+
 public class WorldBannedMobsMenu implements InventoryProvider {
     private final OreoEssentials plugin;
     private final ModGuiService svc;

@@ -32,7 +32,6 @@ public class UnbanCommand implements OreoCommand, org.bukkit.command.TabComplete
         String query = args[0];
         BanList nameBans = Bukkit.getBanList(BanList.Type.NAME);
 
-        // Find a matching ban entry (case-insensitive)
         BanEntry match = findBanEntry(nameBans, query);
         if (match == null) {
             Lang.send(sender, "moderation.unban.not-banned",
@@ -41,7 +40,6 @@ public class UnbanCommand implements OreoCommand, org.bukkit.command.TabComplete
             return true;
         }
 
-        // Unban
         String exactName = match.getTarget();
         nameBans.pardon(exactName);
 
@@ -49,7 +47,6 @@ public class UnbanCommand implements OreoCommand, org.bukkit.command.TabComplete
                 "<green>Unbanned <aqua>%player%</aqua>.</green>",
                 Map.of("player", exactName));
 
-        // Discord notify (if configured)
         var mod = OreoEssentials.get().getDiscordMod();
         if (mod != null && mod.isEnabled()) {
             OfflinePlayer op = Bukkit.getOfflinePlayer(exactName);
@@ -71,13 +68,12 @@ public class UnbanCommand implements OreoCommand, org.bukkit.command.TabComplete
             BanList nameBans = Bukkit.getBanList(BanList.Type.NAME);
             String prefix = args[0].toLowerCase(Locale.ROOT);
 
-            // Build a list safely without streams/generics surprises
             List<String> names = new ArrayList<>();
             for (Object o : nameBans.getBanEntries()) {
                 if (o instanceof BanEntry be) {
                     String t = be.getTarget();
                     if (t != null) names.add(t);
-                } else if (o instanceof String s) { // just in case of exotic forks
+                } else if (o instanceof String s) {
                     names.add(s);
                 }
             }
@@ -100,9 +96,7 @@ public class UnbanCommand implements OreoCommand, org.bukkit.command.TabComplete
                 }
             } else if (o instanceof String s) {
                 if (s.toLowerCase(Locale.ROOT).equals(q)) {
-                    // construct a minimal BanEntry is not exposed; best effort —
-                    // but in practice Bukkit returns BanEntry objects, so this path is unlikely.
-                    // Return null here so execute() treats as "not banned".
+
                 }
             }
         }

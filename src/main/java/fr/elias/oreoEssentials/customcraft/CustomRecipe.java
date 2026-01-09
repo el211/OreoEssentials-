@@ -14,7 +14,6 @@ public final class CustomRecipe {
     private final boolean shapeless;
     private final String permission;
 
-    /* ---------------- Constructors ---------------- */
 
     public CustomRecipe(String name, ItemStack[] grid, ItemStack result) {
         this(name, grid, result, false, null);
@@ -33,7 +32,6 @@ public final class CustomRecipe {
         this.permission = (permission != null && !permission.isBlank()) ? permission : null;
     }
 
-    /* ---------------- Getters ---------------- */
 
     public String getName() { return name; }
 
@@ -43,10 +41,8 @@ public final class CustomRecipe {
 
     public boolean isShapeless() { return shapeless; }
 
-    /** Returns the exact permission node required to craft, or null if public. */
     public String getPermission() { return permission; }
 
-    /* ---------------- Logic ---------------- */
 
     public boolean isValid() {
         if (result == null || result.getType().isAir()) return false;
@@ -56,7 +52,6 @@ public final class CustomRecipe {
         return false;
     }
 
-    /** For shaped recipes: compute minimal bounding box containing all non-air cells. */
     public Bounds computeBounds() {
         int minR = 3, maxR = -1, minC = 3, maxC = -1;
         for (int i = 0; i < 9; i++) {

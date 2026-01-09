@@ -29,7 +29,7 @@ public class SetHomeCommand implements OreoCommand {
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        if (args.length < 1) return false; // keep usage handling from framework
+        if (args.length < 1) return false;
 
         Player p = (Player) sender;
         String rawName = args[0];

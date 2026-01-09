@@ -12,22 +12,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * JumpPads command handler with Lang support.
- *
- * ✅ VERIFIED - Uses Lang.send() for all 13 user messages
- *
- * Commands:
- * - /jumpad create <name> [power] [upward] [useLookDir]
- * - /jumpad remove <name>
- * - /jumpad list
- * - /jumpad info <name>
- *
- * Features:
- * - Config-backed defaults
- * - Per-pad customization
- * - Tab completion
- */
+
 public class JumpPadsCommand implements CommandExecutor, TabCompleter {
     private final JumpPadsManager mgr;
 

@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/rabbitmq/packet/impl/SpawnTeleportRequestPacket.java
 package fr.elias.oreoEssentials.rabbitmq.packet.impl;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
@@ -7,7 +6,6 @@ import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteOutputStream;
 
 import java.util.UUID;
 
-// SpawnTeleportRequestPacket.java
 public final class SpawnTeleportRequestPacket extends Packet {
     private UUID playerId;
     private String targetServer;

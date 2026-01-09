@@ -16,7 +16,7 @@ import java.util.*;
 public class UnmuteCommand implements OreoCommand, org.bukkit.command.TabCompleter {
 
     private final MuteService mutes;
-    private final ChatSyncManager chatSync; // may be null if sync disabled
+    private final ChatSyncManager chatSync;
 
     public UnmuteCommand(MuteService mutes, ChatSyncManager chatSync) {
         this.mutes = mutes;
@@ -96,9 +96,7 @@ public class UnmuteCommand implements OreoCommand, org.bukkit.command.TabComplet
             String want = args[0].toLowerCase(Locale.ROOT);
             Set<String> out = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
-            // -------------------------------
-            // 1) Add currently-muted players
-            // -------------------------------
+
             for (UUID uuid : mutes.allMuted()) {
                 var op = Bukkit.getOfflinePlayer(uuid);
                 String name = (op != null && op.getName() != null) ? op.getName() : uuid.toString();
@@ -108,9 +106,6 @@ public class UnmuteCommand implements OreoCommand, org.bukkit.command.TabComplet
                 }
             }
 
-            // ------------------------------------------
-            // 2) Add cross-server online players (Mongo)
-            // ------------------------------------------
             var dir = OreoEssentials.get().getPlayerDirectory();
             if (dir != null) {
                 try {

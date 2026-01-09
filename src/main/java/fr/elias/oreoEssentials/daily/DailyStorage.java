@@ -20,39 +20,24 @@ public interface DailyStorage {
         LocalDate getLastClaimDate();
     }
 
-    /**
-     * Initialize/connect the storage system
-     */
     void connect();
 
-    /**
-     * Get a player's record (returns null if not found)
-     */
+
     Record get(UUID uuid);
 
-    /**
-     * Get or create a player's record
-     */
+
     Record ensure(UUID uuid, String name);
 
-    /**
-     * Update record when player claims
-     */
+
     void updateOnClaim(UUID uuid, String name, int newStreak, LocalDate date);
 
-    /**
-     * Reset a player's streak
-     */
+
     void resetStreak(UUID uuid);
 
-    /**
-     * Close/save the storage system
-     */
+
     void close();
 
-    /**
-     * Factory method to create the appropriate storage implementation
-     */
+
     static DailyStorage create(OreoEssentials plugin, DailyConfig cfg) {
         if (cfg.mongo.enabled) {
             DailyMongoStore mongoStore = new DailyMongoStore(plugin, cfg);
@@ -73,9 +58,7 @@ public interface DailyStorage {
         return new FileStorageAdapter(fileStore);
     }
 
-    /**
-     * Adapter for MongoDB storage
-     */
+
     class MongoStorageAdapter implements DailyStorage {
         private final DailyMongoStore store;
 
@@ -130,9 +113,7 @@ public interface DailyStorage {
         }
     }
 
-    /**
-     * Adapter for file storage
-     */
+
     class FileStorageAdapter implements DailyStorage {
         private final DailyFileStore store;
 

@@ -21,11 +21,10 @@ public final class CustomCraftingService {
     private final Map<String, CustomRecipe> recipes = new ConcurrentHashMap<>();
     private final Map<String, NamespacedKey> keys = new ConcurrentHashMap<>();
 
-    // --- ItemsAdder (soft) reflection cache ---
     private final boolean iaPresent;
-    private final Class<?> iaCustomStackClass;   // dev.lone.itemsadder.api.CustomStack
-    private final Method iaByItemStack;          // static CustomStack byItemStack(ItemStack)
-    private final Method iaGetNamespacedID;      // String getNamespacedID()
+    private final Class<?> iaCustomStackClass;
+    private final Method iaByItemStack;
+    private final Method iaGetNamespacedID;
 
     public CustomCraftingService(Plugin plugin) {
         this.plugin = plugin;
@@ -41,7 +40,6 @@ public final class CustomCraftingService {
             getId = cs.getMethod("getNamespacedID");
             found = (cs != null && byIS != null && getId != null);
         } catch (ClassNotFoundException | NoSuchMethodException ignored) {
-            // IA not installed — fine.
         }
         this.iaPresent = found;
         this.iaCustomStackClass = cs;
@@ -52,7 +50,6 @@ public final class CustomCraftingService {
         else            plugin.getLogger().info("[CustomCraft] ItemsAdder not present; using vanilla matching.");
     }
 
-    /* ---------------- Lifecycle ---------------- */
 
     public void loadAllAndRegister() {
         recipes.clear();
@@ -91,9 +88,7 @@ public final class CustomCraftingService {
         }
     }
 
-    /* ---------------- Listener helpers ---------------- */
 
-    /** Reverse-lookup: NamespacedKey -> recipe name. */
     public Optional<String> getRecipeNameByKey(NamespacedKey key) {
         for (var e : keys.entrySet()) {
             if (e.getValue().equals(key)) return Optional.of(e.getKey());
@@ -101,7 +96,6 @@ public final class CustomCraftingService {
         return Optional.empty();
     }
 
-    /** Permission to craft this recipe (empty = public). */
     public Optional<String> getPermissionFor(String name) {
         CustomRecipe r = recipes.get(name);
         if (r == null) return Optional.empty();
@@ -109,7 +103,6 @@ public final class CustomCraftingService {
         return (p == null || p.isBlank()) ? Optional.empty() : Optional.of(p);
     }
 
-    /* ---------------- Registration ---------------- */
 
     private void registerBukkitRecipe(CustomRecipe r) {
         if (r.getResult() == null || r.getResult().getType().isAir()) return;
@@ -144,7 +137,6 @@ public final class CustomCraftingService {
             return;
         }
 
-        // Shaped: crop to bounds, IA-aware reuse of letters for identical ingredients
         CustomRecipe.Bounds b = r.computeBounds();
         if (b.rows() <= 0 || b.cols() <= 0) return;
 
@@ -185,7 +177,6 @@ public final class CustomCraftingService {
         keys.put(r.getName(), key);
     }
 
-    /* ---------------- Similarity & IA helpers ---------------- */
 
     private int indexOfSimilar(List<ItemStack> list, ItemStack probe) {
         for (int i = 0; i < list.size(); i++) {
@@ -194,7 +185,6 @@ public final class CustomCraftingService {
         return -1;
     }
 
-    /** Bukkit isSimilar OR (if IA present) same ItemsAdder namespaced ID. */
     private boolean similar(ItemStack a, ItemStack b) {
         if (a == null || b == null) return false;
         if (a.isSimilar(b)) return true;
@@ -208,7 +198,6 @@ public final class CustomCraftingService {
         return false;
     }
 
-    /** Return ItemsAdder namespaced ID or null (reflection; no hard dep). */
     private String iaId(ItemStack stack) {
         if (!iaPresent || stack == null) return null;
         try {

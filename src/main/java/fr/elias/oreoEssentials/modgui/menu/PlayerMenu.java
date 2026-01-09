@@ -18,17 +18,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Player selection menu for moderation.
- *
- * ✅ VERIFIED - Uses Lang.get() + Lang.color() for GUI titles + § for GUI items
- *
- * Features:
- * - Network-wide player listing (via PlayerDirectory)
- * - Fallback to local-only when directory unavailable
- * - Shows player server location
- * - Opens PlayerActionsMenu for each player
- */
 public class PlayerMenu implements InventoryProvider {
 
     private final OreoEssentials plugin;

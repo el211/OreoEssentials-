@@ -7,16 +7,7 @@ import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteOutputStream;
 
 import java.util.UUID;
 
-/**
- * Sent by the TARGET's server when they run /tpaccept.
- * Consumed by the REQUESTER's server to continue the TPA flow (e.g., summon/teleport).
- *
- * Fields:
- *  - requestId: optional trace id for debugging
- *  - requesterUuid/requesterName: who initiated /tpa
- *  - targetUuid/targetName: who accepted /tpaccept
- *  - fromServer: the server name where /tpaccept happened (for routing/logging)
- */
+
 public class TpaAcceptPacket extends Packet {
 
     private String requestId;

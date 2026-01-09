@@ -24,10 +24,8 @@ public class PayTabCompleter implements TabCompleter {
 
             Set<String> suggestions = new HashSet<>();
 
-            // 1) Local online
             Bukkit.getOnlinePlayers().forEach(p -> suggestions.add(p.getName()));
 
-            // 2) Network online via PlayerDirectory
             var dir = plugin.getPlayerDirectory(); // <-- whatever getter you use
             if (dir != null) {
                 suggestions.addAll(dir.suggestOnlineNames(prefix, 80));

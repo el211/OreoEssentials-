@@ -8,7 +8,6 @@ public final class CrossInvPacket extends Packet {
     private String json;
 
     public CrossInvPacket() {
-        // no-arg required by registry
     }
 
     public CrossInvPacket(String json) {
@@ -21,13 +20,11 @@ public final class CrossInvPacket extends Packet {
 
     @Override
     protected void read(FriendlyByteInputStream in) {
-        // packetId already read in Packet.readData(...)
         this.json = in.readString();
     }
 
     @Override
     protected void write(FriendlyByteOutputStream out) {
-        // Packet.writeData(...) already wrote packetId
         out.writeString(json != null ? json : "");
     }
 }

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/packet/impl/trade/TradeStartPacket.java
 package fr.elias.oreoEssentials.rabbitmq.packet.impl.trade;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
@@ -7,11 +6,7 @@ import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteOutputStream;
 
 import java.util.UUID;
 
-/**
- * Signals both servers to open a cross-server trade UI locally for their participant.
- * Carries the canonical, order-independent sessionId (SID) so both ends refer to
- * the same TradeSession.
- */
+
 public final class TradeStartPacket extends Packet {
 
     // Canonical session id for this A<->B pair (order-independent)

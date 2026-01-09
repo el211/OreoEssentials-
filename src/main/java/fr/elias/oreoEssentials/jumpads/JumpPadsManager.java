@@ -14,20 +14,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * JumpPads manager handling creation, storage, and launching.
- *
- * ✅ VERIFIED PERFECT - No user messages (pure backend logic)
- *
- * Features:
- * - Config-backed defaults (power, upward, useLookDir)
- * - Per-pad customization
- * - Cooldown system
- * - Sound & particle effects
- * - Persistent storage (jumpads.yml)
- *
- * All user messages are in JumpPadsCommand.java.
- */
+
 public class JumpPadsManager {
 
     public static class JumpPad {

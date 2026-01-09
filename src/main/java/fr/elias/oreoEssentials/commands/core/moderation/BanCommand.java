@@ -63,10 +63,8 @@ public class BanCommand implements OreoCommand {
             }
         }
 
-        // Add to server ban list
         Bukkit.getBanList(BanList.Type.NAME).addBan(target.getName(), reason, expires, sender.getName());
 
-        // If online, kick immediately with reason (and expiry, if any)
         if (target.isOnline()) {
             Player p = target.getPlayer();
             if (p != null) {
@@ -90,7 +88,6 @@ public class BanCommand implements OreoCommand {
             }
         }
 
-        // Feedback to staff
         if (expires != null) {
             Lang.send(sender, "moderation.ban.success-temp",
                     "<green>Banned <aqua>%player%</aqua> until <yellow>%expires%</yellow>. Reason: <yellow>%reason%</yellow></green>",
@@ -101,7 +98,6 @@ public class BanCommand implements OreoCommand {
                     Map.of("player", target.getName(), "reason", reason));
         }
 
-        // Discord notification
         DiscordModerationNotifier mod = OreoEssentials.get().getDiscordMod();
         if (mod != null && mod.isEnabled()) {
             Long expiresAt = (expires == null) ? null : expires.getTime();
@@ -111,21 +107,17 @@ public class BanCommand implements OreoCommand {
         return true;
     }
 
-    /* ----------------------------- Helpers ----------------------------- */
 
     private OfflinePlayer resolvePlayer(String name) {
-        // 1) Exact online match
         Player online = Bukkit.getPlayerExact(name);
         if (online != null) return online;
 
-        // 2) Search known offline players by case-insensitive name
         for (OfflinePlayer op : Bukkit.getOfflinePlayers()) {
             if (op.getName() != null && op.getName().equalsIgnoreCase(name)) {
                 return op;
             }
         }
 
-        // 3) Fallback (may create a profile if not cached)
         return Bukkit.getOfflinePlayer(name);
     }
 

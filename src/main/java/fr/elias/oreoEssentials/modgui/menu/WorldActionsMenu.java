@@ -18,22 +18,6 @@ import java.util.Map;
 import static org.bukkit.World.Environment.NETHER;
 import static org.bukkit.World.Environment.THE_END;
 
-/**
- * World actions and settings menu.
- *
- * ✅ VERIFIED - Uses Lang.send() for 7 user messages + Lang.get() for GUI titles + § for GUI items
- *
- * Features:
- * - Time control (day/sunset/night)
- * - Weather control (clear/rain/storm)
- * - World spawn setting
- * - World border quick sizes
- * - Gamerules, whitelist, banned mobs sub-menus
- * - Elytra, trident, PVP toggles
- * - Theme cycling
- * - Nether-specific tweaks (water, beds, fire immunity, ghast grief)
- * - End-specific tweaks (void teleport, enderman grief, dragon grief)
- */
 public class WorldActionsMenu implements InventoryProvider {
     private final OreoEssentials plugin;
     private final ModGuiService svc;

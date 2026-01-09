@@ -23,9 +23,7 @@ public class HomesGuiProvider implements InventoryProvider {
 
     private final HomeService homes;
 
-    // Layout: 6x9
-    // header row (row 0): filler + center counter (slot 4) + refresh (slot 8)
-    // content grid: rows 1..4, cols 1..7 (28 items/page). Footer prev/next at (5,0) / (5,8).
+
     public HomesGuiProvider(HomeService homes) {
         this.homes = homes;
     }
@@ -37,29 +35,23 @@ public class HomesGuiProvider implements InventoryProvider {
 
     @Override
     public void update(Player p, InventoryContents contents) {
-        // manual refresh via button
     }
 
     private void draw(Player p, InventoryContents contents) {
         contents.fill(ClickableItem.empty(filler()));
 
-        // Gather cross-server homes (name -> StoredHome)
         Map<String, StoredHome> data = safeListHomes(p.getUniqueId());
         List<String> names = new ArrayList<>(data.keySet());
         names.sort(String.CASE_INSENSITIVE_ORDER);
         int used = names.size();
         int max = guessMaxHomes(p);
 
-        // Header: counter in top-middle (slot 0,4)
         contents.set(0, 4, ClickableItem.empty(counterItem(p, used, max)));
 
-        // Header right: refresh button (slot 0,8)
         contents.set(0, 8, ClickableItem.of(refreshItem(p), e -> {
-            // Re-open same page
             contents.inventory().open(p, contents.pagination().getPage());
         }));
 
-        // Pagination over content grid (rows 1..4, cols 1..7) -> 28 items per page
         Pagination pagination = contents.pagination();
         int pageSize = 28;
 
@@ -70,17 +62,13 @@ public class HomesGuiProvider implements InventoryProvider {
             return ClickableItem.of(it, e -> {
                 switch (e.getClick()) {
                     case LEFT -> {
-                        // Teleport (cross-server path)
                         HomesGuiCommand.crossServerTeleport(homes, p, name);
                     }
                     case RIGHT -> {
-                        // Close current then open confirm
                         contents.inventory().close(p);
                         ConfirmDeleteGui.open(p, homes, name, () -> {
-                            // onConfirm -> reopen current page refreshed
                             reopenHomesGui(p, pagination.getPage());
                         }, () -> {
-                            // onCancel -> reopen
                             reopenHomesGui(p, pagination.getPage());
                         });
                     }
@@ -92,7 +80,6 @@ public class HomesGuiProvider implements InventoryProvider {
         pagination.setItems(items);
         pagination.setItemsPerPage(pageSize);
 
-        // Place items in grid (rows 1..4, cols 1..7)
         SlotIterator it = contents.newIterator(SlotIterator.Type.HORIZONTAL, 1, 1);
         it.blacklist(1, 0); it.blacklist(1, 8);
         it.blacklist(2, 0); it.blacklist(2, 8);
@@ -100,7 +87,6 @@ public class HomesGuiProvider implements InventoryProvider {
         it.blacklist(4, 0); it.blacklist(4, 8);
         pagination.addToIterator(it);
 
-        // Footer (row 5): Prev (5, 0) | Next (5, 8)
         if (!pagination.isFirst()) {
             contents.set(5, 0, ClickableItem.of(navItem(p, Material.ARROW, "homes.gui.nav.previous"), e ->
                     contents.inventory().open(p, pagination.previous().getPage())));
@@ -111,7 +97,6 @@ public class HomesGuiProvider implements InventoryProvider {
         }
     }
 
-    /* ---------------- data helpers ---------------- */
 
     private Map<String, StoredHome> safeListHomes(UUID owner) {
         try {
@@ -156,7 +141,6 @@ public class HomesGuiProvider implements InventoryProvider {
                 .open(p, page);
     }
 
-    /* ---------------- item builders ---------------- */
 
     private ItemStack filler() {
         ItemStack it = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);

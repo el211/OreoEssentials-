@@ -91,13 +91,11 @@ public class PayCommand implements OreoCommand {
                     target.getPlayer()));
         }
 
-        // cache
         OfflinePlayerCache cache = OreoEssentials.get().getOfflinePlayerCache();
         if (cache != null && target.getUniqueId() != null && targetName != null) cache.add(targetName, target.getUniqueId());
         return true;
     }
 
-    /* ---------- helpers ---------- */
 
     private OfflinePlayer resolveOffline(String nameOrUuid) {
         Player p = Bukkit.getPlayerExact(nameOrUuid);

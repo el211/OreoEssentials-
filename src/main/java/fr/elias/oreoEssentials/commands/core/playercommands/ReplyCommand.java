@@ -35,7 +35,6 @@ public class ReplyCommand implements OreoCommand {
 
         Player p = (Player) sender;
 
-        // Get last conversation partner
         var last = messages.getLast(p.getUniqueId());
         if (last == null) {
             Lang.send(p, "reply.no-one",
@@ -43,7 +42,6 @@ public class ReplyCommand implements OreoCommand {
             return true;
         }
 
-        // Check if they're still online
         Player target = Bukkit.getPlayer(last);
         if (target == null) {
             Lang.send(p, "reply.offline",
@@ -51,20 +49,16 @@ public class ReplyCommand implements OreoCommand {
             return true;
         }
 
-        // Build message
         String msg = String.join(" ", args);
 
-        // Send to target: [MSG] SenderName: message
         Lang.send(target, "msg.receive",
                 "<gray>[<light_purple>MSG</light_purple>] <aqua>%sender%</aqua>: <white>%message%</white></gray>",
                 Map.of("sender", p.getName(), "message", msg));
 
-        // Send confirmation to sender: [MSG] -> TargetName: message
         Lang.send(p, "msg.send",
                 "<gray>[<light_purple>MSG</light_purple>] <white>-></white> <aqua>%target%</aqua>: <white>%message%</white></gray>",
                 Map.of("target", target.getName(), "message", msg));
 
-        // Record for future /reply
         messages.record(p, target);
 
         return true;

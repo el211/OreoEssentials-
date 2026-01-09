@@ -102,14 +102,7 @@ public class OtherHomesListCommand implements CommandExecutor, TabCompleter {
         return Collections.emptyList();
     }
 
-    /* ---------------- UUID Resolution ---------------- */
 
-    /**
-     * Resolve the UUID for a player name using:
-     * 1) exact online player
-     * 2) PlayerDirectory (if present) via reflection method lookupUuidByName(String)
-     * 3) Bukkit offline player fallback
-     */
     private UUID resolveTargetUUID(String inputName) {
         if (inputName == null || inputName.isEmpty()) return null;
 
@@ -132,10 +125,8 @@ public class OtherHomesListCommand implements CommandExecutor, TabCompleter {
                 }
             }
         } catch (Throwable ignored) {
-            // getPlayerDirectory not present – continue
         }
 
-        // 3) Bukkit fallback (may be offline UUID on some setups)
         try {
             return Bukkit.getOfflinePlayer(inputName).getUniqueId();
         } catch (Throwable t) {
@@ -143,7 +134,6 @@ public class OtherHomesListCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    /* ---------------- Homes Fetch (Reflection-Only) ---------------- */
 
     @SuppressWarnings("unchecked")
     private Map<String, HomeInfo> fetchHomesReflectively(UUID owner) {
@@ -220,7 +210,6 @@ public class OtherHomesListCommand implements CommandExecutor, TabCompleter {
         return (v instanceof Number n) ? n.doubleValue() : def;
     }
 
-    /* ---------------- Model ---------------- */
 
     private static final class HomeInfo {
         final String name;

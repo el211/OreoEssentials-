@@ -24,7 +24,6 @@ public final class EventEngine implements Listener {
     private final EventConfig config;
     private final DeathMessageService deaths;
 
-    // pvp tracker: who recently tagged whom
     private final Map<UUID, UUID> pvpLastOpponent = new ConcurrentHashMap<>();
     private final Set<String> announcedFirstJoin = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
@@ -33,7 +32,6 @@ public final class EventEngine implements Listener {
         this.deaths = deaths;
     }
 
-    // Auto-translate &-colors for commands from events.yml
     private String colorize(String s) {
         return (s == null) ? null : s.replace('&', '§');
     }
@@ -56,11 +54,9 @@ public final class EventEngine implements Listener {
             boolean asPlayer  = line.toLowerCase(Locale.ROOT).startsWith("asplayer!");
             int delay         = extractDelay(line);
 
-            // Strip directives then colorize
             String cmd = strip(line);
             cmd = colorize(cmd);
 
-            // Snapshot into final variables for lambda
             final String cmdToRun      = cmd;
             final boolean asConsoleF   = asConsole;
             final boolean asPlayerF    = asPlayer;

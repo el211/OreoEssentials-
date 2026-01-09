@@ -34,7 +34,6 @@ public class TpaCommand implements OreoCommand {
     @Override public String usage() { return "<player>"; }
     @Override public boolean playerOnly() { return true; }
 
-    // ---------- debug helpers ----------
     private static String traceId() {
         return Long.toString(ThreadLocalRandom.current().nextLong(2176782336L), 36).toUpperCase(Locale.ROOT);
     }
@@ -125,7 +124,6 @@ public class TpaCommand implements OreoCommand {
             return true;
         }
 
-        // 2) Directory lookup (Mongo, NO OfflinePlayer)
         long tDir = System.nanoTime();
         var dir = plugin.getPlayerDirectory();
         if (dir == null) {
@@ -162,7 +160,6 @@ public class TpaCommand implements OreoCommand {
             return true;
         }
 
-        // 3) Presence (current/last server)
         long tPresence = System.nanoTime();
         String where = null;
         try {
@@ -173,7 +170,6 @@ public class TpaCommand implements OreoCommand {
             E(id, "presence lookup error", t);
         }
 
-        // sanity re-check: if presence says "same server" try UUID-online again (race)
         if (where != null && where.equalsIgnoreCase(localServer)) {
             long tUuid = System.nanoTime();
             Player byId = Bukkit.getPlayer(targetUuid);
@@ -192,7 +188,6 @@ public class TpaCommand implements OreoCommand {
             D(id, "presence said same, but not online now (race?)");
         }
 
-        // 4) Known other server → send cross-server TPA request and ping that server
         if (where != null && !where.isBlank() && !where.equalsIgnoreCase(localServer)) {
             String shownName = safeNameLookup(dir, targetUuid, input);
 
@@ -209,7 +204,6 @@ public class TpaCommand implements OreoCommand {
                 D(id, "cross-server -> broker null; cannot send request");
             }
 
-            // Build ping message using Lang
             String pingMsg = Lang.msgWithDefault(
                     "tpa.request-target",
                     "<aqua>%player%</aqua> <yellow>wants to teleport to you.</yellow> <green>/tpaccept</green> <yellow>or</yellow> <red>/tpdeny</red> <yellow>(<white>%timeout%</white>s)</yellow>",
@@ -222,7 +216,6 @@ public class TpaCommand implements OreoCommand {
             return true;
         }
 
-        // 5) Presence unknown → broadcast GLOBAL request and ping
         if (where == null || where.isBlank()) {
             D(id, "presence unknown -> attempting GLOBAL broker request + ping");
             String shownName = safeNameLookup(dir, targetUuid, input);
@@ -234,7 +227,6 @@ public class TpaCommand implements OreoCommand {
                 D(id, "broker null; cannot send global request");
             }
 
-            // Build ping message using Lang
             String pingMsg = Lang.msgWithDefault(
                     "tpa.request-target",
                     "<aqua>%player%</aqua> <yellow>wants to teleport to you.</yellow> <green>/tpaccept</green> <yellow>or</yellow> <red>/tpdeny</red> <yellow>(<white>%timeout%</white>s)</yellow>",
@@ -251,7 +243,6 @@ public class TpaCommand implements OreoCommand {
             return true;
         }
 
-        // 6) Last-chance UUID-online (rare race)
         long tUuid = System.nanoTime();
         Player byId = Bukkit.getPlayer(targetUuid);
         D(id, "lastChance UUID-online=" + (byId != null) + " in " + ms(tUuid));
@@ -274,7 +265,6 @@ public class TpaCommand implements OreoCommand {
         return true;
     }
 
-    // ---------- helpers ----------
 
     private Player resolveOnline(String input) {
         Player p = Bukkit.getPlayerExact(input);

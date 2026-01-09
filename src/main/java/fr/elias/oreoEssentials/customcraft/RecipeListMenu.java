@@ -84,10 +84,8 @@ public final class RecipeListMenu implements InventoryProvider {
                 String perm = service.getPermissionFor(name)
                         .orElse(Lang.get("customcraft.format.permission.none", "<gray>None</gray>"));
 
-                // Display name
                 m.setDisplayName(i18nLegacyInline("<aqua>" + name + "</aqua>"));
 
-                // Lore (MiniMessage → legacy)
                 List<String> loreTemplate = langList("customcraft.browse.icon-lore",
                         List.of(
                                 "<gray>Mode:</gray> <white>%mode%</white>",
@@ -121,7 +119,6 @@ public final class RecipeListMenu implements InventoryProvider {
         si.blacklist(4, 0); si.blacklist(4, 8);
         pag.addToIterator(si);
 
-        // Previous page button
         contents.set(5, 3, ClickableItem.of(
                 ui(Material.ARROW,
                         i18nLegacy("customcraft.browse.prev",
@@ -134,7 +131,6 @@ public final class RecipeListMenu implements InventoryProvider {
                     }
                 }));
 
-        // Next page button
         contents.set(5, 5, ClickableItem.of(
                 ui(Material.ARROW,
                         i18nLegacy("customcraft.browse.next",
@@ -150,10 +146,8 @@ public final class RecipeListMenu implements InventoryProvider {
 
     @Override
     public void update(Player player, InventoryContents contents) {
-        /* no-op */
     }
 
-    /* ---------------- Helpers ---------------- */
 
     private static ItemStack ui(Material m, String name) {
         ItemStack it = new ItemStack(m);
@@ -165,7 +159,6 @@ public final class RecipeListMenu implements InventoryProvider {
         return it;
     }
 
-    /** Read list from lang via basePath.0, basePath.1, …; return default if none. */
     private static List<String> langList(String basePath, List<String> def) {
         List<String> out = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
@@ -179,7 +172,6 @@ public final class RecipeListMenu implements InventoryProvider {
         return out;
     }
 
-    /* ---------------- MiniMessage → Legacy Helpers (GUIs require String) ---------------- */
 
     private static String i18nLegacy(String key, String def, Map<String, String> vars, Player p) {
         String raw = Lang.get(key, def);

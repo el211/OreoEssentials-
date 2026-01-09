@@ -14,12 +14,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Kit preview menu (alternative to inline preview in KitsMenuSI).
- *
- * ✅ VERIFIED PERFECT - GUI ItemStack styling uses § (correct practice)
- * No chat messages - pure GUI display.
- */
+
 public class KitsPreviewMenu implements InventoryProvider {
 
     private final KitsManager manager;
@@ -50,11 +45,9 @@ public class KitsPreviewMenu implements InventoryProvider {
 
     @Override
     public void init(Player p, InventoryContents contents) {
-        // Back button
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta bm = back.getItemMeta();
         if (bm != null) {
-            // ✅ GUI ItemStack text (visual styling - § is correct)
             bm.setDisplayName("§c← Back");
             back.setItemMeta(bm);
         }
@@ -67,7 +60,6 @@ public class KitsPreviewMenu implements InventoryProvider {
             ItemStack book = new ItemStack(Material.BOOK);
             ItemMeta im = book.getItemMeta();
             if (im != null) {
-                // ✅ GUI ItemStack text (visual styling - § is correct)
                 im.setDisplayName("§bThis kit runs:");
                 List<String> lore = new ArrayList<>();
                 for (String c : kit.getCommands()) lore.add("§7• §f" + c);
@@ -77,7 +69,6 @@ public class KitsPreviewMenu implements InventoryProvider {
             contents.set(SlotPos.of(0, 8), ClickableItem.empty(book));
         }
 
-        // Dump items into the grid (read-only)
         int rows = contents.inventory().getRows();
         int cols = contents.inventory().getColumns();
         int r = 1, c = 0;

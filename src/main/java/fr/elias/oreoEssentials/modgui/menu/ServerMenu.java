@@ -21,20 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Server administration menu.
- *
- * ✅ VERIFIED - Uses Lang.send() for 6 user messages + Lang.get() for GUI titles + § for GUI items
- *
- * Features:
- * - Difficulty cycling (peaceful/easy/normal/hard)
- * - Default gamemode cycling
- * - Whitelist toggle
- * - Quick mob spawning (with cooldown + difficulty check)
- * - TPS dashboard access
- * - Chat moderation access
- * - Performance tools access
- */
+
 public class ServerMenu implements InventoryProvider {
     private final OreoEssentials plugin;
     private final ModGuiService svc;

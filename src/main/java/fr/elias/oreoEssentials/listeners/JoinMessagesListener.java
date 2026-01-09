@@ -70,13 +70,6 @@ public final class JoinMessagesListener implements Listener {
         else Bukkit.getScheduler().runTask(plugin, send);
     }
 
-    /**
-     * If disable_on_backend=true:
-     * - blacklist mode: disable on servers listed in backend_server_names
-     * - whitelist mode: disable everywhere except servers listed
-     *
-     * If backend_server_names is empty, we disable everywhere (safe default for networks).
-     */
     private boolean shouldDisableBackend(FileConfiguration c, String section) {
         if (!c.getBoolean(section + ".disable_on_backend", false)) return false;
 
@@ -85,8 +78,7 @@ public final class JoinMessagesListener implements Listener {
         String mode = c.getString(section + ".use_backend_list_as", "blacklist");
 
         if (list == null || list.isEmpty()) {
-            // Safe default: if you enabled backend suppression but gave no list,
-            // assume “disable everywhere on this backend”.
+
             return true;
         }
 

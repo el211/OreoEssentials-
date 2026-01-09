@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/HomesCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -18,10 +17,6 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * /homes           -> list homes (cross-server) + count
- * /homes <n>    -> teleport to that home (cross-server)
- */
 public class HomesCommand implements OreoCommand {
 
     private final HomeService homes;
@@ -42,7 +37,6 @@ public class HomesCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
 
-        // With name -> cross-server aware teleport (same path as /home)
         if (args.length >= 1) {
             String raw = args[0];
             String key = normalize(raw);
@@ -51,7 +45,6 @@ public class HomesCommand implements OreoCommand {
             String localServer  = homes.localServer();
             if (targetServer == null) targetServer = localServer;
 
-            // Local teleport
             if (targetServer.equalsIgnoreCase(localServer)) {
                 Location loc = getHomeReflect(key, p);
                 if (loc == null) {
@@ -59,7 +52,7 @@ public class HomesCommand implements OreoCommand {
                             "<red>Home not found: <yellow>%name%</yellow></red>",
                             Map.of("name", raw));
 
-                    var list = listNamesCrossServer(p); // cross-server suggestions
+                    var list = listNamesCrossServer(p);
                     if (!list.isEmpty()) {
                         String homes = String.join(", ", list);
                         Lang.send(p, "homes.available",
@@ -75,7 +68,6 @@ public class HomesCommand implements OreoCommand {
                 return true;
             }
 
-            // Remote -> use RabbitMQ + proxy switch
             var cs = OreoEssentials.get().getCrossServerSettings();
             if (!cs.homes()) {
                 Lang.send(p, "homes.cross-disabled",
@@ -114,7 +106,6 @@ public class HomesCommand implements OreoCommand {
             return true;
         }
 
-        // No args -> cross-server list
         List<String> list = listNamesCrossServer(p);
         int used = list.size();
         int max = maxHomes(p);
@@ -137,30 +128,23 @@ public class HomesCommand implements OreoCommand {
         return true;
     }
 
-    /* ---------------- helpers ---------------- */
-
     private static String normalize(String s) {
         return s == null ? "" : s.trim().toLowerCase(Locale.ROOT);
     }
 
-    /** Try multiple possible method names to fetch a single home Location from the LOCAL server. */
     private Location getHomeReflect(String key, Player p) {
         UUID id = p.getUniqueId();
 
-        // Location getHome(UUID, String)
         Location loc = invokeLoc(homes, "getHome", new Class[]{UUID.class, String.class}, new Object[]{id, key});
         if (loc != null) return loc;
 
-        // Location home(UUID, String)
         loc = invokeLoc(homes, "home", new Class[]{UUID.class, String.class}, new Object[]{id, key});
         if (loc != null) return loc;
 
-        // Map-based lookup: Map<String, Location> getHomes/homes/listHomes
         Map<String, Location> map = getMapOfHomesReflect(p);
         if (map != null) {
             Location l = map.get(key);
             if (l == null) {
-                // case-insensitive match
                 for (Map.Entry<String, Location> e : map.entrySet()) {
                     if (normalize(e.getKey()).equals(key)) return e.getValue();
                 }
@@ -171,32 +155,20 @@ public class HomesCommand implements OreoCommand {
         return null;
     }
 
-    /** Cross-server list. Prefer HomeService#homeServers(player) (name->server); fallback to local-only. */
     private List<String> listNamesCrossServer(Player p) {
         try {
             Map<String, String> byServer = homes.homeServers(p.getUniqueId());
             if (byServer != null && !byServer.isEmpty()) {
-                // DISPLAY CHOICE:
-                // 1) Show "name@server" (uncomment below) if you want clarity on where it lives.
-//                return byServer.entrySet().stream()
-//                        .filter(e -> e.getKey() != null && !e.getKey().isEmpty())
-//                        .map(e -> e.getKey() + "@" + e.getValue())
-//                        .sorted(String.CASE_INSENSITIVE_ORDER)
-//                        .collect(Collectors.toList());
-                // 2) Plain names (default). If duplicates exist across servers, they will appear once each.
                 return byServer.keySet().stream()
                         .filter(n -> n != null && !n.isEmpty())
                         .sorted(String.CASE_INSENSITIVE_ORDER)
                         .collect(Collectors.toList());
             }
         } catch (Throwable ignored) {
-            // fall through to local-only
         }
-        // Fallback: local-only names
         return listNamesReflect(p);
     }
 
-    /** Local-only list via reflection fallbacks. */
     private List<String> listNamesReflect(Player p) {
         Map<String, Location> map = getMapOfHomesReflect(p);
         if (map != null) {
@@ -271,21 +243,17 @@ public class HomesCommand implements OreoCommand {
                     Object r = m.invoke(cfg, p);
                     if (r instanceof Number n) return n.intValue();
                 } catch (NoSuchMethodException ignored) {
-                    // fallback to defaultMaxHomes()
                 }
                 try {
                     Method m2 = cfg.getClass().getMethod("defaultMaxHomes");
                     Object r2 = m2.invoke(cfg);
                     if (r2 instanceof Number n2) return n2.intValue();
                 } catch (NoSuchMethodException ignored) {
-                    // no method, fall through
                 }
             }
         } catch (Throwable ignored) {}
-        return -1; // unknown cap -> display "/?"
+        return -1;
     }
-
-    /* --------------- reflection helpers --------------- */
 
     private static Object invoke(Object target, String method, Class<?>[] sig, Object[] args) {
         try {
@@ -302,7 +270,6 @@ public class HomesCommand implements OreoCommand {
         return (o instanceof Location) ? (Location) o : null;
     }
 
-    /** Proxy switch (BungeeCord/Velocity plugin message). */
     private boolean sendPlayerToServer(Player p, String serverName) {
         try {
             java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream();

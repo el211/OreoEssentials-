@@ -33,13 +33,11 @@ public final class VaultsCommand implements OreoCommand {
             return true;
         }
 
-        // /oevault or /oevault menu -> open the menu
         if (args.length == 0 || args[0].equalsIgnoreCase("menu")) {
             svc.openMenu(p);
             return true;
         }
 
-        // /oevault <id> -> open a specific vault
         try {
             int id = Integer.parseInt(args[0]);
             if (id <= 0) throw new NumberFormatException();

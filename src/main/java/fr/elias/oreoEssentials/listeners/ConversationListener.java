@@ -31,7 +31,6 @@ public final class ConversationListener implements Listener {
         ConfigurationSection root = c.getConfigurationSection("conversations");
         if (root == null) return;
 
-        //  master toggle
         if (!root.getBoolean("enabled", true)) return;
 
         final Player sender = e.getPlayer();
@@ -46,13 +45,11 @@ public final class ConversationListener implements Listener {
             ConfigurationSection bot = root.getConfigurationSection(botKey);
             if (bot == null) continue;
 
-            //  per-bot toggle
             if (!bot.getBoolean("enabled", true)) continue;
 
             String callName = bot.getString("custom_call_name", "").toLowerCase(Locale.ROOT);
             if (callName.isEmpty() || !msg.contains(callName)) continue; // must mention the bot
 
-            // Optional quick self_mention_reply when only the name is said
             String selfReply = bot.getString("self_mention_reply", null);
 
             ConfigurationSection questions = bot.getConfigurationSection("questions");
@@ -84,13 +81,11 @@ public final class ConversationListener implements Listener {
                 sayAsBot(bot, selfReply.replace("{name}", sender.getName()));
             }
 
-            // answer once per bot mention
             break;
         }
     }
 
     private void sayAsBot(ConfigurationSection bot, String body) {
-        //  final guard (in case someone calls this directly later)
         if (!bot.getBoolean("enabled", true)) return;
 
         boolean lookLikePlayer = bot.getBoolean(

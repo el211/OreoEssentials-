@@ -22,7 +22,6 @@ public class UuidCommand implements OreoCommand {
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        // Resolve target (self by default for players)
         OfflinePlayer target;
         if (args.length >= 1) {
             if (!sender.hasPermission("oreo.uuid.others")) {
@@ -48,7 +47,6 @@ public class UuidCommand implements OreoCommand {
                 "<gold>UUID of <aqua>%player%</aqua>:</gold> <aqua>%uuid%</aqua>",
                 Map.of("player", display, "uuid", uuid.toString()));
 
-        // Floodgate (Bedrock) info — best-effort, works when the player is a Floodgate player (usually online).
         try {
             Class<?> apiCls = Class.forName("org.geysermc.floodgate.api.FloodgateApi");
             Object api = apiCls.getMethod("getInstance").invoke(null);
@@ -77,7 +75,6 @@ public class UuidCommand implements OreoCommand {
                         Map.of("bedrock_uuid", bedrockUuid.toString()));
             }
         } catch (ClassNotFoundException e) {
-            // Floodgate not installed — silently ignore
         } catch (Throwable t) {
             OreoEssentials.get().getLogger().fine("[/uuid] Floodgate reflect failed: " + t.getMessage());
         }

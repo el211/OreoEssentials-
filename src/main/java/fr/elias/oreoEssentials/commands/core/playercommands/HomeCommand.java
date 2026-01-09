@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/HomeCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -42,14 +41,12 @@ public class HomeCommand implements OreoCommand, TabCompleter {
 
         final OreoEssentials plugin = OreoEssentials.get();
 
-        // Feature toggle (settings.yml: features.home.enabled)
         if (!plugin.getSettingsConfig().isEnabled("home")) {
             Lang.send(player, "home.disabled",
                     "<red>Home feature is currently disabled.</red>");
             return true;
         }
 
-        // /home or /home list -> show homes (CROSS-SERVER)
         if (args.length == 0 || args[0].equalsIgnoreCase("list")) {
             List<String> names = crossServerNames(player.getUniqueId());
             if (names.isEmpty()) {
@@ -60,7 +57,6 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 return true;
             }
 
-            // Format list with colors (names will be inserted as-is)
             String list = names.stream()
                     .sorted(String.CASE_INSENSITIVE_ORDER)
                     .collect(Collectors.joining(", "));
@@ -79,23 +75,18 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         final String raw = args[0];
         final String key = normalize(raw);
 
-        // ---- Cooldown / countdown (features.home.cooldown) ----
         FileConfiguration settings = plugin.getSettingsConfig().getRoot();
         ConfigurationSection homeSection = settings.getConfigurationSection("features.home");
         final boolean useCooldown = homeSection != null && homeSection.getBoolean("cooldown", false);
         final int seconds = homeSection != null ? homeSection.getInt("cooldown-amount", 0) : 0;
 
-        // OP bypass + invalid bypass
         final boolean bypass = player.isOp() || !useCooldown || seconds <= 0;
 
-        // Where does the home live?
         final String localServer = homes.localServer();
         final String homeServer = homes.homeServer(player.getUniqueId(), key);
         final String targetServer = (homeServer == null ? localServer : homeServer);
 
-        // check existence BEFORE starting countdown
         if (targetServer.equalsIgnoreCase(localServer)) {
-            // Local server: must exist locally
             if (homes.getHome(player.getUniqueId(), key) == null) {
                 Lang.send(player, "home.not-found",
                         "<red>Home <yellow>%name%</yellow> not found.</red>",
@@ -104,7 +95,6 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 return true;
             }
         } else {
-            // Cross-server: must exist in cross-server index (homeServer must be set)
             if (homeServer == null || homeServer.isBlank()) {
                 Lang.send(player, "home.not-found",
                         "<red>Home <yellow>%name%</yellow> not found.</red>",
@@ -114,7 +104,6 @@ public class HomeCommand implements OreoCommand, TabCompleter {
             }
         }
 
-        // Local teleport (with optional countdown)
         if (targetServer.equalsIgnoreCase(localServer)) {
 
             final Runnable action = () -> {
@@ -142,10 +131,8 @@ public class HomeCommand implements OreoCommand, TabCompleter {
             return true;
         }
 
-        // Cross-server (with optional countdown before switching)
         final Runnable action = () -> {
 
-            // Respect cross-server toggle for homes
             var cs = plugin.getCrossServerSettings();
             if (!cs.homes()) {
                 Lang.send(player, "home.cross-disabled",
@@ -158,7 +145,6 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 return;
             }
 
-            // Cross-server: publish to the TARGET SERVER'S QUEUE (not global), then proxy switch
             final PacketManager pm = plugin.getPacketManager();
 
             if (pm != null && pm.isInitialized()) {
@@ -182,7 +168,6 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 return;
             }
 
-            // Switch via proxy
             boolean switched = sendPlayerToServer(player, targetServer);
             if (switched) {
                 Lang.send(player, "home.sending",
@@ -209,8 +194,6 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         return true;
     }
 
-    /* ---------------- tab completion ---------------- */
-
     @Override
     public List<String> onTabComplete(CommandSender sender, org.bukkit.command.Command cmd, String alias, String[] args) {
         if (!(sender instanceof Player p)) return List.of();
@@ -226,28 +209,21 @@ public class HomeCommand implements OreoCommand, TabCompleter {
 
     private boolean homeExistsSomewhere(UUID playerId, String homeKey) {
         try {
-            // If HomeService can resolve a server for the home, it exists somewhere (cross-server index)
             String server = homes.homeServer(playerId, homeKey);
             if (server != null && !server.isBlank()) return true;
 
-            // Otherwise, it might be local-only (or index not available): try local lookup
             return homes.getHome(playerId, homeKey) != null;
         } catch (Throwable ignored) {
-            // On any failure, fall back to local lookup
             return homes.getHome(playerId, homeKey) != null;
         }
     }
-
-    /* ---------------- helpers ---------------- */
 
     private static String normalize(String s) {
         return s == null ? "" : s.trim().toLowerCase(Locale.ROOT);
     }
 
-    /** Cross-server names (plain names). Falls back to empty if unavailable. */
     private List<String> crossServerNames(UUID id) {
         try {
-            // Preferred: use aggregated list from HomeService
             Set<String> set = homes.allHomeNames(id);
             if (set != null) {
                 return set.stream()
@@ -256,7 +232,6 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                         .collect(Collectors.toList());
             }
         } catch (Throwable ignored) {}
-        // Very last resort: empty (do not read local-only to avoid inconsistency with /homes)
         return Collections.emptyList();
     }
 
@@ -275,7 +250,6 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         }
     }
 
-    /** Proxy switch */
     private boolean sendPlayerToServer(Player p, String serverName) {
         try {
             ByteArrayOutputStream b = new ByteArrayOutputStream();
@@ -290,10 +264,6 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         }
     }
 
-    /**
-     * Shows a big title countdown on the player, cancels if he moves,
-     * then runs the action at the end.
-     */
     private void startCountdown(Player target, int seconds, String homeName, Runnable action) {
         final OreoEssentials plugin = OreoEssentials.get();
         final Location origin = target.getLocation().clone();
@@ -323,7 +293,6 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                     return;
                 }
 
-                // Use Lang.msgWithDefault for title/subtitle with variables
                 String title = Lang.msgWithDefault(
                         "teleport.countdown.title",
                         "<yellow>Teleporting...</yellow>",
@@ -349,12 +318,10 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         if (now.getWorld() == null || origin.getWorld() == null) return true;
         if (!now.getWorld().equals(origin.getWorld())) return true;
 
-        // cancel if moved even slightly (ignore head rotation)
         double dx = now.getX() - origin.getX();
         double dy = now.getY() - origin.getY();
         double dz = now.getZ() - origin.getZ();
 
-        // tolerance: 0.05 blocks
         return (dx * dx + dy * dy + dz * dz) > (0.05 * 0.05);
     }
 }

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/CommandManager.java
 package fr.elias.oreoEssentials.commands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -21,13 +20,11 @@ public class CommandManager {
     }
 
     public CommandManager register(OreoCommand cmd) {
-        // Track by primary + aliases (lowercased)
         byName.put(cmd.name().toLowerCase(Locale.ROOT), cmd);
         for (String a : cmd.aliases()) {
             byName.put(a.toLowerCase(Locale.ROOT), cmd);
         }
 
-        // Ensure command exists in Bukkit's CommandMap (plugin.yml or dynamic)
         ensureBukkitCommand(cmd.name(), cmd);
         for (String a : cmd.aliases()) {
             ensureBukkitCommand(a, cmd);

@@ -43,10 +43,8 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
 
         String targetArg = args[0];
 
-        // First: try normal Bukkit offline lookup
         OfflinePlayer target = Bukkit.getOfflinePlayer(targetArg);
 
-        // If Bukkit has no record, try PlayerDirectory to resolve UUID by name
         if (target == null || (target.getName() == null && !target.hasPlayedBefore())) {
             PlayerDirectory dir = OreoEssentials.get().getPlayerDirectory();
             if (dir != null) {
@@ -80,16 +78,13 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
 
         long untilEpochMillis = System.currentTimeMillis() + durMs;
 
-        // Apply locally
         mutes.mute(target.getUniqueId(), untilEpochMillis, reason, sender.getName());
 
-        // Discord notification
         DiscordModerationNotifier mod = OreoEssentials.get().getDiscordMod();
         if (mod != null && mod.isEnabled()) {
             mod.notifyMute(target.getName(), target.getUniqueId(), reason, sender.getName(), untilEpochMillis);
         }
 
-        // Network broadcast of the mute "event" (so other servers also store the mute)
         if (sync != null) {
             try {
                 sync.broadcastMute(target.getUniqueId(), untilEpochMillis, reason, sender.getName());
@@ -99,7 +94,6 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
             }
         }
 
-        // --- Vars for lang strings ---
         String durationStr = MuteService.friendlyRemaining(durMs);
         Map<String, String> vars = new HashMap<>();
         vars.put("target", target.getName());
@@ -107,7 +101,6 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
         vars.put("duration", durationStr);
         vars.put("reason", reason);
 
-        // Build reason suffix
         String reasonSuffix;
         if (reason.isEmpty()) {
             reasonSuffix = "";
@@ -121,12 +114,10 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
         }
         vars.put("reason_suffix", reasonSuffix);
 
-        // Feedback to executor
         Lang.send(sender, "moderation.mute.executor.success",
                 "<green>Muted <yellow>%target%</yellow> for <white>%duration%</white>%reason_suffix%.</green>",
                 vars);
 
-        // Feedback to target (if online)
         Player onlineTarget = target.getPlayer();
         if (onlineTarget != null && onlineTarget.isOnline()) {
             Lang.send(onlineTarget, "moderation.mute.target.notified",
@@ -134,14 +125,12 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
                     vars);
         }
 
-        // --- Local broadcast to ALL players and console ---
         for (Player pl : Bukkit.getOnlinePlayers()) {
             Lang.send(pl, "moderation.mute.broadcast",
                     "<gold>[Moderation]</gold> <yellow>%target%</yellow> <gray>was muted by</gray> <aqua>%staff%</aqua> <gray>for</gray> <white>%duration%</white>%reason_suffix%<gray>.</gray>",
                     vars);
         }
 
-        // Console gets plain version
         String consoleMsg = Lang.msgWithDefault(
                 "moderation.mute.broadcast-console",
                 "[Moderation] %target% was muted by %staff% for %duration%%reason_suffix%.",
@@ -150,7 +139,6 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
         );
         Bukkit.getConsoleSender().sendMessage(consoleMsg);
 
-        // --- Cross-server broadcast ---
         if (sync != null) {
             try {
                 String networkDefault = Lang.msgWithDefault(
@@ -173,12 +161,10 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
                                       String[] args) {
         if (!sender.hasPermission(permission())) return Collections.emptyList();
 
-        // Arg 1: player name (local + cross-server)
         if (args.length == 1) {
             final String want = args[0].toLowerCase(Locale.ROOT);
             Set<String> out = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
-            // 1) Local online players
             Bukkit.getOnlinePlayers().forEach(p -> {
                 String n = p.getName();
                 if (n != null && n.toLowerCase(Locale.ROOT).startsWith(want)) {
@@ -186,7 +172,6 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
                 }
             });
 
-            // 2) Network-wide via PlayerDirectory
             PlayerDirectory dir = OreoEssentials.get().getPlayerDirectory();
             if (dir != null) {
                 try {
@@ -204,7 +189,6 @@ public class MuteCommand implements OreoCommand, org.bukkit.command.TabCompleter
             return out.stream().limit(50).collect(Collectors.toList());
         }
 
-        // Arg 2: duration presets
         if (args.length == 2) {
             String partial = args[1].toLowerCase(Locale.ROOT);
             return List.of("30s", "1m", "5m", "10m", "30m", "1h", "2h", "1d").stream()

@@ -24,9 +24,7 @@ public final class CrossServerSettings {
         this.enderchest = enderchest;
     }
 
-    // NOTE: we now expect OreoEssentials, not generic JavaPlugin
     public static CrossServerSettings load(OreoEssentials plugin) {
-        // settings.yml via SettingsConfig
         FileConfiguration settings = plugin.getSettingsConfig().getRoot();
 
         boolean homes      = settings.getBoolean("features.cross-server.homes", true);

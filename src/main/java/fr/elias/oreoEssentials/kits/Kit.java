@@ -11,8 +11,8 @@ public class Kit {
     private final ItemStack icon;
     private final List<ItemStack> items;
     private final long cooldownSeconds;
-    private final Integer slot; // nullable
-    private final List<String> commands; // may be null/empty
+    private final Integer slot;
+    private final List<String> commands;
 
     public Kit(String id, String displayName, ItemStack icon, List<ItemStack> items,
                long cooldownSeconds, Integer slot, List<String> commands) {

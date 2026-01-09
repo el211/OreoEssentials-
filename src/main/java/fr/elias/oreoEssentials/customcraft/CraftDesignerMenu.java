@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/customcraft/CraftDesignerMenu.java
 package fr.elias.oreoEssentials.customcraft;
 
 import fr.elias.oreoEssentials.util.Lang;
@@ -72,10 +71,8 @@ public final class CraftDesignerMenu implements InventoryProvider {
             }
         }
 
-        // Delete button
         drawDeleteButton(contents, player);
 
-        // Labels
         contents.set(0, 2, ClickableItem.empty(ui(Material.BOOK,
                 i18nLegacy("customcraft.gui.labels.ingredients",
                         "<yellow>Ingredients (3×3)</yellow>",
@@ -85,7 +82,6 @@ public final class CraftDesignerMenu implements InventoryProvider {
                         "<green>Result →</green>",
                         Map.of(), player))));
 
-        // Load existing recipe
         service.get(recipeName).ifPresent(r -> {
             ItemStack[] g = r.getGrid();
             for (int i = 0; i < 9; i++) {
@@ -99,7 +95,6 @@ public final class CraftDesignerMenu implements InventoryProvider {
         drawModeToggle(contents);
         drawPermissionToggle(contents);
 
-        // Grid 3×3
         for (int rr = 0; rr < 3; rr++) {
             for (int cc = 0; cc < 3; cc++) {
                 int idx = rr * 3 + cc;
@@ -108,13 +103,11 @@ public final class CraftDesignerMenu implements InventoryProvider {
             }
         }
 
-        // Result slot
         redrawResult(contents);
     }
 
     @Override
     public void update(Player player, InventoryContents contents) {
-        /* no-op */
     }
 
     /* ---------------- UI Pieces ---------------- */
@@ -140,7 +133,6 @@ public final class CraftDesignerMenu implements InventoryProvider {
             Player p = (Player) e.getWhoClicked();
 
             if (!e.isShiftClick()) {
-                // Show hint
                 Component msg = MM.deserialize(
                         Lang.get("customcraft.messages.delete-hint",
                                         "<yellow>Tip:</yellow> Hold <bold>SHIFT</bold> and click the barrier to delete <red>%name%</red>.")
@@ -207,7 +199,6 @@ public final class CraftDesignerMenu implements InventoryProvider {
         }));
     }
 
-    /** Permission toggle at top-right (0,8). */
     private void drawPermissionToggle(InventoryContents contents) {
         boolean hasPerm = permission != null && !permission.isBlank();
         ItemStack it = new ItemStack(hasPerm ? Material.NAME_TAG : Material.PAPER);
@@ -328,7 +319,6 @@ public final class CraftDesignerMenu implements InventoryProvider {
         }
     }
 
-    /* ---------------- Helpers ---------------- */
 
     private static ItemStack ui(Material m, String name) {
         ItemStack it = new ItemStack(m);

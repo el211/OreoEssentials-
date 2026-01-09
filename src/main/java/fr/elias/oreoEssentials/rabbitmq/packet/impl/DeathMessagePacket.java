@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/packet/impl/DeathMessagePacket.java
 package fr.elias.oreoEssentials.rabbitmq.packet.impl;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
@@ -23,13 +22,11 @@ public class DeathMessagePacket extends Packet {
         this.sourceServer = sourceServer;
     }
 
-    /* --- getters --- */
     public UUID getDeadPlayerId()      { return deadPlayerId; }
     public String getDeadPlayerName()  { return deadPlayerName; }
     public String getMessage()         { return message; }
     public String getSourceServer()    { return sourceServer; }
 
-    /* --- Packet IO --- */
     @Override
     protected void write(FriendlyByteOutputStream out) {
         out.writeUUID(deadPlayerId);

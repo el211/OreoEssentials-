@@ -16,16 +16,6 @@ import org.bukkit.entity.Player;
 
 import java.util.Comparator;
 
-/**
- * World selection menu for world-specific moderation.
- *
- * ✅ VERIFIED - Uses Lang.get() for GUI title + § for GUI items
- *
- * Features:
- * - Lists all worlds alphabetically
- * - Environment-specific icons (grass/netherrack/end stone)
- * - Click to open WorldActionsMenu for each world
- */
 public class WorldListMenu implements InventoryProvider {
     private final OreoEssentials plugin;
     private final ModGuiService svc;

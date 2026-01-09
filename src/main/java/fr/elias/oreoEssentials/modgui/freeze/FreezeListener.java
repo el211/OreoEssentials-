@@ -19,7 +19,6 @@ public class FreezeListener implements Listener {
 
     public FreezeListener(FreezeManager manager) {
         this.manager = manager;
-        // You can replace this with your main plugin instance if you want
         Bukkit.getPluginManager().registerEvents(this,
                 Bukkit.getPluginManager().getPlugins()[0]);
     }
@@ -81,7 +80,6 @@ public class FreezeListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        // Optional: auto-unfreeze or keep them frozen in storage
-        // manager.unfreeze(e.getPlayer().getUniqueId());
+
     }
 }

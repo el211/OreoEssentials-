@@ -7,14 +7,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * A namespace groups packet definitions.
- *
- * Usage:
- *  - Subclasses implement {@link #registerPackets()} and call
- *    {@link #registerPacket(int, Class, PacketProvider)} for each packet.
- *  - Registration runs lazily exactly once (first access/registerInto()).
- */
+
 public abstract class PacketNamespace {
 
     private final short namespaceId;

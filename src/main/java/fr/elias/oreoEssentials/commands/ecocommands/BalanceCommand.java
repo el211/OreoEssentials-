@@ -34,7 +34,6 @@ public class BalanceCommand implements OreoCommand {
             return true;
         }
 
-        // /balance
         if (args.length == 0) {
             if (!(sender instanceof Player p)) {
                 sender.sendMessage(ChatColor.RED + "Usage: /" + label + " <player>");
@@ -45,7 +44,6 @@ public class BalanceCommand implements OreoCommand {
             return true;
         }
 
-        // /balance <player>
         if (!sender.hasPermission("oreo.balance.others")) {
             sender.sendMessage(ChatColor.RED + "You don't have permission to view other players' balances.");
             return true;
