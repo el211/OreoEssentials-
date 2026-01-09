@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/chat/FormatManager.java
 package fr.elias.oreoEssentials.chat;
 
 import net.luckperms.api.LuckPermsProvider;
@@ -12,41 +11,11 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * FormatManager
- *
- * Features (NO OMISSIONS vs your current class + fixes for MiniMessage mode):
- * - Loads group format from chat-format.yml (CustomConfig)
- * - Fallback to chat.default if chat.<group> is missing
- * - Injects %chat_message% early
- * - Handles %player_displayname% and %player_name% with optional strip-name-colors
- * - Supports custom legacy gradient tag:
- *      <gradient:#rrggbb:#rrggbb[:#rrggbb...]>TEXT</gradient>
- *   which is converted into legacy §x hex codes (ONLY in legacy mode)
- * - Supports <#RRGGBB> conversion into legacy §x hex codes (ONLY in legacy mode)
- * - Supports legacy & codes -> § (ONLY in legacy mode)
- *
- * New (required for your Adventure chat refactor):
- * - chat.use-minimessage: true/false
- *   When true:
- *     - DO NOT generate any legacy § codes (prevents the "black garbage" you showed)
- *     - DO NOT run the legacy gradient engine (MiniMessage handles <gradient> itself)
- *     - DO return the format string as MiniMessage-friendly text
- *     - Optional bridge: can translate legacy & codes to MiniMessage tags if enabled
- *
- * Notes:
- * - In MiniMessage mode, write your formats using MiniMessage tags:
- *     <gradient:...>, <#RRGGBB>, <hover:...>, <click:...>, <head:...>, etc.
- * - In legacy mode, keep your current formats (& + your custom <gradient:...> tag)
- */
 public class FormatManager {
 
     private final CustomConfig customYmlManager;
 
-    // Existing: <#RRGGBB>
     private static final Pattern HEX_PATTERN = Pattern.compile("<#([A-Fa-f0-9]{6})>");
-
-    // Existing custom gradient: <gradient:#rrggbb:#rrggbb[:#rrggbb...]>TEXT</gradient>
     private static final Pattern GRADIENT_PATTERN =
             Pattern.compile("<gradient:([^>]+)>(.*?)</gradient>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
@@ -54,21 +23,10 @@ public class FormatManager {
         this.customYmlManager = customYmlManager;
     }
 
-    /**
-     * Formats a chat message based on LuckPerms primary group.
-     *
-     * Returns:
-     * - Legacy mode: String containing § codes (ready for Bukkit.broadcastMessage(String))
-     * - MiniMessage mode: String containing MiniMessage tags (ready for MiniMessage.deserialize(...))
-     */
     public String formatMessage(Player p, String message) {
         final FileConfiguration cfg = customYmlManager.getCustomConfig();
 
-        // Toggle: legacy vs MiniMessage output
         final boolean useMiniMessage = cfg.getBoolean("chat.use-minimessage", false);
-
-        // Optional: allow legacy & codes in MiniMessage mode by translating them into MiniMessage tags
-        // (keeps backward compatibility for existing formats while still enabling <head>/<hover>/<click>)
         final boolean miniMessageTranslateLegacyAmp =
                 cfg.getBoolean("chat.minimessage-translate-legacy-amp", true);
 
@@ -81,17 +39,14 @@ public class FormatManager {
             group = "default";
         }
 
-        // 1) Load format
         String format = cfg.getString("chat." + group);
         if (format == null) {
             format = cfg.getString("chat.default", "&7%player_displayname% » &f%chat_message%");
         }
 
-        // 2) Inject raw message immediately
         if (message == null) message = "";
         format = format.replace("%chat_message%", message);
 
-        // 3) Prepare names (optionally strip existing colors so gradient/hex applies cleanly)
         boolean stripNameColors = cfg.getBoolean("chat.strip-name-colors", true);
         String displayName = p.getDisplayName();
         String plainName = p.getName();
@@ -100,62 +55,37 @@ public class FormatManager {
             plainName = stripAll(plainName);
         }
 
-        // 4) Replace name placeholders BEFORE colorization/gradient
         if (format.contains("%player_displayname%")) {
             format = format.replace("%player_displayname%", displayName);
         }
         if (format.contains("%player_name%")) {
-            // If both placeholders are used, keep %player_name% as plain
             String nameToUse = format.contains("%player_displayname%") ? plainName : displayName;
             format = format.replace("%player_name%", nameToUse);
         }
 
-        // -------------------- MiniMessage mode --------------------
         if (useMiniMessage) {
-            // IMPORTANT:
-            // - DO NOT run applyGradients() because it produces §x codes
-            // - DO NOT run colorize() because it produces §x codes and replaces '&' with '§'
-            //
-            // We return a MiniMessage-friendly string. MiniMessage will handle:
-            // - <gradient:...>...</gradient>
-            // - <#RRGGBB> (hex colors are valid in MiniMessage)
-            // - <hover:...>, <click:...>, <head:...> etc.
-
             if (miniMessageTranslateLegacyAmp) {
-                // Bridge for existing formats that still contain & codes (optional)
                 format = legacyAmpToMiniMessage(format);
             }
             return format;
         }
 
-        // -------------------- Legacy mode (original behavior) --------------------
-
-        // 5) Apply gradients first (so they can wrap everything, including injected names)
         format = applyGradients(format);
-
-        // 6) Then resolve <#RRGGBB> and legacy & codes
         format = colorize(format);
 
         return format;
     }
 
-    /* --------------------------- Gradient engine (LEGACY) --------------------------- */
-
-    /**
-     * Legacy-only: converts your custom <gradient:...> tag to §x hex codes.
-     * In MiniMessage mode we do NOT call this.
-     */
     private String applyGradients(String input) {
         Matcher m = GRADIENT_PATTERN.matcher(input);
         StringBuffer out = new StringBuffer();
 
         while (m.find()) {
-            String colorsSpec = m.group(1); // "#ff00aa:#00ffaa:#0000ff" (':' ',' '; ';' separators ok)
+            String colorsSpec = m.group(1);
             String text = m.group(2);
 
             List<int[]> stops = parseColorStops(colorsSpec);
             if (stops.size() < 2 || text.isEmpty()) {
-                // Not enough colors or empty text: just remove the tag and keep raw text
                 m.appendReplacement(out, Matcher.quoteReplacement(text));
                 continue;
             }
@@ -174,7 +104,7 @@ public class FormatManager {
             p = p.trim();
             if (p.isEmpty()) continue;
             if (p.startsWith("#")) p = p.substring(1);
-            if (p.length() == 3) { // allow #abc shorthand
+            if (p.length() == 3) {
                 p = "" + p.charAt(0) + p.charAt(0)
                         + p.charAt(1) + p.charAt(1)
                         + p.charAt(2) + p.charAt(2);
@@ -192,17 +122,14 @@ public class FormatManager {
     }
 
     private String applyGradientToText(String raw, List<int[]> stops) {
-        // We want to color only visible characters; pass-through existing §/& color codes
         StringBuilder out = new StringBuilder(raw.length() * 10);
 
-        // First, count visible code points
         List<Integer> visibleIndexes = new ArrayList<>();
         char[] arr = raw.toCharArray();
         for (int i = 0; i < arr.length; i++) {
             char c = arr[i];
             if (isColorCodeStart(c) && i + 1 < arr.length && isLegacyCodeChar(arr[i + 1])) {
-                // keep both as-is; skip from gradient span
-                i++; // skip code char
+                i++;
                 continue;
             }
             visibleIndexes.add(i);
@@ -211,26 +138,20 @@ public class FormatManager {
         int n = visibleIndexes.size();
         if (n == 0) return raw;
 
-        // Gradient over multiple segments between stops
-        int segments = stops.size() - 1; // (kept for parity with your original class; not strictly needed)
-
         for (int v = 0, i = 0; i < arr.length; i++) {
             char c = arr[i];
             if (isColorCodeStart(c) && i + 1 < arr.length && isLegacyCodeChar(arr[i + 1])) {
-                // passthrough legacy code (don't color next)
                 out.append('§').append(Character.toLowerCase(arr[i + 1]));
-                i++; // skip the code char
+                i++;
                 continue;
             }
 
             if (v < n && i == visibleIndexes.get(v)) {
-                // Compute color at this visible index
                 double t = (n == 1) ? 0.0 : (double) v / (double) (n - 1);
                 int[] rgb = sampleMultiStop(stops, t);
                 out.append(toMcHex(rgb[0], rgb[1], rgb[2])).append(c);
                 v++;
             } else {
-                // Non-visible (part of something else?), just echo
                 out.append(c);
             }
         }
@@ -275,7 +196,6 @@ public class FormatManager {
 
     private String toMcHex(int r, int g, int b) {
         String hex = String.format(Locale.ROOT, "%02X%02X%02X", r, g, b);
-        // §x§R§R§G§G§B§B
         return "§x§" + hex.charAt(0)
                 + "§" + hex.charAt(1)
                 + "§" + hex.charAt(2)
@@ -284,14 +204,7 @@ public class FormatManager {
                 + "§" + hex.charAt(5);
     }
 
-    /* ----------------------------- Colorize (LEGACY) ----------------------------- */
-
-    /**
-     * Legacy-only: converts <#RRGGBB> to §x format and replaces & with §.
-     * In MiniMessage mode we do NOT call this.
-     */
     private String colorize(String input) {
-        // Convert <#RRGGBB> then &-codes → §
         Matcher matcher = HEX_PATTERN.matcher(input);
         StringBuffer buffer = new StringBuffer();
         while (matcher.find()) {
@@ -306,28 +219,13 @@ public class FormatManager {
 
     private String stripAll(String s) {
         if (s == null) return "";
-        // First translate & to § (so stripColor catches both)
         String t = s.replace('&', '§');
         return ChatColor.stripColor(t);
     }
 
-    /* ----------------------- MiniMessage compatibility bridge ----------------------- */
-
-    /**
-     * OPTIONAL bridge to keep backward compatibility when chat.use-minimessage = true
-     * but your formats still contain & codes.
-     *
-     * Example: "&eHello &cWorld" -> "<yellow>Hello <red>World"
-     *
-     * NOTE:
-     * - This does NOT attempt to preserve "scopes" like real MiniMessage nesting.
-     * - It is intentionally simple and safe.
-     * - For best results, rewrite formats to proper MiniMessage tags.
-     */
     private String legacyAmpToMiniMessage(String s) {
         if (s == null || s.isEmpty()) return s;
 
-        // colors
         s = s.replace("&0", "<black>")
                 .replace("&1", "<dark_blue>")
                 .replace("&2", "<dark_green>")
@@ -346,7 +244,6 @@ public class FormatManager {
                 .replace("&f", "<white>")
                 .replace("&r", "<reset>");
 
-        // decorations
         s = s.replace("&l", "<bold>")
                 .replace("&o", "<italic>")
                 .replace("&n", "<underlined>")

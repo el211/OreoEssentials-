@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/config/SettingsConfig.java
 package fr.elias.oreoEssentials.config;
 
 import fr.elias.oreoEssentials.OreoEssentials;

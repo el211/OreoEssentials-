@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/WorldTeleportCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.util.Lang;
@@ -33,13 +32,10 @@ public final class WorldTeleportCommand implements TabExecutor {
             return true;
         }
 
-        // Parse flags
         boolean silent = hasFlag(args, "-s");
 
-        // Resolve target player
         Player target = null;
         if (args.length >= 2) {
-            // If console -> playerName required (unless just -s)
             if (!(sender instanceof Player)) {
                 String candidate = firstNonFlag(args, 1);
                 if (candidate == null) {
@@ -79,7 +75,6 @@ public final class WorldTeleportCommand implements TabExecutor {
             }
         }
 
-        // Resolve destination world by name/alias/index
         World dest = resolveWorld(args[0], target);
         if (dest == null) {
             Lang.send(sender, "admin.world.world-not-found",
@@ -88,7 +83,6 @@ public final class WorldTeleportCommand implements TabExecutor {
             return true;
         }
 
-        // Per-world permission: cmi.command.world.<worldName>
         String perWorldPerm = "cmi.command.world." + dest.getName();
         if (!sender.hasPermission(perWorldPerm)) {
             Lang.send(sender, "admin.world.no-world-permission",
@@ -97,7 +91,6 @@ public final class WorldTeleportCommand implements TabExecutor {
             return true;
         }
 
-        // Teleport to a safe-ish spot: world spawn (with highest block correction)
         Location loc = safeSpawn(dest);
 
         boolean ok = target.teleport(loc);
@@ -107,7 +100,6 @@ public final class WorldTeleportCommand implements TabExecutor {
             return true;
         }
 
-        // Notifications
         if (!silent) {
             if (sender != target) {
                 Lang.send(target, "admin.world.target-notified",
@@ -127,7 +119,6 @@ public final class WorldTeleportCommand implements TabExecutor {
         return true;
     }
 
-    /* ---------------- Helpers ---------------- */
 
     private static boolean hasFlag(String[] args, String flag) {
         for (String a : args) {
@@ -157,26 +148,21 @@ public final class WorldTeleportCommand implements TabExecutor {
     }
 
     private static World resolveWorld(String token, Player contextPlayer) {
-        // Accept exact name first
         World byName = Bukkit.getWorld(token);
         if (byName != null) return byName;
 
         String low = token.toLowerCase(Locale.ROOT);
 
-        // If numeric: index into loaded worlds (1-based)
         if (low.matches("\\d+")) {
             int idx = Integer.parseInt(low);
             List<World> all = Bukkit.getWorlds();
             if (idx >= 1 && idx <= all.size()) return all.get(idx - 1);
         }
-
-        // Aliases normal/nether/end relative to a base world
         World base = (contextPlayer != null
                 ? contextPlayer.getWorld()
                 : (Bukkit.getWorlds().isEmpty() ? null : Bukkit.getWorlds().get(0)));
         if (base == null) return null;
 
-        // e.g., "world" from "world", "world_nether", "world_the_end"
         String baseName = stripDimSuffix(base.getName());
 
         switch (low) {
@@ -204,7 +190,6 @@ public final class WorldTeleportCommand implements TabExecutor {
             break;
         }
 
-        // Fuzzy: try case-insensitive match among loaded worlds
         for (World w : Bukkit.getWorlds()) {
             if (w.getName().equalsIgnoreCase(token)) return w;
         }
@@ -229,7 +214,6 @@ public final class WorldTeleportCommand implements TabExecutor {
         return null;
     }
 
-    /* ---------------- Tab Complete ---------------- */
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
@@ -243,7 +227,6 @@ public final class WorldTeleportCommand implements TabExecutor {
                     .collect(Collectors.toList());
             names.addAll(Arrays.asList("normal", "nether", "end"));
 
-            // Also offer numeric indices
             names.addAll(IntStream.rangeClosed(1, Math.max(3, Bukkit.getWorlds().size()))
                     .mapToObj(String::valueOf)
                     .collect(Collectors.toList()));

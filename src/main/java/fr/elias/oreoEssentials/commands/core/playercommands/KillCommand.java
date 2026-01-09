@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/KillCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -19,7 +18,6 @@ public class KillCommand implements OreoCommand {
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        // /kill -> self kill
         if (args.length == 0) {
             if (!(sender instanceof Player p)) {
                 Lang.send(sender, "kill.console-usage",
@@ -28,7 +26,6 @@ public class KillCommand implements OreoCommand {
                 return true;
             }
 
-            // Self kill permission
             if (!p.hasPermission("oreo.kill")) {
                 Lang.send(p, "kill.self.no-permission",
                         "<red>You don't have permission to kill yourself.</red>");
@@ -41,7 +38,6 @@ public class KillCommand implements OreoCommand {
             return true;
         }
 
-        // /kill <player> -> kill others
         if (!sender.hasPermission("oreo.kill.others")) {
             Lang.send(sender, "kill.others.no-permission",
                     "<red>You lack permission to kill others.</red>");

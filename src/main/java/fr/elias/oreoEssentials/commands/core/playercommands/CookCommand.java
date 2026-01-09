@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/CookCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -106,7 +105,7 @@ public class CookCommand implements OreoCommand {
 
         return true;
     }
-    
+
     private CookingRecipe<?> findCookingRecipeFor(ItemStack input) {
         Iterator<Recipe> it = org.bukkit.Bukkit.recipeIterator();
         while (it.hasNext()) {

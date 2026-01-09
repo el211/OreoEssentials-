@@ -59,7 +59,6 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
             return true;
         }
 
-        // Build an execution queue with inline directives handled
         List<ExecStep> plan = new ArrayList<>();
         InlineContext ctx = new InlineContext(def.runAs);
 
@@ -69,12 +68,10 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
             parseLineIntoSteps(sender, args, def, raw, plan, ctx, idx);
         }
 
-        // Run the queue with delays
         runPlan(sender, player, plan);
         return true;
     }
 
-    /* ---------------------- Inline parsing & exec ---------------------- */
 
     private static final class InlineContext {
         AliasService.RunAs defaultRunAs;
@@ -88,12 +85,12 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
     }
     private static final class CommandStep implements ExecStep {
         final String line;
-        final AliasService.RunAs runAs; // can be null => inherit
+        final AliasService.RunAs runAs;
         final int perLineCooldownSeconds;
         final List<String> inlineChecks;
         final double moneyCost;
 
-        final int lineIndex; // for per-line cooldown key
+        final int lineIndex;
 
         CommandStep(String line, AliasService.RunAs runAs, int cd, List<String> checks, double moneyCost, int lineIndex) {
             this.line = line;
@@ -113,7 +110,6 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
                                     InlineContext ctx,
                                     int lineIndex) {
 
-        // Split by spaces BUT keep quoted segments simple: we only need to detect our markers.
         String s = rawLine.trim();
 
         AliasService.RunAs runAsOverride = null;
@@ -276,7 +272,6 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
         runStepsRecursive(sender, player, plan, i + 1);
     }
 
-    /* ------------------------------ Helpers ------------------------------ */
 
     private static boolean startsWithWordIgnoreCase(String s, String word) {
         if (s.length() < word.length()) return false;

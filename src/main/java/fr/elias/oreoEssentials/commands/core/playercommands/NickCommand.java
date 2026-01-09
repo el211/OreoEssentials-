@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/NickCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -15,7 +14,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class NickCommand implements OreoCommand, TabCompleter {
-    private static final int MAX_LEN = 16; // vanilla tab-list limit
+    private static final int MAX_LEN = 16;
     private static final Pattern VALID = Pattern.compile("^[A-Za-z0-9_]{3,16}$");
 
     @Override public String name() { return "nick"; }
@@ -35,7 +34,6 @@ public class NickCommand implements OreoCommand, TabCompleter {
             return true;
         }
 
-        // Reset nickname
         if (args[0].equalsIgnoreCase("unnick") || args[0].equalsIgnoreCase("reset")) {
             resetNick(p);
             Lang.send(p, "nick.reset",
@@ -45,7 +43,6 @@ public class NickCommand implements OreoCommand, TabCompleter {
 
         String newName = args[0];
 
-        // Validate length
         if (newName.length() > MAX_LEN) {
             Lang.send(p, "nick.too-long",
                     "<red>Name too long (max %max% chars).</red>",
@@ -53,14 +50,12 @@ public class NickCommand implements OreoCommand, TabCompleter {
             return true;
         }
 
-        // Validate format
         if (!VALID.matcher(newName).matches()) {
             Lang.send(p, "nick.invalid",
                     "<red>Invalid name. Use letters, numbers, underscore (3–16).</red>");
             return true;
         }
 
-        // Set nickname (Chat + TAB list via Bukkit API)
         try { p.setDisplayName(newName); } catch (Throwable ignored) {}
         try { p.setPlayerListName(newName); } catch (Throwable ignored) {}
 
@@ -71,16 +66,13 @@ public class NickCommand implements OreoCommand, TabCompleter {
         return true;
     }
 
-    /**
-     * Reset player's nickname to their real name
-     */
+
     private void resetNick(Player p) {
         String real = p.getName();
         try { p.setDisplayName(real); } catch (Throwable ignored) {}
         try { p.setPlayerListName(real); } catch (Throwable ignored) {}
     }
 
-    // --- Tab completion ---
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
         if (args.length == 1) {

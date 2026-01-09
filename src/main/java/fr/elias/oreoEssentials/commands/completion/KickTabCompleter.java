@@ -30,7 +30,6 @@ public class KickTabCompleter implements TabCompleter {
         final String want = args[0].toLowerCase(Locale.ROOT);
         Set<String> out = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
-        // 1) LOCAL ONLINE PLAYERS
         for (Player p : Bukkit.getOnlinePlayers()) {
             String n = p.getName();
             if (n != null && n.toLowerCase(Locale.ROOT).startsWith(want)) {
@@ -38,7 +37,6 @@ public class KickTabCompleter implements TabCompleter {
             }
         }
 
-        // 2) NETWORK-WIDE PLAYERS
         PlayerDirectory dir = plugin.getPlayerDirectory();
         if (dir != null) {
             try {

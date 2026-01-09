@@ -31,7 +31,6 @@ public class ClearLagManager {
         reload();
     }
 
-    // --- Lifecycle ---
     public void reload() {
         File file = new File(plugin.getDataFolder(), "clearlag.yml");
         if (!file.exists()) plugin.saveResource("clearlag.yml", false);
@@ -39,21 +38,19 @@ public class ClearLagManager {
 
         this.cfg = new ClearLagConfig(root);
 
-        //  master switch check
         if (!cfg.masterEnabled) {
             cancelSchedulers();
             plugin.getLogger().info("[OreoLag] Disabled by config (enable=false).");
             return;
         }
 
-        startTpsSampler();   // if you added the sampler earlier
+        startTpsSampler();
         restartSchedulers();
     }
     private void cancelSchedulers() {
         if (autoTask != null) { autoTask.cancel(); autoTask = null; }
         if (tpsTask != null)  { tpsTask.cancel();  tpsTask  = null; }
-        // if you added tpsSampleTask previously, you can keep it running, or stop it too:
-        // if (tpsSampleTask != null) { tpsSampleTask.cancel(); tpsSampleTask = null; }
+
     }
 
 
@@ -83,7 +80,7 @@ public class ClearLagManager {
                     }
                 }
             };
-            autoTask.runTaskTimer(plugin, 20L, 20L); // every second
+            autoTask.runTaskTimer(plugin, 20L, 20L);
         }
 
         if (cfg.tps.enabled) {
@@ -109,7 +106,6 @@ public class ClearLagManager {
         if (tpsSamplerStarted) return;
         tpsSamplerStarted = true;
 
-        // 1-tick task to estimate TPS if Paper's Server#getTPS() is unavailable
         tpsSampleTask = new BukkitRunnable() {
             @Override public void run() {
                 long now = System.nanoTime();
@@ -117,8 +113,8 @@ public class ClearLagManager {
                 lastTickNanos = now;
 
                 if (dt <= 0) return;
-                double instTps = 1_000_000_000.0 / dt; // ticks/second based on time between ticks
-                if (instTps > 25.0) instTps = 25.0;     // clamp noisy spikes
+                double instTps = 1_000_000_000.0 / dt;
+                if (instTps > 25.0) instTps = 25.0;
                 // Exponential moving average to smooth
                 rollingTps = (rollingTps * 0.9) + (Math.min(20.0, instTps) * 0.1);
             }
@@ -132,8 +128,7 @@ public class ClearLagManager {
         for (String c : commands) Bukkit.dispatchCommand(console, c);
     }
 
-    // --- Commands ---
-    /** Manual clear (like /olagg clear). Returns removed count. */
+
     public int commandClear(CommandSender sender) {
         if (!cfg.masterEnabled) { sender.sendMessage("§c[OreoLag] Disabled by config."); return 0; }
         int removed = performRemoval(cfg.cmd, false, sender);
@@ -167,7 +162,6 @@ public class ClearLagManager {
         sender.sendMessage("§a[OreoLag] Reloaded clearlag.yml and restarted tasks.");
     }
 
-    // --- Internals ---
     private int performRemoval(ClearLagConfig.Removal r, boolean scheduled, CommandSender issuer) {
         if (!cfg.masterEnabled) return 0;
         int removed = 0;
@@ -186,7 +180,6 @@ public class ClearLagManager {
                     continue;
                 }
 
-                // items by material whitelist
                 if (e instanceof Item it) {
                     if (!r.flagItem) continue; // if items disabled, skip
                     if (r.itemWhitelist.contains(it.getItemStack().getType())) continue;
@@ -195,7 +188,6 @@ public class ClearLagManager {
                     continue;
                 }
 
-                // generic entities matching flag booleans
                 if (isDirectlyRemovableByFlags(e, r)) {
                     e.remove();
                     removed++;
@@ -218,8 +210,8 @@ public class ClearLagManager {
         }
         if (e instanceof ExperienceOrb) return r.flagExp;
         if (e instanceof Projectile) return r.flagProjectile;
-        if (e instanceof TNTPrimed) return r.flagPrimedTnt;         // (instead of EntityType.PRIMED_TNT)
-        if (e instanceof FallingBlock) return r.flagFallingBlock;   // (instead of EntityType.FALLING_BLOCK)
+        if (e instanceof TNTPrimed) return r.flagPrimedTnt;
+        if (e instanceof FallingBlock) return r.flagFallingBlock;
         return true;
     }
 
@@ -257,7 +249,6 @@ public class ClearLagManager {
     }
 
     private double getServerTPS() {
-        // Try Paper's Server#getTPS() via reflection (keeps compatibility)
         try {
             java.lang.reflect.Method m = Bukkit.getServer().getClass().getMethod("getTPS");
             Object res = m.invoke(Bukkit.getServer());
@@ -265,12 +256,9 @@ public class ClearLagManager {
                 return Math.min(20.0, arr[0]);
             }
         } catch (Throwable ignored) {
-            // Not Paper, or method not present — fall back to our sampler
         }
-        // Fallback sampler value (Spigot)
         return rollingTps > 0 ? rollingTps : 20.0;
     }
 
-    // Accessors
     public ClearLagConfig getConfigModel() { return cfg; }
 }

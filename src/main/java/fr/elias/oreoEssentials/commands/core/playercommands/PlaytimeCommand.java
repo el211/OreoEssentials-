@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/PlaytimeCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.util.Lang;
@@ -34,17 +33,13 @@ public final class PlaytimeCommand implements CommandExecutor, TabCompleter {
     }
 
     private static long vanillaPlaytimeSeconds(Player p) {
-        // Vanilla stores PLAY_ONE_MINUTE in ticks; 20 ticks = 1 second
         int ticks = p.getStatistic(Statistic.PLAY_ONE_MINUTE);
         return Math.max(0L, ticks / 20L);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        // /playtime
-        // /playtime <player> (requires oreo.playtime.others)
 
-        // Self playtime
         if (args.length == 0) {
             if (!(sender instanceof Player self)) {
                 Lang.send(sender, "playtime.console-usage",
@@ -62,7 +57,6 @@ public final class PlaytimeCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Other player's playtime
         if (!sender.hasPermission("oreo.playtime.others")) {
             Lang.send(sender, "playtime.no-permission",
                     "<red>You don't have permission to view other players' playtime.</red>");

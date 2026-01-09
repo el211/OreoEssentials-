@@ -24,13 +24,12 @@ public final class BossBarService implements Listener {
     private final OreoEssentials plugin;
     private final Map<UUID, BossBar> bars = new HashMap<>();
 
-    // reloadable settings
     private boolean enabled;
     private String text;
     private BarColor color;
     private BarStyle style;
-    private double progress;     // 0.0 – 1.0
-    private long period;         // ticks
+    private double progress;
+    private long period;
 
     private int taskId = -1;
 
@@ -45,7 +44,6 @@ public final class BossBarService implements Listener {
     private void readConfig() {
         var cfg = plugin.getConfig().getConfigurationSection("bossbar");
 
-        //toggle source (master toggle from settings.yml)
         this.enabled = plugin.getSettingsConfig().bossbarEnabled();
 
         this.text     = cfg != null ? cfg.getString("text", "<gradient:#FF1493:#00FF7F>Welcome</gradient> {player}")
@@ -59,7 +57,6 @@ public final class BossBarService implements Listener {
     }
 
 
-    /* ---------------- lifecycle ---------------- */
 
     public void start() {
         if (!enabled) {
@@ -67,10 +64,8 @@ public final class BossBarService implements Listener {
             return;
         }
 
-        // create for already-online players
         for (Player p : Bukkit.getOnlinePlayers()) show(p);
 
-        // periodic refresh
         taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
             if (!enabled) return;
             for (Player p : Bukkit.getOnlinePlayers()) {
@@ -98,7 +93,6 @@ public final class BossBarService implements Listener {
         bars.clear();
     }
 
-    /** Hot reload from config and live-apply to players. */
     public void reload() {
         // re-read settings
         readConfig();
@@ -125,15 +119,14 @@ public final class BossBarService implements Listener {
             }
         }, period, period);
 
-        // update all currently online players immediately
+
         for (Player p : Bukkit.getOnlinePlayers()) {
-            show(p); // show() applies new title/color/style/progress and re-adds player
+            show(p);
         }
 
         plugin.getLogger().info("[BossBar] Reloaded from config.");
     }
 
-    /* ---------------- api ---------------- */
 
     public boolean isShown(Player p) { return bars.containsKey(p.getUniqueId()); }
 
@@ -159,12 +152,10 @@ public final class BossBarService implements Listener {
         }
     }
 
-    /* ---------------- events ---------------- */
 
     @EventHandler public void onJoin(PlayerJoinEvent e) { if (enabled) show(e.getPlayer()); }
     @EventHandler public void onQuit(PlayerQuitEvent e) { hide(e.getPlayer()); }
 
-    /* ---------------- helpers ---------------- */
 
     private static BarColor safeColor(String name) {
         try { return BarColor.valueOf(name.toUpperCase(Locale.ROOT)); }

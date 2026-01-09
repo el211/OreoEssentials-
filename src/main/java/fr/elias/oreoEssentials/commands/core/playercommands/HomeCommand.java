@@ -284,6 +284,7 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 target.sendTitle(title, subtitle, 0, 20, 0);
                 remaining--;
             }
+
         }.runTaskTimer(plugin, 0L, 20L);
     }
 

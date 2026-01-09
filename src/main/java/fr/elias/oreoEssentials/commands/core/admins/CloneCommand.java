@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/commands/core/admins/CloneCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;

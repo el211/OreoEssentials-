@@ -22,7 +22,7 @@ final class DynamicAliasTabCompleter implements TabCompleter {
         AliasService.AliasDef def = service.get(alias);
         if (def == null || !def.addTabs) return List.of();
 
-        int argIndex = Math.max(0, args.length - 1); // zero-based
+        int argIndex = Math.max(0, args.length - 1);
         if (argIndex >= def.customTabs.size()) return List.of();
 
         String token = args[args.length - 1].toLowerCase(Locale.ROOT);

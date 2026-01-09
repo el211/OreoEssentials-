@@ -1,6 +1,3 @@
-// COMPLETE AsyncChatListener.java with WORKING hover support
-// This version adds hover AFTER gradient is applied by walking the component tree
-
 package fr.elias.oreoEssentials.chat;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -49,24 +46,19 @@ public final class AsyncChatListener implements Listener {
     private final boolean discordEnabled;
     private final String discordWebhookUrl;
 
-    // formatting toggles
     private final boolean useMiniMessage;
     private final boolean translateLegacyAmp;
     private final boolean stripNameColors;
 
-    // PAPI toggles
     private final boolean papiApplyToFormat;
     private final boolean papiApplyToMessage;
 
-    // moderation
     private final boolean bannedWordsEnabled;
     private final List<String> bannedWords;
 
-    // ★ NEW: Hover configuration
     private final boolean hoverEnabled;
     private final List<String> hoverLines;
 
-    // optional glyphs (kept for <glyph:...>, independent of <head:...>)
     private final Key headFontKey;
     private final String headDefaultGlyph;
     private final Map<String,String> headGlyphs;
@@ -95,21 +87,17 @@ public final class AsyncChatListener implements Listener {
         this.translateLegacyAmp = conf.getBoolean("chat.minimessage-translate-legacy-amp", true);
         this.stripNameColors = conf.getBoolean("chat.strip-name-colors", false);
 
-        // NEW: PAPI toggles
         this.papiApplyToFormat = conf.getBoolean("chat.papi.apply-to-format", true);
         this.papiApplyToMessage = conf.getBoolean("chat.papi.apply-to-message", true);
 
-        // ★ NEW: Hover configuration
         this.hoverEnabled = conf.getBoolean("chat.hover.enabled", true);
         this.hoverLines = conf.getStringList("chat.hover.lines");
         if (hoverLines.isEmpty()) {
-            // Default hover lines
             hoverLines.add("<gold>Player: <white>%player_name%</white></gold>");
             hoverLines.add("<gray>Health: <white>%player_health%/%player_max_health%</white></gray>");
             hoverLines.add("<yellow>Ping: <white>%player_ping%ms</white></yellow>");
         }
 
-        // optional glyph config (not used by <head>)
         Key font = Key.key("minecraft:default");
         String defGlyph = "\u25A0";
         Map<String,String> map = new HashMap<>();
@@ -133,7 +121,6 @@ public final class AsyncChatListener implements Listener {
         this.bannedWordsEnabled = settings.bannedWordsEnabled();
         this.bannedWords = settings.bannedWords();
 
-        // Log hover status
         Bukkit.getLogger().info("[Chat] Hover support: " + (hoverEnabled ? "ENABLED" : "DISABLED")
                 + " (" + hoverLines.size() + " lines)");
     }
@@ -190,41 +177,25 @@ public final class AsyncChatListener implements Listener {
             Player live = Bukkit.getPlayer(sender);
             if (live == null) return;
 
-            // 1) Base format with %chat_message%
             String fmt = formatManager.formatMessage(live, rawMsg);
-
-            // 2) PAPI on FORMAT (group, economy, custom expansions, etc.)
             if (papiApplyToFormat) {
                 fmt = applyPapi(fmt, live);
             }
-
-            // 3) LP prefix fallback
             fmt = fillLuckPermsPrefixIfNeeded(fmt, live);
-
-            // 4) Optional legacy-& bridge for FORMAT
             if (useMiniMessage && translateLegacyAmp && looksLegacy(fmt)) {
                 fmt = ampersandToMiniMessage(fmt);
             }
-
-            // 5) Prepare player MESSAGE
             String msgForPlaceholder = rawMsg;
-
-            // 5a) PAPI on MESSAGE (let users use %placeholders% in their message)
             if (papiApplyToMessage) {
                 msgForPlaceholder = applyPapi(msgForPlaceholder, live);
             }
-            // 5b) Optional legacy-& bridge for MESSAGE (so &a / &xRRGGBB works)
             if (useMiniMessage && translateLegacyAmp && looksLegacy(msgForPlaceholder)) {
                 msgForPlaceholder = ampersandToMiniMessage(msgForPlaceholder);
             }
 
-            // 6) Render & broadcast
             if (useMiniMessage) {
                 try {
-                    // ★ Create hover component FIRST
                     Component hoverComponent = hoverEnabled ? createHoverComponent(live) : null;
-
-                    // Build message normally (without worrying about hover preservation)
                     TagResolver allResolvers = TagResolver.resolver(
                             Placeholder.parsed("chat_message", msgForPlaceholder),
                             Placeholder.unparsed("player_name", live.getName()),
@@ -267,11 +238,7 @@ public final class AsyncChatListener implements Listener {
         });
     }
 
-    /* ★ NEW: Add hover to the name section by walking the component tree */
     private Component addHoverToNameSection(Component message, Component hoverComponent, String playerName) {
-        // The player name appears between "∘" and "»" in the component tree
-        // We need to find the component that contains the name letters and add hover to it
-
         List<Component> children = new ArrayList<>(message.children());
         boolean modified = false;
 
@@ -353,8 +320,6 @@ public final class AsyncChatListener implements Listener {
             return Component.text(hoverText.toString());
         }
     }
-
-    /* ★ NEW: Replace placeholders in hover text */
     private String replaceHoverPlaceholders(String text, Player player) {
         // Apply PlaceholderAPI if available
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
@@ -363,7 +328,6 @@ public final class AsyncChatListener implements Listener {
             } catch (Throwable ignored) {}
         }
 
-        // Basic placeholders
         text = text.replace("%player_name%", player.getName());
         text = text.replace("%player_displayname%", player.getDisplayName());
         text = text.replace("%player_uuid%", player.getUniqueId().toString());
@@ -377,7 +341,6 @@ public final class AsyncChatListener implements Listener {
         text = text.replace("%player_z%", String.format(Locale.ENGLISH, "%.1f", player.getLocation().getZ()));
         text = text.replace("%player_gamemode%", player.getGameMode().name());
 
-        // LuckPerms placeholders
         text = text.replace("%luckperms_prefix%", getLuckPermsPrefix(player));
         text = text.replace("%luckperms_suffix%", getLuckPermsSuffix(player));
         text = text.replace("%luckperms_primary_group%", resolvePrimaryGroup(player));
@@ -385,7 +348,6 @@ public final class AsyncChatListener implements Listener {
         return text;
     }
 
-    /* ★ NEW: Create tag resolvers for hover text */
     private TagResolver createHoverPlaceholders(Player player) {
         return TagResolver.resolver(
                 Placeholder.unparsed("player_name", player.getName()),
@@ -423,12 +385,10 @@ public final class AsyncChatListener implements Listener {
         }
     }
 
-    /* ---------------- helpers ---------------- */
 
     private String displayName(Player p) { return stripNameColors ? p.getName() : p.getDisplayName(); }
     private String safe(String s) { return (s == null) ? "" : s; }
 
-    // PAPI call (player-aware). Returns input unchanged if PAPI is not present.
     private String applyPapi(String input, Player p) {
         if (input == null || input.isEmpty()) return input;
         try {
@@ -486,7 +446,6 @@ public final class AsyncChatListener implements Listener {
         catch (Throwable ex) { Bukkit.getLogger().warning("[Discord] Send failed: " + ex.getMessage()); }
     }
 
-    /* ---------- extra player placeholders ---------- */
 
     private TagResolver playerPlaceholders(Player p) {
         World w = p.getWorld();

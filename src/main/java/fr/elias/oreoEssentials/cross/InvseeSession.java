@@ -1,13 +1,10 @@
-// File: src/main/java/fr/elias/oreoEssentials/cross/InvseeSession.java
 package fr.elias.oreoEssentials.cross;
 
 import org.bukkit.inventory.ItemStack;
 
 import java.util.UUID;
 
-/**
- * Small state holder for one invsee session (one viewer -> one target).
- */
+
 public final class InvseeSession {
 
     private final UUID targetId;
