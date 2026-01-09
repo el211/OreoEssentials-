@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/services/MongoHomeDirectory.java
 package fr.elias.oreoEssentials.services.mongoservices;
 
 import com.mongodb.client.*;
@@ -9,7 +8,9 @@ import com.mongodb.client.model.ReplaceOptions;
 import fr.elias.oreoEssentials.services.HomeDirectory;
 import org.bson.Document;
 
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 public class MongoHomeDirectory implements HomeDirectory {
@@ -40,6 +41,21 @@ public class MongoHomeDirectory implements HomeDirectory {
                 Filters.eq("name", n)
         )).projection(new Document("server", 1)).first();
         return d == null ? null : d.getString("server");
+    }
+
+    @Override
+    public Set<String> listHomes(UUID uuid) {
+        Set<String> homes = new HashSet<>();
+        try (MongoCursor<Document> cursor = col.find(Filters.eq("uuid", uuid.toString())).iterator()) {
+            while (cursor.hasNext()) {
+                Document doc = cursor.next();
+                String name = doc.getString("name");
+                if (name != null && !name.isBlank()) {
+                    homes.add(name);
+                }
+            }
+        }
+        return homes;
     }
 
     @Override
