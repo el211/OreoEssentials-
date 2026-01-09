@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/teleport/RetryTeleporter.java
 package fr.elias.oreoEssentials.teleport;
 
 import org.bukkit.Bukkit;
@@ -21,12 +20,9 @@ public final class RetryTeleporter {
 
 
     public void applyWithRetries(UUID playerId, Supplier<Location> targetSupplier, String tag) {
-        // 0 ticks
         runOnce(playerId, targetSupplier, tag, 0);
-        // 2 ticks
         Bukkit.getScheduler().runTaskLater(plugin, () ->
                 runOnce(playerId, targetSupplier, tag, 2), 2L);
-        // 10 ticks
         Bukkit.getScheduler().runTaskLater(plugin, () ->
                 runOnce(playerId, targetSupplier, tag, 10), 10L);
     }

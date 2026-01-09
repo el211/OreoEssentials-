@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/teleport/BackCrossServerBroker.java
 package fr.elias.oreoEssentials.teleport;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -43,10 +42,8 @@ public class BackCrossServerBroker implements Listener {
         this.proxyMessenger = proxyMessenger;
         this.localServer = localServer;
 
-        // listen to join events
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
-        // subscribe to /back packet
         packetManager.subscribe(
                 BackTeleportPacket.class,
                 (PacketSubscriber<BackTeleportPacket>) (channel, pkt) -> handleIncomingBack(pkt)

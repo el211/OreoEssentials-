@@ -2,10 +2,7 @@ package fr.elias.oreoEssentials.shards.listeners;
 
 import org.bukkit.potion.PotionEffect;
 
-/**
- * Lightweight snapshot of player state for Redis storage
- * Optimized for fast serialization/deserialization
- */
+
 public class PlayerSnapshot {
     // Identity
     public String uuid;

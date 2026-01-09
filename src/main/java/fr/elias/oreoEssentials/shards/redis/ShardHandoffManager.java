@@ -13,10 +13,7 @@ import com.google.gson.GsonBuilder;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Handles ultra-fast Redis-based player handoff for seamless shard transfers
- * Target: <150ms total transfer time
- */
+
 public class ShardHandoffManager {
 
     private final JedisPool jedisPool;
@@ -44,10 +41,7 @@ public class ShardHandoffManager {
                 .create();
     }
 
-    /**
-     * Save player snapshot to Redis before transfer
-     * CRITICAL: Must be ultra-fast (<10ms)
-     */
+
     public boolean saveHandoff(Player player, String targetShard) {
         try (Jedis redis = jedisPool.getResource()) {
             UUID uuid = player.getUniqueId();
@@ -109,10 +103,6 @@ public class ShardHandoffManager {
         }
     }
 
-    /**
-     * Restore player data on target shard
-     * Called immediately after player joins target server
-     */
     public PlayerSnapshot loadHandoff(UUID uuid) {
         try (Jedis redis = jedisPool.getResource()) {
             String key = HANDOFF_PREFIX + uuid;
@@ -122,7 +112,6 @@ public class ShardHandoffManager {
                 return null;
             }
 
-            // Delete after reading (one-time use)
             redis.del(key);
 
             return gson.fromJson(json, PlayerSnapshot.class);
@@ -132,9 +121,7 @@ public class ShardHandoffManager {
         }
     }
 
-    /**
-     * Set border crossing cooldown to prevent rapid back-and-forth exploits
-     */
+
     public void setCooldown(UUID uuid, long durationMs) {
         try (Jedis redis = jedisPool.getResource()) {
             String key = COOLDOWN_PREFIX + uuid;
@@ -145,9 +132,7 @@ public class ShardHandoffManager {
         }
     }
 
-    /**
-     * Check if player is on cooldown
-     */
+
     public boolean isOnCooldown(UUID uuid) {
         try (Jedis redis = jedisPool.getResource()) {
             String key = COOLDOWN_PREFIX + uuid;
@@ -158,17 +143,12 @@ public class ShardHandoffManager {
         }
     }
 
-    /**
-     * Acquire anti-dupe lock
-     * Prevents player from existing on multiple shards simultaneously
-     */
+
     public boolean acquireLock(UUID uuid) {
         try (Jedis redis = jedisPool.getResource()) {
             String key = LOCK_PREFIX + uuid;
-            // SETNX = SET if Not eXists (atomic operation)
             Long result = redis.setnx(key, String.valueOf(System.currentTimeMillis()));
             if (result == 1) {
-                // Set expiry in case of crash
                 redis.expire(key, 10);
                 return true;
             }

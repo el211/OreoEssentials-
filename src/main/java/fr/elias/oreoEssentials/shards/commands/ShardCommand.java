@@ -19,13 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * FIXED: Command now actually creates world dimensions on each shard server
- * /shard create <worldname> <mode> <size> <shards>
- * /shard createworld <worldname> - Actually generate the world on this server
- * /shard info
- * /shard reload
- */
+
 public class ShardCommand implements CommandExecutor, TabCompleter {
 
     private final Plugin plugin;
@@ -64,11 +58,7 @@ public class ShardCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    /**
-     * /shard create <worldname> <mode> <size> <totalShards>
-     * This configures shards.yml but does NOT create worlds yet
-     * Example: /shard create survival GRID 10000 4
-     */
+
     private void handleCreate(CommandSender sender, String[] args) {
         if (args.length < 5) {
             sender.sendMessage("§cUsage: /shard create <worldname> <GRID|RADIAL> <size> <totalShards>");

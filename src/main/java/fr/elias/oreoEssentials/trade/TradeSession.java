@@ -14,79 +14,54 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-/**
- * Represents a single cross-server trade session.
- * This class is purely session state + UI wiring for the *local* server.
- * Networking/publishing is driven by TradeService via the callbacks.
- */
+
 public final class TradeSession {
 
-    /* ----------------------------------------------------------------------
-     * Identity & participants
-     * ---------------------------------------------------------------------- */
-    /** Canonical session id (SID) chosen by the acceptor/publisher and shared across servers. */
     private final UUID sid;
 
-    /** Participant A (left side / title "Trade: A ⇒ <name>") */
     private final UUID aId;
     private final String aName;
 
-    /** Participant B (right side) */
+
     private final UUID bId;
     private final String bName;
-    // --- Side helpers (ownership) ---
+
     private boolean isA(UUID uid) { return uid != null && uid.equals(aId); }
     private boolean isB(UUID uid) { return uid != null && uid.equals(bId); }
 
-    /* ----------------------------------------------------------------------
-     * Lifecycle flags
-     * ---------------------------------------------------------------------- */
-    /** True once we start closing (granting/cancelling). */
+
     private volatile boolean closing = false;
-    /** True once fully closed. */
     private volatile boolean closed  = false;
 
     public boolean isClosingOrClosed() { return closing || closed; }
     public void beginClosing() { this.closing = true; }
     public void markClosed()   { this.closed = true; this.closing = true; }
 
-    /* ----------------------------------------------------------------------
-     * Runtime / wiring
-     * ---------------------------------------------------------------------- */
+
     private final OreoEssentials plugin;
     private final TradeConfig   cfg;
 
-    /** Called by the menu/session when both sides are confirmed and we must perform the exchange. */
     private final Consumer<TradeSession> onFinish;
 
-    /** Called when trade cancels with a reason ("cancelled", "left", "timeout"). */
     private final BiConsumer<TradeSession, String> onCancel;
 
-    /** Called every time the local state changes; TradeService uses it to publish to the peer. */
     private final BiConsumer<TradeSession, Long> onStateChanged;
 
-    /** Active local menu (if any) for UI locking/refresh/closing. */
     private volatile TradeMenu menu;
 
-    /* ----------------------------------------------------------------------
-     * Mirrored trade state
-     * ---------------------------------------------------------------------- */
+
     private long version = 0L;         // monotonic session version (local + remote edits)
     private boolean aReady = false;     // A confirmed?
     private boolean bReady = false;     // B confirmed?
 
-    /** Fixed 18-slot offer areas per side (display model). */
     private final ItemStack[] offerA = new ItemStack[18];
     private final ItemStack[] offerB = new ItemStack[18];
 
-    /** If true, block any edits/clicks; used during confirm→grant race. */
     private volatile boolean uiLocked = false;
 
-    /** Set once items have been granted; ignore any further edits/packets. */
     private volatile boolean completed = false;
 
     private volatile boolean grantedOnce = false;
-    /** Called by TradeService (or right before it) to guard the grant. */
     public boolean tryMarkGrantingOnce() {
         synchronized (this) {
             if (grantedOnce) return false;
@@ -94,9 +69,7 @@ public final class TradeSession {
             return true;
         }
     }
-    /* ----------------------------------------------------------------------
-     * Constructor
-     * ---------------------------------------------------------------------- */
+
     public TradeSession(
             UUID sid,
             OreoEssentials plugin,
@@ -119,11 +92,7 @@ public final class TradeSession {
         this.onStateChanged = Objects.requireNonNull(onStateChanged, "onStateChanged");
     }
 
-    /* ======================================================================
-     * UI lifecycle
-     * ====================================================================== */
 
-    /** Opens the trade menu for whichever participants are currently online on this server. */
     public void open() {
         final Player pa = Bukkit.getPlayer(aId);
         final Player pb = Bukkit.getPlayer(bId);
@@ -142,7 +111,6 @@ public final class TradeSession {
         });
     }
 
-    /** Close inventories for local viewers (safe even if not open). */
     public void closeLocalViewers() {
         Bukkit.getScheduler().runTask(plugin, () -> {
             Player a = Bukkit.getPlayer(aId);
@@ -160,7 +128,6 @@ public final class TradeSession {
         }
     }
     public boolean isClosed() { return closed; }
-    /** Clears offer visuals (locally) and closes menus; used after grant/cancel. */
     public void forceClearAndCloseLocal() {
         Bukkit.getScheduler().runTask(plugin, () -> {
             try {
@@ -174,11 +141,7 @@ public final class TradeSession {
         });
     }
 
-    /* ======================================================================
-     * Local click callbacks (menu → session)
-     * ====================================================================== */
 
-    /** Toggle confirm for a side (forA=true → A; false → B). */
     public void clickConfirm(boolean forA) {
         log("[TRADE] clickConfirm side=" + (forA ? "A" : "B") + " before A=" + aReady + " B=" + bReady);
 
@@ -201,13 +164,10 @@ public final class TradeSession {
         bumpVersionAndFire();
 
         if (aReady && bReady) {
-            // Immediately lock UI to prevent any item pickup/drag while finishing.
             lockUiNow();
 
-            //  mark we're closing now; further cancels/edits will be ignored.
             beginClosing();
 
-            // Finish next tick: close UIs locally, then let service grant & broadcast.
             Bukkit.getScheduler().runTask(plugin, () -> {
                 closeLocalViewers();
                 onFinish.accept(this);
@@ -216,14 +176,12 @@ public final class TradeSession {
 
     }
 
-    /** Cancel from a local click. */
     public void clickCancel() {
         if (completed || uiLocked || isClosingOrClosed()) return;
         log("[TRADE] clickCancel");
         closeLocalViewers();
         onCancel.accept(this, "cancelled");
     }
-    /** Player-driven toggle confirm that enforces side ownership. */
     public void playerToggleConfirm(UUID who) {
         if (who == null) return;
         if (isA(who)) {
@@ -231,11 +189,10 @@ public final class TradeSession {
         } else if (isB(who)) {
             clickConfirm(false);
         } else {
-            // Unknown player => ignore
+
         }
     }
 
-    /** Player-driven offer edit that enforces side ownership. */
     public void playerSetOfferSlot(UUID who, int slot, ItemStack item) {
         if (who == null) return;
         if (isA(who)) {
@@ -243,14 +200,11 @@ public final class TradeSession {
         } else if (isB(who)) {
             setOfferSlot(false, slot, item);
         } else {
-            // Unknown player => ignore
+
         }
     }
 
-    /**
-     * Local edit of an offer slot.
-     * Any local modification clears that side's ready flag and bumps version.
-     */
+
     public void setOfferSlot(boolean forA, int slot, ItemStack item) {
         if (slot < 0 || slot >= 18) return;
         if (uiLocked || completed) return;
@@ -277,11 +231,6 @@ public final class TradeSession {
         bumpVersionAndFire();
     }
 
-    /* ======================================================================
-     * Cross-server synchronization (session-local)
-     * ====================================================================== */
-
-
     public void applyRemoteState(ItemStack[] newA, ItemStack[] newB, boolean readyA, boolean readyB, long newVersion) {
         log("[TRADE] applyRemoteState NEW v=" + newVersion + " (old " + version
                 + "), Aready=" + readyA + " Bready=" + readyB);
@@ -296,15 +245,7 @@ public final class TradeSession {
         this.version = newVersion;
     }
 
-    /* ======================================================================
-     * Locking helpers
-     * ====================================================================== */
 
-    /**
-     * Lock the UI instantly and swap offer displays with placeholders so
-     * the client can't pull items while confirm→grant is running.
-     * Safe to call multiple times.
-     */
     public void lockUiNow() {
         if (uiLocked) return;
         uiLocked = true;
@@ -325,40 +266,28 @@ public final class TradeSession {
         });
     }
 
-
-    /** Mark the session as completed (after grant). Any further edits are ignored. */
     public void markCompleted() { completed = true; }
 
     public boolean isUiLocked()  { return uiLocked; }
     public boolean isCompleted() { return completed; }
 
-    /* ======================================================================
-     * Helpers & accessors
-     * ====================================================================== */
-
     private boolean dbg() { return cfg != null && cfg.debugDeep; }
     private void log(String s) { if (dbg()) plugin.getLogger().info(s); }
 
-    /** Bump version and notify the service so it can publish the delta. */
     private void bumpVersionAndFire() {
         version++;
         try { onStateChanged.accept(this, version); } catch (Throwable ignored) {}
     }
 
-    // Identity
     public UUID getSid() { return sid; }
-    /** Back-compat alias used by some older code. */
     public UUID getId()  { return sid; }
-    /** Back-compat alias. */
     public UUID getTradeId() { return sid; }
 
-    // Participants
     public UUID getAId()   { return aId; }
     public UUID getBId()   { return bId; }
     public String getAName() { return aName; }
     public String getBName() { return bName; }
 
-    // Readiness
     public boolean isReadyA() { return aReady; }
     public boolean isReadyB() { return bReady; }
     public boolean isConfirmed(boolean forA) { return forA ? aReady : bReady; }
@@ -370,21 +299,14 @@ public final class TradeSession {
         return cfg;
     }
 
-    // Version
     public long getVersion() { return version; }
 
-    // Offer views (treat as read-only by callers)
     public ItemStack[] viewOfferA() { return offerA.clone(); }
     public ItemStack[] viewOfferB() { return offerB.clone(); }
 
-
-    // Compact snapshots for granting
     public ItemStack[] getOfferACompact() { return compact(offerA); }
     public ItemStack[] getOfferBCompact() { return compact(offerB); }
 
-    /* ----------------------------------------------------------------------
-     * Service-facing convenience setters (keep older callers working)
-     * ---------------------------------------------------------------------- */
 
     public void setOfferItemA(int index, ItemStack item) {
         if (index < 0 || index >= 18) return;
@@ -430,9 +352,6 @@ public final class TradeSession {
         bumpVersionAndFire();
     }
 
-    /* ----------------------------------------------------------------------
-     * Array + sound helpers
-     * ---------------------------------------------------------------------- */
 
     private static ItemStack[] compact(ItemStack[] src) {
         if (src == null) return new ItemStack[0];

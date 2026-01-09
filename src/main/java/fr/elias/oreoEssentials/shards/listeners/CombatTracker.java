@@ -7,10 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-/**
- * Tracks player damage for combat detection
- * This enhances the BorderDetectionListener's combat detection
- */
+
 public class CombatTracker implements Listener {
 
     private final BorderDetectionListener borderListener;

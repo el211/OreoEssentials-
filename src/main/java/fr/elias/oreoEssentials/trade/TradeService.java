@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/trade/TradeService.java
 package fr.elias.oreoEssentials.trade;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -17,67 +16,55 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
-import java.io.ByteArrayOutputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-
 public final class TradeService implements Listener {
 
-    /* ---------------------------------------------------------------------
-     * Constants
-     * --------------------------------------------------------------------- */
     public static final long INVITE_TTL_SECONDS = 60L;
 
     private final Map<UUID, Deque<TradeStatePacket>> pendingStates = new ConcurrentHashMap<>();
-
-
     private final OreoEssentials plugin;
     private final TradeConfig cfg;
-
-    private boolean dbg() {
-        try { return cfg != null && cfg.debugDeep; } catch (Throwable t) { return false; }
-    }
-    private void log(String s) { if (dbg()) plugin.getLogger().info(s); }
-
-
-    private int cleanupTaskId = 0; // Bukkit task id; 0 = none
-
+    private int cleanupTaskId = 0;
 
     private static final class Invite {
         final UUID fromId;
         final String fromName;
         final Instant createdAt = Instant.now();
+
         Invite(UUID fromId, String fromName) {
             this.fromId = fromId;
             this.fromName = (fromName == null ? "Player" : fromName);
         }
-        boolean expired(long ttl) { return Instant.now().isAfter(createdAt.plusSeconds(ttl)); }
-        @Override public String toString() {
+
+        boolean expired(long ttl) {
+            return Instant.now().isAfter(createdAt.plusSeconds(ttl));
+        }
+
+        @Override
+        public String toString() {
             return "Invite{fromId=" + fromId + ", fromName='" + fromName + "', at=" + createdAt + "}";
         }
     }
+
     private final Map<UUID, Invite> invites = new ConcurrentHashMap<>();
-
-
     private final ConcurrentMap<UUID, TradeSession> sessionsById = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> playerToSession = new ConcurrentHashMap<>();
-
     private final TradeMenuRegistry menuRegistry = new TradeMenuRegistry();
-    public TradeMenuRegistry getMenuRegistry() { return menuRegistry; }
-
-
     private final PendingGrantsDao pendingGrantsDao;
+    private final Set<String> deliveredGrants = ConcurrentHashMap.newKeySet();
 
     public TradeService(OreoEssentials plugin, TradeConfig cfg) {
-        this.plugin  = Objects.requireNonNull(plugin, "plugin");
-        this.cfg     = Objects.requireNonNull(cfg, "cfg");
+        this.plugin = Objects.requireNonNull(plugin, "plugin");
+        this.cfg = Objects.requireNonNull(cfg, "cfg");
 
         PendingGrantsDao dao = null;
         try {
@@ -88,24 +75,39 @@ public final class TradeService implements Listener {
         if (dao == null) dao = new InMemoryPendingGrantsDao();
         this.pendingGrantsDao = dao;
 
-        // Periodic invite cleanup (every 2s)
         this.cleanupTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(
                 plugin,
                 () -> { try { purgeExpiredInvites(); } catch (Throwable ignored) {} },
                 40L, 40L
         );
-        log("[TRADE] TradeService init; cleanupTaskId=" + cleanupTaskId + " tradedebug=" + cfg.debugDeep);
 
+        log("[TRADE] TradeService init; cleanupTaskId=" + cleanupTaskId + " tradedebug=" + cfg.debugDeep);
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
-    /** Convenience for legacy call sites. */
     public TradeService() {
         this(OreoEssentials.get(), new TradeConfig(OreoEssentials.get()));
     }
 
-    public TradeConfig getConfig() { return cfg; }
+    private boolean dbg() {
+        try {
+            return cfg != null && cfg.debugDeep;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
 
+    private void log(String s) {
+        if (dbg()) plugin.getLogger().info(s);
+    }
+
+    public TradeConfig getConfig() {
+        return cfg;
+    }
+
+    public TradeMenuRegistry getMenuRegistry() {
+        return menuRegistry;
+    }
 
     public void sendInvite(Player requester, Player target) {
         log("[TRADE] sendInvite requester=" + safe(requester) + " -> target=" + safe(target));
@@ -124,7 +126,6 @@ public final class TradeService implements Listener {
                 + requester.getName() + " §7to accept (expires in §e" + INVITE_TTL_SECONDS + "s§7).");
     }
 
-
     public boolean tryAcceptInvite(Player acceptor, String requesterName) {
         log("[TRADE] tryAcceptInvite acceptor=" + safe(acceptor) + " requesterName=" + requesterName);
         if (acceptor == null || requesterName == null || requesterName.isBlank()) return false;
@@ -139,6 +140,7 @@ public final class TradeService implements Listener {
             log("[TRADE] invite expired -> removed");
             return true;
         }
+
         if (!inv.fromName.equalsIgnoreCase(requesterName)) {
             log("[TRADE] invite exists but name mismatch (have='" + inv.fromName + "')");
             return false;
@@ -158,9 +160,7 @@ public final class TradeService implements Listener {
 
         if (broker != null && messaging) {
             invites.remove(acceptor.getUniqueId());
-
             UUID sid = TradeIds.computeTradeId(inv.fromId, acceptor.getUniqueId());
-
             boolean published = tryPublishStartWithSid(broker, sid, inv.fromId, inv.fromName, acceptor);
 
             if (!published) {
@@ -174,11 +174,8 @@ public final class TradeService implements Listener {
 
             log("[TRADE] acceptInvite sessionUpsert sid=" + sid
                     + " aId=" + inv.fromId + " bId=" + acceptor.getUniqueId());
-            openOrCreateCrossServerSession(
-                    sid,
-                    inv.fromId,   inv.fromName,
-                    acceptor.getUniqueId(), acceptor.getName()
-            );
+            openOrCreateCrossServerSession(sid, inv.fromId, inv.fromName,
+                    acceptor.getUniqueId(), acceptor.getName());
 
             acceptor.sendMessage("§aAccepted.§7 Opening cross-server trade with §f" + inv.fromName + "§7…");
             return true;
@@ -196,10 +193,15 @@ public final class TradeService implements Listener {
         return tryAcceptInvite(acceptor, inv.fromName);
     }
 
-    /** Called by the broker when a remote invite targets a local player. */
     public void addIncomingInvite(Player receiver, UUID fromId, String fromName) {
         log("[TRADE] addIncomingInvite receiver=" + safe(receiver) + " from=" + fromName + "/" + fromId);
         if (receiver == null || !receiver.isOnline() || fromId == null) return;
+
+        Invite existing = invites.get(receiver.getUniqueId());
+        if (existing != null && existing.fromId.equals(fromId)) {
+            log("[TRADE] duplicate invite ignored for " + receiver.getName() + " from " + fromName);
+            return;
+        }
 
         invites.put(receiver.getUniqueId(), new Invite(fromId, fromName));
         receiver.sendMessage("§e" + (fromName == null ? "Someone" : fromName)
@@ -210,6 +212,13 @@ public final class TradeService implements Listener {
 
     public void addIncomingInvite(UUID receiverId, UUID fromId, String fromName) {
         if (receiverId == null || fromId == null) return;
+
+        Invite existing = invites.get(receiverId);
+        if (existing != null && existing.fromId.equals(fromId)) {
+            log("[TRADE] duplicate invite ignored for " + receiverId + " from " + fromName);
+            return;
+        }
+
         invites.put(receiverId, new Invite(fromId, fromName));
         Player receiver = Bukkit.getPlayer(receiverId);
         if (receiver != null && receiver.isOnline()) {
@@ -220,11 +229,9 @@ public final class TradeService implements Listener {
         }
     }
 
-
     private void startLocalTrade(Player a, Player b) {
         UUID sid = TradeIds.computeTradeId(a.getUniqueId(), b.getUniqueId());
         clearGrantDedupFor(sid, a.getUniqueId(), b.getUniqueId());
-
         log("[TRADE] startLocalTrade sid=" + sid);
 
         TradeSession sess = sessionsById.computeIfAbsent(sid, __ ->
@@ -232,55 +239,110 @@ public final class TradeService implements Listener {
 
         playerToSession.put(a.getUniqueId(), sid);
         playerToSession.put(b.getUniqueId(), sid);
-
         sess.open();
-
         drainPendingStates(sid);
-
         log("[TRADE] local TradeSession.open() called sid=" + sid);
     }
 
-    public void openOrCreateCrossServerSession(
-            UUID sid,
-            UUID aId, String aName,
-            UUID bId, String bName
-    ) {
+    public void openOrCreateCrossServerSession(UUID sid, UUID aId, String aName, UUID bId, String bName) {
+        if (sid == null || aId == null || bId == null) {
+            log("[TRADE] openOrCreateCrossServerSession ABORT: null params");
+            return;
+        }
+
         log("[TRADE] openOrCreateCrossServerSession sid=" + sid
                 + " A=" + aName + "/" + aId + " B=" + bName + "/" + bId);
+
+        TradeSession existing = sessionsById.get(sid);
+        if (existing != null) {
+            if (existing.isClosingOrClosed() || existing.isClosed()) {
+                log("[TRADE] session already closing/closed, aborting open sid=" + sid);
+                return;
+            }
+            log("[TRADE] session already exists for sid=" + sid + ", reusing");
+        }
 
         TradeSession session = sessionsById.computeIfAbsent(sid, __ ->
                 buildSession(sid, aId, aName, bId, bName));
 
         clearGrantDedupFor(sid, aId, bId);
 
-        playerToSession.put(aId, sid);
-        playerToSession.put(bId, sid);
+        UUID oldSidA = playerToSession.put(aId, sid);
+        UUID oldSidB = playerToSession.put(bId, sid);
 
-        session.open();
+        if (oldSidA != null && !oldSidA.equals(sid)) {
+            log("[TRADE] player A was in another session " + oldSidA + ", cleaning up");
+            TradeSession oldA = sessionsById.get(oldSidA);
+            if (oldA != null && !oldA.isClosed()) {
+                try {
+                    returnAllAndCleanup(oldA, "New trade started");
+                } catch (Throwable t) {
+                    log("[TRADE] cleanup old session A failed: " + t.getMessage());
+                }
+            }
+        }
 
-        try {
-            Player a = Bukkit.getPlayer(aId);
-            if (a != null && a.isOnline()) menuRegistry.ensureOpen(a.getUniqueId(), session);
-        } catch (Throwable ignored) {}
-        try {
-            Player b = Bukkit.getPlayer(bId);
-            if (b != null && b.isOnline()) menuRegistry.ensureOpen(b.getUniqueId(), session);
-        } catch (Throwable ignored) {}
+        if (oldSidB != null && !oldSidB.equals(sid)) {
+            log("[TRADE] player B was in another session " + oldSidB + ", cleaning up");
+            TradeSession oldB = sessionsById.get(oldSidB);
+            if (oldB != null && !oldB.isClosed()) {
+                try {
+                    returnAllAndCleanup(oldB, "New trade started");
+                } catch (Throwable t) {
+                    log("[TRADE] cleanup old session B failed: " + t.getMessage());
+                }
+            }
+        }
 
-        drainPendingStates(sid);
+        Player localA = Bukkit.getPlayer(aId);
+        Player localB = Bukkit.getPlayer(bId);
+
+        boolean aIsLocal = localA != null && localA.isOnline();
+        boolean bIsLocal = localB != null && localB.isOnline();
+
+        log("[TRADE] local presence: A=" + aIsLocal + " B=" + bIsLocal);
+
+        if (!aIsLocal && !bIsLocal) {
+            log("[TRADE] ABORT: neither player is local on this server");
+            sessionsById.remove(sid);
+            playerToSession.remove(aId, sid);
+            playerToSession.remove(bId, sid);
+            return;
+        }
+
+        final TradeSession finalSession = session;
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            try {
+                if (!sessionsById.containsKey(sid)) {
+                    log("[TRADE] session removed before GUI open, aborting sid=" + sid);
+                    return;
+                }
+
+                if (finalSession.isClosingOrClosed() || finalSession.isClosed()) {
+                    log("[TRADE] session closed before GUI open, aborting sid=" + sid);
+                    return;
+                }
+
+                finalSession.open();
+                log("[TRADE] GUI opened for local viewers sid=" + sid);
+                drainPendingStates(sid);
+                log("[TRADE] drained pending states sid=" + sid);
+
+            } catch (Throwable t) {
+                log("[TRADE] error opening session GUI: " + t.getMessage());
+                t.printStackTrace();
+                try {
+                    returnAllAndCleanup(finalSession, "Failed to open trade GUI");
+                } catch (Throwable ignored) {}
+            }
+        }, 10L);
     }
-
-
 
     private TradeSession buildSession(UUID sid, UUID aId, String aName, UUID bId, String bName) {
         final UUID capturedSid = sid;
 
         return new TradeSession(
-                sid,
-                plugin,
-                cfg,
-                aId, aName,
-                bId, bName,
+                sid, plugin, cfg, aId, aName, bId, bName,
                 (finished) -> log("[TRADE] onFinish sid=" + capturedSid),
                 (s, reason) -> {
                     log("[TRADE] onCancel sid=" + capturedSid + " reason=" + reason);
@@ -305,16 +367,17 @@ public final class TradeService implements Listener {
         );
     }
 
+    public OreoEssentials getPlugin() {
+        return plugin;
+    }
 
-    public OreoEssentials getPlugin() { return plugin; }
-
-    public TradeSession getSession(UUID sid) { return sessionsById.get(sid); }
+    public TradeSession getSession(UUID sid) {
+        return sessionsById.get(sid);
+    }
 
     public UUID getTradeIdByPlayer(UUID playerId) {
         return playerId != null ? playerToSession.get(playerId) : null;
     }
-
-
 
     public void setOfferItem(UUID playerId, int index, ItemStack item) {
         if (playerId == null) return;
@@ -329,7 +392,7 @@ public final class TradeService implements Listener {
         boolean isA = playerId.equals(s.getAId());
         if (isA) {
             s.setOfferItemA(index, (item == null || item.getType().isAir()) ? null : item.clone());
-            s.setReadyA(false); // any local edit un-reads A
+            s.setReadyA(false);
         } else if (playerId.equals(s.getBId())) {
             s.setOfferItemB(index, (item == null || item.getType().isAir()) ? null : item.clone());
             s.setReadyB(false);
@@ -369,7 +432,6 @@ public final class TradeService implements Listener {
 
     public void requestCancel(UUID playerId) {
         if (playerId == null) return;
-
         UUID sid = getTradeIdByPlayer(playerId);
         log("[TRADE] requestCancel by=" + playerId + " sid=" + sid);
         if (sid == null) return;
@@ -402,11 +464,8 @@ public final class TradeService implements Listener {
 
         publishState(sid, s);
         refreshLocalViewers(s);
-
-        // Policy: close -> cancel & return everything to be safe
         returnAllAndCleanup(s, "Trade closed.");
     }
-
 
     private void finalizeIfBothReady(UUID sid) {
         TradeSession s = getSession(sid);
@@ -417,6 +476,18 @@ public final class TradeService implements Listener {
             return;
         }
 
+        String localServer = plugin.getConfigService().serverName();
+        String nodeA = findNodeFor(s.getAId());
+        boolean weAreLeader = localServer != null && localServer.equalsIgnoreCase(nodeA);
+
+        if (!weAreLeader) {
+            log("[TRADE] finalizeIfBothReady skipped (we are not leader) sid=" + sid
+                    + " localServer=" + localServer + " nodeA=" + nodeA);
+            s.beginClosing();
+            return;
+        }
+
+        log("[TRADE] finalizeIfBothReady WE ARE LEADER sid=" + sid);
         s.beginClosing();
         s.lockUiNow();
 
@@ -424,8 +495,8 @@ public final class TradeService implements Listener {
             try {
                 var broker = plugin.getTradeBroker();
                 if (broker != null && plugin.isMessagingAvailable()) {
-                    ItemStack[] itemsForA = getItemsForA(s); // A receives B's items
-                    ItemStack[] itemsForB = getItemsForB(s); // B receives A's items
+                    ItemStack[] itemsForA = getItemsForA(s);
+                    ItemStack[] itemsForB = getItemsForB(s);
 
                     log("[TRADE] finalize sid=" + s.getId()
                             + " toA=" + summarize(itemsForA)
@@ -438,7 +509,8 @@ public final class TradeService implements Listener {
                                 + " grantToA=" + countNonAir(itemsForA)
                                 + " grantToB=" + countNonAir(itemsForB));
                     } catch (Throwable netErr) {
-                        plugin.getLogger().warning("[TRADE] sendTradeGrant failed, falling back to local completion: " + netErr.getMessage());
+                        plugin.getLogger().warning("[TRADE] sendTradeGrant failed, falling back to local completion: "
+                                + netErr.getMessage());
                         completeTradeLocally(s);
                         return;
                     }
@@ -458,23 +530,26 @@ public final class TradeService implements Listener {
         });
     }
 
+    private String findNodeFor(UUID playerId) {
+        try {
+            var dir = plugin.getPlayerDirectory();
+            return (dir != null) ? dir.lookupCurrentServer(playerId) : null;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
 
-
-    private static String summarize(ItemStack[] arr){
+    private static String summarize(ItemStack[] arr) {
         if (arr == null) return "[]";
         StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < arr.length; i++){
+        for (int i = 0; i < arr.length; i++) {
             ItemStack it = arr[i];
-            if (it != null && !it.getType().isAir()){
+            if (it != null && !it.getType().isAir()) {
                 sb.append(i).append('=').append(it.getType()).append('x').append(it.getAmount()).append(", ");
             }
         }
-        if (sb.length() > 1) sb.setLength(sb.length()-2);
+        if (sb.length() > 1) sb.setLength(sb.length() - 2);
         return sb.append(']').toString();
-    }
-
-    private void debugGrid(TradeSession s){
-        log("A=" + summarize(s.viewOfferA()) + " | B=" + summarize(s.viewOfferB()));
     }
 
     private void completeTradeLocally(TradeSession s) {
@@ -578,16 +653,15 @@ public final class TradeService implements Listener {
     private void cleanupSession(TradeSession s) {
         UUID sid = s.getId();
         sessionsById.remove(sid);
-        clearGrantDedupFor(sid, s.getAId(), s.getBId()); // <-- add
-
+        clearGrantDedupFor(sid, s.getAId(), s.getBId());
         playerToSession.entrySet().removeIf(e -> sid.equals(e.getValue()));
-        publishClose(sid); // optional: inform other servers
+        publishClose(sid);
     }
 
     private void cleanupSessionSilent(TradeSession s) {
         if (s == null) return;
         UUID sid = s.getId();
-        clearGrantDedupFor(sid, s.getAId(), s.getBId()); // <-- add
+        clearGrantDedupFor(sid, s.getAId(), s.getBId());
 
         try { sessionsById.remove(sid); } catch (Throwable ignored) {}
         try { playerToSession.entrySet().removeIf(e -> sid.equals(e.getValue())); } catch (Throwable ignored) {}
@@ -595,15 +669,12 @@ public final class TradeService implements Listener {
         try { if (menuRegistry != null) menuRegistry.unregister(s.getBId()); } catch (Throwable ignored) {}
     }
 
-
-    /** Repaint both local viewers, if present on this server. */
     private void refreshLocalViewers(TradeSession s) {
         var reg = getMenuRegistry();
         if (reg == null) return;
         try { reg.refreshViewer(s.getAId()); } catch (Throwable ignored) {}
         try { reg.refreshViewer(s.getBId()); } catch (Throwable ignored) {}
     }
-
 
     public void cancelTradeFor(UUID playerId, String reason) {
         if (playerId == null) return;
@@ -629,10 +700,7 @@ public final class TradeService implements Listener {
         TradeSession s = sessionsById.remove(sid);
         log("[TRADE] cancelSession sid=" + sid + " hadSession=" + (s != null) + " reason=" + reason);
         if (s == null) return;
-
-        // reverse index cleanup
         playerToSession.entrySet().removeIf(e -> sid.equals(e.getValue()));
-
         s.closeLocalViewers();
     }
 
@@ -698,40 +766,20 @@ public final class TradeService implements Listener {
             } catch (Throwable ignored) {}
         }
     }
-    private static byte[] encodeOffer(ItemStack[] items) {
-        if (items == null) items = new ItemStack[0];
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             BukkitObjectOutputStream oos = new BukkitObjectOutputStream(baos)) {
-            // write a compact count (skip null/AIR)
-            int count = 0;
-            for (ItemStack it : items) if (it != null && !it.getType().isAir()) count++;
-            oos.writeInt(count);
-            for (ItemStack it : items) {
-                if (it == null || it.getType().isAir()) continue;
-                oos.writeObject(it);
-            }
-            oos.flush();
-            return baos.toByteArray();
-        } catch (Throwable t) {
-            return new byte[0];
-        }
-    }
+
     private void clearGrantDedupFor(UUID sid, UUID aId, UUID bId) {
         if (sid == null) return;
         try { deliveredGrants.remove(grantKey(sid, aId)); } catch (Throwable ignored) {}
         try { deliveredGrants.remove(grantKey(sid, bId)); } catch (Throwable ignored) {}
     }
 
-    private final Set<String> deliveredGrants = ConcurrentHashMap.newKeySet();
     private static String grantKey(UUID sid, UUID to) {
         return sid + "|" + to;
     }
 
-
     public void handleRemoteGrant(TradeGrantPacket p) {
         if (p == null) return;
 
-        // Always run on main
         if (!Bukkit.isPrimaryThread()) {
             Bukkit.getScheduler().runTask(plugin, () -> handleRemoteGrant(p));
             return;
@@ -739,11 +787,10 @@ public final class TradeService implements Listener {
 
         try {
             UUID sid = p.getSessionId();
-            UUID to  = p.getGrantTo();
+            UUID to = p.getGrantTo();
 
             String key = grantKey(sid, to);
             if (!deliveredGrants.add(key)) {
-
                 return;
             }
 
@@ -770,7 +817,6 @@ public final class TradeService implements Listener {
             if (target == null || !target.isOnline()) {
                 plugin.getLogger().warning("[TRADE] Grant target offline; saving pending grant. sid=" + sid);
                 try {
-                    // Store only the filtered items (no GUI junk) as pending
                     pendingGrantsDao.storePending(to, sid, items);
                 } catch (Throwable t) {
                     plugin.getLogger().severe("[TRADE] Failed to save pending grant: " + t.getMessage());
@@ -812,14 +858,10 @@ public final class TradeService implements Listener {
         }
     }
 
-
-
-
     public void grantItems(Player player, ItemStack[] items) {
         if (player == null || items == null || items.length == 0) return;
 
-        plugin.getLogger().info("[TRADE] grantItems -> " + player.getName()
-                + " items=" + summarize(items));
+        plugin.getLogger().info("[TRADE] grantItems -> " + player.getName() + " items=" + summarize(items));
         List<ItemStack> give = new ArrayList<>();
         for (ItemStack it : items) {
             if (it == null || it.getType().isAir() || it.getAmount() <= 0) continue;
@@ -827,8 +869,7 @@ public final class TradeService implements Listener {
         }
         if (give.isEmpty()) return;
 
-        Map<Integer, ItemStack> leftover = player.getInventory()
-                .addItem(give.toArray(new ItemStack[0]));
+        Map<Integer, ItemStack> leftover = player.getInventory().addItem(give.toArray(new ItemStack[0]));
 
         if (!leftover.isEmpty()) {
             leftover.values().forEach(rem -> {
@@ -838,9 +879,10 @@ public final class TradeService implements Listener {
             });
         }
 
-        try { player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1f, 1f); } catch (Throwable ignored) {}
+        try {
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1f, 1f);
+        } catch (Throwable ignored) {}
     }
-
 
     public void removeSession(UUID sid) {
         if (sid == null) return;
@@ -852,12 +894,9 @@ public final class TradeService implements Listener {
         }
     }
 
-
     private void publishState(UUID sid, TradeSession s) {
         var broker = plugin.getTradeBroker();
-        if (broker == null) {
-            return;
-        }
+        if (broker == null) return;
 
         if (s == null || s.isClosingOrClosed() || s.isClosed() || s.isUiLocked() || s.isCompleted()) {
             return;
@@ -867,12 +906,12 @@ public final class TradeService implements Listener {
         Player b = Bukkit.getPlayer(s.getBId());
 
         if (a != null && a.isOnline()) {
-            ItemStack[] offerA = filterOfferArray(s.viewOfferA()); // ⬅️ filter out fillers
+            ItemStack[] offerA = filterOfferArray(s.viewOfferA());
             broker.publishState(sid, a, s.isReadyA(), offerA);
         }
 
         if (b != null && b.isOnline()) {
-            ItemStack[] offerB = filterOfferArray(s.viewOfferB()); // ⬅️ filter out fillers
+            ItemStack[] offerB = filterOfferArray(s.viewOfferB());
             broker.publishState(sid, b, s.isReadyB(), offerB);
         }
     }
@@ -888,7 +927,6 @@ public final class TradeService implements Listener {
                 .toArray(ItemStack[]::new);
     }
 
-
     private boolean isNotDecorativeGuiItem(ItemStack item) {
         if (item == null) return false;
 
@@ -896,7 +934,6 @@ public final class TradeService implements Listener {
         if (type == null || type.isAir()) return false;
 
         String matName = type.name();
-
 
         if (matName.contains("GLASS") || matName.contains("PANE")) {
             return false;
@@ -913,25 +950,17 @@ public final class TradeService implements Listener {
         }
 
         if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
-            String name = org.bukkit.ChatColor.stripColor(
-                    item.getItemMeta().getDisplayName()
-            ).toLowerCase(java.util.Locale.ROOT);
+            String name = org.bukkit.ChatColor.stripColor(item.getItemMeta().getDisplayName())
+                    .toLowerCase(java.util.Locale.ROOT);
 
-            if (name.contains("filler")
-                    || name.contains("border")
-                    || name.contains("trade ui")
-                    || name.contains("locked")
-                    || name.contains("interface")
-                    || name.contains("menu")) {
+            if (name.contains("filler") || name.contains("border") || name.contains("trade ui")
+                    || name.contains("locked") || name.contains("interface") || name.contains("menu")) {
                 return false;
             }
         }
 
         return true;
     }
-
-
-
 
     private void publishClose(UUID sid) {
         try {
@@ -942,14 +971,10 @@ public final class TradeService implements Listener {
                 Method m = broker.getClass().getMethod("publishClose", UUID.class);
                 m.invoke(broker, sid);
             } catch (NoSuchMethodException ignore) {
-                // ok if not supported
             }
         } catch (Throwable ignored) {}
     }
 
-    /* ---------------------------------------------------------------------
-     * Housekeeping
-     * --------------------------------------------------------------------- */
     private void purgeExpiredInvites() {
         if (!dbg()) {
             invites.entrySet().removeIf(e -> e.getValue().expired(INVITE_TTL_SECONDS));
@@ -958,25 +983,22 @@ public final class TradeService implements Listener {
         int before = invites.size();
         invites.entrySet().removeIf(e -> e.getValue().expired(INVITE_TTL_SECONDS));
         int after = invites.size();
-        if (before != after) log("[TRADE] purgeExpiredInvites removed=" + (before - after) + " remaining=" + after);
+        if (before != after) {
+            log("[TRADE] purgeExpiredInvites removed=" + (before - after) + " remaining=" + after);
+        }
     }
 
-    /* ---------------------------------------------------------------------
-     * Utils
-     * --------------------------------------------------------------------- */
     private static String safe(Player p) {
         return (p == null ? "null" : p.getName() + "/" + p.getUniqueId());
     }
 
     private boolean tryPublishStartWithSid(Object broker, UUID sid, UUID requesterId, String requesterName, Player acceptor) {
         try {
-            // prefer publishStart(...)
             Method m = broker.getClass().getMethod("publishStart", UUID.class, UUID.class, String.class, Player.class);
             m.invoke(broker, sid, requesterId, requesterName, acceptor);
             log("[TRADE] broker.publishStart(sid, ...) called.");
             return true;
         } catch (NoSuchMethodException ignore) {
-            // try startTrade(...)
             try {
                 Method m2 = broker.getClass().getMethod("startTrade", UUID.class, UUID.class, String.class, Player.class);
                 m2.invoke(broker, sid, requesterId, requesterName, acceptor);
@@ -993,7 +1015,6 @@ public final class TradeService implements Listener {
             return false;
         }
     }
-
 
     private ItemStack[] getItemsForA(TradeSession s) {
         try {
@@ -1023,21 +1044,18 @@ public final class TradeService implements Listener {
     public void handleRemoteClose(TradeClosePacket pkt) {
         if (pkt == null) return;
 
-        UUID sid    = pkt.getSessionId();
+        UUID sid = pkt.getSessionId();
         UUID target = pkt.getGrantTo();
 
         TradeSession s = getSession(sid);
         if (s == null) return;
 
-
-        // Mark closing & lock UI immediately to prevent any last-millisecond edits
         try { s.beginClosing(); } catch (Throwable ignored) {}
-        try { s.lockUiNow(); }   catch (Throwable ignored) {}
+        try { s.lockUiNow(); } catch (Throwable ignored) {}
 
         UUID aId = s.getAId();
         UUID bId = s.getBId();
 
-        // Hard-close inventories for any local viewers (target + other participant)
         Bukkit.getScheduler().runTask(plugin, () -> {
             try {
                 Player pt = Bukkit.getPlayer(target);
@@ -1051,18 +1069,13 @@ public final class TradeService implements Listener {
             } catch (Throwable ignored) {}
         });
 
-        // Drop any SmartInvs/registry mapping (best-effort)
         try { if (menuRegistry != null) menuRegistry.unregister(target); } catch (Throwable ignored) {}
-        try { if (menuRegistry != null) menuRegistry.unregister(aId);    } catch (Throwable ignored) {}
-        try { if (menuRegistry != null) menuRegistry.unregister(bId);    } catch (Throwable ignored) {}
-
-        // Mark completed to short-circuit any late state packets on this node
+        try { if (menuRegistry != null) menuRegistry.unregister(aId); } catch (Throwable ignored) {}
+        try { if (menuRegistry != null) menuRegistry.unregister(bId); } catch (Throwable ignored) {}
         try { s.markCompleted(); } catch (Throwable ignored) {}
 
-        // IMPORTANT: do NOT publish close back to the network (avoid loops)
         cleanupSessionSilent(s);
     }
-
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
@@ -1082,24 +1095,18 @@ public final class TradeService implements Listener {
         }
     }
 
-    /* ---------------------------------------------------------------------
-     * Early-state mailbox helpers
-     * --------------------------------------------------------------------- */
     private void enqueueState(TradeStatePacket p) {
         pendingStates.computeIfAbsent(p.getSessionId(), k -> new ArrayDeque<>(8)).addLast(p);
 
-        // Watchdog: if Start hasn't arrived in ~1s, try re-requesting it.
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (sessionsById.get(p.getSessionId()) == null &&
-                    pendingStates.containsKey(p.getSessionId())) {
+            if (sessionsById.get(p.getSessionId()) == null && pendingStates.containsKey(p.getSessionId())) {
                 try {
                     var broker = plugin.getTradeBroker();
-                    if (broker != null) broker.requestStartReplay(p.getSessionId()); // implement as no-op safe
+                    if (broker != null) broker.requestStartReplay(p.getSessionId());
                 } catch (Throwable ignored) {}
             }
         }, 20L);
     }
-
 
     private void drainPendingStates(UUID sid) {
         Deque<TradeStatePacket> q = pendingStates.remove(sid);

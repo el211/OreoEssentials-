@@ -16,10 +16,7 @@ import org.bukkit.potion.PotionEffect;
 
 import java.util.UUID;
 
-/**
- * Restores player state when they arrive on target shard
- * CRITICAL: Must run immediately on join for seamless experience
- */
+
 public class ShardJoinListener implements Listener {
 
     private final Plugin plugin;

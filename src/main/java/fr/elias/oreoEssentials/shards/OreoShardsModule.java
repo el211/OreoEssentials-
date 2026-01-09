@@ -10,9 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.FileWriter;
 
-/**
- * FIXED: Improved command registration with diagnostics
- */
+
 public class OreoShardsModule {
 
     private final JavaPlugin plugin;
@@ -28,7 +26,6 @@ public class OreoShardsModule {
     public void enable() {
         plugin.getLogger().info("[Sharding] Starting initialization...");
 
-        // 1. Load config
         File configFile = new File(plugin.getDataFolder(), "shards.yml");
 
         if (!configFile.exists()) {
@@ -44,16 +41,13 @@ public class OreoShardsModule {
         FileConfiguration configYml = YamlConfiguration.loadConfiguration(configFile);
         this.config = new ShardConfig(configYml);
 
-        // Check if sharding is enabled
         if (!config.isEnabled()) {
             plugin.getLogger().info("[Sharding] Disabled in config (sharding.enabled=false)");
 
-            // STILL REGISTER COMMAND even if disabled (for /shard create)
             registerShardCommand();
             return;
         }
 
-        // 2. Initialize Redis handoff manager
         ShardConfig.RedisConfig redisConfig = config.getRedis();
         this.handoffManager = new ShardHandoffManager(
                 redisConfig.host,
@@ -61,34 +55,28 @@ public class OreoShardsModule {
                 redisConfig.password
         );
 
-        // Test Redis connection
         if (!handoffManager.testConnection()) {
             plugin.getLogger().severe("[Sharding] Failed to connect to Redis!");
             plugin.getLogger().severe("[Sharding] Check your Redis configuration in shards.yml");
             plugin.getLogger().info("[Sharding] Command /shard will still work for configuration");
 
-            // STILL REGISTER COMMAND even if Redis fails
             registerShardCommand();
             return;
         }
 
         plugin.getLogger().info("[Sharding] Connected to Redis successfully");
 
-        // 3. Determine current shard ID
         String shardId = System.getProperty("shardId", "shard-0-0");
         plugin.getLogger().info("[Sharding] Running as shard: " + shardId);
 
-        // 4. Initialize shard manager
         this.shardManager = new ShardManager(plugin, config, shardId);
 
-        // 5. Register listeners
         this.borderListener = new BorderDetectionListener(shardManager, handoffManager, config);
 
         plugin.getServer().getPluginManager().registerEvents(
                 borderListener,
                 plugin
         );
-        // Register chunk preload listener
         plugin.getServer().getPluginManager().registerEvents(
                 new ChunkPreloadListener(plugin, redisConfig.host, redisConfig.port, redisConfig.password),
                 plugin
@@ -97,7 +85,6 @@ public class OreoShardsModule {
                 new CombatTracker(borderListener),
                 plugin
         );
-        // Register safe zone listener (PvP protection near borders)
         SafeZoneListener safeZoneListener = new SafeZoneListener(shardManager);
         plugin.getServer().getPluginManager().registerEvents(
                 safeZoneListener,
@@ -108,7 +95,6 @@ public class OreoShardsModule {
                 plugin
         );
 
-        // 6. Register /shard command
         registerShardCommand();
 
         plugin.getLogger().info("[Sharding] OreoEssentials Sharding enabled!");
@@ -116,20 +102,16 @@ public class OreoShardsModule {
         plugin.getLogger().info("[Sharding] Worlds configured: " + getConfiguredWorldsCount());
     }
 
-    /**
-     * FIXED: Separate method for command registration with detailed diagnostics
-     */
+
     private void registerShardCommand() {
         plugin.getLogger().info("[Sharding] Attempting to register /shard command...");
 
-        // Create command executor
         var shardCmd = new fr.elias.oreoEssentials.shards.commands.ShardCommand(
                 plugin,
                 shardManager,
                 config
         );
 
-        // Try to get command from plugin.yml
         org.bukkit.command.PluginCommand cmd = plugin.getCommand("shard");
 
         if (cmd == null) {
@@ -141,7 +123,6 @@ public class OreoShardsModule {
             return;
         }
 
-        // Set executor and tab completer
         cmd.setExecutor(shardCmd);
         cmd.setTabCompleter(shardCmd);
 
@@ -150,7 +131,6 @@ public class OreoShardsModule {
         plugin.getLogger().info("[Sharding] ✓ Command name: " + cmd.getName());
         plugin.getLogger().info("[Sharding] ✓ Aliases: " + cmd.getAliases());
 
-        // Verify registration
         try {
             if (cmd.getExecutor() == null) {
                 plugin.getLogger().severe("[Sharding] ✗ WARNING: Executor is null after registration!");

@@ -26,14 +26,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * TradeMenu (restored & fixed)
- * - Dual SmartInvs (invA/invB) so each local viewer has their own editable 3x3.
- * - Uses contents.setEditable(...) only on the viewer's grid (guard allows placement there).
- * - Mirrors edits to the partner's grid instantly for zero-lag local feedback.
- * - Pushes edits via TradeService.setOfferItem(...) which publishes through the broker.
- * - Provides refreshFromSession() for remote-state paints.
- */
+
 public final class TradeMenu implements InventoryProvider {
 
     private final OreoEssentials plugin;
@@ -44,18 +37,15 @@ public final class TradeMenu implements InventoryProvider {
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
 
-    /** Locals on THIS server (either may be null if remote). */
     private final Player a; // side A if local here (may be null)
     private final Player b; // side B if local here (may be null)
 
     private final SmartInventory invA;
     private final SmartInventory invB;
 
-    // 3×3 offer zones (rows 2..4; columns: A=1..3, B=5..7) – column 4 kept for divider
     private static final int[] A_AREA_SLOTS = slotsOfRect(2, 1, 3, 3); // left: cols 1,2,3
     private static final int[] B_AREA_SLOTS = slotsOfRect(2, 5, 3, 3); // right: cols 5,6,7
 
-    // last snapshots to detect local edits
     private final ItemStack[] lastSnapshotA = new ItemStack[9];
     private final ItemStack[] lastSnapshotB = new ItemStack[9];
 
@@ -106,7 +96,6 @@ public final class TradeMenu implements InventoryProvider {
         return plugin;
     }
 
-    /** Open both viewers (if local) and register in registry. */
     public void openForBoth() {
         Bukkit.getScheduler().runTask(plugin, () -> {
             try {
@@ -143,43 +132,32 @@ public final class TradeMenu implements InventoryProvider {
         } catch (Throwable ignored) {}
     }
 
-    /** MUST be called by your InventoryCloseEvent listener to avoid leaks. */
     public void onClose(Player p) {
         try {
             if (reg != null && p != null) reg.unregister(p.getUniqueId());
         } catch (Throwable ignored) {}
     }
 
-    // ------------------------------------------------------------------------
-    // SmartInvs lifecycle
-    // ------------------------------------------------------------------------
 
     @Override
     public void init(Player viewer, InventoryContents contents) {
-        // Mark ONLY the viewer's own 3x3 as editable so the guard lets clicks through
         final boolean isAViewer = (a != null && viewer.getUniqueId().equals(a.getUniqueId()));
         final int[] editable = isAViewer ? A_AREA_SLOTS : B_AREA_SLOTS;
         markEditable(contents, editable);
 
-        // Borders
         ItemStack border = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ClickableItem borderItem = ClickableItem.empty(border);
 
-        // Top row
         for (int c = 0; c < 9; c++) contents.set(0, c, borderItem);
-        // Bottom row (except controls)
         for (int c = 0; c < 9; c++) {
             if (c == 2 || c == 4 || c == 6) continue;
             contents.set(5, c, borderItem);
         }
-        // Left/right verticals
         for (int r = 1; r < 5; r++) {
             contents.set(r, 0, borderItem);
             contents.set(r, 8, borderItem);
         }
 
-        // Headers (player heads)
-// Headers (player heads)
         if (a != null) {
             String aName = Lang.get("trade.player-name", "<yellow>%name%</yellow>")
                     .replace("%name%", a.getName());
@@ -191,7 +169,6 @@ public final class TradeMenu implements InventoryProvider {
             contents.set(1, 7, ClickableItem.empty(playerHead(b.getUniqueId(), legacy(bName))));
         }
 
-        // Divider (material + name from trade.yml)
         ItemStack divider = new ItemStack(config.dividerMaterial);
         ItemMeta dMeta = divider.getItemMeta();
         if (dMeta != null) {
@@ -204,19 +181,15 @@ public final class TradeMenu implements InventoryProvider {
         contents.set(3, 4, dividerItem);
         contents.set(4, 4, dividerItem);
 
-        // Info (placeholder)
         contents.set(1, 4, ClickableItem.empty(new ItemStack(Material.BOOK)));
 
-        // Buttons
         contents.set(5, 2, confirmButton(viewer, false));  // my confirm
         contents.set(5, 4, cancelButton(viewer));          // cancel
         contents.set(5, 6, partnerReadyIndicator(false));  // partner status
 
-        // Reset snapshots
         Arrays.fill(lastSnapshotA, null);
         Arrays.fill(lastSnapshotB, null);
 
-        // Ensure registered even if inv.open(viewer) used directly
         registerViewer(viewer);
     }
 
@@ -226,7 +199,6 @@ public final class TradeMenu implements InventoryProvider {
 
         final boolean isAViewer = (a != null && viewer.getUniqueId().equals(a.getUniqueId()));
 
-        // Resolve session via viewer -> sid
         UUID sid = service.getTradeIdByPlayer(viewer.getUniqueId());
         if (sid == null) return;
         TradeSession sess = service.getSession(sid);
@@ -234,11 +206,9 @@ public final class TradeMenu implements InventoryProvider {
 
         Inventory top = viewer.getOpenInventory().getTopInventory();
 
-        // 1) Push local edits from viewer's zone
         if (isAViewer) mirrorEdits(viewer, top, A_AREA_SLOTS, lastSnapshotA);
         else mirrorEdits(viewer, top, B_AREA_SLOTS, lastSnapshotB);
 
-        // 2) Paint opponent area from session (read-only ghost items)
         ItemStack[] other = isAViewer ? sess.viewOfferB() : sess.viewOfferA();
         int[] otherSlots = isAViewer ? B_AREA_SLOTS : A_AREA_SLOTS;
 
@@ -259,11 +229,6 @@ public final class TradeMenu implements InventoryProvider {
         });
     }
 
-    // ------------------------------------------------------------------------
-    // External refresh hook (called by TradeService after applyRemoteState)
-    // ------------------------------------------------------------------------
-
-    /** Repaint any local viewers (A and/or B) from the latest TradeSession state. */
     public void refreshFromSession() {
         if (service == null) return;
 
@@ -308,9 +273,6 @@ public final class TradeMenu implements InventoryProvider {
         } catch (Throwable ignored) {}
     }
 
-    // ------------------------------------------------------------------------
-    // Helpers
-    // ------------------------------------------------------------------------
 
     private static void markEditable(InventoryContents contents, int[] slots) {
         for (int raw : slots) {
@@ -333,7 +295,6 @@ public final class TradeMenu implements InventoryProvider {
         return out;
     }
 
-    /** Read viewer's 3×3, push to service, and mirror into opponent's grid locally. */
     private void mirrorEdits(Player viewer, Inventory top, int[] slots, ItemStack[] last) {
         for (int i = 0; i < slots.length; i++) {
             int invSlot = slots[i];
@@ -342,7 +303,6 @@ public final class TradeMenu implements InventoryProvider {
             if (!isSame(now, was)) {
                 last[i] = cloneOrNull(now);
 
-                // Push to TradeService (this un-readies the side and publishes via broker)
                 UUID sid = service.getTradeIdByPlayer(viewer.getUniqueId());
                 if (sid != null) {
                     TradeSession sess = service.getSession(sid);
@@ -351,7 +311,6 @@ public final class TradeMenu implements InventoryProvider {
                     }
                 }
 
-                // Instant local mirror for the opponent (if also on this server)
                 final int idx = i;
                 final ItemStack itemCopy = cloneOrNull(now);
                 Bukkit.getScheduler().runTask(plugin, () -> {
@@ -417,9 +376,7 @@ public final class TradeMenu implements InventoryProvider {
         }
     }
 
-    // ------------------------------------------------------------------------
-    // Buttons
-    // ------------------------------------------------------------------------
+
 
     private ClickableItem confirmButton(Player viewer, boolean ready) {
         ItemStack it = buildConfirmIcon(ready);
@@ -487,7 +444,6 @@ public final class TradeMenu implements InventoryProvider {
         return it;
     }
 
-    /** Replace both sides' offer areas with neutral placeholders to visually lock the UI. */
     public void replaceOffersWithPlaceholdersSafely() {
         try {
             // Build a simple "Locked" pane
@@ -511,7 +467,6 @@ public final class TradeMenu implements InventoryProvider {
         } catch (Throwable ignored) {}
     }
 
-    /** Clear both sides' offer areas (used as a belt-and-suspenders during close). */
     public void clearAllOfferSlotsSafely() {
         try {
             int[] offerSlotsA = getOfferSlotsAOrEmpty();
@@ -548,9 +503,7 @@ public final class TradeMenu implements InventoryProvider {
         } catch (Throwable ignored) {}
     }
 
-    // --- Helpers expected by TradeMenuRegistry ---
 
-    /** Factory used by the registry to build a menu from a TradeSession. */
     public static TradeMenu createForSession(TradeSession session) {
         if (session == null) return null;
         OreoEssentials pl = session.getPlugin();
@@ -560,7 +513,6 @@ public final class TradeMenu implements InventoryProvider {
         return new TradeMenu(pl, cfg, aLocal, bLocal);
     }
 
-    /** Open the correct SmartInvs instance for this viewer (A or B). */
     public void openFor(UUID viewerId) {
         if (viewerId == null) return;
         if (a != null && a.isOnline() && a.getUniqueId().equals(viewerId)) {
@@ -574,7 +526,6 @@ public final class TradeMenu implements InventoryProvider {
         }
     }
 
-    /** Best-effort check if the viewer currently has *this* trade menu open. */
     public boolean isOpenFor(UUID viewerId) {
         Player p = (viewerId != null ? Bukkit.getPlayer(viewerId) : null);
         if (p == null || !p.isOnline() || p.getOpenInventory() == null) return false;

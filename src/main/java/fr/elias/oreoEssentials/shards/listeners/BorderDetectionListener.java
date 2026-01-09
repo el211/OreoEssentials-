@@ -83,17 +83,12 @@ public class BorderDetectionListener implements Listener {
         }
     }
 
-    /**
-     * Track when player takes damage (for combat detection)
-     * Call this from EntityDamageEvent listener
-     */
+
     public void onPlayerDamage(UUID uuid) {
         lastDamageTime.put(uuid, System.currentTimeMillis());
     }
 
-    /**
-     * Check if player is in a state where transfer would be unsafe
-     */
+
     private boolean isUnsafeToTransfer(Player player) {
         UUID uuid = player.getUniqueId();
 
@@ -133,9 +128,7 @@ public class BorderDetectionListener implements Listener {
         return false;
     }
 
-    /**
-     * Initiate the seamless transfer
-     */
+
     private void initiateTransfer(Player player, String targetShard) {
         UUID uuid = player.getUniqueId();
 
@@ -170,9 +163,7 @@ public class BorderDetectionListener implements Listener {
         }
     }
 
-    /**
-     * Cleanup damage tracking on player quit
-     */
+
     public void cleanupPlayer(UUID uuid) {
         lastDamageTime.remove(uuid);
     }

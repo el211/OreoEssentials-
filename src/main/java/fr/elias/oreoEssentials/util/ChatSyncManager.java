@@ -1,4 +1,3 @@
-    // File: src/main/java/fr/elias/oreoEssentials/util/ChatSyncManager.java
     package fr.elias.oreoEssentials.util;
 
     import com.rabbitmq.client.Channel;
@@ -174,7 +173,6 @@
             }
         }
 
-        /* ----------------------------- Subscribe/receive ----------------------------- */
 
         public void subscribeMessages() {
             if (!enabled) return;

@@ -31,7 +31,6 @@ public class ChunkPreloadListener implements Listener {
         this.redisPort = redisPort;
         this.redisPassword = redisPassword;
 
-        // Start Redis listener for preload requests
         startRedisListener();
     }
 

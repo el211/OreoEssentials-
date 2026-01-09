@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/teleport/CrossServerTeleportBroker.java
 package fr.elias.oreoEssentials.teleport;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;

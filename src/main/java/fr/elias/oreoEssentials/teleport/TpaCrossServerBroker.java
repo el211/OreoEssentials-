@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/teleport/TpaCrossServerBroker.java
 package fr.elias.oreoEssentials.teleport;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -24,7 +23,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 public final class TpaCrossServerBroker implements Listener {
 
     private final OreoEssentials plugin;
@@ -37,16 +35,17 @@ public final class TpaCrossServerBroker implements Listener {
     private final Map<UUID, UUID> pendingArrival = new ConcurrentHashMap<>();
 
     private final long expireMs;
-
     private final boolean offlineUuidCompat;
 
-    public TpaCrossServerBroker(
-            OreoEssentials plugin,
-            TeleportService teleportService,
-            PacketManager pm,
-            ProxyMessenger proxy,
-            String localServer
-    ) {
+    private static class Pending {
+        UUID requesterUuid;
+        String requesterName;
+        String fromServer;
+        long expiresAt;
+    }
+
+    public TpaCrossServerBroker(OreoEssentials plugin, TeleportService teleportService,
+                                PacketManager pm, ProxyMessenger proxy, String localServer) {
         this.plugin = plugin;
         this.teleportService = teleportService;
         this.pm = pm;
@@ -76,10 +75,8 @@ public final class TpaCrossServerBroker implements Listener {
         }
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
-
         Bukkit.getScheduler().runTaskTimer(plugin, this::purgeExpired, 20L * 30, 20L * 30);
     }
-
 
     public void sendRequestToServer(Player requester, UUID targetUuid, String destServer) {
         sendRequestToServer(requester, targetUuid, "", destServer);
@@ -92,14 +89,8 @@ public final class TpaCrossServerBroker implements Listener {
     public void sendRequestToServer(Player requester, UUID targetUuid, String targetName, String destServer) {
         if (!isMessagingReady() || requester == null) return;
         long now = System.currentTimeMillis();
-        TpaRequestPacket pkt = new TpaRequestPacket(
-                requester.getUniqueId(),
-                requester.getName(),
-                targetUuid,
-                targetName != null ? targetName : "",
-                localServer,
-                now + expireMs
-        );
+        TpaRequestPacket pkt = new TpaRequestPacket(requester.getUniqueId(), requester.getName(),
+                targetUuid, targetName != null ? targetName : "", localServer, now + expireMs);
         pm.sendPacket(PacketChannel.individual(destServer), pkt);
         dbg("Send TpaRequest -> server=" + destServer + " requester=" + requester.getName()
                 + " target=" + targetUuid + (targetName != null && !targetName.isBlank() ? " (" + targetName + ")" : ""));
@@ -108,19 +99,12 @@ public final class TpaCrossServerBroker implements Listener {
     public void sendRequestGlobal(Player requester, UUID targetUuid, String targetName) {
         if (!isMessagingReady() || requester == null) return;
         long now = System.currentTimeMillis();
-        TpaRequestPacket pkt = new TpaRequestPacket(
-                requester.getUniqueId(),
-                requester.getName(),
-                targetUuid,
-                targetName != null ? targetName : "",
-                localServer,
-                now + expireMs
-        );
+        TpaRequestPacket pkt = new TpaRequestPacket(requester.getUniqueId(), requester.getName(),
+                targetUuid, targetName != null ? targetName : "", localServer, now + expireMs);
         pm.sendPacket(PacketChannels.GLOBAL, pkt);
         dbg("Send TpaRequest (GLOBAL) requester=" + requester.getName()
                 + " target=" + targetUuid + (targetName != null && !targetName.isBlank() ? " (" + targetName + ")" : ""));
     }
-
 
     public boolean acceptCrossServer(Player target) {
         if (target == null) return false;
@@ -133,11 +117,7 @@ public final class TpaCrossServerBroker implements Listener {
 
         long now = System.currentTimeMillis();
         if (p.expiresAt > 0 && p.expiresAt < now) {
-            Lang.send(
-                    target,
-                    "tpa.accept.expired",
-                    "<red>That teleport request expired.</red>"
-            );
+            Lang.send(target, "tpa.accept.expired", "<red>That teleport request expired.</red>");
             dbg("Pending expired (target=" + target.getUniqueId() + ")");
             return true;
         }
@@ -145,26 +125,19 @@ public final class TpaCrossServerBroker implements Listener {
         pendingArrival.put(p.requesterUuid, target.getUniqueId());
 
         if (isMessagingReady()) {
-            pm.sendPacket(
-                    PacketChannel.individual(p.fromServer),
-                    new TpaSummonPacket(p.requesterUuid, localServer)
-            );
+            pm.sendPacket(PacketChannel.individual(p.fromServer),
+                    new TpaSummonPacket(p.requesterUuid, localServer));
         }
 
-        Lang.send(
-                target,
-                "tpa.accept.summon",
+        Lang.send(target, "tpa.accept.summon",
                 "<green>Teleport request accepted.</green> <gray>Summoning</gray> <yellow>%player%</yellow><gray>…</gray>",
-                Map.of("player", p.requesterName)
-        );
+                Map.of("player", p.requesterName));
         dbg("Accept -> summon requester=" + p.requesterUuid
                 + " from=" + p.fromServer + " to=" + localServer
                 + " (target=" + target.getName() + ")");
 
-        // Safety: clean up if they never arrive
         Bukkit.getScheduler().runTaskLater(plugin,
-                () -> pendingArrival.remove(p.requesterUuid),
-                20L * 60);
+                () -> pendingArrival.remove(p.requesterUuid), 20L * 60);
 
         return true;
     }
@@ -173,12 +146,9 @@ public final class TpaCrossServerBroker implements Listener {
         Pending p = pendingForTarget.remove(target.getUniqueId());
         if (p == null) return false;
 
-        Lang.send(
-                target,
-                "tpa.deny.target",
+        Lang.send(target, "tpa.deny.target",
                 "<yellow>Denied the teleport request from</yellow> <white>%player%</white>.",
-                Map.of("player", p.requesterName)
-        );
+                Map.of("player", p.requesterName));
         dbg("Denied pending for target=" + target.getName() + " requester=" + p.requesterUuid);
         return true;
     }
@@ -186,7 +156,6 @@ public final class TpaCrossServerBroker implements Listener {
     public boolean hasPendingFor(Player target) {
         return pendingForTarget.containsKey(target.getUniqueId());
     }
-
 
     private void onTpaRequest(PacketChannel channel, TpaRequestPacket pkt) {
         if (pkt == null) return;
@@ -205,23 +174,16 @@ public final class TpaCrossServerBroker implements Listener {
         Pending p = new Pending();
         p.requesterUuid = pkt.getRequesterUuid();
         p.requesterName = pkt.getRequesterName();
-        p.fromServer    = pkt.getFromServer();
-        p.expiresAt     = (pkt.getExpiresAtEpochMs() > 0 ? pkt.getExpiresAtEpochMs() : now + expireMs);
+        p.fromServer = pkt.getFromServer();
+        p.expiresAt = (pkt.getExpiresAtEpochMs() > 0 ? pkt.getExpiresAtEpochMs() : now + expireMs);
 
         pendingForTarget.put(target.getUniqueId(), p);
 
-        // Notify target
-        Lang.send(
-                target,
-                "tpa.request-target",
+        Lang.send(target, "tpa.request-target",
                 "<yellow><bold>%player%</bold></yellow> <gray>wants to teleport to you.</gray> "
                         + "<dark_gray>(expires in</dark_gray> <white>%timeout%</white><dark_gray>s)</dark_gray> "
                         + "<gray>Use</gray> <green>/tpaccept</green> <gray>or</gray> <red>/tpdeny</red>.",
-                Map.of(
-                        "player", p.requesterName,
-                        "timeout", String.valueOf((p.expiresAt - now) / 1000L)
-                )
-        );
+                Map.of("player", p.requesterName, "timeout", String.valueOf((p.expiresAt - now) / 1000L)));
         dbg("Saved pending for target=" + target.getUniqueId() + " name=" + target.getName()
                 + " fromServer=" + p.fromServer + " expiresAt=" + p.expiresAt);
     }
@@ -236,20 +198,17 @@ public final class TpaCrossServerBroker implements Listener {
         }
 
         var root = plugin.getSettingsConfig().getRoot();
-        var sec  = root.getConfigurationSection("features.tpa");
+        var sec = root.getConfigurationSection("features.tpa");
 
         boolean enabled = sec != null && sec.getBoolean("cooldown", false);
-        int seconds     = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
+        int seconds = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
 
         if (!enabled || seconds <= 0) {
             boolean ok = connectToServer(requester, pkt.getDestServer());
             if (ok) {
-                Lang.send(
-                        requester,
-                        "tpa.cross.connecting",
+                Lang.send(requester, "tpa.cross.connecting",
                         "<gray>Connecting you to</gray> <yellow>%server%</yellow><gray>…</gray>",
-                        Map.of("server", pkt.getDestServer())
-                );
+                        Map.of("server", pkt.getDestServer()));
             } else {
                 plugin.getLogger().warning("[TPA-X] Could not send " + requester.getName()
                         + " to server " + pkt.getDestServer() + " (no ProxyMessenger method matched)");
@@ -275,11 +234,8 @@ public final class TpaCrossServerBroker implements Listener {
                 }
 
                 if (hasBodyMoved(requester, origin)) {
-                    Lang.send(
-                            requester,
-                            "teleport.countdown.cancelled-moved",
-                            "<red>Teleport cancelled: you moved.</red>"
-                    );
+                    Lang.send(requester, "teleport.countdown.cancelled-moved",
+                            "<red>Teleport cancelled: you moved.</red>");
                     dbg("Requester moved; cancelling cross-server countdown.");
                     cancel();
                     return;
@@ -287,35 +243,22 @@ public final class TpaCrossServerBroker implements Listener {
 
                 if (remain <= 0) {
                     cancel();
-                    dbg("Cross-server countdown finished; connecting " + requester.getName()
-                            + " -> " + destServer);
+                    dbg("Cross-server countdown finished; connecting " + requester.getName() + " -> " + destServer);
                     boolean ok = connectToServer(requester, destServer);
                     if (ok) {
-                        Lang.send(
-                                requester,
-                                "tpa.cross.connecting",
+                        Lang.send(requester, "tpa.cross.connecting",
                                 "<gray>Connecting you to</gray> <yellow>%server%</yellow><gray>…</gray>",
-                                Map.of("server", destServer)
-                        );
+                                Map.of("server", destServer));
                     } else {
-                        plugin.getLogger().warning("[TPA-X] Failed to connect "
-                                + requester.getName() + " to " + destServer);
+                        plugin.getLogger().warning("[TPA-X] Failed to connect " + requester.getName() + " to " + destServer);
                     }
                     return;
                 }
 
-                String title = Lang.msg(
-                        "teleport.countdown.title",
-                        "<yellow>Teleporting…</yellow>",
-                        requester
-                );
-
-                String subtitle = Lang.msgWithDefault(
-                        "teleport.countdown.subtitle",
+                String title = Lang.msg("teleport.countdown.title", "<yellow>Teleporting…</yellow>", requester);
+                String subtitle = Lang.msgWithDefault("teleport.countdown.subtitle",
                         "<gray>Teleporting in <white>%seconds%</white>s…</gray>",
-                        Map.of("seconds", String.valueOf(remain)),
-                        requester
-                );
+                        Map.of("seconds", String.valueOf(remain)), requester);
 
                 requester.sendTitle(title, subtitle, 0, 20, 0);
                 remain--;
@@ -325,24 +268,17 @@ public final class TpaCrossServerBroker implements Listener {
 
     private boolean hasBodyMoved(Player p, Location origin) {
         Location now = p.getLocation();
-        return now.getBlockX() != origin.getBlockX()
-                || now.getBlockZ() != origin.getBlockZ();
+        return now.getBlockX() != origin.getBlockX() || now.getBlockZ() != origin.getBlockZ();
     }
-
-
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         UUID targetUuid = pendingArrival.remove(e.getPlayer().getUniqueId());
-        if (targetUuid == null) return; // not a summoned requester
+        if (targetUuid == null) return;
 
         Player target = Bukkit.getPlayer(targetUuid);
         if (target == null) {
-            Lang.send(
-                    e.getPlayer(),
-                    "tpa.arrival.target-offline",
-                    "<red>Teleport target went offline.</red>"
-            );
+            Lang.send(e.getPlayer(), "tpa.arrival.target-offline", "<red>Teleport target went offline.</red>");
             dbg("Arrival: target offline for requester=" + e.getPlayer().getName());
             return;
         }
@@ -363,14 +299,11 @@ public final class TpaCrossServerBroker implements Listener {
         pendingArrival.remove(e.getPlayer().getUniqueId());
     }
 
-
-
     private boolean isMessagingReady() {
         return pm != null && pm.isInitialized();
     }
 
     private Player resolveTarget(UUID targetUuid, String targetName) {
-        // 1) UUID direct (works in online-mode & when UUIDs match)
         Player p = Bukkit.getPlayer(targetUuid);
         if (p != null) return p;
 
@@ -389,7 +322,7 @@ public final class TpaCrossServerBroker implements Listener {
             var dir = plugin.getPlayerDirectory();
             if (dir != null) {
                 String lastKnownName = dir.lookupNameByUuid(targetUuid);
-                if (lastKnownName != null && !lastKnownName.isBlank()) { // <-- fixed here
+                if (lastKnownName != null && !lastKnownName.isBlank()) {
                     Player byExact = Bukkit.getPlayerExact(lastKnownName);
                     if (byExact != null) return byExact;
                     String want = lastKnownName.toLowerCase(java.util.Locale.ROOT);
@@ -464,14 +397,5 @@ public final class TpaCrossServerBroker implements Listener {
                 plugin.getLogger().info("[TPA-X@" + localServer + "] " + msg);
             }
         } catch (Throwable ignored) {}
-    }
-
-    /* ================================ DTO ================================= */
-
-    private static class Pending {
-        UUID  requesterUuid;
-        String requesterName;
-        String fromServer;
-        long   expiresAt;
     }
 }
