@@ -198,7 +198,11 @@ chat:
             moderator: "<aqua>[<white>✓</white> Mod]</aqua> {message}"
             admin: "<red>[<white>✓</white> Admin]</red> {message}"
 
+
+
+
+
 MongoDB_rabbitmq:
-  enabled: true
+  enabled: false
   rabbitmq:
-    uri: "amqp://oreo:rabbit123@88.99.150.35:19159/%2F"
+    uri: "amqp://guest:guest@localhost:5672/"
