@@ -36,7 +36,6 @@ public class SettingsConfig {
         return cfg;
     }
 
-
     public boolean isEnabled(String featureKey) {
         return cfg.getBoolean("features." + featureKey + ".enabled", true);
     }
@@ -45,14 +44,12 @@ public class SettingsConfig {
         return cfg.getBoolean("features." + featureKey + "." + subKey, def);
     }
 
-
     public boolean kitsEnabled() { return isEnabled("kits"); }
 
     public boolean kitsCommandsEnabled() {
         return featureOption("kits", "register-commands", true);
     }
 
-    // Trade
     public boolean tradeEnabled() { return isEnabled("trade"); }
 
     public boolean tradeCrossServerEnabled() {
@@ -66,8 +63,8 @@ public class SettingsConfig {
     public boolean chatDiscordBridgeEnabled() {
         return featureOption("chat", "discord-bridge", false);
     }
+
     public boolean bannedWordsEnabled() {
-        // Prefer root "chat.banned-words" if present, else "features.chat.banned-words"
         String baseKey;
         if (cfg.isConfigurationSection("chat.banned-words")) {
             baseKey = "chat.banned-words";
@@ -104,6 +101,7 @@ public class SettingsConfig {
     public boolean jumpPadsEnabled() { return isEnabled("jumppads"); }
 
     public boolean rtpEnabled() { return isEnabled("rtp"); }
+
     public boolean rtpWarmupEnabled() {
         if (cfg.isSet("features.rtp.warmup")) {
             return cfg.getBoolean("features.rtp.warmup", false);
@@ -120,7 +118,6 @@ public class SettingsConfig {
         }
         return Math.max(0, v);
     }
-
 
     public boolean bossbarEnabled() { return isEnabled("bossbar"); }
 
@@ -141,15 +138,21 @@ public class SettingsConfig {
     public boolean clearLagEnabled() { return isEnabled("clearlag"); }
 
     public boolean mobsEnabled() { return isEnabled("mobs"); }
+
     public boolean worldShardingEnabled() {
         return getRoot().getBoolean("features.world-sharding.enabled", false);
     }
+
     public boolean mobsHealthbarEnabled() {
         return mobsEnabled() && featureOption("mobs", "healthbar", true);
     }
 
     public boolean tabEnabled() {
         return isEnabled("tab");
+    }
+
+    public boolean tempFlyEnabled() {
+        return isEnabled("tempfly");
     }
 
     public FileConfiguration getRoot() {

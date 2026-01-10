@@ -89,7 +89,6 @@ public class MongoStorage implements StorageApi {
 
 
 
-    /* ---------------- spawn ---------------- */
 
     @Override
     public void setSpawn(String server, Location loc) {

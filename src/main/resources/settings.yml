@@ -66,6 +66,9 @@ features:
   sit:
     enabled: true
 
+  tempfly:
+    enabled: true
+
   trade:
     enabled: true
     cross-server: true

@@ -5,7 +5,7 @@ import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.integration.DiscordModerationNotifier;
 import fr.elias.oreoEssentials.playerdirectory.PlayerDirectory;
 import fr.elias.oreoEssentials.services.chatservices.MuteService;
-import fr.elias.oreoEssentials.util.ChatSyncManager;
+import fr.elias.oreoEssentials.chat.ChatSyncManager;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;

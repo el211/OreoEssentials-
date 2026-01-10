@@ -3,7 +3,6 @@ package fr.elias.oreoEssentials.chat;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modgui.ModGuiService;
 import fr.elias.oreoEssentials.services.chatservices.MuteService;
-import fr.elias.oreoEssentials.util.ChatSyncManager;
 import fr.elias.oreoEssentials.util.DiscordWebhook;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;

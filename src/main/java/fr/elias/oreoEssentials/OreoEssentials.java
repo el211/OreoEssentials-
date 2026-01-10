@@ -15,6 +15,7 @@ import fr.elias.oreoEssentials.playerwarp.*;
 import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpCommand;
 import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpTabCompleter;
 import fr.elias.oreoEssentials.rtp.listeners.RtpJoinListener;
+import org.bukkit.event.Listener;
 
 import fr.elias.oreoEssentials.commands.completion.*;
 import fr.elias.oreoEssentials.commands.core.playercommands.*;
@@ -87,7 +88,7 @@ import fr.minuskube.inv.InventoryManager;
 import fr.elias.oreoEssentials.chat.AsyncChatListener;
 import fr.elias.oreoEssentials.chat.CustomConfig;
 import fr.elias.oreoEssentials.chat.FormatManager;
-import fr.elias.oreoEssentials.util.ChatSyncManager;
+import fr.elias.oreoEssentials.chat.ChatSyncManager;
 
 import fr.elias.oreoEssentials.util.ProxyMessenger;
 import fr.elias.oreoEssentials.vault.VaultEconomyProvider;
@@ -126,7 +127,16 @@ public final class OreoEssentials extends JavaPlugin {
     private fr.elias.oreoEssentials.playervaults.PlayerVaultsConfig playerVaultsConfig;
     private fr.elias.oreoEssentials.modgui.ModGuiService modGuiService;
     public fr.elias.oreoEssentials.modgui.ModGuiService getModGuiService() { return modGuiService; }
+    private fr.elias.oreoEssentials.tempfly.TempFlyService tempFlyService;
+    private fr.elias.oreoEssentials.tempfly.TempFlyConfig tempFlyConfig;
+    private fr.elias.oreoEssentials.chat.channels.ChatChannelManager channelManager;
 
+    public fr.elias.oreoEssentials.chat.channels.ChatChannelManager getChannelManager() {
+        return channelManager;
+    }
+    public fr.elias.oreoEssentials.tempfly.TempFlyService getTempFlyService() {
+        return tempFlyService;
+    }
     private fr.elias.oreoEssentials.holograms.perplayer_nms.PerPlayerTextDisplayService perPlayerTextDisplayService;
     public fr.elias.oreoEssentials.holograms.perplayer_nms.PerPlayerTextDisplayService getPerPlayerTextDisplayService() {
         return perPlayerTextDisplayService;
@@ -338,6 +348,31 @@ public final class OreoEssentials extends JavaPlugin {
                 new FreezeListener(freezeService), this
         );
         this.commands = new CommandManager(this);
+        if (settingsConfig.isEnabled("tempfly")) {
+            this.tempFlyConfig = new fr.elias.oreoEssentials.tempfly.TempFlyConfig(getDataFolder());
+            this.tempFlyService = new fr.elias.oreoEssentials.tempfly.TempFlyService(this, tempFlyConfig);
+
+            var tempFlyCmd = new fr.elias.oreoEssentials.commands.core.playercommands.TempFlyCommand(tempFlyService);
+            this.commands.register(tempFlyCmd);
+
+            if (getCommand("tempfly") != null) {
+                getCommand("tempfly").setTabCompleter(tempFlyCmd);
+            }
+            if (getCommand("tfly") != null) {
+                getCommand("tfly").setTabCompleter(tempFlyCmd);
+            }
+
+            getLogger().info("[TempFly] Enabled with tab completion.");
+        } else {
+            unregisterCommandHard("tempfly");
+            unregisterCommandHard("tfly");
+            getLogger().info("[TempFly] Disabled by settings.yml.");
+        }
+
+        var settingsCmd = new fr.elias.oreoEssentials.commands.core.admins.OeSettingsCommand(this);
+        this.commands.register(settingsCmd);
+        getLogger().info("[Settings] GUI command registered (/oesettings).");
+
         this.invlookManager = new InvlookManager();
         getServer().getPluginManager().registerEvents(new InvlookListener(this), this);
 
@@ -699,22 +734,57 @@ public final class OreoEssentials extends JavaPlugin {
         this.chatConfig = new fr.elias.oreoEssentials.chat.CustomConfig(this, "chat-format.yml");
         this.chatFormatManager = new fr.elias.oreoEssentials.chat.FormatManager(chatConfig);
 
+        this.channelManager = new fr.elias.oreoEssentials.chat.channels.ChatChannelManager(
+                this,
+                this.chatConfig
+        );
+
+        this.channelManager.reload(); // or load(), init(), etc (use the method your class provides)
+
+
         getServer().getPluginManager().registerEvents(new JoinMessagesListener(this), this);
         getServer().getPluginManager().registerEvents(new QuitMessagesListener(this), this);
 
         boolean chatSyncEnabled = chatConfig.getCustomConfig().getBoolean("MongoDB_rabbitmq.enabled", false);
         String chatRabbitUri    = chatConfig.getCustomConfig().getString("MongoDB_rabbitmq.rabbitmq.uri", "");
         try {
-            this.chatSyncManager = new ChatSyncManager(chatSyncEnabled, chatRabbitUri, muteService);
+            this.chatSyncManager = new ChatSyncManager(chatSyncEnabled, chatRabbitUri, muteService, channelManager);
             if (chatSyncEnabled) this.chatSyncManager.subscribeMessages();
             getLogger().info("[CHAT] ChatSync enabled=" + chatSyncEnabled);
         } catch (Exception e) {
             getLogger().severe("[CHAT] ChatSync init failed: " + e.getMessage());
-            this.chatSyncManager = new ChatSyncManager(false, "", muteService);
+            this.chatSyncManager = new ChatSyncManager(false, "", muteService, null);
         }
 
         boolean discordEnabled = false;
         String discordWebhookUrl = "";
+        Listener chatListener;
+
+        if (channelManager != null && channelManager.isEnabled()) {
+            chatListener = new fr.elias.oreoEssentials.chat.AsyncChatListenerWithChannels(
+                    this,
+                    chatFormatManager,
+                    chatConfig,
+                    chatSyncManager,
+                    discordEnabled,
+                    discordWebhookUrl,
+                    muteService,
+                    channelManager
+            );
+            getLogger().info("[Chat] Initialized with channel support");
+        } else {
+            chatListener = new fr.elias.oreoEssentials.chat.AsyncChatListener(
+                    chatFormatManager,
+                    chatConfig,
+                    chatSyncManager,
+                    discordEnabled,
+                    discordWebhookUrl,
+                    muteService
+            );
+            getLogger().info("[Chat] Initialized without channels (legacy formatting mode)");
+        }
+
+        getServer().getPluginManager().registerEvents(chatListener, this);
 
         if (getSettingsConfig().chatDiscordBridgeEnabled()) {
             var chatRoot = chatConfig.getCustomConfig().getConfigurationSection("chat.discord");
@@ -724,17 +794,29 @@ public final class OreoEssentials extends JavaPlugin {
             }
         }
 
-        getServer().getPluginManager().registerEvents(
-                new AsyncChatListener(
-                        chatFormatManager,
-                        chatConfig,
-                        chatSyncManager,
-                        discordEnabled,
-                        discordWebhookUrl,
-                        muteService
-                ),
-                this
-        );
+
+
+        if (channelManager.isEnabled()) {
+            // Register channel commands
+            var channelsCmd = new fr.elias.oreoEssentials.chat.channels.commands.OeChannelsCommand(this, channelManager);
+            var channelCmd = new fr.elias.oreoEssentials.chat.channels.commands.OeChannelCommand(this, channelManager);
+
+            this.commands.register(channelsCmd);
+            this.commands.register(channelCmd);
+
+            // Set tab completers
+            if (getCommand("oechannel") != null) {
+                getCommand("oechannel").setTabCompleter(channelCmd);
+            }
+            if (getCommand("channel") != null) {
+                getCommand("channel").setTabCompleter(channelCmd);
+            }
+
+            getLogger().info("[Channels] Enabled with " + channelManager.getAllChannels().size() + " channels");
+        } else {
+            getLogger().info("[Channels] Disabled by config (chat.channels.enabled=false)");
+        }
+
 
         getServer().getPluginManager().registerEvents(new ConversationListener(this), this);
         new fr.elias.oreoEssentials.tasks.AutoMessageScheduler(this).start();
@@ -1237,15 +1319,7 @@ public final class OreoEssentials extends JavaPlugin {
             this.tpaBroker = null;
             getLogger().info("[BROKER] TPA cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
-        if (packetManager != null && packetManager.isInitialized()) {
-            this.tpBroker = new fr.elias.oreoEssentials.teleport.TpCrossServerBroker(
-                    this, this.teleportService, this.packetManager, proxyMessenger, configService.serverName()
-            );
-            getLogger().info("[BROKER] TP cross-server broker ready (server=" + configService.serverName() + ").");
-        } else {
-            this.tpBroker = null;
-            getLogger().info("[BROKER] TP cross-server broker disabled (PacketManager unavailable or not initialized).");
-        }
+
         if (packetManager != null && packetManager.isInitialized()) {
             this.tpBroker = new fr.elias.oreoEssentials.teleport.TpCrossServerBroker(
                     this,
@@ -1259,6 +1333,7 @@ public final class OreoEssentials extends JavaPlugin {
             this.tpBroker = null;
             getLogger().info("[BROKER] TP cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
+
         if (packetManager != null && packetManager.isInitialized() && proxyMessenger != null) {
             this.backBroker = new fr.elias.oreoEssentials.teleport.BackCrossServerBroker(
                     this,
@@ -1272,6 +1347,7 @@ public final class OreoEssentials extends JavaPlugin {
             this.backBroker = null;
             getLogger().info("[BROKER] Back cross-server broker disabled (PacketManager unavailable or proxyMessenger null).");
         }
+
 
         if (packetManager != null
                 && packetManager.isInitialized()
@@ -2055,6 +2131,8 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (dailyStore != null) dailyStore.close(); } catch (Exception ignored) {}
         try { if (tradeService != null) tradeService.cancelAll(); } catch (Throwable ignored) {}
         try { if (shardsModule != null) shardsModule.disable(); } catch (Exception ignored) {}
+        try { if (channelManager != null) channelManager.savePlayerData(); } catch (Exception ignored) {}
+        try { if (tempFlyService != null) tempFlyService.shutdown(); } catch (Exception ignored) {}
         try {
             if (invlookManager != null) {
                 invlookManager.clear();

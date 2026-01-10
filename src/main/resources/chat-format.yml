@@ -9,7 +9,26 @@ chat:
   papi:
     apply-to-format: true      # resolve %vault_eco_balance%, %luckperms_prefix%, etc.
     apply-to-message: true     # allow %placeholders% inside the player's message
-  # Hover configuration :
+
+  # ===================== Rank formats (for chat message itself) =====================
+  default: "<gradient:#ffb300:#ff3d00><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  helper: "<gradient:#8bc34a:#4caf50><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  moderator: "<gradient:#00e5ff:#00bfa5><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  staff: "<gradient:#00c6ff:#0072ff><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  elite: "<gradient:#b993d6:#8ca6db><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  hero: "<gradient:#ff512f:#dd2476><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  legend: "<gradient:#f7971e:#ffd200><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  mvp: "<gradient:#12c2e9:#c471ed:#f64f59><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  vip: "<gray>%luckperms_prefix%</gray> <yellow>($%vault_eco_balance%)</yellow> <dark_gray>-</dark_gray> <gradient:#ffd700:#ffb300><bold><head:%player_uuid%> %player_name%</bold></gradient> <gray>[<server_name>]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  admin: "<gradient:#ff3d00:#d50000><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  owner: "<gradient:#8e2de2:#4a00e0><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+
+  # Discord relay
+  discord:
+    enabled: true
+    webhook_url: "https://discord.com/api/webhooks/1342772793707855942/H4JylhjXU0rIjJR4lXMTTtFxjHpyRc0Q_wWiShNN8CcdfHbt1gCucNBymGRyBF_vnLX2"
+
+  # Hover configuration
   hover:
     enabled: true
     lines:
@@ -32,53 +51,154 @@ chat:
       - ""
       - "<gray>━━━━━━━━━━━━━━━━━━━━</gray>"
 
-  # Alternative simple configuration:
-  # hover:
-  #   enabled: true
-  #   lines:
-  #     - "<gold>%player_name%</gold>"
-  #     - "<gray>Health: %player_health%</gray>"
-  #     - "<yellow>Ping: %player_ping%ms</yellow>"
-  # Optional glyphs (only if you ever use <glyph:...>)
+  # ===================== Channel system configuration =====================
+  channels:
+    enabled: true
 
-  head:
+    default_channel: "global"
+    remember_last_channel: true
 
-    font: "oreo:heads"
-    default-glyph: "\uE001"
-    glyphs:
-      default: "\uE001"
-      vip:     "\uE002"
-      staff:   "\uE003"
-      admin:   "\uE004"
+    formatting:
+      enabled: true
+      fallback_format: "<gray>{player}</gray><dark_gray>: </dark_gray><white>{message}</white>"
 
-  # ===================== Rank formats =====================
-  # Notes:
-  # - <head:%player_uuid%> needs MiniMessage 4.25.0+ on your platform.
-  # - <server_name> is provided by the listener TagResolver.
-  # - %vault_eco_balance% comes from PAPI + Vault (applied to the format).
-  # - %chat_message% stays unwrapped so player colors/gradients work.
+    gui:
+      title: "<gold>Oreo Channels</gold>"
+      rows: 4
+      fill_empty_with_glass: true
 
-  default:   "<gradient:#ffb300:#ff3d00><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
-  helper:    "<gradient:#8bc34a:#4caf50><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
-  moderator: "<gradient:#00e5ff:#00bfa5><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
-  staff:     "<gradient:#00c6ff:#0072ff><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
-  elite:     "<gradient:#b993d6:#8ca6db><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
-  hero:      "<gradient:#ff512f:#dd2476><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
-  legend:    "<gradient:#f7971e:#ffd200><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
-  mvp:       "<gradient:#12c2e9:#c471ed:#f64f59><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+    list_order:
+      - "global"
+      - "staff"
+      - "trade"
+      - "local"
+      - "help"
 
-  # VIP keeps LP prefix + balance; also shows server
-  vip: "<gray>%luckperms_prefix%</gray> <yellow>($%vault_eco_balance%)</yellow> <dark_gray>-</dark_gray> <gradient:#ffd700:#ffb300><bold><head:%player_uuid%> %player_name%</bold></gradient> <gray>[<server_name>]</gray> <dark_gray>»</dark_gray> %chat_message%"
+    channel_definitions:
+      # ==================== GLOBAL CHANNEL ====================
+      global:
+        enabled: true
+        display_name: "<gradient:#FF1493:#00FF7F>Global</gradient>"
+        description: "<gray>Server-wide chat</gray>"
 
-  admin: "<gradient:#ff3d00:#d50000><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
-  owner: "<gradient:#8e2de2:#4a00e0><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+        talk_permission: "oreo.chat.channel.global.talk"
+        view_permission: "oreo.chat.channel.global.view"
+        join_permission: "oreo.chat.channel.global.join"
 
-  # Discord relay
-  discord:
-    enabled: false
-    webhook_url: "https://discord.com/api/webhooks/your-webhook-id/your-webhook-token"
+        scope:
+          type: "ALL"
+          range_blocks: 0
+
+        formatting:
+          enabled: true
+          # Default format for everyone
+          format: "<gray>[<gradient:#FF1493:#00FF7F>G</gradient>]</gray> {message}"
+
+          # Per-rank formats (optional)
+          rank_formats:
+            # VIPs get a star
+            vip: "<gold>[<white>★</white> G]</gold> {message}"
+            mvp: "<gradient:#ffd700:#ff8c00>[<white>✦</white> G]</gradient> {message}"
+
+            # Staff get lightning bolt
+            admin: "<red>[<yellow>⚡</yellow> G]</red> {message}"
+            owner: "<gradient:#8e2de2:#4a00e0>[<white>♔</white> G]</gradient> {message}"
+
+      # ==================== LOCAL CHANNEL ====================
+      local:
+        enabled: true
+        display_name: "<yellow>Local</yellow>"
+        description: "<gray>Talk to nearby players (100 blocks)</gray>"
+
+        talk_permission: null
+        view_permission: null
+        join_permission: null
+
+        scope:
+          type: "RANGE"
+          range_blocks: 100
+
+        formatting:
+          enabled: true
+          format: "<yellow>[L]</yellow> {message}"
+
+          # Example: Different local prefixes for ranks
+          rank_formats:
+            vip: "<gold>[L+]</gold> {message}"
+            admin: "<red>[ADMIN-L]</red> {message}"
+
+      # ==================== TRADE CHANNEL ====================
+      trade:
+        enabled: true
+        display_name: "<green>Trade</green>"
+        description: "<gray>Buy and sell items</gray>"
+
+        talk_permission: "oreo.chat.channel.trade.talk"
+        view_permission: "oreo.chat.channel.trade.view"
+        join_permission: "oreo.chat.channel.trade.join"
+
+        scope:
+          type: "ALL"
+          range_blocks: 0
+
+        formatting:
+          enabled: true
+          format: "<green>[<gold>$</gold>T]</green> {message}"
+
+          # Example: Premium traders get special prefix
+          rank_formats:
+            vip: "<gold>[<white>💰</white> VIP Trade]</gold> {message}"
+            mvp: "<gradient:#ffd700:#ff8c00>[<white>💎</white> MVP Trade]</gradient> {message}"
+
+      # ==================== STAFF CHANNEL ====================
+      staff:
+        enabled: true
+        display_name: "<red>Staff</red>"
+        description: "<gray>Staff-only channel</gray>"
+
+        talk_permission: "oreo.chat.channel.staff.talk"
+        view_permission: "oreo.chat.channel.staff.view"
+        join_permission: "oreo.chat.channel.staff.join"
+
+        scope:
+          type: "ALL"
+          range_blocks: 0
+
+        formatting:
+          enabled: true
+          format: "<dark_red><bold>[STAFF]</bold></dark_red> {message}"
+
+          # Different staff ranks
+          rank_formats:
+            moderator: "<aqua><bold>[MOD]</bold></aqua> {message}"
+            admin: "<red><bold>[ADMIN]</bold></red> {message}"
+            owner: "<gradient:#8e2de2:#4a00e0><bold>[OWNER]</bold></gradient> {message}"
+
+      # ==================== HELP CHANNEL ====================
+      help:
+        enabled: true
+        display_name: "<aqua>Help</aqua>"
+        description: "<gray>Ask for help from staff</gray>"
+
+        talk_permission: null
+        view_permission: "oreo.chat.channel.help.view"
+        join_permission: null
+
+        scope:
+          type: "ALL"
+          range_blocks: 0
+
+        formatting:
+          enabled: true
+          format: "<aqua>[<white>?</white>]</aqua> {message}"
+
+          # Staff helping get different prefix
+          rank_formats:
+            helper: "<green>[<white>✓</white> Helper]</green> {message}"
+            moderator: "<aqua>[<white>✓</white> Mod]</aqua> {message}"
+            admin: "<red>[<white>✓</white> Admin]</red> {message}"
 
 MongoDB_rabbitmq:
-  enabled: false
+  enabled: true
   rabbitmq:
-    uri: "amqp://guest:guest@localhost:5672/"
+    uri: "amqp://oreo:rabbit123@88.99.150.35:19159/%2F"
