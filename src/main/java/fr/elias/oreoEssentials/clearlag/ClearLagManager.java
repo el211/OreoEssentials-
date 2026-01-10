@@ -64,7 +64,6 @@ public class ClearLagManager {
                 @Override public void run() {
                     tick += 20;
                     int remaining = (int) (cfg.auto.intervalSec - (tick / 20));
-                    // warnings
                     cfg.auto.warnings.forEach(w -> {
                         if (remaining == w.time()) {
                             String msg = w.msg().replace("+remaining", String.valueOf(remaining));

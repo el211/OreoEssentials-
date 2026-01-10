@@ -6,19 +6,14 @@ import fr.elias.oreoEssentials.services.chatservices.MuteService;
 import fr.elias.oreoEssentials.util.DiscordWebhook;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextReplacementConfig;
-import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import net.luckperms.api.LuckPerms;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.cacheddata.CachedMetaData;
-import net.luckperms.api.model.group.Group;
-import net.luckperms.api.model.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -35,12 +30,14 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
+
 public final class AsyncChatListener implements Listener {
 
     private final FormatManager formatManager;
     private final CustomConfig chatCfg;
     private final ChatSyncManager sync;
     private final MuteService muteService;
+    private final ChatHoverProvider hover;
 
     private final boolean discordEnabled;
     private final String discordWebhookUrl;
@@ -55,12 +52,9 @@ public final class AsyncChatListener implements Listener {
     private final boolean bannedWordsEnabled;
     private final List<String> bannedWords;
 
-    private final boolean hoverEnabled;
-    private final List<String> hoverLines;
-
     private final Key headFontKey;
     private final String headDefaultGlyph;
-    private final Map<String,String> headGlyphs;
+    private final Map<String, String> headGlyphs;
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final Pattern AMP_OR_SECTION = Pattern.compile("(?i)(?:&|§)[0-9A-FK-ORX]");
@@ -89,17 +83,14 @@ public final class AsyncChatListener implements Listener {
         this.papiApplyToFormat = conf.getBoolean("chat.papi.apply-to-format", true);
         this.papiApplyToMessage = conf.getBoolean("chat.papi.apply-to-message", true);
 
-        this.hoverEnabled = conf.getBoolean("chat.hover.enabled", true);
-        this.hoverLines = conf.getStringList("chat.hover.lines");
-        if (hoverLines.isEmpty()) {
-            hoverLines.add("<gold>Player: <white>%player_name%</white></gold>");
-            hoverLines.add("<gray>Health: <white>%player_health%/%player_max_health%</white></gray>");
-            hoverLines.add("<yellow>Ping: <white>%player_ping%ms</white></yellow>");
-        }
+        this.hover = new ChatHoverProvider(
+                conf.getBoolean("chat.hover.enabled", true),
+                conf.getStringList("chat.hover.lines")
+        );
 
         Key font = Key.key("minecraft:default");
         String defGlyph = "\u25A0";
-        Map<String,String> map = new HashMap<>();
+        Map<String, String> map = new HashMap<>();
         try {
             String fontStr = conf.getString("chat.head.font", "oreo:heads");
             font = Key.key(fontStr);
@@ -111,7 +102,8 @@ public final class AsyncChatListener implements Listener {
                     if (val != null && !val.isBlank()) map.put(g.toLowerCase(Locale.ROOT), val);
                 }
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
         this.headFontKey = font;
         this.headDefaultGlyph = defGlyph;
         this.headGlyphs = map;
@@ -120,12 +112,16 @@ public final class AsyncChatListener implements Listener {
         this.bannedWordsEnabled = settings.bannedWordsEnabled();
         this.bannedWords = settings.bannedWords();
 
-        Bukkit.getLogger().info("[Chat] Hover support: " + (hoverEnabled ? "ENABLED" : "DISABLED")
-                + " (" + hoverLines.size() + " lines)");
+        Bukkit.getLogger().info("═══════════════════════════════════════════════════════");
+        Bukkit.getLogger().info("[Chat] ✅ AsyncChatListener (LEGACY MODE) initialized!");
+        Bukkit.getLogger().info("[Chat] Hover support: " + (hover.isEnabled() ? "ENABLED" : "DISABLED"));
+        Bukkit.getLogger().info("[Chat] This is the NON-CHANNEL listener");
+        Bukkit.getLogger().info("═══════════════════════════════════════════════════════");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onAsyncChat(AsyncPlayerChatEvent event) {
+
         if (!OreoEssentials.get().getSettingsConfig().chatEnabled()) return;
 
         final Player player = event.getPlayer();
@@ -184,6 +180,7 @@ public final class AsyncChatListener implements Listener {
             if (useMiniMessage && translateLegacyAmp && looksLegacy(fmt)) {
                 fmt = ampersandToMiniMessage(fmt);
             }
+
             String msgForPlaceholder = rawMsg;
             if (papiApplyToMessage) {
                 msgForPlaceholder = applyPapi(msgForPlaceholder, live);
@@ -194,7 +191,6 @@ public final class AsyncChatListener implements Listener {
 
             if (useMiniMessage) {
                 try {
-                    Component hoverComponent = hoverEnabled ? createHoverComponent(live) : null;
                     TagResolver allResolvers = TagResolver.resolver(
                             Placeholder.parsed("chat_message", msgForPlaceholder),
                             Placeholder.unparsed("player_name", live.getName()),
@@ -204,15 +200,36 @@ public final class AsyncChatListener implements Listener {
 
                     Component out = MM.deserialize(fmt, allResolvers);
 
-                    if (hoverEnabled && hoverComponent != null) {
-                        out = addHoverToNameSection(out, hoverComponent, live.getName());
+
+                    if (hover.isEnabled()) {
+
+                        Component hoverComponent = hover.createHoverComponent(live);
+
+                        String messagePlain = PlainTextComponentSerializer.plainText().serialize(out);
+
+                        String targetName = PlainTextComponentSerializer.plainText().serialize(live.displayName());
+                        if (targetName == null || targetName.isBlank()) {
+                            targetName = live.getName();
+                        }
+
+                        Component beforeHover = out;
+
+                        out = hover.addHoverToNameSection(out, hoverComponent, targetName);
+
+                        boolean hoverAdded = out != beforeHover;
+
+                        if (!hoverAdded) {
+                            out = hover.addHoverToNameEverywhere(out, hoverComponent, targetName);
+                        }
+
+                        out = hover.addHoverToPlayerNamesInMessage(out, live);
+                    } else {
                     }
 
-                    if (hoverEnabled) {
-                        out = addHoverToPlayerNamesInMessage(out, live);
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        p.sendMessage(out);
                     }
-
-                    Bukkit.getServer().sendMessage(out);
+                    Bukkit.getConsoleSender().sendMessage(out);
 
                     maybeDiscord(live.getName(), PlainTextComponentSerializer.plainText().serialize(out));
 
@@ -223,170 +240,62 @@ public final class AsyncChatListener implements Listener {
                     Bukkit.getLogger().warning("[Chat] MiniMessage parse error: " + t.getMessage());
                     t.printStackTrace();
                     String plain = stripTags(fmt);
-                    Bukkit.broadcast(Component.text(plain));
+                    Component outPlain = Component.text(plain);
+
+                    if (hover.isEnabled()) {
+                        Component hoverComponent = hover.createHoverComponent(live);
+                        String targetName = PlainTextComponentSerializer.plainText().serialize(live.displayName());
+                        if (targetName == null || targetName.isBlank()) {
+                            targetName = live.getName();
+                        }
+                        outPlain = hover.addHoverToNameEverywhere(outPlain, hoverComponent, targetName);
+                        outPlain = hover.addHoverToPlayerNamesInMessage(outPlain, live);
+                    }
+
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        p.sendMessage(outPlain);
+                    }
+                    Bukkit.getConsoleSender().sendMessage(outPlain);
+
                     maybeDiscord(live.getName(), plain);
-                    maybeSync(sender, serverName, live.getName(), plain);
+
+                    String jsonComponent = GsonComponentSerializer.gson().serialize(outPlain);
+                    maybeSync(sender, serverName, live.getName(), jsonComponent);
                 }
             } else {
-                // Legacy mode
                 String legacy = ChatColor.translateAlternateColorCodes('&', fmt);
-                Bukkit.broadcastMessage(legacy);
-                maybeDiscord(live.getName(), ChatColor.stripColor(legacy));
-                maybeSync(sender, serverName, live.getName(), legacy);
+                Component out = LegacyComponentSerializer.legacySection().deserialize(legacy);
+
+                if (hover.isEnabled()) {
+                    Component hoverComponent = hover.createHoverComponent(live);
+                    String targetName = PlainTextComponentSerializer.plainText().serialize(live.displayName());
+                    if (targetName == null || targetName.isBlank()) {
+                        targetName = live.getName();
+                    }
+                    out = hover.addHoverToNameEverywhere(out, hoverComponent, targetName);
+                    out = hover.addHoverToPlayerNamesInMessage(out, live);
+                }
+
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    p.sendMessage(out);
+                }
+                Bukkit.getConsoleSender().sendMessage(out);
+
+                maybeDiscord(live.getName(), PlainTextComponentSerializer.plainText().serialize(out));
+
+                String jsonComponent = GsonComponentSerializer.gson().serialize(out);
+                maybeSync(sender, serverName, live.getName(), jsonComponent);
             }
         });
     }
 
-    private Component addHoverToNameSection(Component message, Component hoverComponent, String playerName) {
-        List<Component> children = new ArrayList<>(message.children());
-        boolean modified = false;
-
-        for (int i = 0; i < children.size(); i++) {
-            Component child = children.get(i);
-            String childText = PlainTextComponentSerializer.plainText().serialize(child);
-
-            if (childText.contains(playerName) ||
-                    (childText.length() > 3 && playerName.contains(childText))) {
-
-                Component withHover = addHoverRecursive(child, hoverComponent);
-                children.set(i, withHover);
-                modified = true;
-                break;
-            }
-        }
-
-        if (modified) {
-            return message.children(children);
-        }
-
-        return message;
+    private String displayName(Player p) {
+        return stripNameColors ? p.getName() : p.getDisplayName();
     }
 
-    private Component addHoverRecursive(Component component, Component hoverComponent) {
-        Component withHover = component.hoverEvent(HoverEvent.showText(hoverComponent));
-
-        if (!component.children().isEmpty()) {
-            List<Component> newChildren = new ArrayList<>();
-            for (Component child : component.children()) {
-                newChildren.add(addHoverRecursive(child, hoverComponent));
-            }
-            withHover = withHover.children(newChildren);
-        }
-
-        return withHover;
+    private String safe(String s) {
+        return (s == null) ? "" : s;
     }
-
-    private Component addHoverToPlayerNamesInMessage(Component message, Player sender) {
-        for (Player target : Bukkit.getOnlinePlayers()) {
-            if (target.getUniqueId().equals(sender.getUniqueId())) {
-                continue;
-            }
-
-            final String targetName = target.getName();
-
-            Component hoverComponent = createHoverComponent(target);
-
-            Pattern exactPattern = Pattern.compile("\\b" + Pattern.quote(targetName) + "\\b");
-
-            message = message.replaceText(TextReplacementConfig.builder()
-                    .match(exactPattern)
-                    .replacement((matchResult, builder) -> {
-                        return builder.hoverEvent(HoverEvent.showText(hoverComponent));
-                    })
-                    .build());
-        }
-
-        return message;
-    }
-
-    private Component createHoverComponent(Player player) {
-        StringBuilder hoverText = new StringBuilder();
-
-        for (int i = 0; i < hoverLines.size(); i++) {
-            String line = hoverLines.get(i);
-            line = replaceHoverPlaceholders(line, player);
-            hoverText.append(line);
-            if (i < hoverLines.size() - 1) {
-                hoverText.append("\n");
-            }
-        }
-
-        try {
-            Component result = MM.deserialize(hoverText.toString(), createHoverPlaceholders(player));
-            return result;
-        } catch (Exception e) {
-            Bukkit.getLogger().warning("[Chat] Failed to parse hover text: " + e.getMessage());
-            return Component.text(hoverText.toString());
-        }
-    }
-    private String replaceHoverPlaceholders(String text, Player player) {
-        // Apply PlaceholderAPI if available
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            try {
-                text = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, text);
-            } catch (Throwable ignored) {}
-        }
-
-        text = text.replace("%player_name%", player.getName());
-        text = text.replace("%player_displayname%", player.getDisplayName());
-        text = text.replace("%player_uuid%", player.getUniqueId().toString());
-        text = text.replace("%player_health%", String.valueOf((int) Math.ceil(player.getHealth())));
-        text = text.replace("%player_max_health%", String.valueOf((int) Math.ceil(player.getMaxHealth())));
-        text = text.replace("%player_level%", String.valueOf(player.getLevel()));
-        text = text.replace("%player_ping%", String.valueOf(getPingSafe(player)));
-        text = text.replace("%player_world%", player.getWorld().getName());
-        text = text.replace("%player_x%", String.format(Locale.ENGLISH, "%.1f", player.getLocation().getX()));
-        text = text.replace("%player_y%", String.format(Locale.ENGLISH, "%.1f", player.getLocation().getY()));
-        text = text.replace("%player_z%", String.format(Locale.ENGLISH, "%.1f", player.getLocation().getZ()));
-        text = text.replace("%player_gamemode%", player.getGameMode().name());
-
-        text = text.replace("%luckperms_prefix%", getLuckPermsPrefix(player));
-        text = text.replace("%luckperms_suffix%", getLuckPermsSuffix(player));
-        text = text.replace("%luckperms_primary_group%", resolvePrimaryGroup(player));
-
-        return text;
-    }
-
-    private TagResolver createHoverPlaceholders(Player player) {
-        return TagResolver.resolver(
-                Placeholder.unparsed("player_name", player.getName()),
-                Placeholder.unparsed("player_displayname", player.getDisplayName()),
-                Placeholder.unparsed("player_uuid", player.getUniqueId().toString()),
-                Placeholder.unparsed("player_health", String.valueOf((int) Math.ceil(player.getHealth()))),
-                Placeholder.unparsed("player_max_health", String.valueOf((int) Math.ceil(player.getMaxHealth()))),
-                Placeholder.unparsed("player_level", String.valueOf(player.getLevel())),
-                Placeholder.unparsed("player_ping", String.valueOf(getPingSafe(player))),
-                Placeholder.unparsed("player_world", player.getWorld().getName()),
-                Placeholder.unparsed("player_gamemode", player.getGameMode().name()),
-                Placeholder.unparsed("luckperms_primary_group", resolvePrimaryGroup(player))
-        );
-    }
-
-    private String getLuckPermsPrefix(Player player) {
-        try {
-            LuckPerms lp = LuckPermsProvider.get();
-            CachedMetaData meta = lp.getPlayerAdapter(Player.class).getMetaData(player);
-            String prefix = meta.getPrefix();
-            return prefix != null ? prefix : "";
-        } catch (Throwable ignored) {
-            return "";
-        }
-    }
-
-    private String getLuckPermsSuffix(Player player) {
-        try {
-            LuckPerms lp = LuckPermsProvider.get();
-            CachedMetaData meta = lp.getPlayerAdapter(Player.class).getMetaData(player);
-            String suffix = meta.getSuffix();
-            return suffix != null ? suffix : "";
-        } catch (Throwable ignored) {
-            return "";
-        }
-    }
-
-
-    private String displayName(Player p) { return stripNameColors ? p.getName() : p.getDisplayName(); }
-    private String safe(String s) { return (s == null) ? "" : s; }
 
     private String applyPapi(String input, Player p) {
         if (input == null || input.isEmpty()) return input;
@@ -394,19 +303,21 @@ public final class AsyncChatListener implements Listener {
             if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
                 return me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, input);
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
         return input;
     }
 
     private String fillLuckPermsPrefixIfNeeded(String fmt, Player p) {
         if (fmt == null || !fmt.contains("%luckperms_prefix%")) return fmt;
         try {
-            LuckPerms lp = LuckPermsProvider.get();
-            CachedMetaData meta = lp.getPlayerAdapter(Player.class).getMetaData(p);
+            CachedMetaData meta = LuckPermsProvider.get().getPlayerAdapter(Player.class).getMetaData(p);
             String prefix = meta.getPrefix();
             if (prefix == null) prefix = "";
             return fmt.replace("%luckperms_prefix%", prefix);
-        } catch (Throwable ignored) { return fmt; }
+        } catch (Throwable ignored) {
+            return fmt;
+        }
     }
 
     private String ampersandToMiniMessage(String input) {
@@ -414,8 +325,13 @@ public final class AsyncChatListener implements Listener {
         return MiniMessage.miniMessage().serialize(comp);
     }
 
-    private boolean looksLegacy(String s) { return s != null && AMP_OR_SECTION.matcher(s).find(); }
-    private String stripTags(String s) { return s == null ? "" : s.replaceAll("<[^>]+>", ""); }
+    private boolean looksLegacy(String s) {
+        return s != null && AMP_OR_SECTION.matcher(s).find();
+    }
+
+    private String stripTags(String s) {
+        return s == null ? "" : s.replaceAll("<[^>]+>", "");
+    }
 
     private String censor(String msg, List<String> words) {
         if (msg == null || msg.isEmpty() || words == null || words.isEmpty()) return msg;
@@ -433,18 +349,19 @@ public final class AsyncChatListener implements Listener {
             if (sync != null) {
                 sync.publishMessage(uuid, server, name, serializedComponent);
             }
-        }
-        catch (Throwable ex) {
+        } catch (Throwable ex) {
             Bukkit.getLogger().severe("[ChatSync] Publish failed: " + ex.getMessage());
         }
     }
 
     private void maybeDiscord(String username, String content) {
         if (!discordEnabled || discordWebhookUrl.isEmpty()) return;
-        try { new DiscordWebhook(OreoEssentials.get(), discordWebhookUrl).sendAsync(username, content); }
-        catch (Throwable ex) { Bukkit.getLogger().warning("[Discord] Send failed: " + ex.getMessage()); }
+        try {
+            new DiscordWebhook(OreoEssentials.get(), discordWebhookUrl).sendAsync(username, content);
+        } catch (Throwable ex) {
+            Bukkit.getLogger().warning("[Discord] Send failed: " + ex.getMessage());
+        }
     }
-
 
     private TagResolver playerPlaceholders(Player p) {
         World w = p.getWorld();
@@ -459,7 +376,7 @@ public final class AsyncChatListener implements Listener {
         String gm = gmName(p.getGameMode());
         String uuid = p.getUniqueId().toString();
 
-        String lpPrimary = resolvePrimaryGroup(p);
+        String lpPrimary = hoverPrimaryGroup(p);
         String server = Bukkit.getServer().getName();
         String time24 = new SimpleDateFormat("HH:mm:ss").format(new Date());
         String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
@@ -482,22 +399,31 @@ public final class AsyncChatListener implements Listener {
         );
     }
 
-    private String fmtCoord(double v) { return String.format(Locale.ENGLISH, "%.1f", v); }
-    private int getPingSafe(Player p) { try { return p.getPing(); } catch (Throwable ignored) { return -1; } }
-    private String gmName(GameMode gm) { return (gm == null) ? "SURVIVAL" : gm.name(); }
+    private String fmtCoord(double v) {
+        return String.format(Locale.ENGLISH, "%.1f", v);
+    }
 
-    private String resolvePrimaryGroup(Player p) {
+    private int getPingSafe(Player p) {
         try {
-            LuckPerms lp = LuckPermsProvider.get();
-            User u = lp.getPlayerAdapter(Player.class).getUser(p);
-            if (u == null) return "default";
-            String primary = u.getPrimaryGroup();
-            if (primary != null) return primary;
-            for (Group g : u.getInheritedGroups(u.getQueryOptions())) {
-                if (g != null) return g.getName();
-            }
+            return p.getPing();
+        } catch (Throwable ignored) {
+            return -1;
+        }
+    }
 
-        } catch (Throwable ignored) {}
-        return "default";
+    private String gmName(GameMode gm) {
+        return (gm == null) ? "SURVIVAL" : gm.name();
+    }
+
+    private String hoverPrimaryGroup(Player p) {
+        try {
+            var lp = LuckPermsProvider.get();
+            var user = lp.getPlayerAdapter(Player.class).getUser(p);
+            if (user == null) return "default";
+            String primary = user.getPrimaryGroup();
+            return primary != null ? primary : "default";
+        } catch (Throwable ignored) {
+            return "default";
+        }
     }
 }

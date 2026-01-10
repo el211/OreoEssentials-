@@ -5,18 +5,15 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Represents a chat channel with configurable scope, permissions, and formatting
- * Supports per-rank formatting for different LuckPerms groups
- */
+
 public class ChatChannel {
 
     public enum ChannelScope {
-        ALL,      // Everyone on all servers
-        WORLD,    // Same world only
-        RANGE,    // Within X blocks
-        SERVER,   // Same server only
-        SHARD     // Same shard only
+        ALL,
+        WORLD,
+        RANGE,
+        SERVER,
+        SHARD
     }
 
     private final String id;
@@ -34,7 +31,6 @@ public class ChatChannel {
     private final boolean formattingEnabled;
     private final String format;
 
-    // NEW: Per-rank formats (key = luckperms group name, value = format)
     private final Map<String, String> rankFormats;
 
     public ChatChannel(
@@ -94,26 +90,19 @@ public class ChatChannel {
         return joinPermission == null || player.hasPermission(joinPermission);
     }
 
-    /**
-     * Get the format for a specific player based on their LuckPerms primary group
-     * Falls back to default format if no rank-specific format is defined
-     */
+
     public String getFormatForPlayer(Player player) {
         // Try to get player's primary group from LuckPerms
         String primaryGroup = getPrimaryGroup(player);
 
-        // Check if we have a custom format for this rank
         if (primaryGroup != null && rankFormats.containsKey(primaryGroup.toLowerCase())) {
             return rankFormats.get(primaryGroup.toLowerCase());
         }
 
-        // Fall back to default format
         return format;
     }
 
-    /**
-     * Get player's primary LuckPerms group
-     */
+
     private String getPrimaryGroup(Player player) {
         try {
             net.luckperms.api.LuckPerms lp = net.luckperms.api.LuckPermsProvider.get();
@@ -125,7 +114,6 @@ public class ChatChannel {
         return "default";
     }
 
-    // Getters
     public String getId() { return id; }
     public boolean isEnabled() { return enabled; }
     public String getDisplayName() { return displayName; }
