@@ -117,10 +117,14 @@ public class ChatSyncManager {
         }
     }
 
+    /**
+     * Publish a channel-specific message to RabbitMQ for cross-server delivery
+     */
     public void publishChannelMessage(UUID senderId, String server, String senderName, String channelId, String jsonComponent) {
         if (!enabled) return;
 
         try {
+            // CHANMSG;;serverId;;senderUUID;;b64(server);;b64(senderName);;b64(channelId);;b64(jsonComponent)
             String payload = EX_CHANNEL_MSG
                     + ";;" + SERVER_ID
                     + ";;" + senderId
@@ -365,28 +369,22 @@ public class ChatSyncManager {
                 }
             }
 
+            // Fallback: do NOT broadcast unknown channel system messages to players (prevents leaks)
             Bukkit.getConsoleSender().sendMessage(messageJsonOrText);
         });
     }
 
 
     private void handleChannelMessage(String msg) {
-        Bukkit.getLogger().info("[ChatSync/DEBUG] ========== CHANNEL MESSAGE RECEIVED ==========");
-        Bukkit.getLogger().info("[ChatSync/DEBUG] Raw message: " + msg);
-
         String[] parts = msg.split(";;", 7);
         if (parts.length < 7) {
-            Bukkit.getLogger().warning("[ChatSync/DEBUG] Invalid message format! Expected 7 parts, got " + parts.length);
             return;
         }
 
         String originServerId = parts[1];
-        Bukkit.getLogger().info("[ChatSync/DEBUG] Origin server ID: " + originServerId);
-        Bukkit.getLogger().info("[ChatSync/DEBUG] My server ID: " + SERVER_ID);
 
         // Ignore our own messages (already sent locally)
         if (SERVER_ID.toString().equals(originServerId)) {
-            Bukkit.getLogger().info("[ChatSync/DEBUG] LOOPBACK - Ignoring own message");
             return;
         }
 
@@ -396,60 +394,40 @@ public class ChatSyncManager {
         String channelId = fromB64(parts[5]);
         String messageJson = fromB64(parts[6]);
 
-        Bukkit.getLogger().info("[ChatSync/DEBUG] Sender: " + senderName + " (" + senderUuidStr + ")");
-        Bukkit.getLogger().info("[ChatSync/DEBUG] Server: " + serverName);
-        Bukkit.getLogger().info("[ChatSync/DEBUG] Channel: " + channelId);
-        Bukkit.getLogger().info("[ChatSync/DEBUG] Message preview: " + messageJson.substring(0, Math.min(100, messageJson.length())));
-
         UUID senderUuid = null;
         try {
             senderUuid = UUID.fromString(senderUuidStr);
         } catch (Exception ignored) {
-            Bukkit.getLogger().warning("[ChatSync/DEBUG] Invalid sender UUID!");
         }
 
         // Check if sender is muted
         if (muteService != null && senderUuid != null && muteService.isMuted(senderUuid)) {
-            Bukkit.getLogger().info("[ChatSync/DEBUG] BLOCKED - Sender is muted");
             return;
         }
 
         final UUID finalSenderUuid = senderUuid;
 
         Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
-            Bukkit.getLogger().info("[ChatSync/DEBUG] Running on main thread...");
-
             if (channelManager == null) {
-                Bukkit.getLogger().warning("[ChatSync/DEBUG] BLOCKED - channelManager is NULL!");
                 return;
             }
 
             if (!channelManager.isEnabled()) {
-                Bukkit.getLogger().warning("[ChatSync/DEBUG] BLOCKED - Channels are disabled");
                 return;
             }
 
-            Bukkit.getLogger().info("[ChatSync/DEBUG] Channel manager is enabled, processing...");
-
             ChatChannel channel = channelManager.getChannel(channelId);
             if (channel == null) {
-                Bukkit.getLogger().warning("[ChatSync/DEBUG] BLOCKED - Channel '" + channelId + "' not found!");
                 return;
             }
 
             if (!channel.isEnabled()) {
-                Bukkit.getLogger().warning("[ChatSync/DEBUG] BLOCKED - Channel '" + channelId + "' is disabled");
                 return;
             }
 
-            Bukkit.getLogger().info("[ChatSync/DEBUG] Channel '" + channelId + "' found and enabled!");
-            Bukkit.getLogger().info("[ChatSync/DEBUG] Channel scope: " + channel.getScope());
-
             if (channel.getScope() == ChatChannel.ChannelScope.SERVER) {
                 String localServer = OreoEssentials.get().getConfigService().serverName();
-                Bukkit.getLogger().info("[ChatSync/DEBUG] SERVER-scoped channel. Local: " + localServer + ", Message from: " + serverName);
                 if (!serverName.equalsIgnoreCase(localServer)) {
-                    Bukkit.getLogger().info("[ChatSync/DEBUG] BLOCKED - Different server for SERVER-scoped channel");
                     return;
                 }
             }
@@ -457,38 +435,23 @@ public class ChatSyncManager {
             Component component;
             try {
                 component = GsonComponentSerializer.gson().deserialize(messageJson);
-                Bukkit.getLogger().info("[ChatSync/DEBUG] Successfully deserialized message component");
             } catch (Exception ex) {
                 component = Component.text(messageJson);
-                Bukkit.getLogger().warning("[ChatSync/DEBUG] Failed to deserialize, using plain text fallback: " + ex.getMessage());
             }
-
-            int recipientCount = 0;
-            int totalOnline = Bukkit.getOnlinePlayers().size();
-            Bukkit.getLogger().info("[ChatSync/DEBUG] Checking " + totalOnline + " online players...");
 
             for (var player : Bukkit.getOnlinePlayers()) {
                 ChatChannel playerChannel = channelManager.getPlayerChannel(player);
 
-                Bukkit.getLogger().info("[ChatSync/DEBUG] Player " + player.getName() + " is in channel: "
-                        + (playerChannel == null ? "NULL" : playerChannel.getId()));
-
                 if (playerChannel == null || !playerChannel.getId().equalsIgnoreCase(channel.getId())) {
-                    Bukkit.getLogger().info("[ChatSync/DEBUG]   -> SKIPPED (wrong channel)");
                     continue;
                 }
 
                 if (!channel.canView(player)) {
-                    Bukkit.getLogger().info("[ChatSync/DEBUG]   -> SKIPPED (no view permission)");
                     continue;
                 }
 
                 player.sendMessage(component);
-                recipientCount++;
-                Bukkit.getLogger().info("[ChatSync/DEBUG]   -> DELIVERED!");
             }
-
-            Bukkit.getLogger().info("[ChatSync/DEBUG] ========== DELIVERED TO " + recipientCount + " PLAYERS ==========");
 
             Bukkit.getConsoleSender().sendMessage(component);
         });

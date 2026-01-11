@@ -27,9 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Chat listener with channel support AND hover tooltips!
- */
+
 public class AsyncChatListenerWithChannels implements Listener {
 
     private final OreoEssentials plugin;
@@ -125,7 +123,6 @@ public class AsyncChatListenerWithChannels implements Listener {
         }
     }
 
-    // PUBLIC methods for ChatChannelHandler to use
 
     public boolean isHoverEnabled() {
         return hoverEnabled;
