@@ -26,7 +26,7 @@ chat:
   # Discord relay
   discord:
     enabled: true
-    webhook_url: "https://discord.com/api/webhooks/1342772793707855942/H4JylhjXU0rIjJR4lXMTTtFxjHpyRc0Q_wWiShNN8CcdfHbt1gCucNBymGRyBF_vnLX2"
+    webhook_url: "https://discord.com/api/webhooks/examplewebhookhere"
 
   # Hover configuration
   hover:
@@ -57,6 +57,12 @@ chat:
 
     default_channel: "global"
     remember_last_channel: true
+
+    cross_server:
+      enabled: false  # Set to true to use MongoDB from config.yml
+      # When enabled, players will stay in the same channel across all servers
+      # Requires: MongoDB configured in config.yml (storage.mongo section)
+      # When disabled, each server tracks channels independently (YAML files)
 
     formatting:
       enabled: true

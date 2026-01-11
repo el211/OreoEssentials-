@@ -736,10 +736,11 @@ public final class OreoEssentials extends JavaPlugin {
 
         this.channelManager = new fr.elias.oreoEssentials.chat.channels.ChatChannelManager(
                 this,
-                this.chatConfig
+                this.chatConfig,
+                this.homesMongoClient
         );
 
-        this.channelManager.reload(); // or load(), init(), etc (use the method your class provides)
+        this.channelManager.reload();
 
 
         getServer().getPluginManager().registerEvents(new JoinMessagesListener(this), this);

@@ -11,10 +11,7 @@ import org.bukkit.entity.Player;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Manages all chat channels and player channel assignments
- * Now supports per-rank channel formatting and join messages!
- */
+
 public class ChatChannelManager {
 
     private final OreoEssentials plugin;
@@ -31,15 +28,47 @@ public class ChatChannelManager {
 
     private final Map<UUID, String> playerChannels = new ConcurrentHashMap<>();
 
-    private ChannelPersistence persistence;
+    private ChannelPersistenceProvider persistence;
 
     public ChatChannelManager(OreoEssentials plugin, CustomConfig chatConfig) {
+        this(plugin, chatConfig, null);
+    }
+
+    public ChatChannelManager(OreoEssentials plugin, CustomConfig chatConfig, com.mongodb.client.MongoClient mongoClient) {
         this.plugin = plugin;
         this.chatConfig = chatConfig;
-        this.persistence = new ChannelPersistence(plugin);
+
+        // Initialize persistence based on config
+        initializePersistence(mongoClient);
 
         loadConfig();
         loadPlayerData();
+    }
+
+    private void initializePersistence(com.mongodb.client.MongoClient mongoClient) {
+        FileConfiguration cfg = chatConfig.getCustomConfig();
+        boolean useMongo = cfg.getBoolean("chat.channels.cross_server.enabled", false);
+
+        if (useMongo && mongoClient != null) {
+            try {
+                // Use MongoDB from global config
+                String dbName = plugin.getConfig().getString("storage.mongo.database", "oreo");
+                String prefix = plugin.getConfig().getString("storage.mongo.collectionPrefix", "oreo_");
+
+                this.persistence = new MongoChannelPersistence(mongoClient, dbName, prefix);
+                plugin.getLogger().info("[Channels] Using MongoDB persistence (cross-server enabled)");
+            } catch (Exception e) {
+                plugin.getLogger().warning("[Channels] Failed to init MongoDB persistence, falling back to YAML: " + e.getMessage());
+                this.persistence = new YamlChannelPersistence(plugin);
+            }
+        } else {
+            this.persistence = new YamlChannelPersistence(plugin);
+            if (!useMongo) {
+                plugin.getLogger().info("[Channels] Using YAML persistence (local server only)");
+            } else {
+                plugin.getLogger().warning("[Channels] MongoDB requested but MongoClient is null, using YAML");
+            }
+        }
     }
 
     public void reload() {
