@@ -2,6 +2,8 @@ package fr.elias.oreoEssentials.chat.channels;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.chat.CustomConfig;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -11,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manages all chat channels and player channel assignments
- * Now supports per-rank channel formatting!
+ * Now supports per-rank channel formatting and join messages!
  */
 public class ChatChannelManager {
 
@@ -99,6 +101,9 @@ public class ChatChannelManager {
             boolean fmtEnabled = ch.getBoolean("formatting.enabled", true);
             String format = ch.getString("formatting.format", fallbackFormat);
 
+            // NEW: Load join message
+            String joinMessage = ch.getString("join_message", null);
+
             // NEW: Load per-rank formats
             Map<String, String> rankFormats = new HashMap<>();
             ConfigurationSection rankSection = ch.getConfigurationSection("formatting.rank_formats");
@@ -107,16 +112,18 @@ public class ChatChannelManager {
                     String rankFormat = rankSection.getString(rank);
                     if (rankFormat != null && !rankFormat.isEmpty()) {
                         rankFormats.put(rank.toLowerCase(), rankFormat);
-                        plugin.getLogger().info("[Channels] Loaded rank format for '" + rank + "' in channel '" + id + "'");
                     }
                 }
             }
+
+            // NEW: Load Discord webhook
+            String discordWebhook = ch.getString("discord_webhook", null);
 
             ChatChannel channel = new ChatChannel(
                     id, chEnabled, displayName, desc,
                     talkPerm, viewPerm, joinPerm,
                     scope, range,
-                    fmtEnabled, format, rankFormats
+                    fmtEnabled, format, joinMessage, rankFormats, discordWebhook
             );
 
             channels.put(id, channel);
@@ -126,18 +133,20 @@ public class ChatChannelManager {
             channelOrder.addAll(channels.keySet());
         }
 
-        plugin.getLogger().info("[Channels] Loaded " + channels.size() + " channels. Default: " + defaultChannelId);
+        plugin.getLogger().info("[Channels] Loaded " + channels.size() + " channels");
     }
 
     private void createDefaultChannels() {
         ChatChannel global = new ChatChannel(
                 "global", true, "<gradient:#FF1493:#00FF7F>Global</gradient>",
                 "<gray>Server-wide chat</gray>",
-                "oreo.chat.channel.global.talk",
-                "oreo.chat.channel.global.view",
-                "oreo.chat.channel.global.join",
+                null,
+                null,
+                null,
                 ChatChannel.ChannelScope.ALL, 0,
-                true, "<gray>[G]</gray> {message}"
+                true, "<gray>[G]</gray> {prefix}{player}{suffix}<dark_gray>: </dark_gray><white>{message}</white>",
+                "<gray>You are now chatting in </gray><gradient:#FF1493:#00FF7F>Global</gradient><gray>!</gray>",
+                null  // No rank formats by default
         );
 
         ChatChannel local = new ChatChannel(
@@ -145,7 +154,9 @@ public class ChatChannelManager {
                 "<gray>Local area chat</gray>",
                 null, null, null,
                 ChatChannel.ChannelScope.RANGE, 100,
-                true, "<yellow>[L]</yellow> {message}"
+                true, "<yellow>[L]</yellow> {prefix}{player}{suffix}<dark_gray>: </dark_gray><white>{message}</white>",
+                "<gray>You are now chatting in </gray><yellow>Local</yellow><gray>!</gray>",
+                null  // No rank formats by default
         );
 
         channels.put("global", global);
@@ -174,11 +185,7 @@ public class ChatChannelManager {
     }
 
     public ChatChannel getDefaultChannel() {
-        ChatChannel defaultCh = channels.get(defaultChannelId);
-        if (defaultCh == null) {
-            return channels.values().stream().findFirst().orElse(null);
-        }
-        return defaultCh;
+        return channels.get(defaultChannelId);
     }
 
     public Collection<ChatChannel> getAllChannels() {
@@ -199,26 +206,19 @@ public class ChatChannelManager {
 
     public ChatChannel getPlayerChannel(Player player) {
         String channelId = playerChannels.get(player.getUniqueId());
-
         if (channelId == null) {
-            ChatChannel defaultCh = getDefaultChannel();
-            if (defaultCh != null) {
-                setPlayerChannel(player, defaultCh);
-            }
-            return defaultCh;
+            return getDefaultChannel();
         }
-
         ChatChannel ch = channels.get(channelId);
-
         if (ch == null || !ch.isEnabled()) {
-            ChatChannel defaultCh = getDefaultChannel();
-            setPlayerChannel(player, defaultCh);
-            return defaultCh;
+            return getDefaultChannel();
         }
-
         return ch;
     }
 
+    /**
+     * Set a player's channel and send join message if configured
+     */
     public void setPlayerChannel(Player player, ChatChannel channel) {
         if (channel == null) {
             playerChannels.remove(player.getUniqueId());
@@ -229,6 +229,16 @@ public class ChatChannelManager {
             playerChannels.put(player.getUniqueId(), channel.getId());
             if (rememberLastChannel) {
                 persistence.save(player.getUniqueId(), channel.getId());
+            }
+
+            // Send join message if configured
+            if (channel.hasJoinMessage()) {
+                try {
+                    Component msg = MiniMessage.miniMessage().deserialize(channel.getJoinMessage());
+                    player.sendMessage(msg);
+                } catch (Exception e) {
+                    player.sendMessage(channel.getJoinMessage());
+                }
             }
         }
     }

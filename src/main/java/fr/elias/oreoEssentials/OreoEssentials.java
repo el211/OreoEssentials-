@@ -797,14 +797,12 @@ public final class OreoEssentials extends JavaPlugin {
 
 
         if (channelManager.isEnabled()) {
-            // Register channel commands
             var channelsCmd = new fr.elias.oreoEssentials.chat.channels.commands.OeChannelsCommand(this, channelManager);
             var channelCmd = new fr.elias.oreoEssentials.chat.channels.commands.OeChannelCommand(this, channelManager);
 
             this.commands.register(channelsCmd);
             this.commands.register(channelCmd);
 
-            // Set tab completers
             if (getCommand("oechannel") != null) {
                 getCommand("oechannel").setTabCompleter(channelCmd);
             }
@@ -813,6 +811,23 @@ public final class OreoEssentials extends JavaPlugin {
             }
 
             getLogger().info("[Channels] Enabled with " + channelManager.getAllChannels().size() + " channels");
+
+            var announceCmd = new fr.elias.oreoEssentials.chat.channels.commands.ChannelAnnounceCommand(
+                    this,
+                    channelManager,
+                    chatSyncManager
+            );
+
+            if (getCommand("channelannounce") != null) {
+                getCommand("channelannounce").setExecutor(announceCmd);
+                getCommand("channelannounce").setTabCompleter(announceCmd);
+            }
+            if (getCommand("channelannounce") != null) {
+                getCommand("channelannounce").setTabCompleter(announceCmd);
+            }
+
+            getLogger().info("[Channels] Announcement command registered (/channelannounce)");
+
         } else {
             getLogger().info("[Channels] Disabled by config (chat.channels.enabled=false)");
         }

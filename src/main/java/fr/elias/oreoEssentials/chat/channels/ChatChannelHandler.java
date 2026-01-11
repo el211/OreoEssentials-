@@ -18,7 +18,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-
+/**
+ * Handles channel message routing, formatting, and delivery with proper channel isolation
+ */
 public class ChatChannelHandler {
 
     private final OreoEssentials plugin;
@@ -26,6 +28,7 @@ public class ChatChannelHandler {
     private final ChatSyncManager syncManager;
     private final FormatManager formatManager;
 
+    // Reference to the listener for hover support
     private Object hoverProvider;
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
@@ -42,12 +45,16 @@ public class ChatChannelHandler {
         this.formatManager = formatManager;
     }
 
-
+    /**
+     * Set the hover provider (AsyncChatListenerWithChannels instance)
+     */
     public void setHoverProvider(Object provider) {
         this.hoverProvider = provider;
     }
 
-
+    /**
+     * Process and send a channel message with proper channel isolation AND hover support
+     */
     public void sendChannelMessage(Player sender, String message, ChatChannel channel) {
         if (channel == null || !channel.isEnabled()) {
             sender.sendMessage("§cYour current channel is disabled. Switching to default channel.");
@@ -105,6 +112,24 @@ public class ChatChannelHandler {
                 );
             } catch (Exception e) {
                 Bukkit.getLogger().severe("[ChatChannelHandler] Failed to publish cross-server message: " + e.getMessage());
+            }
+        }
+
+        // NEW: Send to Discord webhook if configured for this channel
+        if (channel.hasDiscordWebhook()) {
+            try {
+                String serverName = plugin.getConfigService().serverName();
+                String channelDisplayName = channel.getDisplayName();
+                String strippedMessage = DiscordWebhookSender.stripFormatting(message);
+
+                DiscordWebhookSender.sendAsync(
+                        channel.getDiscordWebhook(),
+                        "[" + serverName + "] " + channelDisplayName,
+                        strippedMessage,
+                        sender.getName()
+                );
+            } catch (Exception e) {
+                Bukkit.getLogger().warning("[ChatChannelHandler] Failed to send Discord webhook: " + e.getMessage());
             }
         }
     }

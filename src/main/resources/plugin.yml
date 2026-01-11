@@ -594,6 +594,11 @@ commands:
   # ═══════════════════════════════════════════════════════════════
   # CHAT CHANNELS SYSTEM COMMANDS
   # ═══════════════════════════════════════════════════════════════
+  channelannounce:
+    description: Send an announcement to a specific channel
+    usage: /<command> <channel> <message>
+    permission: oreo.channel.announce
+    aliases: [channelbroadcast, chanannounce, ca]
 
   oechannels:
     description: Open chat channels GUI

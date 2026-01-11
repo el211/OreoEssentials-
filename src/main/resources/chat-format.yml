@@ -69,6 +69,7 @@ chat:
 
     list_order:
       - "global"
+      - "announcements"    # NRead-only announcements channel
       - "staff"
       - "trade"
       - "local"
@@ -104,6 +105,40 @@ chat:
             admin: "<red>[<yellow>⚡</yellow> G]</red> {message}"
             owner: "<gradient:#8e2de2:#4a00e0>[<white>♔</white> G]</gradient> {message}"
 
+        # Join message when switching to this channel
+        join_message: "<gray>You are now chatting in </gray><gradient:#FF1493:#00FF7F>Global</gradient><gray>!</gray>"
+
+        # Discord webhook for announcements
+        discord_webhook: null  # Set to send announcements to Discord
+      # ==================== ANNOUNCEMENTS CHANNEL (READ-ONLY) ====================
+      announcements:
+        enabled: true
+        display_name: "<gold><bold>📢 Announcements</bold></gold>"
+        description: "<gray>Official server announcements (read-only)</gray>"
+
+        # IMPORTANT: This makes it read-only - only players with this permission can send messages
+        talk_permission: "oreo.chat.channel.announcements.talk"
+        view_permission: null  # Everyone can view
+        join_permission: null  # Everyone can join
+
+        scope:
+          type: "ALL"
+          range_blocks: 0
+
+        formatting:
+          enabled: true
+          format: "<gold><bold>[📢]</bold></gold> {message}"
+
+          # Staff announcements get different prefixes
+          rank_formats:
+            admin: "<gold><bold>[📢 Admin]</bold></gold> {message}"
+            owner: "<gradient:#ffd700:#ff8c00><bold>[📢 Owner]</bold></gradient> {message}"
+
+        join_message: "<gray>You are viewing </gray><gold><bold>Announcements</bold></gold><gray>. This channel is </gray><red>read-only</red><gray>.</gray>"
+
+        # Discord webhook for announcements
+        discord_webhook: null  # Set to send announcements to Discord
+
       # ==================== LOCAL CHANNEL ====================
       local:
         enabled: true
@@ -127,6 +162,11 @@ chat:
             vip: "<gold>[L+]</gold> {message}"
             admin: "<red>[ADMIN-L]</red> {message}"
 
+        # NEW: Join message
+        join_message: "<gray>You are now chatting in </gray><yellow>Local</yellow><gray> (100 blocks range)</gray>"
+
+        # Discord webhook for announcements
+        discord_webhook: null  # Set to send announcements to Discord
       # ==================== TRADE CHANNEL ====================
       trade:
         enabled: true
@@ -150,6 +190,11 @@ chat:
             vip: "<gold>[<white>💰</white> VIP Trade]</gold> {message}"
             mvp: "<gradient:#ffd700:#ff8c00>[<white>💎</white> MVP Trade]</gradient> {message}"
 
+        #Join message
+        join_message: "<gray>You are now in </gray><green>Trade</green><gray> channel. Buy & sell items here!</gray>"
+
+        # Discord webhook for announcements
+        discord_webhook: null  # Set to send announcements to Discord
       # ==================== STAFF CHANNEL ====================
       staff:
         enabled: true
@@ -174,6 +219,10 @@ chat:
             admin: "<red><bold>[ADMIN]</bold></red> {message}"
             owner: "<gradient:#8e2de2:#4a00e0><bold>[OWNER]</bold></gradient> {message}"
 
+        join_message: "<gray>You are now in </gray><red><bold>Staff Chat</bold></red><gray>!</gray>"
+
+        # Discord webhook for announcements
+        discord_webhook: null  # Set to send announcements to Discord
       # ==================== HELP CHANNEL ====================
       help:
         enabled: true
@@ -198,8 +247,11 @@ chat:
             moderator: "<aqua>[<white>✓</white> Mod]</aqua> {message}"
             admin: "<red>[<white>✓</white> Admin]</red> {message}"
 
+        # Join message
+        join_message: "<gray>You are now in </gray><aqua>Help</aqua><gray> channel. Ask your questions!</gray>"
 
-
+        # Discord webhook for announcements
+        discord_webhook: null  # Set to send announcements to Discord
 
 
 MongoDB_rabbitmq:
