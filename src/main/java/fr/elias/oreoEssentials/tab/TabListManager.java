@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.tab;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.config.SettingsConfig;
 import fr.elias.oreoEssentials.playerdirectory.PlayerDirectory;
+import fr.elias.oreoEssentials.tab.CustomTablistLayout;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -28,6 +29,10 @@ public class TabListManager {
     private final OreoEssentials plugin;
     private final SettingsConfig settings;
     private final PlayerDirectory playerDirectory;
+
+    // NEW: Custom layout support
+    private CustomTablistLayout customLayout;
+    private boolean useCustomLayout;
 
     private File file;
     private FileConfiguration cfg;
@@ -138,6 +143,23 @@ public class TabListManager {
         String ov = nf != null ? nf.getString("overflow", "TRIM") : "TRIM";
         overflowMode = "ELLIPSIS".equalsIgnoreCase(ov) ? OverflowMode.ELLIPSIS : OverflowMode.TRIM;
 
+        // NEW: Load custom layout mode
+        String layoutMode = cfg.getString("tab.layout-mode", "CLASSIC");
+        this.useCustomLayout = "CUSTOM".equalsIgnoreCase(layoutMode);
+
+        if (useCustomLayout) {
+            // Check if ProtocolLib is available
+            if (Bukkit.getPluginManager().getPlugin("ProtocolLib") == null) {
+                plugin.getLogger().warning("[TAB] Custom layout requires ProtocolLib! Falling back to classic mode.");
+                plugin.getLogger().warning("[TAB] Download ProtocolLib: https://www.spigotmc.org/resources/protocollib.1997/");
+                this.useCustomLayout = false;
+            } else {
+                plugin.getLogger().info("[TAB] Using CUSTOM layout mode (packet-based tablist like the image)");
+            }
+        } else {
+            plugin.getLogger().info("[TAB] Using CLASSIC layout mode (traditional header/footer)");
+        }
+
         serverTagPattern = nf != null ? nf.getString("server-tag", "") : "";
 
         rankFormats.clear();
@@ -189,6 +211,25 @@ public class TabListManager {
     public void start() {
         stop();
 
+        // NEW: Check which mode to use
+        if (useCustomLayout) {
+            // Use custom packet-based layout (like the image)
+            if (customLayout == null) {
+                customLayout = new CustomTablistLayout(plugin, this);
+            }
+            customLayout.start(intervalTicks);
+            plugin.getLogger().info("[TAB] Started in CUSTOM layout mode");
+        } else {
+            // Use classic header/footer mode (your original code)
+            startClassicMode();
+            plugin.getLogger().info("[TAB] Started in CLASSIC layout mode");
+        }
+    }
+
+    /**
+     * Classic mode: Traditional header/footer with player name formatting
+     */
+    private void startClassicMode() {
         task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             for (Player p : Bukkit.getOnlinePlayers()) {
 
@@ -283,6 +324,12 @@ public class TabListManager {
             task.cancel();
             task = null;
         }
+
+        // NEW: Stop custom layout if running
+        if (customLayout != null) {
+            customLayout.stop();
+        }
+
         titleShown.clear();
     }
 
