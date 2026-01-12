@@ -52,7 +52,7 @@ public class BackCommand implements OreoCommand {
         Player p = (Player) sender;
         UUID uuid = p.getUniqueId();
 
-        //  Use the new raw cross-server API
+        // Get the last back location
         BackLocation last = backService.getLastRaw(uuid);
         if (last == null) {
             p.sendMessage("§cNo last location recorded.");
@@ -73,20 +73,19 @@ public class BackCommand implements OreoCommand {
             return true;
         }
 
-// 🌐 Other server → cross-server broker (packet + server switch handled by broker)
+        // 🌐 Other server → cross-server back
         var broker = plugin.getBackBroker();
         if (broker == null) {
-            p.sendMessage("§cBack cross-server broker not available.");
+            p.sendMessage("§cBack cross-server system is not available.");
             return true;
         }
 
-// IMPORTANT: the broker method takes 2 args in your project
+        // ✅ FIXED: Send message BEFORE server transfer
+        p.sendMessage("§aTeleporting back to §e" + last.getServer() + "§a...");
+
+        // Now request the cross-server back (this will kick player to other server)
         broker.requestCrossServerBack(p, last);
 
-        p.sendMessage("§aTeleported back.");
         return true;
-
-
-
     }
 }

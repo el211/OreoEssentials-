@@ -1,12 +1,16 @@
 package fr.elias.oreoEssentials;
 
+import com.google.gson.Gson;
 import fr.elias.oreoEssentials.bossbar.BossBarService;
 import fr.elias.oreoEssentials.bossbar.BossBarToggleCommand;
 import fr.elias.oreoEssentials.clearlag.ClearLagManager;
 import fr.elias.oreoEssentials.commands.CommandManager;
 import fr.elias.oreoEssentials.commands.core.moderation.freeze.FreezeCommand;
+import fr.elias.oreoEssentials.commands.core.playercommands.back.BackBroker;
 import fr.elias.oreoEssentials.commands.core.playercommands.back.BackCommand;
+import fr.elias.oreoEssentials.commands.core.playercommands.back.BackLocation;
 import fr.elias.oreoEssentials.commands.core.playercommands.back.BackService;
+import fr.elias.oreoEssentials.commands.core.playercommands.back.BackJoinListener;
 import fr.elias.oreoEssentials.cross.InvlookListener;
 import fr.elias.oreoEssentials.cross.InvlookManager;
 import fr.elias.oreoEssentials.migration.commands.ZEssentialsHomesImportCommand;
@@ -100,6 +104,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class OreoEssentials extends JavaPlugin {
 
@@ -130,7 +136,9 @@ public final class OreoEssentials extends JavaPlugin {
     private fr.elias.oreoEssentials.tempfly.TempFlyService tempFlyService;
     private fr.elias.oreoEssentials.tempfly.TempFlyConfig tempFlyConfig;
     private fr.elias.oreoEssentials.chat.channels.ChatChannelManager channelManager;
+    private BackBroker backBroker;
 
+    private Map<UUID, BackLocation> pendingBackTeleports = new ConcurrentHashMap<>();
     public fr.elias.oreoEssentials.chat.channels.ChatChannelManager getChannelManager() {
         return channelManager;
     }
@@ -191,10 +199,7 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.playervaults.PlayerVaultsService getPlayervaultsService() { return playervaultsService; }
     private fr.elias.oreoEssentials.cross.InvseeService invseeService;
     private fr.elias.oreoEssentials.cross.InvseeCrossServerBroker invseeBroker;
-    private fr.elias.oreoEssentials.teleport.BackCrossServerBroker backBroker;
-    public fr.elias.oreoEssentials.teleport.BackCrossServerBroker getBackBroker() {
-        return backBroker;
-    }
+
     public fr.elias.oreoEssentials.cross.InvseeService getInvseeService() {
         return invseeService;
     }
@@ -252,7 +257,14 @@ public final class OreoEssentials extends JavaPlugin {
 
     private fr.elias.oreoEssentials.playtime.PlaytimeTracker playtimeTracker;
     private PlayerNametagManager nametagManager;
-
+    private Gson gson = new Gson();
+    public BackBroker getBackBroker() {
+        return backBroker;
+    }
+    public Gson getGson() { return gson; }  // ADD THIS
+    public Map<UUID, BackLocation> getPendingBackTeleports() {
+        return pendingBackTeleports;
+    }
     @Override
     public void onLoad() {
         loadExternalLibraries();
@@ -1349,21 +1361,31 @@ public final class OreoEssentials extends JavaPlugin {
             this.tpBroker = null;
             getLogger().info("[BROKER] TP cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
+        // ===== Initialize BackBroker + BackJoinListener =====
+        if (rabbitEnabled && packetManager != null && packetManager.isInitialized()) {
+            try {
+                com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
+                factory.setUri(getConfig().getString("rabbitmq.uri"));
+                com.rabbitmq.client.Connection rabbitConn = factory.newConnection();
 
-        if (packetManager != null && packetManager.isInitialized() && proxyMessenger != null) {
-            this.backBroker = new fr.elias.oreoEssentials.teleport.BackCrossServerBroker(
-                    this,
-                    this.teleportService,
-                    this.packetManager,
-                    proxyMessenger,
-                    configService.serverName()
-            );
-            getLogger().info("[BROKER] Back cross-server broker ready (server=" + configService.serverName() + ").");
+                this.backBroker = new BackBroker(this, backService, rabbitConn);
+                this.backBroker.start();
+
+                getServer().getPluginManager().registerEvents(
+                        new BackJoinListener(this),
+                        this
+                );
+
+                getLogger().info("[BackBroker] Cross-server /back broker ready (server=" + configService.serverName() + ").");
+            } catch (Exception e) {
+                this.backBroker = null;
+                getLogger().severe("[BackBroker] Failed to initialize: " + e.getMessage());
+                e.printStackTrace();
+            }
         } else {
             this.backBroker = null;
-            getLogger().info("[BROKER] Back cross-server broker disabled (PacketManager unavailable or proxyMessenger null).");
+            getLogger().info("[BackBroker] Disabled (RabbitMQ not available).");
         }
-
 
         if (packetManager != null
                 && packetManager.isInitialized()
@@ -2127,7 +2149,17 @@ public final class OreoEssentials extends JavaPlugin {
         }
 
         org.bukkit.Bukkit.getScheduler().cancelTasks(this);
+        try {
+            if (backBroker != null) {
+                backBroker.shutdown();
+                getLogger().info("[BackBroker] Shutdown complete.");
+            }
+        } catch (Exception ignored) {}
 
+        try {
+            pendingBackTeleports.clear();
+            getLogger().info("[BackBroker] Cleared pending teleports.");
+        } catch (Exception ignored) {}
         try { if (teleportService != null) teleportService.shutdown(); } catch (Exception ignored) {}
         try { if (storage != null) { storage.flush(); storage.close(); } } catch (Exception ignored) {}
         try { if (database != null) database.close(); } catch (Exception ignored) {}
