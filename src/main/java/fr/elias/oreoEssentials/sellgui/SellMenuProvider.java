@@ -22,7 +22,6 @@ public final class SellMenuProvider implements InventoryProvider {
     private final OreoEssentials plugin;
     private final SellGuiManager manager;
 
-    // sell area: rows 1..4, cols 1..7  (4x7 = 28 slots)
     private static boolean isSellSlot(int row, int col) {
         return row >= 1 && row <= 4 && col >= 1 && col <= 7;
     }
@@ -44,7 +43,7 @@ public final class SellMenuProvider implements InventoryProvider {
         }
         contents.fill(ClickableItem.empty(glass));
 
-        // Mark sell slots editable + empty them visually
+
         for (int r = 1; r <= 4; r++) {
             for (int c = 1; c <= 7; c++) {
                 SlotPos pos = SlotPos.of(r, c);
@@ -53,7 +52,6 @@ public final class SellMenuProvider implements InventoryProvider {
             }
         }
 
-            // SELL
         contents.set(5, 2, ClickableItem.of(
                 manager.config().buildButton(
                         "sell",
@@ -71,7 +69,6 @@ public final class SellMenuProvider implements InventoryProvider {
                 }
         ));
 
-            // CLOSE
         contents.set(5, 4, ClickableItem.of(
                 manager.config().buildButton(
                         "close",
@@ -82,7 +79,6 @@ public final class SellMenuProvider implements InventoryProvider {
                 e -> player.closeInventory()
         ));
 
-            // CLEAR
         contents.set(5, 6, ClickableItem.of(
                 manager.config().buildButton(
                         "clear",
@@ -100,7 +96,6 @@ public final class SellMenuProvider implements InventoryProvider {
 
     @Override
     public void update(Player player, InventoryContents contents) {
-        // optional: could update a "Total" display every tick/second
     }
 
     private double computeTotal(Player player) {
@@ -124,7 +119,6 @@ public final class SellMenuProvider implements InventoryProvider {
     }
 
     private void openConfirm(Player player, double total) {
-        // Snapshot items in sell area (so confirm GUI sells exactly those)
         Map<Integer, ItemStack> snapshot = snapshotSellSlots(player);
 
         SmartInventory.builder()
@@ -158,9 +152,7 @@ public final class SellMenuProvider implements InventoryProvider {
         returnSellItemsStatic(player);
     }
 
-    /**
-     * Called from SellGuiManager on InventoryCloseEvent (SmartInvs listener)
-     */
+
     public static void returnSellItemsStatic(Player player) {
         ItemStack[] top = player.getOpenInventory().getTopInventory().getContents();
 
@@ -174,7 +166,6 @@ public final class SellMenuProvider implements InventoryProvider {
 
             top[slot] = null;
 
-            // Return to player inventory (drop leftovers)
             Map<Integer, ItemStack> leftover = player.getInventory().addItem(it);
             leftover.values().forEach(drop -> player.getWorld().dropItemNaturally(player.getLocation(), drop));
         }
@@ -193,7 +184,6 @@ public final class SellMenuProvider implements InventoryProvider {
                 meta.setLore(loreLegacy.stream().map(Lang::color).toList());
             }
 
-            // Optional: hide extra tooltip noise
             meta.addItemFlags(ItemFlag.values());
 
             item.setItemMeta(meta);

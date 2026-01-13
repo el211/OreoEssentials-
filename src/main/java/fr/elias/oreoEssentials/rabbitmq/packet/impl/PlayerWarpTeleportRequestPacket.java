@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/rabbitmq/packet/impl/PlayerWarpTeleportRequestPacket.java
 package fr.elias.oreoEssentials.rabbitmq.packet.impl;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;

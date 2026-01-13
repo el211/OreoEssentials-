@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/services/ConfigService.java
 package fr.elias.oreoEssentials.services;
 
 import fr.elias.oreoEssentials.OreoEssentials;

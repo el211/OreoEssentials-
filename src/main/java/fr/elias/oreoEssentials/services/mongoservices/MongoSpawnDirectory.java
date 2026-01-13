@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/services/MongoSpawnDirectory.java
 package fr.elias.oreoEssentials.services.mongoservices;
 
 import com.mongodb.client.MongoClient;
@@ -10,7 +9,6 @@ import org.bson.Document;
 public class MongoSpawnDirectory implements SpawnDirectory {
     private final MongoCollection<Document> col;
 
-    // collectionName example: prefix + "spawn_directory"
     public MongoSpawnDirectory(MongoClient client, String dbName, String collectionName) {
         this.col = client.getDatabase(dbName).getCollection(collectionName);
     }

@@ -19,11 +19,9 @@ public class TpaSummonPacket extends Packet {
         this.destServer = destServer;
     }
 
-    /* --- getters --- */
     public UUID getRequesterUuid() { return requesterUuid; }
     public String getDestServer()  { return destServer; }
 
-    /* --- Packet IO --- */
     @Override
     protected void write(FriendlyByteOutputStream out) {
         out.writeUUID(requesterUuid);

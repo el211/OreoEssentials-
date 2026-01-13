@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/services/yaml/YamlPlayerWarpStorage.java
 package fr.elias.oreoEssentials.services.yaml;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -43,9 +42,7 @@ public class YamlPlayerWarpStorage implements PlayerWarpStorage {
         loadAllFromFile();
     }
 
-    // ------------------------------------------------------
-    // Storage API
-    // ------------------------------------------------------
+
 
     @Override
     public synchronized void save(PlayerWarp warp) {
@@ -95,9 +92,7 @@ public class YamlPlayerWarpStorage implements PlayerWarpStorage {
         return new ArrayList<>(cache.values());
     }
 
-    // ------------------------------------------------------
-    // YAML <-> PlayerWarp
-    // ------------------------------------------------------
+
 
     private void loadAllFromFile() {
         cache.clear();
@@ -162,7 +157,7 @@ public class YamlPlayerWarpStorage implements PlayerWarpStorage {
                 : wl.stream().map(UUID::toString).collect(Collectors.toList()));
         sec.set("whitelist_players", wlList);
 
-        // icon (Bukkit handles serialization)
+
         if (warp.getIcon() != null) {
             sec.set("icon", warp.getIcon());
         } else {

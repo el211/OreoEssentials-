@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/services/mongoservices/MongoStorage.java
 package fr.elias.oreoEssentials.services.mongoservices;
 
 import com.mongodb.client.FindIterable;

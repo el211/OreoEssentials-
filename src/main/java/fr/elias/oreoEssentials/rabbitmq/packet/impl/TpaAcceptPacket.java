@@ -35,7 +35,6 @@ public class TpaAcceptPacket extends Packet {
         this.fromServer = fromServer;
     }
 
-    /* --- getters --- */
     public String getRequestId()     { return requestId; }
     public UUID getRequesterUuid()   { return requesterUuid; }
     public String getRequesterName() { return requesterName; }
@@ -43,7 +42,6 @@ public class TpaAcceptPacket extends Packet {
     public String getTargetName()    { return targetName; }
     public String getFromServer()    { return fromServer; }
 
-    /* --- Packet IO (same style/sig as TpaRequestPacket) --- */
     @Override
     protected void write(FriendlyByteOutputStream out) {
         out.writeString(requestId != null ? requestId : "");

@@ -9,10 +9,8 @@ import java.util.UUID;
 
 public final class TradeStartPacket extends Packet {
 
-    // Canonical session id for this A<->B pair (order-independent)
     private UUID sessionId;
 
-    // Participant A (original requester)
     private UUID aId;
     private String aName;
     public UUID getRequesterId()   { return aId; }
@@ -20,11 +18,9 @@ public final class TradeStartPacket extends Packet {
     public UUID getAcceptorId()    { return bId; }
     public String getAcceptorName(){ return bName; }
 
-    // Participant B (acceptor on the other server)
     private UUID bId;
     private String bName;
 
-    /** No-args constructor required by the registry. */
     public TradeStartPacket() {}
 
     public TradeStartPacket(UUID sessionId, UUID aId, String aName, UUID bId, String bName) {
@@ -35,9 +31,7 @@ public final class TradeStartPacket extends Packet {
         this.bName = (bName == null ? "Player" : bName);
     }
 
-    // --- Getters (both styles) ---
     public UUID getSessionId() { return sessionId; }
-    /** Alias used by handlers (name matters): */
     public UUID getSid()       { return sessionId; }
 
     public UUID getAId()       { return aId; }
@@ -45,12 +39,10 @@ public final class TradeStartPacket extends Packet {
     public UUID getBId()       { return bId; }
     public String getBName()   { return bName; }
 
-    // --- Optional setter so the publisher can inject the computed SID before send ---
     public void setSid(UUID sid) { this.sessionId = sid; }
 
     @Override
     protected void read(FriendlyByteInputStream in) {
-        // packetId already consumed by Packet.readData(...)
         this.sessionId = in.readUUID();
         this.aId       = in.readUUID();
         this.aName     = in.readString();
@@ -63,7 +55,6 @@ public final class TradeStartPacket extends Packet {
 
     @Override
     protected void write(FriendlyByteOutputStream out) {
-        // Packet.writeData(...) will handle packetId
         out.writeUUID(sessionId);
         out.writeUUID(aId);
         out.writeString(aName != null ? aName : "Player");

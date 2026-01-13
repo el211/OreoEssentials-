@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/services/mongoservices/MongoWarpDirectory.java
 package fr.elias.oreoEssentials.services.mongoservices;
 
 import com.mongodb.client.MongoClient;
@@ -39,7 +38,6 @@ public class MongoWarpDirectory implements WarpDirectory {
     @Override
     public void setWarpServer(String warpName, String server) {
         final String n = key(warpName);
-        // Do NOT replace the whole document; keep existing permission
         col.updateOne(
                 Filters.eq(F_NAME, n),
                 Updates.combine(

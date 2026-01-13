@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/handler/PlayerJoinPacketHandler.java
 package fr.elias.oreoEssentials.rabbitmq.handler;
 
 import fr.elias.oreoEssentials.OreoEssentials;

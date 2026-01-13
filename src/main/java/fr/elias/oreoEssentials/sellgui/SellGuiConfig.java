@@ -23,7 +23,6 @@ public final class SellGuiConfig {
     private static final MiniMessage MINI = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
 
-    // key = "MATERIAL" or "MATERIAL:CMD"
     private final Map<String, Double> prices = new HashMap<>();
 
     public SellGuiConfig(JavaPlugin plugin) {
@@ -57,9 +56,7 @@ public final class SellGuiConfig {
         return cfg.getBoolean("settings.allow_unsellable_items_in_gui", false);
     }
 
-    // ----------------------------
-    // Messages (for provider)
-    // ----------------------------
+
     public String msgNothingSellable() {
         return mmToLegacy(cfg.getString("settings.messages.nothing_sellable", "<red>Nothing sellable in the sell slots.</red>"));
     }
@@ -68,9 +65,7 @@ public final class SellGuiConfig {
         return mmToLegacy(cfg.getString("settings.messages.returned_all", "<green>Returned all items.</green>"));
     }
 
-    // ----------------------------
-    // Buttons (material + name + lore)
-    // ----------------------------
+
     public Material buttonMaterial(String key, Material def) {
         String path = "settings.buttons." + key + ".material";
         String raw = cfg.getString(path, def.name());
@@ -106,20 +101,16 @@ public final class SellGuiConfig {
         return item;
     }
 
-    // ----------------------------
-    // Pricing
-    // ----------------------------
+
     public double getUnitPrice(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) return -1;
 
-        // 1) ItemsAdder / Nexo
         String externalKey = SellItemIdResolver.resolveKey(item);
         if (externalKey != null) {
             Double ext = prices.get(externalKey.toUpperCase(Locale.ROOT));
             if (ext != null) return ext;
         }
 
-        // 2) Vanilla + CustomModelData fallback
         String matKey = item.getType().name();
         int cmd = getCustomModelData(item);
 

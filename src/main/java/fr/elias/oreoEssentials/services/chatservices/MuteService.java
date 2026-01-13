@@ -110,7 +110,7 @@ public class MuteService {
                 plugin.getLogger().warning("Failed to load mute for key " + key + ": " + t.getMessage());
             }
         }
-        saveFile(); // rewrite to drop expired
+        saveFile();
     }
 
     private void saveOne(MuteData md) {

@@ -11,7 +11,7 @@ public class TpaRequestPacket extends Packet {
     private UUID requesterUuid;
     private String requesterName;
     private UUID targetUuid;
-    private String targetName;          // <--  allows fallback on cracked/offline servers
+    private String targetName;
     private String fromServer;
     private long expiresAtEpochMs;
 
@@ -30,7 +30,7 @@ public class TpaRequestPacket extends Packet {
     public UUID getRequesterUuid()   { return requesterUuid; }
     public String getRequesterName() { return requesterName; }
     public UUID getTargetUuid()      { return targetUuid; }
-    public String getTargetName()    { return targetName; }   // <-- NEW getter
+    public String getTargetName()    { return targetName; }
     public String getFromServer()    { return fromServer; }
     public long getExpiresAtEpochMs(){ return expiresAtEpochMs; }
 
@@ -39,7 +39,7 @@ public class TpaRequestPacket extends Packet {
         out.writeUUID(requesterUuid);
         out.writeString(requesterName != null ? requesterName : "");
         out.writeUUID(targetUuid);
-        out.writeString(targetName != null ? targetName : "");   // <-- NEW
+        out.writeString(targetName != null ? targetName : "");
         out.writeString(fromServer != null ? fromServer : "");
         out.writeLong(expiresAtEpochMs);
     }
@@ -49,7 +49,7 @@ public class TpaRequestPacket extends Packet {
         this.requesterUuid     = in.readUUID();
         this.requesterName     = in.readString();
         this.targetUuid        = in.readUUID();
-        this.targetName        = in.readString();                 // <-- NEW
+        this.targetName        = in.readString();
         this.fromServer        = in.readString();
         this.expiresAtEpochMs  = in.readLong();
     }

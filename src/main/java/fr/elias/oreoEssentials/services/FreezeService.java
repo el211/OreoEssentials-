@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/services/FreezeService.java
 package fr.elias.oreoEssentials.services;
 
 import java.util.Set;

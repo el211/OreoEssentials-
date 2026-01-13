@@ -32,7 +32,6 @@ public class AfkService {
         UUID id = player.getUniqueId();
 
         if (afk) {
-            // First time going AFK: store original tab name if not stored yet
             originalTabNames.putIfAbsent(id, safeTabName(player));
             afkPlayers.add(id);
         } else {
@@ -49,7 +48,6 @@ public class AfkService {
         originalTabNames.remove(id);
     }
     public void clearAfk(Player player) {
-        // Simply mark them as not AFK and refresh tab name
         setAfk(player, false);
     }
 

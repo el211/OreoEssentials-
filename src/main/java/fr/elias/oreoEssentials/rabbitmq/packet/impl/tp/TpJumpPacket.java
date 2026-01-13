@@ -6,10 +6,7 @@ import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteOutputStream;
 
 import java.util.UUID;
 
-/**
- * Cross-server TP: ask the destination server to snap an admin to a target player
- * when the admin arrives on that server.
- */
+
 public class TpJumpPacket extends Packet {
 
     private UUID adminUuid;

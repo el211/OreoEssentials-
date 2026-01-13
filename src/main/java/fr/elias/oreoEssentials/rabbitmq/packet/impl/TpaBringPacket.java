@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public class TpaBringPacket extends Packet {
     private UUID requesterUuid;
-    private String targetServer; // where to connect the requester
+    private String targetServer;
 
     public TpaBringPacket() {}
     public TpaBringPacket(UUID requesterUuid, String targetServer) {

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/handler/trade/TradeClosePacketHandler.java
 package fr.elias.oreoEssentials.rabbitmq.handler.trade;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -24,7 +23,6 @@ public final class TradeClosePacketHandler implements PacketSubscriber<TradeClos
         if (dbg()) plugin.getLogger().info("[TRADE] RECV TradeClosePacket ch=" + channel +
                 " session=" + packet.getSessionId() + " target=" + packet.getGrantTo());
 
-        // Ensure GUI ops happen on main thread
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (plugin.getTradeService() != null) {
                 plugin.getTradeService().handleRemoteClose(packet);

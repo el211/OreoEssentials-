@@ -24,7 +24,6 @@ public class RemoteMessagePacketHandler implements PacketSubscriber<SendRemoteMe
 
         Player player = Bukkit.getPlayer(targetId);
 
-        //  If the player is online on this server
         if (player != null && player.isOnline()) {
             player.sendMessage(message);
             Bukkit.getLogger().info("[OreoEssentials]  Delivered remote message to " + player.getName() + ": " + message);

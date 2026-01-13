@@ -41,7 +41,6 @@ public final class PrewardsMenu implements InventoryProvider {
     public void init(Player p, InventoryContents contents) {
         final boolean featureOn = svc.isEnabled();
 
-        // ---- Background ----
         if (svc.skin.fillEmpty) {
             ItemStack fill = new ItemStack(svc.skin.fillerMat);
             ItemMeta im = fill.getItemMeta();
@@ -54,10 +53,8 @@ public final class PrewardsMenu implements InventoryProvider {
             contents.fill(ClickableItem.empty(fill));
         }
 
-        // Iterator starts at (row=1, col=1) to leave a 1-block border
         SlotIterator it = contents.newIterator(SlotIterator.Type.HORIZONTAL, 1, 1);
 
-        // ---- Rewards ----
         svc.rewards.values().forEach(r -> {
             if (!svc.hasPermission(p, r)) return;
 
@@ -71,7 +68,6 @@ public final class PrewardsMenu implements InventoryProvider {
                 for (String line : r.iconLore) lore.add(svc.color(line));
             }
 
-            // When disabled, tint title and replace lore to indicate status
             String displayName = baseName;
             if (!featureOn) {
                 displayName = "&8" + displayName;
@@ -86,7 +82,6 @@ public final class PrewardsMenu implements InventoryProvider {
                 meta.setDisplayName(svc.color(displayName));
                 meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
 
-                // Apply global skin overrides for the reward's current state
                 PlaytimeRewardsService.SkinState skinState = svc.skin.states.get(state.name());
                 if (skinState != null && featureOn) { // only decorate states when enabled
                     if (skinState.mat != null) item.setType(skinState.mat);
@@ -98,7 +93,6 @@ public final class PrewardsMenu implements InventoryProvider {
                     }
                 }
 
-                // Append state line (or disabled)
                 if (featureOn) {
                     lore.add(svc.color("&7State: &f" + state.name()));
                 }
@@ -130,7 +124,6 @@ public final class PrewardsMenu implements InventoryProvider {
             }
         });
 
-        // ---- Admin toggle lever (bottom row, slot 5) ----
         int rows = Math.max(1, svc.skin.rows);
         if (rows >= 2 && p.hasPermission("oreo.prewards.admin")) {
             final int bottom = rows - 1;
@@ -155,6 +148,6 @@ public final class PrewardsMenu implements InventoryProvider {
 
     @Override
     public void update(Player player, InventoryContents contents) {
-        // No periodic updates; GUI is refreshed on click/open.
+
     }
 }

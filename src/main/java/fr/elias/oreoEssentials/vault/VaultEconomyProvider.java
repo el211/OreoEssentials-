@@ -48,7 +48,6 @@ public class VaultEconomyProvider implements Economy {
     }
 
     private static double sanitize(double v) {
-        // keep two decimals like most economies; adjust if your DB already rounds
         return Math.round(v * 100.0) / 100.0;
     }
 

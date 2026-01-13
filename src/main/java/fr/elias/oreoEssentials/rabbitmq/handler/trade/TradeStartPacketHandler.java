@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/handler/trade/TradeStartPacketHandler.java
 package fr.elias.oreoEssentials.rabbitmq.handler.trade;
 
 import fr.elias.oreoEssentials.OreoEssentials;

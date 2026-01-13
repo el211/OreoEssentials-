@@ -13,21 +13,15 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Tracks per-server playtime (in seconds) for each player.
- * Persists to plugins/OreoEssentials/playtime_data.yml
- */
+
 public final class PlaytimeTracker implements Listener {
 
     private final OreoEssentials plugin;
 
-    /** Accumulated total seconds per UUID (persisted) */
     private final Map<UUID, Long> totals = new ConcurrentHashMap<>();
 
-    /** Join timestamp (millis) per online player */
     private final Map<UUID, Long> onlineSince = new ConcurrentHashMap<>();
 
-    /** One-time set of players we’ve baselined from bukkit (so we don’t do it twice) */
     private final Set<UUID> baselined = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private final File file;
@@ -41,7 +35,6 @@ public final class PlaytimeTracker implements Listener {
         load();
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
-        // periodic autosave so crashes don't lose much
         autosaveTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, this::saveQuiet, 20L * 60, 20L * 60);
     }
 
@@ -55,7 +48,6 @@ public final class PlaytimeTracker implements Listener {
         HandlerList.unregisterAll(this);
     }
 
-    /* -------------------- Persistence -------------------- */
 
     private void load() {
         try {
@@ -66,7 +58,6 @@ public final class PlaytimeTracker implements Listener {
             }
             yaml = YamlConfiguration.loadConfiguration(file);
 
-            // read totals
             if (yaml.isConfigurationSection("totals")) {
                 for (String k : yaml.getConfigurationSection("totals").getKeys(false)) {
                     try {
@@ -75,7 +66,6 @@ public final class PlaytimeTracker implements Listener {
                     } catch (IllegalArgumentException ignored) {}
                 }
             }
-            // baselined set
             baselined.clear();
             for (String s : yaml.getStringList("baselined")) {
                 try { baselined.add(UUID.fromString(s)); } catch (IllegalArgumentException ignored) {}
@@ -90,7 +80,6 @@ public final class PlaytimeTracker implements Listener {
     private void saveQuiet() {
         try {
             YamlConfiguration out = new YamlConfiguration();
-            // flush any currently online deltas to in-memory totals first
             flushOnlineDeltas();
             for (Map.Entry<UUID, Long> e : totals.entrySet()) {
                 out.set("totals." + e.getKey(), e.getValue());
@@ -115,9 +104,7 @@ public final class PlaytimeTracker implements Listener {
         }
     }
 
-    /* -------------------- API -------------------- */
 
-    /** Returns per-server seconds for this player (includes current session). */
     public long getSeconds(UUID uuid) {
         long base = totals.getOrDefault(uuid, 0L);
         Long start = onlineSince.get(uuid);
@@ -127,7 +114,6 @@ public final class PlaytimeTracker implements Listener {
         return Math.max(0, base);
     }
 
-    /** One-time baseline from Bukkit vanilla seconds for this UUID. */
     public void baselineFromBukkitIfNeeded(Player p) {
         if (baselined.contains(p.getUniqueId())) return;
         baselined.add(p.getUniqueId());
@@ -137,16 +123,14 @@ public final class PlaytimeTracker implements Listener {
         totals.put(p.getUniqueId(), sec);
     }
 
-    /* -------------------- Events -------------------- */
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
         onlineSince.put(p.getUniqueId(), System.currentTimeMillis());
 
-        // optional baseline
         boolean baseline = plugin.getConfig().getBoolean("playtime.internal.baseline-from-bukkit-on-first-seen",
-                false); // or read from playtime_rewards.yml if you prefer
+                false);
         if (baseline) baselineFromBukkitIfNeeded(p);
     }
 

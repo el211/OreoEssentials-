@@ -31,7 +31,6 @@ public class BackTeleportPacket extends Packet {
         this.pitch = pitch;
     }
 
-    /* --- getters --- */
     public UUID getPlayerUuid() { return playerUuid; }
     public String getServer()   { return server; }
     public String getWorld()    { return world; }
@@ -41,7 +40,6 @@ public class BackTeleportPacket extends Packet {
     public float getYaw()       { return yaw; }
     public float getPitch()     { return pitch; }
 
-    /* --- Packet IO --- */
     @Override
     protected void write(FriendlyByteOutputStream out) {
         out.writeUUID(playerUuid);
