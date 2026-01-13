@@ -40,6 +40,9 @@
         @EventHandler(priority = EventPriority.MONITOR)
         public void onQuit(PlayerQuitEvent event) {
             Player p = event.getPlayer();
+
+            if (backService.isCrossServerSwitch(p.getUniqueId())) return;
+
             backService.setLast(
                     p.getUniqueId(),
                     BackLocation.from(serverName, p.getLocation())
@@ -49,9 +52,13 @@
         @EventHandler(priority = EventPriority.MONITOR)
         public void onKick(PlayerKickEvent event) {
             Player p = event.getPlayer();
+
+            if (backService.isCrossServerSwitch(p.getUniqueId())) return;
+
             backService.setLast(
                     p.getUniqueId(),
                     BackLocation.from(serverName, p.getLocation())
             );
         }
+
     }

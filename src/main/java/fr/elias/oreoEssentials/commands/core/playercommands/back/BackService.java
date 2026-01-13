@@ -6,10 +6,12 @@ import fr.elias.oreoEssentials.services.StorageApi;
 import org.bukkit.Location;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class BackService {
+    private final Set<UUID> crossServerSwitching = ConcurrentHashMap.newKeySet();
 
     private final StorageApi storage;
     private final Map<UUID, BackLocation> cache = new ConcurrentHashMap<>();
@@ -71,7 +73,17 @@ public class BackService {
         BackLocation b = BackLocation.from(localServer, loc);
         setLast(uuid, b);
     }
+    public void markCrossServerSwitch(UUID uuid) {
+        crossServerSwitching.add(uuid);
+    }
 
+    public void unmarkCrossServerSwitch(UUID uuid) {
+        crossServerSwitching.remove(uuid);
+    }
+
+    public boolean isCrossServerSwitch(UUID uuid) {
+        return crossServerSwitching.contains(uuid);
+    }
     public void clearCache() {
         cache.clear();
     }

@@ -1372,9 +1372,10 @@ public final class OreoEssentials extends JavaPlugin {
                 this.backBroker.start();
 
                 getServer().getPluginManager().registerEvents(
-                        new BackJoinListener(this),
+                        new BackJoinListener(this, backService),
                         this
                 );
+
 
                 getLogger().info("[BackBroker] Cross-server /back broker ready (server=" + configService.serverName() + ").");
             } catch (Exception e) {
