@@ -261,7 +261,7 @@ public final class OreoEssentials extends JavaPlugin {
     public BackBroker getBackBroker() {
         return backBroker;
     }
-    public Gson getGson() { return gson; }  // ADD THIS
+    public Gson getGson() { return gson; }
     public Map<UUID, BackLocation> getPendingBackTeleports() {
         return pendingBackTeleports;
     }
