@@ -24,7 +24,6 @@
         public void onTeleport(PlayerTeleportEvent event) {
             Player p = event.getPlayer();
 
-            // tu peux filtrer : COMMAND, PLUGIN, UNKNOWN, etc.
             switch (event.getCause()) {
                 case COMMAND:
                 case PLUGIN:
@@ -35,7 +34,6 @@
                     );
                     break;
                 default:
-                    // pas de back sur enderpearl / nether / portal etc
                     break;
             }
         }

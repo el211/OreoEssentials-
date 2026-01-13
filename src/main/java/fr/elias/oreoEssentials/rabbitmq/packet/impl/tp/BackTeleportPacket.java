@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/rabbitmq/packet/impl/tp/BackTeleportPacket.java
 package fr.elias.oreoEssentials.rabbitmq.packet.impl.tp;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
@@ -10,12 +9,11 @@ import java.util.UUID;
 public class BackTeleportPacket extends Packet {
 
     private UUID playerUuid;
-    private String server;   // target server
+    private String server;
     private String world;
     private double x, y, z;
     private float yaw, pitch;
 
-    // Required no-arg constructor for PacketManager.registerPacket(..., BackTeleportPacket::new)
     public BackTeleportPacket() {}
 
     public BackTeleportPacket(UUID playerUuid,

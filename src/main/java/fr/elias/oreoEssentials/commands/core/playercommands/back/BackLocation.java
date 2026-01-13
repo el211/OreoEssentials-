@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/back/BackLocation.java
 package fr.elias.oreoEssentials.commands.core.playercommands.back;
 
 import org.bukkit.Bukkit;

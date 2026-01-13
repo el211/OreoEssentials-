@@ -61,7 +61,6 @@ public class BackCommand implements OreoCommand {
 
         String localServer = plugin.getConfigService().serverName();
 
-        // 📍 Same server → normal Bukkit teleport
         if (last.getServer().equalsIgnoreCase(localServer)) {
             Location loc = last.toLocalLocation();
             if (loc == null) {
@@ -73,14 +72,12 @@ public class BackCommand implements OreoCommand {
             return true;
         }
 
-        // 🌐 Other server → cross-server back
         var broker = plugin.getBackBroker();
         if (broker == null) {
             p.sendMessage("§cBack cross-server system is not available.");
             return true;
         }
 
-        // ✅ FIXED: Send message BEFORE server transfer
         p.sendMessage("§aTeleporting back to §e" + last.getServer() + "§a...");
 
         // Now request the cross-server back (this will kick player to other server)

@@ -28,11 +28,10 @@ public class BackJoinListener implements Listener {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
 
-        // Check if this player has a pending back teleport
         BackLocation pending = plugin.getPendingBackTeleports().remove(uuid);
 
         if (pending == null) {
-            return; // No pending teleport
+            return;
         }
 
         plugin.getLogger().info("[BackJoinListener] Player " + player.getName() +
@@ -69,6 +68,6 @@ public class BackJoinListener implements Listener {
             plugin.getLogger().info("[BackJoinListener] Teleported " + player.getName() +
                     " to back location");
 
-        }, 20L); // 1 second delay (20 ticks)
+        }, 20L);
     }
 }
