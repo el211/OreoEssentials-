@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/cross/InvseeStatePacket.java
 package fr.elias.oreoEssentials.cross;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
@@ -14,7 +13,7 @@ public final class InvseeStatePacket extends Packet {
 
     private UUID targetId;
     private UUID viewerId;
-    private byte[] contentsBytes; // encoded ItemStack[]
+    private byte[] contentsBytes;
 
     public InvseeStatePacket() {
     }
@@ -51,7 +50,6 @@ public final class InvseeStatePacket extends Packet {
         contentsBytes = readBlob(in);
     }
 
-    /* --- helpers (same pattern as TradeStatePacket) --- */
 
     private static void writeBlob(FriendlyByteOutputStream out, byte[] data) {
         int n = (data == null ? 0 : data.length);

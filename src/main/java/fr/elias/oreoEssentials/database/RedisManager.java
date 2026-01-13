@@ -1,106 +1,116 @@
 package fr.elias.oreoEssentials.database;
 
-
-import org.redisson.Redisson;
-import org.redisson.api.LocalCachedMapOptions;
-import org.redisson.api.RLocalCachedMap;
-import org.redisson.api.RMap;
-import org.redisson.api.RMapCache;
-import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 public class RedisManager {
-    private final RedissonClient redisson;
+    private JedisPool jedisPool;
     private final boolean enabled;
-    private final RMapCache<UUID, Double> balanceMap;
+
+    private final String host;
+    private final int port;
+    private final String password;
 
     public RedisManager(String host, int port, String password) {
+        this.host = host;
+        this.port = port;
+        this.password = password;
         this.enabled = (host != null && !host.isEmpty());
-
-        if (enabled) {
-            Config config = new Config();
-            if (password != null && !password.isEmpty()) {
-                config.useSingleServer()
-                        .setAddress("redis://" + host + ":" + port)
-                        .setPassword(password);
-            } else {
-                config.useSingleServer()
-                        .setAddress("redis://" + host + ":" + port);
-            }
-
-            redisson = Redisson.create(config);
-            balanceMap = redisson.getMapCache("player_balances");
-        } else {
-            redisson = null;
-            balanceMap = null;
-        }
     }
 
     public boolean connect() {
-        return enabled && redisson != null;
+        if (!enabled) return false;
+
+        try {
+            JedisPoolConfig poolConfig = new JedisPoolConfig();
+            poolConfig.setMaxTotal(10);
+            poolConfig.setMaxIdle(5);
+            poolConfig.setMinIdle(1);
+
+            if (password != null && !password.isEmpty()) {
+                jedisPool = new JedisPool(poolConfig, host, port, 2000, password);
+            } else {
+                jedisPool = new JedisPool(poolConfig, host, port, 2000);
+            }
+
+            // Test connection
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.ping();
+            }
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
-    /**
-     * Get a player's balance from Redis.
-     * If the player does not exist in Redis, return `null` (fallback to database).
-     */
     public Double getBalance(UUID playerUUID) {
-        if (!enabled || balanceMap == null) return null;
-        return balanceMap.getOrDefault(playerUUID, null);
+        if (!enabled || jedisPool == null) return null;
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            String key = "balance:" + playerUUID.toString();
+            String value = jedis.get(key);
+            return value != null ? Double.parseDouble(value) : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
-    /**
-     * Store a player's balance in Redis and set expiration.
-     */
     public void setBalance(UUID playerUUID, double balance) {
-        if (!enabled || balanceMap == null) return;
-        balanceMap.put(playerUUID, balance, 10, TimeUnit.MINUTES);
-        // Set the expiration to 10 minutes
+        if (!enabled || jedisPool == null) return;
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            String key = "balance:" + playerUUID.toString();
+            jedis.setex(key, 600, String.valueOf(balance)); // 10 minutes TTL
+        } catch (Exception ignored) {}
     }
 
-    /**
-     * Add money to a player's balance in Redis.
-     */
     public void giveBalance(UUID playerUUID, double amount) {
-        if (!enabled || balanceMap == null) return;
-        balanceMap.compute(playerUUID, (key, currentBalance) ->
-                (currentBalance == null ? 100.0 : currentBalance) + amount);
+        if (!enabled || jedisPool == null) return;
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            String key = "balance:" + playerUUID.toString();
+            String current = jedis.get(key);
+            double newBalance = (current != null ? Double.parseDouble(current) : 100.0) + amount;
+            jedis.setex(key, 600, String.valueOf(newBalance));
+        } catch (Exception ignored) {}
     }
 
-    /**
-     * Deduct money from a player's balance in Redis, ensuring it never goes below 0.
-     */
     public void takeBalance(UUID playerUUID, double amount) {
-        if (!enabled || balanceMap == null) return;
-        balanceMap.compute(playerUUID, (key, currentBalance) ->
-                Math.max(0, (currentBalance == null ? 100.0 : currentBalance) - amount));
+        if (!enabled || jedisPool == null) return;
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            String key = "balance:" + playerUUID.toString();
+            String current = jedis.get(key);
+            double newBalance = Math.max(0, (current != null ? Double.parseDouble(current) : 100.0) - amount);
+            jedis.setex(key, 600, String.valueOf(newBalance));
+        } catch (Exception ignored) {}
     }
 
-    /**
-     * Remove a player's balance from Redis (forcing a fresh database fetch on next request).
-     */
     public void deleteBalance(UUID playerUUID) {
-        if (!enabled || balanceMap == null) return;
-        balanceMap.remove(playerUUID);
+        if (!enabled || jedisPool == null) return;
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            String key = "balance:" + playerUUID.toString();
+            jedis.del(key);
+        } catch (Exception ignored) {}
     }
 
-    /**
-     * Clear all cached balances (forces all players to reload from the database).
-     */
     public void clearCache() {
-        if (!enabled || balanceMap == null) return;
-        balanceMap.clear();
+        if (!enabled || jedisPool == null) return;
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.flushDB(); // WARNING: This clears ENTIRE database
+        } catch (Exception ignored) {}
     }
 
-    /**
-     * Gracefully shutdown Redis connection.
-     */
     public void shutdown() {
-        if (redisson != null) {
-            redisson.shutdown();
+        if (jedisPool != null) {
+            jedisPool.close();
         }
     }
 }

@@ -75,7 +75,6 @@ public class SeenCommand implements OreoCommand {
         return true;
     }
 
-    /** Try to call a no-arg long-returning method reflectively (Paper compatibility). */
     private long tryGetLong(OfflinePlayer op, String methodName) {
         try {
             Method m = op.getClass().getMethod(methodName);
@@ -86,7 +85,6 @@ public class SeenCommand implements OreoCommand {
         return -1L;
     }
 
-    /** Compact "time ago" formatter. */
     private String formatAgo(long millis) {
         if (millis < 0) millis = 0;
         Duration d = Duration.ofMillis(millis);

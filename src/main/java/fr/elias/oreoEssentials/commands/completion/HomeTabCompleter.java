@@ -22,17 +22,18 @@ public class HomeTabCompleter implements TabCompleter {
         if (!(sender instanceof Player p)) return Collections.emptyList();
         if (args.length != 1) return Collections.emptyList();
 
+        String partial = args[0].toLowerCase(Locale.ROOT);
         Set<String> names = fetchHomeNamesReflective(p.getUniqueId());
-        String prefix = args[0].toLowerCase(Locale.ROOT);
+
         return names.stream()
-                .filter(s -> s.toLowerCase(Locale.ROOT).startsWith(prefix))
-                .sorted()
+                .filter(n -> n.toLowerCase(Locale.ROOT).startsWith(partial))
+                .sorted(String.CASE_INSENSITIVE_ORDER)
                 .collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")
     private Set<String> fetchHomeNamesReflective(UUID uuid) {
-        List<String> methodNames = List.of("listHomes", "getHomes", "homesOf", "list", "listNames", "getNames");
+        List<String> methodNames = List.of("listHomes", "getHomes", "homesOf", "list", "listNames", "getNames", "allHomeNames");
         for (String mName : methodNames) {
             try {
                 Method m = homeService.getClass().getMethod(mName, UUID.class);
@@ -40,6 +41,10 @@ public class HomeTabCompleter implements TabCompleter {
                 if (result instanceof Collection<?> col) {
                     Set<String> out = new HashSet<>();
                     for (Object o : col) if (o != null) out.add(String.valueOf(o));
+                    return out;
+                } else if (result instanceof Set<?>) {
+                    Set<String> out = new HashSet<>();
+                    for (Object o : (Set<?>) result) if (o != null) out.add(String.valueOf(o));
                     return out;
                 }
             } catch (NoSuchMethodException ignored) {

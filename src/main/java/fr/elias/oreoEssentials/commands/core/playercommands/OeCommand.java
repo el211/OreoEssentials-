@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/OeCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import com.google.common.io.ByteArrayDataOutput;
@@ -34,7 +33,6 @@ public class OeCommand implements OreoCommand, org.bukkit.command.TabCompleter {
 
         String targetServer = args[1];
 
-        // Send player to another server via BungeeCord plugin channel (Velocity supports this too)
         try {
             ByteArrayDataOutput out = ByteStreams.newDataOutput();
             out.writeUTF("Connect");
@@ -63,7 +61,6 @@ public class OeCommand implements OreoCommand, org.bukkit.command.TabCompleter {
             return List.of("server");
         }
 
-        // (Optional) you could implement GetServers round-trip caching here for tab completion.
         return Collections.emptyList();
     }
 }

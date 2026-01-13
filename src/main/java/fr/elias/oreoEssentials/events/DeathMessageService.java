@@ -17,7 +17,6 @@ public final class DeathMessageService {
     private final File file;
     private YamlConfiguration yml;
 
-    // Master toggle (NEW)
     private volatile boolean enabled = true;
 
     public DeathMessageService(File dataFolder) {

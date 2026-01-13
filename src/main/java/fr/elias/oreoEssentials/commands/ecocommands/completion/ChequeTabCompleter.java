@@ -16,7 +16,7 @@ public class ChequeTabCompleter implements TabCompleter {
         List<String> completions = new ArrayList<>();
 
         if (!(sender instanceof Player)) {
-            return completions; // Console can't autocomplete numbers
+            return completions;
         }
 
         Player player = (Player) sender;
@@ -24,15 +24,13 @@ public class ChequeTabCompleter implements TabCompleter {
         if (args.length == 1) {
             double balance = getPlayerBalance(player);
 
-            //  Suggest amounts dynamically based on balance
             if (balance >= 100) completions.add("100");
             if (balance >= 500) completions.add("500");
             if (balance >= 1000) completions.add("1000");
             if (balance >= 5000) completions.add("5000");
             if (balance >= 10000) completions.add("10000");
 
-            //  Allow any number they started typing (keeps what they wrote)
-            if (!args[0].isEmpty() && args[0].matches("\\d+")) { // Potential improvement: Precompile this regex
+            if (!args[0].isEmpty() && args[0].matches("\\d+")) {
                 completions.add(args[0]);
             }
         }
@@ -41,7 +39,7 @@ public class ChequeTabCompleter implements TabCompleter {
     }
 
     private double getPlayerBalance(Player player) {
-        // Placeholder function, replace this with actual Vault or Economy API call
-        return 10000; // Example: assume they have $10,000
+
+        return 10000;
     }
 }

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/completion/ClearTabCompleter.java
 package fr.elias.oreoEssentials.commands.completion;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -23,17 +22,14 @@ public class ClearTabCompleter implements TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
         String cmdName = cmd.getName().toLowerCase(Locale.ROOT);
 
-        // Handle /clear and /ci
         if (!(cmdName.equals("clear") || cmdName.equals("ci"))) {
             return Collections.emptyList();
         }
 
-        // Only complete the first argument
         if (args.length != 1) {
             return Collections.emptyList();
         }
 
-        // Must be allowed to clear others
         if (!sender.hasPermission("oreo.clear.others")) {
             return Collections.emptyList();
         }
@@ -41,10 +37,8 @@ public class ClearTabCompleter implements TabCompleter {
         final String partial = args[0];
         final String want = partial.toLowerCase(Locale.ROOT);
 
-        // Use TreeSet to keep results sorted & unique
         Set<String> out = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
-        // 1) Local online players
         for (Player p : Bukkit.getOnlinePlayers()) {
             String n = p.getName();
             if (n != null && n.toLowerCase(Locale.ROOT).startsWith(want)) {
@@ -52,7 +46,6 @@ public class ClearTabCompleter implements TabCompleter {
             }
         }
 
-        // 2) Network-wide via PlayerDirectory.suggestOnlineNames()
         PlayerDirectory dir = plugin.getPlayerDirectory();
         if (dir != null) {
             try {

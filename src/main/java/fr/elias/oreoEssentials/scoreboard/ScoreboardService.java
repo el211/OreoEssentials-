@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/scoreboard/ScoreboardService.java
 package fr.elias.oreoEssentials.scoreboard;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -23,22 +22,24 @@ import org.bukkit.scoreboard.ScoreboardManager;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class ScoreboardService implements Listener {
 
     private static final String OBJ_NAME = "oreo_sb";
-
-    private final OreoEssentials plugin;
-
-    private ScoreboardConfig cfg;       // reloadable
-    private AnimatedText titleAnim;     // reloadable
-
-    private final Set<UUID> shown = ConcurrentHashMap.newKeySet();
-    private final Map<UUID, Boolean> toggles = new ConcurrentHashMap<>();
-
+    private static final Pattern ANIM_TAG = Pattern.compile(
+            "%animations_<tag(?:\\s+interval=(\\d+))?>\\s*(.*?)\\s*</tag>%",
+            Pattern.DOTALL | Pattern.CASE_INSENSITIVE
+    );
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
 
+    private final OreoEssentials plugin;
+    private ScoreboardConfig cfg;
+    private AnimatedText titleAnim;
+    private final Set<UUID> shown = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, Boolean> toggles = new ConcurrentHashMap<>();
     private int taskId = -1;
 
     public ScoreboardService(OreoEssentials plugin, ScoreboardConfig cfg) {
@@ -47,22 +48,17 @@ public final class ScoreboardService implements Listener {
         this.titleAnim = new AnimatedText(cfg.titleFrames(), cfg.titleFrameTicks());
     }
 
-    /* ---------------- Lifecycle ---------------- */
-
     public void start() {
         if (!cfg.enabled()) return;
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
-        // Show for already online players (reload /plugman / etc.)
-        // Delay slightly to let nametag manager initialize first
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 if (isWorldAllowed(p)) show(p);
             }
         }, 5L);
 
-        // Update loop
         taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
             titleAnim.tick();
 
@@ -75,7 +71,7 @@ public final class ScoreboardService implements Listener {
                 }
 
                 if (!isWorldAllowed(p)) {
-                    hide(p); // will also re-apply nametag after scoreboard reset
+                    hide(p);
                     continue;
                 }
 
@@ -93,17 +89,14 @@ public final class ScoreboardService implements Listener {
         for (UUID id : List.copyOf(shown)) {
             Player p = Bukkit.getPlayer(id);
             if (p != null) {
-                clearBoard(p); // also re-apply nametag
+                clearBoard(p);
             }
         }
 
         shown.clear();
-
-        // Clean unregister
         HandlerList.unregisterAll(this);
     }
 
-    /** Re-read config and refresh all players who had it enabled. */
     public void reload() {
         Set<UUID> keepShown = new HashSet<>(shown);
         Map<UUID, Boolean> keepToggles = new HashMap<>(toggles);
@@ -126,8 +119,6 @@ public final class ScoreboardService implements Listener {
         }
     }
 
-    /* ---------------- Toggling ---------------- */
-
     public boolean isShown(Player p) {
         return shown.contains(p.getUniqueId());
     }
@@ -149,8 +140,6 @@ public final class ScoreboardService implements Listener {
         toggles.put(p.getUniqueId(), true);
     }
 
-    /* ---------------- Show/Hide ---------------- */
-
     public void show(Player p) {
         if (!cfg.enabled()) return;
         if (isShown(p)) return;
@@ -158,8 +147,6 @@ public final class ScoreboardService implements Listener {
         ScoreboardManager mgr = Bukkit.getScoreboardManager();
         if (mgr == null) return;
 
-        // IMPORTANT: We create a dedicated scoreboard for the sidebar.
-        // This will overwrite whatever scoreboard the player had -> so we MUST re-apply nametags after.
         Scoreboard board = mgr.getNewScoreboard();
 
         Objective obj = board.registerNewObjective(OBJ_NAME, "dummy");
@@ -171,13 +158,11 @@ public final class ScoreboardService implements Listener {
         p.setScoreboard(board);
         shown.add(p.getUniqueId());
 
-        // Re-apply nametag onto the NEW scoreboard
-        // Delay by 1 tick to ensure scoreboard is fully set
         Bukkit.getScheduler().runTask(plugin, () -> forceNametagUpdate(p));
     }
 
     public void hide(Player p) {
-        clearBoard(p); // clears sidebar scoreboard -> and re-applies nametag
+        clearBoard(p);
         shown.remove(p.getUniqueId());
     }
 
@@ -189,12 +174,8 @@ public final class ScoreboardService implements Listener {
             }
         } catch (Throwable ignored) {}
 
-        // After replacing scoreboard, teams are wiped -> re-apply nametag
-        // Delay by 1 tick to ensure scoreboard is fully set
         Bukkit.getScheduler().runTask(plugin, () -> forceNametagUpdate(p));
     }
-
-    /* ---------------- Refresh ---------------- */
 
     private void refresh(Player p) {
         Scoreboard board = p.getScoreboard();
@@ -217,19 +198,13 @@ public final class ScoreboardService implements Listener {
 
         safeSetTitle(p, obj);
 
-        // Only clear scores for our objective (safer than resetting every entry on the board)
         try {
             for (String entry : new HashSet<>(board.getEntries())) {
-                // This removes scores in ALL objectives for that entry.
-                // We keep it, because this scoreboard is "ours" anyway.
                 board.resetScores(entry);
             }
         } catch (Throwable ignored) {}
 
         applyLines(p, board, obj);
-
-        // Optional: if you want nametag placeholders like health/ping to update smoothly
-        // you can also force update here. It's cheap enough at 5s intervals.
         forceNametagUpdate(p);
     }
 
@@ -261,15 +236,12 @@ public final class ScoreboardService implements Listener {
             tries++;
         }
 
-        // last resort
         if (board.getEntries().contains(s)) {
             s = base.substring(0, Math.min(base.length(), 30)) + ChatColor.RESET + tries;
         }
 
         return s;
     }
-
-    /* ---------------- Helpers ---------------- */
 
     private boolean isWorldAllowed(Player p) {
         String w = p.getWorld().getName();
@@ -287,11 +259,11 @@ public final class ScoreboardService implements Listener {
         return s.length() > max ? s.substring(0, max) : s;
     }
 
-    /** Render pipeline: {player} -> PAPI -> MiniMessage -> legacy (§x) -> & codes. */
     private String render(Player p, String raw) {
         if (raw == null) return "";
 
-        String s = raw.replace("{player}", p.getName());
+        String s = applyTagAnimations(raw);
+        s = s.replace("{player}", p.getName());
 
         try {
             if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
@@ -307,6 +279,50 @@ public final class ScoreboardService implements Listener {
         return ChatColor.translateAlternateColorCodes('&', s);
     }
 
+    private String applyTagAnimations(String input) {
+        if (input == null || input.isEmpty()) return input;
+
+        Matcher m = ANIM_TAG.matcher(input);
+        StringBuffer out = new StringBuffer();
+
+        while (m.find()) {
+            int interval = 20;
+            try {
+                if (m.group(1) != null) interval = Math.max(1, Integer.parseInt(m.group(1)));
+            } catch (Throwable ignored) {}
+
+            String body = m.group(2) == null ? "" : m.group(2);
+
+            List<String> frames = new ArrayList<>();
+            StringBuilder current = new StringBuilder();
+            String[] lines = body.replace("\r\n", "\n").split("\n", -1);
+            for (String line : lines) {
+                if (line.trim().equals("|")) {
+                    frames.add(current.toString());
+                    current.setLength(0);
+                } else {
+                    current.append(line).append("\n");
+                }
+            }
+            frames.add(current.toString());
+            frames.replaceAll(s -> s.endsWith("\n") ? s.substring(0, s.length() - 1) : s);
+
+            String replacement;
+            if (frames.isEmpty()) {
+                replacement = "";
+            } else {
+                long ticks = System.currentTimeMillis() / 50L;
+                int idx = (int) ((ticks / interval) % frames.size());
+                replacement = frames.get(Math.max(0, idx));
+            }
+
+            m.appendReplacement(out, Matcher.quoteReplacement(replacement));
+        }
+
+        m.appendTail(out);
+        return out.toString();
+    }
+
     private void forceNametagUpdate(Player p) {
         try {
             if (plugin.getNametagManager() != null) {
@@ -315,19 +331,12 @@ public final class ScoreboardService implements Listener {
         } catch (Throwable ignored) {}
     }
 
-    /* ---------------- Events ---------------- */
-
-    /**
-     * CRITICAL: Run at HIGHEST priority so we set up scoreboard BEFORE nametag manager
-     * This ensures nametag manager adds teams to OUR scoreboard, not some temporary one
-     */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onJoin(PlayerJoinEvent e) {
         if (!cfg.enabled()) return;
 
         Player p = e.getPlayer();
 
-        // Delay slightly to let player fully load, but run before nametag manager (which uses LOWEST priority)
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (isWorldAllowed(p)) show(p);
             else forceNametagUpdate(p);
@@ -336,7 +345,6 @@ public final class ScoreboardService implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        // Clean scoreboard + avoid keeping UUIDs forever
         shown.remove(e.getPlayer().getUniqueId());
         toggles.remove(e.getPlayer().getUniqueId());
     }

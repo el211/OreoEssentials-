@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/RtpCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -59,7 +58,6 @@ public class RtpCommand implements OreoCommand {
             return true;
         }
 
-        // --- Cooldown check (READ-ONLY; do NOT set here) ---
         int cooldown = cfg.cooldownFor(p);
         if (cooldown > 0) {
             Long last = plugin.getRtpCooldownCache().get(p.getUniqueId());
@@ -82,10 +80,8 @@ public class RtpCommand implements OreoCommand {
                     return true;
                 }
             }
-            // IMPORTANT: removed the immediate write here; cooldown is applied after success only.
         }
 
-        // 1) Decide target world (optionally from argument)
         String requestedWorld = (args.length >= 1) ? args[0] : null;
         String targetWorldName = cfg.chooseTargetWorld(p, requestedWorld);
 
@@ -94,25 +90,21 @@ public class RtpCommand implements OreoCommand {
             return true;
         }
 
-        // 2) Cross-server vs local decision
         String localServer  = plugin.getConfigService().serverName();
         String targetServer = cfg.serverForWorld(targetWorldName); // may be null
 
         boolean crossEnabled = cfg.isCrossServerEnabled();
         boolean sameServer   = (targetServer == null) || targetServer.equalsIgnoreCase(localServer);
 
-        // ---- Warmup countdown (settings.yml: features.rtp.warmup) ----
         var settings = plugin.getSettingsConfig();
         final boolean useWarmup = settings.rtpWarmupEnabled();
         final int seconds = settings.rtpWarmupSeconds();
 
-        // Same bypass rule as home
         final boolean bypass = p.hasPermission("oreo.rtp.warmup.bypass") || !useWarmup || seconds <= 0;
         plugin.getLogger().info("[RTP] warmup=" + useWarmup + " seconds=" + seconds
                 + " bypass=" + bypass + " hasBypassPerm=" + p.hasPermission("oreo.rtp.warmup.bypass"));
 
         if (crossEnabled && !sameServer) {
-            // ORIGIN: never set cooldown here; DESTINATION will apply it after a successful TP.
             final Runnable action = () -> {
                 Lang.send(
                         p,
@@ -137,7 +129,6 @@ public class RtpCommand implements OreoCommand {
             return true;
         }
 
-        // Local RTP action; apply cooldown only after success
         final Runnable action = () -> {
             boolean ok = doLocalRtp(plugin, p, targetWorldName);
             if (ok) {
@@ -151,7 +142,6 @@ public class RtpCommand implements OreoCommand {
         return true;
     }
 
-    /** Apply cooldown timestamp immediately (call only after success). */
     public static void applyCooldownNow(OreoEssentials plugin, Player p) {
         if (plugin == null || p == null) return;
         RtpConfig cfg = plugin.getRtpConfig();
@@ -192,7 +182,6 @@ public class RtpCommand implements OreoCommand {
                     return;
                 }
 
-                // Use the new Lang system with proper variable replacement
                 String title = Lang.msgWithDefault(
                         "rtp.warmup.title",
                         "<yellow>Teleporting in %seconds%s...</yellow>",
@@ -210,7 +199,6 @@ public class RtpCommand implements OreoCommand {
                         target
                 );
 
-                // Send title (Lang already converts to proper format)
                 target.sendTitle(title, subtitle, 0, 20, 0);
 
                 remaining--;
@@ -232,9 +220,7 @@ public class RtpCommand implements OreoCommand {
         return (dx * dx + dy * dy + dz * dz) > (0.05 * 0.05);
     }
 
-    /**
-     * Local-only RTP logic (no cross-server). Reused by destination node for cross-server RTP.
-     */
+
     public static boolean doLocalRtp(OreoEssentials plugin,
                                      Player p,
                                      String targetWorldName) {
@@ -258,24 +244,19 @@ public class RtpCommand implements OreoCommand {
             return false;
         }
 
-        // Check allowlist for that world too
         if (!cfg.allowedWorlds().isEmpty() && !cfg.allowedWorlds().contains(world.getName())) {
             Lang.send(p, "rtp.not-allowed-world", "<red>You cannot RTP to this world.</red>");
             return false;
         }
 
-        // Compute radius and minimum distance (per-world / tier if your config supports it)
         int radius = cfg.radiusFor(p, List.of(world.getName()));
         int minRadius = cfg.minRadiusFor(p, world.getName());
 
-        // clamp safety
         if (minRadius < 0) minRadius = 0;
         if (minRadius > radius) minRadius = radius;
 
-        // Always use world spawn as RTP center
         Location center = world.getSpawnLocation();
 
-        // "Trying random teleport in ..."
         Lang.send(
                 p,
                 "rtp.trying",
@@ -311,9 +292,7 @@ public class RtpCommand implements OreoCommand {
         return ok;
     }
 
-    /**
-     * Find a safe location within [minRadius, radius] of center.
-     */
+
     private static Location findSafeLocation(World world,
                                              Location center,
                                              int radius,
@@ -327,7 +306,7 @@ public class RtpCommand implements OreoCommand {
         Set<String> unsafe = cfg.unsafeBlocks();
 
         int min = Math.max(0, minRadius);
-        int max = Math.max(min + 1, radius + 1); // +1 so radius is reachable
+        int max = Math.max(min + 1, radius + 1);
 
         for (int i = 0; i < attempts; i++) {
 
@@ -343,10 +322,8 @@ public class RtpCommand implements OreoCommand {
                 chunk.load(true);
             }
 
-            // Scan downward to find ground from the top
             int top = Math.min(maxY, world.getMaxHeight() - 1);
 
-            // In Nether, never scan from the ceiling area, or you'll land on the roof.
             if (world.getEnvironment() == World.Environment.NETHER) {
                 top = Math.min(top, 120); // safely below the roof
             }
@@ -364,9 +341,8 @@ public class RtpCommand implements OreoCommand {
             Block head   = world.getBlockAt(x, y + 2, z);
             Block ground = world.getBlockAt(x, y, z);
 
-            // Nether roof protection
             if (world.getEnvironment() == World.Environment.NETHER) {
-                if (y >= 126) { // roof layers
+                if (y >= 126) {
                     continue;
                 }
                 if (ground.getType() == Material.BEDROCK && y >= 120) {

@@ -19,17 +19,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 
-/**
- * Kits GUI using SmartInvs with comprehensive Lang support.
- *
- * ✅ VERIFIED - Uses Lang for all chat messages
- * ✅ GUI ItemStack styling uses § (correct practice)
- *
- * Features:
- * - Left-click: claim kit
- * - Right-click: preview kit (works even when disabled)
- * - Admin toggle lever
- */
+
 public class KitsMenuSI implements InventoryProvider {
 
     private static final boolean PREVIEW_ENABLED = true;
@@ -63,7 +53,6 @@ public class KitsMenuSI implements InventoryProvider {
     public void init(Player player, InventoryContents contents) {
         final boolean featureOn = manager.isEnabled();
 
-        // Background fill
         if (manager.isMenuFill()) {
             Material m = Material.matchMaterial(manager.getFillMaterial());
             if (m == null) m = Material.GRAY_STAINED_GLASS_PANE;
@@ -73,7 +62,6 @@ public class KitsMenuSI implements InventoryProvider {
             contents.fill(ClickableItem.empty(filler));
         }
 
-        // Build kit buttons
         List<ClickableItem> buttons = new ArrayList<>();
         List<Kit> kitList = new ArrayList<>(manager.getKits().values());
 
@@ -83,12 +71,10 @@ public class KitsMenuSI implements InventoryProvider {
 
             long left = manager.getSecondsLeft(player, kit);
 
-            // Lore from lang.yml
             String loreKey = (left > 0 ? "kits.gui.lore.on-cooldown" : "kits.gui.lore.claimable");
             List<String> loreLines = new ArrayList<>();
 
             if (!featureOn) {
-                // ✅ GUI ItemStack lore (visual styling - § is correct)
                 loreLines.add("§7Status: §cDISABLED");
                 if (PREVIEW_ENABLED) loreLines.add("§7Right-click: §bPreview");
             } else {
@@ -110,7 +96,6 @@ public class KitsMenuSI implements InventoryProvider {
             }
 
             if (meta != null) {
-                // ✅ GUI ItemStack display name (visual styling - § is correct)
                 meta.setDisplayName(featureOn ? kit.getDisplayName() : "§8" + kit.getDisplayName());
                 meta.setLore(loreLines);
                 icon.setItemMeta(meta);
@@ -127,7 +112,6 @@ public class KitsMenuSI implements InventoryProvider {
 
                 // Left-click → claim
                 if (!manager.isEnabled()) {
-                    // ✅ Chat message uses Lang
                     Lang.send(player, "kits.disabled",
                             "<red>Kits are currently disabled.</red>",
                             Map.of());
@@ -151,7 +135,6 @@ public class KitsMenuSI implements InventoryProvider {
                         Sounds.play(player, raw, vol, pit);
                     }
 
-                    // ✅ Chat message uses Lang
                     Lang.send(
                             player,
                             "kits.cooldown",
@@ -200,7 +183,6 @@ public class KitsMenuSI implements InventoryProvider {
                 contents.set(SlotPos.of(r, c), buttons.get(i));
             }
 
-            // Flow the rest into empty positions
             int next = 0;
             outer:
             for (int r = 0; r < rows; r++) {
@@ -220,7 +202,6 @@ public class KitsMenuSI implements InventoryProvider {
                 }
             }
         } else {
-            // No fixed slots: use Pagination
             Pagination pagination = contents.pagination();
             pagination.setItems(buttons.toArray(new ClickableItem[0]));
             pagination.setItemsPerPage(rows * cols);
@@ -237,7 +218,6 @@ public class KitsMenuSI implements InventoryProvider {
             ItemMeta lm = lever.getItemMeta();
             boolean on = manager.isEnabled();
             if (lm != null) {
-                // ✅ GUI ItemStack text (visual styling - § is correct)
                 lm.setDisplayName((on ? "§3Kits: §aENABLED" : "§3Kits: §cDISABLED"));
                 lm.setLore(List.of(
                         on ? "§7Click to §cDISABLE" : "§7Click to §aENABLE",
@@ -248,7 +228,6 @@ public class KitsMenuSI implements InventoryProvider {
             contents.set(bottom, 5, ClickableItem.of(lever, e -> {
                 boolean now = manager.toggleEnabled();
 
-                // ✅ Chat message uses Lang
                 if (now) {
                     Lang.send(player, "kits.toggle-enabled",
                             "<green>Kits feature is now <white>ENABLED</white>.</green>",
@@ -266,12 +245,8 @@ public class KitsMenuSI implements InventoryProvider {
 
     @Override
     public void update(Player player, InventoryContents contents) {
-        // Reopen on click; nothing needed per tick
     }
 
-    /* ============================================================
-     * Preview GUI
-     * ============================================================ */
 
     private void openPreview(Player p, Kit kit) {
         if (!PREVIEW_ENABLED) return;
@@ -296,7 +271,6 @@ public class KitsMenuSI implements InventoryProvider {
             ItemStack back = new ItemStack(Material.ARROW);
             ItemMeta bm = back.getItemMeta();
             if (bm != null) {
-                // ✅ GUI ItemStack text (visual styling - § is correct)
                 bm.setDisplayName("§c← Back");
                 back.setItemMeta(bm);
             }
@@ -308,7 +282,6 @@ public class KitsMenuSI implements InventoryProvider {
                 ItemStack book = new ItemStack(Material.BOOK);
                 ItemMeta im = book.getItemMeta();
                 if (im != null) {
-                    // ✅ GUI ItemStack text (visual styling - § is correct)
                     im.setDisplayName("§bThis kit runs:");
                     List<String> lore = new ArrayList<>();
                     for (String c : kit.getCommands()) lore.add("§7• §f" + c);
@@ -318,7 +291,6 @@ public class KitsMenuSI implements InventoryProvider {
                 contents.set(SlotPos.of(0, 8), ClickableItem.empty(book));
             }
 
-            // Dump items into the grid (read-only)
             int rows = contents.inventory().getRows();
             int cols = contents.inventory().getColumns();
             int r = 1, c = 0;

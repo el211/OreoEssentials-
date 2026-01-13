@@ -17,19 +17,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Daily Rewards GUI menu.
- *
- * ✅ VERIFIED - Uses Lang.send() for 2 user messages + svc.color() for GUI items (correct)
- *
- * Features:
- * - Paginated reward display
- * - Custom positioning support
- * - Live streak tracking
- * - Admin toggle button
- * - Auto-refresh on claim
- * - Feature flag integration
- */
+
 public final class DailyMenu implements InventoryProvider {
 
     private final OreoEssentials plugin;
@@ -79,14 +67,11 @@ public final class DailyMenu implements InventoryProvider {
         final int currentStreak = svc.getStreak(p.getUniqueId());
         final int todayIndex    = svc.nextDayIndex(currentStreak);
 
-        // Feature flag snapshot for this render
         final boolean featureOn = svc.isEnabled();
 
-        // Grid buffer (usable area only)
         final ClickableItem[] grid = new ClickableItem[perPage];
         final AtomicInteger flowingIdx = new AtomicInteger(0);
 
-        // Build items for this page
         for (int day = idxStart; day <= idxEnd; day++) {
             final RewardsConfig.DayDef def = rewards.day(day);
 
@@ -98,12 +83,10 @@ public final class DailyMenu implements InventoryProvider {
                     ? def.name
                     : "Day " + day;
 
-            // State-based coloring + lore
             final List<String> lore = new ArrayList<>(2);
             final boolean isReadyToday = (day == todayIndex) && svc.canClaimToday(p);
 
             if (!featureOn) {
-                // When disabled, gray out + lock messaging
                 title = "&8" + title;
                 lore.clear();
                 lore.add("&7Status: &cDISABLED");
@@ -124,7 +107,6 @@ public final class DailyMenu implements InventoryProvider {
             }
 
             if (meta != null) {
-                // Custom Model Data
                 if (def != null && def.customModelData != null && def.customModelData > 0) {
                     try {
                         meta.setCustomModelData(def.customModelData.intValue());
@@ -152,7 +134,6 @@ public final class DailyMenu implements InventoryProvider {
             final boolean isReadyFinal = isReadyToday;
 
             final ClickableItem ci = ClickableItem.of(item, e -> {
-                // Short-circuit when disabled
                 if (!svc.isEnabled()) {
                     Lang.send(p, "daily.gui.disabled",
                             "<red>Daily Rewards is disabled.</red>",
@@ -184,7 +165,6 @@ public final class DailyMenu implements InventoryProvider {
             }
         }
 
-        // Render grid
         for (int slot = 0; slot < perPage; slot++) {
             final ClickableItem ci = grid[slot];
             if (ci == null) continue;
@@ -193,11 +173,9 @@ public final class DailyMenu implements InventoryProvider {
             contents.set(row, col, ci);
         }
 
-        // Toolbar
         if (rows >= 2) {
             final int bottom = rows - 1;
 
-            // Prev
             {
                 final ItemStack prev = new ItemStack(Material.ARROW);
                 final ItemMeta pm = prev.getItemMeta();
@@ -211,7 +189,6 @@ public final class DailyMenu implements InventoryProvider {
                 }));
             }
 
-            // Stats
             {
                 final ItemStack stats = new ItemStack(Material.PLAYER_HEAD);
                 final ItemMeta sm = stats.getItemMeta();
@@ -227,7 +204,6 @@ public final class DailyMenu implements InventoryProvider {
                 contents.set(bottom, 4, ClickableItem.empty(stats));
             }
 
-            // Admin toggle button at slot 5
             if (p.hasPermission("oreo.daily.admin")) {
                 final ItemStack lever = new ItemStack(Material.LEVER);
                 final ItemMeta lm = lever.getItemMeta();
@@ -242,7 +218,6 @@ public final class DailyMenu implements InventoryProvider {
                 }
                 contents.set(bottom, 5, ClickableItem.of(lever, e -> {
                     boolean now = svc.toggleEnabled();
-                    // Reflect in config and persist
                     cfg.setEnabled(now);
                     try { cfg.save(); } catch (Throwable ignored) {}
 
@@ -254,7 +229,6 @@ public final class DailyMenu implements InventoryProvider {
                 }));
             }
 
-            // Next
             {
                 final ItemStack next = new ItemStack(Material.ARROW);
                 final ItemMeta nm = next.getItemMeta();

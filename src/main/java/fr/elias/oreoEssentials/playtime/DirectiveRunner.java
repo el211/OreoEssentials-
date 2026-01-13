@@ -14,7 +14,6 @@ public final class DirectiveRunner {
         boolean asPlayer = false;
         long delayTicks = 0L;
 
-        // delay! <seconds>
         if (line.startsWith("delay! ")) {
             String rest = line.substring(7);
             int sp = rest.indexOf(' ');

@@ -36,7 +36,6 @@ public final class ItemStacksCodec {
         }
     }
 
-    /* (Optional) Base64 wrappers if you ever want text form */
     public static String encodeBase64(ItemStack[] items) {
         return Base64.getEncoder().encodeToString(encodeToBytes(items));
     }

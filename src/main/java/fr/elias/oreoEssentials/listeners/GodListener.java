@@ -22,20 +22,14 @@ public class GodListener implements Listener {
         if (!(e.getEntity() instanceof Player p)) return;
         if (!god.isGod(p.getUniqueId())) return;
 
-        // Cancel *all* damage while in god
         e.setCancelled(true);
 
-        // QoL: clear fire ticks on any damage tick that would have happened
         p.setFireTicks(0);
-        // Top up health if needed (optional)
         if (p.getHealth() < p.getMaxHealth()) {
             p.setHealth(Math.min(p.getMaxHealth(), p.getHealth() + 0.5)); // small regen each “would-be” tick
         }
-
-        // Extra safety for some damage types
         DamageCause c = e.getCause();
         if (c == DamageCause.VOID) {
-            // bounce them up a little if falling into the void
             p.teleport(p.getLocation().add(0, 2, 0));
         }
     }

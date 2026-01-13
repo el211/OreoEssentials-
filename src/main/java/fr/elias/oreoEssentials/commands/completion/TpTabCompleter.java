@@ -30,7 +30,6 @@ public class TpTabCompleter implements TabCompleter {
         final String want = args[0].toLowerCase(Locale.ROOT);
         Set<String> out = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
-        // 1) Local online players
         for (Player p : Bukkit.getOnlinePlayers()) {
             String n = p.getName();
             if (n != null && n.toLowerCase(Locale.ROOT).startsWith(want)) {
@@ -38,7 +37,6 @@ public class TpTabCompleter implements TabCompleter {
             }
         }
 
-        // 2) Network online players
         PlayerDirectory dir = plugin.getPlayerDirectory();
         if (dir != null) {
             try {
@@ -53,7 +51,6 @@ public class TpTabCompleter implements TabCompleter {
             } catch (Throwable ignored) {}
         }
 
-        // 3) OFFLINE players from OfflinePlayerCache
         OfflinePlayerCache cache = plugin.getOfflinePlayerCache();
         if (cache != null) {
             try {

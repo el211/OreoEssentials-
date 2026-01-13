@@ -23,15 +23,7 @@ import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * ModGUI InvSee menu:
- * - Uses InvseeService.requestSnapshot(...) to get the best possible snapshot
- *   (online on this server, or persisted via InventoryService).
- * - On close, rebuilds a Snapshot from the GUI and calls
- *   InvseeService.applySnapshotFromGui(...) which:
- *     * applies to online player if present
- *     * saves via InventoryService for cross-server / next-login sync
- */
+
 public class InvSeeMenu implements InventoryProvider {
 
     private final OreoEssentials plugin;
@@ -42,10 +34,7 @@ public class InvSeeMenu implements InventoryProvider {
         this.targetId = targetId;
     }
 
-    /**
-     * Helper to open with a close listener that pushes changes
-     * back to the player via InvseeService (local + cross-server safe).
-     */
+
     public static void open(OreoEssentials plugin, Player viewer, UUID targetId) {
         OfflinePlayer op = Bukkit.getOfflinePlayer(targetId);
         String targetName =
@@ -95,7 +84,6 @@ public class InvSeeMenu implements InventoryProvider {
             return;
         }
 
-        // Safety: ensure arrays are non-null and sized for our layout.
         if (snap.contents == null) snap.contents = new ItemStack[41];
         if (snap.armor == null)    snap.armor    = new ItemStack[4];
 
@@ -104,9 +92,7 @@ public class InvSeeMenu implements InventoryProvider {
                 + " armorLen=" + snap.armor.length
                 + " offhand=" + (snap.offhand == null ? "null" : snap.offhand.getType().name()));
 
-        // --- Layout inside the 6x9 GUI ---
 
-        // 1) Main contents (0..40 => rows 0..4 + row5 col0..4)
         for (int i = 0; i < 41; i++) {
             int row = i / 9;
             int col = i % 9;
@@ -115,12 +101,10 @@ public class InvSeeMenu implements InventoryProvider {
             contents.set(row, col, ClickableItem.of(
                     (it == null ? new ItemStack(Material.AIR) : it),
                     e -> {
-                        // SmartInvs handles visual changes; we only sync on close.
                     }
             ));
         }
 
-        // 2) Armor (slots 45..48 => row 5, col 0..3)
         for (int i = 0; i < 4; i++) {
             int raw = 45 + i;
             int row = raw / 9; // 5
@@ -130,12 +114,10 @@ public class InvSeeMenu implements InventoryProvider {
             contents.set(row, col, ClickableItem.of(
                     (it == null ? new ItemStack(Material.AIR) : it),
                     e -> {
-                        // Visual only, real sync on close.
                     }
             ));
         }
 
-        // 3) Offhand (slot 49 => row 5, col 4)
         {
             int raw = 49;
             int row = raw / 9; // 5
@@ -145,12 +127,10 @@ public class InvSeeMenu implements InventoryProvider {
             contents.set(row, col, ClickableItem.of(
                     (off == null ? new ItemStack(Material.AIR) : off),
                     e -> {
-                        // Visual only, real sync on close.
                     }
             ));
         }
 
-        // 4) Label / description item (slot 53 => row 5, col 8)
         OfflinePlayer op = Bukkit.getOfflinePlayer(targetId);
         String targetName =
                 (op.getName() != null ? op.getName() : targetId.toString().substring(0, 8));
@@ -174,10 +154,7 @@ public class InvSeeMenu implements InventoryProvider {
         // No periodic animation required.
     }
 
-    /**
-     * Read the GUI back into an InventoryService.Snapshot
-     * and push it via InvseeService.applySnapshotFromGui(...).
-     */
+
     public static void syncAndApply(OreoEssentials plugin,
                                     Player viewer,
                                     UUID targetId,
@@ -196,13 +173,11 @@ public class InvSeeMenu implements InventoryProvider {
         snap.contents = new ItemStack[41];
         snap.armor    = new ItemStack[4];
 
-        // 1) Contents 0..40 from slots 0..40
         for (int i = 0; i < 41 && i < inv.getSize(); i++) {
             ItemStack it = inv.getItem(i);
             snap.contents[i] = (it == null || it.getType() == Material.AIR) ? null : it.clone();
         }
 
-        // 2) Armor from slots 45..48
         for (int i = 0; i < 4; i++) {
             int raw = 45 + i;
             if (raw >= inv.getSize()) break;
@@ -210,13 +185,11 @@ public class InvSeeMenu implements InventoryProvider {
             snap.armor[i] = (it == null || it.getType() == Material.AIR) ? null : it.clone();
         }
 
-        // 3) Offhand from slot 49
         if (49 < inv.getSize()) {
             ItemStack it = inv.getItem(49);
             snap.offhand = (it == null || it.getType() == Material.AIR) ? null : it.clone();
         }
 
-        // ---- SAFETY: don't push a fully empty snapshot (likely request failure / empty GUI) ----
         boolean allEmpty = true;
         int nonEmptyContents = 0;
         int nonEmptyArmor = 0;

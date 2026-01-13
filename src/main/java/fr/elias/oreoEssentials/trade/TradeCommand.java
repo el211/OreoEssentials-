@@ -22,7 +22,6 @@ public final class TradeCommand implements CommandExecutor {
         this.service = service;
     }
 
-    /* ----------------------------- Debug Helpers ----------------------------- */
 
     private boolean dbg() {
         try {
@@ -36,7 +35,6 @@ public final class TradeCommand implements CommandExecutor {
         if (dbg()) plugin.getLogger().info(msg);
     }
 
-    /* ----------------------------- Command ----------------------------- */
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String lbl, String[] args) {
@@ -70,18 +68,15 @@ public final class TradeCommand implements CommandExecutor {
         final String targetName = args[0];
         log("[TRADE] /trade invoked by=" + p.getName() + " arg=" + targetName);
 
-        // 1) If this player has an invite FROM <targetName>, accept it.
         boolean accepted = service.tryAcceptInvite(p, targetName);
         if (!accepted && service.tryAcceptInviteAny(p)) return true;
 
         log("[TRADE] tryAcceptInvite result=" + accepted + " acceptor=" + p.getName() + " requesterName=" + targetName);
         if (accepted) return true;
 
-        // 2) Otherwise this is a NEW invite.
         Player localTarget = Bukkit.getPlayerExact(targetName);
         log("[TRADE] resolve local target -> " + (localTarget != null ? ("FOUND uuid=" + localTarget.getUniqueId()) : "not found"));
 
-        // Local self-check
         if (localTarget != null && localTarget.getUniqueId().equals(p.getUniqueId())) {
             Lang.send(p, "trade.self",
                     "<red>You cannot trade with yourself.</red>");
@@ -89,20 +84,17 @@ public final class TradeCommand implements CommandExecutor {
             return true;
         }
 
-        // If local target exists and is online → local invite
         if (localTarget != null && localTarget.isOnline()) {
             log("[TRADE] sending LOCAL invite: " + p.getName() + " -> " + localTarget.getName());
-            service.sendInvite(p, localTarget); // just sends an invite; GUI opens on accept
+            service.sendInvite(p, localTarget);
             return true;
         }
 
-        // 3) Cross-server path (remote)
         var broker = plugin.getTradeBroker();
         boolean msgAvail = plugin.isMessagingAvailable();
         log("[TRADE] cross-server path: broker=" + (broker != null) + " messagingAvailable=" + msgAvail);
 
         if (broker != null && msgAvail) {
-            // resolve UUID using PlayerDirectory
             UUID targetId = null;
             try {
                 var dir = plugin.getPlayerDirectory();
@@ -118,7 +110,7 @@ public final class TradeCommand implements CommandExecutor {
 
             if (targetId != null && !targetId.equals(p.getUniqueId())) {
                 log("[TRADE] sending REMOTE invite: " + p.getName() + " -> " + targetName + " (" + targetId + ")");
-                broker.sendInvite(p, targetId, targetName);  // no GUI yet; receiver gets an invite
+                broker.sendInvite(p, targetId, targetName);
                 return true;
             } else {
                 log("[TRADE] remote invite aborted: targetId=" + targetId + " (self? " + p.getUniqueId().equals(targetId) + ")");

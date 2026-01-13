@@ -33,27 +33,18 @@ public class PacketManager implements IncomingPacketListener {
         this.packetRegistry = new PacketRegistry();
     }
 
-    /** Initialize the manager & attach the low-level listener. */
     public void init() {
         initialized = true;
         this.sender.registerListener(this);
         dbg("[PM/INIT@" + serverName() + "] PacketManager initialized and listener registered.");
     }
 
-    /** Subscribe the underlying transport to a channel (GLOBAL or individual). */
     public void subscribeChannel(PacketChannel channel) {
         this.sender.registerChannel(channel);
         dbg("[PM/CHAN@" + serverName() + "] Subscribed channel " + renderChannel(channel));
     }
 
-    /* =========================================================
-     * REGISTRATION API
-     * ========================================================= */
 
-    /**
-     * Register a packet type so the bus can (de)serialize it.
-     * Must be called AFTER {@link #init()} and BEFORE publishing/receiving such packets.
-     */
     public <T extends Packet> void registerPacket(Class<T> packetClass, Supplier<T> constructor) {
         try {
             // Preferred native API on PacketRegistry (strongly-typed)
@@ -77,10 +68,7 @@ public class PacketManager implements IncomingPacketListener {
         }
     }
 
-    /**
-     * Best-effort reflective registration for slightly different PacketRegistry APIs.
-     * Tries common method names: register, define, put.
-     */
+
     private <T extends Packet> boolean tryReflectiveRegister(Class<T> packetClass, Supplier<T> constructor) {
         String[] names = { "register", "define", "put" };
         for (String m : names) {
@@ -89,15 +77,12 @@ public class PacketManager implements IncomingPacketListener {
                 method.invoke(packetRegistry, packetClass, constructor);
                 return true;
             } catch (NoSuchMethodException ignored) {
-                // try next name
             } catch (Throwable ignored) {
-                // continue trying others
             }
         }
         return false;
     }
 
-    /* ====================== SEND ====================== */
 
     public void sendPacket(PacketChannel target, Packet packet) {
         PacketDefinition<?> definition = this.packetRegistry.getDefinition(packet.getClass());
@@ -141,7 +126,6 @@ public class PacketManager implements IncomingPacketListener {
         dbg("[PM/SUB@" + serverName() + "] Subscribed " + packetClass.getSimpleName());
     }
 
-    /* ====================== RECEIVE ====================== */
 
     @Override
     public void onReceive(PacketChannel channel, byte[] content) {
@@ -162,7 +146,6 @@ public class PacketManager implements IncomingPacketListener {
         Packet packet = definition.getProvider().createPacket();
         packet.readData(in);
 
-        // Extra detail for homes (debug-only)
         if (packet instanceof HomeTeleportRequestPacket h) {
             dbg("[PM/RECV@" + serverName() + "/HOME]"
                     + " requestId=" + h.getRequestId()
@@ -175,7 +158,6 @@ public class PacketManager implements IncomingPacketListener {
         dispatch(channel, packet);
     }
 
-    /* ====================== DISPATCH ====================== */
 
     private <T extends Packet> void dispatch(PacketChannel channel, T packet) {
         @SuppressWarnings("unchecked")
@@ -191,7 +173,6 @@ public class PacketManager implements IncomingPacketListener {
         queue.dispatch(channel, packet);
     }
 
-    /* ====================== UTIL ====================== */
 
     private String renderChannel(PacketChannel ch) {
         try {
@@ -231,11 +212,7 @@ public class PacketManager implements IncomingPacketListener {
         sender.close();
         dbg("[PM/CLOSE@" + serverName() + "] PacketManager closed.");
     }
-    /**
-     * Debug-only checksum of the current packet registry state.
-     * Not used for logic, just for logging so all servers can verify
-     * they registered packets in the same way.
-     */
+
     public String registryChecksum() {
         try {
             // Simple, stable-ish debug value

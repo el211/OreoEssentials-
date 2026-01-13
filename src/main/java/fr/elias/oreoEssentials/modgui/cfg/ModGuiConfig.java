@@ -28,7 +28,6 @@ public class ModGuiConfig {
             plugin.getLogger().warning("[ModGUI] Failed to load modgui.yml: " + t.getMessage());
             cfg = new YamlConfiguration();
         }
-        // ensure sections
         if (!cfg.isConfigurationSection("worlds")) {
             cfg.createSection("worlds");
         }
@@ -43,7 +42,6 @@ public class ModGuiConfig {
 
     private String wKey(World w) { return "worlds." + w.getName(); }
 
-    // -------- Per-world whitelist --------
     public boolean worldWhitelistEnabled(World w) {
         return cfg.getBoolean(wKey(w) + ".whitelist.enabled", false);
     }
@@ -75,7 +73,6 @@ public class ModGuiConfig {
         saveSilently();
     }
 
-    // -------- Per-world banned mobs --------
     public Set<String> bannedMobs(World w) {
         return new HashSet<>(cfg.getStringList(wKey(w) + ".banned-mobs"));
     }
@@ -89,7 +86,6 @@ public class ModGuiConfig {
         return bannedMobs(w).contains(mobKey);
     }
 
-    // -------- Per-world gamerules (string→string raw; GUI controls common rules) --------
     public String gamerule(World w, String key, String def) {
         return cfg.getString(wKey(w) + ".gamerules." + key, def);
     }
@@ -98,7 +94,6 @@ public class ModGuiConfig {
         saveSilently();
     }
 
-    // -------- Dimension tweaks (Nether / End etc.) --------
     public boolean tweak(World world, String key, boolean def) {
         String path = "world-tweaks." + world.getName() + "." + key;
         return cfg.getBoolean(path, def);
@@ -110,7 +105,6 @@ public class ModGuiConfig {
         saveSilently();
     }
 
-    // Convenience wrappers
 
     public boolean netherAllowWater(World w) {
         return tweak(w, "allow-water", false);
@@ -169,22 +163,18 @@ public class ModGuiConfig {
         saveSilently();
     }
 
-    // Elytra
     public boolean disableElytra(World w) { return worldFlag(w, "disable-elytra", false); }
     public void setDisableElytra(World w, boolean v) { setWorldFlag(w, "disable-elytra", v); }
 
-    // Tridents
     public boolean disableTrident(World w) { return worldFlag(w, "disable-trident", false); }
     public void setDisableTrident(World w, boolean v) { setWorldFlag(w, "disable-trident", v); }
 
-    // PvP
     public boolean pvpEnabled(World w) { return !worldFlag(w, "disable-pvp", false); }
     public void setPvpEnabled(World w, boolean enabled) { setWorldFlag(w, "disable-pvp", !enabled); }
 
     public boolean disableProjectilePvp(World w) { return worldFlag(w, "disable-projectile-pvp", false); }
     public void setDisableProjectilePvp(World w, boolean v) { setWorldFlag(w, "disable-projectile-pvp", v); }
 
-    // Theme
     public String worldTheme(World w) {
         return cfg.getString(wKey(w) + ".theme", "DEFAULT");
     }

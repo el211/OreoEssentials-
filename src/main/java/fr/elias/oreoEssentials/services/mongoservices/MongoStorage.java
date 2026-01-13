@@ -90,20 +90,25 @@ public class MongoStorage implements StorageApi {
 
 
 
-
-
-    /* ---------------- spawn ---------------- */
-
-    @Override public void setSpawn(Location loc) {
-        Document d = new Document("_id", "spawn").append("loc", LocUtil.toDoc(loc));
-        colSpawn.replaceOne(eq("_id", "spawn"), d, new com.mongodb.client.model.ReplaceOptions().upsert(true));
+    @Override
+    public void setSpawn(String server, Location loc) {
+        String id = "spawn:" + (server == null ? "" : server.trim().toLowerCase(Locale.ROOT));
+        Document d = new Document("_id", id).append("loc", LocUtil.toDoc(loc));
+        colSpawn.replaceOne(eq("_id", id), d, new com.mongodb.client.model.ReplaceOptions().upsert(true));
     }
 
-    @Override public Location getSpawn() {
-        Document d = colSpawn.find(eq("_id", "spawn")).first();
-        if (d == null) return null;
-        return LocUtil.fromDoc(d.get("loc", Document.class));
+    @Override
+    public Location getSpawn(String server) {
+        String id = "spawn:" + (server == null ? "" : server.trim().toLowerCase(Locale.ROOT));
+        Document d = colSpawn.find(eq("_id", id)).first();
+        if (d != null) return LocUtil.fromDoc(d.get("loc", Document.class));
+
+        // LEGACY fallback
+        Document legacy = colSpawn.find(eq("_id", "spawn")).first();
+        if (legacy == null) return null;
+        return LocUtil.fromDoc(legacy.get("loc", Document.class));
     }
+
 
     /* ---------------- warps ---------------- */
 
@@ -171,11 +176,7 @@ public class MongoStorage implements StorageApi {
                 .collect(Collectors.toCollection(java.util.LinkedHashSet::new));
     }
 
-    /**
-     *  structured listing used by /otherhomes and /otherhome
-     * This legacy store only keeps a LocUtil doc; it doesn't store "server",
-     * so we fill it with the current server name.
-     */
+
     @Override
     public Map<String, HomeService.StoredHome> listHomes(UUID owner) {
         Map<String, HomeService.StoredHome> out = new LinkedHashMap<>();
@@ -211,9 +212,7 @@ public class MongoStorage implements StorageApi {
         return n == null ? 0.0 : n.doubleValue();
     }
 
-    /* ---------------- last location ---------------- */
 
-    /* ---------------- last location (compat + new /back) ---------------- */
 
     @Override
     public void setLast(UUID uuid, Location loc) {
@@ -233,8 +232,6 @@ public class MongoStorage implements StorageApi {
             );
         }
 
-        // 2)  also update the cross-server /back data via StorageApi default
-        // -> this will convert Location -> Map and call setBackData(...)
         StorageApi.super.setLast(uuid, loc);
     }
 

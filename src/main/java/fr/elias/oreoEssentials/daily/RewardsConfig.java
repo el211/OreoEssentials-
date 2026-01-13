@@ -16,10 +16,10 @@ public final class RewardsConfig {
         public final Material icon;
         public final boolean enchanted;
         public final List<String> commands;
-        public final String message;          // optional
-        public final Integer guiPos;          // optional (0..53)
-        public final Integer guiPage;         // optional (1..N)
-        public final Integer customModelData; // optional (>0)
+        public final String message;
+        public final Integer guiPos;
+        public final Integer guiPage;
+        public final Integer customModelData;
 
         DayDef(int day, String name, Material icon, boolean enchanted,
                List<String> commands, String message,
@@ -46,7 +46,6 @@ public final class RewardsConfig {
         days.clear();
         maxDay = 0;
 
-        // Read from unified dailyrewards.yml
         File f = new File(plugin.getDataFolder(), "dailyrewards.yml");
         if (!f.exists()) plugin.saveResource("dailyrewards.yml", false);
 

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/PlayerWarpWhitelistCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.playerwarp.PlayerWarp;
@@ -57,7 +56,6 @@ public class PlayerWarpWhitelistCommand implements CommandExecutor, TabCompleter
         return true;
     }
 
-    // ---------------------- TAB COMPLETE ----------------------
     @Override
     public List<String> onTabComplete(CommandSender sender,
                                       Command command,
@@ -68,9 +66,7 @@ public class PlayerWarpWhitelistCommand implements CommandExecutor, TabCompleter
             return Collections.emptyList();
         }
 
-        // /pwwhitelist <arg1> <arg2> <arg3>
         if (args.length == 1) {
-            // Suggest "add", "remove"
             String partial = args[0].toLowerCase(Locale.ROOT);
             return ACTIONS.stream()
                     .filter(a -> a.startsWith(partial))
@@ -79,7 +75,6 @@ public class PlayerWarpWhitelistCommand implements CommandExecutor, TabCompleter
         }
 
         if (args.length == 2) {
-            // Suggest your own warp names for arg2
             String partial = args[1].toLowerCase(Locale.ROOT);
 
             return service.listByOwner(player.getUniqueId()).stream()
@@ -97,9 +92,6 @@ public class PlayerWarpWhitelistCommand implements CommandExecutor, TabCompleter
             String warpNameRaw = args[1];
             String partial = args[2].toLowerCase(Locale.ROOT);
 
-            // Arg3 suggestions:
-            // - for "add" → all online players
-            // - for "remove" → only players already whitelisted on this warp
             if (action.equals("add")) {
                 return Bukkit.getOnlinePlayers().stream()
                         .map(Player::getName)

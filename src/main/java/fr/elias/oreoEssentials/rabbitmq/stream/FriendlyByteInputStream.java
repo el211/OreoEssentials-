@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/stream/FriendlyByteInputStream.java
 package fr.elias.oreoEssentials.rabbitmq.stream;
 
 import java.io.ByteArrayInputStream;

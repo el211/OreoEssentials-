@@ -18,16 +18,6 @@ import org.bukkit.entity.TNTPrimed;
 
 import java.util.Map;
 
-/**
- * Performance tools GUI menu.
- *
- * ✅ VERIFIED - Uses Lang.send() for 3 user messages + § for GUI items
- *
- * Features:
- * - Kill all hostile mobs
- * - Clear dropped items
- * - Purge primed TNT
- */
 public class PerfToolsMenu implements InventoryProvider {
 
     private final OreoEssentials plugin;

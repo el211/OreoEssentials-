@@ -10,15 +10,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.UUID;
 
-/**
- * Handles Daily Rewards business logic:
- *  - Eligibility checks
- *  - Streak computation
- *  - Reward execution
- *  - Runtime enable/disable toggle
- *
- * Updated to use unified storage interface (supports both MongoDB and file storage)
- */
+
 public final class DailyService {
 
     private final OreoEssentials plugin;
@@ -26,7 +18,6 @@ public final class DailyService {
     private final DailyStorage store;
     private final RewardsConfig rewards;
 
-    /** Master ON/OFF switch, live-togglable (GUI or command). */
     private volatile boolean featureEnabled;
 
     public DailyService(OreoEssentials plugin, DailyConfig cfg, DailyStorage store, RewardsConfig rewards) {
@@ -37,7 +28,6 @@ public final class DailyService {
         this.featureEnabled = cfg.enabled; // respect config at boot
     }
 
-    /* ----------------------------- Utils ----------------------------- */
 
     public String color(String s) {
         return ChatColor.translateAlternateColorCodes('&', s);
@@ -47,13 +37,7 @@ public final class DailyService {
         return LocalDate.now(ZoneId.systemDefault());
     }
 
-    /* ----------------------------- Queries ----------------------------- */
 
-    /**
-     * Can the player claim today?
-     * - Returns false if the module is disabled.
-     * - Calendar-day cadence (current behavior): claim once per day.
-     */
     public boolean canClaimToday(Player p) {
         if (!featureEnabled) return false;
 
@@ -66,18 +50,13 @@ public final class DailyService {
         return !today().isEqual(last);
     }
 
-    /**
-     * Current streak for a UUID (0 if no record).
-     */
+
     public int getStreak(UUID u) {
         DailyStorage.Record r = store.get(u);
         return (r == null) ? 0 : r.getStreak();
     }
 
-    /**
-     * The reward "day index" (1..maxDay) that corresponds to the *next* claim,
-     * based on the current streak *before* updating it.
-     */
+
     public int nextDayIndex(int currentStreak) {
         int max = Math.max(1, rewards.maxDay());
         if (cfg.resetWhenStreakCompleted) {
@@ -90,12 +69,8 @@ public final class DailyService {
         }
     }
 
-    /* ----------------------------- Actions ----------------------------- */
 
-    /**
-     * Attempts to claim today's reward for the player.
-     * Returns true if a reward was awarded.
-     */
+
     public boolean claim(Player p) {
         if (!featureEnabled) {
             p.sendMessage(color(cfg.prefix + " &cDaily Rewards is currently disabled."));
@@ -116,13 +91,13 @@ public final class DailyService {
         } else {
             long gapDays = Duration.between(last.atStartOfDay(), t.atStartOfDay()).toDays();
             if (gapDays == 1) {
-                newStreak = r.getStreak() + 1; // consecutive
+                newStreak = r.getStreak() + 1;
             } else if (cfg.pauseStreakWhenMissed) {
-                newStreak = r.getStreak();     // hold
+                newStreak = r.getStreak();
             } else if (cfg.skipMissedDays) {
-                newStreak = r.getStreak() + 1; // skip gaps, keep growing
+                newStreak = r.getStreak() + 1;
             } else {
-                newStreak = 1;            // reset
+                newStreak = 1;
             }
         }
 
@@ -150,22 +125,17 @@ public final class DailyService {
         return true;
     }
 
-    /* ----------------------------- Toggle API ----------------------------- */
 
-    /** @return current enabled state. */
+
     public boolean isEnabled() {
         return featureEnabled;
     }
 
-    /** Set enabled state at runtime (does not write to disk). */
     public void setEnabled(boolean v) {
         this.featureEnabled = v;
     }
 
-    /**
-     * Toggle enabled state and return the new value.
-     * (Does not write back to dailyrewards.yml; caller may persist if desired.)
-     */
+
     public boolean toggleEnabled() {
         this.featureEnabled = !this.featureEnabled;
         return this.featureEnabled;

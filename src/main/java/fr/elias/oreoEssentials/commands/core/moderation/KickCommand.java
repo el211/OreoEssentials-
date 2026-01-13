@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/moderation/KickCommand.java
 package fr.elias.oreoEssentials.commands.core.moderation;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -44,7 +43,6 @@ public class KickCommand implements OreoCommand {
         var dir = plugin.getPlayerDirectory();
         var bridge = plugin.getModBridge();
 
-        // 1) LOCAL ONLINE first
         Player local = Bukkit.getPlayerExact(arg);
         if (local != null && local.isOnline()) {
             String kickMsg = Lang.msgWithDefault(
@@ -63,14 +61,12 @@ public class KickCommand implements OreoCommand {
             return true;
         }
 
-        // 2) NETWORK-wide UUID lookup
         UUID uuid = null;
 
         try {
             if (dir != null) uuid = dir.lookupUuidByName(arg);
         } catch (Throwable ignored) { }
 
-        // Fallback: try parsing UUID
         if (uuid == null) {
             try {
                 uuid = UUID.fromString(arg);
@@ -83,7 +79,6 @@ public class KickCommand implements OreoCommand {
             return true;
         }
 
-        // 3) Name lookup
         String targetName = arg;
         try {
             if (dir != null) {
@@ -92,7 +87,6 @@ public class KickCommand implements OreoCommand {
             }
         } catch (Throwable ignored) { }
 
-        // 4) CROSS-SERVER KICK via ModBridge
         if (bridge != null) {
             bridge.kick(uuid, targetName, reason);
 
@@ -104,7 +98,6 @@ public class KickCommand implements OreoCommand {
             return true;
         }
 
-        // 5) If no bridge, fail safely
         Lang.send(sender, "moderation.kick.no-bridge",
                 "<red>Target is not on this server and cross-server mod bridge is unavailable.</red>");
         return true;

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/aliases/AliasEditorGUI.java
 package fr.elias.oreoEssentials.aliases;
 
 import fr.minuskube.inv.ClickableItem;
@@ -17,11 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * SmartInvs-driven GUI for managing OreoEssentials Aliases.
- * Includes: enable/disable, run-as, cooldown, checks, commands,
- * perm-gate toggle, custom tab-completion toggle and editor.
- */
+
 public final class AliasEditorGUI {
 
     private final AliasService service;
@@ -42,9 +37,7 @@ public final class AliasEditorGUI {
                 .open(viewer);
     }
 
-    /* ======================================================================
-     * Providers
-     * ====================================================================== */
+
 
     private static final class MainProvider implements InventoryProvider {
         private final AliasService service;
@@ -141,7 +134,6 @@ public final class AliasEditorGUI {
                             + " §8(§7groups:§f " + (def.customTabs == null ? 0 : def.customTabs.size()) + "§8)"
             ))));
 
-            // Enabled toggle
             c.set(2, 2, ClickableItem.of(
                     makeNamed(def.enabled ? Material.LIME_CONCRETE : Material.RED_CONCRETE,
                             def.enabled ? "§aEnabled" : "§cDisabled",
@@ -151,7 +143,6 @@ public final class AliasEditorGUI {
                         reopen(p); }
             ));
 
-            // Run-as toggle
             c.set(2, 4, ClickableItem.of(
                     makeNamed(Material.COMMAND_BLOCK, "§eRun-as: §f" + def.runAs, List.of(
                             "§7Click to toggle to " + (def.runAs == AliasService.RunAs.PLAYER ? "§fCONSOLE" : "§fPLAYER"))),
@@ -160,7 +151,6 @@ public final class AliasEditorGUI {
                         reopen(p); }
             ));
 
-            // Cooldown cycle
             c.set(2, 6, ClickableItem.of(
                     makeNamed(Material.CLOCK, "§bCooldown: §f" + def.cooldownSeconds + "s", List.of(
                             "§7Click to cycle (0→5→30→60→0)")),
@@ -169,7 +159,6 @@ public final class AliasEditorGUI {
                         reopen(p); }
             ));
 
-            // Checks (view/delete) & logic toggle
             c.set(3, 2, ClickableItem.of(
                     makeNamed(Material.WRITABLE_BOOK, "§dChecks (" + (def.checks == null ? 0 : def.checks.size()) + ")", List.of(
                             "§7View / remove checks",
@@ -177,7 +166,6 @@ public final class AliasEditorGUI {
                     e -> new ChecksProvider(service, invManager, aliasName).open(p)
             ));
 
-            // Commands viewer
             c.set(3, 4, ClickableItem.of(
                     makeNamed(Material.BOOK, "§dCommands (" + def.commands.size() + ")", List.of(
                             "§7View lines",
@@ -186,7 +174,6 @@ public final class AliasEditorGUI {
                     e -> new CommandsProvider(service, invManager, aliasName).open(p)
             ));
 
-            //  Perm-gate toggle
             c.set(3, 6, ClickableItem.of(
                     makeNamed(def.permGate ? Material.TRIPWIRE_HOOK : Material.IRON_DOOR,
                             "§bPerm Gate: " + (def.permGate ? "§aON" : "§cOFF"),
@@ -198,7 +185,6 @@ public final class AliasEditorGUI {
                     }
             ));
 
-            //  Custom Tabs toggle + editor
             c.set(4, 2, ClickableItem.of(
                     makeNamed(def.addTabs ? Material.GLOWSTONE : Material.REDSTONE_LAMP,
                             "§bTab-Complete: " + (def.addTabs ? "§aON" : "§cOFF"),
@@ -372,9 +358,6 @@ public final class AliasEditorGUI {
         @Override public void update(Player player, InventoryContents contents) {}
     }
 
-    /* ======================================================================
-     *  Custom Tabs Provider (view / edit per-argument suggestions)
-     * ====================================================================== */
 
     private static final class CustomTabsProvider implements InventoryProvider {
         private final AliasService service;
@@ -409,7 +392,6 @@ public final class AliasEditorGUI {
                     "§7Toggle tabs: §f/aliaseditor tabs " + alias + " <true|false>"
             ))));
 
-            // Toggle tabs (ON/OFF)
             c.set(5, 4, ClickableItem.of(
                     makeNamed(def.addTabs ? Material.GLOWSTONE : Material.REDSTONE_LAMP,
                             "§bTab-Complete: " + (def.addTabs ? "§aON" : "§cOFF"),
@@ -421,7 +403,6 @@ public final class AliasEditorGUI {
                     }
             ));
 
-            // Clear all groups
             c.set(5, 6, ClickableItem.of(
                     makeNamed(Material.BARRIER, "§cClear All Groups", List.of(
                             "§7Click to run:", "§f/aliaseditor cleartabs " + alias)),
@@ -431,11 +412,9 @@ public final class AliasEditorGUI {
                     }
             ));
 
-            // Back
             c.set(5, 0, ClickableItem.of(makeNamed(Material.ARROW, "§eBack", List.of()),
                     e -> new DetailProvider(service, invManager, alias).open(p)));
 
-            // List all groups (1..n)
             List<ClickableItem> items = new ArrayList<>();
             int groups = (def.customTabs == null) ? 0 : def.customTabs.size();
             for (int i = 0; i < groups; i++) {
@@ -469,7 +448,6 @@ public final class AliasEditorGUI {
                 }));
             }
 
-            // Add a "Create next group" button
             int nextIndex = Math.max(1, groups + 1);
             ItemStack create = makeNamed(Material.GREEN_WOOL, "§aCreate Group #" + nextIndex, List.of(
                     "§7Click to put example command in chat:",
@@ -494,9 +472,7 @@ public final class AliasEditorGUI {
         @Override public void update(Player player, InventoryContents contents) {}
     }
 
-    /* ======================================================================
-     * Utils
-     * ====================================================================== */
+
 
     private static int nextCooldown(int cur) {
         if (cur <= 0) return 5;

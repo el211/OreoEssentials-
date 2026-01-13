@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/DeathBackCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -27,7 +26,6 @@ public class DeathBackCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         Player p = (Player) sender;
 
-        // Check if player has a death location stored
         Location loc = deathBack.getLastDeath(p.getUniqueId());
         if (loc == null) {
             Lang.send(p, "deathback.no-location",
@@ -35,14 +33,11 @@ public class DeathBackCommand implements OreoCommand {
             return true;
         }
 
-        // Attempt teleport
         boolean ok = p.teleport(loc);
         if (ok) {
             Lang.send(p, "deathback.success",
                     "<green>Teleported to your last death.</green>");
 
-            // Optional: clear after use
-            // deathBack.clear(p.getUniqueId());
         } else {
             Lang.send(p, "deathback.failed",
                     "<red>Teleport failed.</red>");

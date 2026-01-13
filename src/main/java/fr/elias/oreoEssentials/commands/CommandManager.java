@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/CommandManager.java
 package fr.elias.oreoEssentials.commands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -14,22 +13,18 @@ import java.util.*;
 public class CommandManager {
     private final OreoEssentials plugin;
 
-    /** map of primary names and aliases -> command */
     private final Map<String, OreoCommand> byName = new HashMap<>();
 
     public CommandManager(OreoEssentials plugin) {
         this.plugin = plugin;
     }
 
-    /** Fluent registration used throughout your bootstrap chain. */
     public CommandManager register(OreoCommand cmd) {
-        // Track by primary + aliases (lowercased)
         byName.put(cmd.name().toLowerCase(Locale.ROOT), cmd);
         for (String a : cmd.aliases()) {
             byName.put(a.toLowerCase(Locale.ROOT), cmd);
         }
 
-        // Ensure command exists in Bukkit's CommandMap (plugin.yml or dynamic)
         ensureBukkitCommand(cmd.name(), cmd);
         for (String a : cmd.aliases()) {
             ensureBukkitCommand(a, cmd);
@@ -37,19 +32,14 @@ public class CommandManager {
         return this;
     }
 
-    /* ------------------------------------------------------------------ */
-    /*                            Wiring layer                             */
-    /* ------------------------------------------------------------------ */
 
     private void ensureBukkitCommand(String label, OreoCommand cmd) {
-        // 1) if declared in plugin.yml, just set executor/completer
         PluginCommand pc = plugin.getCommand(label);
         if (pc != null) {
             wire(pc, cmd);
             return;
         }
 
-        // 2) otherwise, create + register dynamically via CommandMap
         try {
             CommandMap map = getCommandMap();
             if (map == null) {
@@ -63,7 +53,6 @@ public class CommandManager {
                 return;
             }
 
-            // ---- Metadata from OreoCommand (with reflection-friendly helpers)
             String desc  = metaDescription(cmd);
             String usage = metaUsage(cmd);
             String perm  = metaPermission(cmd);
@@ -72,7 +61,6 @@ public class CommandManager {
             created.setUsage("/" + cmd.name() + (usage == null || usage.isEmpty() ? "" : " " + usage));
             if (perm != null && !perm.isEmpty()) created.setPermission(perm);
 
-            // Register under your plugin's name as fallback prefix
             boolean ok = map.register(plugin.getDescription().getName(), created);
             if (!ok) {
                 plugin.getLogger().warning("[Commands] Failed to register '" + label + "' into CommandMap.");
@@ -85,11 +73,9 @@ public class CommandManager {
     }
 
     private void wire(PluginCommand pc, OreoCommand cmd) {
-        // central dispatcher
         Exec exec = new Exec();
         pc.setExecutor(exec);
 
-        // If your OreoCommand implements TabCompleter, wire it; else keep dispatcher (empty list)
         if (cmd instanceof TabCompleter tc) {
             pc.setTabCompleter(tc);
         } else {
@@ -105,7 +91,6 @@ public class CommandManager {
 
     private CommandMap getCommandMap() {
         try {
-            // CraftBukkit: org.bukkit.craftbukkit.CraftServer has field "commandMap"
             Field f = Bukkit.getServer().getClass().getDeclaredField("commandMap");
             f.setAccessible(true);
             return (CommandMap) f.get(Bukkit.getServer());
@@ -125,14 +110,10 @@ public class CommandManager {
         }
     }
 
-    /* ------------------------------------------------------------------ */
-    /*                           Central Exec                              */
-    /* ------------------------------------------------------------------ */
 
     private final class Exec implements TabExecutor {
         @Override
         public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-            // prefer the typed label (alias) first; fallback to command name
             String key = label.toLowerCase(Locale.ROOT);
             OreoCommand cmd = byName.get(key);
             if (cmd == null) {
@@ -180,9 +161,6 @@ public class CommandManager {
         }
     }
 
-    /* ------------------------------------------------------------------ */
-    /*                       Reflection meta helpers                       */
-    /* ------------------------------------------------------------------ */
 
     private String metaDescription(OreoCommand cmd) { return callString(cmd, "description", "getDescription"); }
     private String metaUsage(OreoCommand cmd)       { return callString(cmd, "usage", "getUsage"); }

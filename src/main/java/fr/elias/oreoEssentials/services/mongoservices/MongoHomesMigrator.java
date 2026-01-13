@@ -16,15 +16,7 @@ public final class MongoHomesMigrator {
 
     private MongoHomesMigrator() {}
 
-    /**
-     * Normalizes/repairs the "server" field in both:
-     *   - <prefix>homes
-     *   - <prefix>home_directory
-     *
-     * It will:
-     *  - change legacy names (e.g. "Purpur" or Bukkit server name) to desiredName
-     *  - set missing/empty/NULL server fields to desiredName
-     */
+
     public static void run(MongoClient client, String dbName, String prefix, String legacyName, String desiredName, java.util.logging.Logger log) {
         MongoDatabase db = client.getDatabase(dbName);
         MongoCollection<Document> homes = db.getCollection(prefix + "homes");

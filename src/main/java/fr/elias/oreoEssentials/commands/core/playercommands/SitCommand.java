@@ -57,7 +57,6 @@ public class SitCommand implements OreoCommand {
             return true;
         }
 
-        // If already sitting on one of our seats -> stand up (toggle behavior)
         if (isSitting(p)) {
             standUp(p);
             Lang.send(p, "sit.stand",
@@ -65,7 +64,6 @@ public class SitCommand implements OreoCommand {
             return true;
         }
 
-        // Basic state checks
         if (p.getVehicle() != null) {
             Lang.send(p, "sit.already-riding",
                     "<red>You're already riding something.</red>");
@@ -84,11 +82,9 @@ public class SitCommand implements OreoCommand {
             return true;
         }
 
-        // Determine base block to sit on
         Location playerLoc = p.getLocation();
         Block blockBelow = playerLoc.getBlock().getRelative(BlockFace.DOWN);
 
-        // If literally in the air (edge cases like slabs / carpets), fallback
         if (blockBelow.getType() == Material.AIR) {
             blockBelow = playerLoc.getBlock();
         }
@@ -99,20 +95,16 @@ public class SitCommand implements OreoCommand {
             return true;
         }
 
-        // Compute center of the block with Y offset depending on type
         double x = blockBelow.getX() + 0.5;
         double z = blockBelow.getZ() + 0.5;
         double y = blockBelow.getY();
 
         double yOffset;
         if (Tag.STAIRS.isTagged(blockBelow.getType())) {
-            // Sitting on stairs: lower to feel like you're on the step
             yOffset = 0.3;
         } else if (Tag.SLABS.isTagged(blockBelow.getType())) {
-            // Half-block: slightly lower than full block
             yOffset = 0.2;
         } else {
-            // Default: normal solid block / anything else
             yOffset = 0.4;
         }
 
@@ -121,14 +113,12 @@ public class SitCommand implements OreoCommand {
                 x,
                 y + yOffset,
                 z,
-                playerLoc.getYaw(), // keep player's facing direction
+                playerLoc.getYaw(),
                 0f
         );
 
-        // Clean up any existing Oreo seats at this exact block (avoid stacking armor stands)
         cleanupExistingSeats(blockBelow, seatLoc);
 
-        // Spawn invisible marker armor stand as the "seat"
         ArmorStand seat = blockBelow.getWorld().spawn(seatLoc, ArmorStand.class, as -> {
             as.setInvisible(true);
             as.setMarker(true);         // no hitbox
@@ -142,10 +132,8 @@ public class SitCommand implements OreoCommand {
             as.addScoreboardTag(SEAT_TAG);
         });
 
-        // Mount the player
         seat.addPassenger(p);
 
-        // Feedback to player
         Lang.send(p, "sit.sat",
                 "<green>You sat down on <yellow>%block%</yellow>.</green>",
                 Map.of("block", blockBelow.getType().name().toLowerCase()));
@@ -153,9 +141,7 @@ public class SitCommand implements OreoCommand {
         return true;
     }
 
-    /**
-     * Checks if the player is currently sitting on an OreoEssentials seat.
-     */
+
     private boolean isSitting(Player p) {
         Entity vehicle = p.getVehicle();
         if (vehicle == null) return false;
@@ -163,10 +149,7 @@ public class SitCommand implements OreoCommand {
         return stand.getScoreboardTags().contains(SEAT_TAG);
     }
 
-    /**
-     * Makes the player stand up if riding an OreoEssentials sit seat.
-     * Also removes the underlying armor stand.
-     */
+
     private void standUp(Player p) {
         Entity vehicle = p.getVehicle();
         if (vehicle instanceof ArmorStand stand &&
@@ -176,10 +159,7 @@ public class SitCommand implements OreoCommand {
         }
     }
 
-    /**
-     * Remove any existing SEAT_TAG armor stands at / near the same block
-     * to avoid leftover seats or stacked seats.
-     */
+
     private void cleanupExistingSeats(Block blockBelow, Location seatLoc) {
         double radius = 0.6; // small radius around the block center
         for (Entity e : blockBelow.getWorld().getNearbyEntities(seatLoc, radius, radius, radius)) {

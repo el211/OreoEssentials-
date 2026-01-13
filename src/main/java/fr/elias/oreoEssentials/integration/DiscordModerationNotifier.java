@@ -13,7 +13,6 @@ import java.util.UUID;
 
 public class DiscordModerationNotifier {
 
-    // ADDED: JAIL, UNJAIL
     public enum EventType { KICK, BAN, UNBAN, MUTE, UNMUTE, JAIL, UNJAIL }
 
     private final Plugin plugin;
@@ -24,8 +23,7 @@ public class DiscordModerationNotifier {
 
 
     public DiscordModerationNotifier(Plugin plugin) {
-        // NOTE: CustomConfig expects OreoEssentials, but it extends JavaPlugin so this is fine.
-        // We keep the exact constructor signature you used elsewhere.
+
         this.plugin = plugin;
         this.cfg = new CustomConfig(OreoEssentials.get(), "discord-integration.yml");
         reload();
@@ -37,7 +35,6 @@ public class DiscordModerationNotifier {
         this.defaultWebhook    = safe(c.getString("default_webhook", ""));
         this.includeServerName = c.getBoolean("include_server_name", true);
 
-        // ---- existing defaults (unchanged) ----
         setDefaultIfMissing("events.kick.enabled", true);
         setDefaultIfMissing("events.kick.username", "Oreo Moderation");
         setDefaultIfMissing("events.kick.prefix", "**[KICK]**");
@@ -192,12 +189,7 @@ public class DiscordModerationNotifier {
         });
     }
 
-    /* ------------------ Template rendering (SAFE) ------------------ */
 
-    /**
-     * Replaces simple tokens like {player}, {uuid}, {reason}, {by}, {until_abs}, {until_rel}, {until_desc}, {server}
-     * with provided values. Single-pass key replacement, no loops -> cannot hang.
-     */
     private String renderTemplate(String template, Map<String,String> placeholders) {
         if (template == null) template = "";
         String out = template;

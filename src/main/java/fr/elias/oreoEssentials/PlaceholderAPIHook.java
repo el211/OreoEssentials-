@@ -20,15 +20,9 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Consolidated PlaceholderAPI hook for OreoEssentials.
- * Supports: economy, kits, playtime/prewards, player vaults, homes (safe fallbacks).
- *
- * Identifier: %oreo_<id>%
- */
 public class PlaceholderAPIHook extends PlaceholderExpansion {
     private final OreoEssentials plugin;
-    private final Economy economy; // may be null
+    private final Economy economy;
 
     public PlaceholderAPIHook(OreoEssentials plugin) {
         this.plugin = plugin;
@@ -46,12 +40,18 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         if (player == null) return "";
         final String id = idRaw.toLowerCase(Locale.ROOT);
 
-        /* ---------------- Economy ---------------- */
         if (id.equals("balance")) {
             if (economy == null) return "0";
             return String.valueOf(economy.getBalance(player));
         }
-        /* ---------------- SERVER NICKNAMES ---------------- */
+        if (id.equals("balance_formatted")) {
+            if (economy == null) return "0";
+            double bal = economy.getBalance(player);
+
+            java.text.DecimalFormat df = new java.text.DecimalFormat("#,##0.##");
+            return df.format(bal);
+        }
+
         if (id.equals("server_name")) {
             return Bukkit.getServer().getName();
         }
@@ -66,7 +66,6 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             return resolveServerNick(serverId);
         }
 
-        /* ---------------- KITS ---------------- */
         if (id.equals("kits_enabled")) {
             KitsManager km = kits();
             return (km != null && km.isEnabled()) ? "true" : "false";
@@ -113,8 +112,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             long left = Math.max(0, km.getSecondsLeft(p, k));
             return left <= 0 ? "ready" : String.valueOf(left);
         }
-// %oreo_kit_cooldown_formatted_<id>%
-// OU %oreo_kit_<id>_cooldown_formatted%
+
         if (id.startsWith("kit_cooldown_formatted_") || (id.startsWith("kit_") && id.endsWith("_cooldown_formatted"))) {
             Player p = player.getPlayer();
             if (p == null) return "";
@@ -122,10 +120,8 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             String kitId;
 
             if (id.startsWith("kit_cooldown_formatted_")) {
-                // style: kit_cooldown_formatted_pvp
                 kitId = id.substring("kit_cooldown_formatted_".length());
             } else {
-                // style: kit_pvp_cooldown_formatted
                 String core = id.substring("kit_".length(), id.length() - "_cooldown_formatted".length());
                 kitId = core;
             }
@@ -137,18 +133,14 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
 
             long left = Math.max(0, km.getSecondsLeft(p, k));
             if (left <= 0) {
-                // texte quand le kit est prêt (tu peux mettre ça dans lang.yml si tu veux)
                 return "ready";
-                // ou ex.:
-                // return Lang.get("kits.placeholder.ready", "ready");
+
             }
 
-            // Temps formaté, genre "3m 25s"
             return Lang.timeHuman(left);
         }
 
 
-        /* -------- PLAYTIME / PLAYTIME-REWARDS -------- */
         if (id.equals("playtime_total_seconds")) {
             long secs = playtimeTotalSeconds(player);
             return String.valueOf(secs);
@@ -176,10 +168,9 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             String rewardId = id.substring("prewards_state_".length());
             var entry = svc.rewards.get(rewardId);
             if (entry == null) return "";
-            return svc.stateOf(p, entry).name(); // LOCKED | READY | CLAIMED | REPEATING
+            return svc.stateOf(p, entry).name();
         }
 
-        /* ---------------- PLAYER VAULTS ---------------- */
         if (id.equals("vaults_enabled")) {
             PlayerVaultsService pv = pvService();
             return (pv != null && pv.enabled()) ? "true" : "false";
@@ -256,14 +247,12 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             return org.bukkit.ChatColor.translateAlternateColorCodes('&', title);
         }
 
-        /* ---------------- HOMES (safe reflection) ---------------- */
         if (id.equals("homes_used") || id.equals("homes_max") || id.equals("homes")) {
             int used = 0;
             int max  = 0;
             try {
                 Object homes = homeService();
                 if (homes != null && player.getUniqueId() != null) {
-                    // call: homes.homes(UUID) -> Collection/Map size
                     Method m = homes.getClass().getMethod("homes", java.util.UUID.class);
                     Object list = m.invoke(homes, player.getUniqueId());
                     if (list instanceof java.util.Collection<?> coll) used = coll.size();
@@ -275,7 +264,6 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                 Object cfg = configService();
                 Player p = player.getPlayer();
                 if (cfg != null && p != null) {
-                    // prefer permission-based max when online
                     Method m = cfg.getClass().getMethod("getMaxHomesFor", org.bukkit.entity.Player.class);
                     Object out = m.invoke(cfg, p);
                     if (out instanceof Number n) max = n.intValue();
@@ -291,10 +279,8 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             return used + "/" + max;
         }
 
-        return null; // unknown placeholder
+        return null;
     }
-
-    /* ---------------- helpers ---------------- */
 
     private boolean isKitReady(KitsManager km, Player p, Kit k) {
         if (!km.isEnabled()) return false;
@@ -307,7 +293,6 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             var c = plugin.getConfig();
             String def = c.getString("server_nicknames.default", serverName);
 
-            // store keys as-is, but compare case-insensitive
             var sec = c.getConfigurationSection("server_nicknames.map");
             if (sec == null) return def;
 
@@ -322,7 +307,6 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         }
     }
 
-    /** Best-effort total seconds using your stack: Prewards.getPlaytimeSeconds -> Tracker -> Bukkit stat. */
     private long playtimeTotalSeconds(OfflinePlayer off) {
         Player p = off.getPlayer();
         if (p != null) {
@@ -352,8 +336,6 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
     private static int parseIntSafe(String s) {
         try { return Integer.parseInt(s); } catch (Exception e) { return -1; }
     }
-
-    /* ---- Reflection getters: keep your API flexible without hard deps ---- */
 
     private KitsManager kits() {
         try {

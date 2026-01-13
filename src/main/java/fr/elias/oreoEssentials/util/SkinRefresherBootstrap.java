@@ -7,7 +7,6 @@ import org.bukkit.Bukkit;
 public final class SkinRefresherBootstrap {
     private SkinRefresherBootstrap() {}
 
-    /** Call this once in onEnable() after plugins are loaded. */
     public static void init(OreoEssentials plugin) {
         boolean hasPE = Bukkit.getPluginManager().getPlugin("PacketEvents") != null
                 || Bukkit.getPluginManager().getPlugin("packetevents") != null;

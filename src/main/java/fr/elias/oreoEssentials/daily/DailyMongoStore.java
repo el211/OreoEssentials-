@@ -18,8 +18,8 @@ public final class DailyMongoStore {
     public static final class Record {
         public UUID uuid;
         public String name;
-        public int streak;                // current consecutive days
-        public long lastClaimEpochDay;    // LocalDate.toEpochDay()
+        public int streak;
+        public long lastClaimEpochDay;
         public int totalClaims;
 
         public LocalDate lastClaimDate() {

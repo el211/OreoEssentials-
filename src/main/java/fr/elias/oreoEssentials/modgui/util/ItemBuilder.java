@@ -11,14 +11,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * ItemStack builder utility for GUI creation.
- *
- * ✅ VERIFIED PERFECT - GUI utility (uses § for visual styling, which is correct)
- *
- * This is a helper class for building ItemStacks for GUI menus.
- * Using § color codes here is the correct practice for GUI item display.
- */
+
 public final class ItemBuilder {
     private final ItemStack item;
 
@@ -52,7 +45,6 @@ public final class ItemBuilder {
         return this;
     }
 
-    /** Add a single enchant (unsafe by default for flexibility in GUIs). */
     public ItemBuilder enchant(Enchantment ench, int level, boolean unsafe) {
         if (unsafe) {
             item.addUnsafeEnchantment(ench, level);
@@ -62,7 +54,6 @@ public final class ItemBuilder {
         return this;
     }
 
-    /** Add any flags you want to hide. */
     public ItemBuilder flags(ItemFlag... flags) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {

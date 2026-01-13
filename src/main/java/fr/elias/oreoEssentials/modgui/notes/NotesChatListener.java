@@ -12,14 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Player notes chat listener.
- *
- * ✅ VERIFIED - Uses Lang.send() for 3 user messages
- *
- * Captures chat input for adding notes to players.
- * Staff types in chat after clicking "Add Note" button.
- */
+
 public class NotesChatListener implements Listener {
 
     private final OreoEssentials plugin;

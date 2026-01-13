@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/GamemodeCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -33,7 +32,6 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (args.length < 1) return false;
 
-        // Parse mode
         String m = args[0].toLowerCase(Locale.ROOT);
         Mode mode = Mode.fromString(m);
         if (mode == null) {
@@ -43,7 +41,6 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
             return true;
         }
 
-        // Target
         Player target;
         if (args.length >= 2) {
             if (!sender.hasPermission("oreo.gamemode.others")) {
@@ -82,7 +79,6 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
     }
 
     private void applyMode(Player p, Mode mode) {
-        // Clear "visitor" by default, re-enable only if choosing visitor
         visitors.setVisitor(p.getUniqueId(), false);
 
         switch (mode) {
@@ -98,7 +94,6 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
     }
 
     enum Mode {
-        // vanilla mapping: 0=SURVIVAL, 1=CREATIVE, 2=ADVENTURE, 3=SPECTATOR, 4=VISITOR (custom)
         SURVIVAL("survival", "s", "0"),
         CREATIVE("creative", "c", "1"),
         ADVENTURE("adventure", "a", "2"),
@@ -127,7 +122,6 @@ public class GamemodeCommand implements OreoCommand, org.bukkit.command.TabCompl
         }
     }
 
-    /* ---------------- Tab Completion ---------------- */
 
     @Override
     public java.util.List<String> onTabComplete(CommandSender sender, org.bukkit.command.Command cmd, String alias, String[] args) {

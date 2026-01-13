@@ -29,31 +29,25 @@ public final class TradeInventoryCloseListener implements Listener {
 
         final UUID viewerId = p.getUniqueId();
 
-        // Prefer a non-destructive lookup so the menu can run its own unregister logic.
         TradeMenu menu = null;
         try {
-            // If you added peek(UUID), use it:
             try {
                 menu = reg.peek(viewerId);
             } catch (NoSuchMethodError | Exception ignored) {
-                // Fallback to get(UUID) if peek isn't present
                 try {
                     menu = reg.get(viewerId);
                 } catch (Throwable ignoredToo) {
-                    // ignore, menu stays null
                 }
             }
 
             if (menu != null) {
                 try {
-                    menu.onClose(p); // menu is responsible for reg.unregister(viewerId)
+                    menu.onClose(p);
                 } catch (Throwable ignored) {}
             } else {
-                // If we don't have an instance, at least make sure the registry is clean.
                 try { reg.unregister(viewerId); } catch (Throwable ignored) {}
             }
         } catch (Throwable ignoredOuter) {
-            // Last-resort cleanup
             try { reg.unregister(viewerId); } catch (Throwable ignored) {}
         }
     }

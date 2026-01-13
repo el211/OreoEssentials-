@@ -18,18 +18,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * World-specific whitelist configuration menu.
- *
- * ✅ VERIFIED - Uses Lang.get() for GUI title + § for GUI items
- *
- * Features:
- * - Enable/disable whitelist for specific world
- * - Add/remove players from whitelist
- * - Visual feedback (white=whitelisted, black=not whitelisted)
- * - Auto-refresh on changes
- * - Back button to return to world actions
- */
+
 public class WorldWhitelistMenu implements InventoryProvider {
     private final OreoEssentials plugin;
     private final ModGuiService svc;
@@ -45,7 +34,6 @@ public class WorldWhitelistMenu implements InventoryProvider {
     public void init(Player p, InventoryContents c) {
         boolean enabled = svc.cfg().worldWhitelistEnabled(world);
 
-        // Toggle whitelist enabled/disabled
         c.set(1, 4, ClickableItem.of(
                 new ItemBuilder(enabled ? Material.LIME_DYE : Material.GRAY_DYE)
                         .name("&fWhitelist: " + (enabled ? "&aENABLED" : "&cDISABLED"))
@@ -59,7 +47,6 @@ public class WorldWhitelistMenu implements InventoryProvider {
                 }
         ));
 
-        // Back button
         c.set(5, 8, ClickableItem.of(
                 new ItemBuilder(Material.ARROW)
                         .name("&7Back")
@@ -75,7 +62,6 @@ public class WorldWhitelistMenu implements InventoryProvider {
                         .open(p)
         ));
 
-        // List online players for quick add/remove
         int row = 3, col = 1;
 
         Set<java.util.UUID> allowed = svc.cfg().worldWhitelist(world);

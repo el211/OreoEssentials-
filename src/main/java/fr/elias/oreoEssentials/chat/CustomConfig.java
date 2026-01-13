@@ -1,18 +1,28 @@
 package fr.elias.oreoEssentials.chat;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
 public class CustomConfig {
+    private final OreoEssentials plugin;
     private final File file;
     private FileConfiguration config;
+    private final String fileName;
 
     public CustomConfig(OreoEssentials plugin, String fileName) {
-        file = new File(plugin.getDataFolder(), fileName);
+        this.plugin = plugin;
+        this.fileName = fileName;
+        this.file = new File(plugin.getDataFolder(), fileName);
+
         try {
             if (!file.exists()) {
                 file.getParentFile().mkdirs();
@@ -25,15 +35,70 @@ public class CustomConfig {
         } catch (IOException e) {
             plugin.getLogger().severe("Error creating " + fileName + ": " + e.getMessage());
         }
+
         config = YamlConfiguration.loadConfiguration(file);
+        mergeDefaults();
     }
 
-    public FileConfiguration getCustomConfig() { return config; }
+    private void mergeDefaults() {
+        InputStream defaultStream = plugin.getResource(fileName);
+        if (defaultStream == null) {
+            return;
+        }
+
+        try (InputStreamReader reader = new InputStreamReader(defaultStream, StandardCharsets.UTF_8)) {
+            FileConfiguration defaultConfig = YamlConfiguration.loadConfiguration(reader);
+
+            boolean modified = false;
+            modified |= mergeSection(defaultConfig, config, "");
+
+            if (modified) {
+                saveCustomConfig();
+                plugin.getLogger().info("[" + fileName + "] Added missing configuration fields from defaults.");
+            }
+        } catch (IOException e) {
+            plugin.getLogger().warning("Failed to merge defaults for " + fileName + ": " + e.getMessage());
+        }
+    }
+
+    private boolean mergeSection(ConfigurationSection defaults, ConfigurationSection current, String path) {
+        boolean modified = false;
+        Set<String> defaultKeys = defaults.getKeys(false);
+
+        for (String key : defaultKeys) {
+            String fullPath = path.isEmpty() ? key : path + "." + key;
+
+            if (!current.contains(key)) {
+                Object defaultValue = defaults.get(key);
+                current.set(key, defaultValue);
+                modified = true;
+                plugin.getLogger().info("[" + fileName + "] Added missing field: " + fullPath);
+            } else if (defaults.isConfigurationSection(key) && current.isConfigurationSection(key)) {
+                ConfigurationSection defaultSection = defaults.getConfigurationSection(key);
+                ConfigurationSection currentSection = current.getConfigurationSection(key);
+                if (defaultSection != null && currentSection != null) {
+                    modified |= mergeSection(defaultSection, currentSection, fullPath);
+                }
+            }
+        }
+
+        return modified;
+    }
+
+    public FileConfiguration getCustomConfig() {
+        return config;
+    }
 
     public void saveCustomConfig() {
-        try { config.save(file); }
-        catch (IOException e) { OreoEssentials.get().getLogger().severe("Failed to save " + file.getName() + ": " + e.getMessage()); }
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to save " + file.getName() + ": " + e.getMessage());
+        }
     }
 
-    public void reloadCustomConfig() { config = YamlConfiguration.loadConfiguration(file); }
+    public void reloadCustomConfig() {
+        config = YamlConfiguration.loadConfiguration(file);
+        mergeDefaults();
+    }
 }

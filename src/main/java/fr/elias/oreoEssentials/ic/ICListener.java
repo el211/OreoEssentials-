@@ -23,7 +23,6 @@ public final class ICListener implements Listener {
 
     public ICListener(ICManager mgr) { this.mgr = mgr; }
 
-    // Right-click BLOCK
     @EventHandler(ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent e) {
         Action a = e.getAction();
@@ -40,7 +39,6 @@ public final class ICListener implements Listener {
         }
     }
 
-    // Right-click ENTITY
     @EventHandler(ignoreCancelled = true)
     public void onInteractEntity(PlayerInteractAtEntityEvent e) {
         Entity en = e.getRightClicked();
@@ -53,7 +51,6 @@ public final class ICListener implements Listener {
         }
     }
 
-    // Public sign creation: [ic:name] on line 1
     @EventHandler(ignoreCancelled = true)
     public void onSignChange(SignChangeEvent e) {
         String l0 = e.getLine(0);
@@ -70,19 +67,16 @@ public final class ICListener implements Listener {
             e.getPlayer().sendMessage("§cNo public IC with name §f" + name);
             return;
         }
-        // save block as bound
         Block b = e.getBlock();
         ic.blocks.add(ICPos.of(b));
         mgr.save();
 
-        // prettify sign
         e.setLine(0, ChatColor.DARK_PURPLE + "[IC]");
         e.setLine(1, ChatColor.GOLD + name);
         // lines 3-4 remain user's variables ($1..$n)
         e.getPlayer().sendMessage("§aPublic IC sign added for §f" + name + "§a.");
     }
 
-    // --- execution ---
     private void run(ICEntry ic, Player clicker, ICPos posOrNull) {
         List<String> signArgs = posOrNull == null ? Collections.emptyList() : ic.signArgsAt(posOrNull);
         for (String raw : ic.commands) {

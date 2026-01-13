@@ -1,5 +1,5 @@
 name: OreoEssentials
-version: "2.7-SNAPSHOT"
+version: "2.8-SNAPSHOT"
 main: fr.elias.oreoEssentials.OreoEssentials
 api-version: "1.21"
 description: "All-in-one essentials plugin with homes/warps/spawn, RTP, economy (Vault), chat tools, portals/jump pads, cross-server EC & player sync."
@@ -19,6 +19,12 @@ commands:
   spawn:
     description: Teleport to spawn
     permission: oreo.spawn
+
+  tempfly:
+    description: Toggle temporary flight
+    usage: /<command> [on|off|time]
+    aliases: [tfly, temporaryflight]
+    permission: oe.tempfly.use
 
   trade:
     description: Open a trade with another player
@@ -321,6 +327,13 @@ commands:
     permission: oreo.cook
     usage: "/cook [amount|max]"
 
+
+  shard:
+    description: Manage world sharding
+    usage: /shard <create|info|list|setup|reload>
+    permission: oreo.shard.admin
+    aliases: [ shards, worldshard ]
+
   clear:
     description: Clear inventory (/clear or /ci [player])
     aliases: [ ci ]
@@ -529,6 +542,12 @@ commands:
     permission: oreo.prewards
     usage: "/prewards [claim <id> [player]] | /prewards reload"
 
+  oesettings:
+    description: Open settings GUI
+    usage: /<command>
+    aliases: [ oeconfig, oecfg ]
+    permission: oreo.admin.settings
+
   daily:
     description: Daily rewards command
     usage: /daily [claim|top]
@@ -566,20 +585,37 @@ commands:
     usage: /warpsadmin
     aliases: [ warpsgui, warpguiadmin ]
     permission: oreo.warps.admin
-  channel:
-    description: Manage chat channels
-    usage: /channel <list|join|leave|speak>
-    permission: oreoessentials.channel.command
-  channels:
-    description: Open the Channels GUI
-    usage: "/channels"
-    aliases: [ ch, chgui ]
-    permission: oreo.channels.gui.open
 
   pwwhitelist:
     description: Manage player warp whitelists
     usage: /pwwhitelist <add|remove> <warp> <player>
     permission: oreo.playerwarps.whitelist
+
+  # ═══════════════════════════════════════════════════════════════
+  # CHAT CHANNELS SYSTEM COMMANDS
+  # ═══════════════════════════════════════════════════════════════
+  channelannounce:
+    description: Send an announcement to a specific channel
+    usage: /<command> <channel> <message>
+    permission: oreo.channel.announce
+    aliases: [channelbroadcast, chanannounce, ca]
+
+  oechannels:
+    description: Open chat channels GUI
+    usage: /<command>
+    aliases: [channels, ch]
+    permission: oreo.chat.channels
+
+  oechannel:
+    description: Switch to a specific chat channel
+    usage: /<command> <channel>
+    aliases: [channel, setchannel]
+    permission: oreo.chat.channel
+
+  # ═══════════════════════════════════════════════════════════════
+  # END CHAT CHANNELS COMMANDS
+  # ═══════════════════════════════════════════════════════════════
+
 permissions:
   oreo.*:
     description: All OreoEssentials features
@@ -659,11 +695,9 @@ permissions:
       oreo.invsee: true
       oreo.ecsee: true
       oreo.bossbar.toggle: true
-    oreo.vault.menu:
-      default: true
-    oreo.homes.gui:
-      description: Allows opening the Homes GUI
-      default: true
+      oreo.chat.channels: true
+      oreo.chat.channel: true
+
   # Basics
   oreo.spawn:               { default: true }
   oreo.setspawn:            { default: op }
@@ -725,11 +759,7 @@ permissions:
   oreo.vault.use.*:         {default: false}
   oreo.vault.use.1:         { default: false }
   oreo.vault.use.2:         { default: false }
-  oreoessentials.channel.command: { default: true }
-  oreoessentials.channel.autojoin.*: { default: false }
-  oreoessentials.channel.join.*: { default: true }
-  oreoessentials.channel.leave.*: { default: true }
-  oreoessentials.channel.*: { default: true }
+
   # QoL toggles & GUIs
   oreo.sync:                { default: true }
   oreo.afk:                 { default: true }
@@ -897,9 +927,6 @@ permissions:
   oreo.prewards:
     description: Use /prewards (open GUI, claim own rewards)
     default: true
-  oreo.channels.gui.open:
-    description: Allows opening the Channels SmartInvs GUI (/channels)
-    default: true
 
   oreo.prewards.notify:
     description: Receive reminders when rewards are ready
@@ -923,6 +950,10 @@ permissions:
     description: Use the admin warps GUI (delete/toggle permission)
     default: op
 
+  oreo.shard.admin:
+    description: Access to shard management commands
+    default: op
+
   oreo.warp.delete:
     description: Allows deleting warps from the admin GUI
     default: op
@@ -931,12 +962,103 @@ permissions:
   oreo.prewards.mvp_daily:  { default: false }
     # Example: any other reward ids you define can get a matching perm:
     # oreo.prewards.hourly1:  { default: true }
-    # oreo.prewards.daily1:   { default: true }
+  # oreo.prewards.daily1:   { default: true }
   oreo.prewards.*:             { default: op }
-  daily:
-    description: Daily rewards command
-    usage: /daily [claim|top]
-    aliases: [dr, dailyrewards]
-    permission: oreo.daily
+
   OreoHolograms.admin:
     default: op
+
+  oreo.vault.menu:
+    default: true
+
+  oreo.homes.gui:
+    description: Allows opening the Homes GUI
+    default: true
+
+  # ═══════════════════════════════════════════════════════════════
+  # CHAT CHANNELS SYSTEM PERMISSIONS
+  # ═══════════════════════════════════════════════════════════════
+
+  # Base channel permissions
+  oreo.chat.channels:
+    description: Open the chat channels GUI (/oechannels)
+    default: true
+
+  oreo.chat.channel:
+    description: Switch channels using /oechannel
+    default: true
+
+  # Per-channel permissions (optional - if permission is null in config, everyone can use)
+  # Global channel
+  oreo.chat.channel.global.talk:
+    description: Send messages in global channel
+    default: true
+
+  oreo.chat.channel.global.view:
+    description: See messages in global channel
+    default: true
+
+  oreo.chat.channel.global.join:
+    description: Join the global channel
+    default: true
+
+  # Local channel
+  oreo.chat.channel.local.talk:
+    description: Send messages in local channel
+    default: true
+
+  oreo.chat.channel.local.view:
+    description: See messages in local channel
+    default: true
+
+  oreo.chat.channel.local.join:
+    description: Join the local channel
+    default: true
+
+  # Trade channel
+  oreo.chat.channel.trade.talk:
+    description: Send messages in trade channel
+    default: true
+
+  oreo.chat.channel.trade.view:
+    description: See messages in trade channel
+    default: true
+
+  oreo.chat.channel.trade.join:
+    description: Join the trade channel
+    default: true
+
+  # Help channel
+  oreo.chat.channel.help.talk:
+    description: Send messages in help channel
+    default: true
+
+  oreo.chat.channel.help.view:
+    description: See messages in help channel (usually for staff)
+    default: op
+
+  oreo.chat.channel.help.join:
+    description: Join the help channel
+    default: true
+
+  # Staff channel
+  oreo.chat.channel.staff.talk:
+    description: Send messages in staff channel
+    default: op
+
+  oreo.chat.channel.staff.view:
+    description: See messages in staff channel
+    default: op
+
+  oreo.chat.channel.staff.join:
+    description: Join the staff channel
+    default: op
+
+  # Admin permission - bypass all channel restrictions
+  oreo.chat.channel.admin:
+    description: Bypass all channel restrictions
+    default: op
+
+  # ═══════════════════════════════════════════════════════════════
+  # END CHAT CHANNELS PERMISSIONS
+  # ═══════════════════════════════════════════════════════════════

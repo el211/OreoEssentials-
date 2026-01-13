@@ -103,25 +103,61 @@ Jail:
 #---------------------------------------------------------------------
 #---------------------------------------------------------------------
 #---------------------------------------------------------------------
+# -------- Scoreboard (sidebar) --------
+# -------- Scoreboard (sidebar) --------
 scoreboard:
   default-enabled: true
   update-ticks: 20
+
   title:
     frame-ticks: 10
     frames:
-      - "&d&lOreo&f&lEssentials"
-      - "&5&lOreo&f&lEssentials"
-      - "&d&lOreo&f&lEssentials"
+      - "&9&lOreo&b&lEssentials"
+      - "&b&lOreo&9&lEssentials"
+      - "&9&lOreo&b&lEssentials"
+
   lines:
-    - "&7Player: &f{player}"
-    - "&7Money: &f%vault_eco_balance_formatted%"
-    - "&7Online: &f%server_online%/%server_max_players%"
-    - ""
-    - "&7TPS: &f%server_tps_1%"
-    - "&7Ping: &f%player_ping%"
+    - "%animations_<tag interval=20>
+       &8&m------------------------
+       |
+       &9&m------------------------
+       </tag>%"
+
+    - "%animations_<tag interval=20>
+       &7Player: &9{player}
+       |
+       &7Player: &b{player}
+       </tag>%"
+
+    - "%animations_<tag interval=20>
+       &7Money: &9$%vault_eco_balance_formatted%
+       |
+       &7Money: &b$%vault_eco_balance_formatted%
+       </tag>%"
+
+    - "%animations_<tag interval=20>
+       &7Online: &9%server_online%&7/&f%server_max_players%
+       |
+       &7Online: &b%server_online%&7/&f%server_max_players%
+       </tag>%"
+
+    - "%animations_<tag interval=20>
+       &7World: &9%player_world%
+       |
+       &7World: &b%player_world%
+       </tag>%"
+
+    - "%animations_<tag interval=20>
+       &8&m------------------------
+       |
+       &9&m------------------------
+       </tag>%"
+
   worlds:
-    whitelist: []   # show only in these worlds (empty = all)
-    blacklist: []   # or hide in these worlds
+    whitelist: []
+    blacklist: []
+
+
 
 
 #---------------------------------------------------------------------
@@ -277,12 +313,13 @@ Join_messages:
     - "faction_nether"
 
   look_like_player: true
-  player_name: "<gradient:#FF1493:#00FF7F>Afelius</gradient>"
-  player_prefix: "<gradient:#8A2BE2:#00FFFF>[</gradient>"
+  player_name: "<gradient:#9BE8FF:#00D4FF>Oreobot</gradient>"
+  player_prefix: "<gradient:#00D4FF:#1E90FF>[</gradient>"
   delimiter: " | "
   join_message_delay: 0
-  first_join: "<gradient:#FF1493:#00FF7F>Welcome</gradient> <gradient:#00FF7F:#1E90FF>{name}</gradient> <gradient:#1E90FF:#FF1493>to the server for the first time!</gradient>"
-  rejoin_message: "<gradient:#00FF7F:#1E90FF>{name}</gradient> <gradient:#1E90FF:#FF1493>has joined the game.</gradient>"
+
+  first_join: "<gradient:#00D4FF:#1E90FF>Welcome</gradient> <gradient:#1E90FF:#9BE8FF>{name}</gradient> <gradient:#9BE8FF:#00D4FF>to the server for the first time!</gradient>"
+  rejoin_message: "<gradient:#1E90FF:#9BE8FF>{name}</gradient> <gradient:#9BE8FF:#00D4FF>has joined the game.</gradient>"
 
 
 Quit_messages:
@@ -295,68 +332,60 @@ Quit_messages:
     - "faction_nether"
 
   look_like_player: true
-  player_name: "<gradient:#FF1493:#00FF7F>Afelius</gradient>"
-  player_prefix: "<gradient:#8A2BE2:#00FFFF>[</gradient>"
+  player_name: "<gradient:#9BE8FF:#00D4FF>Oreobot</gradient>"
+  player_prefix: "<gradient:#00D4FF:#1E90FF>[</gradient>"
   delimiter: " | "
-  message: "<gradient:#00FF7F:#1E90FF>{name}</gradient> <gradient:#1E90FF:#FF1493>has left the game.</gradient>"
+  message: "<gradient:#1E90FF:#9BE8FF>{name}</gradient> <gradient:#9BE8FF:#00D4FF>has left the game.</gradient>"
 
 
-# -------- Automatic messages (Afelius) --------
+# -------- Automatic messages (Oreobot) --------
 Automatic_message:
   enable: true
   look_like_player: true
-  player_name: "<gradient:#00FF7F:#1E90FF>Afelius</gradient>"
-  player_prefix: "<gradient:#8A2BE2:#00FFFF>[</gradient>"
+  player_name: "<gradient:#9BE8FF:#00D4FF>Oreobot</gradient>"
+  player_prefix: "<gradient:#00D4FF:#1E90FF>[</gradient>"
   delimiter: " | "
+
   messages:
     message1:
-      text: "<gradient:#FF1493:#00FF7F>Don't forget to check our</gradient> <gradient:#00FF7F:#1E90FF>website</gradient> <gradient:#1E90FF:#FF1493>for updates!</gradient>"
+      text: "<gradient:#00D4FF:#1E90FF>Don't forget to check our</gradient> <gradient:#1E90FF:#9BE8FF>website</gradient> <gradient:#9BE8FF:#00D4FF>for updates!</gradient>"
       timer_loop: 50
+
     message2:
-      text: "<gradient:#1E90FF:#FFD700> Type /help for a list of</gradient> <gradient:#FFD700:#FF1493>commands!</gradient>"
+      text: "<gradient:#00D4FF:#1E90FF>Type</gradient> <gradient:#1E90FF:#9BE8FF>/help</gradient> <gradient:#9BE8FF:#00D4FF>for a list of commands!</gradient>"
       timer_loop: 60
+
 
 # -------- Chat bot conversations (Afelius) --------
 conversations:
-  enabled: true   # master toggle for ALL conversation bots (optional but nice)
-  afelius:
-    custom_call_name: "afelius"
-    self_mention_reply: "<gradient:#FF1493:#00FF7F>Hello</gradient>, <gradient:#00FF7F:#1E90FF>{name}</gradient>, <gradient:#1E90FF:#FF1493>how can I assist you today?</gradient>"
-    player_name: "<gradient:#FF1493:#00FF7F>Afelius</gradient>"
-    player_prefix: "<gradient:#00FF7F:#FF1493>[</gradient>"
+  enabled: true
+
+
+  oreobot:
+    custom_call_name: "oreobot"
+
+    # Blue/cyan gradients close to OreoEssentials artwork
+    self_mention_reply: "<gradient:#00D4FF:#1E90FF>Hello</gradient>, <gradient:#1E90FF:#9BE8FF>{name}</gradient><gradient:#9BE8FF:#00D4FF>! How can I assist you today?</gradient>"
+
+    player_name: "<gradient:#9BE8FF:#00D4FF>OREOBOT</gradient>"
+    player_prefix: "<gradient:#00D4FF:#1E90FF>[</gradient>"
     delimiter: " | "
+
     questions:
       question1:
         keyword: "help"
         key_phrase: "i need help"
         replies:
-          - "<gradient:#FF1493:#00FF7F>Sure</gradient>, <gradient:#00FF7F:#1E90FF>{name}</gradient>, <gradient:#1E90FF:#FF1493>what do you need help with?</gradient>"
-          - "<gradient:#00FF7F:#1E90FF>Feel free to</gradient> <gradient:#1E90FF:#FF1493>ask any questions!</gradient>"
+          - "<gradient:#00D4FF:#1E90FF>Sure</gradient>, <gradient:#1E90FF:#9BE8FF>{name}</gradient><gradient:#9BE8FF:#00D4FF> — what do you need help with?</gradient>"
+          - "<gradient:#1E90FF:#00D4FF>Feel free to</gradient> <gradient:#9BE8FF:#00D4FF>ask any questions!</gradient>"
+
       question2:
         keyword: "commands"
         key_phrase: "what are the commands"
         replies:
-          - "<gradient:#FF1493:#00FF7F>You can type /help to see all</gradient> <gradient:#00FF7F:#1E90FF>available</gradient> <gradient:#1E90FF:#FF1493>commands.</gradient>"
-          - "<gradient:#00FF7F:#1E90FF>Check the</gradient> <gradient:#1E90FF:#FFD700>website for a detailed</gradient> <gradient:#FFD700:#FF1493>command list.</gradient>"
-  bot:
-    custom_call_name: "bot"
-    self_mention_reply: "<gradient:#1E90FF:#FFD700>Hello,</gradient> <gradient:#FFD700:#FF1493>{name},</gradient> <gradient:#FF1493:#1E90FF>how can I assist you today?</gradient>"
-    player_name: "<gradient:#FFD700:#FF1493>BOT</gradient>"
-    player_prefix: "<gradient:#1E90FF:#FFD700>[</gradient>"
-    delimiter: " | "
-    questions:
-      question1:
-        keyword: "help"
-        key_phrase: "i need help"
-        replies:
-          - "<gradient:#FFD700:#1E90FF>Sure,</gradient> <gradient:#1E90FF:#FF1493>{name},</gradient> <gradient:#FF1493:#FFD700>what do you need help with?</gradient>"
-          - "<gradient:#1E90FF:#FF1493>Feel free to</gradient> <gradient:#FF1493:#FFD700>ask any questions!</gradient>"
-      question2:
-        keyword: "commands"
-        key_phrase: "what are the commands"
-        replies:
-          - "<gradient:#FFD700:#1E90FF>You can type /help to see all</gradient> <gradient:#1E90FF:#FF1493>available</gradient> <gradient:#FF1493:#FFD700>commands.</gradient>"
-          - "<gradient:#FF1493:#1E90FF>Check the</gradient> <gradient:#1E90FF:#FFD700>website for a detailed</gradient> <gradient:#FFD700:#FF1493>command list.</gradient>"
+          - "<gradient:#00D4FF:#1E90FF>You can type</gradient> <gradient:#1E90FF:#9BE8FF>/help</gradient> <gradient:#9BE8FF:#00D4FF>to see all available commands.</gradient>"
+          - "<gradient:#1E90FF:#00D4FF>Check the</gradient> <gradient:#9BE8FF:#00D4FF>website for a detailed command list.</gradient>"
+
 
 
 

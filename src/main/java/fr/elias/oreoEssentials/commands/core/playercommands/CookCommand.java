@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/CookCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -34,7 +33,6 @@ public class CookCommand implements OreoCommand {
             return true;
         }
 
-        // Find a matching cooking recipe (furnace / smoker / blast furnace / campfire)
         CookingRecipe<?> match = findCookingRecipeFor(hand);
         if (match == null) {
             Lang.send(p, "cook.no-recipe",
@@ -42,7 +40,6 @@ public class CookCommand implements OreoCommand {
             return true;
         }
 
-        // How many to cook?
         int request;
         if (args.length >= 1) {
             if (args[0].equalsIgnoreCase("max") || args[0].equalsIgnoreCase("all")) {
@@ -71,17 +68,14 @@ public class CookCommand implements OreoCommand {
         int perItemOut = Math.max(1, resultProto.getAmount());
         int totalOut = perItemOut * canCook;
 
-        // Remove inputs
         hand.setAmount(hand.getAmount() - canCook);
         p.getInventory().setItemInMainHand(hand.getAmount() > 0 ? hand : null);
 
-        // Give outputs (respect stack sizes)
         ItemStack give = resultProto.clone();
         give.setAmount(Math.min(give.getMaxStackSize(), totalOut));
         var leftover = p.getInventory().addItem(give);
 
         int remaining = totalOut - give.getAmount();
-        // If more than one stack is needed
         while (remaining > 0) {
             ItemStack more = resultProto.clone();
             int add = Math.min(more.getMaxStackSize(), remaining);
@@ -91,20 +85,16 @@ public class CookCommand implements OreoCommand {
             if (!leftover.isEmpty()) break; // inventory full
         }
 
-        // Drop leftovers if inv full
         if (!leftover.isEmpty()) {
             leftover.values().forEach(it -> p.getWorld().dropItemNaturally(p.getLocation(), it));
             Lang.send(p, "cook.inventory-full",
                     "<yellow>Your inventory was full; dropped some smelted items at your feet.</yellow>");
         }
 
-        // Play sound effect
         p.playSound(p.getLocation(), Sound.BLOCK_FURNACE_FIRE_CRACKLE, 0.8f, 1.0f);
 
-        // Format item name nicely (replace underscores with spaces, lowercase)
         String itemName = resultProto.getType().name().toLowerCase().replace('_', ' ');
 
-        // Send success message with variables
         Lang.send(p, "cook.success",
                 "<green>Smelted <aqua>%input%</aqua> → <aqua>%output%</aqua> <gray>%item%</gray>.</green>",
                 Map.of(
@@ -116,10 +106,6 @@ public class CookCommand implements OreoCommand {
         return true;
     }
 
-    /**
-     * Find a cooking recipe that matches the input item.
-     * Searches all recipe types: furnace, smoker, blast furnace, campfire.
-     */
     private CookingRecipe<?> findCookingRecipeFor(ItemStack input) {
         Iterator<Recipe> it = org.bukkit.Bukkit.recipeIterator();
         while (it.hasNext()) {

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/ConfirmDeleteGui.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.services.HomeService;
@@ -30,7 +29,6 @@ public class ConfirmDeleteGui implements InventoryProvider {
     }
 
     public static void open(Player p, HomeService homes, String homeName, Runnable onConfirm, Runnable onCancel) {
-        // Use Lang for GUI title - automatically converts to legacy § format
         String title = Lang.msgLegacy("homes.delete.title",
                 "<dark_red>Delete '%home%'?</dark_red>",
                 Map.of("home", homeName),
@@ -48,18 +46,14 @@ public class ConfirmDeleteGui implements InventoryProvider {
 
     @Override
     public void init(Player p, InventoryContents contents) {
-        // Text item center top - info about what's being deleted
         contents.set(0, 4, fr.minuskube.inv.ClickableItem.empty(infoItem(p, homeName)));
 
-        // YES button (green concrete) at row 1, column 3
         contents.set(SlotPos.of(1, 3), fr.minuskube.inv.ClickableItem.of(
                 actionItem(p, Material.GREEN_CONCRETE,
                         Lang.msgLegacy("homes.delete.yes", "<green>Yes, delete</green>", p)),
                 e -> {
-                    // Delete the home
                     boolean ok = homes.delHome(p.getUniqueId(), homeName.toLowerCase());
 
-                    // Send feedback message using Lang
                     if (ok) {
                         Lang.send(p, "homes.delete.success",
                                 "<red>Deleted home <yellow>%home%</yellow>.</red>",
@@ -74,7 +68,6 @@ public class ConfirmDeleteGui implements InventoryProvider {
                     if (onConfirm != null) onConfirm.run();
                 }));
 
-        // NO button (red concrete) at row 1, column 5
         contents.set(SlotPos.of(1, 5), fr.minuskube.inv.ClickableItem.of(
                 actionItem(p, Material.RED_CONCRETE,
                         Lang.msgLegacy("homes.delete.no", "<red>No, cancel</red>", p)),
@@ -89,11 +82,7 @@ public class ConfirmDeleteGui implements InventoryProvider {
         // No updates needed for this static confirmation GUI
     }
 
-    /* --------------- Helper Methods for Creating Items --------------- */
 
-    /**
-     * Creates the informational item (paper) shown at the top of the GUI.
-     */
     private ItemStack infoItem(Player p, String name) {
         ItemStack it = new ItemStack(Material.PAPER);
         ItemMeta meta = it.getItemMeta();
@@ -118,14 +107,11 @@ public class ConfirmDeleteGui implements InventoryProvider {
         return it;
     }
 
-    /**
-     * Creates an action button item (YES/NO concrete blocks).
-     */
+
     private ItemStack actionItem(Player p, Material mat, String title) {
         ItemStack it = new ItemStack(mat);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) {
-            // Title already formatted by Lang.msgLegacy in init()
             meta.setDisplayName(title);
             it.setItemMeta(meta);
         }

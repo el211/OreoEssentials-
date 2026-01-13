@@ -6,7 +6,6 @@ import java.util.UUID;
 public final class TradeIds {
     private TradeIds() {}
 
-    /** Deterministic, order-independent trade id for two players. */
     public static UUID computeTradeId(UUID u1, UUID u2) {
         int cmp = u1.toString().compareTo(u2.toString());
         UUID a = (cmp <= 0) ? u1 : u2;

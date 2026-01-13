@@ -18,11 +18,7 @@ public final class MojangSkinFetcher {
 
     private MojangSkinFetcher() {}
 
-    /**
-     * Fetch UUID from Mojang API by username.
-     * @param username Player name
-     * @return UUID or null if not found
-     */
+
     public static UUID fetchUuid(String username) {
         try {
             URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + username);
@@ -47,7 +43,6 @@ public final class MojangSkinFetcher {
             JsonObject json = JsonParser.parseString(response.toString()).getAsJsonObject();
             String id = json.get("id").getAsString();
 
-            // Format UUID (insert dashes)
             String formatted = id.replaceFirst(
                     "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})",
                     "$1-$2-$3-$4-$5"
@@ -63,23 +58,13 @@ public final class MojangSkinFetcher {
         }
     }
 
-    /**
-     * Fetch player profile with textures from Mojang session server.
-     * This method BLOCKS while fetching - should be called async!
-     *
-     * @param uuid Player UUID
-     * @param name Player name
-     * @return PlayerProfile with textures, or null
-     */
+
     public static PlayerProfile fetchProfileWithTextures(UUID uuid, String name) {
         try {
-            // Create profile
             PlayerProfile profile = Bukkit.createPlayerProfile(uuid, name);
 
-            // ✅ FIX: Use wildcard capture for the CompletableFuture
             CompletableFuture<? extends PlayerProfile> future = profile.update();
 
-            // Block and wait (max 10 seconds)
             PlayerProfile updated = future.get(10, TimeUnit.SECONDS);
 
             if (updated == null || updated.getTextures() == null || updated.getTextures().getSkin() == null) {
@@ -99,23 +84,14 @@ public final class MojangSkinFetcher {
         }
     }
 
-    /**
-     * Fetch profile asynchronously (non-blocking).
-     * Use this in commands to avoid freezing the server.
-     *
-     * @param uuid Player UUID
-     * @param name Player name
-     * @param callback Called with the result on the main thread
-     */
+
     public static void fetchProfileAsync(UUID uuid, String name,
                                          java.util.function.Consumer<PlayerProfile> callback) {
-        // Run the blocking fetch on async thread
         Bukkit.getScheduler().runTaskAsynchronously(
                 fr.elias.oreoEssentials.OreoEssentials.get(),
                 () -> {
                     PlayerProfile profile = fetchProfileWithTextures(uuid, name);
 
-                    // Return result on main thread
                     Bukkit.getScheduler().runTask(
                             fr.elias.oreoEssentials.OreoEssentials.get(),
                             () -> callback.accept(profile)

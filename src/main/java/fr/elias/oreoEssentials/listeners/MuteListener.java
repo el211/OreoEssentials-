@@ -15,7 +15,6 @@ public class MuteListener implements Listener {
         this.mutes = mutes;
     }
 
-    // imports: org.bukkit.event.EventPriority
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void onChat(AsyncPlayerChatEvent e) {
         Player p = e.getPlayer();

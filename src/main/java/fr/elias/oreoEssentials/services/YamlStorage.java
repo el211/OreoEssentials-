@@ -66,9 +66,7 @@ public class YamlStorage implements StorageApi {
         });
     }
 
-    /* ---------------------------------------------------------------------- */
-    /*                        /back global storage                        */
-    /* ---------------------------------------------------------------------- */
+
 
     @Override
     public void setBackData(UUID uuid, Map<String, Object> data) {
@@ -90,22 +88,29 @@ public class YamlStorage implements StorageApi {
         return (sec != null ? sec.getValues(false) : null);
     }
 
-    /* ---------------------------------------------------------------------- */
-    /*                         Spawn / Warps (unchanged)                      */
-    /* ---------------------------------------------------------------------- */
+
 
     @Override
-    public void setSpawn(Location loc) {
-        var sec = spawn.getConfigurationSection("spawn");
-        if (sec == null) sec = spawn.createSection("spawn");
+    public void setSpawn(String server, Location loc) {
+        String key = (server == null ? "" : server.trim().toLowerCase(Locale.ROOT));
+
+        ConfigurationSection sec = spawn.getConfigurationSection("spawns." + key);
+        if (sec == null) sec = spawn.createSection("spawns." + key);
+
         LocUtil.write(sec, loc);
         saveSpawn();
     }
 
     @Override
-    public Location getSpawn() {
+    public Location getSpawn(String server) {
+        String key = (server == null ? "" : server.trim().toLowerCase(Locale.ROOT));
+
+        Location loc = LocUtil.read(spawn.getConfigurationSection("spawns." + key));
+        if (loc != null) return loc;
+
         return LocUtil.read(spawn.getConfigurationSection("spawn"));
     }
+
 
     @Override
     public void setWarp(String name, Location loc) {
@@ -139,9 +144,6 @@ public class YamlStorage implements StorageApi {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    /* ---------------------------------------------------------------------- */
-    /*                                  Homes                                  */
-    /* ---------------------------------------------------------------------- */
 
     @Override
     public boolean setHome(UUID uuid, String name, Location loc) {
@@ -209,9 +211,6 @@ public class YamlStorage implements StorageApi {
         return out;
     }
 
-    /* ---------------------------------------------------------------------- */
-    /*                           LAST LOCATION (compat)                        */
-    /* ---------------------------------------------------------------------- */
 
     @Override
     public void setLast(UUID uuid, Location loc) {
@@ -237,9 +236,7 @@ public class YamlStorage implements StorageApi {
         return LocUtil.read(player(uuid).getConfigurationSection("lastLocation"));
     }
 
-    /* ---------------------------------------------------------------------- */
-    /*                          Save / Flush / Close                           */
-    /* ---------------------------------------------------------------------- */
+
 
     private void savePlayer(UUID uuid) {
         File f = new File(dataDir, uuid + ".yml");

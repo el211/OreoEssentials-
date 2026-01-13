@@ -7,10 +7,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * In-memory fallback. Not persistent across restarts.
- * Replace with Mongo/Redis implementation in production.
- */
+
 public final class InMemoryPendingGrantsDao implements PendingGrantsDao {
     private static final class Entry {
         UUID sessionId;

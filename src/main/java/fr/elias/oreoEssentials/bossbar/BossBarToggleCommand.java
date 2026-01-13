@@ -8,12 +8,7 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 
-/**
- * /bossbar toggle
- * Permission: oreo.bossbar.toggle
- *
- * Relies on BossBarService to manage a per-player bossbar.
- */
+
 public class BossBarToggleCommand implements OreoCommand {
 
     private final BossBarService service;
@@ -47,7 +42,6 @@ public class BossBarToggleCommand implements OreoCommand {
             return true;
         }
 
-        // Unknown subcommand
         p.sendMessage(ChatColor.RED + "Usage: /" + label + " " + usage());
         return true;
     }

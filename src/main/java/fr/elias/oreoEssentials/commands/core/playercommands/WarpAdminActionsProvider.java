@@ -39,7 +39,6 @@ public class WarpAdminActionsProvider implements InventoryProvider, Listener {
     public WarpAdminActionsProvider(WarpService warps, String warpName) {
         this.warps = warps;
         this.warpName = warpName.toLowerCase(Locale.ROOT);
-        // ensure listener is registered
         Bukkit.getPluginManager().registerEvents(this, OreoEssentials.get());
     }
 
@@ -50,7 +49,6 @@ public class WarpAdminActionsProvider implements InventoryProvider, Listener {
         final String server = (dir != null ? dir.getWarpServer(warpName) : plugin.getConfigService().serverName());
         final String perm = (dir != null ? nullSafe(dir.getWarpPermission(warpName)) : null);
 
-        // Header
         contents.set(0, 4, ClickableItem.empty(infoItem(
                 TITLE_PREFIX + warpName,
                 List.of(
@@ -61,11 +59,9 @@ public class WarpAdminActionsProvider implements InventoryProvider, Listener {
                 )
         )));
 
-        // Teleport
         contents.set(SlotPos.of(1, 2), ClickableItem.of(button(Material.ENDER_PEARL, ChatColor.GREEN + "Teleport"),
                 e -> WarpsAdminCommand.crossServerTeleport(warps, p, warpName)));
 
-        // Set / Change Permission (chat prompt)
         contents.set(SlotPos.of(1, 4), ClickableItem.of(button(Material.PAPER, ChatColor.AQUA + "Set/Change Permission"),
                 e -> {
                     p.closeInventory();
@@ -75,7 +71,6 @@ public class WarpAdminActionsProvider implements InventoryProvider, Listener {
                     prompts.put(p.getUniqueId(), new PendingPrompt(PendingPrompt.Type.SET_PERMISSION, warpName));
                 }));
 
-        // Clear Permission (Open to everyone)
         contents.set(SlotPos.of(1, 6), ClickableItem.of(button(Material.LIME_DYE, ChatColor.GREEN + "Make Public (clear perm)"),
                 e -> {
                     if (dir != null) {
@@ -89,7 +84,6 @@ public class WarpAdminActionsProvider implements InventoryProvider, Listener {
                     reopen(p);
                 }));
 
-        // Rename (chat prompt)
         contents.set(SlotPos.of(2, 3), ClickableItem.of(button(Material.NAME_TAG, ChatColor.GOLD + "Rename Warp"),
                 e -> {
                     p.closeInventory();
@@ -99,7 +93,6 @@ public class WarpAdminActionsProvider implements InventoryProvider, Listener {
                     prompts.put(p.getUniqueId(), new PendingPrompt(PendingPrompt.Type.RENAME, warpName));
                 }));
 
-        // Delete (confirm)
         contents.set(SlotPos.of(2, 5), ClickableItem.of(button(Material.RED_CONCRETE, ChatColor.RED + "Delete Warp"),
                 e -> WarpConfirmDeleteGui.open(p, warps, warpName, () -> {
                     p.sendMessage(ChatColor.RED + "Deleted warp " + ChatColor.YELLOW + warpName + ChatColor.RED + ".");
@@ -107,7 +100,6 @@ public class WarpAdminActionsProvider implements InventoryProvider, Listener {
                     WarpsAdminCommand.openAdmin(p, warps, 0);
                 }, () -> reopen(p))));
 
-        // Back to admin list
         contents.set(SlotPos.of(3, 4), ClickableItem.of(button(Material.ARROW, ChatColor.RED + "← Back"),
                 e -> WarpsAdminCommand.openAdmin(p, warps, 0)));
     }
@@ -144,7 +136,6 @@ public class WarpAdminActionsProvider implements InventoryProvider, Listener {
 
     private String nullSafe(String s) { return (s == null ? "" : s); }
 
-    /* ------------------- Chat prompts ------------------- */
 
     @EventHandler
     public void onChat(AsyncPlayerChatEvent e) {
@@ -203,7 +194,6 @@ public class WarpAdminActionsProvider implements InventoryProvider, Listener {
             return;
         }
 
-        // also move directory metadata (server, permission)
         final WarpDirectory dir = OreoEssentials.get().getWarpDirectory();
         if (dir != null) {
             try {

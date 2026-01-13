@@ -22,19 +22,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * EnderChest viewer and editor (EcSee) menu.
- *
- * ✅ VERIFIED - Uses Lang.send() for 1 user message + Lang.get() for GUI text
- *
- * Features:
- * - Cross-server ender chest viewing
- * - Edit ender chest contents
- * - Permission-based slot limits
- * - Locked slot visual indicators
- * - Change logging to playeractions.log
- * - Auto-sync on close
- */
+
 public class EcSeeMenu implements InventoryProvider {
 
     private final OreoEssentials plugin;
@@ -56,17 +44,13 @@ public class EcSeeMenu implements InventoryProvider {
             return;
         }
 
-        // Resolve target name (network-wide)
         String targetName = resolveName(targetId);
 
-        // Determine how many slots this player has (offline aware)
         int allowed = ecs.resolveSlotsOffline(targetId);
         int rows    = Math.max(1, (int) Math.ceil(allowed / 9.0));
 
-        // Load global/cross-server content
         ItemStack[] stored = ecs.loadFor(targetId, rows);
 
-        // Fill allowed slots
         for (int i = 0; i < allowed; i++) {
             ItemStack item = (stored != null && i < stored.length) ? stored[i] : null;
             int row = i / 9;
@@ -76,12 +60,10 @@ public class EcSeeMenu implements InventoryProvider {
                 c.set(row, col, ClickableItem.empty(new ItemStack(Material.AIR)));
             } else {
                 c.set(row, col, ClickableItem.of(item, e -> {
-                    // Staff can modify directly; sync on close
                 }));
             }
         }
 
-        // Fill locked slots with a generic barrier (visual only)
         ItemStack locked = createLockedBarrierItem(allowed);
         for (int i = allowed; i < 54; i++) {
             int row = i / 9;
@@ -89,7 +71,6 @@ public class EcSeeMenu implements InventoryProvider {
             c.set(row, col, ClickableItem.empty(locked));
         }
 
-        // Info item at bottom
         String titleName = Lang.get("modgui.ecsee.title", "&bEditing EnderChest of &e%target%")
                 .replace("%target%", targetName);
 
@@ -105,15 +86,7 @@ public class EcSeeMenu implements InventoryProvider {
         // No live updates for now
     }
 
-    /* =========================================================
-       Sync back to cross-server EC (NOT vanilla!!) + log
-       Called from PlayerActionsMenu InventoryClose listener.
-       ========================================================= */
 
-    /**
-     * Syncs the modified ender chest contents back to storage and logs all changes.
-     * This is called when the viewer closes the EcSee inventory.
-     */
     public static void syncAndLog(OreoEssentials plugin,
                                   Player viewer,
                                   UUID targetId,
@@ -144,13 +117,10 @@ public class EcSeeMenu implements InventoryProvider {
             }
         }
 
-        // Save to cross-server storage
         ecs.saveFor(targetId, rows, toSave);
     }
 
-    /* =========================================================
-       Helpers
-       ========================================================= */
+
 
     private static boolean equalsItem(ItemStack a, ItemStack b) {
         if (a == null || a.getType() == Material.AIR) {
@@ -191,10 +161,7 @@ public class EcSeeMenu implements InventoryProvider {
         return (name == null || name.isBlank()) ? targetId.toString() : name;
     }
 
-    /**
-     * Creates a locked slot barrier item with localized text.
-     * Uses Lang.get() and Lang.getList() for internationalization.
-     */
+
     private ItemStack createLockedBarrierItem(int allowedSlots) {
         ItemStack b = new ItemStack(Material.BARRIER);
         ItemMeta m = b.getItemMeta();

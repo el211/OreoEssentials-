@@ -16,20 +16,7 @@ import java.lang.management.OperatingSystemMXBean;
 import java.lang.reflect.Method;
 import java.util.List;
 
-/**
- * TPS and performance dashboard menu.
- *
- * ✅ VERIFIED PERFECT - Pure GUI display (uses § for ItemStack display, which is correct)
- *
- * Features:
- * - Live TPS monitoring (1m, 5m, 15m via Paper reflection)
- * - Memory usage (used, allocated, max JVM)
- * - System load average
- * - Per-world statistics (players, entities, loaded chunks)
- * - Auto-refreshing display
- *
- * No user chat messages - pure visual dashboard.
- */
+
 public class TpsDashboardMenu implements InventoryProvider {
 
     private final OreoEssentials plugin;

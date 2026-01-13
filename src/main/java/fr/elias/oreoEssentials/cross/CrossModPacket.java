@@ -2,10 +2,7 @@ package fr.elias.oreoEssentials.cross;
 
 import java.util.UUID;
 
-/**
- * Plain JSON payload used inside CrossInvPacket for moderation actions.
- * Distinct from the RabbitMQ packet impl (rabbitmq.packet.impl.CrossInvPacket).
- */
+
 public final class CrossModPacket {
 
     public enum Action {
@@ -15,11 +12,10 @@ public final class CrossModPacket {
         FREEZE_TOGGLE,
         VANISH_TOGGLE,
         GAMEMODE_CYCLE,
-        HEAL,          // NEW
-        FEED           // NEW
+        HEAL,
+        FEED
     }
 
-    /** Always "MOD" for moderation messages. */
     private String kind = "MOD";
 
     private Action action;

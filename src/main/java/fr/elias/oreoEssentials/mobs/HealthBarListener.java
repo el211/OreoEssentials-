@@ -51,12 +51,7 @@ public final class HealthBarListener implements Listener {
 
     private BukkitTask sweeper;
 
-    /**
-     * NEW CONSTRUCTOR:
-     * pass UltimateChristmas instance from your main plugin enable logic.
-     * If you pass null here, santa/grinch skipping still works via SantaHook/GrinchHook (safe),
-     * and any direct calls to xmas will be skipped.
-     */
+
     public HealthBarListener(OreoEssentials plugin, UltimateChristmas xmasPlugin) {
         this.plugin = plugin;
         this.xmas = xmasPlugin;

@@ -39,13 +39,10 @@ final class SkinRefresherPE implements SkinRefresher {
         }
     }
 
-    /* ---------------- helpers ---------------- */
 
     private static Object getPacketEventsAPI() {
-        // v2.x+ new package
         Object api = reflectStatic("io.github.retrooper.packetevents.PacketEvents", "getAPI");
         if (api != null) return api;
-        // old package
         return reflectStatic("com.github.retrooper.packetevents.PacketEvents", "getAPI");
     }
 

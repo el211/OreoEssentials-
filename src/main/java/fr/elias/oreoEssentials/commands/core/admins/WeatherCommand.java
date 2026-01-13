@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/WeatherCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.util.Lang;
@@ -24,7 +23,6 @@ public final class WeatherCommand implements TabExecutor {
             return true;
         }
 
-        // Normalize to main /weather signature
         WType type;
         List<String> list = new ArrayList<>(Arrays.asList(args));
         switch (cmd.getName().toLowerCase(Locale.ROOT)) {

@@ -1,11 +1,10 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/moderation/UnmuteCommand.java
 package fr.elias.oreoEssentials.commands.core.moderation;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.integration.DiscordModerationNotifier;
 import fr.elias.oreoEssentials.services.chatservices.MuteService;
-import fr.elias.oreoEssentials.util.ChatSyncManager;
+import fr.elias.oreoEssentials.chat.ChatSyncManager;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -16,7 +15,7 @@ import java.util.*;
 public class UnmuteCommand implements OreoCommand, org.bukkit.command.TabCompleter {
 
     private final MuteService mutes;
-    private final ChatSyncManager chatSync; // may be null if sync disabled
+    private final ChatSyncManager chatSync;
 
     public UnmuteCommand(MuteService mutes, ChatSyncManager chatSync) {
         this.mutes = mutes;
@@ -96,9 +95,7 @@ public class UnmuteCommand implements OreoCommand, org.bukkit.command.TabComplet
             String want = args[0].toLowerCase(Locale.ROOT);
             Set<String> out = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
-            // -------------------------------
-            // 1) Add currently-muted players
-            // -------------------------------
+
             for (UUID uuid : mutes.allMuted()) {
                 var op = Bukkit.getOfflinePlayer(uuid);
                 String name = (op != null && op.getName() != null) ? op.getName() : uuid.toString();
@@ -108,9 +105,6 @@ public class UnmuteCommand implements OreoCommand, org.bukkit.command.TabComplet
                 }
             }
 
-            // ------------------------------------------
-            // 2) Add cross-server online players (Mongo)
-            // ------------------------------------------
             var dir = OreoEssentials.get().getPlayerDirectory();
             if (dir != null) {
                 try {

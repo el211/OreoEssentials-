@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/AfeliusReloadCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.OreoEssentials;

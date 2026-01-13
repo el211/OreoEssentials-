@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/moderation/BroadcastCommand.java
 package fr.elias.oreoEssentials.commands.core.moderation;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -29,31 +28,25 @@ public class BroadcastCommand implements OreoCommand {
 
         String raw = String.join(" ", args);
 
-        // PlaceholderAPI (optional)
         raw = applyPapi(sender, raw);
 
-        // Colors: hex first, then legacy &
         String msg = translateColors(raw);
 
-        // Get prefix from lang (with default)
         String prefix = Lang.msgWithDefault(
                 "moderation.broadcast.prefix",
                 "<gold>[Broadcast]</gold> ",
                 sender instanceof Player ? (Player) sender : null
         );
 
-        // Send to players
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.sendMessage(prefix + msg);
         }
 
-        // Also log to console (stripped)
         Bukkit.getConsoleSender().sendMessage(prefix + ChatColor.stripColor(msg));
 
         return true;
     }
 
-    /* ---------------- helpers ---------------- */
 
     private String applyPapi(CommandSender sender, String text) {
         try {
@@ -68,11 +61,6 @@ public class BroadcastCommand implements OreoCommand {
         return text;
     }
 
-    /**
-     * Supports:
-     *  - Hex colors: &#RRGGBB  (1.16+ clients)
-     *  - Legacy & codes: &a, &6, &l, &r, etc.
-     */
     private String translateColors(String input) {
         if (input == null || input.isEmpty()) return input;
 
@@ -85,11 +73,9 @@ public class BroadcastCommand implements OreoCommand {
         }
         m.appendTail(sb);
 
-        // Then legacy & codes
         return ChatColor.translateAlternateColorCodes('&', sb.toString());
     }
 
-    // Build §x§R§R§G§G§B§B sequence for Minecraft hex
     private String hexToSection(String hex) {
         String h = hex.toLowerCase(Locale.ROOT);
         StringBuilder out = new StringBuilder("§x");

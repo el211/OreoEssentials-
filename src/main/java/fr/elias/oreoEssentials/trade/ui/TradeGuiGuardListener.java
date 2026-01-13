@@ -30,7 +30,6 @@ public final class TradeGuiGuardListener implements Listener {
         catch (Throwable t) { return Optional.empty(); }
     }
 
-    /** Only guard when the open SmartInvs is our TradeMenu */
     private boolean isTradeMenuOpen(Player p) {
         Optional<SmartInventory> inv = currentInv(p);
         return inv.isPresent() && (inv.get().getProvider() instanceof TradeMenu);
@@ -41,11 +40,11 @@ public final class TradeGuiGuardListener implements Listener {
         Inventory top = p.getOpenInventory().getTopInventory();
         if (top == null) return false;
         int size = top.getSize();
-        if (rawSlot >= size) return false; // not the top inv
+        if (rawSlot >= size) return false;
         int row = rawSlot / 9, col = rawSlot % 9;
 
         Optional<InventoryContents> oc = contents(p);
-        if (oc.isEmpty()) return false; // not a SmartInvs GUI
+        if (oc.isEmpty()) return false;
         InventoryContents c = oc.get();
 
         boolean editable;
@@ -54,7 +53,6 @@ public final class TradeGuiGuardListener implements Listener {
         return !editable;
     }
 
-    // Allow clicks in editable top slots; block everything else touching top
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onClick(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
@@ -65,14 +63,12 @@ public final class TradeGuiGuardListener implements Listener {
 
         boolean topSlotEditable = clickIsTop && !isTopNonEditable(p, e.getSlot());
 
-        // If clicking a non-editable top slot → block
         if (clickIsTop && !topSlotEditable) {
             e.setCancelled(true);
             e.setResult(Event.Result.DENY);
             return;
         }
 
-        // For global actions (shift, swap, collect, clone), block unless this is an editable top-slot action
         switch (e.getAction()) {
             case COLLECT_TO_CURSOR, MOVE_TO_OTHER_INVENTORY, HOTBAR_SWAP,
                  HOTBAR_MOVE_AND_READD, SWAP_WITH_CURSOR, CLONE_STACK, UNKNOWN -> {
@@ -84,14 +80,12 @@ public final class TradeGuiGuardListener implements Listener {
             default -> { /* ok */ }
         }
 
-        // Number-key swap into top: allow only if editable
         if (e.getClick() == ClickType.NUMBER_KEY && clickIsTop && !topSlotEditable) {
             e.setCancelled(true);
             e.setResult(Event.Result.DENY);
         }
     }
 
-    // Block drags that touch any non-editable top slot
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDrag(InventoryDragEvent e) {
         HumanEntity who = e.getWhoClicked();

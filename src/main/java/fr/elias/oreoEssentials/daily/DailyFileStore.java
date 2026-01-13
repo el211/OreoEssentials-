@@ -12,17 +12,14 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * File-based storage for Daily Rewards (alternative to MongoDB).
- * Stores player data in data/daily_players.yml
- */
+
 public final class DailyFileStore {
 
     public static final class Record {
         public UUID uuid;
         public String name;
-        public int streak;                // current consecutive days
-        public long lastClaimEpochDay;    // LocalDate.toEpochDay()
+        public int streak;
+        public long lastClaimEpochDay;
         public int totalClaims;
 
         public LocalDate lastClaimDate() {
@@ -34,7 +31,6 @@ public final class DailyFileStore {
     private final File dataFile;
     private YamlConfiguration data;
 
-    // In-memory cache for performance
     private final Map<UUID, Record> cache = new ConcurrentHashMap<>();
 
     public DailyFileStore(OreoEssentials plugin) {
@@ -42,9 +38,6 @@ public final class DailyFileStore {
         this.dataFile = new File(plugin.getDataFolder(), "daily_players.yml");
     }
 
-    /**
-     * Load player data from file into memory cache
-     */
     public void load() {
         if (!dataFile.exists()) {
             try {
@@ -84,18 +77,14 @@ public final class DailyFileStore {
         plugin.getLogger().info("[Daily] Loaded " + cache.size() + " player records from file storage.");
     }
 
-    /**
-     * Save all cached data to file
-     */
+
     public void save() {
         if (data == null) {
             data = new YamlConfiguration();
         }
 
-        // Clear existing data
         data.set("players", null);
 
-        // Write all cached records
         for (Map.Entry<UUID, Record> entry : cache.entrySet()) {
             String path = "players." + entry.getKey().toString();
             Record r = entry.getValue();
@@ -116,34 +105,26 @@ public final class DailyFileStore {
         }
     }
 
-    /**
-     * Auto-save every 5 minutes
-     */
+
     public void startAutoSave() {
         plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, this::save, 6000L, 6000L);
     }
 
-    /**
-     * Get a player's record (from cache)
-     */
+
     public Record get(UUID uuid) {
         return cache.get(uuid);
     }
 
-    /**
-     * Get or create a player's record
-     */
+
     public Record ensure(UUID uuid, String name) {
         Record r = cache.get(uuid);
         if (r != null) {
-            // Update name if changed
             if (!r.name.equals(name)) {
                 r.name = name;
             }
             return r;
         }
 
-        // Create new record
         r = new Record();
         r.uuid = uuid;
         r.name = name;
@@ -155,9 +136,7 @@ public final class DailyFileStore {
         return r;
     }
 
-    /**
-     * Update record when player claims a reward
-     */
+
     public void updateOnClaim(UUID uuid, String name, int newStreak, LocalDate date) {
         Record r = ensure(uuid, name);
         r.name = name;
@@ -165,13 +144,10 @@ public final class DailyFileStore {
         r.lastClaimEpochDay = date.toEpochDay();
         r.totalClaims++;
 
-        // Immediate save for important data
         save();
     }
 
-    /**
-     * Reset a player's streak
-     */
+
     public void resetStreak(UUID uuid) {
         Record r = cache.get(uuid);
         if (r != null) {
@@ -181,9 +157,7 @@ public final class DailyFileStore {
         }
     }
 
-    /**
-     * Shutdown - save all data
-     */
+
     public void close() {
         save();
         cache.clear();

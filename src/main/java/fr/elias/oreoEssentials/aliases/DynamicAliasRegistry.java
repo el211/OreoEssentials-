@@ -13,13 +13,9 @@ import java.util.*;
 public final class DynamicAliasRegistry {
     private DynamicAliasRegistry() {}
 
-    /** Keep strong refs so we can unregister on reload/disable. */
     private static final List<Command> REGISTERED = new ArrayList<>();
 
-    /* ------------------------------------------------------------------
-     * Internal command capable of delegating to a generic CommandExecutor
-     * and optional TabCompleter.
-     * ------------------------------------------------------------------ */
+
     private static final class InternalDynamicCommand extends Command implements PluginIdentifiableCommand {
         private final Plugin plugin;
 
@@ -61,22 +57,16 @@ public final class DynamicAliasRegistry {
         }
     }
 
-    /* ------------------------------------------------------------------
-     * Public API
-     * ------------------------------------------------------------------ */
 
-    /** Back-compat: register with a DynamicAliasExecutor (no tab completer). */
     public static void register(Plugin plugin, String name, DynamicAliasExecutor exec, String desc) {
         register(plugin, name, exec, desc, null);
     }
 
-    /**  register with DynamicAliasExecutor and optional TabCompleter. */
     public static void register(Plugin plugin, String name, DynamicAliasExecutor exec, String desc, TabCompleter tab) {
         // DynamicAliasExecutor IS a CommandExecutor, so just delegate to the generic overload.
         register(plugin, name, (CommandExecutor) exec, desc, tab);
     }
 
-    /** Generic registration: CommandExecutor + optional TabCompleter. */
     public static void register(Plugin plugin, String name, CommandExecutor executor, String desc, TabCompleter tab) {
         if (plugin == null || name == null || executor == null) return;
         CommandMap map = getCommandMap();
@@ -96,7 +86,6 @@ public final class DynamicAliasRegistry {
         REGISTERED.add(cmd);
     }
 
-    /** Unregister all previously registered dynamic alias commands. */
     public static void unregisterAll(Plugin plugin) {
         CommandMap map = getCommandMap();
         if (map == null) return;
@@ -121,9 +110,7 @@ public final class DynamicAliasRegistry {
         REGISTERED.clear();
     }
 
-    /* ------------------------------------------------------------------
-     * Reflection helpers
-     * ------------------------------------------------------------------ */
+
 
     private static CommandMap getCommandMap() {
         try {
@@ -148,9 +135,7 @@ public final class DynamicAliasRegistry {
         }
     }
 
-    /* ------------------------------------------------------------------
-     * Tiny shim to satisfy CommandExecutor.onCommand(...) signature.
-     * ------------------------------------------------------------------ */
+
     private static final class PluginCommandShim extends Command implements PluginIdentifiableCommand {
         private final Plugin plugin;
 
@@ -161,7 +146,7 @@ public final class DynamicAliasRegistry {
 
         @Override
         public boolean execute(CommandSender sender, String commandLabel, String[] args) {
-            return false; // never called (we route via CommandExecutor)
+            return false;
         }
 
         @Override

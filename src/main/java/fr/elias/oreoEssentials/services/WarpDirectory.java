@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/services/WarpDirectory.java
 package fr.elias.oreoEssentials.services;
 
 public interface WarpDirectory {

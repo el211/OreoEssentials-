@@ -1,11 +1,10 @@
-// File: src/main/java/fr/elias/oreoEssentials/modgui/menu/ChatModerationMenu.java
 package fr.elias.oreoEssentials.modgui.menu;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modgui.ModGuiService;
 import fr.elias.oreoEssentials.modgui.util.ItemBuilder;
 import fr.elias.oreoEssentials.services.chatservices.MuteService;
-import fr.elias.oreoEssentials.util.ChatSyncManager;
+import fr.elias.oreoEssentials.chat.ChatSyncManager;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
@@ -16,24 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
-/**
- * Chat moderation GUI.
- *
- * - Clear chat (local + network via RabbitMQ)
- * - Global chat mute toggle (local + network)
- * - Slowmode (local + network)
- * - Staff chat toggle (local, per-player)
- * - Player mute picker (uses /mute which is already cross-server)
- *
- * For network sync, this class expects ChatSyncManager to implement something like:
- *
- *   void broadcastChatControl(String type, String value, String actorName);
- *
- * Examples:
- *   type = "GLOBAL_MUTE"   , value = "true"/"false"
- *   type = "SLOWMODE"      , value = "10" (seconds)
- *   type = "CLEAR_CHAT"    , value = "true"
- */
+
 public class ChatModerationMenu implements InventoryProvider {
 
     private final OreoEssentials plugin;

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/packet/impl/trade/TradeConfirmPacket.java
 package fr.elias.oreoEssentials.rabbitmq.packet.impl.trade;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
@@ -17,7 +16,7 @@ public final class TradeConfirmPacket extends Packet {
         this.sessionId = sessionId;
         this.confirmerId = confirmerId;
     }
-
+  //
     public UUID getSessionId()  { return sessionId; }
     public UUID getConfirmerId(){ return confirmerId; }
 

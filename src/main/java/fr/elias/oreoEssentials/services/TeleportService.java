@@ -34,11 +34,9 @@ public class TeleportService {
         this.back = back;
         this.timeoutSec = config.tpaTimeoutSeconds();
 
-        // cleanup stale requests
         Bukkit.getScheduler().runTaskTimer(plugin, this::cleanup, 20L * 30, 20L * 30);
     }
 
-    /** Create a TPA from "from" → "to". */
     public boolean request(Player from, Player to) {
         if (from == null || to == null || !from.isOnline() || !to.isOnline()) return false;
 
@@ -57,7 +55,6 @@ public class TeleportService {
                 )
         );
 
-        // Notify requester
         Lang.send(
                 from,
                 "tpa.sent.local",
@@ -67,7 +64,6 @@ public class TeleportService {
         return true;
     }
 
-    /** /tpaccept */
     public boolean accept(Player target) {
         if (target == null || !target.isOnline()) return false;
 
@@ -124,7 +120,6 @@ public class TeleportService {
         return true;
     }
 
-    /** /tpdeny */
     public boolean deny(Player target) {
         if (target == null || !target.isOnline()) return false;
 
@@ -161,11 +156,7 @@ public class TeleportService {
         pendingToTarget.entrySet().removeIf(e -> e.getValue().expiresAt < now);
     }
 
-    // ------------------------------------------------------------------------
-    // TP utilities
-    // ------------------------------------------------------------------------
 
-    /** Teleport silently (records /back). */
     public void teleportSilently(Player who, Location to) {
         if (who == null || to == null) return;
         try { if (back != null) back.setLast(who.getUniqueId(), who.getLocation()); } catch (Throwable ignored) {}
@@ -176,20 +167,17 @@ public class TeleportService {
         else Bukkit.getScheduler().runTask(plugin, tp);
     }
 
-    /** Teleport 'who' to current location of 'target' silently. */
     public void teleportSilently(Player who, Player target) {
         if (who == null || target == null || !target.isOnline()) return;
         teleportSilently(who, target.getLocation());
     }
 
-    /** Get requester who /tpa'd this target, or null. */
     public Player getRequester(Player target) {
         if (target == null) return null;
         TpaRequest req = pendingToTarget.get(target.getUniqueId());
         return (req == null) ? null : Bukkit.getPlayer(req.from);
     }
 
-    /** Cancel a TPA because the requester moved during countdown. */
     public boolean cancelRequestDueToMovement(Player target, Player requester) {
         if (target == null) return false;
 
@@ -217,9 +205,7 @@ public class TeleportService {
         return true;
     }
 
-    /**
-     * Teleport to a BackLocation (same-server direct, cross-server via broker if available).
-     */
+
     public boolean teleportToServerLocation(Player who, BackLocation loc) {
         if (who == null || loc == null) return false;
 
@@ -237,14 +223,13 @@ public class TeleportService {
             return true;
         }
 
-        // other server → broker
         var backBroker = plugin.getBackBroker();
         if (backBroker != null && plugin.isMessagingAvailable()) {
             backBroker.requestCrossServerBack(who, loc);
             return true;
         }
 
-        return false; // broker unavailable
+        return false;
     }
 
     public void shutdown() {

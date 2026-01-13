@@ -26,13 +26,11 @@ public class HomeTeleportRequestPacket extends Packet {
         this.requestId = (requestId == null ? UUID.randomUUID().toString() : requestId);
     }
 
-    /* --- getters --- */
     public UUID getPlayerId()       { return playerId; }
     public String getHomeName()     { return homeName; }
     public String getTargetServer() { return targetServer; }
     public String getRequestId()    { return requestId; }
 
-    /* --- Packet IO --- */
     @Override
     protected void write(FriendlyByteOutputStream out) {
         out.writeUUID(playerId);

@@ -15,11 +15,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Kits system manager with comprehensive Lang support.
- *
- * ✅ VERIFIED - Uses Lang.send() for all user messages
- */
+
 public class KitsManager {
 
     private final OreoEssentials plugin;
@@ -47,9 +43,7 @@ public class KitsManager {
         reload();
     }
 
-    /* ============================================================
-     * Files
-     * ============================================================ */
+
 
     private void loadFiles() {
         if (!plugin.getDataFolder().exists()) plugin.getDataFolder().mkdirs();
@@ -83,20 +77,16 @@ public class KitsManager {
             plugin.getLogger().severe("[Kits] Failed to load kitsdata.yml: " + e.getMessage());
         }
 
-        // Global toggle (default true)
         enabled = kitsCfg.getBoolean("settings.enable", true);
 
-        // ItemsAdder flag
         this.useItemsAdder = kitsCfg.getBoolean("use-itemadder", true) && ItemParser.isItemsAdderPresent();
 
-        // Menu section
         ConfigurationSection menuSec = kitsCfg.getConfigurationSection("menu");
         this.menuTitle    = ItemParser.color(menuSec != null ? menuSec.getString("title", "&6Kits") : "&6Kits");
         this.menuRows     = Math.max(1, Math.min(6, menuSec != null ? menuSec.getInt("rows", 3) : 3));
         this.menuFill     = menuSec != null && menuSec.getBoolean("fill", true);
         this.fillMaterial = menuSec != null ? menuSec.getString("fill-material", "GRAY_STAINED_GLASS_PANE") : "GRAY_STAINED_GLASS_PANE";
 
-        // Parse kits with robust logging
         kits.clear();
         ConfigurationSection sec = kitsCfg.getConfigurationSection("kits");
         if (sec == null) {
@@ -122,7 +112,6 @@ public class KitsManager {
                 long cooldown = k.getLong("cooldown-seconds", 0L);
                 Integer slot = k.isInt("slot") ? k.getInt("slot") : null;
 
-                // Items
                 List<ItemStack> items = new ArrayList<>();
                 for (String line : k.getStringList("items")) {
                     ItemStack it = ItemParser.parseItem(line, useItemsAdder);
@@ -133,7 +122,6 @@ public class KitsManager {
                     items.add(it);
                 }
 
-                // Commands (nullable)
                 List<String> commands = k.getStringList("commands");
                 if (commands != null && commands.isEmpty()) commands = null;
 
@@ -148,9 +136,7 @@ public class KitsManager {
         plugin.getLogger().info("[Kits] Loaded " + loaded + " kit(s). Broken: " + broken + ".");
     }
 
-    /* ============================================================
-     * Accessors
-     * ============================================================ */
+
 
     public Map<String, Kit> getKits() { return Collections.unmodifiableMap(kits); }
     public String getMenuTitle() { return menuTitle; }
@@ -183,11 +169,8 @@ public class KitsManager {
         }
     }
 
-    /* ============================================================
-     * Cooldowns & Claims
-     * ============================================================ */
 
-    /** Returns seconds left of cooldown; 0 if ready. */
+
     public long getSecondsLeft(Player p, Kit kit) {
         if (p.hasPermission("oreo.kit.bypasscooldown")) return 0;
         if (kit.getCooldownSeconds() <= 0) return 0;
@@ -209,12 +192,7 @@ public class KitsManager {
         try { dataCfg.save(dataFile); } catch (Exception ignored) {}
     }
 
-    /**
-     * Tries to give the kit to player.
-     * ✅ Uses Lang.send() for all messages
-     *
-     * @return true if handled (success or messaged), false if kit ID was unknown.
-     */
+
     public boolean claim(Player p, String kitId) {
         Kit kit = kits.get(kitId.toLowerCase(Locale.ROOT));
         if (kit == null) {
@@ -237,7 +215,6 @@ public class KitsManager {
             return true;
         }
 
-        // Permission: global "can use kits"
         if (!p.hasPermission("oreo.kit.claim")) {
             Lang.send(p, "kits.no-permission-claim",
                     "<red>You don't have permission to claim kits.</red>",
@@ -245,7 +222,6 @@ public class KitsManager {
             return true;
         }
 
-        // Permission: kit-specific (oreo.kit.<id>)
         String kitPerm = "oreo.kit." + kit.getId().toLowerCase(Locale.ROOT);
 
         if (!p.hasPermission(kitPerm)
@@ -278,14 +254,12 @@ public class KitsManager {
                     Map.of("kit_name", kit.getDisplayName()));
         }
 
-        // Give items with overflow drop
         for (ItemStack it : kit.getItems()) {
             if (it == null) continue;
             Map<Integer, ItemStack> leftover = p.getInventory().addItem(it.clone());
             leftover.values().forEach(drop -> p.getWorld().dropItemNaturally(p.getLocation(), drop));
         }
 
-        // Run commands with delay support
         if (kit.getCommands() != null) {
             long delayTicks = 0L;
             for (String raw : kit.getCommands()) {
@@ -363,7 +337,6 @@ public class KitsManager {
             return;
         }
 
-        // Default -> console
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), withPlayer);
     }
 

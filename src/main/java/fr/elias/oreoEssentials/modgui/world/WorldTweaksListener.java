@@ -26,16 +26,7 @@ import org.bukkit.event.entity.EntityToggleGlideEvent;
 
 import java.util.Map;
 
-/**
- * World tweaks event listener.
- *
- * ✅ VERIFIED - Uses Lang.send() for 3 user messages
- *
- * Features:
- * - Nether: Allow water, beds, no fire damage, no ghast grief
- * - End: Void teleport, no dragon grief, no enderman grief
- * - World-specific: Disable elytra, tridents, PVP
- */
+
 public class WorldTweaksListener implements Listener {
 
     private final ModGuiConfig cfg;

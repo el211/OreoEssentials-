@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/config/CrossServerSettings.java
 package fr.elias.oreoEssentials.config;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -10,7 +9,7 @@ public final class CrossServerSettings {
     private final boolean warps;
     private final boolean spawn;
     private final boolean economy;
-    private final boolean enderchest; //  cross-server /ec
+    private final boolean enderchest;
 
     private CrossServerSettings(boolean homes,
                                 boolean warps,
@@ -24,9 +23,7 @@ public final class CrossServerSettings {
         this.enderchest = enderchest;
     }
 
-    // NOTE: we now expect OreoEssentials, not generic JavaPlugin
     public static CrossServerSettings load(OreoEssentials plugin) {
-        // settings.yml via SettingsConfig
         FileConfiguration settings = plugin.getSettingsConfig().getRoot();
 
         boolean homes      = settings.getBoolean("features.cross-server.homes", true);

@@ -12,19 +12,13 @@ public final class EntityMatcher {
 
     private EntityMatcher() {}
 
-    /** Area filter: never remove entities whose simple type name is listed. */
     public static boolean inAreaFilter(Entity e, Iterable<String> areaFilter) {
         String key = e.getType().name(); // e.g., ARMOR_STAND
         for (String s : areaFilter) if (key.equalsIgnoreCase(s)) return true;
         return false;
     }
 
-    /** Token grammar examples:
-     *  "ARROW onGround"
-     *  "BOAT !isMounted"
-     *  "ZOMBIE hasName"
-     *  "PIG !name=\"Bob\""
-     */
+
     public static boolean matchesTokens(Entity e, List<String> rules) {
         for (String r : rules) {
             if (matchesTokenRule(e, r)) return true;
@@ -42,7 +36,6 @@ public final class EntityMatcher {
             return false;
         }
 
-        // Evaluate flags
         for (int i = 1; i < parts.length; i++) {
             String token = parts[i];
             boolean neg = token.startsWith("!");
@@ -72,7 +65,6 @@ public final class EntityMatcher {
             String[] parts = ln.trim().split("\\s+");
             if (parts.length == 0) continue;
             if (!type.equalsIgnoreCase(parts[0])) continue;
-            // apply tokens (same grammar)
             boolean matches = matchesTokenRule(le, ln);
             if (matches) return true;
         }

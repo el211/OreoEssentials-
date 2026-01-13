@@ -24,7 +24,7 @@ import java.util.UUID;
 public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
 
     private final OreoEssentials plugin;
-    private final Economy vault; // may be null
+    private final Economy vault;
 
     public MoneyCommand(OreoEssentials plugin) {
         this.plugin = plugin;
@@ -39,7 +39,6 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
-        // /money
         if (args.length == 0) {
             if (!(sender instanceof Player p)) {
                 sender.sendMessage(Lang.msg("economy.money.usage.view", null));
@@ -49,13 +48,11 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
             return true;
         }
 
-        // /money <player>
         if (args.length == 1) {
             showOtherBalance(sender, args[0]);
             return true;
         }
 
-        // /money <give|take|set> <player> <amount>
         if (args.length >= 3) {
             final String sub = args[0].toLowerCase(Locale.ROOT);
             if (!sub.equals("give") && !sub.equals("take") && !sub.equals("set")) {
@@ -79,7 +76,6 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
                 return true;
             }
 
-            // ---- DB preferred path
             if (plugin.getDatabase() != null) {
                 Async.run(() -> {
                     UUID targetId = plugin.getOfflinePlayerCache().getId(targetName);
@@ -97,7 +93,6 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
 
                     double newBal = plugin.getDatabase().getBalance(targetId);
 
-                    // sender message
                     Map<String, String> sVars = new HashMap<>();
                     sVars.put("target", targetName);
                     sVars.put("amount_formatted", fmt(amount));
@@ -109,7 +104,6 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
                     };
                     sendSync(sender, Lang.msg(senderPath, sVars, sender instanceof Player ? (Player) sender : null));
 
-                    // receiver message (if online)
                     var p = Bukkit.getPlayer(targetId);
                     if (p != null) {
                         Map<String, String> rVars = new HashMap<>();
@@ -127,7 +121,7 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
                 return true;
             }
 
-            // ---- Vault fallback
+
             if (vault == null) {
                 sender.sendMessage(Lang.msg("economy.errors.no-economy", sender instanceof Player ? (Player) sender : null));
                 return true;
@@ -146,7 +140,6 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
                 }
             }
 
-            // sender message
             Map<String, String> sVars = new HashMap<>();
             sVars.put("target", targetName);
             sVars.put("amount_formatted", fmt(amount));
@@ -178,7 +171,6 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
         return true;
     }
 
-    /* ---------------- helpers ---------------- */
 
     private void showSelfBalance(Player player) {
         if (plugin.getDatabase() != null) {
@@ -241,7 +233,6 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
         else Bukkit.getScheduler().runTask(plugin, () -> who.sendMessage(text));
     }
 
-    /* ----- formatting from lang.yml ----- */
 
     private String fmt(double v) {
         int decimals = (int) Math.round(Lang.getDouble("economy.format.decimals", 2.0));
@@ -268,9 +259,6 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
         } catch (Exception e) { return null; }
     }
 
-    // =========================
-    // OreoCommand implementation
-    // =========================
 
     @Override
     public String name() {
@@ -280,31 +268,26 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
 
     @Override
     public List<String> aliases() {
-        // Match your plugin.yml aliases if you have them
         return List.of("bal");
     }
 
     @Override
     public String permission() {
-        // Base permission for viewing (you already use oreo.money.give/take/set inside)
         return "oreo.money";
     }
 
     @Override
     public String usage() {
-        // Shown by your CommandManager if needed
         return "[player|give|take|set]";
     }
 
     @Override
     public boolean playerOnly() {
-        // /money can be used from console too (for admin subcommands)
         return false;
     }
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        // Delegate to the existing Bukkit onCommand implementation
         return onCommand(sender, null, label, args);
     }
 }

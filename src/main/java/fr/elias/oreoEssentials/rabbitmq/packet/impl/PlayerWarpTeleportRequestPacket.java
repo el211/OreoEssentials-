@@ -7,16 +7,7 @@ import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteOutputStream;
 
 import java.util.UUID;
 
-/**
- * Cross-server teleport request for PLAYER WARPS (/pw).
- *
- * We send:
- * - playerId    = player to teleport
- * - ownerId     = owner of the player warp
- * - warpName    = name of the warp (per-owner)
- * - targetServer= server that will actually teleport the player
- * - requestId   = correlation id (debug / tracking)
- */
+
 public final class PlayerWarpTeleportRequestPacket extends Packet {
 
     private UUID playerId;

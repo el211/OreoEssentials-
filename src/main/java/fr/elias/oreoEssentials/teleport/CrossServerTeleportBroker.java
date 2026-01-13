@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/teleport/CrossServerTeleportBroker.java
 package fr.elias.oreoEssentials.teleport;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
@@ -26,9 +25,7 @@ public final class CrossServerTeleportBroker implements Listener {
     private final String thisServer;
     private final Logger log;
 
-    // latest requested intent for each player; value is either "SPAWN" or "WARP:<name>"
     private final Map<UUID, String> lastIntent   = new ConcurrentHashMap<>();
-    // “something pending” marker so we only act on join if we actually queued a request
     private final Map<UUID, Boolean> pendingJoin = new ConcurrentHashMap<>();
 
     public CrossServerTeleportBroker(Plugin plugin,
@@ -43,7 +40,6 @@ public final class CrossServerTeleportBroker implements Listener {
         this.thisServer = thisServer;
         this.log = plugin.getLogger();
 
-        // WARP packet
         pm.subscribe(WarpTeleportRequestPacket.class, (channel, pkt) -> {
             if (!thisServer.equalsIgnoreCase(pkt.getTargetServer())) {
                 log.info("[WARP/REQ] ignoring (not my server)");
@@ -61,12 +57,10 @@ public final class CrossServerTeleportBroker implements Listener {
                     + " online=" + (p != null && p.isOnline()));
 
             if (p != null && p.isOnline()) {
-                // apply now with guarded multi-tries
                 applyWithRetries(id, () -> warpService.getWarp(warp), "WARP", warp);
             }
         });
 
-        // SPAWN packet
         pm.subscribe(SpawnTeleportRequestPacket.class, (channel, pkt) -> {
             if (!thisServer.equalsIgnoreCase(pkt.getTargetServer())) {
                 log.info("[SPAWN/REQ] ignoring (not my server)");
@@ -93,7 +87,7 @@ public final class CrossServerTeleportBroker implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent e) {
         final UUID id = e.getPlayer().getUniqueId();
-        if (!pendingJoin.containsKey(id)) return; // only if we queued something for this player
+        if (!pendingJoin.containsKey(id)) return;
         String intent = lastIntent.get(id);
         if (intent == null) return;
 
@@ -108,13 +102,7 @@ public final class CrossServerTeleportBroker implements Listener {
         }
     }
 
-    /* ---------------- helpers ---------------- */
 
-    /**
-     * Teleports at ticks 0, +2, +10 guarded by the current lastIntent.
-     * If the player runs a *new* command elsewhere, the recorded intent changes and
-     * these retries become no-ops (prevents stale overrides).
-     */
     private void applyWithRetries(UUID playerId,
                                   java.util.function.Supplier<Location> targetSupplier,
                                   String tag,
@@ -150,7 +138,6 @@ public final class CrossServerTeleportBroker implements Listener {
         if (loc == null) {
             log.warning("[" + tag + "/Retry] tick=" + tick + " target=null"
                     + (warpNameOrNull != null ? " (warp='" + warpNameOrNull + "')" : ""));
-            // after final try, clear
             if (tick == 10) {
                 pendingJoin.remove(id);
                 lastIntent.remove(id);

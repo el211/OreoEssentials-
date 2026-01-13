@@ -54,7 +54,6 @@ public class MuteService {
         }
         this.cfg = YamlConfiguration.loadConfiguration(file);
         loadAll();
-        // periodic cleanup of expired mutes
         Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::cleanupExpired, 20L*60, 20L*60);
     }
 
@@ -168,7 +167,7 @@ public class MuteService {
             long val = Long.parseLong(token.substring(0, token.length()-1));
             return val * mult;
         } catch (Exception e) {
-            return -1; // invalid
+            return -1;
         }
     }
 

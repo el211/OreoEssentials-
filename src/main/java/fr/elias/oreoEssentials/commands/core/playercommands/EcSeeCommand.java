@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/EcSeeCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -69,18 +68,14 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
             return true;
         }
 
-        // ---- FIXED: Determine target's actual slot count ----
         int targetSlots;
         Player live = Bukkit.getPlayer(targetId);
         if (live != null && live.isOnline()) {
-            // If player is online, use their actual permissions
             targetSlots = svc.resolveSlots(live);
         } else {
-            // If offline, use best estimate
             targetSlots = svc.resolveSlotsOffline(targetId);
         }
 
-        // Calculate rows needed for target's slot count
         int targetRows = Math.max(1, (int) Math.ceil(targetSlots / 9.0));
         int guiSize = targetRows * 9;
 
@@ -88,7 +83,6 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
             log.info("[ECSEE] Target=" + targetName + " has " + targetSlots + " slots (" + targetRows + " rows)");
         }
 
-        // ---- Decide best source for contents ----
         ItemStack[] contents;
         String source;
 
@@ -122,8 +116,6 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
             }
         }
 
-        // ---- Open proxy GUI with correct size ----
-        // Use Lang for GUI title
         String guiTitle = Lang.msgLegacy("ecsee.gui.title",
                 "<dark_purple>Ender Chest</dark_purple> <gray>(%player%)</gray>",
                 Map.of("player", targetName),
@@ -133,7 +125,6 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
         gui.setContents(EnderChestStorage.clamp(contents, targetRows));
         viewer.openInventory(gui);
 
-        // ---- Save on close ----
         UUID viewerId = viewer.getUniqueId();
         String finalSource = source;
         final int finalTargetRows = targetRows;
@@ -149,10 +140,8 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
 
                 ItemStack[] edited = Arrays.copyOf(gui.getContents(), finalGuiSize);
 
-                // Persist (so cross-server & future joins see changes)
                 svc.saveFor(targetId, finalTargetRows, edited);
 
-                // If target is online on THIS server, try to mirror live view
                 Player liveNow = Bukkit.getPlayer(targetId);
                 if (liveNow != null && liveNow.isOnline()) {
                     try {
@@ -168,7 +157,6 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
                             svc.saveFromInventory(liveNow, targetGui);
                             if (debug) log.info("[ECSEE] Mirrored changes to target's VIRTUAL GUI. target=" + finalTargetName);
                         } else {
-                            // Only write to vanilla enderchest if it can fit (vanilla EC is max 27 slots)
                             ItemStack[] vanillaContents = Arrays.copyOf(edited, Math.min(27, edited.length));
                             liveNow.getEnderChest().setContents(vanillaContents);
                             if (debug) log.info("[ECSEE] Wrote changes to target's VANILLA EC. target=" + finalTargetName);
@@ -184,8 +172,6 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
                 }
 
                 HandlerList.unregisterAll(this);
-
-                // Send success message using Lang
                 Lang.send(p, "ecsee.saved",
                         "<green>Saved changes to <aqua>%player%</aqua>'s ender chest.</green>",
                         Map.of("player", finalTargetName));
@@ -202,18 +188,12 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
         return c;
     }
 
-    /** Minimal, API-safe resolver: exact online → UUID string → plugin resolver. */
     private static UUID resolveTargetId(String arg) {
-        // 1) Exact online name on this server
         Player p = Bukkit.getPlayerExact(arg);
         if (p != null) return p.getUniqueId();
-
-        // 2) Try parsing as UUID
         try {
             return UUID.fromString(arg);
         } catch (IllegalArgumentException ignored) { }
-
-        // 3) Network-wide via PlayerDirectory (Mongo-backed)
         try {
             var plugin = OreoEssentials.get();
             var dir = plugin.getPlayerDirectory();
@@ -223,7 +203,6 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
             }
         } catch (Throwable ignored) { }
 
-        // 4) Final fallback: your old resolver (Floodgate, etc.)
         return fr.elias.oreoEssentials.util.Uuids.resolve(arg);
     }
 
@@ -239,15 +218,12 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
 
         Set<String> out = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
-        // 1) Local online players
         for (Player p : Bukkit.getOnlinePlayers()) {
             String n = p.getName();
             if (n != null && n.toLowerCase(Locale.ROOT).startsWith(want)) {
                 out.add(n);
             }
         }
-
-        // 2) Network-wide via PlayerDirectory.suggestOnlineNames()
         var plugin = OreoEssentials.get();
         var dir = plugin.getPlayerDirectory();
         if (dir != null) {
@@ -263,7 +239,6 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
             } catch (Throwable ignored) { }
         }
 
-        // Limit to 50 suggestions for sanity
         return out.stream().limit(50).toList();
     }
 }

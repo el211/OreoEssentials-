@@ -5,14 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
-/**
- * JumpPads event listener.
- *
- * ✅ VERIFIED PERFECT - No user messages (pure event handling)
- *
- * Listens for player movement and triggers jump pad launches.
- * All logic is delegated to JumpPadsManager.
- */
+
 public class JumpPadsListener implements Listener {
     private final JumpPadsManager mgr;
 

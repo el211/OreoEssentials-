@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/services/JsonStorage.java
 package fr.elias.oreoEssentials.services;
 
 import com.google.gson.Gson;
@@ -27,7 +26,6 @@ public class JsonStorage implements StorageApi {
         load();
     }
 
-    /* ---------------- spawn ---------------- */
 
     @Override
     public void setSpawn(Location loc) {
@@ -44,7 +42,6 @@ public class JsonStorage implements StorageApi {
         }
     }
 
-    /* ---------------- warps ---------------- */
 
     @Override
     public void setWarp(String name, Location loc) {
@@ -79,7 +76,6 @@ public class JsonStorage implements StorageApi {
         }
     }
 
-    /* ---------------- homes ---------------- */
 
     @Override
     public boolean setHome(UUID uuid, String name, Location loc) {
@@ -153,7 +149,6 @@ public class JsonStorage implements StorageApi {
         try { return Double.parseDouble(String.valueOf(v)); } catch (Exception e) { return 0.0; }
     }
 
-    /* ---------------- BACK: new global storage ---------------- */
 
     @Override
     public void setBackData(UUID uuid, Map<String, Object> backData) {
@@ -183,8 +178,7 @@ public class JsonStorage implements StorageApi {
 
     @Override
     public void setLast(UUID uuid, Location loc) {
-        //  update /back data using the default StorageApi logic
-        // This calls setBackData(UUID, Map...) above (which is synchronized).
+
         StorageApi.super.setLast(uuid, loc);
 
         // LEGACY: keep the old 'lastLocation' field for anything that still uses it
@@ -197,13 +191,11 @@ public class JsonStorage implements StorageApi {
 
     @Override
     public Location getLast(UUID uuid) {
-        // 1) Prefer /back global data (server-aware) via the default implementation
         Location fromBack = StorageApi.super.getLast(uuid);
         if (fromBack != null) {
             return fromBack;
         }
 
-        // 2) Fallback to the old local-only 'lastLocation'
         synchronized (lock) {
             PlayerData p = data.players.get(uuid.toString());
             if (p == null) return null;
@@ -211,19 +203,15 @@ public class JsonStorage implements StorageApi {
         }
     }
 
-    /* ---------------- lifecycle ---------------- */
 
     @Override
     public void flush() {
-        // no-op for JSON; every change calls save()
     }
 
     @Override
     public void close() {
-        // no-op
     }
 
-    /* ---------------- file I/O ---------------- */
 
     private void load() {
         try {
@@ -238,12 +226,22 @@ public class JsonStorage implements StorageApi {
                 if (data == null) data = new Data();
                 if (data.warps == null) data.warps = new LinkedHashMap<>();
                 if (data.players == null) data.players = new LinkedHashMap<>();
+
+                if (data.spawns == null) data.spawns = new LinkedHashMap<>();
+
+                String thisServer = org.bukkit.Bukkit.getServer().getName().toLowerCase(Locale.ROOT);
+                if (data.spawn != null && !data.spawns.containsKey(thisServer)) {
+                    data.spawns.put(thisServer, data.spawn);
+                    // optionnel: data.spawn = null;
+                    save();
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
             data = new Data();
         }
     }
+
 
     private void save() {
         try (FileWriter w = new FileWriter(file)) {
@@ -253,7 +251,6 @@ public class JsonStorage implements StorageApi {
         }
     }
 
-    /* ---------------- location helpers ---------------- */
 
     private static Document toDoc(Location loc) {
         if (loc == null) return null;
@@ -281,17 +278,47 @@ public class JsonStorage implements StorageApi {
         return loc;
     }
 
-    /* ---------------- DTOs ---------------- */
 
     private static final class Data {
+        Map<String, Document> spawns = new LinkedHashMap<>();
+
         Document spawn = null;
         Map<String, Document> warps = new LinkedHashMap<>();
         Map<String, PlayerData> players = new LinkedHashMap<>();
     }
+    @Override
+    public void setSpawn(String server, Location loc) {
+        if (server == null) server = "";
+        final String key = server.toLowerCase(Locale.ROOT);
+
+        synchronized (lock) {
+            if (loc == null) {
+                if (data.spawns != null) data.spawns.remove(key);
+            } else {
+                if (data.spawns == null) data.spawns = new LinkedHashMap<>();
+                data.spawns.put(key, toDoc(loc));
+            }
+            save();
+        }
+    }
+
+    @Override
+    public Location getSpawn(String server) {
+        if (server == null) server = "";
+        final String key = server.toLowerCase(Locale.ROOT);
+
+        synchronized (lock) {
+            if (data.spawns != null) {
+                Document d = data.spawns.get(key);
+                if (d != null) return fromDoc(d);
+            }
+            return fromDoc(data.spawn);
+        }
+    }
 
     private static final class PlayerData {
-        Document lastLocation = null;                 // legacy /back storage
+        Document lastLocation = null;
         Map<String, Document> homes = new LinkedHashMap<>();
-        Map<String, Object> back = null;             //  global /back data (BackLocation.toMap)
+        Map<String, Object> back = null;
     }
 }

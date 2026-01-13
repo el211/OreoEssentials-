@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/FlySpeedCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.util.Lang;
@@ -54,7 +53,7 @@ public final class FlySpeedCommand implements TabExecutor {
             return true;
         }
 
-        float speed = level / 10.0f; // 1→0.1f, 10→1.0f
+        float speed = level / 10.0f;
         trySetSpeed(p, speed);
 
         if (p.getAllowFlight()) {
@@ -79,7 +78,6 @@ public final class FlySpeedCommand implements TabExecutor {
     }
 
     private static void trySetSpeed(Player p, float speed) {
-        // Bukkit expects -1.0..1.0; we use 0.1..1.0
         try {
             p.setFlySpeed(speed);
         } catch (IllegalArgumentException ex) {
@@ -87,7 +85,6 @@ public final class FlySpeedCommand implements TabExecutor {
         }
     }
 
-    /* ---------------- Tab Complete ---------------- */
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {

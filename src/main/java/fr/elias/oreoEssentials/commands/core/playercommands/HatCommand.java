@@ -30,7 +30,6 @@ public class HatCommand implements OreoCommand {
         if (old != null && old.getType() != Material.AIR) {
             p.getInventory().addItem(old);
         }
-        // remove one from hand
         if (hand.getAmount() > 1) {
             hand.setAmount(hand.getAmount() - 1);
             p.getInventory().setItemInMainHand(hand);

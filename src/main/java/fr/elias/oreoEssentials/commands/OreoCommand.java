@@ -11,12 +11,11 @@ public interface OreoCommand {
     List<String> aliases();
     String permission();
     String usage();
-    boolean playerOnly(); // why: guard commands that make no sense from console
+    boolean playerOnly();
 
     boolean execute(CommandSender sender, String label, String[] args);
-    // 🔽 Ajoute ça :
     default List<String> tabComplete(CommandSender sender, String alias, String[] args) {
-        return Collections.emptyList(); // par défaut : rien
+        return Collections.emptyList();
     }
 }
 

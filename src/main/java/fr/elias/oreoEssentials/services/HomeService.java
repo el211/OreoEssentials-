@@ -1,24 +1,22 @@
-// src/main/java/fr/elias/oreoEssentials/services/HomeService.java
 package fr.elias.oreoEssentials.services;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class HomeService {
     private final StorageApi storage;
     private final ConfigService config;
     private final HomeDirectory directory;
-    private final String localServer; // <- single source
+    private final String localServer;
 
     public HomeService(StorageApi storage, ConfigService config, HomeDirectory directory) {
         this.storage = storage;
         this.config = config;
         this.directory = directory;
-        this.localServer = config.serverName(); // <-- IMPORTANT change
+        this.localServer = config.serverName();
     }
 
     public boolean setHome(Player player, String name, Location loc) {
@@ -29,7 +27,6 @@ public class HomeService {
 
         boolean ok = storage.setHome(player.getUniqueId(), n, loc);
         if (ok && directory != null) {
-            // record ownership with the *same* server name source
             directory.setHomeServer(player.getUniqueId(), n, localServer);
         }
         return ok;
@@ -41,16 +38,19 @@ public class HomeService {
         return ok;
     }
 
-    public Location getHome(UUID uuid, String name) { return storage.getHome(uuid, name); }
-    public Set<String> homes(UUID uuid) { return storage.homes(uuid); }
+    public Location getHome(UUID uuid, String name) {
+        return storage.getHome(uuid, name);
+    }
 
-    /** Returns server that owns home, or local if unknown. */
+    public Set<String> homes(UUID uuid) {
+        return storage.homes(uuid);
+    }
+
     public String homeServer(UUID uuid, String name) {
         if (directory == null) return localServer;
         String s = directory.getHomeServer(uuid, name);
         return s == null ? localServer : s;
     }
-// inside HomeService.java
 
     public static final class StoredHome {
         private final String world;
@@ -64,32 +64,66 @@ public class HomeService {
             this.z = z;
             this.server = server;
         }
-        public String getWorld()  { return world; }
-        public double getX()      { return x; }
-        public double getY()      { return y; }
-        public double getZ()      { return z; }
-        public String getServer() { return server; }
+
+        public String getWorld() {
+            return world;
+        }
+
+        public double getX() {
+            return x;
+        }
+
+        public double getY() {
+            return y;
+        }
+
+        public double getZ() {
+            return z;
+        }
+
+        public String getServer() {
+            return server;
+        }
     }
 
-    /**
-     * Returns all homes for the given player, keyed by (lower-cased) home name.
-     * This is the canonical method that /otherhomes and /otherhome use.
-     */
-    public Map<String, StoredHome> listHomes(java.util.UUID owner) {
-        // delegate to storage (see next step)
+    public Map<String, StoredHome> listHomes(UUID owner) {
         return storage.listHomes(owner);
     }
-    /** Convenience: all home names across servers. */
-    public java.util.Set<String> allHomeNames(UUID owner) {
-        Map<String, StoredHome> m = listHomes(owner);
-        return (m == null) ? java.util.Collections.emptySet() : m.keySet();
+
+    public Set<String> allHomeNames(UUID owner) {
+        Set<String> result = new HashSet<>();
+
+        if (directory != null) {
+            try {
+                Set<String> directoryNames = directory.listHomes(owner);
+                Bukkit.getLogger().info("[HOME/DEBUG] Directory returned: " + directoryNames + " for " + owner);
+                if (directoryNames != null && !directoryNames.isEmpty()) {
+                    result.addAll(directoryNames);
+                }
+            } catch (Throwable t) {
+                Bukkit.getLogger().warning("[HOME/DEBUG] Directory error: " + t.getMessage());
+                t.printStackTrace();
+            }
+        } else {
+            Bukkit.getLogger().warning("[HOME/DEBUG] Directory is NULL!");
+        }
+
+        try {
+            Set<String> local = homes(owner);
+            if (local != null) {
+                result.addAll(local);
+            }
+        } catch (Throwable ignored) {
+        }
+
+        Bukkit.getLogger().info("[HOME/DEBUG] Final result: " + result);
+        return result;
     }
 
-    /** Convenience: name -> server map (server falls back to local when null). */
-    public java.util.Map<String, String> homeServers(UUID owner) {
+    public Map<String, String> homeServers(UUID owner) {
         Map<String, StoredHome> m = listHomes(owner);
-        if (m == null) return java.util.Collections.emptyMap();
-        java.util.Map<String, String> out = new java.util.HashMap<>();
+        if (m == null) return Collections.emptyMap();
+        Map<String, String> out = new HashMap<>();
         for (var e : m.entrySet()) {
             String srv = (e.getValue() == null || e.getValue().getServer() == null)
                     ? localServer : e.getValue().getServer();
@@ -98,5 +132,7 @@ public class HomeService {
         return out;
     }
 
-    public String localServer() { return localServer; }
+    public String localServer() {
+        return localServer;
+    }
 }

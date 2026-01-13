@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/SetWarpCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -45,7 +44,6 @@ public class SetWarpCommand implements OreoCommand {
                 "<green>Warp <aqua>%warp%</aqua> has been set.</green>",
                 Map.of("warp", name));
 
-        // Record owner server if directory exists (cross-server)
         WarpDirectory warpDir = OreoEssentials.get().getWarpDirectory();
         if (warpDir != null) {
             String local = OreoEssentials.get().getConfig().getString("server.name", Bukkit.getServer().getName());

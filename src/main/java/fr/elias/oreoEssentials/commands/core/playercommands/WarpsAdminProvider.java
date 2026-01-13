@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/WarpsAdminProvider.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -36,7 +35,6 @@ public class WarpsAdminProvider implements InventoryProvider {
 
     @Override
     public void update(Player p, InventoryContents contents) {
-        // static; manual refresh via button
     }
 
     private void draw(Player p, InventoryContents contents) {
@@ -46,16 +44,13 @@ public class WarpsAdminProvider implements InventoryProvider {
         final String localServer = plugin.getConfigService().serverName();
         final WarpDirectory dir = plugin.getWarpDirectory();
 
-        // Collect and sort warps
         List<String> names = new ArrayList<>(safeListWarps());
         names.sort(String.CASE_INSENSITIVE_ORDER);
 
-        // Header counter + refresh
         contents.set(0, 4, ClickableItem.empty(counterItem(p, names.size())));
         contents.set(0, 8, ClickableItem.of(refreshItem(p), e ->
                 contents.inventory().open(p, contents.pagination().getPage())));
 
-        // Build grid items
         ClickableItem[] items = names.stream().map(displayName -> {
             final String key = displayName.toLowerCase(Locale.ROOT);
 
@@ -81,7 +76,6 @@ public class WarpsAdminProvider implements InventoryProvider {
                     return;
                 }
 
-                // Open actions GUI for all other clicks (LEFT/RIGHT/etc.)
                 String actionTitle = Lang.msgWithDefault(
                         "warp.admin.gui.title",
                         "<dark_aqua>Warp: <aqua>%warp%</aqua></dark_aqua>",
@@ -100,7 +94,6 @@ public class WarpsAdminProvider implements InventoryProvider {
             });
         }).toArray(ClickableItem[]::new);
 
-        // Pagination: rows 1..4, cols 1..7 (28 per page)
         Pagination pagination = contents.pagination();
         pagination.setItems(items);
         pagination.setItemsPerPage(28);
@@ -112,7 +105,6 @@ public class WarpsAdminProvider implements InventoryProvider {
         it.blacklist(4, 0); it.blacklist(4, 8);
         pagination.addToIterator(it);
 
-        // Footer nav
         if (!pagination.isFirst()) {
             String prevName = Lang.msgWithDefault(
                     "warp.admin.list.previous",
@@ -134,7 +126,6 @@ public class WarpsAdminProvider implements InventoryProvider {
         }
     }
 
-    /* ---------------- data + items ---------------- */
 
     private Set<String> safeListWarps() {
         try {
@@ -234,7 +225,6 @@ public class WarpsAdminProvider implements InventoryProvider {
 
             List<String> lore = new ArrayList<>();
 
-            // Server line
             lore.add(Lang.msgWithDefault(
                     "warp.admin.list.warp-server",
                     "<gray>Server: <yellow>%server%</yellow></gray>",
@@ -242,7 +232,6 @@ public class WarpsAdminProvider implements InventoryProvider {
                     p
             ));
 
-            // World and coordinates (if available)
             if (loc != null && loc.getWorld() != null) {
                 lore.add(Lang.msgWithDefault(
                         "warp.admin.list.warp-world",
@@ -261,7 +250,6 @@ public class WarpsAdminProvider implements InventoryProvider {
 
             lore.add(" ");
 
-            // Permission line
             if (protectedMode) {
                 lore.add(Lang.msgWithDefault(
                         "warp.admin.list.warp-perm-protected",
@@ -279,7 +267,6 @@ public class WarpsAdminProvider implements InventoryProvider {
 
             lore.add(" ");
 
-            // Action hints
             lore.add(Lang.msgWithDefault(
                     "warp.admin.list.warp-click",
                     "<green>Click: <white>Open actions</white></green>",

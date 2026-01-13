@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/commands/completion/EnchantTabCompleter.java
 package fr.elias.oreoEssentials.commands.completion;
 
 import org.bukkit.NamespacedKey;

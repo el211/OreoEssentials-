@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/commands/core/admins/SkinCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -39,25 +38,20 @@ public class SkinCommand implements OreoCommand, org.bukkit.command.TabCompleter
 
         String target = args[0];
 
-        // Special case: reset to own skin
         if (target.equalsIgnoreCase("reset")) {
             resetSkin(self);
             return true;
         }
 
-        // Check if target is online first
         PlayerProfile onlineProfile = SkinUtil.onlineProfileOf(target);
         if (onlineProfile != null) {
-            // Online player - apply immediately
             applySkin(self, onlineProfile, target);
             return true;
         }
 
-        // Not online - fetch from Mojang asynchronously
         self.sendMessage(ChatColor.GRAY + "Fetching skin for " + ChatColor.WHITE + target + ChatColor.GRAY + "...");
 
         Bukkit.getScheduler().runTaskAsynchronously(OreoEssentials.get(), () -> {
-            // Step 1: Get UUID
             UUID uuid = MojangSkinFetcher.fetchUuid(target);
             if (uuid == null) {
                 self.sendMessage(ChatColor.RED + "Player '" + target + "' not found.");
@@ -65,7 +59,6 @@ public class SkinCommand implements OreoCommand, org.bukkit.command.TabCompleter
                 return;
             }
 
-            // Step 2: Fetch profile with textures
             PlayerProfile profile = MojangSkinFetcher.fetchProfileWithTextures(uuid, target);
             if (profile == null) {
                 self.sendMessage(ChatColor.RED + "Failed to fetch skin for " + target);
@@ -73,7 +66,6 @@ public class SkinCommand implements OreoCommand, org.bukkit.command.TabCompleter
                 return;
             }
 
-            // Step 3: Apply on main thread
             Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
                 applySkin(self, profile, target);
             });
@@ -83,17 +75,14 @@ public class SkinCommand implements OreoCommand, org.bukkit.command.TabCompleter
     }
 
     private void applySkin(Player player, PlayerProfile sourceProfile, String sourceName) {
-        // Verify textures exist
         if (sourceProfile.getTextures() == null || sourceProfile.getTextures().getSkin() == null) {
             player.sendMessage(ChatColor.RED + "Player " + sourceName + " has no skin texture.");
             return;
         }
 
-        // Copy textures to player's profile
         PlayerProfile myProfile = player.getPlayerProfile();
         SkinUtil.copyTextures(sourceProfile, myProfile);
 
-        // Apply the profile
         boolean applied = SkinUtil.applyProfile(player, myProfile);
 
         if (!applied) {
@@ -102,7 +91,6 @@ public class SkinCommand implements OreoCommand, org.bukkit.command.TabCompleter
             return;
         }
 
-        // Refresh for other players
         SkinRefresh.refresh(player);
 
         player.sendMessage(ChatColor.GREEN + "✓ Your skin is now " + ChatColor.AQUA + sourceName + ChatColor.GREEN + "!");
@@ -114,13 +102,10 @@ public class SkinCommand implements OreoCommand, org.bukkit.command.TabCompleter
 
         Bukkit.getScheduler().runTaskAsynchronously(OreoEssentials.get(), () -> {
             try {
-                // Fetch fresh profile from Mojang
                 PlayerProfile original = Bukkit.createPlayerProfile(player.getUniqueId(), player.getName());
 
-                // Update() returns CompletableFuture - wait for it
                 PlayerProfile updated = original.update().get(10, java.util.concurrent.TimeUnit.SECONDS);
 
-                // Apply on main thread
                 Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
                     boolean applied = SkinUtil.applyProfile(player, updated);
 
@@ -151,7 +136,6 @@ public class SkinCommand implements OreoCommand, org.bukkit.command.TabCompleter
                     .sorted(String.CASE_INSENSITIVE_ORDER)
                     .collect(Collectors.toList());
 
-            // Add "reset" option
             if ("reset".startsWith(p)) {
                 suggestions.add(0, "reset");
             }

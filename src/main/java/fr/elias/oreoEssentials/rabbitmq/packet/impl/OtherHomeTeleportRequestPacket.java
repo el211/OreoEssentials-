@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/packet/impl/OtherHomeTeleportRequestPacket.java
 package fr.elias.oreoEssentials.rabbitmq.packet.impl;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
@@ -8,8 +7,8 @@ import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteOutputStream;
 import java.util.UUID;
 
 public final class OtherHomeTeleportRequestPacket extends Packet {
-    private UUID subjectId;     // who will be teleported (admin)
-    private UUID ownerId;       // whose home it is
+    private UUID subjectId;
+    private UUID ownerId;
     private String homeName;
     private String targetServer;
     private String requestId;

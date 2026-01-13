@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/ClearCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -29,21 +28,17 @@ public class ClearCommand implements OreoCommand {
         OreoEssentials plugin = OreoEssentials.get();
         PlayerDirectory directory = plugin.getPlayerDirectory();
 
-        // InventoryService via Bukkit ServicesManager
         InventoryService invService = Bukkit.getServicesManager()
                 .load(InventoryService.class);
 
         if (invService == null) {
-            // Info to staff: no persistent clear available
             Lang.send(sender,
                     "admin.clear.no-service",
                     "<yellow>Note: Inventory service unavailable - clearing local only.</yellow>");
         }
 
-        // ---------- /clear (self) ----------
         if (args.length == 0) {
             if (!(sender instanceof Player p)) {
-                // Console must specify a player
                 Lang.send(sender,
                         "admin.clear.console-usage",
                         "<red>Usage: /%label% <player></red>",
@@ -53,10 +48,8 @@ public class ClearCommand implements OreoCommand {
 
             UUID uuid = p.getUniqueId();
 
-            // 1) Clear live inventory on THIS server
             clearLiveInventory(p);
 
-            // 2) Clear persistent (Mongo/YAML) if service available
             if (invService != null) {
                 clearPersistentInventory(invService, uuid);
                 Lang.send(p,
@@ -71,7 +64,6 @@ public class ClearCommand implements OreoCommand {
             return true;
         }
 
-        // ---------- /clear <player> ----------
         if (!sender.hasPermission("oreo.clear.others")) {
             Lang.send(sender,
                     "admin.clear.others-no-permission",
@@ -81,7 +73,6 @@ public class ClearCommand implements OreoCommand {
 
         String targetName = args[0];
 
-        // 1) Resolve cross-server via PlayerDirectory
         UUID targetUuid = directory.lookupUuidByName(targetName);
         if (targetUuid == null) {
             Lang.send(sender,
@@ -91,19 +82,16 @@ public class ClearCommand implements OreoCommand {
             return true;
         }
 
-        // 2) If player is online on THIS server, clear live
         Player online = Bukkit.getPlayer(targetUuid);
         if (online != null) {
             clearLiveInventory(online);
 
             if (invService != null) {
-                // Notify player: clear all servers
                 Lang.send(online,
                         "admin.clear.target-notified-all",
                         "<yellow>Your inventory was cleared on all servers by <aqua>%player%</aqua>.</yellow>",
                         Map.of("player", sender.getName()));
             } else {
-                // Notify player: clear local only
                 Lang.send(online,
                         "admin.clear.target-notified-local",
                         "<yellow>Your inventory was cleared on this server by <aqua>%player%</aqua>.</yellow>",
@@ -111,7 +99,6 @@ public class ClearCommand implements OreoCommand {
             }
         }
 
-        // 3) Clear persistent (cross-server effect)
         if (invService != null) {
             clearPersistentInventory(invService, targetUuid);
             Lang.send(sender,
@@ -137,9 +124,9 @@ public class ClearCommand implements OreoCommand {
 
     private void clearPersistentInventory(InventoryService invService, UUID uuid) {
         InventoryService.Snapshot snap = new InventoryService.Snapshot();
-        snap.contents = new ItemStack[41]; // 41 slots: all null => empty inventory
-        snap.armor = new ItemStack[4];     // 4 armor slots empty
-        snap.offhand = null;               // offhand empty
+        snap.contents = new ItemStack[41];
+        snap.armor = new ItemStack[4];
+        snap.offhand = null;
 
         invService.save(uuid, snap);
     }

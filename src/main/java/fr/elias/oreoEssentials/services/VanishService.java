@@ -22,7 +22,6 @@ public class VanishService {
         return vanished.contains(p.getUniqueId());
     }
 
-    /** Toggle vanish for a player. Returns true if now vanished, false if now visible. */
     public boolean toggle(Player p) {
         if (isVanished(p)) {
             show(p);
@@ -35,7 +34,6 @@ public class VanishService {
         }
     }
 
-    /** Hide p from everyone else. */
     public void hide(Player p) {
         for (Player other : Bukkit.getOnlinePlayers()) {
             if (other.equals(p)) continue;
@@ -43,7 +41,6 @@ public class VanishService {
         }
     }
 
-    /** Show p to everyone else. */
     public void show(Player p) {
         for (Player other : Bukkit.getOnlinePlayers()) {
             if (other.equals(p)) continue;
@@ -51,7 +48,6 @@ public class VanishService {
         }
     }
 
-    /** Ensure joining player cannot see any already-vanished players. */
     public void applyToJoiner(Player joiner) {
         for (UUID id : vanished) {
             Player vanishedPlayer = Bukkit.getPlayer(id);
@@ -61,7 +57,6 @@ public class VanishService {
         }
     }
 
-    /** Make sure a leaving player is removed from the set. */
     public void handleQuit(Player quitter) {
         vanished.remove(quitter.getUniqueId());
     }

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/DisenchantCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -47,7 +46,6 @@ public class DisenchantCommand implements OreoCommand {
 
         String target = args[0].toLowerCase(Locale.ROOT).trim();
 
-        // Remove ALL enchantments
         if (target.equals("all") || target.equals("*")) {
             item.getEnchantments().keySet().forEach(item::removeEnchantment);
             Lang.send(p, "admin.disenchant.all",
@@ -77,7 +75,6 @@ public class DisenchantCommand implements OreoCommand {
             try {
                 remove = Math.max(1, Integer.parseInt(args[1]));
             } catch (NumberFormatException ignored) {
-                // Ignore invalid numbers, default to 1
             }
         }
 
@@ -104,14 +101,12 @@ public class DisenchantCommand implements OreoCommand {
     }
 
     private static String enchKey(Enchantment e) {
-        // Prefer namespaced key string (e.g., minecraft:sharpness or plugin:custom)
         return e.getKey().toString();
     }
 
     private static Enchantment resolve(String input) {
         String s = input.toLowerCase(Locale.ROOT).trim();
 
-        // Try exact namespaced key (plugin:ench or minecraft:ench)
         try {
             NamespacedKey key = NamespacedKey.fromString(s);
             if (key != null) {
@@ -120,11 +115,9 @@ public class DisenchantCommand implements OreoCommand {
             }
         } catch (Exception ignored) {}
 
-        // Try minecraft:<s>
         Enchantment byMc = Enchantment.getByKey(NamespacedKey.minecraft(s));
         if (byMc != null) return byMc;
 
-        // Try matching by key only (simple id)
         for (Enchantment e : Enchantment.values()) {
             String simple = e.getKey().getKey();
             if (simple.equalsIgnoreCase(s) || e.getKey().toString().equalsIgnoreCase(s)) {

@@ -12,8 +12,8 @@ public final class PendingTeleportRegistry {
 
     public static final class Pending {
         public final Kind kind;
-        public final String name; // home/warp name (null for SPAWN/LOCATION)
-        public final Location direct; // non-null only for LOCATION
+        public final String name;
+        public final Location direct;
         public Pending(Kind kind, String name, Location direct) { this.kind = kind; this.name = name; this.direct = direct; }
         @Override public String toString() { return "Pending{kind=" + kind + ", name=" + name + ", direct=" + direct + '}'; }
     }

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/WarpsPlayerProvider.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -45,7 +44,6 @@ public class WarpsPlayerProvider implements InventoryProvider {
         List<String> names = new ArrayList<>(safeListWarps());
         names.sort(String.CASE_INSENSITIVE_ORDER);
 
-        // Header + refresh
         contents.set(0, 4, ClickableItem.empty(counterItem(p, names.size())));
         contents.set(0, 8, ClickableItem.of(refreshItem(p), e ->
                 contents.inventory().open(p, contents.pagination().getPage())));
@@ -71,7 +69,6 @@ public class WarpsPlayerProvider implements InventoryProvider {
                             "<red>You don't have permission for this warp.</red>");
                     return;
                 }
-                // Uses the admin teleport helper to keep behavior consistent (local/cross-server)
                 WarpsAdminCommand.crossServerTeleport(warps, p, displayName);
             });
         }).toArray(ClickableItem[]::new);

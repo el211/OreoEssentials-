@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/customcraft/CustomCraftingListener.java
 package fr.elias.oreoEssentials.customcraft;
 
 import fr.elias.oreoEssentials.util.Lang;
@@ -52,7 +51,6 @@ public final class CustomCraftingListener implements Listener {
             if (perm == null) return;
             if (e.getWhoClicked() instanceof Player p && !p.hasPermission(perm)) {
                 e.setCancelled(true);
-                // why: GUI strings need legacy; chat can use Component with full MM
                 Component msg = MM.deserialize(applyPapi(p, Lang.get("customcraft.messages.no-permission-craft",
                         "<red>You need <yellow>%permission%</yellow> to craft this."))
                         .replace("%permission%", perm));
@@ -61,7 +59,6 @@ public final class CustomCraftingListener implements Listener {
         });
     }
 
-    /* ---------------- util ---------------- */
 
     private static String applyPapi(Player p, String raw) {
         if (raw == null) return "";

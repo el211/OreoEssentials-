@@ -9,7 +9,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-/** Minimal Discord Webhook helper with sync/async send. */
 public class DiscordWebhook {
     private final Plugin plugin;      // for async scheduler
     private final String webhookUrl;
@@ -23,17 +22,14 @@ public class DiscordWebhook {
         return !webhookUrl.isEmpty();
     }
 
-    /** Fire-and-forget on a Bukkit async thread. */
     public void sendAsync(String username, String content) {
         if (!isConfigured()) return;
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> send(username, content));
     }
 
-    /** Synchronous call (use only off the main thread). */
     public void send(String username, String content) {
         if (!isConfigured()) return;
 
-        // Clean & truncate to Discord limits (2,000 chars content)
         String plain = stripColors(content);
         if (plain.length() > 1900) plain = plain.substring(0, 1900) + "…";
 
@@ -78,7 +74,6 @@ public class DiscordWebhook {
         return (s == null || s.isBlank()) ? "Minecraft" : s;
     }
 
-    /** Minimal JSON escaper. */
     private String escapeJson(String s) {
         StringBuilder out = new StringBuilder(s.length() + 16);
         for (int i = 0; i < s.length(); i++) {

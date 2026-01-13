@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/EnchantCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -97,14 +96,12 @@ public class EnchantCommand implements OreoCommand {
     }
 
     private static String enchKey(Enchantment e) {
-        // Prefer stable namespaced form, e.g., "minecraft:sharpness"
         return e.getKey().toString();
     }
 
     private static Enchantment resolve(String input) {
         String s = input.toLowerCase(Locale.ROOT).trim();
 
-        // Try exact namespaced key first (plugin:ench or minecraft:ench)
         try {
             NamespacedKey key = NamespacedKey.fromString(s);
             if (key != null) {
@@ -113,11 +110,9 @@ public class EnchantCommand implements OreoCommand {
             }
         } catch (Exception ignored) {}
 
-        // Try implicit minecraft namespace
         Enchantment byMc = Enchantment.getByKey(NamespacedKey.minecraft(s));
         if (byMc != null) return byMc;
 
-        // Fallback: match by simple key ("sharpness", "looting", etc.)
         for (Enchantment e : Enchantment.values()) {
             String simple = e.getKey().getKey();
             if (simple.equalsIgnoreCase(s) || e.getKey().toString().equalsIgnoreCase(s)) {

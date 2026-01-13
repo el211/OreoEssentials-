@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/aliases/AliasEditorCommand.java
 package fr.elias.oreoEssentials.aliases;
 
 import fr.minuskube.inv.InventoryManager;
@@ -32,7 +31,6 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
         String sub = args[0].toLowerCase(Locale.ROOT);
         switch (sub) {
 
-            /* ---------------- GUI ---------------- */
             case "gui" -> {
                 if (!(sender instanceof Player p)) {
                     sender.sendMessage("§cOnly players can use the GUI.");
@@ -42,7 +40,6 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            /* ---------------- BASIC CRUD ---------------- */
             case "list" -> {
                 var map = service.all();
                 if (map.isEmpty()) { sender.sendMessage("§7No aliases defined."); return true; }
@@ -61,7 +58,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            case "create" -> { // /aliaseditor create <name> <PLAYER|CONSOLE> <command...>
+            case "create" -> {
                 if (args.length < 4) { sender.sendMessage("§cUsage: /aliaseditor create <name> <PLAYER|CONSOLE> <command...>"); return true; }
                 String name = args[1].toLowerCase(Locale.ROOT);
                 if (service.exists(name)) { sender.sendMessage("§cAlias already exists."); return true; }
@@ -79,7 +76,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            case "set" -> { // /aliaseditor set <name> <command...>
+            case "set" -> {
                 if (args.length < 3) { sender.sendMessage("§cUsage: /aliaseditor set <name> <command...>"); return true; }
                 String name = args[1].toLowerCase(Locale.ROOT);
                 var def = service.get(name);
@@ -92,7 +89,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            case "addline" -> { // /aliaseditor addline <name> <command...>
+            case "addline" -> {
                 if (args.length < 3) { sender.sendMessage("§cUsage: /aliaseditor addline <name> <command...>"); return true; }
                 String name = args[1].toLowerCase(Locale.ROOT);
                 var def = service.get(name);
@@ -121,7 +118,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            case "runas" -> { // /aliaseditor runas <name> <PLAYER|CONSOLE>
+            case "runas" -> {
                 if (args.length < 3) { sender.sendMessage("§cUsage: /aliaseditor runas <name> <PLAYER|CONSOLE>"); return true; }
                 var def = service.get(args[1]);
                 if (def == null) { sender.sendMessage("§cAlias not found."); return true; }
@@ -133,7 +130,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            case "cooldown" -> { // /aliaseditor cooldown <name> <seconds>
+            case "cooldown" -> {
                 if (args.length < 3) { sender.sendMessage("§cUsage: /aliaseditor cooldown <name> <seconds>"); return true; }
                 var def = service.get(args[1]);
                 if (def == null) { sender.sendMessage("§cAlias not found."); return true; }
@@ -188,7 +185,6 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            /* ---------------- CHECKS & LOGIC ---------------- */
             case "addcheck" -> {
                 if (args.length < 3) { sender.sendMessage("§cUsage: /aliaseditor addcheck <name> <expr...>"); return true; }
                 var def = service.get(args[1]); if (def == null) { sender.sendMessage("§cAlias not found."); return true; }
@@ -241,8 +237,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            /* ----------------  PERM-GATE & TABS ---------------- */
-            case "permgate" -> { // /aliaseditor permgate <name> <true|false>
+            case "permgate" -> {
                 if (args.length < 3) { sender.sendMessage("§cUsage: /aliaseditor permgate <name> <true|false>"); return true; }
                 var def = service.get(args[1]); if (def == null) { sender.sendMessage("§cAlias not found."); return true; }
                 def.permGate = parseBoolean(args[2], null);
@@ -251,7 +246,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            case "tabs" -> { // /aliaseditor tabs <name> <true|false>
+            case "tabs" -> {
                 if (args.length < 3) { sender.sendMessage("§cUsage: /aliaseditor tabs <name> <true|false>"); return true; }
                 var def = service.get(args[1]); if (def == null) { sender.sendMessage("§cAlias not found."); return true; }
                 def.addTabs = parseBoolean(args[2], null);
@@ -262,7 +257,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            case "addtab" -> { // /aliaseditor addtab <name> <index> <value1,value2,...>
+            case "addtab" -> {
                 if (args.length < 4) { sender.sendMessage("§cUsage: /aliaseditor addtab <name> <index> <value1,value2,...>"); return true; }
                 var def = service.get(args[1]); if (def == null) { sender.sendMessage("§cAlias not found."); return true; }
                 int index;
@@ -279,12 +274,12 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
 
                 def.customTabs.set(index - 1, new ArrayList<>(vals));
                 service.save();
-                service.applyRuntimeRegistration(); // in case tabs just enabled
+                service.applyRuntimeRegistration();
                 sender.sendMessage("§aSet tab group #" + index + " for /" + def.name + " to: §f" + String.join(", ", vals));
                 return true;
             }
 
-            case "deltag" -> { // /aliaseditor deltag <name> <index>
+            case "deltag" -> {
                 if (args.length < 3) { sender.sendMessage("§cUsage: /aliaseditor deltag <name> <index>"); return true; }
                 var def = service.get(args[1]); if (def == null) { sender.sendMessage("§cAlias not found."); return true; }
                 int index;
@@ -297,7 +292,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            case "cleartabs" -> { // /aliaseditor cleartabs <name>
+            case "cleartabs" -> {
                 if (args.length < 2) { sender.sendMessage("§cUsage: /aliaseditor cleartabs <name>"); return true; }
                 var def = service.get(args[1]); if (def == null) { sender.sendMessage("§cAlias not found."); return true; }
                 def.customTabs.clear();
@@ -314,7 +309,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    /* ------------------------ Tab Completion ------------------------ */
+
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
@@ -337,7 +332,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
         switch (sub) {
             case "create" -> {
                 if (args.length == 3) return prefix(List.of("PLAYER","CONSOLE"), args[2]);
-                return List.of(); // name is free-form
+                return List.of();
             }
             case "set", "addline", "enable", "disable", "delete", "info",
                  "addcheck", "listchecks", "setfailmsg", "setlogic", "runas", "cooldown", "delcheck",
@@ -361,9 +356,8 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 }
                 if (sub.equals("cooldown") && args.length == 3) return prefix(List.of("0","5","30","60"), args[2]);
 
-                // addtab name <index> <values...>
                 if (sub.equals("addtab")) {
-                    if (args.length == 3) { // suggest current+next index
+                    if (args.length == 3) {
                         var def = service.get(args[1]);
                         int next = (def == null ? 1 : Math.max(1, def.customTabs.size() + 1));
                         List<String> suggestions = new ArrayList<>();
@@ -392,7 +386,6 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    /* ------------------------ Utils ------------------------ */
 
     private static Boolean parseBoolean(String s, Boolean def) {
         if (s == null) return def;

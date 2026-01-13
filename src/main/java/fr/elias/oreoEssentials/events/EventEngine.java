@@ -1,6 +1,10 @@
 // File: src/main/java/fr/elias/oreoEssentials/events/EventEngine.java
 package fr.elias.oreoEssentials.events;
 
+import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
+import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
+import fr.elias.oreoEssentials.rabbitmq.packet.impl.DeathMessagePacket;
 import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.entity.Entity;
@@ -20,7 +24,6 @@ public final class EventEngine implements Listener {
     private final EventConfig config;
     private final DeathMessageService deaths;
 
-    // pvp tracker: who recently tagged whom
     private final Map<UUID, UUID> pvpLastOpponent = new ConcurrentHashMap<>();
     private final Set<String> announcedFirstJoin = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
@@ -29,7 +32,6 @@ public final class EventEngine implements Listener {
         this.deaths = deaths;
     }
 
-    // Auto-translate &-colors for commands from events.yml
     private String colorize(String s) {
         return (s == null) ? null : s.replace('&', '§');
     }
@@ -52,11 +54,9 @@ public final class EventEngine implements Listener {
             boolean asPlayer  = line.toLowerCase(Locale.ROOT).startsWith("asplayer!");
             int delay         = extractDelay(line);
 
-            // Strip directives then colorize
             String cmd = strip(line);
             cmd = colorize(cmd);
 
-            // Snapshot into final variables for lambda
             final String cmdToRun      = cmd;
             final boolean asConsoleF   = asConsole;
             final boolean asPlayerF    = asPlayer;
@@ -322,13 +322,37 @@ public final class EventEngine implements Listener {
             }
         }
 
-        // Build and set death message (new overload)
+        // Build death message
         String msg = deaths.buildMessage(
                 dead, killer, mob,
                 last != null ? last.getCause() : null,
                 item, projectileType,
                 mythicId, mythicDisplay
         );
+
+        // Set local death message
         e.setDeathMessage(msg);
+
+        // NEW: Broadcast to all servers if cross-server messaging is enabled and message is not null
+        OreoEssentials plugin = OreoEssentials.get();
+        PacketManager pm = plugin.getPacketManager();
+
+        if (pm != null && pm.isInitialized() && msg != null && !msg.isEmpty()) {
+            String serverName = plugin.getConfigService().serverName();
+
+            DeathMessagePacket packet = new DeathMessagePacket(
+                    dead.getUniqueId(),
+                    dead.getName(),
+                    msg,
+                    serverName
+            );
+
+            // *** FIXED: Use PacketChannels.GLOBAL instead of PacketChannel.broadcast() ***
+            pm.sendPacket(fr.elias.oreoEssentials.rabbitmq.PacketChannels.GLOBAL, packet);
+
+            plugin.getLogger().info("[Death/Broadcast] player=" + dead.getName()
+                    + " server=" + serverName
+                    + " msg=" + msg);
+        }
     }
 }

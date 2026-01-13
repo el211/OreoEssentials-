@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/moderation/VanishCommand.java
 package fr.elias.oreoEssentials.commands.core.moderation;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;

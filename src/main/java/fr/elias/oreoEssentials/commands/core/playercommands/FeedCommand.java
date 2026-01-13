@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/FeedCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -21,9 +20,7 @@ public class FeedCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         Player target;
 
-        // Determine target player
         if (args.length >= 1) {
-            // Feed another player
             target = Bukkit.getPlayerExact(args[0]);
             if (target == null) {
                 Lang.send(sender, "feed.not-found",
@@ -31,7 +28,6 @@ public class FeedCommand implements OreoCommand {
                 return true;
             }
         } else {
-            // Feed self
             if (!(sender instanceof Player)) {
                 Lang.send(sender, "feed.console-self",
                         "<red>Console cannot feed itself. Specify a player.</red>");
@@ -40,15 +36,12 @@ public class FeedCommand implements OreoCommand {
             target = (Player) sender;
         }
 
-        // Restore hunger and saturation
         target.setFoodLevel(20);
         target.setSaturation(20f);
 
-        // Notify target
         Lang.send(target, "feed.fed",
                 "<green>Fed.</green>");
 
-        // Notify sender if feeding someone else
         if (target != sender) {
             Lang.send(sender, "feed.fed-other",
                     "<yellow>Fed <aqua>%player%</aqua>.</yellow>",

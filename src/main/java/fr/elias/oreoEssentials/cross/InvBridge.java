@@ -1,4 +1,3 @@
-// package: fr.elias.oreoEssentials.cross
 package fr.elias.oreoEssentials.cross;
 
 import com.google.gson.Gson;

@@ -28,26 +28,15 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Multi-language MiniMessage-first lang system with:
- * - MiniMessage support (gradients, hover, click, etc.)
- * - Legacy color code bridge (&, §, &#hex)
- * - PlaceholderAPI integration
- * - Multi-language support (lang_en.yml, lang_fr.yml, etc.)
- * - Map-based variable replacement (%var%)
- * - Console fallback (plain text)
- * - GUI helpers (legacy § codes for inventory titles)
- */
+
 public final class Lang {
 
     private static OreoEssentials plugin;
     private static YamlConfiguration cfg;
     private static String currentLanguage = "en";
 
-    /** RAW MiniMessage, never pre-serialized (to keep hover/gradient possible). */
     private static String prefixRaw = "";
 
-    // Parsers/serializers
     private static final MiniMessage MM = MiniMessage.builder().strict(false).build();
     private static final LegacyComponentSerializer LEGACY_AMP = LegacyComponentSerializer.legacyAmpersand();
     private static final LegacyComponentSerializer LEGACY_SEC = LegacyComponentSerializer.legacySection();
@@ -58,7 +47,6 @@ public final class Lang {
             .build();
     private static final PlainTextComponentSerializer PLAIN = PlainTextComponentSerializer.plainText();
 
-    // Detection + conversions
     private static final Pattern AMP_OR_SECTION = Pattern.compile("(?i)(?:&|§)[0-9A-FK-ORX]");
     private static final Pattern LEGACY_HEX_AMP_X = Pattern.compile("(?i)&x((&[0-9a-f]){6})");
     private static final Pattern LEGACY_HEX_SECTION_X = Pattern.compile("(?i)§x((§[0-9a-f]){6})");
@@ -67,27 +55,22 @@ public final class Lang {
 
     private Lang() {}
 
-    /* ============================= INIT / RELOAD ============================= */
 
     public static void init(OreoEssentials pl) {
         plugin = Objects.requireNonNull(pl, "plugin");
 
-        // Create lang/ directory if it doesn't exist
         File langFolder = new File(plugin.getDataFolder(), "lang");
         if (!langFolder.exists()) {
             langFolder.mkdirs();
         }
 
-        // Get language from config.yml
         currentLanguage = plugin.getConfig().getString("language", "en").toLowerCase();
 
-        // Check if old lang.yml exists (migration path)
         File oldLangFile = new File(plugin.getDataFolder(), "lang.yml");
         File newLangFile = new File(langFolder, "lang_" + currentLanguage + ".yml");
 
         if (oldLangFile.exists()) {
             if (!newLangFile.exists()) {
-                // Auto-migrate: copy old lang.yml to new lang_<language>.yml
                 try {
                     java.nio.file.Files.copy(
                             oldLangFile.toPath(),
@@ -106,7 +89,6 @@ public final class Lang {
                     plugin.getLogger().warning("[Lang] Please manually copy your messages to lang/lang_" + currentLanguage + ".yml");
                 }
             } else {
-                // Migration already done, just warn
                 plugin.getLogger().warning("╔════════════════════════════════════════════════════════╗");
                 plugin.getLogger().warning("║  NOTICE: lang.yml is deprecated!                       ║");
                 plugin.getLogger().warning("║                                                        ║");
@@ -119,10 +101,8 @@ public final class Lang {
             }
         }
 
-        // Extract all bundled lang files from JAR
         extractBundledLangFiles(langFolder);
 
-        // Load the selected language file
         loadLanguageFile(currentLanguage);
 
         plugin.getLogger().info("[Lang] Loaded language: " + currentLanguage);
@@ -131,19 +111,14 @@ public final class Lang {
     public static void reload() {
         if (plugin == null) return;
 
-        // Reload config to get latest language setting
         plugin.reloadConfig();
         currentLanguage = plugin.getConfig().getString("language", "en").toLowerCase();
 
-        // Reload the language file
         loadLanguageFile(currentLanguage);
 
         plugin.getLogger().info("[Lang] Reloaded language: " + currentLanguage);
     }
 
-    /**
-     * Extract all bundled lang_*.yml files from the JAR to the lang/ folder.
-     */
     private static void extractBundledLangFiles(File langFolder) {
         String[] bundledLangs = {"en", "fr", "es", "de", "pt", "nl", "it", "ru", "zh", "ja"};
 
@@ -151,7 +126,6 @@ public final class Lang {
             String fileName = "lang_" + lang + ".yml";
             File targetFile = new File(langFolder, fileName);
 
-            // Only extract if file doesn't exist (preserve user edits)
             if (!targetFile.exists()) {
                 try (InputStream is = plugin.getResource("lang/" + fileName)) {
                     if (is != null) {
@@ -165,14 +139,11 @@ public final class Lang {
         }
     }
 
-    /**
-     * Load a language file with fallback to English.
-     */
+
     private static void loadLanguageFile(String language) {
         File langFolder = new File(plugin.getDataFolder(), "lang");
         File langFile = new File(langFolder, "lang_" + language + ".yml");
 
-        // Fallback to English if requested language doesn't exist
         if (!langFile.exists()) {
             plugin.getLogger().warning("[Lang] Language file not found: lang_" + language + ".yml");
             plugin.getLogger().warning("[Lang] Falling back to English (lang_en.yml)");
@@ -180,10 +151,8 @@ public final class Lang {
             currentLanguage = "en";
         }
 
-        // Load the file
         cfg = YamlConfiguration.loadConfiguration(langFile);
 
-        // Merge defaults from the bundled file in JAR
         try (InputStream is = plugin.getResource("lang/lang_" + currentLanguage + ".yml")) {
             if (is != null) {
                 YamlConfiguration defCfg = YamlConfiguration.loadConfiguration(
@@ -216,23 +185,18 @@ public final class Lang {
         prefixRaw = get("general.prefix", "");
     }
 
-    /**
-     * Get the current language code (e.g., "en", "fr", "es").
-     */
+
     public static String getCurrentLanguage() {
         return currentLanguage;
     }
 
-    /**
-     * Set the language at runtime (useful for /oe reload or admin commands).
-     */
+
     public static void setLanguage(String lang) {
         currentLanguage = lang.toLowerCase();
         loadLanguageFile(currentLanguage);
         plugin.getLogger().info("[Lang] Switched to language: " + currentLanguage);
     }
 
-    /* ============================= LOW-LEVEL GETTERS ============================= */
 
     public static String get(String path, String def) {
         if (cfg == null) return def;
@@ -255,81 +219,42 @@ public final class Lang {
         return cfg.getDouble(path, def);
     }
 
-    /* ============================= CORE MSG METHODS WITH MAP SUPPORT ============================= */
-
-    /**
-     * Get message with variable replacement support.
-     * Returns legacy string (§-codes) suitable for GUI titles/lore.
-     * @param key Lang key
-     * @param vars Variables to replace (can be null)
-     * @param viewer Player for PAPI (can be null)
-     * @return Formatted message as legacy string
-     */
     public static String msg(String key, Map<?, ?> vars, Player viewer) {
         String resolved = rawOrDefault(key, null, vars, viewer);
         return toLegacy(resolved);
     }
 
-    /**
-     * Get message without variables (simple key + player).
-     * @param key Lang key
-     * @param viewer Player for PAPI (can be null)
-     * @return Formatted message as legacy string
-     */
+
     public static String msg(String key, Player viewer) {
         return msg(key, (Map<?, ?>) null, viewer);
     }
 
-    /**
-     * Get message with default value and variable replacement.
-     * @param key Lang key
-     * @param def Default if key not found
-     * @param vars Variables to replace (can be null)
-     * @param viewer Player for PAPI (can be null)
-     * @return Formatted message as legacy string
-     */
+
     public static String msgWithDefault(String key, String def, Map<?, ?> vars, Player viewer) {
         String resolved = rawOrDefault(key, def, vars, viewer);
         return toLegacy(resolved);
     }
 
-    /**
-     * Get message with default value, no variables.
-     * @param key Lang key
-     * @param def Default if key not found
-     * @param viewer Player for PAPI (can be null)
-     * @return Formatted message as legacy string
-     */
+
     public static String msgWithDefault(String key, String def, Player viewer) {
         return msgWithDefault(key, def, null, viewer);
     }
 
-    /**
-     * DEPRECATED: Old signature for backwards compatibility.
-     * Use msg(key, viewer) or msgWithDefault(key, def, viewer) instead.
-     */
+
     @Deprecated
     public static String msg(String key, String def, Player viewer) {
         return msgWithDefault(key, def, viewer);
     }
 
-    /**
-     * Convenience: resolve message by key, then apply %placeholders% from vars.
-     */
+
     public static String msgv(String key, Map<?, ?> vars, Player context) {
         return msg(key, vars, context);
     }
 
-    /**
-     * Same as above but allows a default string if the key is missing.
-     */
     public static String msgv(String key, String def, Map<?, ?> vars, Player context) {
         return msgWithDefault(key, def, vars, context);
     }
 
-    /* ============================= RESOLVE / PARSE ============================= */
-
-    /** Resolve lang → apply vars → PAPI → raw string (MiniMessage or legacy). */
     public static String raw(String key, Map<?, ?> vars, Player papiFor) {
         String s = get(key, "");
         if (s == null) return "";
@@ -346,7 +271,6 @@ public final class Lang {
         return s;
     }
 
-    /** Build chat Component (MiniMessage-first + legacy-& bridge). */
     public static Component msgComp(String key, Map<?, ?> vars, Player papiFor) {
         return toComponent(raw(key, vars, papiFor));
     }
@@ -355,7 +279,6 @@ public final class Lang {
         return msgComp(key, null, papiFor);
     }
 
-    /** Legacy string for GUI (inventory titles/lore). */
     public static String msgLegacy(String key, Map<?, ?> vars, Player papiFor) {
         return toLegacy(raw(key, vars, papiFor));
     }
@@ -364,17 +287,14 @@ public final class Lang {
         return msgLegacy(key, (String) null, papiFor);
     }
 
-    /** Legacy string for GUI with default and no variables. */
     public static String msgLegacy(String key, String def, Player papiFor) {
         return toLegacy(rawOrDefault(key, def, null, papiFor));
     }
 
-    /** Legacy string for GUI with default AND variables. */
     public static String msgLegacy(String key, String def, Map<?, ?> vars, Player papiFor) {
         return toLegacy(rawOrDefault(key, def, vars, papiFor));
     }
 
-    /** GUI helper: MM or & → legacy (for titles/buttons). */
     public static String ui(String key, String def, Map<?, ?> vars, Player p) {
         String resolved = rawOrDefault(key, def, vars, p);
         return toLegacy(resolved);
@@ -384,7 +304,6 @@ public final class Lang {
         return ui(key, def, null, p);
     }
 
-    /** GUI lore helper (list under baseKey.0, .1, ...), with default if empty. */
     public static List<String> uiList(String baseKey, List<String> def, Player p) {
         List<String> raw = new ArrayList<>();
         for (int i = 0; i < 400; i++) { // safe cap
@@ -398,7 +317,6 @@ public final class Lang {
         return out;
     }
 
-    /** Direct parse of arbitrary raw text (MiniMessage or legacy). */
     public static Component parse(String raw, Player p) {
         return toComponent(applyPapiMaybe(p, raw));
     }
@@ -407,9 +325,6 @@ public final class Lang {
         return toLegacy(applyPapiMaybe(p, raw));
     }
 
-    /* ============================= SENDING ============================= */
-
-    /** Send lang message with Map support. Player → Component; Console → plain text. */
     public static void send(CommandSender to, String key, String def, Map<?, ?> vars) {
         String resolved = rawOrDefault(key, def, vars, (to instanceof Player p) ? p : null);
         sendRaw(to, resolved);
@@ -423,7 +338,6 @@ public final class Lang {
         send(to, key, "", (Map<?, ?>) null);
     }
 
-    /** Send raw MiniMessage/legacy. Player → Component; Console → plain text. */
     public static void sendRaw(CommandSender to, String raw) {
         if (to instanceof Player p) {
             p.sendMessage(toComponent(applyPapiMaybe(p, raw)));
@@ -432,9 +346,7 @@ public final class Lang {
         }
     }
 
-    /* ============================= TITLES ============================= */
 
-    /** Title using lang keys; times in ticks. */
     public static void sendTitle(Player p,
                                  String titleKey, String titleDef,
                                  String subKey, String subDef,
@@ -456,13 +368,7 @@ public final class Lang {
         p.clearTitle();
     }
 
-    /* ============================= HUMANIZED TIME ============================= */
 
-    /**
-     * Humanize duration (seconds) using simple units; override strings via lang if desired.
-     * @param seconds Duration in seconds
-     * @return Human-readable string like "3 days, 2 hours and 15 minutes"
-     */
     public static String timeHuman(long seconds) {
         if (seconds < 0) seconds = 0;
         long d = seconds / 86400; seconds %= 86400;
@@ -489,41 +395,24 @@ public final class Lang {
         return out.toString();
     }
 
-    /* ============================= MISC ============================= */
 
-    /** Color utility: MiniMessage/legacy → legacy-§ with hex preserved. */
     public static String color(String s) { return toLegacy(s); }
 
-    /* ============================= CORE CONVERSION ============================= */
 
-    /**
-     * MM-first parse with legacy-& bridge; no-italic by default (Minecraft UI norm).
-     * This is the central method that handles both MiniMessage and legacy color codes.
-     *
-     * ✅ SUPPORTS:
-     * - MiniMessage tags: <gradient:#00FF00:#0000FF>text</gradient>
-     * - Hover/Click events: <hover:show_text:'tooltip'>text</hover>
-     * - Legacy codes: &a, &l, &#FF0000
-     * - Hex colors: &x&F&F&0&0&0&0 or &#FF0000
-     */
     public static Component toComponent(String input) {
         if (input == null || input.isEmpty()) return Component.empty();
 
         String normalized = input.replace('§', '&');
 
-        // Detect if this contains legacy codes (& or §)
         if (AMP_OR_SECTION.matcher(normalized).find()) {
-            // Convert legacy codes to MiniMessage, then parse
             String mm = legacyToMiniMessage(normalized);
             try {
                 return MM.deserialize(mm, baseResolvers()).decoration(TextDecoration.ITALIC, false);
             } catch (Throwable t) {
-                // Fallback to pure legacy parsing
                 return LEGACY_AMP.deserialize(normalized).decoration(TextDecoration.ITALIC, false);
             }
         }
 
-        // Pure MiniMessage (no legacy codes detected)
         try {
             return MM.deserialize(normalized, baseResolvers()).decoration(TextDecoration.ITALIC, false);
         } catch (Throwable t) {
@@ -532,20 +421,15 @@ public final class Lang {
         }
     }
 
-    /**
-     * Convert input (MiniMessage or legacy) to legacy § string.
-     * This preserves hex colors using the §x§R§R§G§G§B§B format.
-     */
+
     public static String toLegacy(String input) {
         if (input == null || input.isEmpty()) return "";
         return LEGACY_HEX.serialize(toComponent(input));
     }
 
-    /** Legacy (&, §, &#, &x&… hex) → MiniMessage tags. */
     private static String legacyToMiniMessage(String input) {
         if (input == null || input.isEmpty()) return "";
 
-        // &x&F&F&0&0&0&0 → <#FF0000>
         Matcher mx = LEGACY_HEX_AMP_X.matcher(input);
         StringBuffer sbx = new StringBuffer();
         while (mx.find()) {
@@ -555,7 +439,6 @@ public final class Lang {
         mx.appendTail(sbx);
         input = sbx.toString();
 
-        // §x§F§F§0§0§0§0 → <#FF0000>
         String section = input.replace('&', '§');
         Matcher ms = LEGACY_HEX_SECTION_X.matcher(section);
         StringBuffer sbs = new StringBuffer();
@@ -566,7 +449,6 @@ public final class Lang {
         ms.appendTail(sbs);
         input = sbs.toString().replace('§', '&');
 
-        // &#RRGGBB → <#RRGGBB>
         Matcher mh = LEGACY_HEX_HASH.matcher(input);
         StringBuffer sbh = new StringBuffer();
         while (mh.find()) {
@@ -575,7 +457,6 @@ public final class Lang {
         mh.appendTail(sbh);
         input = sbh.toString();
 
-        // &a, &l, &r, …
         Matcher m = LEGACY_CODES.matcher(input);
         StringBuffer sb = new StringBuffer();
         while (m.find()) {

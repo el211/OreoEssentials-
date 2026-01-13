@@ -25,12 +25,10 @@ public class ProxyMessenger implements PluginMessageListener {
 
     public ProxyMessenger(Plugin plugin) {
         this.plugin = plugin;
-        // Register channels
         Bukkit.getMessenger().registerOutgoingPluginChannel(plugin, BUNGEE_CHANNEL);
         Bukkit.getMessenger().registerIncomingPluginChannel(plugin, BUNGEE_CHANNEL, this);
     }
 
-    /** Ask proxy for server list (updates cache on response). */
     public void requestServers() {
         Player any = getAnyPlayer();
         if (any == null) return; // need a player context to send plugin message
@@ -42,7 +40,6 @@ public class ProxyMessenger implements PluginMessageListener {
         } catch (Exception ignored) {}
     }
 
-    /** Connect a player to another server. */
     public void connect(Player player, String serverName) {
         try {
             ByteArrayOutputStream b = new ByteArrayOutputStream();
@@ -53,7 +50,6 @@ public class ProxyMessenger implements PluginMessageListener {
         } catch (Exception ignored) {}
     }
 
-    /** Current cached server list (may be empty until first response). */
     public List<String> getCachedServers() {
         return new ArrayList<>(cachedServers);
     }
@@ -63,8 +59,8 @@ public class ProxyMessenger implements PluginMessageListener {
 
         try {
             ByteArrayDataOutput out = ByteStreams.newDataOutput();
-            out.writeUTF("Connect");         // BungeeCord sub-channel
-            out.writeUTF(serverName);        // target server name
+            out.writeUTF("Connect");
+            out.writeUTF(serverName);
 
             player.sendPluginMessage(
                     plugin,

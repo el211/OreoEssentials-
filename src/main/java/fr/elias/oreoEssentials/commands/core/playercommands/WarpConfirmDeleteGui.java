@@ -90,7 +90,6 @@ public class WarpConfirmDeleteGui implements InventoryProvider {
                 }
         ));
 
-        // No button
         String noName = Lang.msgWithDefault(
                 "warp.delete.no",
                 "<red>No, cancel</red>",

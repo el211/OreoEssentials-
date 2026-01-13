@@ -58,7 +58,6 @@ public class WarpsAdminCommand implements OreoCommand {
         return true;
     }
 
-    /* ---------------- helpers for providers ---------------- */
 
     static boolean crossServerTeleport(WarpService warps, Player p, String warpName) {
         final OreoEssentials plugin = OreoEssentials.get();
@@ -133,7 +132,6 @@ public class WarpsAdminCommand implements OreoCommand {
         }
     }
 
-    /** Helper so other classes can reopen the admin GUI at a specific page. */
     public static void openAdmin(Player p, WarpService warps, int page) {
         String title = Lang.msgWithDefault(
                 "warp.admin.list.title",

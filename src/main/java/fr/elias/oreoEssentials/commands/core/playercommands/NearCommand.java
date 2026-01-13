@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/NearCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -39,7 +38,6 @@ public class NearCommand implements OreoCommand {
         Location me = p.getLocation();
         int finalRadius = radius;
 
-        // Find nearby players
         var list = Bukkit.getOnlinePlayers().stream()
                 .filter(other -> other != p && other.getWorld().equals(p.getWorld()))
                 .map(other -> new Entry(other.getName(), other.getLocation().distance(me)))
@@ -54,8 +52,6 @@ public class NearCommand implements OreoCommand {
             return true;
         }
 
-        // Build formatted list with individual entry formatting
-        // Using msgWithDefault which has signature: (String key, String default, Map vars, Player viewer)
         String formattedList = list.stream()
                 .map(e -> Lang.msgWithDefault("near.entry.format",
                         "<aqua>%name%</aqua> <gray>(<yellow>%distance%</yellow>m)</gray>",

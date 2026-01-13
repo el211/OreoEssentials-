@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/moderation/GodCommand.java
 package fr.elias.oreoEssentials.commands.core.moderation;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -28,7 +27,6 @@ public class GodCommand implements OreoCommand {
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        // /god -> self (must be a player)
         if (args.length == 0) {
             if (!(sender instanceof Player p)) {
                 Lang.send(sender, "moderation.god.usage",
@@ -49,7 +47,6 @@ public class GodCommand implements OreoCommand {
             return true;
         }
 
-        // /god <player> -> others
         if (!sender.hasPermission("oreo.god.others")) {
             Lang.send(sender, "moderation.god.no-permission-others",
                     "<red>You don't have permission to toggle god for others.</red>");
@@ -66,7 +63,6 @@ public class GodCommand implements OreoCommand {
 
         boolean enabled = toggleAndApply(target, target.getUniqueId());
 
-        // Notify target
         if (enabled) {
             Lang.send(target, "moderation.god.target-enabled",
                     "<green>An admin enabled your god mode.</green>");
@@ -75,7 +71,6 @@ public class GodCommand implements OreoCommand {
                     "<red>An admin disabled your god mode.</red>");
         }
 
-        // Notify sender
         if (enabled) {
             Lang.send(sender, "moderation.god.other-enabled",
                     "<green>Enabled god mode for <aqua>%player%</aqua>.</green>",
@@ -105,11 +100,9 @@ public class GodCommand implements OreoCommand {
     }
 
     private Player findOnlinePlayer(String input) {
-        // exact first
         Player p = Bukkit.getPlayerExact(input);
         if (p != null) return p;
 
-        // case-insensitive partial fallback
         String lower = input.toLowerCase(Locale.ROOT);
         for (Player online : Bukkit.getOnlinePlayers()) {
             if (online.getName().toLowerCase(Locale.ROOT).startsWith(lower)) {

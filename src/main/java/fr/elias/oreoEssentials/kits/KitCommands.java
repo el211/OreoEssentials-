@@ -11,15 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Kits command handler with comprehensive Lang support.
- *
- * ✅ VERIFIED - All messages use Lang.send()
- *
- * Commands:
- * - /kits [toggle] - Open GUI or toggle feature
- * - /kit <name> - Claim a kit directly
- */
+
 public class KitCommands implements CommandExecutor, TabCompleter {
 
     private final OreoEssentials plugin;
@@ -66,7 +58,6 @@ public class KitCommands implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            // /kits - Open GUI (player only)
             if (!(sender instanceof Player p)) {
                 Lang.send(sender, "kits.player-only",
                         "<red>Only players can use this command.</red>",

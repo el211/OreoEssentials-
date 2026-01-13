@@ -10,13 +10,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class AliasService {
 
-    /* ------------------------------ Model ------------------------------ */
 
     public enum RunAs { PLAYER, CONSOLE }
     public enum LogicType { AND, OR }
 
     public static final class Check {
-        /** raw user expression, e.g. "%ping%>=100", "permission:my.perm", "money>=1000", "%world%<-lobby-" */
         public String expr;
     }
 
@@ -32,7 +30,6 @@ public final class AliasService {
         public LogicType logic = LogicType.AND; // how to combine checks (AND / OR)
         public String failMessage = "§cYou don't meet the requirements for %alias%.";
 
-        // Per-alias permission + tab completion config
         public boolean permGate = false;  // requires oreo.alias.custom.<alias>
         public boolean addTabs  = false;  // enable per-alias tab-complete
         public List<List<String>> customTabs = new ArrayList<>(); // per-arg suggestions

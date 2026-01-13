@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/daily/DailyCommand.java
 package fr.elias.oreoEssentials.daily;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -13,21 +12,7 @@ import org.bukkit.entity.Player;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Daily Rewards command handler.
- *
- * ✅ VERIFIED - Uses Lang.send() for 8 user messages
- *
- * Player Commands:
- *  /daily             -> Opens the reward claim GUI (if enabled)
- *  /daily claim       -> Opens the reward claim GUI (if enabled)
- *  /daily top         -> Shows the Reward Streak Leaderboard (works even if disabled)
- *  /daily toggle      -> Enable/disable Daily Rewards at runtime (admin)
- *
- * Permissions:
- *  - oreo.daily        (players)
- *  - oreo.daily.admin  (admins; can toggle the feature)
- */
+
 public final class DailyCommand implements CommandExecutor, TabCompleter {
 
     private final OreoEssentials plugin;
@@ -50,7 +35,6 @@ public final class DailyCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
-        // --- Admin toggle (allowed from console or in-game) ---
         if (args.length > 0 && args[0].equalsIgnoreCase("toggle")) {
             if (!sender.hasPermission("oreo.daily.admin")) {
                 Lang.send(sender, "daily.no-permission-toggle",
@@ -59,7 +43,6 @@ public final class DailyCommand implements CommandExecutor, TabCompleter {
             }
 
             boolean now = svc.toggleEnabled();
-            // Reflect in config and optionally persist
             cfg.setEnabled(now);
             try { cfg.save(); } catch (Throwable ignored) {}
 
@@ -69,13 +52,11 @@ public final class DailyCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // --- /daily top works from console too ---
         if (args.length > 0 && args[0].equalsIgnoreCase("top")) {
             showTop(sender);
             return true;
         }
 
-        // --- From here on, we require a player context ---
         if (!(sender instanceof Player p)) {
             Lang.send(sender, "daily.players-only",
                     "<red>This command must be run in-game.</red>");
@@ -88,7 +69,6 @@ public final class DailyCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // If feature is disabled, inform player (and hint to admins)
         if (!svc.isEnabled()) {
             Lang.send(p, "daily.disabled",
                     "<red>Daily Rewards is currently disabled.</red>");
@@ -101,13 +81,11 @@ public final class DailyCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // /daily OR /daily claim -> open GUI
         if (args.length == 0 || args[0].equalsIgnoreCase("claim")) {
             open(p);
             return true;
         }
 
-        // Unknown subcommand -> usage
         sendUsage(sender, label);
         return true;
     }
@@ -130,31 +108,26 @@ public final class DailyCommand implements CommandExecutor, TabCompleter {
         record Row(String name, int streak, double hours) {}
         List<Row> rows = new ArrayList<>();
 
-        // Online players: include rough hours from vanilla stat (not persisted)
         for (Player op : Bukkit.getOnlinePlayers()) {
             double hrs = Math.max(0, op.getStatistic(Statistic.PLAY_ONE_MINUTE) / 20.0 / 3600.0);
             rows.add(new Row(op.getName(), svc.getStreak(op.getUniqueId()), hrs));
         }
 
-        // Offline players: streak from Mongo, hours unavailable (0.0)
         for (OfflinePlayer off : Bukkit.getOfflinePlayers()) {
             UUID id = off.getUniqueId();
             if (id == null) continue;
 
             String name = (off.getName() != null) ? off.getName() : id.toString();
 
-            // Skip if already added from online set
             boolean dup = rows.stream().anyMatch(r -> r.name.equalsIgnoreCase(name));
             if (dup) continue;
 
             rows.add(new Row(name, svc.getStreak(id), 0.0));
         }
 
-        // Sort: streak desc, then hours desc
         rows.sort(Comparator.comparingInt(Row::streak).reversed()
                 .thenComparingDouble(Row::hours).reversed());
 
-        // Render top 10 using Lang for better formatting
         Player p = viewer instanceof Player ? (Player) viewer : null;
 
         Lang.sendRaw(viewer, Lang.color("&8&m-------------------------"));

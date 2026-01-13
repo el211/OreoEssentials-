@@ -32,7 +32,6 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
-        // ---- Help / no args ----
         if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
             sendUsage(sender, label);
             return true;
@@ -40,7 +39,6 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
 
         String sub = args[0].toLowerCase(Locale.ROOT);
 
-        // ---- Reload (console OK) ----
         if (sub.equals("reload")) {
             if (!sender.hasPermission("oreo.craft")) {
                 send(sender, "customcraft.errors.no-permission",
@@ -53,7 +51,6 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // ---- List (console OK) ----
         if (sub.equals("list")) {
             var names = new TreeSet<>(service.allNames());
             send(sender, "customcraft.messages.list",
@@ -62,7 +59,6 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // ---- Delete (console OK) ----
         if (sub.equals("delete")) {
             if (!sender.hasPermission("oreo.craft")) {
                 send(sender, "customcraft.errors.no-permission",
@@ -89,7 +85,6 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // ---- Everything below requires a Player (GUI) ----
         if (!(sender instanceof Player p)) {
             send(sender, "customcraft.errors.player-only",
                     "<red>This subcommand requires a player.</red>", Map.of());
@@ -101,13 +96,11 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // ---- Browse (GUI) ----
         if (sub.equals("browse")) {
             RecipeListMenu.open(p, plugin, invMgr, service);
             return true;
         }
 
-        // ---- Craft <name> (open editor / create-or-edit) ----
         if (sub.equals("craft")) {
             if (args.length < 2) {
                 send(p, "customcraft.errors.usage-craft",
@@ -151,7 +144,6 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
                 Map.of("label", label));
     }
 
-    /* ---------------- Tab Completion ---------------- */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
         List<String> out = new ArrayList<>();
@@ -174,9 +166,7 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
         return out;
     }
 
-    /* ---------------- MiniMessage helpers ---------------- */
 
-    /** Send a message using a lang key; player = full MM, console = plain text. */
     private static void send(CommandSender to, String key, String def, Map<String, String> vars) {
         if (to instanceof Player p) {
             Component comp = mm(key, def, vars, p);
@@ -189,13 +179,11 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    /** Build a MiniMessage component from lang + vars (+PAPI if player). */
     private static Component mm(String key, String def, Map<String, String> vars, Player player) {
         String raw = resolve(key, def, vars, player);
         return MM.deserialize(raw);
     }
 
-    /** Resolve lang key → text, apply %vars%, then PAPI (if player). */
     private static String resolve(String key, String def, Map<String, String> vars, Player player) {
         String raw = Lang.get(key, def);
         if (vars != null) {

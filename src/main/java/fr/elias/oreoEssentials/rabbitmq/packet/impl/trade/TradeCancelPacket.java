@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/packet/impl/trade/TradeCancelPacket.java
 package fr.elias.oreoEssentials.rabbitmq.packet.impl.trade;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;

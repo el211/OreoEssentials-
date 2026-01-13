@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/WarpCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -38,7 +37,6 @@ public class WarpCommand implements OreoCommand {
     @Override public String permission() { return "oreo.warp"; }
     @Override public String usage() { return "<n>|list [player]"; }
 
-    // ❗ IMPORTANT: allow console
     @Override public boolean playerOnly() { return false; }
 
     @Override
@@ -46,10 +44,8 @@ public class WarpCommand implements OreoCommand {
         final OreoEssentials plugin = OreoEssentials.get();
         final var log = plugin.getLogger();
 
-        // Actor = the one running the command (may be null if console)
         Player actor = (sender instanceof Player) ? (Player) sender : null;
 
-        // /warp or /warp list → list warps (NO COOLDOWN)
         if (args.length == 0 || args[0].equalsIgnoreCase("list")) {
             var list = warps.listWarps();
             if (list.isEmpty()) {
@@ -65,14 +61,11 @@ public class WarpCommand implements OreoCommand {
             return true;
         }
 
-        // ---- Parse warp + optional player ----
         final String rawWarp = args[0];
         final String warpName = rawWarp.trim().toLowerCase(Locale.ROOT);
 
-        // Target player
         Player target;
         if (args.length >= 2) {
-            // /warp <warp> <player>
             String targetName = args[1];
             target = Bukkit.getPlayerExact(targetName);
             if (target == null) {
@@ -82,7 +75,6 @@ public class WarpCommand implements OreoCommand {
                 return true;
             }
         } else {
-            // /warp <warp> → self only
             if (actor == null) {
                 Lang.send(sender, "warp.console-usage",
                         "<red>Usage from console: /warp <warp> <player></red>");
@@ -91,8 +83,6 @@ public class WarpCommand implements OreoCommand {
             target = actor;
         }
 
-        // ---- Permission checks ----
-        // Base permission for actor (if actor exists)
         if (actor != null && !actor.hasPermission("oreo.warp")) {
             Lang.send(actor, "warp.no-permission",
                     "<red>You don't have permission for this warp.</red>");
@@ -100,7 +90,6 @@ public class WarpCommand implements OreoCommand {
             return true;
         }
 
-        // Check warp-specific permission for actor, if actor exists
         if (actor != null && !warps.canUse(actor, warpName)) {
             String rp = warps.requiredPermission(warpName);
             if (rp == null || rp.isBlank()) {
@@ -117,7 +106,6 @@ public class WarpCommand implements OreoCommand {
             return true;
         }
 
-        // Extra perm to warp other players
         if (actor != null && !actor.equals(target) && !actor.hasPermission("oreo.warp.others")) {
             Lang.send(actor, "warp.no-permission-others",
                     "<red>You don't have permission to warp other players.</red>");
@@ -126,25 +114,21 @@ public class WarpCommand implements OreoCommand {
             return true;
         }
 
-        // ---- Existence pre-check (avoid warmup if warp doesn't exist) ----
         final String localServer = plugin.getConfigService().serverName();
         final WarpDirectory warpDir = plugin.getWarpDirectory();
 
         String ownerServer = (warpDir != null ? warpDir.getWarpServer(warpName) : null);
 
-        // If directory doesn't know this warp at all => not found (no warmup)
         if (ownerServer == null || ownerServer.isBlank()) {
-            // maybe it's a local-only warp
             Location test = warps.getWarp(warpName);
             if (test == null) {
                 Lang.send(sender, "warp.not-found",
                         "<red>Warp not found.</red>");
                 return true;
             }
-            ownerServer = localServer; // treat as local
+            ownerServer = localServer;
         }
 
-        // If warp is local, validate existence in local storage
         if (ownerServer.equalsIgnoreCase(localServer)) {
             Location test = warps.getWarp(warpName);
             if (test == null) {
@@ -154,20 +138,11 @@ public class WarpCommand implements OreoCommand {
             }
         }
 
-        // ---- Cooldown / countdown (features.warp.cooldown) ----
         FileConfiguration settings = plugin.getSettingsConfig().getRoot();
         ConfigurationSection warpSection = settings.getConfigurationSection("features.warp");
         boolean useCooldown = warpSection != null && warpSection.getBoolean("cooldown", false);
         int seconds = (warpSection != null ? warpSection.getInt("cooldown-amount", 0) : 0);
 
-        /*
-         * If:
-         *  - command is run from CONSOLE (actor == null), OR
-         *  - actor is OP, OR
-         *  - cooldown disabled, OR
-         *  - cooldown invalid,
-         * then teleport IMMEDIATELY with no countdown.
-         */
         boolean actorIsOp = actor != null && actor.isOp();
 
         if (actor == null || actorIsOp || !useCooldown || seconds <= 0 || target == null) {
@@ -175,16 +150,12 @@ public class WarpCommand implements OreoCommand {
             return true;
         }
 
-        // Countdown shown to the TARGET player (only for non-op in-game actors)
         startCountdown(target, seconds, warpName, () ->
                 performWarp(plugin, warps, sender, actor, target, warpName)
         );
         return true;
     }
 
-    /**
-     * Runs the original warp logic (local or cross-server) AFTER the countdown.
-     */
     private void performWarp(OreoEssentials plugin,
                              WarpService warps,
                              CommandSender sender,
@@ -194,7 +165,6 @@ public class WarpCommand implements OreoCommand {
 
         final var log = plugin.getLogger();
 
-        // Resolve server owner for this warp
         final String localServer  = plugin.getConfigService().serverName();
         final WarpDirectory warpDir = plugin.getWarpDirectory();
         String targetServer = (warpDir != null ? warpDir.getWarpServer(warpName) : localServer);
@@ -209,7 +179,6 @@ public class WarpCommand implements OreoCommand {
                 + " targetServer=" + targetServer
                 + " warpDir=" + (warpDir == null ? "null" : "ok"));
 
-        // Local warp -> direct teleport
         if (targetServer.equalsIgnoreCase(localServer)) {
             Location l = warps.getWarp(warpName);
             if (l == null) {
@@ -221,12 +190,10 @@ public class WarpCommand implements OreoCommand {
 
             try {
                 target.teleport(l);
-                // Message to target
                 Lang.send(target, "warp.teleported",
                         "<green>Teleported to warp <aqua>%warp%</aqua>.</green>",
                         Map.of("warp", warpName));
 
-                // Message to sender if different
                 if (!sender.equals(target)) {
                     Lang.send(sender, "warp.teleported-other",
                             "<green>Teleported <yellow>%player%</yellow> to warp <aqua>%warp%</aqua>.</green>",
@@ -245,7 +212,6 @@ public class WarpCommand implements OreoCommand {
             return;
         }
 
-        // Respect cross-server toggle for warps
         var cs = plugin.getCrossServerSettings();
         if (!cs.warps() && !targetServer.equalsIgnoreCase(localServer)) {
             Lang.send(sender, "warp.cross-disabled",
@@ -256,7 +222,6 @@ public class WarpCommand implements OreoCommand {
             return;
         }
 
-        // Remote warp: publish to the target server's queue, then proxy-switch the TARGET player
         final PacketManager pm = plugin.getPacketManager();
         log.info("[WarpCmd] Remote warp. pm=" + (pm == null ? "null" : "ok")
                 + " pm.init=" + (pm != null && pm.isInitialized()));
@@ -281,14 +246,11 @@ public class WarpCommand implements OreoCommand {
             return;
         }
 
-        // Proxy switch for the TARGET player
         if (sendPlayerToServer(target, targetServer)) {
-            // Message to target
             Lang.send(target, "warp.sending",
                     "<yellow>Sending you to <aqua>%server%</aqua>... you'll be teleported to warp <aqua>%warp%</aqua> on arrival.</yellow>",
                     Map.of("server", targetServer, "warp", warpName));
 
-            // Message to sender if different
             if (!sender.equals(target)) {
                 Lang.send(sender, "warp.sending-other",
                         "<green>Sending <yellow>%player%</yellow> to <aqua>%server%</aqua> (warp <yellow>%warp%</yellow>).</green>",
@@ -306,7 +268,6 @@ public class WarpCommand implements OreoCommand {
         }
     }
 
-    /** Bungee/Velocity plugin message switch (for the TARGET player) */
     private boolean sendPlayerToServer(Player p, String serverName) {
         final var plugin = OreoEssentials.get();
         final var log = plugin.getLogger();
@@ -325,13 +286,9 @@ public class WarpCommand implements OreoCommand {
         }
     }
 
-    /**
-     * Shows a big title countdown on the player, cancels if he moves,
-     * then runs the action at the end.
-     */
     private void startCountdown(Player target, int seconds, String warpName, Runnable action) {
         final OreoEssentials plugin = OreoEssentials.get();
-        final Location origin = target.getLocation().clone(); // for movement check
+        final Location origin = target.getLocation().clone();
 
         new BukkitRunnable() {
             int remaining = seconds;
@@ -343,7 +300,6 @@ public class WarpCommand implements OreoCommand {
                     return;
                 }
 
-                // Cancel if player moved to another block/world (head rotation allowed)
                 if (hasBodyMoved(target, origin)) {
                     cancel();
                     Lang.send(target, "warp.cancelled-moved",
@@ -358,7 +314,6 @@ public class WarpCommand implements OreoCommand {
                     return;
                 }
 
-                // Title + subtitle using proper Lang methods
                 String title = Lang.msgWithDefault(
                         "teleport.countdown.title",
                         "<yellow>Teleporting...</yellow>",
@@ -378,9 +333,6 @@ public class WarpCommand implements OreoCommand {
         }.runTaskTimer(plugin, 0L, 20L);
     }
 
-    /**
-     * Check if player moved to another block/world (head rotation allowed).
-     */
     private boolean hasBodyMoved(Player p, Location origin) {
         Location now = p.getLocation();
         return !now.getWorld().equals(origin.getWorld())
