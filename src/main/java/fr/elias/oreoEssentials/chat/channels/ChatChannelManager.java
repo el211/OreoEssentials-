@@ -38,7 +38,6 @@ public class ChatChannelManager {
         this.plugin = plugin;
         this.chatConfig = chatConfig;
 
-        // Initialize persistence based on config
         initializePersistence(mongoClient);
 
         loadConfig();
@@ -145,7 +144,6 @@ public class ChatChannelManager {
                 }
             }
 
-            // NEW: Load Discord webhook
             String discordWebhook = ch.getString("discord_webhook", null);
 
             ChatChannel channel = new ChatChannel(
@@ -260,7 +258,6 @@ public class ChatChannelManager {
                 persistence.save(player.getUniqueId(), channel.getId());
             }
 
-            // Send join message if configured
             if (channel.hasJoinMessage()) {
                 try {
                     Component msg = MiniMessage.miniMessage().deserialize(channel.getJoinMessage());

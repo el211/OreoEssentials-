@@ -79,7 +79,6 @@ public final class InvBridge {
         plugin.getLogger().info("[INV-BRIDGE] Cross-server bridge ready on server=" + thisServer);
     }
 
-    /* ===================== messages ===================== */
 
     static class Base {
         @SerializedName("type") public String type;
@@ -99,7 +98,7 @@ public final class InvBridge {
         public String  error;
         public UUID    target;
         public Kind    kind;
-        public byte[]  blob; // Bukkit-serialized ItemStack[] (raw bytes)
+        public byte[]  blob;
         public int     arrayLen;
     }
 
@@ -109,8 +108,8 @@ public final class InvBridge {
         public UUID   target;
         public Kind   kind;
         public byte[] blob;
-        public int    arrayLen; // sanity
-        public int    ecRows;   // for EC
+        public int    arrayLen;
+        public int    ecRows;
     }
 
     static final class ApplyAck extends Base {
@@ -119,7 +118,6 @@ public final class InvBridge {
         public String  error;
     }
 
-    /* ===================== public API ===================== */
 
     public InventoryService.Snapshot requestLiveInv(UUID target) {
         plugin.getLogger().info("[INV-DEBUG] requestLiveInv(): target=" + target
@@ -254,7 +252,6 @@ public final class InvBridge {
         plugin.getLogger().info("[INV-DEBUG] applyLiveInv(): target=" + target
                 + " on server=" + thisServer);
 
-        // Local fast-path
         Player local = Bukkit.getPlayer(target);
         if (local != null && local.isOnline()) {
             plugin.getLogger().info("[INV-DEBUG] applyLiveInv(local): found player="

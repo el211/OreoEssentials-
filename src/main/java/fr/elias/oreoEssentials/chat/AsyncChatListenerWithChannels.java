@@ -172,7 +172,6 @@ public class AsyncChatListenerWithChannels implements Listener {
         return message;
     }
 
-    // PRIVATE helper methods
 
     private Component addHoverRecursive(Component component, Component hoverComponent) {
         Component withHover = component.hoverEvent(HoverEvent.showText(hoverComponent));

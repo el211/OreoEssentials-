@@ -124,7 +124,6 @@ public class ChatSyncManager {
         if (!enabled) return;
 
         try {
-            // CHANMSG;;serverId;;senderUUID;;b64(server);;b64(senderName);;b64(channelId);;b64(jsonComponent)
             String payload = EX_CHANNEL_MSG
                     + ";;" + SERVER_ID
                     + ";;" + senderId
@@ -228,7 +227,6 @@ public class ChatSyncManager {
             String type = parts[2];
             String originId = parts[3];
 
-            // Check loopback
             if (SERVER_ID.toString().equals(originId)) {
                 Bukkit.getLogger().info("[ChatSync] Ignoring own CHAT control message");
                 return;
@@ -383,7 +381,6 @@ public class ChatSyncManager {
 
         String originServerId = parts[1];
 
-        // Ignore our own messages (already sent locally)
         if (SERVER_ID.toString().equals(originServerId)) {
             return;
         }
@@ -479,7 +476,6 @@ public class ChatSyncManager {
         } catch (Exception ignored) {
         }
 
-        // Check if sender is muted
         if (muteService != null && senderUuid != null && muteService.isMuted(senderUuid)) {
             Bukkit.getLogger().info("[ChatSync] Blocked muted player message: " + senderUuid);
             return;

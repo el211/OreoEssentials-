@@ -19,6 +19,7 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
+import io.papermc.paper.scoreboard.numbers.NumberFormat;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -151,7 +152,9 @@ public final class ScoreboardService implements Listener {
 
         Objective obj = board.registerNewObjective(OBJ_NAME, "dummy");
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+        obj.numberFormat(NumberFormat.blank());
         safeSetTitle(p, obj);
+
 
         applyLines(p, board, obj);
 
@@ -195,8 +198,9 @@ public final class ScoreboardService implements Listener {
         } else if (obj.getDisplaySlot() != DisplaySlot.SIDEBAR) {
             obj.setDisplaySlot(DisplaySlot.SIDEBAR);
         }
-
+        obj.numberFormat(NumberFormat.blank());
         safeSetTitle(p, obj);
+
 
         try {
             for (String entry : new HashSet<>(board.getEntries())) {

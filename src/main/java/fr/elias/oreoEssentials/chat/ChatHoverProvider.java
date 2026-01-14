@@ -219,7 +219,6 @@ public final class ChatHoverProvider {
                         .replacement((match, builder) -> builder.hoverEvent(HoverEvent.showText(hover)))
                         .build());
             } catch (Throwable t) {
-                // If pattern fails, try literal match
                 try {
                     message = message.replaceText(TextReplacementConfig.builder()
                             .matchLiteral(name)

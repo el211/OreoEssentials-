@@ -28,7 +28,6 @@ public class ChatChannelHandler {
     private final ChatSyncManager syncManager;
     private final FormatManager formatManager;
 
-    // Reference to the listener for hover support
     private Object hoverProvider;
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
@@ -115,7 +114,6 @@ public class ChatChannelHandler {
             }
         }
 
-        // NEW: Send to Discord webhook if configured for this channel
         if (channel.hasDiscordWebhook()) {
             try {
                 String serverName = plugin.getConfigService().serverName();
