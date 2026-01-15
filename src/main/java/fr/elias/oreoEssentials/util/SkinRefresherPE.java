@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/util/SkinRefresherPE.java
 package fr.elias.oreoEssentials.util;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -28,8 +27,8 @@ final class SkinRefresherPE implements SkinRefresher {
             Object pm = call(api, "getPlayerManager");
             if (pm == null) { SkinDebug.log("PE: getPlayerManager() returned null"); fallback(player); return; }
 
-            if (tryV2(player, pm)) return;  // PlayerInfoRemove (v2+)
-            if (tryV1(player, pm)) return;  // PlayerInfo REMOVE (v1.x)
+            if (tryV2(player, pm)) return;
+            if (tryV1(player, pm)) return;
 
             SkinDebug.log("PE: no wrapper matched; falling back");
             fallback(player);

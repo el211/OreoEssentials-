@@ -17,41 +17,83 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class PlaceholderAPIHook extends PlaceholderExpansion {
     private final OreoEssentials plugin;
     private final Economy economy;
+    private boolean debug;
 
     public PlaceholderAPIHook(OreoEssentials plugin) {
         this.plugin = plugin;
         var reg = plugin.getServer().getServicesManager().getRegistration(Economy.class);
         this.economy = (reg != null) ? reg.getProvider() : null;
+        this.debug = plugin.getConfig().getBoolean("placeholder-debug", false);
     }
 
-    @Override public @NotNull String getIdentifier() { return "oreo"; }
-    @Override public @NotNull String getAuthor()     { return String.join(", ", plugin.getDescription().getAuthors()); }
-    @Override public @NotNull String getVersion()    { return plugin.getDescription().getVersion(); }
-    @Override public boolean canRegister()           { return true; }
+    @Override
+    public @NotNull String getIdentifier() {
+        return "oreo";
+    }
+
+    @Override
+    public @NotNull String getAuthor() {
+        return String.join(", ", plugin.getDescription().getAuthors());
+    }
+
+    @Override
+    public @NotNull String getVersion() {
+        return plugin.getDescription().getVersion();
+    }
+
+    @Override
+    public boolean canRegister() {
+        return true;
+    }
+
+    @Override
+    public boolean persist() {
+        return true;
+    }
 
     @Override
     public @Nullable String onRequest(OfflinePlayer player, @NotNull String idRaw) {
-        if (player == null) return "";
+        if (player == null) {
+            debugLog("Player is null for placeholder: %oreo_" + idRaw + "%");
+            return "";
+        }
+
         final String id = idRaw.toLowerCase(Locale.ROOT);
 
+        debugLog("Processing placeholder: %oreo_" + idRaw + "% for player: " + player.getName());
+
+        // Economy placeholders
         if (id.equals("balance")) {
-            if (economy == null) return "0";
-            return String.valueOf(economy.getBalance(player));
-        }
-        if (id.equals("balance_formatted")) {
-            if (economy == null) return "0";
+            if (economy == null) {
+                debugLog("Economy is null for 'balance'");
+                return "0";
+            }
             double bal = economy.getBalance(player);
-
-            java.text.DecimalFormat df = new java.text.DecimalFormat("#,##0.##");
-            return df.format(bal);
+            String result = String.valueOf(bal);
+            debugLog("balance = " + result);
+            return result;
         }
 
+        if (id.equals("balance_formatted")) {
+            if (economy == null) {
+                debugLog("Economy is null for 'balance_formatted'");
+                return "0";
+            }
+            double bal = economy.getBalance(player);
+            DecimalFormat df = new DecimalFormat("#,##0.##");
+            String result = df.format(bal);
+            debugLog("balance_formatted = " + result);
+            return result;
+        }
+
+        // Server placeholders
         if (id.equals("server_name")) {
             return Bukkit.getServer().getName();
         }
@@ -66,14 +108,17 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             return resolveServerNick(serverId);
         }
 
+        // Kits placeholders
         if (id.equals("kits_enabled")) {
             KitsManager km = kits();
             return (km != null && km.isEnabled()) ? "true" : "false";
         }
+
         if (id.equals("kits_count")) {
             KitsManager km = kits();
             return (km != null) ? String.valueOf(km.getKits().size()) : "0";
         }
+
         if (id.equals("kits_ready_count")) {
             Player p = player.getPlayer();
             KitsManager km = kits();
@@ -82,6 +127,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                     .filter(k -> isKitReady(km, p, k))
                     .count());
         }
+
         if (id.equals("kits_ready_list")) {
             Player p = player.getPlayer();
             KitsManager km = kits();
@@ -92,6 +138,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                     .collect(Collectors.toList());
             return trim64(String.join(", ", ready));
         }
+
         if (id.startsWith("kit_ready_")) {
             Player p = player.getPlayer();
             if (p == null) return "false";
@@ -101,6 +148,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             Kit k = km.getKits().get(kitId.toLowerCase(Locale.ROOT));
             return (k != null && isKitReady(km, p, k)) ? "true" : "false";
         }
+
         if (id.startsWith("kit_cooldown_")) {
             Player p = player.getPlayer();
             if (p == null) return "";
@@ -118,7 +166,6 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             if (p == null) return "";
 
             String kitId;
-
             if (id.startsWith("kit_cooldown_formatted_")) {
                 kitId = id.substring("kit_cooldown_formatted_".length());
             } else {
@@ -132,35 +179,36 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             if (k == null) return "";
 
             long left = Math.max(0, km.getSecondsLeft(p, k));
-            if (left <= 0) {
-                return "ready";
-
-            }
+            if (left <= 0) return "ready";
 
             return Lang.timeHuman(left);
         }
 
-
+        // Playtime placeholders
         if (id.equals("playtime_total_seconds")) {
             long secs = playtimeTotalSeconds(player);
             return String.valueOf(secs);
         }
+
         if (id.equals("prewards_enabled")) {
             PlaytimeRewardsService svc = prewards();
             return (svc != null && svc.isEnabled()) ? "true" : "false";
         }
+
         if (id.equals("prewards_ready_count")) {
             Player p = player.getPlayer();
             PlaytimeRewardsService svc = prewards();
             if (p == null || svc == null || !svc.isEnabled()) return "0";
             return String.valueOf(svc.rewardsReady(p).size());
         }
+
         if (id.equals("prewards_ready_list")) {
             Player p = player.getPlayer();
             PlaytimeRewardsService svc = prewards();
             if (p == null || svc == null || !svc.isEnabled()) return "";
             return trim64(String.join(", ", svc.rewardsReady(p)));
         }
+
         if (id.startsWith("prewards_state_")) {
             Player p = player.getPlayer();
             PlaytimeRewardsService svc = prewards();
@@ -171,41 +219,53 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             return svc.stateOf(p, entry).name();
         }
 
+        // Vaults placeholders
         if (id.equals("vaults_enabled")) {
             PlayerVaultsService pv = pvService();
             return (pv != null && pv.enabled()) ? "true" : "false";
         }
+
         if (id.equals("vaults_max")) {
             int max = pvConfigMax();
             return String.valueOf(Math.max(0, max));
         }
+
         if (id.equals("vaults_unlocked_count")) {
             Player p = player.getPlayer();
             PlayerVaultsService pv = pvService();
             if (p == null || pv == null || !pv.enabled()) return "0";
             int max = pvConfigMax();
             int count = 0;
-            for (int i = 1; i <= max; i++) if (pv.canAccess(p, i)) count++;
+            for (int i = 1; i <= max; i++) {
+                if (pv.canAccess(p, i)) count++;
+            }
             return String.valueOf(count);
         }
+
         if (id.equals("vaults_unlocked_list")) {
             Player p = player.getPlayer();
             PlayerVaultsService pv = pvService();
             if (p == null || pv == null || !pv.enabled()) return "";
             int max = pvConfigMax();
             List<String> ids = new ArrayList<>();
-            for (int i = 1; i <= max; i++) if (pv.canAccess(p, i)) ids.add(String.valueOf(i));
+            for (int i = 1; i <= max; i++) {
+                if (pv.canAccess(p, i)) ids.add(String.valueOf(i));
+            }
             return trim64(String.join(", ", ids));
         }
+
         if (id.equals("vaults_locked_list")) {
             Player p = player.getPlayer();
             PlayerVaultsService pv = pvService();
             if (p == null || pv == null || !pv.enabled()) return "";
             int max = pvConfigMax();
             List<String> ids = new ArrayList<>();
-            for (int i = 1; i <= max; i++) if (!pv.canAccess(p, i)) ids.add(String.valueOf(i));
+            for (int i = 1; i <= max; i++) {
+                if (!pv.canAccess(p, i)) ids.add(String.valueOf(i));
+            }
             return trim64(String.join(", ", ids));
         }
+
         if (id.startsWith("vault_can_access_")) {
             Player p = player.getPlayer();
             PlayerVaultsService pv = pvService();
@@ -214,6 +274,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             if (vid <= 0) return "false";
             return pv.canAccess(p, vid) ? "true" : "false";
         }
+
         if (id.startsWith("vault_slots_")) {
             Player p = player.getPlayer();
             PlayerVaultsService pv = pvService();
@@ -222,6 +283,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             if (vid <= 0) return "0";
             return String.valueOf(pv.resolveSlots(p, vid));
         }
+
         if (id.startsWith("vault_rows_")) {
             Player p = player.getPlayer();
             PlayerVaultsService pv = pvService();
@@ -232,6 +294,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             int rows = Math.max(1, (int) Math.ceil(slots / 9.0));
             return String.valueOf(rows);
         }
+
         if (id.startsWith("vault_title_preview_")) {
             Player p = player.getPlayer();
             PlayerVaultsService pv = pvService();
@@ -247,16 +310,21 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             return org.bukkit.ChatColor.translateAlternateColorCodes('&', title);
         }
 
+        // Homes placeholders
         if (id.equals("homes_used") || id.equals("homes_max") || id.equals("homes")) {
             int used = 0;
-            int max  = 0;
+            int max = 0;
+
             try {
                 Object homes = homeService();
                 if (homes != null && player.getUniqueId() != null) {
-                    Method m = homes.getClass().getMethod("homes", java.util.UUID.class);
+                    Method m = homes.getClass().getMethod("homes", UUID.class);
                     Object list = m.invoke(homes, player.getUniqueId());
-                    if (list instanceof java.util.Collection<?> coll) used = coll.size();
-                    else if (list instanceof java.util.Map<?, ?> map) used = map.size();
+                    if (list instanceof Collection<?> coll) {
+                        used = coll.size();
+                    } else if (list instanceof Map<?, ?> map) {
+                        used = map.size();
+                    }
                 }
             } catch (Throwable ignored) {}
 
@@ -264,7 +332,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                 Object cfg = configService();
                 Player p = player.getPlayer();
                 if (cfg != null && p != null) {
-                    Method m = cfg.getClass().getMethod("getMaxHomesFor", org.bukkit.entity.Player.class);
+                    Method m = cfg.getClass().getMethod("getMaxHomesFor", Player.class);
                     Object out = m.invoke(cfg, p);
                     if (out instanceof Number n) max = n.intValue();
                 } else if (cfg != null) {
@@ -275,19 +343,29 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             } catch (Throwable ignored) {}
 
             if (id.equals("homes_used")) return String.valueOf(used);
-            if (id.equals("homes_max"))  return String.valueOf(max);
+            if (id.equals("homes_max")) return String.valueOf(max);
             return used + "/" + max;
         }
 
+        debugLog("Unknown placeholder: %oreo_" + idRaw + "%");
         return null;
     }
 
+    // Helper method for debug logging
+    private void debugLog(String message) {
+        if (debug) {
+            plugin.getLogger().info("[PLACEHOLDER DEBUG] " + message);
+        }
+    }
+
+    // Helper methods
     private boolean isKitReady(KitsManager km, Player p, Kit k) {
         if (!km.isEnabled()) return false;
         if (!p.hasPermission("oreo.kit.claim")) return false;
         long left = Math.max(0, km.getSecondsLeft(p, k));
         return left == 0 || p.hasPermission("oreo.kit.bypasscooldown");
     }
+
     private String resolveServerNick(String serverName) {
         try {
             var c = plugin.getConfig();
@@ -312,19 +390,26 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         if (p != null) {
             PlaytimeRewardsService svc = prewards();
             if (svc != null && svc.isEnabled()) {
-                try { return Math.max(0, svc.getPlaytimeSeconds(p)); } catch (Throwable ignored) {}
+                try {
+                    return Math.max(0, svc.getPlaytimeSeconds(p));
+                } catch (Throwable ignored) {}
             }
         }
+
         PlaytimeTracker tr = tracker();
         if (tr != null && off.getUniqueId() != null) {
-            try { return Math.max(0, tr.getSeconds(off.getUniqueId())); } catch (Throwable ignored) {}
+            try {
+                return Math.max(0, tr.getSeconds(off.getUniqueId()));
+            } catch (Throwable ignored) {}
         }
+
         try {
             if (p != null) {
                 int ticks = p.getStatistic(Statistic.PLAY_ONE_MINUTE);
                 return Math.max(0, ticks / 20L);
             }
         } catch (Throwable ignored) {}
+
         return 0;
     }
 
@@ -334,35 +419,48 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
     }
 
     private static int parseIntSafe(String s) {
-        try { return Integer.parseInt(s); } catch (Exception e) { return -1; }
+        try {
+            return Integer.parseInt(s);
+        } catch (Exception e) {
+            return -1;
+        }
     }
 
+    // Service getters using reflection
     private KitsManager kits() {
         try {
             Method m = plugin.getClass().getMethod("getKitsManager");
             return (KitsManager) m.invoke(plugin);
-        } catch (Throwable ignored) { return null; }
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     private PlaytimeRewardsService prewards() {
         try {
             Method m = plugin.getClass().getMethod("getPlaytimeRewardsService");
             return (PlaytimeRewardsService) m.invoke(plugin);
-        } catch (Throwable ignored) { return null; }
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     private PlaytimeTracker tracker() {
         try {
             Method m = plugin.getClass().getMethod("getPlaytimeTracker");
             return (PlaytimeTracker) m.invoke(plugin);
-        } catch (Throwable ignored) { return null; }
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     private PlayerVaultsService pvService() {
         try {
             Method m = plugin.getClass().getMethod("getPlayerVaultsService");
             return (PlayerVaultsService) m.invoke(plugin);
-        } catch (Throwable ignored) { return null; }
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     private PlayerVaultsConfig pvConfig() {
@@ -371,7 +469,9 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             if (svc == null) return null;
             Method gm = svc.getClass().getMethod("getConfigBean");
             return (PlayerVaultsConfig) gm.invoke(svc);
-        } catch (Throwable ignored) { return null; }
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     private int pvConfigMax() {
@@ -383,13 +483,17 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         try {
             Method m = plugin.getClass().getMethod("getHomeService");
             return m.invoke(plugin);
-        } catch (Throwable ignored) { return null; }
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     private Object configService() {
         try {
             Method m = plugin.getClass().getMethod("getConfigService");
             return m.invoke(plugin);
-        } catch (Throwable ignored) { return null; }
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 }

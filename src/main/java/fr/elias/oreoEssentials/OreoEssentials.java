@@ -46,7 +46,10 @@ import fr.elias.oreoEssentials.rtp.RtpPendingService;
 import fr.elias.oreoEssentials.services.*;
 import fr.elias.oreoEssentials.services.chatservices.MuteService;
 import fr.elias.oreoEssentials.services.mongoservices.*;
-
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimplePie;
+import org.bstats.charts.SingleLineChart;
+import org.bstats.charts.AdvancedPie;
 import fr.elias.oreoEssentials.playerwarp.mongo.MongoPlayerWarpStorage;
 import fr.elias.oreoEssentials.playerwarp.mongo.MongoPlayerWarpDirectory;
 
@@ -103,12 +106,13 @@ import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class OreoEssentials extends JavaPlugin {
-
+    private Metrics metrics;
     private static OreoEssentials instance;
     public static OreoEssentials get() { return instance; }
     private MuteService muteService;
@@ -137,6 +141,7 @@ public final class OreoEssentials extends JavaPlugin {
     private fr.elias.oreoEssentials.tempfly.TempFlyConfig tempFlyConfig;
     private fr.elias.oreoEssentials.chat.channels.ChatChannelManager channelManager;
     private BackBroker backBroker;
+    private PlaceholderAPIHook placeholderHook;
 
     private Map<UUID, BackLocation> pendingBackTeleports = new ConcurrentHashMap<>();
     public fr.elias.oreoEssentials.chat.channels.ChatChannelManager getChannelManager() {
@@ -338,8 +343,7 @@ public final class OreoEssentials extends JavaPlugin {
         this.settingsConfig = new fr.elias.oreoEssentials.config.SettingsConfig(this);
         this.settings = this.settingsConfig;
 
-        getLogger().info("[BOOT] OreoEssentials starting up…");
-
+        showStartupBanner();
         this.configService = new ConfigService(this);
         final String essentialsStorage = getConfig().getString("essentials.storage", "yaml").toLowerCase();
 
@@ -1532,7 +1536,7 @@ public final class OreoEssentials extends JavaPlugin {
             this.tabListManager = null;
             getLogger().info("[TAB] Disabled by settings.yml (features.tab.enabled=false).");
         }
-
+        checkProtocolLib();
         var tphere = new fr.elias.oreoEssentials.commands.core.admins.TphereCommand(this);
         this.commands.register(tphere);
         if (getCommand("tphere") != null) {
@@ -1981,8 +1985,8 @@ public final class OreoEssentials extends JavaPlugin {
             this.shardsModule = null;
             getLogger().info("[Sharding] Disabled by settings.yml.");
         }
-
-        getLogger().info("OreoEssentials enabled.");
+        initializeBStats();
+        showCompletionBanner();
         if (settingsConfig.getRoot().getBoolean("nametag.enabled", true)) {
             try {
                 this.nametagManager = new PlayerNametagManager(
@@ -2190,7 +2194,14 @@ public final class OreoEssentials extends JavaPlugin {
         dailyStore = null;
         try { if (dailyStore != null) dailyStore.close(); } catch (Exception ignored) {}
         try { if (tradeService != null) tradeService.cancelAll(); } catch (Throwable ignored) {}
-
+        try {
+            if (placeholderHook != null) {
+                placeholderHook.unregister();
+                getLogger().info("PlaceholderAPI expansion unregistered");
+            }
+        } catch (Exception e) {
+            getLogger().warning("Error unregistering PlaceholderAPI: " + e.getMessage());
+        }
         try {
             if (nametagManager != null) {
                 nametagManager.shutdown();
@@ -2206,18 +2217,99 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("PlaceholderAPI not found; skipping placeholders.");
             return;
         }
+
         try {
-            Class<?> hookCls = Class.forName("fr.elias.oreoEssentials.PlaceholderAPIHook");
-            Object hook = hookCls.getConstructor(OreoEssentials.class).newInstance(this);
-            hookCls.getMethod("register").invoke(hook);
-            getLogger().info("PlaceholderAPI placeholders registered.");
-        } catch (ClassNotFoundException e) {
-            getLogger().warning("PlaceholderAPIHook class not found; skipping placeholders.");
+            placeholderHook = new PlaceholderAPIHook(this);
+
+            Bukkit.getScheduler().runTaskLater(this, () -> {
+                if (placeholderHook.register()) {
+                    getLogger().info("✓ PlaceholderAPI expansion 'oreo' registered successfully!");
+                    getLogger().info("  Available: %oreo_balance%, %oreo_balance_formatted%, etc.");
+
+                    if (getConfig().getBoolean("placeholder-debug", false)) {
+                        getLogger().info("[PAPI TEST] Testing placeholder registration...");
+                        Player testPlayer = Bukkit.getOnlinePlayers().stream().findFirst().orElse(null);
+                        if (testPlayer != null) {
+                            String test = placeholderHook.onRequest(testPlayer, "balance_formatted");
+                            getLogger().info("[PAPI TEST] %oreo_balance_formatted% = " + test);
+                        }
+                    }
+                } else {
+                    getLogger().severe("✗ Failed to register PlaceholderAPI expansion!");
+                    getLogger().severe("  This may cause placeholders to not work in scoreboards.");
+                }
+            }, 10L);
+
         } catch (Throwable t) {
-            getLogger().warning("Failed to register PlaceholderAPI placeholders: " + t.getMessage());
+            getLogger().severe("Failed to register PlaceholderAPI: " + t.getMessage());
+            t.printStackTrace();
         }
     }
+    private void showStartupBanner() {
+        String version = getDescription().getVersion();
 
+        getLogger().info("╔════════════════════════════════════════════════════════════╗");
+        getLogger().info("║                                                            ║");
+        getLogger().info("║               STARTING OREOESSENTIALS PREMIUM                  ║");
+        getLogger().info("║                                                            ║");
+        getLogger().info("║        Version: " + String.format("%-30s", version) +    " ║");
+        getLogger().info("║                                                            ║");
+        getLogger().info("║              Loading all features and modules...           ║");
+        getLogger().info("║                                                            ║");
+        getLogger().info("╚════════════════════════════════════════════════════════════╝");
+    }
+    private void checkProtocolLib() {
+        boolean hasProtocolLib = Bukkit.getPluginManager().getPlugin("ProtocolLib") != null;
+        boolean tabEnabled = settingsConfig.tabEnabled();
+
+        if (tabEnabled && !hasProtocolLib) {
+            // Show warning box when tab is enabled but ProtocolLib is missing
+            getLogger().warning("╔════════════════════════════════════════════════════════════╗");
+            getLogger().warning("║                    ⚠ WARNING ⚠                             ║");
+            getLogger().warning("║                                                            ║");
+            getLogger().warning("║  ProtocolLib is NOT INSTALLED!                             ║");
+            getLogger().warning("║                                                            ║");
+            getLogger().warning("║  Your custom tab-list will NOT work without ProtocolLib.   ║");
+            getLogger().warning("║                                                            ║");
+            getLogger().warning("║  Download: https://www.spigotmc.org/resources/1997/        ║");
+            getLogger().warning("║                                                            ║");
+            getLogger().warning("║  Install ProtocolLib and restart your server.              ║");
+            getLogger().warning("╚════════════════════════════════════════════════════════════╝");
+        } else if (tabEnabled && hasProtocolLib) {
+            // Show success box when both are enabled
+            getLogger().info("╔════════════════════════════════════════════════════════════╗");
+            getLogger().info("║                    ✓ SUCCESS ✓                             ║");
+            getLogger().info("║                                                            ║");
+            getLogger().info("║  ProtocolLib detected!                                     ║");
+            getLogger().info("║                                                            ║");
+            getLogger().info("║  Custom tab-list features are available.                  ║");
+            getLogger().info("╚════════════════════════════════════════════════════════════╝");
+        } else if (!tabEnabled && !hasProtocolLib) {
+            // Both disabled - informational message
+            getLogger().info("╔════════════════════════════════════════════════════════════╗");
+            getLogger().info("║                  ℹ INFORMATION ℹ                           ║");
+            getLogger().info("║                                                            ║");
+            getLogger().info("║  Custom tab-list is disabled (settings.yml).              ║");
+            getLogger().info("║                                                            ║");
+            getLogger().info("║  Install ProtocolLib to enable custom tab features.       ║");
+            getLogger().info("║  Download: https://www.spigotmc.org/resources/1997/        ║");
+            getLogger().info("╚════════════════════════════════════════════════════════════╝");
+        }
+        // If tab is disabled but ProtocolLib is installed, no message needed
+    }
+    private void showCompletionBanner() {
+        long totalOnline = Bukkit.getOnlinePlayers().size();
+
+        getLogger().info("╔════════════════════════════════════════════════════════════╗");
+        getLogger().info("║                                                            ║");
+        getLogger().info("║              ✓ OREOESSENTIALS READY ✓                     ║");
+        getLogger().info("║                                                            ║");
+        getLogger().info("║  All features loaded successfully!                        ║");
+        getLogger().info("║                                                            ║");
+        getLogger().info("║  Players online: " + String.format("%-42d", totalOnline) + " ║");
+        getLogger().info("║                                                            ║");
+        getLogger().info("╚════════════════════════════════════════════════════════════╝");
+    }
     public IpTracker getIpTracker() { return ipTracker; }
     public FreezeManager getFreezeManager() { return freezeManager; }
     public PlayerNotesManager getNotesManager() { return notesManager; }
@@ -2340,7 +2432,68 @@ public final class OreoEssentials extends JavaPlugin {
 
         return "UNKNOWN";
     }
+    private void initializeBStats() {
+        try {
+            int pluginId = 28852;
+            this.metrics = new Metrics(this, pluginId);
+            metrics.addCustomChart(new SimplePie("storage_type", () -> {
+                String storageType = getConfig().getString("essentials.storage", "yaml");
+                return storageType.toUpperCase();
+            }));
+            metrics.addCustomChart(new SimplePie("economy_type", () -> {
+                if (!economyEnabled) return "Disabled";
+                String ecoType = getConfig().getString("economy.type", "none");
+                return ecoType.toUpperCase();
+            }));
+            metrics.addCustomChart(new AdvancedPie("enabled_features", () -> {
+                Map<String, Integer> features = new HashMap<>();
 
+                if (settingsConfig.kitsEnabled()) features.put("Kits", 1);
+                if (settingsConfig.tradeEnabled()) features.put("Trade", 1);
+                if (settingsConfig.rtpEnabled()) features.put("RTP", 1);
+                if (settingsConfig.bossbarEnabled()) features.put("BossBar", 1);
+                if (settingsConfig.scoreboardEnabled()) features.put("Scoreboard", 1);
+                if (settingsConfig.tabEnabled()) features.put("Tab", 1);
+                if (settingsConfig.clearLagEnabled()) features.put("ClearLag", 1);
+                if (settingsConfig.oreoHologramsEnabled()) features.put("Holograms", 1);
+                if (settingsConfig.playtimeRewardsEnabled()) features.put("PlaytimeRewards", 1);
+                if (settingsConfig.worldShardingEnabled()) features.put("Sharding", 1);
+
+                return features;
+            }));
+
+            metrics.addCustomChart(new SimplePie("cross_server_mode", () -> {
+                if (!rabbitEnabled) return "Disabled";
+
+                boolean anyCross = crossServerSettings.homes()
+                        || crossServerSettings.warps()
+                        || crossServerSettings.spawn()
+                        || crossServerSettings.economy();
+
+                return anyCross ? "Enabled" : "Disabled";
+            }));
+
+            metrics.addCustomChart(new SimplePie("redis_enabled", () ->
+                    redisEnabled ? "Enabled" : "Disabled"
+            ));
+
+            metrics.addCustomChart(new SingleLineChart("total_kits", () -> {
+                if (kitsManager == null) return 0;
+                return kitsManager.getKits().size();
+            }));
+
+            metrics.addCustomChart(new SingleLineChart("custom_recipes", () -> {
+                if (customCraftingService == null) return 0;
+                return customCraftingService.getRecipeCount();
+            }));
+
+            getLogger().info("[bStats] Metrics initialized successfully!");
+            getLogger().info("[bStats] View your stats at: https://bstats.org/plugin/bukkit/" + pluginId);
+
+        } catch (Exception e) {
+            getLogger().warning("[bStats] Failed to initialize metrics: " + e.getMessage());
+        }
+    }
     public ModBridge getModBridge() { return modBridge; }
     public java.util.Map<java.util.UUID, Long> getRtpCooldownCache() { return rtpCooldownCache; }
     public fr.elias.oreoEssentials.playtime.PlaytimeTracker getPlaytimeTracker() { return this.playtimeTracker; }

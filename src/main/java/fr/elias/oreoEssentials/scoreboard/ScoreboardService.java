@@ -34,7 +34,14 @@ public final class ScoreboardService implements Listener {
             Pattern.DOTALL | Pattern.CASE_INSENSITIVE
     );
     private static final MiniMessage MM = MiniMessage.miniMessage();
-    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
+    private static final LegacyComponentSerializer LEGACY =
+            LegacyComponentSerializer.builder()
+                    .character('§')
+                    .hexColors()
+                    .useUnusualXRepeatedCharacterHexFormat()
+                    .build();
+    private static final Pattern AMP_HEX = Pattern.compile("&#([0-9a-fA-F]{6})");
+    private static final Pattern LEGACY_HEX = Pattern.compile("§x(§[0-9a-fA-F]){6}");
 
     private final OreoEssentials plugin;
     private ScoreboardConfig cfg;
@@ -223,7 +230,7 @@ public final class ScoreboardService implements Listener {
         int score = lines.size();
 
         for (String raw : lines) {
-            String line = truncate(render(p, raw), 40);
+            String line = truncateVisible(render(p, raw), 40);
             if (line.isEmpty()) line = ChatColor.RESET.toString();
 
             String entry = ensureUnique(board, line);
@@ -241,8 +248,9 @@ public final class ScoreboardService implements Listener {
         }
 
         if (board.getEntries().contains(s)) {
-            s = base.substring(0, Math.min(base.length(), 30)) + ChatColor.RESET + tries;
+            s = truncateVisible(base, 30) + ChatColor.RESET + tries;
         }
+
 
         return s;
     }
@@ -259,29 +267,48 @@ public final class ScoreboardService implements Listener {
         return pref == null ? cfg.defaultEnabled() : pref;
     }
 
-    private static String truncate(String s, int max) {
-        return s.length() > max ? s.substring(0, max) : s;
-    }
-
     private String render(Player p, String raw) {
         if (raw == null) return "";
 
+        // Step 1: Apply tag animations first
         String s = applyTagAnimations(raw);
+        plugin.getLogger().info("[DEBUG] After animations: " + s);
+
+        // Step 2: Replace {player} placeholder
         s = s.replace("{player}", p.getName());
 
+        // Step 3: Process PlaceholderAPI placeholders
         try {
             if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                String before = s;
                 s = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, s);
+                plugin.getLogger().info("[DEBUG] PlaceholderAPI - Before: " + before);
+                plugin.getLogger().info("[DEBUG] PlaceholderAPI - After: " + s);
+
+                // Try again if placeholder wasn't resolved
+                if (s.contains("%oreo_balance_formatted%")) {
+                    plugin.getLogger().warning("[DEBUG] Placeholder not resolved, trying again...");
+                    s = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, s);
+                    plugin.getLogger().info("[DEBUG] PlaceholderAPI - Second attempt: " + s);
+                }
             }
-        } catch (Throwable ignored) {}
-
-        try {
-            Component c = MM.deserialize(s);
-            s = LEGACY.serialize(c);
-        } catch (Throwable ignored) {}
-
-        return ChatColor.translateAlternateColorCodes('&', s);
+        } catch (Throwable ex) {
+            plugin.getLogger().warning("PlaceholderAPI error: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        s = AMP_HEX.matcher(s).replaceAll("<#$1>");
+        if (s.indexOf('<') != -1 && s.indexOf('>') != -1) {
+            try {
+                Component c = MM.deserialize(s);
+                s = LEGACY.serialize(c);
+            } catch (Throwable ignored) {}
+        }
+        s = ChatColor.translateAlternateColorCodes('&', s);
+        s = downsampleLegacyHexToLegacy16(s);
+        return s;
     }
+
+
 
     private String applyTagAnimations(String input) {
         if (input == null || input.isEmpty()) return input;
@@ -352,7 +379,97 @@ public final class ScoreboardService implements Listener {
         shown.remove(e.getPlayer().getUniqueId());
         toggles.remove(e.getPlayer().getUniqueId());
     }
+    private static String truncateVisible(String s, int maxVisible) {
+        if (s == null || s.isEmpty()) return "";
+        StringBuilder out = new StringBuilder(s.length());
 
+        int visible = 0;
+        for (int i = 0; i < s.length() && visible < maxVisible; ) {
+            char c = s.charAt(i);
+
+            // Legacy color codes
+            if (c == '§' && i + 1 < s.length()) {
+                char code = s.charAt(i + 1);
+
+                // Hex format: §x§R§R§G§G§B§B  (14 chars)
+                if ((code == 'x' || code == 'X') && i + 13 < s.length()) {
+                    out.append(s, i, i + 14);
+                    i += 14;
+                    continue;
+                }
+
+                // Normal format: §a, §l, §r, etc
+                out.append(c).append(code);
+                i += 2;
+                continue;
+            }
+
+            // Normal visible char
+            out.append(c);
+            visible++;
+            i++;
+        }
+
+        return out.toString();
+    }
+    private static String downsampleLegacyHexToLegacy16(String s) {
+        if (s == null || s.isEmpty()) return s;
+
+        Matcher m = LEGACY_HEX.matcher(s);
+        StringBuffer out = new StringBuffer();
+
+        while (m.find()) {
+            // Extract RRGGBB from §x§R§R§G§G§B§B
+            String hex = m.group().replace("§x", "").replace("§", "");
+            int rgb = Integer.parseInt(hex, 16);
+
+            char legacy = nearestLegacyColor(rgb);
+            m.appendReplacement(out, "§" + legacy);
+        }
+
+        m.appendTail(out);
+        return out.toString();
+    }
+
+    private static char nearestLegacyColor(int rgb) {
+        int r = (rgb >> 16) & 0xFF;
+        int g = (rgb >> 8) & 0xFF;
+        int b = rgb & 0xFF;
+
+        // Approx Minecraft legacy palette
+        // (good enough for “gold/yellow/text” themes)
+        int[][] palette = {
+                {0x00,0x00,0x00,'0'},
+                {0x00,0x00,0xAA,'1'},
+                {0x00,0xAA,0x00,'2'},
+                {0x00,0xAA,0xAA,'3'},
+                {0xAA,0x00,0x00,'4'},
+                {0xAA,0x00,0xAA,'5'},
+                {0xFF,0xAA,0x00,'6'}, // gold
+                {0xAA,0xAA,0xAA,'7'},
+                {0x55,0x55,0x55,'8'},
+                {0x55,0x55,0xFF,'9'},
+                {0x55,0xFF,0x55,'a'},
+                {0x55,0xFF,0xFF,'b'},
+                {0xFF,0x55,0x55,'c'},
+                {0xFF,0x55,0xFF,'d'},
+                {0xFF,0xFF,0x55,'e'}, // yellow
+                {0xFF,0xFF,0xFF,'f'}  // white
+        };
+
+        int best = Integer.MAX_VALUE;
+        char bestCode = 'f';
+
+        for (int[] p : palette) {
+            int dr = r - p[0], dg = g - p[1], db = b - p[2];
+            int dist = dr*dr + dg*dg + db*db;
+            if (dist < best) {
+                best = dist;
+                bestCode = (char) p[3];
+            }
+        }
+        return bestCode;
+    }
     @EventHandler
     public void onWorld(PlayerChangedWorldEvent e) {
         Player p = e.getPlayer();

@@ -99,74 +99,58 @@ Jail:
       # Collections: "jails" and "jail_sentences" (auto-created)
 
 
+
+
 # -------- Scoreboard (sidebar) --------
-#---------------------------------------------------------------------
-#---------------------------------------------------------------------
-#---------------------------------------------------------------------
-# -------- Scoreboard (sidebar) --------
-# -------- Scoreboard (sidebar) --------
+# ---------------------------------------------------------------------
+# update-ticks: 10 means scoreboard refreshes every 0.5 seconds
+# This allows you to see the animation frames changing
+# ---------------------------------------------------------------------
 scoreboard:
   default-enabled: true
-  update-ticks: 20
+  update-ticks: 10
 
   title:
     frame-ticks: 10
     frames:
-      - "&9&lOreo&b&lEssentials"
-      - "&b&lOreo&9&lEssentials"
-      - "&9&lOreo&b&lEssentials"
-
-  lines:
-    - "%animations_<tag interval=20>
-       &8&m------------------------
-       |
-       &9&m------------------------
-       </tag>%"
-
-    - "%animations_<tag interval=20>
-       &7Player: &9{player}
-       |
-       &7Player: &b{player}
-       </tag>%"
-
-    - "%animations_<tag interval=20>
-       &7Money: &9$%vault_eco_balance_formatted%
-       |
-       &7Money: &b$%vault_eco_balance_formatted%
-       </tag>%"
-
-    - "%animations_<tag interval=20>
-       &7Online: &9%server_online%&7/&f%server_max_players%
-       |
-       &7Online: &b%server_online%&7/&f%server_max_players%
-       </tag>%"
-
-    - "%animations_<tag interval=20>
-       &7World: &9%player_world%
-       |
-       &7World: &b%player_world%
-       </tag>%"
-
-    - "%animations_<tag interval=20>
-       &8&m------------------------
-       |
-       &9&m------------------------
-       </tag>%"
+      - '&9&lOreo&b&lEssentials'
+      - '&b&lOreo&9&lEssentials'
+      - '&9&lOreo&b&lEssentials'
 
   worlds:
     whitelist: []
     blacklist: []
 
+  lines:
+    - |-
+      %animations_<tag interval=10>
+      &8&m------------------------
+      |
+      &9&m------------------------
+      </tag>%
+    - |-
+      %animations_<tag interval=10>
+      &7Player: &9{player}
+      |
+      &7Player: &b{player}
+      </tag>%
+    - |-
+      %animations_<tag interval=10>
+      <gradient:#FFD700:#FFA500>Money:</gradient> &e%vault_eco_balance_formatted%
+      |
+      <gradient:#FFA500:#FFD700>Money:</gradient> &6%vault_eco_balance_formatted%
+      |
+      <gradient:#FFFF00:#FFD700>Money:</gradient> &e%vault_eco_balance_formatted%
+      |
+      <gradient:#FFD700:#FFFF00>Money:</gradient> &6%vault_eco_balance_formatted%
+      </tag>%
+# ---------------------------------------------------------------------
+# Alternative if you want slower updates but visible animations:
+# Keep update-ticks: 20 but change line intervals to 15 or 25
+# This creates "phase shift" so different frames appear on updates
+# ---------------------------------------------------------------------
 
 
-
-#---------------------------------------------------------------------
-#---------------------------------------------------------------------
-#---------------------------------------------------------------------
-
-
-
-# -------- Economy (Vault-backed) --------
 economy:
   # none | json | mongodb | postgresql
   type: "json"

@@ -110,7 +110,6 @@ public final class CraftDesignerMenu implements InventoryProvider {
     public void update(Player player, InventoryContents contents) {
     }
 
-    /* ---------------- UI Pieces ---------------- */
 
     private void drawDeleteButton(InventoryContents contents, Player player) {
         ItemStack it = new ItemStack(Material.BARRIER);
@@ -122,8 +121,8 @@ public final class CraftDesignerMenu implements InventoryProvider {
 
             List<String> lore = langList("customcraft.gui.delete.lore",
                     List.of(
-                            "<gray>Click:</gray> <white>Info</white>",
-                            "<gray>SHIFT+Click:</gray> <red>CONFIRM deletion</red>"
+                            "<gray>Left-Click:</gray> <white>Info</white>",
+                            "<gray>Right-Click:</gray> <red>CONFIRM deletion</red>"
                     ));
             m.setLore(lore.stream().map(CraftDesignerMenu::mmInlineToLegacy).toList());
             it.setItemMeta(m);
@@ -132,33 +131,31 @@ public final class CraftDesignerMenu implements InventoryProvider {
         contents.set(0, 0, ClickableItem.of(it, (InventoryClickEvent e) -> {
             Player p = (Player) e.getWhoClicked();
 
-            if (!e.isShiftClick()) {
-                Component msg = MM.deserialize(
-                        Lang.get("customcraft.messages.delete-hint",
-                                        "<yellow>Tip:</yellow> Hold <bold>SHIFT</bold> and click the barrier to delete <red>%name%</red>.")
-                                .replace("%name%", recipeName)
-                );
-                p.sendMessage(msg);
-                return;
-            }
-
-            // Delete recipe
-            boolean ok = service.delete(recipeName);
-            if (ok) {
-                Component msg = MM.deserialize(
-                        Lang.get("customcraft.messages.deleted",
-                                        "<green>Deleted recipe <yellow>%name%</yellow>.</green>")
-                                .replace("%name%", recipeName)
-                );
-                p.sendMessage(msg);
+            if (e.isRightClick()) {
+                boolean ok = service.delete(recipeName);
+                if (ok) {
+                    Component msg = MM.deserialize(
+                            Lang.get("customcraft.messages.deleted",
+                                            "<green>Deleted recipe <yellow>%name%</yellow>.</green>")
+                                    .replace("%name%", recipeName)
+                    );
+                    p.sendMessage(msg);
+                } else {
+                    Component msg = MM.deserialize(
+                            Lang.get("customcraft.messages.invalid",
+                                    "<red>Invalid recipe.</red>")
+                    );
+                    p.sendMessage(msg);
+                }
+                p.closeInventory();
             } else {
                 Component msg = MM.deserialize(
-                        Lang.get("customcraft.messages.invalid",
-                                "<red>Invalid recipe.</red>")
+                        Lang.get("customcraft.messages.delete-hint",
+                                        "<yellow>Tip:</yellow> <bold>Right-click</bold> the barrier to delete <red>%name%</red>.")
+                                .replace("%name%", recipeName)
                 );
                 p.sendMessage(msg);
             }
-            p.closeInventory();
         }));
     }
 

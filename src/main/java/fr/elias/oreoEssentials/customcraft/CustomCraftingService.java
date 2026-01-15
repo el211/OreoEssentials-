@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/customcraft/CustomCraftingService.java
 package fr.elias.oreoEssentials.customcraft;
 
 import org.bukkit.Bukkit;
@@ -76,6 +75,14 @@ public final class CustomCraftingService {
     public Optional<CustomRecipe> get(String name) { return Optional.ofNullable(recipes.get(name)); }
     public Set<String> allNames() { return new TreeSet<>(recipes.keySet()); }
 
+    /**
+     * Returns the total number of custom recipes loaded
+     * @return number of recipes
+     */
+    public int getRecipeCount() {
+        return recipes.size();
+    }
+
     public boolean delete(String name) {
         try {
             storage.delete(name);
@@ -111,7 +118,6 @@ public final class CustomCraftingService {
         Bukkit.removeRecipe(key);
 
         if (r.isShapeless()) {
-            // Shapeless: multiset of ExactChoice, IA-aware grouping (counts respected)
             ShapelessRecipe sr = new ShapelessRecipe(key, r.getResult().clone());
 
             List<ItemStack> items = new ArrayList<>();

@@ -3,12 +3,27 @@ package fr.elias.oreoEssentials.scoreboard;
 import fr.elias.oreoEssentials.OreoEssentials;
 import org.bukkit.configuration.ConfigurationSection;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+
 
 public final class ScoreboardConfig {
+
+
+    private static final boolean DEF_DEFAULT_ENABLED = true;
+    private static final long DEF_UPDATE_TICKS = 20L;
+
+    private static final long DEF_TITLE_FRAME_TICKS = 10L;
+    private static final List<String> DEF_TITLE_FRAMES = List.of(
+            "&d&lOreo&f&lEssentials"
+    );
+
+    private static final List<String> DEF_LINES = List.of(
+            "&7Player: &f{player}",
+            "&7Money: &f%vault_eco_balance_formatted%"
+    );
+
+    private static final Set<String> DEF_EMPTY_SET = Set.of();
+
 
     private final boolean enabled;
     private final boolean defaultEnabled;
@@ -41,45 +56,69 @@ public final class ScoreboardConfig {
 
     public static ScoreboardConfig load(OreoEssentials plugin) {
         ConfigurationSection root = plugin.getConfig().getConfigurationSection("scoreboard");
-        if (root == null) {
-            return new ScoreboardConfig(
-                    false, true, 20L,
-                    List.of("&d&lOreo&f&lEssentials"),
-                    10L,
-                    List.of("&7Player: &f{player}", "&7Money: &f%vault_eco_balance_formatted%"),
-                    Set.of(),
-                    Set.of()
-            );
-        }
 
+        // You already control the "enabled" toggle via SettingsConfig, so always respect that:
         boolean enabled = plugin.getSettingsConfig().scoreboardEnabled();
-        boolean defaultEnabled = root.getBoolean("default-enabled", true);
-        long updateTicks = Math.max(1L, root.getLong("update-ticks", 20L));
 
-        ConfigurationSection titleSec = root.getConfigurationSection("title");
-        List<String> frames = new ArrayList<>();
-        long frameTicks = 10L;
-        if (titleSec != null) {
-            frameTicks = Math.max(1L, titleSec.getLong("frame-ticks", 10L));
-            List<String> cfgFrames = titleSec.getStringList("frames");
-            if (cfgFrames != null && !cfgFrames.isEmpty()) frames.addAll(cfgFrames);
+        if (root == null) {
+            return defaults(enabled);
         }
-        if (frames.isEmpty()) frames.add("&d&lOreo&f&lEssentials");
+
+        boolean defaultEnabled = root.getBoolean("default-enabled", DEF_DEFAULT_ENABLED);
+        long updateTicks = Math.max(1L, root.getLong("update-ticks", DEF_UPDATE_TICKS));
+
+        // Title
+        ConfigurationSection titleSec = root.getConfigurationSection("title");
+        long frameTicks = DEF_TITLE_FRAME_TICKS;
+        List<String> frames = new ArrayList<>(DEF_TITLE_FRAMES);
+
+        if (titleSec != null) {
+            frameTicks = Math.max(1L, titleSec.getLong("frame-ticks", DEF_TITLE_FRAME_TICKS));
+            List<String> cfgFrames = titleSec.getStringList("frames");
+            if (cfgFrames != null && !cfgFrames.isEmpty()) {
+                frames = new ArrayList<>(cfgFrames);
+            }
+        }
+        if (frames.isEmpty()) frames = new ArrayList<>(DEF_TITLE_FRAMES);
 
         List<String> lines = root.getStringList("lines");
         if (lines == null || lines.isEmpty()) {
-            lines = List.of("&7Player: &f{player}", "&7Online: &f%server_online%");
+            lines = new ArrayList<>(DEF_LINES);
         }
 
-        Set<String> wl = new HashSet<>(root.getStringList("worlds.whitelist"));
-        Set<String> bl = new HashSet<>(root.getStringList("worlds.blacklist"));
+        Set<String> wl = toSet(root.getStringList("worlds.whitelist"));
+        Set<String> bl = toSet(root.getStringList("worlds.blacklist"));
 
         return new ScoreboardConfig(
-                enabled, defaultEnabled, updateTicks,
-                List.copyOf(frames), frameTicks, List.copyOf(lines),
-                Set.copyOf(wl), Set.copyOf(bl)
+                enabled,
+                defaultEnabled,
+                updateTicks,
+                List.copyOf(frames),
+                frameTicks,
+                List.copyOf(lines),
+                Set.copyOf(wl),
+                Set.copyOf(bl)
         );
     }
+
+    private static ScoreboardConfig defaults(boolean enabled) {
+        return new ScoreboardConfig(
+                enabled,
+                DEF_DEFAULT_ENABLED,
+                DEF_UPDATE_TICKS,
+                DEF_TITLE_FRAMES,
+                DEF_TITLE_FRAME_TICKS,
+                DEF_LINES,
+                DEF_EMPTY_SET,
+                DEF_EMPTY_SET
+        );
+    }
+
+    private static Set<String> toSet(List<String> list) {
+        if (list == null || list.isEmpty()) return new HashSet<>();
+        return new HashSet<>(list);
+    }
+
 
     public boolean enabled() { return enabled; }
     public boolean defaultEnabled() { return defaultEnabled; }
