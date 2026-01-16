@@ -22,7 +22,8 @@ features:
     cooldown: false
     cooldown-amount: 5
 
-
+  currency:
+    enabled: true
   economy:
     enabled: true
 

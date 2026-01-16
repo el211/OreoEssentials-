@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/namespace/PacketRegistry.java
 package fr.elias.oreoEssentials.rabbitmq.namespace;
 
 import fr.elias.oreoEssentials.rabbitmq.namespace.impl.HomesPacketNamespace;

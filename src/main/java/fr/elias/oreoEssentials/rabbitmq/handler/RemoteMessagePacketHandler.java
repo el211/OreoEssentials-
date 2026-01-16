@@ -16,7 +16,6 @@ public class RemoteMessagePacketHandler implements PacketSubscriber<SendRemoteMe
         UUID targetId = packet.getTargetId();
         String message = packet.getMessage();
 
-        //  Check for null or empty message/UUID
         if (targetId == null || message == null || message.trim().isEmpty()) {
             Bukkit.getLogger().warning("[OreoEssentials] ⚠ Received invalid SendRemoteMessagePacket: targetId or message is null/empty.");
             return;

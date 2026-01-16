@@ -272,7 +272,6 @@ public final class ScoreboardService implements Listener {
 
         // Step 1: Apply tag animations first
         String s = applyTagAnimations(raw);
-        plugin.getLogger().info("[DEBUG] After animations: " + s);
 
         // Step 2: Replace {player} placeholder
         s = s.replace("{player}", p.getName());
@@ -282,14 +281,11 @@ public final class ScoreboardService implements Listener {
             if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
                 String before = s;
                 s = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, s);
-                plugin.getLogger().info("[DEBUG] PlaceholderAPI - Before: " + before);
-                plugin.getLogger().info("[DEBUG] PlaceholderAPI - After: " + s);
+
 
                 // Try again if placeholder wasn't resolved
                 if (s.contains("%oreo_balance_formatted%")) {
-                    plugin.getLogger().warning("[DEBUG] Placeholder not resolved, trying again...");
                     s = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, s);
-                    plugin.getLogger().info("[DEBUG] PlaceholderAPI - Second attempt: " + s);
                 }
             }
         } catch (Throwable ex) {

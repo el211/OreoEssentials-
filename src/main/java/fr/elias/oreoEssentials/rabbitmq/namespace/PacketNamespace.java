@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/namespace/PacketNamespace.java
 package fr.elias.oreoEssentials.rabbitmq.namespace;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
@@ -14,7 +13,6 @@ public abstract class PacketNamespace {
     private final Set<PacketDefinition<?>> definitions =
             ConcurrentHashMap.newKeySet();
 
-    // ensures registerPackets() is executed once per namespace
     private volatile boolean registered = false;
 
     protected PacketNamespace(short namespaceId) {

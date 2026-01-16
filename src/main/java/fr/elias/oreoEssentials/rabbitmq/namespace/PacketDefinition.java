@@ -1,10 +1,9 @@
-// src/main/java/fr/elias/oreoEssentials/rabbitmq/namespace/PacketDefinition.java
 package fr.elias.oreoEssentials.rabbitmq.namespace;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
 
 public final class PacketDefinition<T extends Packet> {
-    private final long registryId;                // PacketManager reads a long
+    private final long registryId;
     private final Class<T> packetClass;
     private final PacketProvider<T> provider;
     private final PacketNamespace namespace;

@@ -13,6 +13,16 @@ import fr.elias.oreoEssentials.commands.core.playercommands.back.BackService;
 import fr.elias.oreoEssentials.commands.core.playercommands.back.BackJoinListener;
 import fr.elias.oreoEssentials.cross.InvlookListener;
 import fr.elias.oreoEssentials.cross.InvlookManager;
+import fr.elias.oreoEssentials.currency.CurrencyConfig;
+import fr.elias.oreoEssentials.currency.CurrencyService;
+import fr.elias.oreoEssentials.currency.commands.CurrencyBalanceCommand;
+import fr.elias.oreoEssentials.currency.commands.CurrencyCommand;
+import fr.elias.oreoEssentials.currency.commands.CurrencySendCommand;
+import fr.elias.oreoEssentials.currency.commands.CurrencyTopCommand;
+import fr.elias.oreoEssentials.currency.rabbitmq.CurrencyPacketNamespace;
+import fr.elias.oreoEssentials.currency.storage.CurrencyStorage;
+import fr.elias.oreoEssentials.currency.storage.JsonCurrencyStorage;
+import fr.elias.oreoEssentials.currency.storage.MongoCurrencyStorage;
 import fr.elias.oreoEssentials.migration.commands.ZEssentialsHomesImportCommand;
 import fr.elias.oreoEssentials.nametag.PlayerNametagManager;
 import fr.elias.oreoEssentials.playerwarp.*;
@@ -20,6 +30,10 @@ import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpCommand;
 import fr.elias.oreoEssentials.playerwarp.command.PlayerWarpTabCompleter;
 import fr.elias.oreoEssentials.rtp.listeners.RtpJoinListener;
 import org.bukkit.event.Listener;
+import fr.elias.oreoEssentials.currency.commands.CurrencyBalanceTabCompleter;
+import fr.elias.oreoEssentials.currency.commands.CurrencyTopTabCompleter;
+import fr.elias.oreoEssentials.currency.commands.CurrencySendTabCompleter;
+import fr.elias.oreoEssentials.currency.commands.CurrencyCommandTabCompleter;
 
 import fr.elias.oreoEssentials.commands.completion.*;
 import fr.elias.oreoEssentials.commands.core.playercommands.*;
@@ -142,7 +156,11 @@ public final class OreoEssentials extends JavaPlugin {
     private fr.elias.oreoEssentials.chat.channels.ChatChannelManager channelManager;
     private BackBroker backBroker;
     private PlaceholderAPIHook placeholderHook;
+    private CurrencyService currencyService;
+    private CurrencyConfig currencyConfig;
 
+    public CurrencyService getCurrencyService() { return currencyService; }
+    public CurrencyConfig getCurrencyConfig() { return currencyConfig; }
     private Map<UUID, BackLocation> pendingBackTeleports = new ConcurrentHashMap<>();
     public fr.elias.oreoEssentials.chat.channels.ChatChannelManager getChannelManager() {
         return channelManager;
@@ -1126,34 +1144,44 @@ public final class OreoEssentials extends JavaPlugin {
         this.homeService  = new HomeService(this.storage, this.configService, this.homeDirectory);
 
         if (rabbitEnabled) {
-            RabbitMQSender rabbit = new RabbitMQSender(getConfig().getString("rabbitmq.uri"));
+            // IMPORTANT: server name must be unique per backend, ex: shard-0-0, shard-0-1...
+            // localServerName should already be your configService.serverName() (or equivalent)
+            RabbitMQSender rabbit = new RabbitMQSender(getConfig().getString("rabbitmq.uri"), localServerName);
 
             if (this.offlinePlayerCache == null) {
                 this.offlinePlayerCache = new OfflinePlayerCache();
             }
 
             this.packetManager = new PacketManager(this, rabbit);
+
             if (rabbit.connect()) {
-                packetManager.init();
-                registerAllPacketsDeterministically(packetManager);
+
+                // 0) IMPORTANT: register EVERYTHING that affects IDs BEFORE init()
+                registerAllPacketsDeterministically(this.packetManager);
+
+                // If CurrencyPacketNamespace defines packet IDs, it MUST be registered pre-init.
+                // (If it only adds serializers, still safe here.)
                 try {
+                    this.packetManager.getPacketRegistry().register(new CurrencyPacketNamespace());
+                    getLogger().info("[RABBIT] CurrencyPacketNamespace registered (pre-init).");
+                } catch (Throwable t) {
+                    getLogger().warning("[RABBIT] Failed to register CurrencyPacketNamespace (pre-init): " + t.getMessage());
+                }
 
-                    getLogger().info("[RABBIT] Packet registry checksum=" + packetManager.registryChecksum());
-                } catch (Throwable ignored) {}
-
+                // 1) Create brokers/services that subscribers will call (optional pre-init)
                 if (invSyncEnabled) {
                     try {
                         this.invseeBroker = new fr.elias.oreoEssentials.cross.InvseeCrossServerBroker(
                                 this,
-                                packetManager,
+                                this.packetManager,
                                 localServerName,
                                 null
                         );
                         this.invseeService = new fr.elias.oreoEssentials.cross.InvseeService(
                                 this,
-                                invseeBroker
+                                this.invseeBroker
                         );
-                        this.invseeBroker.setService(invseeService);
+                        this.invseeBroker.setService(this.invseeService);
 
                         getLogger().info("[INVSEE] Cross-server Invsee broker + service ready.");
                     } catch (Throwable t) {
@@ -1167,94 +1195,105 @@ public final class OreoEssentials extends JavaPlugin {
                     getLogger().info("[INVSEE] Cross-server Invsee disabled (invSyncEnabled=false).");
                 }
 
-                packetManager.subscribeChannel(PacketChannels.GLOBAL);
-                packetManager.subscribeChannel(
+                // 2) Subscribe channels ONCE (before init is fine)
+                this.packetManager.subscribeChannel(PacketChannels.GLOBAL);
+                this.packetManager.subscribeChannel(
                         fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel.individual(localServerName)
                 );
-                getLogger().info("[RABBIT] Subscribed to individual channel for this server: " + localServerName);
+                getLogger().info("[RABBIT] Subscribed channels: global + individual(" + localServerName + ")");
 
+                // 3) Packet subscriptions (before init is fine)
                 if (this.invseeBroker != null) {
-                    packetManager.subscribe(
+                    this.packetManager.subscribe(
                             fr.elias.oreoEssentials.cross.InvseeOpenRequestPacket.class,
-                            (channel, pkt) -> invseeBroker.handleOpenRequest(pkt)
+                            (channel, pkt) -> this.invseeBroker.handleOpenRequest(pkt)
                     );
-                    packetManager.subscribe(
+                    this.packetManager.subscribe(
                             fr.elias.oreoEssentials.cross.InvseeStatePacket.class,
-                            (channel, pkt) -> invseeBroker.handleState(pkt)
+                            (channel, pkt) -> this.invseeBroker.handleState(pkt)
                     );
-                    packetManager.subscribe(
+                    this.packetManager.subscribe(
                             fr.elias.oreoEssentials.cross.InvseeEditPacket.class,
-                            (channel, pkt) -> invseeBroker.handleEdit(pkt)
+                            (channel, pkt) -> this.invseeBroker.handleEdit(pkt)
                     );
                     getLogger().info("[INVSEE] Subscribed Invsee packets on RabbitMQ.");
                 }
 
-                packetManager.subscribe(
+                this.packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket.class,
                         new RemoteMessagePacketHandler()
                 );
 
-                packetManager.subscribe(
+                this.packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeStartPacket.class,
                         (fr.elias.oreoEssentials.rabbitmq.packet.event.PacketSubscriber<
                                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeStartPacket>
                                 ) new fr.elias.oreoEssentials.rabbitmq.handler.trade.TradeStartPacketHandler(this)
                 );
-                packetManager.subscribe(
+                this.packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerJoinPacket.class,
                         new PlayerJoinPacketHandler(this)
                 );
-                packetManager.subscribe(
+                this.packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerQuitPacket.class,
                         new PlayerQuitPacketHandler(this)
                 );
-                packetManager.subscribe(
+                this.packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.DeathMessagePacket.class,
                         new fr.elias.oreoEssentials.rabbitmq.handler.DeathMessagePacketHandler(this)
                 );
 
-                packetManager.subscribe(
+                this.packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeInvitePacket.class,
                         new fr.elias.oreoEssentials.rabbitmq.handler.trade.TradeInvitePacketHandler(this)
                 );
-                packetManager.subscribe(
-                        fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeInvitePacket.class,
-                        new fr.elias.oreoEssentials.rabbitmq.handler.trade.TradeInvitePacketHandler(this)
-                );
-                packetManager.subscribe(
+
+                this.packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeStatePacket.class,
                         new fr.elias.oreoEssentials.rabbitmq.handler.trade.TradeStatePacketHandler(this)
                 );
-                packetManager.subscribe(
+                this.packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeConfirmPacket.class,
                         new fr.elias.oreoEssentials.rabbitmq.handler.trade.TradeConfirmPacketHandler(this)
                 );
-                packetManager.subscribe(
+                this.packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeCancelPacket.class,
                         new fr.elias.oreoEssentials.rabbitmq.handler.trade.TradeCancelPacketHandler(this)
                 );
-                packetManager.subscribe(
+                this.packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeGrantPacket.class,
                         new fr.elias.oreoEssentials.rabbitmq.handler.trade.TradeGrantPacketHandler(this)
                 );
-                packetManager.subscribe(
+                this.packetManager.subscribe(
                         fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeClosePacket.class,
                         new fr.elias.oreoEssentials.rabbitmq.handler.trade.TradeClosePacketHandler(this)
                 );
 
+                // 4) INIT LAST (consumer starts only after registry is final)
+                this.packetManager.init();
+
+                try {
+                    getLogger().info("[RABBIT] Packet registry checksum=" + this.packetManager.registryChecksum());
+                } catch (Throwable ignored) {}
+
                 getLogger().info("[RABBIT] Connected and subscriptions active.");
+
             } else {
                 getLogger().severe("[RABBIT] Connect failed; continuing without messaging.");
                 this.packetManager = null;
                 this.invseeBroker = null;
                 this.invseeService = null;
             }
+
         } else {
             getLogger().info("[RABBIT] Disabled.");
             this.packetManager = null;
             this.invseeBroker = null;
             this.invseeService = null;
         }
+
+// Currency should be initialized AFTER RabbitMQ packetManager is ready (so it can sync cross-server)
+        initCurrencySystem();
 
         if (packetManager != null && packetManager.isInitialized()) {
             this.modBridge = new ModBridge(
@@ -1285,6 +1324,8 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[TRADE] Cross-server trade broker disabled (PacketManager unavailable, trade disabled, or settings.yml).");
         }
 
+
+// ---------------------------------------------
         if (packetManager != null && packetManager.isInitialized()) {
 
             final var cs = this.getCrossServerSettings();
@@ -1292,16 +1333,9 @@ public final class OreoEssentials extends JavaPlugin {
                     cs.homes() || cs.warps() || cs.spawn() || cs.economy();
 
             if (anyCross) {
-                packetManager.subscribeChannel(
-                        fr.elias.oreoEssentials.rabbitmq.PacketChannels.GLOBAL
-                );
-                packetManager.subscribeChannel(
-                        fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel
-                                .individual(configService.serverName())
-                );
-                getLogger().info("[RABBIT] Subscribed channels for cross-server features. server=" + configService.serverName());
+                getLogger().info("[RABBIT] Cross-server features enabled; channels already subscribed. server=" + configService.serverName());
             } else {
-                getLogger().info("[RABBIT] All cross-server features disabled by config; skipping channel subscriptions.");
+                getLogger().info("[RABBIT] All cross-server features disabled by config; skipping brokers.");
             }
 
             if (cs.spawn() || cs.warps()) {
@@ -1331,6 +1365,7 @@ public final class OreoEssentials extends JavaPlugin {
         } else {
             getLogger().warning("[BROKER] Brokers not started: PacketManager unavailable.");
         }
+
 
         this.backService      = new BackService(storage);
         this.messageService   = new MessageService();
@@ -2115,6 +2150,92 @@ public final class OreoEssentials extends JavaPlugin {
     public boolean isMessagingAvailable() {
         return packetManager != null && packetManager.isInitialized();
     }
+    private void initCurrencySystem() {
+        // Feature toggle
+        if (!settingsConfig.currencyEnabled()) {
+            getLogger().info("[Currency] Disabled by settings.yml");
+            return;
+        }
+
+        try {
+            // Load currency config
+            this.currencyConfig = new CurrencyConfig(this);
+            getLogger().info("[Currency/DEBUG] file=" + new java.io.File(getDataFolder(), "currency-config.yml").getAbsolutePath());
+            getLogger().info("[Currency/DEBUG] enabled=" + currencyConfig.isEnabled()
+                    + " storage=" + currencyConfig.getStorageType()
+                    + " cross=" + currencyConfig.isCrossServerEnabled()
+                    + " homesMongoClient=" + (homesMongoClient != null));
+
+            // Choose storage
+            final CurrencyStorage currencyStorage;
+            if (currencyConfig.useMongoStorage() && this.homesMongoClient != null) {
+                String dbName = getConfig().getString("storage.mongo.database", "oreo");
+                String prefix = getConfig().getString("storage.mongo.collectionPrefix", "oreo_");
+                getLogger().info("[Currency/DEBUG] mongo db=" + getConfig().getString("storage.mongo.database")
+                        + " prefix=" + getConfig().getString("storage.mongo.collectionPrefix"));
+
+                currencyStorage = new MongoCurrencyStorage(this.homesMongoClient, dbName, prefix);
+                getLogger().info("[Currency] Using MongoDB storage");
+            } else {
+                currencyStorage = new JsonCurrencyStorage(this);
+                getLogger().info("[Currency] Using JSON storage");
+            }
+
+            // Create service (loads currencies async)
+            this.currencyService = new CurrencyService(this, currencyStorage, currencyConfig);
+
+            // Register commands
+            this.commands.register(new CurrencyCommand(this));
+            this.commands.register(new CurrencyBalanceCommand(this));
+            this.commands.register(new CurrencySendCommand(this));
+            this.commands.register(new CurrencyTopCommand(this));
+
+            // Register tab completers (only if commands exist in plugin.yml)
+            if (getCommand("currency") != null) {
+                getCommand("currency").setTabCompleter(new CurrencyCommandTabCompleter(this));
+            }
+            if (getCommand("currencybalance") != null) {
+                getCommand("currencybalance").setTabCompleter(new CurrencyBalanceTabCompleter(this));
+            }
+            if (getCommand("currencysend") != null) {
+                getCommand("currencysend").setTabCompleter(new CurrencySendTabCompleter(this));
+            }
+            if (getCommand("currencytop") != null) {
+                getCommand("currencytop").setTabCompleter(new CurrencyTopTabCompleter(this));
+            }
+
+            // Cross-server (RabbitMQ)
+            if (currencyConfig.isCrossServerEnabled()
+                    && packetManager != null
+                    && packetManager.isInitialized()) {
+
+
+
+                // Subscribe to currency sync packets (create/delete)
+                packetManager.subscribe(
+                        fr.elias.oreoEssentials.currency.rabbitmq.CurrencySyncPacket.class,
+                        (channel, pkt) -> {
+                            try {
+                                currencyService.handleCurrencySync(pkt);
+                            } catch (Throwable t) {
+                                getLogger().warning("[Currency] Failed to handle CurrencySyncPacket: " + t.getMessage());
+                            }
+                        }
+                );
+
+                getLogger().info("[Currency] Registered cross-server packets + sync listener");
+            } else {
+                getLogger().info("[Currency] Cross-server sync disabled or PacketManager not ready");
+            }
+
+            getLogger().info("[Currency] Enabled (currencies load async)");
+
+        } catch (Throwable t) {
+            getLogger().severe("[Currency] Failed to initialize: " + t.getMessage());
+            t.printStackTrace();
+        }
+    }
+
 
     @Override
     public void onDisable() {

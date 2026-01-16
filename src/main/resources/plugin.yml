@@ -1,5 +1,5 @@
 name: OreoEssentials
-version: "2.8A-SNAPSHOT"
+version: "2.9-SNAPSHOT"
 main: fr.elias.oreoEssentials.OreoEssentials
 api-version: "1.21"
 description: "All-in-one essentials plugin with homes/warps/spawn, RTP, economy (Vault), chat tools, portals/jump pads, cross-server EC & player sync."
@@ -26,6 +26,25 @@ commands:
     aliases: [tfly, temporaryflight]
     permission: oe.tempfly.use
 
+  oecurrency:
+    description: Manage currencies
+    aliases: [currency, currencies, curr]
+    permission: oreo.currency.admin
+
+  currencybalance:
+    description: Check currency balance
+    aliases: [cbal, cbalance, currbal]
+    permission: oreo.currency.balance
+
+  currencysend:
+    description: Send currency to players
+    aliases: [csend, sendcurrency, paycurrency]
+    permission: oreo.currency.send
+
+  currencytop:
+    description: View top currency balances
+    aliases: [ctop, currencyleaderboard, cbalancetop]
+    permission: oreo.currency.top
   trade:
     description: Open a trade with another player
     usage: /trade <player>

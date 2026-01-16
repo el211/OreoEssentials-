@@ -1,0 +1,127 @@
+# ═══════════════════════════════════════════════════════════════
+#             OreoEssentials Currency System Configuration
+#                    Using Kyori MiniMessage Format
+# ═══════════════════════════════════════════════════════════════
+
+currency:
+  # Enable the currency system
+  enabled: true
+
+  # Storage type: json or mongodb
+  # - json: Local storage (single server only)
+  # - mongodb: Uses main OreoEssentials MongoDB connection (cross-server)
+  storage: json
+
+  # Default currency ID (for Vault compatibility)
+  default-currency: money
+
+  # Enable cross-server currency synchronization
+  # Requires: storage=mongodb AND RabbitMQ enabled in main config
+  cross-server: false
+
+  # Transfer settings
+  transfer:
+    min-amount: 0.01       # Minimum amount players can send
+    max-amount: 1000000.0  # Maximum amount (bypass with oreo.currency.send.unlimited)
+    cooldown: 0            # Seconds between transfers (0 = no cooldown)
+
+# ═══════════════════════════════════════════════════════════════
+#                          Messages
+#           Using Kyori Adventure MiniMessage Format
+# ═══════════════════════════════════════════════════════════════
+#
+# MiniMessage Format (Modern & Recommended):
+#   - Gradient: <gradient:red:blue>text</gradient>
+#   - Gradient (hex): <gradient:#FF0000:#0000FF>text</gradient>
+#   - Rainbow: <rainbow>text</rainbow>
+#   - Color names: <red>text</red>, <green>text</green>, <gold>text</gold>
+#   - Hex colors: <#RRGGBB>text</#RRGGBB>
+#   - Bold: <b>text</b> or <bold>text</bold>
+#   - Italic: <i>text</i> or <italic>text</italic>
+#   - Underline: <u>text</u> or <underline>text</underline>
+#   - Strikethrough: <st>text</st> or <strikethrough>text</strikethrough>
+#   - Obfuscated: <obf>text</obf> or <obfuscated>text</obfuscated>
+#   - Reset: <reset>
+#
+# Legacy Format (Also Supported):
+#   - Colors: &a, &b, &c, etc.
+#   - Hex: &#RRGGBB (converted to MiniMessage)
+#
+# Placeholders:
+#   - {player} - Player name
+#   - {amount} - Currency amount (formatted)
+#   - {currency} - Currency name
+#   - {id} - Currency ID
+#   - {name} - Currency display name
+#   - {symbol} - Currency symbol
+#   - {rank} - Rank number (in leaderboards)
+#   - %placeholder% - PlaceholderAPI placeholders (if installed)
+#
+# Documentation: https://docs.advntr.dev/minimessage/format.html
+#
+# ═══════════════════════════════════════════════════════════════
+
+messages:
+  # Prefix for all currency messages (Gold gradient)
+  prefix: '<gradient:gold:yellow>[Currency]</gradient> '
+
+  # Currency management messages
+  currency-created: '<green>Created currency: <white>{name} {symbol}'
+  currency-deleted: '<green>Deleted currency: <white>{id}'
+  currency-not-found: '<gradient:red:dark_red>Currency not found: {id}</gradient>'
+
+  # Transaction messages
+  insufficient-balance: '<gradient:red:dark_red><b>Insufficient balance!</b></gradient>'
+  transfer-sent: '<gradient:green:dark_green>✔ Sent {amount} to <white>{player}</gradient>'
+  transfer-received: '<gradient:green:dark_green>✔ Received {amount} from <white>{player}</gradient>'
+
+  # Balance messages
+  balance: '<yellow>{currency}: <green>{amount}'
+  balance-all-header: '<gradient:gold:yellow>════════ Your Balances ════════</gradient>'
+  balance-all-entry: '<yellow>▪ <white>{currency}: <green>{amount}'
+  balance-all-footer: '<gradient:gold:yellow>═══════════════════════════════</gradient>'
+
+  # Leaderboard messages
+  top-header: '<gradient:gold:yellow>════ <white>{currency}</white> Top Balances ════</gradient>'
+  top-footer: '<gradient:gold:yellow>═══════════════════════════════</gradient>'
+  top-entry: '<gold>#{rank} <white>{player} <dark_gray>- <green>{amount}'
+  top-entry-1: '<gradient:gold:yellow><b>👑 #{rank}</b></gradient> <white>{player} <dark_gray>- <gradient:green:dark_green>{amount}</gradient>'
+  top-entry-2: '<gray><b>🥈 #{rank}</b></gray> <white>{player} <dark_gray>- <green>{amount}'
+  top-entry-3: '<#CD7F32><b>🥉 #{rank}</b></#CD7F32> <white>{player} <dark_gray>- <green>{amount}'
+
+# ═══════════════════════════════════════════════════════════════
+#                    MiniMessage Examples
+# ═══════════════════════════════════════════════════════════════
+#
+# Simple Colors:
+#   <red>Red text</red>
+#   <green>Green</green> <blue>Blue</blue>
+#   <gold>Gold</gold> <aqua>Aqua</aqua>
+#
+# Hex Colors:
+#   <#FF0000>Custom Red</#FF0000>
+#   <#00FF00>Custom Green</#00FF00>
+#
+# Gradients:
+#   <gradient:red:blue>Red to Blue</gradient>
+#   <gradient:#FF0000:#0000FF>Hex gradient</gradient>
+#   <gradient:gold:yellow:white>Multi-color gradient</gradient>
+#
+# Rainbow:
+#   <rainbow>Rainbow text!</rainbow>
+#   <rainbow:!>Rainbow with phase</rainbow>
+#
+# Formatting:
+#   <b>Bold</b> <i>Italic</i> <u>Underline</u>
+#   <st>Strikethrough</st> <obf>Obfuscated</obf>
+#
+# Combined:
+#   <gradient:green:dark_green><b>Bold Gradient!</b></gradient>
+#   <gold><u>Underlined Gold</u></gold>
+#   <rainbow><b>Bold Rainbow!</b></rainbow>
+#
+# Hover & Click (Advanced):
+#   <hover:show_text:'Hover text'>Hover me!</hover>
+#   <click:run_command:/help>Click me!</click>
+#
+# ═══════════════════════════════════════════════════════════════

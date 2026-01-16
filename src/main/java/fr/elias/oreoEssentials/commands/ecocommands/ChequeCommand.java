@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/ecocommands/ChequeCommand.java
 package fr.elias.oreoEssentials.commands.ecocommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;

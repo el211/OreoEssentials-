@@ -7,7 +7,7 @@ public final class HomesPacketNamespace extends PacketNamespace {
     public static final short NAMESPACE_ID = 0x0002;
 
     public static final int REG_HOME_TELEPORT_REQUEST        = 1;
-    public static final int REG_OTHER_HOME_TELEPORT_REQUEST  = 2; // NEW
+    public static final int REG_OTHER_HOME_TELEPORT_REQUEST  = 2;
 
     public HomesPacketNamespace() {
         super(NAMESPACE_ID);

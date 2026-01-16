@@ -43,6 +43,9 @@ public class SettingsConfig {
     public boolean featureOption(String featureKey, String subKey, boolean def) {
         return cfg.getBoolean("features." + featureKey + "." + subKey, def);
     }
+    public boolean currencyEnabled() {
+        return isEnabled("currency");
+    }
 
     public boolean kitsEnabled() { return isEnabled("kits"); }
 

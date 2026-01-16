@@ -18,13 +18,11 @@ public class PlayerJoinPacketHandler implements PacketSubscriber<PlayerJoinPacke
 
     @Override
     public void onReceive(PacketChannel channel, PlayerJoinPacket packet) {
-        // Defensive null checks in case upstream sent malformed data
         if (packet == null) return;
 
         UUID uuid = packet.getPlayerId();
         String name = packet.getPlayerName();
 
-        // Optional: small sanity check to avoid polluting cache
         if (uuid == null || name == null || name.isEmpty()) {
             plugin.getLogger().warning("[Rabbit] PlayerJoinPacket missing data (uuid=" + uuid + ", name=" + name + ")");
             return;
@@ -32,7 +30,6 @@ public class PlayerJoinPacketHandler implements PacketSubscriber<PlayerJoinPacke
 
         plugin.getLogger().fine("[Rabbit] Join @" + channel + " -> " + name + " (" + uuid + ")");
 
-        //  Guarded cache access (getter is null-safe but we still guard)
         OfflinePlayerCache cache = plugin.getOfflinePlayerCache();
         if (cache != null) {
             try {

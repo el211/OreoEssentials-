@@ -1,9 +1,7 @@
 package fr.elias.oreoEssentials.commands.ecocommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
-import fr.elias.oreoEssentials.commands.OreoCommand; // NEW
-import java.util.List;                                // NEW
-
+import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.util.Async;
 import fr.elias.oreoEssentials.util.Lang;
 import net.milkbowl.vault.economy.Economy;
@@ -16,12 +14,10 @@ import org.bukkit.entity.Player;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
+public class MoneyCommand implements CommandExecutor, OreoCommand {
 
     private final OreoEssentials plugin;
     private final Economy vault;
@@ -76,6 +72,7 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
                 return true;
             }
 
+
             if (plugin.getDatabase() != null) {
                 Async.run(() -> {
                     UUID targetId = plugin.getOfflinePlayerCache().getId(targetName);
@@ -104,19 +101,19 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
                     };
                     sendSync(sender, Lang.msg(senderPath, sVars, sender instanceof Player ? (Player) sender : null));
 
-                    var p = Bukkit.getPlayer(targetId);
-                    if (p != null) {
-                        Map<String, String> rVars = new HashMap<>();
-                        rVars.put("amount_formatted", fmt(amount));
-                        rVars.put("balance_formatted", fmt(newBal));
-                        rVars.put("currency_symbol", currencySymbol());
-                        String receiverPath = switch (sub) {
-                            case "give" -> "economy.money.give.receiver";
-                            case "take" -> "economy.money.take.receiver";
-                            default -> "economy.money.set.receiver";
-                        };
-                        sendSync(p, Lang.msg(receiverPath, rVars, p));
-                    }
+                    Map<String, String> rVars = new HashMap<>();
+                    rVars.put("amount_formatted", fmt(amount));
+                    rVars.put("balance_formatted", fmt(newBal));
+                    rVars.put("currency_symbol", currencySymbol());
+                    String receiverPath = switch (sub) {
+                        case "give" -> "economy.money.give.receiver";
+                        case "take" -> "economy.money.take.receiver";
+                        default -> "economy.money.set.receiver";
+                    };
+
+                    String receiverMsg = Lang.msg(receiverPath, rVars, null);
+                    notifyReceiverCrossServer(targetId, receiverMsg);
+
                 });
                 return true;
             }
@@ -126,7 +123,9 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
                 sender.sendMessage(Lang.msg("economy.errors.no-economy", sender instanceof Player ? (Player) sender : null));
                 return true;
             }
+
             OfflinePlayer off = Bukkit.getOfflinePlayer(targetName);
+
             switch (sub) {
                 case "give" -> vault.depositPlayer(off, amount);
                 case "take" -> vault.withdrawPlayer(off, amount);
@@ -151,24 +150,63 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
             };
             sender.sendMessage(Lang.msg(senderPath, sVars, sender instanceof Player ? (Player) sender : null));
 
-            // receiver (if online)
-            if (off.isOnline() && off.getPlayer() != null) {
+            UUID targetId = off.getUniqueId();
+            if (targetId != null) {
+                double newBal = safeVaultBalance(off);
+
                 Map<String, String> rVars = new HashMap<>();
                 rVars.put("amount_formatted", fmt(amount));
-                rVars.put("balance_formatted", fmt(safeVaultBalance(off)));
+                rVars.put("balance_formatted", fmt(newBal));
                 rVars.put("currency_symbol", currencySymbol());
                 String receiverPath = switch (sub) {
                     case "give" -> "economy.money.give.receiver";
                     case "take" -> "economy.money.take.receiver";
                     default -> "economy.money.set.receiver";
                 };
-                off.getPlayer().sendMessage(Lang.msg(receiverPath, rVars, off.getPlayer()));
+
+                String receiverMsg = Lang.msg(receiverPath, rVars, null);
+                notifyReceiverCrossServer(targetId, receiverMsg);
             }
+
             return true;
         }
 
         sender.sendMessage(Lang.msg("economy.money.usage.view", sender instanceof Player ? (Player) sender : null));
         return true;
+    }
+
+
+    private void notifyReceiverCrossServer(UUID targetUuid, String message) {
+        if (targetUuid == null || message == null || message.isBlank()) return;
+
+        // Same server?
+        Player local = Bukkit.getPlayer(targetUuid);
+        if (local != null) {
+            sendSync(local, message);
+            return;
+        }
+
+        try {
+            var pm = plugin.getPacketManager();
+            var dir = plugin.getPlayerDirectory();
+            if (pm == null || !pm.isInitialized() || dir == null) return;
+
+            String server = dir.lookupCurrentServer(targetUuid);
+            if (server == null || server.isBlank()) return;
+
+            pm.sendPacket(
+                    fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel.individual(server),
+                    new fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket(targetUuid, message)
+            );
+
+            if (plugin.getConfig().getBoolean("debug", false)) {
+                plugin.getLogger().info("[MONEY][DBG] Remote notify -> uuid=" + targetUuid + " server=" + server);
+            }
+        } catch (Throwable t) {
+            if (plugin.getConfig().getBoolean("debug", false)) {
+                plugin.getLogger().warning("[MONEY][DBG] Remote notify failed: " + t.getMessage());
+            }
+        }
     }
 
 
@@ -229,6 +267,7 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
     }
 
     private void sendSync(CommandSender who, String text) {
+        if (text == null) return;
         if (Bukkit.isPrimaryThread()) who.sendMessage(text);
         else Bukkit.getScheduler().runTask(plugin, () -> who.sendMessage(text));
     }
@@ -242,7 +281,7 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
         DecimalFormatSymbols sym = new DecimalFormatSymbols(Locale.US);
         if (!th.isEmpty()) sym.setGroupingSeparator(th.charAt(0));
         if (!dec.isEmpty()) sym.setDecimalSeparator(dec.charAt(0));
-        java.text.DecimalFormat df = new java.text.DecimalFormat(pattern, sym);
+        DecimalFormat df = new DecimalFormat(pattern, sym);
         df.setGroupingUsed(!th.isEmpty());
         return df.format(v);
     }
@@ -262,7 +301,6 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
 
     @Override
     public String name() {
-        // Command label handled by CommandManager -> /money
         return "money";
     }
 
@@ -291,5 +329,3 @@ public class MoneyCommand implements CommandExecutor, OreoCommand { // UPDATED
         return onCommand(sender, null, label, args);
     }
 }
-
-

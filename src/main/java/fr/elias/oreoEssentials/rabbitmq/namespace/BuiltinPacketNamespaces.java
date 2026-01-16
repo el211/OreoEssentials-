@@ -12,7 +12,6 @@ public final class BuiltinPacketNamespaces {
 
     private static final Map<Short, PacketNamespace> NAMESPACE_BY_ID = new ConcurrentHashMap<>();
 
-    // Register your built-in namespaces here
     public static final PacketNamespace ECONOMY = add(new EconomyPacketNamespace());
 
     public static Collection<PacketNamespace> getNamespaces() {

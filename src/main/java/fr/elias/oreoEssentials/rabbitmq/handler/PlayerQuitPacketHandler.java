@@ -25,7 +25,6 @@ public class PlayerQuitPacketHandler implements PacketSubscriber<PlayerQuitPacke
             return;
         }
 
-        // 🛡 Prevent crash if player isn't cached
         if (plugin.getOfflinePlayerCache().contains(playerId)) {
             plugin.getOfflinePlayerCache().remove(playerId);
             plugin.getLogger().info("📨 Received PlayerQuitPacket: " + playerId + " (removed from cache)");

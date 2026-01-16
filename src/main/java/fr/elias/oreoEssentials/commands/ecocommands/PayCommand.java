@@ -36,7 +36,9 @@ public class PayCommand implements OreoCommand {
             return true;
         }
 
-        Economy econ = OreoEssentials.get().getVaultEconomy();
+        final OreoEssentials plugin = OreoEssentials.get();
+
+        Economy econ = plugin.getVaultEconomy();
         if (econ == null) {
             from.sendMessage(Lang.msg("economy.errors.no-economy", from));
             return true;
@@ -72,9 +74,10 @@ public class PayCommand implements OreoCommand {
             from.sendMessage(Lang.msg("economy.errors.no-economy", from));
             return true;
         }
+
         EconomyResponse d = econ.depositPlayer(target, amount);
         if (d == null || d.type != EconomyResponse.ResponseType.SUCCESS) {
-            econ.depositPlayer(from, amount); // refund
+            try { econ.depositPlayer(from, amount); } catch (Throwable ignored) {} // refund best-effort
             from.sendMessage(Lang.msg("economy.errors.no-economy", from));
             return true;
         }
@@ -85,17 +88,51 @@ public class PayCommand implements OreoCommand {
                 Map.of("target", targetName, "amount_formatted", fmt(amount), "currency_symbol", currencySymbol()),
                 from));
 
-        if (target.isOnline() && target.getPlayer() != null) {
-            target.getPlayer().sendMessage(Lang.msg("economy.pay.success-receiver",
-                    Map.of("player", from.getName(), "amount_formatted", fmt(amount), "currency_symbol", currencySymbol()),
-                    target.getPlayer()));
+        // receiver message text (no player context needed)
+        String receiverMsg = Lang.msg("economy.pay.success-receiver",
+                Map.of("player", from.getName(), "amount_formatted", fmt(amount), "currency_symbol", currencySymbol()),
+                null
+        );
+
+        // If target is on this server -> send now
+        Player local = Bukkit.getPlayer(target.getUniqueId());
+        if (local != null) {
+            local.sendMessage(receiverMsg);
+        } else {
+            // Cross-server -> send GLOBAL, any shard hosting the player will deliver it
+            try {
+                var pm = plugin.getPacketManager();
+                if (pm != null && pm.isInitialized()) {
+                    pm.sendPacket(
+                            fr.elias.oreoEssentials.rabbitmq.PacketChannels.GLOBAL,
+                            new fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket(
+                                    target.getUniqueId(),
+                                    receiverMsg
+                            )
+                    );
+
+                    if (plugin.getConfig().getBoolean("debug", false)) {
+                        plugin.getLogger().info("[PAY][DBG] GLOBAL remote message queued for " + target.getUniqueId());
+                    }
+                } else {
+                    if (plugin.getConfig().getBoolean("debug", false)) {
+                        plugin.getLogger().info("[PAY][DBG] Remote message skipped (PacketManager not available).");
+                    }
+                }
+            } catch (Throwable t) {
+                if (plugin.getConfig().getBoolean("debug", false)) {
+                    plugin.getLogger().warning("[PAY][DBG] Remote message failed: " + t.getMessage());
+                }
+            }
         }
 
-        OfflinePlayerCache cache = OreoEssentials.get().getOfflinePlayerCache();
-        if (cache != null && target.getUniqueId() != null && targetName != null) cache.add(targetName, target.getUniqueId());
+        OfflinePlayerCache cache = plugin.getOfflinePlayerCache();
+        if (cache != null && target.getUniqueId() != null && targetName != null) {
+            cache.add(targetName, target.getUniqueId());
+        }
+
         return true;
     }
-
 
     private OfflinePlayer resolveOffline(String nameOrUuid) {
         Player p = Bukkit.getPlayerExact(nameOrUuid);
