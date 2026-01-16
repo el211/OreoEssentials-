@@ -19,6 +19,7 @@ import fr.elias.oreoEssentials.currency.commands.CurrencyBalanceCommand;
 import fr.elias.oreoEssentials.currency.commands.CurrencyCommand;
 import fr.elias.oreoEssentials.currency.commands.CurrencySendCommand;
 import fr.elias.oreoEssentials.currency.commands.CurrencyTopCommand;
+import fr.elias.oreoEssentials.currency.placeholders.CurrencyPlaceholderExpansion;
 import fr.elias.oreoEssentials.currency.rabbitmq.CurrencyPacketNamespace;
 import fr.elias.oreoEssentials.currency.storage.CurrencyStorage;
 import fr.elias.oreoEssentials.currency.storage.JsonCurrencyStorage;
@@ -277,7 +278,7 @@ public final class OreoEssentials extends JavaPlugin {
     private CustomCraftingService customCraftingService;
     public CustomCraftingService getCustomCraftingService() { return customCraftingService; }
     private fr.elias.oreoEssentials.holograms.OreoHolograms oreoHolograms;
-
+    private CurrencyPlaceholderExpansion currencyPlaceholders;
     private fr.elias.oreoEssentials.playtime.PlaytimeTracker playtimeTracker;
     private PlayerNametagManager nametagManager;
     private Gson gson = new Gson();
@@ -1159,14 +1160,6 @@ public final class OreoEssentials extends JavaPlugin {
                 // 0) IMPORTANT: register EVERYTHING that affects IDs BEFORE init()
                 registerAllPacketsDeterministically(this.packetManager);
 
-                // If CurrencyPacketNamespace defines packet IDs, it MUST be registered pre-init.
-                // (If it only adds serializers, still safe here.)
-                try {
-                    this.packetManager.getPacketRegistry().register(new CurrencyPacketNamespace());
-                    getLogger().info("[RABBIT] CurrencyPacketNamespace registered (pre-init).");
-                } catch (Throwable t) {
-                    getLogger().warning("[RABBIT] Failed to register CurrencyPacketNamespace (pre-init): " + t.getMessage());
-                }
 
                 // 1) Create brokers/services that subscribers will call (optional pre-init)
                 if (invSyncEnabled) {
@@ -1294,7 +1287,22 @@ public final class OreoEssentials extends JavaPlugin {
 
 // Currency should be initialized AFTER RabbitMQ packetManager is ready (so it can sync cross-server)
         initCurrencySystem();
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") && currencyService != null) {
+            try {
+                this.currencyPlaceholders = new CurrencyPlaceholderExpansion(this);
 
+                if (this.currencyPlaceholders.register()) {
+                    getLogger().info("[Currency] PlaceholderAPI expansion registered successfully!");
+                    getLogger().info("[Currency] Available: %oreo_currency_balance_<id>%, etc.");
+                } else {
+                    getLogger().warning("[Currency] Failed to register PlaceholderAPI expansion!");
+                }
+            } catch (Throwable t) {
+                getLogger().warning("[Currency] PlaceholderAPI expansion failed: " + t.getMessage());
+            }
+        } else {
+            getLogger().info("[Currency] PlaceholderAPI not found - placeholders disabled");
+        }
         if (packetManager != null && packetManager.isInitialized()) {
             this.modBridge = new ModBridge(
                     this,
@@ -2053,68 +2061,77 @@ public final class OreoEssentials extends JavaPlugin {
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerJoinPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerJoinPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerQuitPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerQuitPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerWarpTeleportRequestPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerWarpTeleportRequestPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rtp.RtpTeleportRequestPacket.class,
                 fr.elias.oreoEssentials.rtp.RtpTeleportRequestPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.cross.InvseeOpenRequestPacket.class,
                 fr.elias.oreoEssentials.cross.InvseeOpenRequestPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.cross.InvseeStatePacket.class,
                 fr.elias.oreoEssentials.cross.InvseeStatePacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.cross.InvseeEditPacket.class,
                 fr.elias.oreoEssentials.cross.InvseeEditPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.DeathMessagePacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.DeathMessagePacket::new
         );
 
         pm.registerPacket(
-                fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerWarpTeleportRequestPacket.class,
-                fr.elias.oreoEssentials.rabbitmq.packet.impl.PlayerWarpTeleportRequestPacket::new
-        );
-
-        pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeStartPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeStartPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeInvitePacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeInvitePacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeStatePacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeStatePacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeConfirmPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeConfirmPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeCancelPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeCancelPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeGrantPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeGrantPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeClosePacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.TradeClosePacket::new
@@ -2124,6 +2141,7 @@ public final class OreoEssentials extends JavaPlugin {
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.TpJumpPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.TpJumpPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.BackTeleportPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.BackTeleportPacket::new
@@ -2133,18 +2151,39 @@ public final class OreoEssentials extends JavaPlugin {
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.TpaBringPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.TpaBringPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.TpaRequestPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.TpaRequestPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.TpaSummonPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.TpaSummonPacket::new
         );
+
         pm.registerPacket(
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.TpaAcceptPacket.class,
                 fr.elias.oreoEssentials.rabbitmq.packet.impl.TpaAcceptPacket::new
         );
+
+
+        pm.registerPacket(
+                fr.elias.oreoEssentials.currency.rabbitmq.CurrencyTransferPacket.class,
+                fr.elias.oreoEssentials.currency.rabbitmq.CurrencyTransferPacket::new
+        );
+
+        pm.registerPacket(
+                fr.elias.oreoEssentials.currency.rabbitmq.CurrencyUpdatePacket.class,
+                fr.elias.oreoEssentials.currency.rabbitmq.CurrencyUpdatePacket::new
+        );
+
+        pm.registerPacket(
+                fr.elias.oreoEssentials.currency.rabbitmq.CurrencySyncPacket.class,
+                fr.elias.oreoEssentials.currency.rabbitmq.CurrencySyncPacket::new
+        );
+
+        getLogger().info("[RABBIT] Registered " + 25 + " packet types deterministically");
     }
 
     public boolean isMessagingAvailable() {
@@ -2625,6 +2664,9 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.shards.OreoShardsModule getShardsModule() { return shardsModule; }
     public EconomyBootstrap getEcoBootstrap() { return ecoBootstrap; }
     public Economy getVaultEconomy() { return vaultEconomy; }
+    public CurrencyPlaceholderExpansion getCurrencyPlaceholders() {
+        return currencyPlaceholders;
+    }
 }
 
 

@@ -208,6 +208,7 @@ public class CurrencyService {
         });
     }
 
+    // ========== Balance Management ==========
 
     public CompletableFuture<Double> getBalance(UUID playerId, String currencyId) {
         if (playerId == null || currencyId == null) {
@@ -256,7 +257,11 @@ public class CurrencyService {
 
         return getBalance(playerId, currencyId).thenCompose(balance -> {
             double newBalance = balance + amount;
-            return setBalance(playerId, finalCurrencyId, newBalance).thenApply(v -> true);
+            return setBalance(playerId, finalCurrencyId, newBalance)
+                    .thenApply(v -> {
+                        clearPlaceholderCache(playerId);
+                        return true;
+                    });
         });
     }
 
@@ -277,7 +282,11 @@ public class CurrencyService {
             }
 
             double newBalance = balance - amount;
-            return setBalance(playerId, finalCurrencyId, newBalance).thenApply(v -> true);
+            return setBalance(playerId, finalCurrencyId, newBalance)
+                    .thenApply(v -> {
+                        clearPlaceholderCache(playerId);
+                        return true;
+                    });
         });
     }
 
@@ -346,6 +355,7 @@ public class CurrencyService {
         return storage.getTopBalances(currencyId, limit);
     }
 
+    // ========== Utility Methods ==========
 
     public String formatBalance(String currencyId, double amount) {
         Currency currency = getCurrency(currencyId);
@@ -368,6 +378,8 @@ public class CurrencyService {
             plugin.getLogger().warning("[Currency] Error during shutdown: " + e.getMessage());
         }
     }
+
+    // ========== Cross-Server Sync ==========
 
     /**
      * Broadcast currency creation/deletion to other servers
@@ -431,7 +443,31 @@ public class CurrencyService {
             return null;
         });
     }
+    /**
+     * Get top balances as Map.Entry format for placeholders
+     */
+    public CompletableFuture<List<Map.Entry<String, Double>>> getTopBalancesForPlaceholders(String currencyId, int limit) {
+        return getTopBalances(currencyId, limit).thenApply(balances -> {
+            return balances.stream()
+                    .map(balance -> {
+                        // Get player name from UUID
+                        org.bukkit.OfflinePlayer player = org.bukkit.Bukkit.getOfflinePlayer(balance.getPlayerId());
+                        String playerName = player.getName() != null ? player.getName() : balance.getPlayerId().toString();
+                        return new java.util.AbstractMap.SimpleEntry<>(playerName, balance.getBalance());
+                    })
+                    .collect(java.util.stream.Collectors.toList());
+        });
+    }
+    // ========== Private Helper Methods ==========
 
+    private void clearPlaceholderCache(UUID playerId) {
+        try {
+            var expansion = plugin.getCurrencyPlaceholders();
+            if (expansion != null) {
+                expansion.clearCache(playerId);
+            }
+        } catch (Throwable ignored) {}
+    }
 
     private void debugDumpCurrencies(String reason) {
         try {

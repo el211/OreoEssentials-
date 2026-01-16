@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,13 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Command for players to send currency to each other
  * Usage: /currencysend <player|uuid> <currency> <amount>
  *
- * Notes:
- * - Amount is parsed from the LAST argument to avoid the "mycurrency4 10 -> 410" bug.
- * - Receiver message is sent via GLOBAL SendRemoteMessagePacket so it works cross-server reliably.
- * - Player resolving:
- *   - local online first
- *   - then OfflinePlayerCache
- *   - then PlayerDirectory (Mongo)
+ * FIXED: Proper argument parsing to prevent "mycurrency4 10" becoming "410"
  */
 public class CurrencySendCommand implements OreoCommand {
 
@@ -83,8 +76,42 @@ public class CurrencySendCommand implements OreoCommand {
             }
         }
 
+        // FIXED: Proper argument parsing
+        // args[0] = player name
+        // args[1] = currency ID
+        // args[2] = amount
+        // But if there are more args, the currency might contain spaces or the amount might be at the end
+
         final String targetInput = args[0];
-        final String currencyId = args[1].toLowerCase(Locale.ROOT).trim();
+
+        // Parse amount from LAST argument (to handle multi-word currency names)
+        final String amountRaw = args[args.length - 1];
+        final double amount = parsePositive(amountRaw);
+
+        if (amount <= 0) {
+            from.sendMessage("§c✖ Invalid amount: " + amountRaw);
+            return true;
+        }
+
+        // Currency ID is everything between player name and amount
+        // For "/csend NekoMochiiiii mycurrency4 10":
+        //   args[0] = "NekoMochiiiii"
+        //   args[1] = "mycurrency4"
+        //   args[2] = "10"
+        // So currency is just args[1]
+
+        StringBuilder currencyBuilder = new StringBuilder();
+        for (int i = 1; i < args.length - 1; i++) {
+            if (i > 1) currencyBuilder.append(" ");
+            currencyBuilder.append(args[i]);
+        }
+
+        // If only 3 args, currency is just args[1]
+        final String currencyId = (args.length == 3 ? args[1] : currencyBuilder.toString())
+                .toLowerCase(Locale.ROOT).trim();
+
+        // Debug logging
+        plugin.getLogger().info("[CurrencySend] Player: " + targetInput + ", Currency: '" + currencyId + "', Amount: " + amount);
 
         final Currency currency = plugin.getCurrencyService().getCurrency(currencyId);
         if (currency == null) {
@@ -94,14 +121,6 @@ public class CurrencySendCommand implements OreoCommand {
         }
         if (!currency.isTradeable()) {
             from.sendMessage("§c✖ This currency is not tradeable!");
-            return true;
-        }
-
-        // IMPORTANT: parse amount from LAST arg to prevent "410" bug with currency names ending in digits
-        final String amountRaw = args[args.length - 1];
-        final double amount = parsePositive(amountRaw);
-        if (amount <= 0) {
-            from.sendMessage("§c✖ Invalid amount: " + amountRaw);
             return true;
         }
 
@@ -291,7 +310,8 @@ public class CurrencySendCommand implements OreoCommand {
         try {
             String raw = rawIn.replace(",", "").trim();
             if (raw.startsWith("-") || raw.toLowerCase(Locale.ROOT).contains("e")) return -1;
-            return Double.parseDouble(raw);
+            double parsed = Double.parseDouble(raw);
+            return parsed > 0 ? parsed : -1;
         } catch (Exception ignored) {
             return -1;
         }

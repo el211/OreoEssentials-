@@ -33,8 +33,15 @@ public class Currency {
     public boolean isTradeable() { return tradeable; }
     public boolean isCrossServer() { return crossServer; }
 
+    /**
+     * Format a currency amount with the currency symbol
+     * IMPORTANT: Space between symbol and amount prevents "410" concatenation bug
+     *
+     * @param amount The amount to format
+     * @return Formatted string (e.g., "💎 10.00" or "$ 25.50")
+     */
     public String format(double amount) {
-        return symbol + String.format("%.2f", amount);
+        return symbol + " " + String.format("%.2f", amount);
     }
 
     @Override
