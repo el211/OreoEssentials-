@@ -1285,24 +1285,28 @@ public final class OreoEssentials extends JavaPlugin {
             this.invseeService = null;
         }
 
-// Currency should be initialized AFTER RabbitMQ packetManager is ready (so it can sync cross-server)
         initCurrencySystem();
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") && currencyService != null) {
-            try {
-                this.currencyPlaceholders = new CurrencyPlaceholderExpansion(this);
 
-                if (this.currencyPlaceholders.register()) {
-                    getLogger().info("[Currency] PlaceholderAPI expansion registered successfully!");
-                    getLogger().info("[Currency] Available: %oreo_currency_balance_<id>%, etc.");
-                } else {
-                    getLogger().warning("[Currency] Failed to register PlaceholderAPI expansion!");
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") && currencyService != null) {
+            Bukkit.getScheduler().runTaskLater(this, () -> {
+                try {
+                    this.currencyPlaceholders = new CurrencyPlaceholderExpansion(this);
+
+                    if (this.currencyPlaceholders.register()) {
+                        getLogger().info("✓ PlaceholderAPI expansion registered successfully!");
+                        getLogger().info("  Available: %oreo_currency_balance_<id>%, etc.");
+                    } else {
+                        getLogger().warning("✗ Failed to register PlaceholderAPI expansion!");
+                    }
+                } catch (Throwable t) {
+                    getLogger().warning("[Currency] PlaceholderAPI expansion failed: " + t.getMessage());
                 }
-            } catch (Throwable t) {
-                getLogger().warning("[Currency] PlaceholderAPI expansion failed: " + t.getMessage());
-            }
+            }, 60L);
         } else {
             getLogger().info("[Currency] PlaceholderAPI not found - placeholders disabled");
         }
+
+
         if (packetManager != null && packetManager.isInitialized()) {
             this.modBridge = new ModBridge(
                     this,

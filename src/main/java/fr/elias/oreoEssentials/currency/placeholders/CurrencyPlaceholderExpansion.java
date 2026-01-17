@@ -43,11 +43,14 @@ public class CurrencyPlaceholderExpansion extends PlaceholderExpansion {
         this.plugin = plugin;
         this.currencyService = plugin.getCurrencyService();
         this.decimalFormat = new DecimalFormat("#,##0.00");
+
+        plugin.getLogger().info("[Currency/PAPI] CurrencyService = " +
+                (currencyService == null ? "NULL!" : "OK"));
     }
 
     @Override
     public @NotNull String getIdentifier() {
-        return "oreo_currency";
+        return "oreo";
     }
 
     @Override
@@ -62,7 +65,7 @@ public class CurrencyPlaceholderExpansion extends PlaceholderExpansion {
 
     @Override
     public boolean persist() {
-        return true; // Keep expansion loaded across reloads
+        return true;
     }
 
     @Override
@@ -72,18 +75,20 @@ public class CurrencyPlaceholderExpansion extends PlaceholderExpansion {
 
     @Override
     public @Nullable String onPlaceholderRequest(Player player, @NotNull String params) {
+        plugin.getLogger().info("[Currency/PAPI] Request: " + params + " for player: " +
+                (player == null ? "NULL" : player.getName()));
+
         if (currencyService == null) {
             return null;
         }
 
-        // Parse placeholder format
         String[] parts = params.split("_");
 
         if (parts.length < 2) {
             return null;
         }
 
-        String type = parts[0]; // balance, symbol, name, rank, top
+        String type = parts[0];
 
         switch (type.toLowerCase()) {
             case "balance":
@@ -136,9 +141,7 @@ public class CurrencyPlaceholderExpansion extends PlaceholderExpansion {
         // Use a blocking get with timeout
         try {
             CompletableFuture<Double> future = currencyService.getBalance(player.getUniqueId(), currencyId);
-            double balance = future.get(100, java.util.concurrent.TimeUnit.MILLISECONDS);
-
-            // Cache result
+            double balance = future.get(1000, java.util.concurrent.TimeUnit.MILLISECONDS);            // Cache result
             balanceCache.put(cacheKey, new CachedValue<>(balance, CACHE_DURATION_MS));
 
             return formatted ? currency.format(balance) : decimalFormat.format(balance);
@@ -190,7 +193,6 @@ public class CurrencyPlaceholderExpansion extends PlaceholderExpansion {
             return "N/A";
         }
 
-        // Check cache
         String cacheKey = player.getUniqueId() + ":" + currencyId + ":rank";
         CachedValue<Integer> cached = rankCache.get(cacheKey);
 
@@ -198,13 +200,12 @@ public class CurrencyPlaceholderExpansion extends PlaceholderExpansion {
             return String.valueOf(cached.getValue());
         }
 
-        // Fetch top balances and find player's rank
         try {
             CompletableFuture<List<Map.Entry<String, Double>>> future =
                     currencyService.getTopBalancesForPlaceholders(currencyId, 100);
 
             List<Map.Entry<String, Double>> topBalances =
-                    future.get(200, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    future.get(1000, java.util.concurrent.TimeUnit.MILLISECONDS);
 
             for (int i = 0; i < topBalances.size(); i++) {
                 if (topBalances.get(i).getKey().equals(player.getName())) {
@@ -259,8 +260,7 @@ public class CurrencyPlaceholderExpansion extends PlaceholderExpansion {
                 CompletableFuture<List<Map.Entry<String, Double>>> future =
                         currencyService.getTopBalancesForPlaceholders(currencyId, 100);
 
-                topBalances = future.get(200, java.util.concurrent.TimeUnit.MILLISECONDS);
-
+                topBalances = future.get(1000, java.util.concurrent.TimeUnit.MILLISECONDS);
                 // Cache result
                 topCache.put(cacheKey, new CachedValue<>(topBalances, CACHE_DURATION_MS));
             } catch (Exception e) {

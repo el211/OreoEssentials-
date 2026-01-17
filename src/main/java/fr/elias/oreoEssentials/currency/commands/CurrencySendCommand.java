@@ -16,12 +16,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Command for players to send currency to each other
- * Usage: /currencysend <player|uuid> <currency> <amount>
- *
- * FIXED: Proper argument parsing to prevent "mycurrency4 10" becoming "410"
- */
+
 public class CurrencySendCommand implements OreoCommand {
 
     private final OreoEssentials plugin;
@@ -76,11 +71,6 @@ public class CurrencySendCommand implements OreoCommand {
             }
         }
 
-        // FIXED: Proper argument parsing
-        // args[0] = player name
-        // args[1] = currency ID
-        // args[2] = amount
-        // But if there are more args, the currency might contain spaces or the amount might be at the end
 
         final String targetInput = args[0];
 
@@ -93,12 +83,7 @@ public class CurrencySendCommand implements OreoCommand {
             return true;
         }
 
-        // Currency ID is everything between player name and amount
-        // For "/csend NekoMochiiiii mycurrency4 10":
-        //   args[0] = "NekoMochiiiii"
-        //   args[1] = "mycurrency4"
-        //   args[2] = "10"
-        // So currency is just args[1]
+
 
         StringBuilder currencyBuilder = new StringBuilder();
         for (int i = 1; i < args.length - 1; i++) {
@@ -106,11 +91,9 @@ public class CurrencySendCommand implements OreoCommand {
             currencyBuilder.append(args[i]);
         }
 
-        // If only 3 args, currency is just args[1]
         final String currencyId = (args.length == 3 ? args[1] : currencyBuilder.toString())
                 .toLowerCase(Locale.ROOT).trim();
 
-        // Debug logging
         plugin.getLogger().info("[CurrencySend] Player: " + targetInput + ", Currency: '" + currencyId + "', Amount: " + amount);
 
         final Currency currency = plugin.getCurrencyService().getCurrency(currencyId);
@@ -136,7 +119,6 @@ public class CurrencySendCommand implements OreoCommand {
             return true;
         }
 
-        // Resolve target UUID + display name
         resolveTarget(targetInput).thenAccept(resolved -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (!from.isOnline()) return;
 
@@ -170,7 +152,6 @@ public class CurrencySendCommand implements OreoCommand {
         return true;
     }
 
-    /* ----------------------------- transfer ----------------------------- */
 
     private void executeTransfer(Player sender,
                                  UUID targetUuid,
@@ -253,7 +234,6 @@ public class CurrencySendCommand implements OreoCommand {
         return CompletableFuture.supplyAsync(() -> {
             if (nameOrUuid == null || nameOrUuid.isBlank()) return null;
 
-            // 1) UUID direct
             try {
                 UUID id = UUID.fromString(nameOrUuid);
                 return new TargetResolved(id, nameOrUuid);

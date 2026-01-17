@@ -91,11 +91,7 @@ public class CurrencyCommandTabCompleter implements TabCompleter {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Cross-server player suggestions:
-     * - Always include local Bukkit online players
-     * - If PlayerDirectory exists → also include "online anywhere" names from Mongo
-     */
+
     private Collection<String> getNetworkPlayerNames(CommandSender sender, String prefixRaw) {
         String prefix = (prefixRaw == null) ? "" : prefixRaw.toLowerCase(Locale.ROOT);
 
