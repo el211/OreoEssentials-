@@ -22,12 +22,13 @@ public final class CurrencySyncPacket extends Packet {
     private double defaultBalance;
     private boolean tradeable;
     private boolean crossServer;
+    private boolean allowNegative; // ADD THIS FIELD
 
     public CurrencySyncPacket() {}
 
     public CurrencySyncPacket(Action action, String currencyId, String currencyName,
                               String currencySymbol, String displayName, double defaultBalance,
-                              boolean tradeable, boolean crossServer) {
+                              boolean tradeable, boolean crossServer, boolean allowNegative) {
         this.action = action;
         this.currencyId = currencyId;
         this.currencyName = currencyName;
@@ -36,6 +37,7 @@ public final class CurrencySyncPacket extends Packet {
         this.defaultBalance = defaultBalance;
         this.tradeable = tradeable;
         this.crossServer = crossServer;
+        this.allowNegative = allowNegative;
     }
 
     public CurrencySyncPacket(Action action, String currencyId) {
@@ -55,6 +57,7 @@ public final class CurrencySyncPacket extends Packet {
             this.defaultBalance = in.readDouble();
             this.tradeable = in.readBoolean();
             this.crossServer = in.readBoolean();
+            this.allowNegative = in.readBoolean();
         }
     }
 
@@ -70,6 +73,7 @@ public final class CurrencySyncPacket extends Packet {
             out.writeDouble(defaultBalance);
             out.writeBoolean(tradeable);
             out.writeBoolean(crossServer);
+            out.writeBoolean(allowNegative);
         }
     }
 
@@ -81,6 +85,7 @@ public final class CurrencySyncPacket extends Packet {
     public double getDefaultBalance() { return defaultBalance; }
     public boolean isTradeable() { return tradeable; }
     public boolean isCrossServer() { return crossServer; }
+    public boolean isAllowNegative() { return allowNegative; }
 
     @Override
     public String toString() {

@@ -14,6 +14,7 @@ public class Currency {
     private final double defaultBalance;
     private final boolean tradeable;
     private final boolean crossServer;
+    private final boolean allowNegative; // ← NEW FIELD
 
     private Currency(Builder builder) {
         this.id = builder.id;
@@ -23,6 +24,7 @@ public class Currency {
         this.defaultBalance = builder.defaultBalance;
         this.tradeable = builder.tradeable;
         this.crossServer = builder.crossServer;
+        this.allowNegative = builder.allowNegative; // ← NEW
     }
 
     public String getId() { return id; }
@@ -32,6 +34,7 @@ public class Currency {
     public double getDefaultBalance() { return defaultBalance; }
     public boolean isTradeable() { return tradeable; }
     public boolean isCrossServer() { return crossServer; }
+    public boolean isAllowNegative() { return allowNegative; } // ← NEW
 
     /**
      * Format a currency amount with the currency symbol
@@ -74,6 +77,7 @@ public class Currency {
         private double defaultBalance = 0.0;
         private boolean tradeable = true;
         private boolean crossServer = false;
+        private boolean allowNegative = false; // ← NEW
 
         public Builder id(String id) {
             this.id = id;
@@ -107,6 +111,11 @@ public class Currency {
 
         public Builder crossServer(boolean crossServer) {
             this.crossServer = crossServer;
+            return this;
+        }
+
+        public Builder allowNegative(boolean allowNegative) { // ← NEW
+            this.allowNegative = allowNegative;
             return this;
         }
 

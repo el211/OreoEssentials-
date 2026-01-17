@@ -1712,7 +1712,8 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.UuidCommand())
                 .register(new TpCommand(teleportService))
                 .register(new ZEssentialsHomesImportCommand(this, storage, homeDirectory))
-                .register(new MoveCommand(teleportService));
+                .register(new MoveCommand(teleportService))
+                .register(new fr.elias.oreoEssentials.currency.commands.CurrencyAdminCommand(this));
         if (pwCmd != null) {
             this.commands.register(pwCmd);
         }

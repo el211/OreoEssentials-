@@ -236,12 +236,19 @@ public class CurrencyService {
         }
 
         currencyId = currencyId.toLowerCase(Locale.ROOT).trim();
-        amount = Math.max(0, amount);
+
+        Currency currency = getCurrency(currencyId);
+        if (currency != null && !currency.isAllowNegative()) {
+            amount = Math.max(0, amount);
+        }
+
+        final String finalCurrencyId = currencyId;
+        final double finalAmount = amount;
 
         balanceCache.computeIfAbsent(playerId, k -> new ConcurrentHashMap<>())
-                .put(currencyId, amount);
+                .put(finalCurrencyId, finalAmount);
 
-        return storage.saveBalance(playerId, currencyId, amount);
+        return storage.saveBalance(playerId, finalCurrencyId, finalAmount);
     }
 
     public CompletableFuture<Boolean> deposit(UUID playerId, String currencyId, double amount) {
@@ -379,7 +386,6 @@ public class CurrencyService {
         }
     }
 
-    // ========== Cross-Server Sync ==========
 
     /**
      * Broadcast currency creation/deletion to other servers
@@ -406,7 +412,8 @@ public class CurrencyService {
                         currency.getDisplayName(),
                         currency.getDefaultBalance(),
                         currency.isTradeable(),
-                        currency.isCrossServer()
+                        currency.isCrossServer(),
+                        currency.isAllowNegative()
                 );
             } else {
                 packet = new fr.elias.oreoEssentials.currency.rabbitmq.CurrencySyncPacket(

@@ -31,6 +31,11 @@ commands:
     aliases: [currency, currencies, curr]
     permission: oreo.currency.admin
 
+  currencyadmin:
+    description: Open the currency admin GUI
+    aliases: [ cadmin, currencygui ]
+    permission: oreo.currency.admin
+
   currencybalance:
     description: Check currency balance
     aliases: [cbal, cbalance, currbal]

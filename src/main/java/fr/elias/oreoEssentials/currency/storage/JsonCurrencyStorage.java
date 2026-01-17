@@ -62,6 +62,7 @@ public class JsonCurrencyStorage implements CurrencyStorage {
                             .defaultBalance(currencyData.defaultBalance)
                             .tradeable(currencyData.tradeable)
                             .crossServer(currencyData.crossServer)
+                            .allowNegative(currencyData.allowNegative)
                             .build();
                     currencyCache.put(id, currency);
                 });
@@ -105,6 +106,7 @@ public class JsonCurrencyStorage implements CurrencyStorage {
                 currencyData.defaultBalance = currency.getDefaultBalance();
                 currencyData.tradeable = currency.isTradeable();
                 currencyData.crossServer = currency.isCrossServer();
+                currencyData.allowNegative = currency.isAllowNegative();
                 data.put(id, currencyData);
             });
 
@@ -236,5 +238,6 @@ public class JsonCurrencyStorage implements CurrencyStorage {
         double defaultBalance;
         boolean tradeable;
         boolean crossServer;
+        boolean allowNegative;
     }
 }

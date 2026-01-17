@@ -41,7 +41,8 @@ public class MongoCurrencyStorage implements CurrencyStorage {
                     .append("displayName", currency.getDisplayName())
                     .append("defaultBalance", currency.getDefaultBalance())
                     .append("tradeable", currency.isTradeable())
-                    .append("crossServer", currency.isCrossServer());
+                    .append("crossServer", currency.isCrossServer())
+                    .append("allowNegative", currency.isAllowNegative());
 
             currenciesCollection.replaceOne(
                     Filters.eq("_id", currency.getId()),
@@ -65,6 +66,7 @@ public class MongoCurrencyStorage implements CurrencyStorage {
                     .defaultBalance(doc.getDouble("defaultBalance"))
                     .tradeable(doc.getBoolean("tradeable"))
                     .crossServer(doc.getBoolean("crossServer"))
+                    .allowNegative(doc.getBoolean("allowNegative") != null ? doc.getBoolean("allowNegative") : false)
                     .build();
         });
     }
@@ -82,6 +84,7 @@ public class MongoCurrencyStorage implements CurrencyStorage {
                         .defaultBalance(doc.getDouble("defaultBalance"))
                         .tradeable(doc.getBoolean("tradeable"))
                         .crossServer(doc.getBoolean("crossServer"))
+                        .allowNegative(doc.getBoolean("allowNegative") != null ? doc.getBoolean("allowNegative") : false)
                         .build());
             }
             return currencies;
