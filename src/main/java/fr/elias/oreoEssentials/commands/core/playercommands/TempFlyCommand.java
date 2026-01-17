@@ -1,4 +1,4 @@
-package fr.elias.oreoEssentials.tempfly;
+package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.tempfly.TempFlyService;
