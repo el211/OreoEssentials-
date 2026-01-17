@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/util/MojangSkinFetcher.java
 package fr.elias.oreoEssentials.util;
 
 import com.google.gson.JsonObject;

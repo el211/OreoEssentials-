@@ -26,14 +26,11 @@ public final class PlayerSyncListener implements Listener {
         if (!enabled) return;
         Player p = e.getPlayer();
 
-        // Save mapping to global directory on join
         try {
             OreoEssentials.get().getPlayerDirectory().saveMapping(p.getName(), p.getUniqueId());
         } catch (Exception ex) {
-            // Log error if you want
         }
 
-        // Apply after a short delay so vanilla join state is ready
         p.getServer().getScheduler().runTaskLater(
                 p.getServer().getPluginManager().getPlugin("OreoEssentials"),
                 () -> service.loadAndApply(p),

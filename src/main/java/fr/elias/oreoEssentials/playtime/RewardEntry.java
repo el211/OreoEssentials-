@@ -11,23 +11,19 @@ public final class RewardEntry {
     public final boolean autoClaim;
     public final List<String> description;
 
-    // Triggering
-    public final Long payFor;      // seconds (one-time)
-    public final Long payEvery;    // seconds (repeating)
+    public final Long payFor;
+    public final Long payEvery;
 
-    // Behaviour
-    public final boolean stackRewards;        // allow catching up missed cycles
+    public final boolean stackRewards;
     public final boolean requiresPermission;  // require oreo.prewards.<id>
 
-    // Actions
     public final List<String> commands;
 
-    // GUI skin
-    public final Integer slot;               // 0..(rows*9-1), nullable = auto flow
-    public final Material iconMaterial;      // defaults to PAPER
-    public final Integer customModelData;    // nullable
-    public final String iconName;            // nullable
-    public final List<String> iconLore;      // nullable
+    public final Integer slot;
+    public final Material iconMaterial;
+    public final Integer customModelData;
+    public final String iconName;
+    public final List<String> iconLore;
 
     public RewardEntry(
             String id,

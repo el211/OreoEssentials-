@@ -32,7 +32,6 @@ public final class ModBridge {
 
         plugin.getLogger().info("[MOD-BRIDGE] Subscribing mod messages on server=" + thisServer);
 
-        // Reuse CrossInvPacket as a generic JSON envelope, filter by kind="MOD"
         packets.subscribe(CrossInvPacket.class, (channel, raw) -> {
             try {
                 String json = raw.getJson();
@@ -49,9 +48,6 @@ public final class ModBridge {
         plugin.getLogger().info("[MOD-BRIDGE] Ready on server=" + thisServer);
     }
 
-    // ------------------------------------------------------------------
-    // PUBLIC API (used by PlayerActionsMenu)
-    // ------------------------------------------------------------------
 
     public void kill(UUID targetId, String targetName) {
         if (tryLocalKill(targetId)) return;
@@ -64,18 +60,15 @@ public final class ModBridge {
     }
 
     public void ban(UUID targetId, String targetName, String reason) {
-        // Always write ban to DB locally (your ban plugin)
         Bukkit.dispatchCommand(
                 Bukkit.getConsoleSender(),
                 "ban " + targetName + " " + (reason == null ? "ModGUI" : reason)
         );
-        // Then kick on the server where they actually are
         sendRemote(CrossModPacket.Action.KICK, targetId, targetName, reason);
     }
 
     public void freezeToggle(UUID targetId, String targetName, long seconds) {
         if (tryLocalFreezeToggle(targetId, seconds)) return;
-        // encode duration in 'reason' field
         sendRemote(CrossModPacket.Action.FREEZE_TOGGLE, targetId, targetName, Long.toString(seconds));
     }
 
@@ -98,9 +91,7 @@ public final class ModBridge {
         sendRemote(CrossModPacket.Action.FEED, targetId, targetName, null);
     }
 
-    // ------------------------------------------------------------------
-    // LOCAL HELPERS
-    // ------------------------------------------------------------------
+
 
     private boolean tryLocalKill(UUID targetId) {
         Player p = Bukkit.getPlayer(targetId);
@@ -126,7 +117,7 @@ public final class ModBridge {
         if (fm.isFrozen(targetId)) {
             fm.unfreeze(p);
         } else {
-            fm.freeze(p, null, seconds); // staff = null => generic
+            fm.freeze(p, null, seconds);
         }
         return true;
     }
@@ -153,7 +144,6 @@ public final class ModBridge {
         Player p = Bukkit.getPlayer(targetId);
         if (p == null || !p.isOnline()) return false;
 
-        // Use your existing /vanish command (supports targets)
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "vanish " + p.getName());
         return true;
     }
@@ -172,9 +162,7 @@ public final class ModBridge {
         return true;
     }
 
-    // ------------------------------------------------------------------
-    // REMOTE SEND + RECEIVE
-    // ------------------------------------------------------------------
+
 
     private void sendRemote(CrossModPacket.Action action,
                             UUID targetId,
@@ -185,14 +173,13 @@ public final class ModBridge {
             return;
         }
 
-        // We don't route by PlayerDirectory anymore; broadcast to GLOBAL.
         CrossModPacket pkt = new CrossModPacket();
         pkt.setAction(action);
         pkt.setTarget(targetId);
         pkt.setTargetName(targetName);
         pkt.setReason(reason);
         pkt.setSourceServer(thisServer);
-        pkt.setTargetServer(null); // null => any server can handle; only the one with the player will succeed
+        pkt.setTargetServer(null);
 
         String json = GSON.toJson(pkt);
         packets.sendPacket(PacketChannels.GLOBAL, new CrossInvPacket(json));
@@ -200,7 +187,6 @@ public final class ModBridge {
 
     private void handleIncoming(CrossModPacket pkt) {
 
-        // ------------------------- NULL SAFETY -------------------------
         if (pkt == null) {
             plugin.getLogger().warning("[MOD-BRIDGE] Received null CrossModPacket (ignored)");
             return;
@@ -217,13 +203,11 @@ public final class ModBridge {
             return;
         }
 
-        // ------------------------- SERVER FILTERING -------------------------
         if (pkt.getTargetServer() != null &&
                 !thisServer.equalsIgnoreCase(pkt.getTargetServer())) {
-            return; // Packet is not for this server → ignore safely
+            return;
         }
 
-        // ------------------------- MAIN EXECUTION (SYNC) -------------------------
         Bukkit.getScheduler().runTask(plugin, () -> {
             Player p = Bukkit.getPlayer(pkt.getTarget());
             if (p == null || !p.isOnline()) return;

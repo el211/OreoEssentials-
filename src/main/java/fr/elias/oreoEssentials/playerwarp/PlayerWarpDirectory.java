@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/playerwarp/PlayerWarpDirectory.java
 package fr.elias.oreoEssentials.playerwarp;
 
 public interface PlayerWarpDirectory {

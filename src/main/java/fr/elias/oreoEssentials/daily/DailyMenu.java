@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/daily/DailyMenu.java
 package fr.elias.oreoEssentials.daily;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -24,7 +23,7 @@ public final class DailyMenu implements InventoryProvider {
     private final DailyConfig cfg;
     private final DailyService svc;
     private final RewardsConfig rewards;
-    private final int page; // 1-based
+    private final int page;
 
     public DailyMenu(OreoEssentials plugin, DailyConfig cfg, DailyService svc, RewardsConfig rewards) {
         this(plugin, cfg, svc, rewards, 1);
@@ -55,7 +54,7 @@ public final class DailyMenu implements InventoryProvider {
         defs.sort(Comparator.comparingInt(d -> d.day));
 
         final int rows       = cfg.inventoryRows;
-        final int usableRows = rows >= 2 ? rows - 1 : rows; // bottom row is toolbar if rows>=2
+        final int usableRows = rows >= 2 ? rows - 1 : rows;
         final int perPage    = Math.max(0, usableRows) * 9;
 
         final int total      = Math.max(rewards.maxDay(), defs.size());
@@ -255,6 +254,5 @@ public final class DailyMenu implements InventoryProvider {
 
     @Override
     public void update(Player p, InventoryContents contents) {
-        // No periodic updates; we refresh on click/open.
     }
 }

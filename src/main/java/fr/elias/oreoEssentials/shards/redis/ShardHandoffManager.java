@@ -18,7 +18,7 @@ public class ShardHandoffManager {
 
     private final JedisPool jedisPool;
     private final Gson gson;
-    private static final int HANDOFF_TTL_SECONDS = 5; // Auto-cleanup stale data
+    private static final int HANDOFF_TTL_SECONDS = 5;
     private static final String HANDOFF_PREFIX = "oreo:handoff:";
     private static final String COOLDOWN_PREFIX = "oreo:cooldown:";
     private static final String LOCK_PREFIX = "oreo:lock:";

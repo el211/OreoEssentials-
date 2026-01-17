@@ -16,7 +16,6 @@ public final class RtpTeleportRequestPacket extends Packet {
     private String worldName;
     private String requestId;
 
-    // REQUIRED empty constructor for packet manager
     public RtpTeleportRequestPacket() {}
 
     public RtpTeleportRequestPacket(UUID playerId, String worldName, String requestId) {

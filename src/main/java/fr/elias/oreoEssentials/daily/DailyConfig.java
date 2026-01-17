@@ -25,7 +25,7 @@ public final class DailyConfig {
     public boolean checkUpdates = true;
 
     public boolean resetWhenStreakCompleted = true;
-    public boolean availableOnNewDay = false; // midnight reset (server TZ) vs 24h cooldown
+    public boolean availableOnNewDay = false;
     public boolean pauseStreakWhenMissed = false;
     public boolean skipMissedDays = false;
 

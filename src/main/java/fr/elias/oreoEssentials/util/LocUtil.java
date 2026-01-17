@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/util/LocUtil.java
 package fr.elias.oreoEssentials.util;
 
 import org.bson.Document;

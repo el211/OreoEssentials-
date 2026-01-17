@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/playerwarp/PlayerWarpStorage.java
 package fr.elias.oreoEssentials.playerwarp;
 
 import java.util.List;

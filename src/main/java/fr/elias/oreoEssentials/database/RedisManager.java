@@ -65,7 +65,7 @@ public class RedisManager {
 
         try (Jedis jedis = jedisPool.getResource()) {
             String key = "balance:" + playerUUID.toString();
-            jedis.setex(key, 600, String.valueOf(balance)); // 10 minutes TTL
+            jedis.setex(key, 600, String.valueOf(balance));
         } catch (Exception ignored) {}
     }
 
@@ -104,7 +104,7 @@ public class RedisManager {
         if (!enabled || jedisPool == null) return;
 
         try (Jedis jedis = jedisPool.getResource()) {
-            jedis.flushDB(); // WARNING: This clears ENTIRE database
+            jedis.flushDB();
         } catch (Exception ignored) {}
     }
 

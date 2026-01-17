@@ -18,10 +18,8 @@ import java.util.stream.Collectors;
 
 public final class PlaytimeRewardsService {
 
-    /* ---------------- Source (where playtime comes from) ---------------- */
     public enum Source { BUKKIT, INTERNAL }
 
-    /* ---------------- GUI skin ---------------- */
 
     public static final class GuiSkin {
         public String title = "&bPlaytime Rewards";
@@ -39,7 +37,6 @@ public final class PlaytimeRewardsService {
         public boolean glow;
     }
 
-    /* ---------------- Fields ---------------- */
 
     private final OreoEssentials plugin;
     private final PlaytimeTracker tracker; // nullable when using BUKKIT
@@ -51,22 +48,17 @@ public final class PlaytimeRewardsService {
     public final Map<String, RewardEntry> rewards = new LinkedHashMap<>();
     public final GuiSkin skin = new GuiSkin();
 
-    // Settings
     private volatile boolean enabled = true;
     public int notifyEveryMinutes = 10;
     public boolean stackRewards = true;
 
-    // Source selection & baselines
     private Source source = Source.BUKKIT;
-    /** One-time: initialize internal counter from Bukkit time on first sighting */
     private boolean baselineFromBukkit = false;
-    /** One-time: set repeating reward counters to “already paid up to current time” on first sighting (prevents retro mass payouts) */
     public boolean baselineOnFirstSeen = true;
 
     private BukkitTask periodicTask;
     private PrewardsListeners listener;
 
-    /* ---------------- Lifecycle ---------------- */
 
     public PlaytimeRewardsService(OreoEssentials plugin, PlaytimeTracker tracker) {
         this.plugin = plugin;
@@ -75,17 +67,14 @@ public final class PlaytimeRewardsService {
         this.runner = new DirectiveRunner(plugin);
     }
 
-    /** Expose plugin for SmartInvs manager, etc. */
     public OreoEssentials getPlugin() { return plugin; }
 
-    /** Call once from onEnable() */
     public void init() {
         loadConfig();
         if (enabled) start();
         else plugin.getLogger().info("[Prewards] Disabled by config (settings.enable=false).");
     }
 
-    /** Reload file, then (re)apply enabled state */
     public void loadConfig() {
         configFile = new File(plugin.getDataFolder(), "playtime_rewards.yml");
         if (!configFile.exists()) plugin.saveResource("playtime_rewards.yml", false);
@@ -95,7 +84,6 @@ public final class PlaytimeRewardsService {
         notifyEveryMinutes   = cfg.getInt("settings.notify-every-minutes", 10);
         stackRewards         = cfg.getBoolean("settings.stack-rewards", true);
 
-        // Source switch (bukkit | internal)
         String srcStr = cfg.getString("settings.source",
                 cfg.getBoolean("settings.use-bukkit-statistic", true) ? "bukkit" : "internal");
         source = "internal".equalsIgnoreCase(srcStr) ? Source.INTERNAL : Source.BUKKIT;
@@ -103,7 +91,6 @@ public final class PlaytimeRewardsService {
         baselineFromBukkit   = cfg.getBoolean("settings.baseline-from-bukkit-on-first-seen", false);
         baselineOnFirstSeen  = cfg.getBoolean("settings.baseline-on-first-seen", true);
 
-        // ----- skin -----
         skin.title     = cfg.getString("settings.gui.title", "&bPlaytime Rewards");
         skin.rows      = Math.max(1, Math.min(6, cfg.getInt("settings.gui.rows", 5)));
         skin.fillEmpty = cfg.getBoolean("settings.gui.fill-empty", true);
@@ -123,7 +110,6 @@ public final class PlaytimeRewardsService {
             }
         }
 
-        // ----- rewards -----
         rewards.clear();
         ConfigurationSection rs = cfg.getConfigurationSection("rewards");
         if (rs != null) {
@@ -170,8 +156,7 @@ public final class PlaytimeRewardsService {
     }
 
     private void start() {
-        stop(); // safety
-        // Periodic checker (every 30s)
+        stop();
         periodicTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             for (Player p : Bukkit.getOnlinePlayers()) checkPlayer(p, true);
         }, 20L, 20L * 30);
@@ -195,7 +180,6 @@ public final class PlaytimeRewardsService {
         plugin.getLogger().info("[Prewards] Stopped.");
     }
 
-    /* ------------ Toggle API ------------ */
 
     public boolean isEnabled() { return enabled; }
 
@@ -211,7 +195,6 @@ public final class PlaytimeRewardsService {
         return this.enabled;
     }
 
-    /** Persist only settings.enable without rewriting the whole YAML formatting. */
     public void saveToggle() {
         try {
             if (cfg == null) return;
@@ -223,9 +206,7 @@ public final class PlaytimeRewardsService {
         }
     }
 
-    /* ---------------- Core logic ---------------- */
 
-    /** Returns playtime (seconds) based on the configured source. */
     public long getPlaytimeSeconds(Player p) {
         if (source == Source.INTERNAL && tracker != null) {
             if (baselineFromBukkit) {

@@ -1,5 +1,4 @@
-// PlayerNametagManager.java - SCOREBOARD-INTEGRATED VERSION
-// CRITICAL FIX: Works WITH ScoreboardService by adding teams to existing scoreboards
+
 
 package fr.elias.oreoEssentials.nametag;
 
@@ -32,13 +31,11 @@ public class PlayerNametagManager implements Listener {
     private final MiniMessage mm = MiniMessage.miniMessage();
     private final LegacyComponentSerializer legacy = LegacyComponentSerializer.legacySection();
 
-    // Configuration
     private boolean enabled;
     private String teamPrefix;
     private String teamSuffix;
     private int updateInterval;
 
-    // Update task
     private BukkitRunnable updateTask;
 
     public PlayerNametagManager(OreoEssentials plugin, FileConfiguration config) {

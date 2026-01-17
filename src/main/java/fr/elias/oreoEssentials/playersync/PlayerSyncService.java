@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/playersync/PlayerSyncService.java
 package fr.elias.oreoEssentials.playersync;
 
 import fr.elias.oreoEssentials.OreoEssentials;

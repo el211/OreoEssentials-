@@ -33,7 +33,6 @@ public final class SellMenuProvider implements InventoryProvider {
 
     @Override
     public void init(Player player, InventoryContents contents) {
-        // Background
         ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta gm = glass.getItemMeta();
         if (gm != null) {

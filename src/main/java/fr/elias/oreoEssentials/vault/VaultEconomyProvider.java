@@ -19,10 +19,8 @@ public class VaultEconomyProvider implements Economy {
     public VaultEconomyProvider(OreoEssentials plugin) {
         this.plugin = plugin;
 
-        // On la nouvelle clee
         String type = plugin.getConfig().getString("economy.type", null);
 
-        // si elle n'existe pas, on tombe sur l'ancienne
         if (type == null) {
             type = plugin.getConfig().getString("database.type", "mongodb");
             plugin.getLogger().warning(

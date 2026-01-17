@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/database/PostgreSQLManager.java
 package fr.elias.oreoEssentials.database;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -173,7 +172,6 @@ public class PostgreSQLManager implements PlayerEconomyDatabase {
         });
     }
 
-    /* ---------------- Leaderboard ---------------- */
 
     @Override
     public boolean supportsLeaderboard() { return true; }

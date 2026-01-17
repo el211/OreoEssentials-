@@ -23,15 +23,12 @@ public class OfflinePlayerCache {
     public UUID getId(String name) {
         if (name == null) return null;
 
-        // Prefer exact online match (fast)
         Player online = Bukkit.getPlayerExact(name);
         if (online != null) return online.getUniqueId();
 
-        // Then our own cache (case-sensitive)
         UUID found = nameToId.get(name);
         if (found != null) return found;
 
-        // Then our own cache (case-insensitive)
         return nameToIdCaseInsensitive.get(name.toLowerCase(Locale.ROOT));
     }
 

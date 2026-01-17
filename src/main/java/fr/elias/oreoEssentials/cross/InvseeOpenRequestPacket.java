@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/cross/InvseeOpenRequestPacket.java
 package fr.elias.oreoEssentials.cross;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
@@ -16,7 +15,6 @@ public final class InvseeOpenRequestPacket extends Packet {
     private String viewerName;
     private UUID targetId;
 
-    // Required empty constructor for Packet registry
     public InvseeOpenRequestPacket() {
     }
 

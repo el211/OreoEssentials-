@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/trade/ui/TradeMenu.java
 package fr.elias.oreoEssentials.trade.ui;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -37,8 +36,8 @@ public final class TradeMenu implements InventoryProvider {
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
 
-    private final Player a; // side A if local here (may be null)
-    private final Player b; // side B if local here (may be null)
+    private final Player a;
+    private final Player b;
 
     private final SmartInventory invA;
     private final SmartInventory invB;

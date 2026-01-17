@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/namespace/impl/HomesPacketNamespace.java
 package fr.elias.oreoEssentials.rabbitmq.namespace.impl;
 
 import fr.elias.oreoEssentials.rabbitmq.namespace.PacketNamespace;
@@ -10,7 +9,6 @@ public final class HomesPacketNamespace extends PacketNamespace {
 
     public static final int HOME_TP_REQ_ID = 1001;
 
-    // ADD: a new, unique id within this namespace
     public static final int OTHER_HOME_TP_REQ_ID = 1002;
 
     public HomesPacketNamespace() {

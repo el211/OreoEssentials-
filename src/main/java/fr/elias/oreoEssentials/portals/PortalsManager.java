@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/portals/PortalsManager.java
 package fr.elias.oreoEssentials.portals;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -23,7 +22,7 @@ public class PortalsManager {
         public final BoundingBox box;
         public final Location destination;
         public final boolean keepYawPitch;
-        public final String permission; // null or empty = no permission required
+        public final String permission;
 
         public Portal(String name, World world, BoundingBox box, Location destination, boolean keepYawPitch, String permission) {
             this.name = name;
@@ -50,14 +49,12 @@ public class PortalsManager {
     private final File file;
     private final FileConfiguration cfg;
 
-    // runtime maps
     private final Map<String, Portal> portals = new ConcurrentHashMap<>(64);
     private final Map<UUID, Location> pos1 = new ConcurrentHashMap<>();
     private final Map<UUID, Location> pos2 = new ConcurrentHashMap<>();
     private final Map<UUID, Long> cooldown = new ConcurrentHashMap<>();
     private final Map<UUID, String> lastPortalDenied = new ConcurrentHashMap<>(); // prevent spam
 
-    // --- Config-backed options ---
     private final boolean enabled;
     private final long cooldownMs;
     private final String soundName;
@@ -65,12 +62,11 @@ public class PortalsManager {
     private final int particleCount;
     private final boolean allowKeepYawPitch;
     private final boolean teleportAsync;
-    private final int maxPortalVolume; // prevent massive portals
+    private final int maxPortalVolume;
 
     public PortalsManager(OreoEssentials plugin) {
         this.plugin = plugin;
 
-        // read config (with sane defaults)
         FileConfiguration c = plugin.getConfig();
         this.enabled = plugin.getSettings().portalsEnabled();
         this.cooldownMs = c.getLong("portals.cooldown_ms", 1000L);
@@ -81,7 +77,6 @@ public class PortalsManager {
         this.teleportAsync = c.getBoolean("portals.teleport_async", false);
         this.maxPortalVolume = c.getInt("portals.max_portal_volume", 100000);
 
-        // data file
         this.file = new File(plugin.getDataFolder(), "portals.yml");
         if (!file.exists()) {
             try {
@@ -142,7 +137,6 @@ public class PortalsManager {
         World w = a.getWorld();
         BoundingBox box = BoundingBox.of(a, b);
 
-        // Volume check
         double volume = box.getVolume();
         if (volume > maxPortalVolume) {
             return "Portal too large (max volume: " + maxPortalVolume + " blocks)";
@@ -154,7 +148,6 @@ public class PortalsManager {
 
         String key = name.toLowerCase(Locale.ROOT);
 
-        // Check for existing portal
         if (portals.containsKey(key)) {
             return "Portal with that name already exists";
         }
@@ -165,11 +158,10 @@ public class PortalsManager {
         savePortal(portal);
         saveFile();
 
-        // Clear pos markers after successful creation
         pos1.remove(creator.getUniqueId());
         pos2.remove(creator.getUniqueId());
 
-        return null; // success
+        return null;
     }
 
     public boolean remove(String name) {
@@ -282,15 +274,12 @@ public class PortalsManager {
         long now = System.currentTimeMillis();
         UUID pid = p.getUniqueId();
 
-        // Cooldown check
         Long cd = cooldown.get(pid);
         if (cd != null && now < cd) return;
 
         for (Portal portal : portals.values()) {
             if (portal.contains(to)) {
-                // Permission check
                 if (!portal.hasPermission(p)) {
-                    // Anti-spam: only send message once per portal
                     String lastDenied = lastPortalDenied.get(pid);
                     if (!portal.name.equals(lastDenied)) {
                         Lang.send(p, "portals.no-portal-permission",
@@ -311,16 +300,12 @@ public class PortalsManager {
                     dest.setPitch(p.getLocation().getPitch());
                 }
 
-                // Effects (configurable)
                 playEffects(p, to);
 
-                // Apply cooldown to avoid bounce or recursive portals
                 cooldown.put(pid, now + Math.max(0, cooldownMs));
 
-                // Clear denial cache on successful teleport
                 lastPortalDenied.remove(pid);
 
-                // Teleport (async or sync)
                 if (teleportAsync) {
                     Bukkit.getScheduler().runTask(plugin, () -> p.teleport(dest));
                 } else {
@@ -344,7 +329,6 @@ public class PortalsManager {
                 }
             }
 
-            // Particles
             if (particleName != null && !particleName.isEmpty() && particleCount > 0) {
                 try {
                     Particle particle = Particle.valueOf(particleName);
@@ -358,7 +342,6 @@ public class PortalsManager {
                 }
             }
         } catch (Throwable t) {
-            // Silently ignore effects errors
         }
     }
 

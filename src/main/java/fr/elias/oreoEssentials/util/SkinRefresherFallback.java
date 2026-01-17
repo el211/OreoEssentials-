@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/util/SkinRefresherFallback.java
 package fr.elias.oreoEssentials.util;
 
 import fr.elias.oreoEssentials.OreoEssentials;

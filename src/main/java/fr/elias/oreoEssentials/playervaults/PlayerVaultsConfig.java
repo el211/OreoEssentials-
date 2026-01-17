@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/playervaults/PlayerVaultsConfig.java
 package fr.elias.oreoEssentials.playervaults;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -19,18 +18,17 @@ public final class PlayerVaultsConfig {
     private static final String MINECRAFT_NS = "minecraft:";
 
     private final boolean enabled;
-    private final String storage;                // auto|yaml|mongodb
+    private final String storage;
     private final String collection;
 
-    private final int maxVaults;                 // 1..54
+    private final int maxVaults;
 
     // SLOTS mode (not rows)
-    private final int slotsCap;                  // 1..54
-    private final int defaultSlots;              // 1..slotsCap
+    private final int slotsCap;
+    private final int defaultSlots;
 
     private final String denyMessage;
 
-    // NEW: modern string sound keys (use with player.playSound(..., key, vol, pitch))
     private final String openSoundKey;
     private final String denySoundKey;
 
@@ -41,13 +39,10 @@ public final class PlayerVaultsConfig {
     private final String menuItemUnlockedLore;
     private final String menuItemLockedLore;
 
-    // vault inventory title (<id>, <rows> supported; rows = ceil(slots/9))
     private final String vaultTitle;
 
-    // how many vaults are unlocked for each rank (rank -> count)
     private final Map<String, Integer> accessGlobal;
 
-    // per-vault SLOTS by rank (vaultId -> (rank/default -> slots))
     private final Map<Integer, Map<String, Integer>> slotsPerVault;
 
     public PlayerVaultsConfig(OreoEssentials plugin) {
@@ -64,14 +59,12 @@ public final class PlayerVaultsConfig {
 
         denyMessage = cs.getString("deny-message", "&cYou don't have permission to access vault &f#%id%&c.");
 
-        // sounds (stored as modern keys)
         ConfigurationSection snd = cs.getConfigurationSection("sounds");
         String rawOpen = (snd != null ? snd.getString("open", "minecraft:ui.button.click") : "minecraft:ui.button.click");
         String rawDeny = (snd != null ? snd.getString("deny", "minecraft:entity.villager.no") : "minecraft:entity.villager.no");
         openSoundKey = normalizeSoundKey(rawOpen);
         denySoundKey = normalizeSoundKey(rawDeny);
 
-        // menu
         ConfigurationSection menu = cs.getConfigurationSection("menu");
         menuTitle            = opt(menu, "title", "&8Player Vaults");
         menuItemUnlockedName = opt(menu, "item-unlocked-name", "&aVault &f#<id>");
@@ -79,16 +72,13 @@ public final class PlayerVaultsConfig {
         menuItemUnlockedLore = opt(menu, "item-unlocked-lore", "&7Click to open");
         menuItemLockedLore   = opt(menu, "item-locked-lore", "&7You don't have access");
 
-        // per-vault inventory title
         vaultTitle = cs.getString("vault-title", "&8Vault &f#<id> &7(<rows>x9)");
 
-        // vaults-per-rank
         Map<String, Integer> access = new HashMap<>();
         Map<Integer, Map<String, Integer>> perVault = new HashMap<>();
 
         ConfigurationSection vpr = cs.getConfigurationSection("vaults-per-rank");
         if (vpr != null) {
-            // global unlocked counts
             ConfigurationSection global = vpr.getConfigurationSection("global");
             if (global != null) {
                 for (String k : global.getKeys(false)) {
@@ -96,7 +86,6 @@ public final class PlayerVaultsConfig {
                     if (val >= 0) access.put(k.toLowerCase(Locale.ROOT), clamp(val, 0, maxVaults));
                 }
             }
-            // per-vault slots by rank
             ConfigurationSection pv = vpr.getConfigurationSection("per-vault");
             if (pv != null) {
                 for (String vk : pv.getKeys(false)) {
@@ -118,7 +107,6 @@ public final class PlayerVaultsConfig {
         slotsPerVault = Collections.unmodifiableMap(perVault);
     }
 
-    /* ------------ getters (names match your service) ------------ */
 
     public boolean enabled() { return enabled; }
     public String storage() { return storage; }
@@ -139,8 +127,7 @@ public final class PlayerVaultsConfig {
     /** Modern string key for deny sound (use with player.playSound(loc, key, vol, pitch)). */
     public String denySoundKey() { return denySoundKey; }
 
-    // ---- Back-compat enum getters (no Sound.valueOf used) ----
-    // They return a best-effort enum for legacy code. Prefer the *Key() getters instead.
+
 
     /** @deprecated Use {@link #openSoundKey()} and string-based playSound. */
     @Deprecated(forRemoval = true)
@@ -183,7 +170,6 @@ public final class PlayerVaultsConfig {
         return def != null ? clamp(def, 1, slotsCap) : -1;
     }
 
-    /* ------------ helpers ------------ */
 
     private static String opt(ConfigurationSection sec, String key, String def) {
         return (sec != null && sec.isString(key)) ? sec.getString(key, def) : def;
@@ -201,15 +187,12 @@ public final class PlayerVaultsConfig {
         final String s = raw.trim();
         if (s.isEmpty()) return "minecraft:ui.button.click";
 
-        // modern-ish: contains dot
         if (s.indexOf('.') >= 0) {
             return s.indexOf(':') >= 0 ? s : MINECRAFT_NS + s;
         }
-        // namespaced but no dot: accept as-is (caller-provided)
         if (s.indexOf(':') >= 0) {
             return s;
         }
-        // legacy UPPER_UNDERSCORE → lower + '.' + minecraft:
         final String dotted = s.toLowerCase(Locale.ROOT).replace('_', '.');
         return MINECRAFT_NS + dotted;
     }

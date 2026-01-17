@@ -12,8 +12,7 @@ public class RemoteMessagePacketHandler implements PacketSubscriber<SendRemoteMe
 
     @Override
     public void onReceive(PacketChannel channel, SendRemoteMessagePacket packet) {
-        // CRITICAL: RabbitMQ packets arrive on async thread!
-        // We MUST run on main thread to safely access Bukkit APIs
+
         Bukkit.getScheduler().runTask(
                 Bukkit.getPluginManager().getPlugin("OreoEssentials"),
                 () -> {

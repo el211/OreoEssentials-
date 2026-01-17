@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/trade/TradeCommand.java
 package fr.elias.oreoEssentials.trade;
 
 import fr.elias.oreoEssentials.OreoEssentials;

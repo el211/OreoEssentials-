@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/util/Sounds.java
 package fr.elias.oreoEssentials.util;
 
 import org.bukkit.entity.Player;

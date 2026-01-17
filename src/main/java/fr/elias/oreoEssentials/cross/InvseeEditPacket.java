@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/cross/InvseeEditPacket.java
 package fr.elias.oreoEssentials.cross;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;

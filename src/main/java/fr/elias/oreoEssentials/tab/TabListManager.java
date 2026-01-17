@@ -30,7 +30,6 @@ public class TabListManager {
     private final SettingsConfig settings;
     private final PlayerDirectory playerDirectory;
 
-    // NEW: Custom layout support
     private CustomTablistLayout customLayout;
     private boolean useCustomLayout;
 
@@ -143,12 +142,10 @@ public class TabListManager {
         String ov = nf != null ? nf.getString("overflow", "TRIM") : "TRIM";
         overflowMode = "ELLIPSIS".equalsIgnoreCase(ov) ? OverflowMode.ELLIPSIS : OverflowMode.TRIM;
 
-        // NEW: Load custom layout mode
         String layoutMode = cfg.getString("tab.layout-mode", "CLASSIC");
         this.useCustomLayout = "CUSTOM".equalsIgnoreCase(layoutMode);
 
         if (useCustomLayout) {
-            // Check if ProtocolLib is available
             if (Bukkit.getPluginManager().getPlugin("ProtocolLib") == null) {
                 plugin.getLogger().warning("[TAB] Custom layout requires ProtocolLib! Falling back to classic mode.");
                 plugin.getLogger().warning("[TAB] Download ProtocolLib: https://www.spigotmc.org/resources/protocollib.1997/");
@@ -211,9 +208,7 @@ public class TabListManager {
     public void start() {
         stop();
 
-        // NEW: Check which mode to use
         if (useCustomLayout) {
-            // Use custom packet-based layout (like the image)
             if (customLayout == null) {
                 customLayout = new CustomTablistLayout(plugin, this);
             }
@@ -325,7 +320,6 @@ public class TabListManager {
             task = null;
         }
 
-        // NEW: Stop custom layout if running
         if (customLayout != null) {
             customLayout.stop();
         }

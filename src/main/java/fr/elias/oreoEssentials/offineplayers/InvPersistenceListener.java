@@ -18,7 +18,6 @@ public final class InvPersistenceListener implements Listener {
     public void onQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
 
-        // save live inventory & ender as the “last known”
         InvSnapshot inv = new InvSnapshot();
         inv.contents = Arrays.copyOf(p.getInventory().getContents(), p.getInventory().getContents().length);
         inv.armor    = Arrays.copyOf(p.getInventory().getArmorContents(), 4);
@@ -34,10 +33,8 @@ public final class InvPersistenceListener implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
 
-        // apply any pending offline edits
         InvSnapshot pendingInv = storage.loadPendingInv(p.getUniqueId());
         if (pendingInv != null) {
-            // size-safe writes
             ItemStack[] cont = pad(pendingInv.contents, p.getInventory().getContents().length);
             p.getInventory().setContents(cont);
             if (pendingInv.armor != null) p.getInventory().setArmorContents(pad(pendingInv.armor, 4));

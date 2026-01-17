@@ -11,7 +11,7 @@ public class TpJumpPacket extends Packet {
 
     private UUID adminUuid;
     private UUID targetUuid;
-    private String targetName; // just for debug/messages, not required
+    private String targetName;
     private String fromServer;
 
     public TpJumpPacket() {

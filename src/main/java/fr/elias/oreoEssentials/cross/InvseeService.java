@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/cross/InvseeService.java
 package fr.elias.oreoEssentials.cross;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -23,7 +22,6 @@ public final class InvseeService {
      */
     private final InventoryService invStorage;
 
-    // viewerId -> session (pour le /invsee cross-serveur "live")
     private final Map<UUID, InvseeSession> sessions = new ConcurrentHashMap<>();
 
     public InvseeService(OreoEssentials plugin, InvseeCrossServerBroker broker) {
@@ -42,9 +40,7 @@ public final class InvseeService {
         return broker;
     }
 
-    /* ------------------------------------------------------------------
-     * 1) HANDLERS APPELÉS PAR InvseeCrossServerBroker (packets RabbitMQ)
-     * ------------------------------------------------------------------ */
+
 
     /**
      * Appelé côté OWNER quand ce nœud reçoit un InvseeOpenRequestPacket
@@ -60,9 +56,6 @@ public final class InvseeService {
         }
 
 
-        // InvseeSession sess = new InvseeSession(target.getUniqueId(), p.getViewerId());
-        // sess.setTargetName(target.getName());
-        // sessions.put(p.getViewerId(), sess);
 
 
         ItemStack[] snap = target.getInventory().getContents();
@@ -138,9 +131,7 @@ public final class InvseeService {
     }
 
 
-    /* ------------------------------------------------------------------
-     * 2) FLUX /INVSEE CLASSIQUE (cross.InvseeMenu + sessions)
-     * ------------------------------------------------------------------ */
+
 
     /**
      * Appelé quand un staff exécute /invsee <player> sur ce serveur.
@@ -152,26 +143,21 @@ public final class InvseeService {
     public void openLocalViewer(Player viewer, UUID targetId, String targetName) {
         if (viewer == null || targetId == null) return;
 
-        // 1) Create / register session
         InvseeSession sess = new InvseeSession(targetId, viewer.getUniqueId());
         sess.setTargetName(targetName);
         sessions.put(viewer.getUniqueId(), sess);
 
-        // 2) Prefill with best-effort snapshot (local or offline)
         InventoryService.Snapshot initial = requestSnapshot(targetId); // uses invStorage + online player
         if (initial != null && initial.contents != null) {
             sess.setLastSnapshot(initial.contents);
         } else {
-            // avoid NPE in menus depending on lastSnapshot
             sess.setLastSnapshot(new ItemStack[0]);
         }
 
-        // 3) Open GUI immediately with whatever we have
         InvseeMenu menu = new InvseeMenu(plugin, this, sess, viewer); // 🔹 add viewer here
         sess.setMenu(menu);
         menu.open(viewer);
 
-        // 4) Optionally ask the broker for a live owner snapshot (cross-server)
         if (broker != null && plugin.isMessagingAvailable() && isPlayerKnownOnNetwork(targetId)) {
             broker.requestOpen(viewer, targetId, targetName);
         } else {
@@ -215,13 +201,11 @@ public final class InvseeService {
     public InventoryService.Snapshot requestSnapshot(UUID targetId) {
         if (targetId == null) return null;
 
-        // 1) Online local
         Player online = Bukkit.getPlayer(targetId);
         if (online != null && online.isOnline()) {
             return snapshotFromOnline(online);
         }
 
-        // 2) Persistant (PlayerSync / Mongo / YAML)
         if (invStorage != null) {
             try {
                 return invStorage.load(targetId);
@@ -282,11 +266,9 @@ public final class InvseeService {
                 online.updateInventory();
             } catch (Exception e) {
                 plugin.getLogger().warning("[INVSEE] applySnapshotFromGui: failed to apply to online player: " + e.getMessage());
-                // On tente quand même de sauver
             }
         }
 
-        // Sauvegarde dans le storage persistant si dispo
         if (invStorage != null) {
             try {
                 invStorage.save(targetId, snap);

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/playerwarp/PlayerWarp.java
 package fr.elias.oreoEssentials.playerwarp;
 
 import org.bukkit.Bukkit;
@@ -26,7 +25,6 @@ public class PlayerWarp {
     private boolean whitelistEnabled;
     private Set<UUID> whitelist;
 
-    // Optional/legacy fields (Mongo compatibility)
     private String description;
     private String category;
     private boolean locked;
@@ -48,9 +46,7 @@ public class PlayerWarp {
      */
     private String password;
 
-    // ============================================================
-    // CONSTRUCTORS
-    // ============================================================
+
 
     /** Minimal constructor */
     public PlayerWarp(String id, UUID owner, String name, Location loc) {
@@ -84,9 +80,7 @@ public class PlayerWarp {
         this.password = null;
     }
 
-    // ============================================================
-    // GETTERS / SETTERS
-    // ============================================================
+
 
     public String getId() { return id; }
 
@@ -99,23 +93,18 @@ public class PlayerWarp {
     public Location getLocation() { return location; }
     public void setLocation(Location location) { this.location = location; }
 
-    // ---- Description ----
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    // ---- Category ----
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
 
-    // ---- Locked ----
     public boolean isLocked() { return locked; }
     public void setLocked(boolean locked) { this.locked = locked; }
 
-    // ---- Cost ----
     public double getCost() { return cost; }
     public void setCost(double cost) { this.cost = cost; }
 
-    // ---- Whitelist ----
     public boolean isWhitelistEnabled() { return whitelistEnabled; }
     public void setWhitelistEnabled(boolean enabled) { this.whitelistEnabled = enabled; }
 
@@ -160,15 +149,11 @@ public class PlayerWarp {
         this.managers.remove(uuid);
     }
 
-    // ---- Password ----
     public String getPassword() { return password; }
     public void setPassword(String password) {
         this.password = (password == null || password.isEmpty()) ? null : password;
     }
 
-    // ============================================================
-    // STATIC FACTORY — safe location creation
-    // ============================================================
 
     public static Location fromData(String world,
                                     double x,

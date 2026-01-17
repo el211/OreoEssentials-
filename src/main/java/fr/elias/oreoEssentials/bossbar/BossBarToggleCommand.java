@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/bossbar/BossBarToggleCommand.java
 package fr.elias.oreoEssentials.bossbar;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;

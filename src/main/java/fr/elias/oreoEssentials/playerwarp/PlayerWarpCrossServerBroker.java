@@ -41,7 +41,6 @@ public final class PlayerWarpCrossServerBroker implements Listener {
     private final ProxyMessenger proxyMessenger;
     private final String localServerName;
 
-    // Pending teleports keyed by player UUID
     private final Map<UUID, PendingWarp> pending = new ConcurrentHashMap<>();
 
     public PlayerWarpCrossServerBroker(OreoEssentials plugin,
@@ -55,13 +54,11 @@ public final class PlayerWarpCrossServerBroker implements Listener {
         this.proxyMessenger = proxyMessenger;
         this.localServerName = localServerName;
 
-        // Subscribe to packets
         this.packetManager.subscribe(
                 PlayerWarpTeleportRequestPacket.class,
                 (channel, packet) -> handleIncoming(packet)
         );
 
-        // Listen join events to complete delayed teleports
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
         plugin.getLogger().info("[PW] PlayerWarpCrossServerBroker ready on server=" + localServerName);
@@ -84,13 +81,11 @@ public final class PlayerWarpCrossServerBroker implements Listener {
                 requestId
         );
 
-        // Send to the target server's individual channel
         packetManager.sendPacket(
                 PacketChannel.individual(targetServer),
                 pkt
         );
 
-        // Ask proxy to move player to targetServer
         proxyMessenger.connect(player, targetServer);
 
         plugin.getLogger().info("[PW/XSRV] Sent teleport request " + requestId
@@ -106,11 +101,9 @@ public final class PlayerWarpCrossServerBroker implements Listener {
     private void handleIncoming(PlayerWarpTeleportRequestPacket pkt) {
         if (pkt == null) return;
 
-        // Only act if WE are the targetServer
         if (pkt.getTargetServer() != null
                 && !pkt.getTargetServer().isBlank()
                 && !pkt.getTargetServer().equalsIgnoreCase(localServerName)) {
-            // Not for this server
             return;
         }
 

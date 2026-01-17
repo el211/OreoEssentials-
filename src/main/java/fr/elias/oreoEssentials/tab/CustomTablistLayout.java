@@ -20,7 +20,6 @@ public class CustomTablistLayout {
     private final TabListManager tabManager;
     private BukkitTask updateTask;
 
-    // Animation state
     private int currentFrame = 0;
     private long lastFrameChange = 0;
 
@@ -70,7 +69,6 @@ public class CustomTablistLayout {
                 lastFrameChange = currentTime;
             }
 
-            // Build header
             String headerText;
             if (headerAnimated) {
                 headerText = getAnimatedText(cfg, "tab.custom-layout.top-section.texts", viewer);
@@ -87,7 +85,6 @@ public class CustomTablistLayout {
                 headerText = line1 + "\n" + line2 + "  " + line3;
             }
 
-            // Build footer
             String footerText;
             if (footerAnimated) {
                 footerText = getAnimatedText(cfg, "tab.custom-layout.bottom-section.texts", viewer);
@@ -104,10 +101,8 @@ public class CustomTablistLayout {
                 footerText = "\n" + fLine1 + "  " + fLine2 + "\n" + fLine3;
             }
 
-            // Set header and footer
             viewer.setPlayerListHeaderFooter(headerText, footerText);
 
-            // Update player names with colors
             updatePlayerNames(viewer, cfg);
 
         } catch (Exception e) {
@@ -126,18 +121,15 @@ public class CustomTablistLayout {
             return "";
         }
 
-        // Get current frame (cycle through frames)
         int frameIndex = currentFrame % frames.size();
         String frame = frames.get(frameIndex);
 
-        // Apply color codes and placeholders
         frame = applyPlaceholders(viewer, color(frame));
 
         return frame;
     }
 
     private void updatePlayerNames(Player viewer, FileConfiguration cfg) {
-        // Get all online players and sort by rank
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
 
         players.sort((p1, p2) -> {
@@ -146,7 +138,6 @@ public class CustomTablistLayout {
             return Integer.compare(priority2, priority1);
         });
 
-        // Update each player's display name in tab
         for (Player target : players) {
             String displayName = formatPlayerName(target, cfg);
             try {
@@ -161,10 +152,8 @@ public class CustomTablistLayout {
         String format = cfg.getString("tab.custom-layout.player-section.player-format.format",
                 "%player_color%%player_name%%afk_indicator%");
 
-        // Get rank color
         String rankColor = getRankColor(player, cfg);
 
-        // Check if AFK
         String afkIndicator = "";
         if (cfg.getBoolean("tab.custom-layout.player-section.player-format.show-afk", true)) {
             if (isPlayerAFK(player)) {
@@ -198,7 +187,7 @@ public class CustomTablistLayout {
             return priorities.getInt(rank, 10);
         }
 
-        return 10; // Default priority
+        return 10;
     }
 
     private String getPrimaryGroup(Player player) {

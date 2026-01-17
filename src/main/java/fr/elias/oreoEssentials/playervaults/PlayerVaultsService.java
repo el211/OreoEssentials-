@@ -22,7 +22,7 @@ public final class PlayerVaultsService {
 
     public PlayerVaultsService(OreoEssentials plugin) {
         this.plugin = plugin;
-        reload(); // initial boot
+        reload();
     }
     /** Re-read config and (re)create storage if needed. Safe to call at runtime. */
     public synchronized void reload() {
@@ -37,12 +37,10 @@ public final class PlayerVaultsService {
             return;
         }
 
-        // Decide desired backend (mongodb vs yaml) based on pv + essentials
         final String pvMode   = newCfg.storage().toLowerCase();
         final String mainMode = plugin.getConfig().getString("essentials.storage", "yaml").toLowerCase();
         final boolean wantMongo = pvMode.equals("mongodb") || (pvMode.equals("auto") && "mongodb".equals(mainMode));
 
-        // Build new storage instance if needed
         PlayerVaultsStorage newStorage;
         if (wantMongo) {
             com.mongodb.client.MongoClient client = getHomesMongoClient(plugin);
@@ -51,14 +49,12 @@ public final class PlayerVaultsService {
                 String coll = newCfg.collection();
                 newStorage  = new MongoPlayerVaultsStorage(client, db, coll, "global");
             } else {
-                // Fallback to YAML if no shared Mongo client
                 newStorage = new YamlPlayerVaultsStorage(plugin);
             }
         } else {
             newStorage = new YamlPlayerVaultsStorage(plugin);
         }
 
-        // Swap cfg + storage (flush old if backend actually changed)
         PlayerVaultsStorage old = this.storage;
         this.storage = newStorage;
         this.cfg = newCfg;
@@ -74,7 +70,6 @@ public final class PlayerVaultsService {
 
     public boolean enabled() { return cfg != null && cfg.enabled() && storage != null; }
 
-    /* ---------------- GUI entry points ---------------- */
 
     public void openMenu(Player p) {
         if (!enabled()) return;
@@ -90,28 +85,23 @@ public final class PlayerVaultsService {
     public void openVault(Player p, int id) {
         if (!enabled()) return;
 
-        // access check (perm or unlocked-by-rank)
         if (!canAccess(p, id)) {
             deny(p, cfg.denyMessage().replace("%id%", String.valueOf(id)));
             return;
         }
 
-        // 1) allowed SLOTS (config/perms)
         int allowedSlots = resolveSlots(p, id);
         allowedSlots = Math.max(1, Math.min(cfg.slotsCap(), allowedSlots));
 
-        // 2) visible rows (Bukkit inventories are multiples of 9)
         int rowsVisible = Math.max(1, (int) Math.ceil(allowedSlots / 9.0));
         int size = rowsVisible * 9;
 
-        // 3) load snapshot and clamp to allowedSlots
         var snap = storage.load(p.getUniqueId(), id);
         org.bukkit.inventory.ItemStack[] contents = new org.bukkit.inventory.ItemStack[size];
         if (snap != null && snap.contents() != null) {
             System.arraycopy(snap.contents(), 0, contents, 0, Math.min(allowedSlots, snap.contents().length));
         }
 
-        // 4) open masked view (view will mask blocked cells, and save only the allowed region)
         VaultView.open(plugin, this, cfg, p, id, rowsVisible, allowedSlots, contents);
         p.playSound(p.getLocation(), cfg.openSound(), 1f, 1f);
     }
@@ -135,7 +125,6 @@ public final class PlayerVaultsService {
         try { if (storage != null) storage.flush(); } catch (Throwable ignored) {}
     }
 
-    /* ---------------- Permissions / slot logic ---------------- */
 
     public boolean hasUsePermission(Player p, int id) {
         if (p.hasPermission("oreo.vault.bypass")
@@ -163,7 +152,6 @@ public final class PlayerVaultsService {
         return cfg.defaultSlots();
     }
 
-    /* ---------------- internals ---------------- */
 
     private static MongoClient getHomesMongoClient(OreoEssentials plugin) {
         try {

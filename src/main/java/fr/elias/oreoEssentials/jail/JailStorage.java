@@ -8,7 +8,6 @@ import java.util.*;
  */
 public interface JailStorage {
 
-    // ==================== BULK OPERATIONS ====================
 
     /**
      * Load all jails from storage.
@@ -34,7 +33,6 @@ public interface JailStorage {
      */
     void saveSentences(Map<UUID, JailModels.Sentence> sentences);
 
-    // ==================== INDIVIDUAL OPERATIONS ====================
 
     /**
      * Save or update a single jail (upsert).
@@ -78,7 +76,6 @@ public interface JailStorage {
         throw new UnsupportedOperationException("Individual sentence delete not supported by this storage backend");
     }
 
-    // ==================== LIFECYCLE ====================
 
     /**
      * Close any open connections/resources.

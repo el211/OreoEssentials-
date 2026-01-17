@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/rabbitmq/namespace/BuiltinPacketNamespaces.java
 package fr.elias.oreoEssentials.rabbitmq.namespace;
 
 import fr.elias.oreoEssentials.rabbitmq.namespace.impl.EconomyPacketNamespace;

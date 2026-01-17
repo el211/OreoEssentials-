@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-// e.g. in RtpPendingService
 public class RtpPendingService {
     private final Map<UUID, String> pending = new ConcurrentHashMap<>();
 

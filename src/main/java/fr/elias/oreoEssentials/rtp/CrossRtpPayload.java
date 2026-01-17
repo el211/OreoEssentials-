@@ -1,4 +1,3 @@
-// package: fr.elias.oreoEssentials.rtp
 package fr.elias.oreoEssentials.rtp;
 
 import java.util.UUID;

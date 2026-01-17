@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/trade/ui/TradeGuiGuardListener.java
 package fr.elias.oreoEssentials.trade.ui;
 
 import fr.elias.oreoEssentials.OreoEssentials;

@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/rabbitmq/namespace/impl/SpawnPacketNamespace.java
 package fr.elias.oreoEssentials.rabbitmq.namespace.impl;
 
 import fr.elias.oreoEssentials.rabbitmq.namespace.PacketNamespace;

@@ -50,7 +50,6 @@ public final class InvBridge {
 
         plugin.getLogger().info("[INV-BRIDGE] Subscribing CrossInvPacket on server=" + thisServer);
 
-        // ---- subscriptions ----
         packets.subscribe(CrossInvPacket.class, (channel, pkt) -> {
             try {
                 final String payload = pkt.getJson();
@@ -373,7 +372,6 @@ public final class InvBridge {
             Bukkit.getScheduler().runTask(plugin, () -> callback.accept(finalOk));
         });
     }
-    /* ===================== request/response core ===================== */
 
     private SnapshotResponse requestSnapshot(UUID target, Kind kind, int ecRows) {
         final int maxAttempts = 3;
@@ -509,7 +507,6 @@ public final class InvBridge {
                 pendingApply.remove(corr);
             }
 
-            // If we’re here, it was a timeout or null ack → maybe retry
             if (attempt < maxAttempts) {
                 try {
                     Thread.sleep(backoffMs);
@@ -537,7 +534,6 @@ public final class InvBridge {
         packets.sendPacket(PacketChannels.GLOBAL, new CrossInvPacket(json));
     }
 
-    /* ===================== inbound handlers ===================== */
 
     private void onRequest(String json) {
         SnapshotRequest req = GSON.fromJson(json, SnapshotRequest.class);
@@ -576,7 +572,6 @@ public final class InvBridge {
             if (p == null || !p.isOnline()) {
                 plugin.getLogger().info("[INV-BRIDGE] onRequest: IGNORE (player not on this server) "
                         + "target=" + req.target + " kind=" + req.kind + " server=" + thisServer);
-                // IMPORTANT: do NOT send a resp, just return
                 return;
             }
 
@@ -794,7 +789,6 @@ public final class InvBridge {
         }
     }
 
-    /* ===================== helpers ===================== */
 
     public static final class InvLayouts {
         public static ItemStack[] toFlat(InventoryService.Snapshot s) {

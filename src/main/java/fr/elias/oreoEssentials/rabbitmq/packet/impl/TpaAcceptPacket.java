@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rabbitmq/packet/impl/TpaAcceptPacket.java
 package fr.elias.oreoEssentials.rabbitmq.packet.impl;
 
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;

@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/util/SkinUtil.java
 package fr.elias.oreoEssentials.util;
 
 import org.bukkit.Bukkit;

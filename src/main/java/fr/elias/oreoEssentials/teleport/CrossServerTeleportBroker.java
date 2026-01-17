@@ -48,7 +48,6 @@ public final class CrossServerTeleportBroker implements Listener {
             UUID id = pkt.getPlayerId();
             String warp = pkt.getWarpName();
 
-            // overwrite any older intent
             lastIntent.put(id, "WARP:" + warp);
             pendingJoin.put(id, true);
 

@@ -30,7 +30,6 @@ public final class MongoJailStorage implements JailStorage {
         this.sentencesCol = db.getCollection("jail_sentences");
     }
 
-    // ==================== JAILS ====================
 
     @Override
     public Map<String, JailModels.Jail> loadJails() {
@@ -42,7 +41,6 @@ public final class MongoJailStorage implements JailStorage {
                 jail.name = doc.getString("_id");
                 jail.world = doc.getString("world");
 
-                // Load region (cuboid)
                 Document regionDoc = doc.get("region", Document.class);
                 if (regionDoc != null) {
                     JailModels.Cuboid cuboid = new JailModels.Cuboid();
@@ -55,7 +53,6 @@ public final class MongoJailStorage implements JailStorage {
                     jail.region = cuboid;
                 }
 
-                // Load cells
                 Document cellsDoc = doc.get("cells", Document.class);
                 if (cellsDoc != null) {
                     for (String cellId : cellsDoc.keySet()) {
@@ -80,7 +77,6 @@ public final class MongoJailStorage implements JailStorage {
                     out.put(jail.name.toLowerCase(Locale.ROOT), jail);
                 }
             } catch (Exception ex) {
-                // Skip malformed jail entries
             }
         }
 
@@ -112,7 +108,6 @@ public final class MongoJailStorage implements JailStorage {
                 jailDoc.append("region", regionDoc);
             }
 
-            // Save cells
             if (!jail.cells.isEmpty()) {
                 Document cellsDoc = new Document();
                 for (Map.Entry<String, Location> entry : jail.cells.entrySet()) {
@@ -136,7 +131,6 @@ public final class MongoJailStorage implements JailStorage {
         }
     }
 
-    // ==================== SENTENCES ====================
 
     @Override
     public Map<UUID, JailModels.Sentence> loadSentences() {
@@ -156,7 +150,6 @@ public final class MongoJailStorage implements JailStorage {
 
                 out.put(uuid, sentence);
             } catch (Exception ignored) {
-                // Skip malformed sentence entries
             }
         }
 
@@ -165,7 +158,6 @@ public final class MongoJailStorage implements JailStorage {
 
     @Override
     public void saveSentences(Map<UUID, JailModels.Sentence> sentences) {
-        // Clear existing sentences
         sentencesCol.deleteMany(new Document());
 
         if (sentences.isEmpty()) return;
@@ -188,7 +180,6 @@ public final class MongoJailStorage implements JailStorage {
         }
     }
 
-    // ==================== INDIVIDUAL OPERATIONS ====================
 
     /**
      * Save or update a single sentence (upsert).
@@ -267,7 +258,6 @@ public final class MongoJailStorage implements JailStorage {
         jailsCol.deleteOne(eq("_id", jailName.toLowerCase(Locale.ROOT)));
     }
 
-    // ==================== CLEANUP ====================
 
     @Override
     public void close() {
@@ -276,7 +266,7 @@ public final class MongoJailStorage implements JailStorage {
                 client.close();
             }
         } catch (Exception ignored) {
-            // Suppress close errors
+
         }
     }
 }

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/playerwarp/PlayerWarpService.java
 package fr.elias.oreoEssentials.playerwarp;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -47,7 +46,6 @@ public class PlayerWarpService {
         return owner.toString() + ":" + name.trim().toLowerCase(Locale.ROOT);
     }
 
-    /* -------- Basic Ops -------- */
 
     public PlayerWarp createWarp(Player owner, String name, Location loc) {
         String trimmedName = name.trim().toLowerCase(Locale.ROOT);
@@ -63,7 +61,6 @@ public class PlayerWarpService {
         );
         storage.save(warp);
 
-        // Register owning server in directory (if available)
         if (directory != null) {
             try {
                 String serverName = OreoEssentials.get()
@@ -107,14 +104,12 @@ public class PlayerWarpService {
         return storage.listAll();
     }
 
-    /* -------- Permission Helpers (directory-backed, optional) -------- */
 
     public String requiredPermission(PlayerWarp warp) {
         return (directory == null ? null : directory.getWarpPermission(warp.getId()));
     }
 
     public boolean canUse(Player player, PlayerWarp warp) {
-        // 1) Per-warp permission from directory (if any)
         String perm = requiredPermission(warp);
         if (perm != null && !perm.isBlank() && !player.hasPermission(perm)) {
             return false;
@@ -122,37 +117,30 @@ public class PlayerWarpService {
 
         UUID uuid = player.getUniqueId();
 
-        // 2) Owner = ALWAYS allowed (even if locked)
         if (warp.getOwner().equals(uuid)) {
             return true;
         }
 
-        // 3) Managers = ALWAYS allowed (even if locked)
         if (warp.getManagers() != null && warp.getManagers().contains(uuid)) {
             return true;
         }
 
-        // 4) Staff bypass lock
         if (player.hasPermission("oe.pw.bypass.lock")) {
             return true;
         }
 
-        // 5) Warp locked = nobody else passes, even if whitelisted / password
         if (warp.isLocked()) {
             return false;
         }
 
-        // 6) Whitelist = only whitelisted players
         if (warp.isWhitelistEnabled()) {
             Set<UUID> wl = warp.getWhitelist();
             return wl != null && wl.contains(uuid);
         }
 
-        // 7) Otherwise public
         return true;
     }
 
-    /* -------- Limit Helpers -------- */
 
     public int getWarpCount(Player owner) {
         return listByOwner(owner.getUniqueId()).size();
@@ -211,7 +199,6 @@ public class PlayerWarpService {
         return (s == null || s.isBlank()) ? localServer : s;
     }
 
-    /* Convenience: list names for GUI/list cmd */
     public List<String> listNames() {
         return listAll().stream()
                 .map(PlayerWarp::getName)
@@ -219,16 +206,7 @@ public class PlayerWarpService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Teleport player to warp with full checks.
-     * ✅ Uses Lang.send() for all 6 user messages
-     *
-     * Handles:
-     * - Permission checks
-     * - Cost deduction (Vault)
-     * - Cross-server routing
-     * - Local teleport fallback
-     */
+
     public boolean teleportToPlayerWarp(Player player, UUID ownerId, String warpName) {
         OreoEssentials plugin = OreoEssentials.get();
         String trimmed = warpName.trim();
@@ -244,7 +222,6 @@ public class PlayerWarpService {
             return false;
         }
 
-        // 🔒 Owner sanity check
         if (!warp.getOwner().equals(ownerId)) {
             plugin.getLogger().warning("[OreoEssentials] [PW/SECURITY] Mismatch: storage returned warp id="
                     + warp.getId() + " owner=" + warp.getOwner()
@@ -255,7 +232,6 @@ public class PlayerWarpService {
             return false;
         }
 
-        // Permission + whitelist + lock
         if (!canUse(player, warp)) {
             plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] teleportToPlayerWarp: player "
                     + player.getName() + " lacks permission for warp id=" + warp.getId());
@@ -265,7 +241,6 @@ public class PlayerWarpService {
             return false;
         }
 
-        // 💰 COST HANDLING (shared by /pw and GUI)
         double cost = warp.getCost();
         if (cost > 0
                 && !player.getUniqueId().equals(warp.getOwner())           // owner = free
@@ -283,10 +258,8 @@ public class PlayerWarpService {
                     return false;
                 }
 
-                // Withdraw from player
                 eco.withdrawPlayer(player, cost);
 
-                // Pay owner if possible
                 OfflinePlayer owner = org.bukkit.Bukkit.getOfflinePlayer(warp.getOwner());
                 if (owner != null) {
                     eco.depositPlayer(owner, cost);
@@ -299,7 +272,6 @@ public class PlayerWarpService {
             }
         }
 
-        // ===== Server Resolution =====
         String localServer   = plugin.getConfigService().serverName();
         String targetServer  = getWarpServer(warp, localServer);
         boolean crossEnabled = plugin.getCrossServerSettings().warps();
@@ -317,7 +289,6 @@ public class PlayerWarpService {
                 + " messagingAvailable=" + messaging
                 + " sameServer=" + sameServer);
 
-        // ==== LOCAL TELEPORT ====
         if (!crossEnabled || !messaging || sameServer) {
             if (!crossEnabled) {
                 plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] Cross-server playerwarps disabled in config.");
@@ -351,7 +322,6 @@ public class PlayerWarpService {
             return ok;
         }
 
-        // ==== CROSS-SERVER TELEPORT ====
         plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] Using cross-server teleport. from="
                 + localServer + " to=" + targetServer);
 
@@ -392,10 +362,7 @@ public class PlayerWarpService {
                 + "," + loc.getBlockZ();
     }
 
-    /**
-     * Add player to warp whitelist.
-     * ✅ Uses Lang.send() for all 4 user messages
-     */
+
     public boolean addToWhitelist(Player owner, String warpName, OfflinePlayer target) {
         String trimmed = warpName.trim();
         String lower   = trimmed.toLowerCase(Locale.ROOT);
@@ -438,10 +405,7 @@ public class PlayerWarpService {
         return true;
     }
 
-    /**
-     * Remove player from warp whitelist.
-     * ✅ Uses Lang.send() for all 4 user messages
-     */
+
     public boolean removeFromWhitelist(Player owner, String warpName, OfflinePlayer target) {
         String trimmed = warpName.trim();
         String lower   = trimmed.toLowerCase(Locale.ROOT);

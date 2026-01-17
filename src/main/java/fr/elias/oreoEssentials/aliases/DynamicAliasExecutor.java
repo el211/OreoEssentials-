@@ -33,26 +33,22 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
             return true;
         }
 
-        // Optional per-alias permission gate
         if (def.permGate && !sender.hasPermission("oreo.alias.custom." + def.name)) {
             sender.sendMessage("§cYou don’t have permission to use /" + def.name + ".");
             return true;
         }
 
-        // Generic use permission (keep your previous one if desired)
         if (!sender.hasPermission("oreo.alias.use.*") && !sender.hasPermission("oreo.alias.use." + alias)) {
             sender.sendMessage("§cYou don’t have permission to use /" + alias + ".");
             return true;
         }
 
         Player player = (sender instanceof Player p) ? p : null;
-        // Alias-wide cooldown
         if (!service.checkAndTouchCooldown(alias, player == null ? null : player.getUniqueId(), def.cooldownSeconds)) {
             sender.sendMessage("§cYou must wait before using /" + alias + " again.");
             return true;
         }
 
-        // Alias-wide checks
         if (!service.evaluateAllChecks(sender, def)) {
             String msg = (def.failMessage == null ? "§cYou don't meet the requirements for /%alias%." : def.failMessage);
             try { sender.sendMessage(msg.replace("%alias%", alias)); } catch (Throwable ignored) {}
@@ -118,12 +114,10 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
         List<String> inlineChecks = new ArrayList<>();
         long pendingDelayTicks = 0L;
 
-        // Extract known prefixes in a loop until none matches
         boolean changed;
         do {
             changed = false;
 
-            // asConsole!/asPlayer!
             if (startsWithWordIgnoreCase(s, "asConsole!")) {
                 runAsOverride = AliasService.RunAs.CONSOLE;
                 s = s.substring("asConsole!".length()).trim();
@@ -134,10 +128,8 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
                 changed = true;
             }
 
-            // delay!/Delay! <seconds>
             if (startsWithWordIgnoreCase(s, "delay!") || startsWithWordIgnoreCase(s, "Delay!")) {
                 String rem = s.substring(s.indexOf('!') + 1).trim();
-                // read first token as seconds
                 int sp = rem.indexOf(' ');
                 String num = (sp == -1 ? rem : rem.substring(0, sp)).trim();
                 double sec = parseDoubleSafe(num, 0d);
@@ -146,7 +138,6 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
                 changed = true;
             }
 
-            // cooldown:<n>?!
             if (startsWithWordIgnoreCase(s, "cooldown:")) {
                 String rem = s.substring("cooldown:".length()).trim();
                 int end = findDirectiveEnd(rem);
@@ -158,7 +149,6 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
                 changed = true;
             }
 
-            // moneycost:<amount>?!
             if (startsWithWordIgnoreCase(s, "moneycost:")) {
                 String rem = s.substring("moneycost:".length()).trim();
                 int end = findDirectiveEnd(rem);
@@ -169,7 +159,6 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
                 changed = true;
             }
 
-            // check:<expr>!
             if (startsWithWordIgnoreCase(s, "check:")) {
                 String rem = s.substring("check:".length()).trim();
                 int bang = rem.indexOf('!');
@@ -185,10 +174,8 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
             out.add(new DelayStep(pendingDelayTicks));
         }
 
-        // Expand variables in the final command string: $1 $2 ... $*  and [playerName]
         String expanded = expandVariables(sender, s, args);
 
-        // PAPI placeholders in command
         if (sender instanceof Player p && Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             try { expanded = PlaceholderAPI.setPlaceholders(p, expanded); } catch (Throwable ignored) {}
         }
@@ -214,16 +201,13 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
 
         CommandStep cs = (CommandStep) step;
 
-        // Inline checks
         for (String expr : cs.inlineChecks) {
             if (!service.evaluateSingle(sender, expr)) {
-                // skip this step only
                 runStepsRecursive(sender, player, plan, i + 1);
                 return;
             }
         }
 
-        // Per-line cooldown (skip if not ready)
         if (cs.perLineCooldownSeconds > 0) {
             UUID uid = (player == null ? null : player.getUniqueId());
             if (!service.checkAndTouchLineCooldown(alias, cs.lineIndex, uid, cs.perLineCooldownSeconds)) {
@@ -232,10 +216,8 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
             }
         }
 
-        // Money cost (withdraw; skip if insufficient)
         if (cs.moneyCost > 0) {
             if (!(sender instanceof Player p)) {
-                // console has no wallet; just skip this step
                 runStepsRecursive(sender, player, plan, i + 1);
                 return;
             }
@@ -247,7 +229,6 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
             try { reg.getProvider().withdrawPlayer(p, cs.moneyCost); } catch (Throwable ignored) {}
         }
 
-        // Dispatch command
         boolean ok = false;
         AliasService.RunAs runAs = (cs.runAs != null ? cs.runAs : service.get(alias).runAs);
         try {
@@ -292,7 +273,6 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
     private String expandVariables(CommandSender sender, String s, String[] args) {
         String out = s;
 
-        // [playerName]
         String playerName = (sender instanceof Player p) ? p.getName() : (sender.getName() != null ? sender.getName() : "CONSOLE");
         out = out.replace("[playerName]", playerName);
 

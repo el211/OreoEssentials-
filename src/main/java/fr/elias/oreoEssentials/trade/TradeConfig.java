@@ -36,14 +36,13 @@ public final class TradeConfig {
     public final Sound cancelSound;
     public final Sound completeSound;
 
-    public final boolean requireEmptyCursorOnConfirm; // small UX guard
-    public final int minDistanceBlocks;               // 0 = disabled
+    public final boolean requireEmptyCursorOnConfirm;
+    public final int minDistanceBlocks;
 
     public TradeConfig(JavaPlugin plugin) {
         this.plugin = plugin;
         plugin.saveResource("trade.yml", false);
         FileConfiguration c = plugin.getConfig(); // main config
-        // load separate trade.yml (kept with plugin config system)
         org.bukkit.configuration.file.YamlConfiguration trade =
                 org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(
                         new java.io.File(plugin.getDataFolder(), "trade.yml")

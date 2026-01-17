@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/portals/PortalsCommand.java
 package fr.elias.oreoEssentials.portals;
 
 import fr.elias.oreoEssentials.util.Lang;

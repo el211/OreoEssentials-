@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/customcraft/RecipesStorage.java
 package fr.elias.oreoEssentials.customcraft;
 
 import org.bukkit.configuration.ConfigurationSection;

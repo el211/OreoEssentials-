@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/playerwarp/YamlPlayerWarpStorage.java
 package fr.elias.oreoEssentials.playerwarp;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -61,9 +60,7 @@ public class YamlPlayerWarpStorage implements PlayerWarpStorage {
         loadAllFromConfig();
     }
 
-    /* --------------------------------------------------------
-     * File / config handling
-     * -------------------------------------------------------- */
+
 
     private void loadFile() {
         if (!file.exists()) {
@@ -138,7 +135,6 @@ public class YamlPlayerWarpStorage implements PlayerWarpStorage {
             return null;
         }
 
-        // --- whitelist fields (legacy-safe) ---
         boolean whitelistEnabled = sec.getBoolean("whitelist.enabled", false);
         List<String> wlRaw = sec.getStringList("whitelist.players");
         Set<UUID> wl = new HashSet<>();
@@ -149,22 +145,18 @@ public class YamlPlayerWarpStorage implements PlayerWarpStorage {
             }
         }
 
-        // Base object
         PlayerWarp warp = new PlayerWarp(warpId, owner, name, loc, whitelistEnabled, wl);
 
-        // --- extra metadata ---
         warp.setDescription(sec.getString("description", ""));
         warp.setCategory(sec.getString("category", ""));
         warp.setLocked(sec.getBoolean("locked", false));
         warp.setCost(sec.getDouble("cost", 0.0D));
 
-        // --- icon (ItemStack) ---
         Object rawIcon = sec.get("icon");
         if (rawIcon instanceof ItemStack icon) {
             warp.setIcon(icon);
         }
 
-        // --- managers ---
         List<String> managersRaw = sec.getStringList("managers");
         Set<UUID> managers = new HashSet<>();
         for (String s : managersRaw) {
@@ -175,7 +167,6 @@ public class YamlPlayerWarpStorage implements PlayerWarpStorage {
         }
         warp.setManagers(managers);
 
-        // --- password ---
         String pwd = sec.getString("password", null);
         warp.setPassword(pwd); // PlayerWarp normalizes null/empty
 
@@ -200,35 +191,27 @@ public class YamlPlayerWarpStorage implements PlayerWarpStorage {
         sec.set("yaw", loc.getYaw());
         sec.set("pitch", loc.getPitch());
 
-        // --- extra metadata ---
         sec.set("description", warp.getDescription());
         sec.set("category", warp.getCategory());
         sec.set("locked", warp.isLocked());
         sec.set("cost", warp.getCost());
 
-        // icon (Bukkit handles ItemStack serialization)
         sec.set("icon", warp.getIcon());
 
-        // --- whitelist ---
         sec.set("whitelist.enabled", warp.isWhitelistEnabled());
         List<String> wl = warp.getWhitelist().stream()
                 .map(UUID::toString)
                 .collect(Collectors.toList());
         sec.set("whitelist.players", wl);
 
-        // --- managers ---
         List<String> managers = warp.getManagers().stream()
                 .map(UUID::toString)
                 .collect(Collectors.toList());
         sec.set("managers", managers);
 
-        // --- password ---
         sec.set("password", warp.getPassword());
     }
 
-    /* --------------------------------------------------------
-     * PlayerWarpStorage implementation
-     * -------------------------------------------------------- */
 
     @Override
     public synchronized void save(PlayerWarp warp) {

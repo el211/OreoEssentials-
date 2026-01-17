@@ -62,7 +62,6 @@ public abstract class PacketNamespace {
     public final Collection<PacketDefinition<?>> getDefinitions() {
         ensureRegistered();
         return definitions;
-        // Note: returned collection is concurrent; callers should not modify it.
     }
 
     /**

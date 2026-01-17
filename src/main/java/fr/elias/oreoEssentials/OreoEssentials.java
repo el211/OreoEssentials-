@@ -1145,8 +1145,7 @@ public final class OreoEssentials extends JavaPlugin {
         this.homeService  = new HomeService(this.storage, this.configService, this.homeDirectory);
 
         if (rabbitEnabled) {
-            // IMPORTANT: server name must be unique per backend, ex: shard-0-0, shard-0-1...
-            // localServerName should already be your configService.serverName() (or equivalent)
+
             RabbitMQSender rabbit = new RabbitMQSender(getConfig().getString("rabbitmq.uri"), localServerName);
 
             if (this.offlinePlayerCache == null) {
@@ -1157,11 +1156,9 @@ public final class OreoEssentials extends JavaPlugin {
 
             if (rabbit.connect()) {
 
-                // 0) IMPORTANT: register EVERYTHING that affects IDs BEFORE init()
                 registerAllPacketsDeterministically(this.packetManager);
 
 
-                // 1) Create brokers/services that subscribers will call (optional pre-init)
                 if (invSyncEnabled) {
                     try {
                         this.invseeBroker = new fr.elias.oreoEssentials.cross.InvseeCrossServerBroker(
@@ -1188,14 +1185,12 @@ public final class OreoEssentials extends JavaPlugin {
                     getLogger().info("[INVSEE] Cross-server Invsee disabled (invSyncEnabled=false).");
                 }
 
-                // 2) Subscribe channels ONCE (before init is fine)
                 this.packetManager.subscribeChannel(PacketChannels.GLOBAL);
                 this.packetManager.subscribeChannel(
                         fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel.individual(localServerName)
                 );
                 getLogger().info("[RABBIT] Subscribed channels: global + individual(" + localServerName + ")");
 
-                // 3) Packet subscriptions (before init is fine)
                 if (this.invseeBroker != null) {
                     this.packetManager.subscribe(
                             fr.elias.oreoEssentials.cross.InvseeOpenRequestPacket.class,
@@ -1262,7 +1257,6 @@ public final class OreoEssentials extends JavaPlugin {
                         new fr.elias.oreoEssentials.rabbitmq.handler.trade.TradeClosePacketHandler(this)
                 );
 
-                // 4) INIT LAST (consumer starts only after registry is final)
                 this.packetManager.init();
 
                 try {
@@ -1337,7 +1331,6 @@ public final class OreoEssentials extends JavaPlugin {
         }
 
 
-// ---------------------------------------------
         if (packetManager != null && packetManager.isInitialized()) {
 
             final var cs = this.getCrossServerSettings();
@@ -1412,7 +1405,6 @@ public final class OreoEssentials extends JavaPlugin {
             this.tpBroker = null;
             getLogger().info("[BROKER] TP cross-server broker disabled (PacketManager unavailable or not initialized).");
         }
-        // ===== Initialize BackBroker + BackJoinListener =====
         if (rabbitEnabled && packetManager != null && packetManager.isInitialized()) {
             try {
                 com.rabbitmq.client.ConnectionFactory factory = new com.rabbitmq.client.ConnectionFactory();
@@ -2195,14 +2187,12 @@ public final class OreoEssentials extends JavaPlugin {
         return packetManager != null && packetManager.isInitialized();
     }
     private void initCurrencySystem() {
-        // Feature toggle
         if (!settingsConfig.currencyEnabled()) {
             getLogger().info("[Currency] Disabled by settings.yml");
             return;
         }
 
         try {
-            // Load currency config
             this.currencyConfig = new CurrencyConfig(this);
             getLogger().info("[Currency/DEBUG] file=" + new java.io.File(getDataFolder(), "currency-config.yml").getAbsolutePath());
             getLogger().info("[Currency/DEBUG] enabled=" + currencyConfig.isEnabled()
@@ -2210,7 +2200,6 @@ public final class OreoEssentials extends JavaPlugin {
                     + " cross=" + currencyConfig.isCrossServerEnabled()
                     + " homesMongoClient=" + (homesMongoClient != null));
 
-            // Choose storage
             final CurrencyStorage currencyStorage;
             if (currencyConfig.useMongoStorage() && this.homesMongoClient != null) {
                 String dbName = getConfig().getString("storage.mongo.database", "oreo");
@@ -2225,16 +2214,13 @@ public final class OreoEssentials extends JavaPlugin {
                 getLogger().info("[Currency] Using JSON storage");
             }
 
-            // Create service (loads currencies async)
             this.currencyService = new CurrencyService(this, currencyStorage, currencyConfig);
 
-            // Register commands
             this.commands.register(new CurrencyCommand(this));
             this.commands.register(new CurrencyBalanceCommand(this));
             this.commands.register(new CurrencySendCommand(this));
             this.commands.register(new CurrencyTopCommand(this));
 
-            // Register tab completers (only if commands exist in plugin.yml)
             if (getCommand("currency") != null) {
                 getCommand("currency").setTabCompleter(new CurrencyCommandTabCompleter(this));
             }
@@ -2248,14 +2234,12 @@ public final class OreoEssentials extends JavaPlugin {
                 getCommand("currencytop").setTabCompleter(new CurrencyTopTabCompleter(this));
             }
 
-            // Cross-server (RabbitMQ)
             if (currencyConfig.isCrossServerEnabled()
                     && packetManager != null
                     && packetManager.isInitialized()) {
 
 
 
-                // Subscribe to currency sync packets (create/delete)
                 packetManager.subscribe(
                         fr.elias.oreoEssentials.currency.rabbitmq.CurrencySyncPacket.class,
                         (channel, pkt) -> {
@@ -2428,7 +2412,6 @@ public final class OreoEssentials extends JavaPlugin {
         boolean tabEnabled = settingsConfig.tabEnabled();
 
         if (tabEnabled && !hasProtocolLib) {
-            // Show warning box when tab is enabled but ProtocolLib is missing
             getLogger().warning("╔════════════════════════════════════════════════════════════╗");
             getLogger().warning("║                    ⚠ WARNING ⚠                             ║");
             getLogger().warning("║                                                            ║");
@@ -2460,7 +2443,6 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("║  Download: https://www.spigotmc.org/resources/1997/        ║");
             getLogger().info("╚════════════════════════════════════════════════════════════╝");
         }
-        // If tab is disabled but ProtocolLib is installed, no message needed
     }
     private void showCompletionBanner() {
         long totalOnline = Bukkit.getOnlinePlayers().size();

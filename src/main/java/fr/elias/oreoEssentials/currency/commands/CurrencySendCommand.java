@@ -74,7 +74,6 @@ public class CurrencySendCommand implements OreoCommand {
 
         final String targetInput = args[0];
 
-        // Parse amount from LAST argument (to handle multi-word currency names)
         final String amountRaw = args[args.length - 1];
         final double amount = parsePositive(amountRaw);
 
@@ -218,7 +217,6 @@ public class CurrencySendCommand implements OreoCommand {
         } catch (Throwable ignored) {}
     }
 
-    /* ----------------------------- resolve target ----------------------------- */
 
     private static final class TargetResolved {
         final UUID uuid;
@@ -239,13 +237,11 @@ public class CurrencySendCommand implements OreoCommand {
                 return new TargetResolved(id, nameOrUuid);
             } catch (IllegalArgumentException ignored) {}
 
-            // 2) local online exact
             Player local = Bukkit.getPlayerExact(nameOrUuid);
             if (local != null) {
                 return new TargetResolved(local.getUniqueId(), local.getName());
             }
 
-            // 3) OfflinePlayerCache (fast + reliable on networks)
             try {
                 var cache = plugin.getOfflinePlayerCache();
                 if (cache != null) {
@@ -256,7 +252,6 @@ public class CurrencySendCommand implements OreoCommand {
                 }
             } catch (Throwable ignored) {}
 
-            // 4) PlayerDirectory (Mongo)
             PlayerDirectory dir;
             try {
                 dir = plugin.getPlayerDirectory();
@@ -284,7 +279,6 @@ public class CurrencySendCommand implements OreoCommand {
         });
     }
 
-    /* ----------------------------- utils ----------------------------- */
 
     private double parsePositive(String rawIn) {
         try {

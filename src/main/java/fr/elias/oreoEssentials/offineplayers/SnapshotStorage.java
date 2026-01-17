@@ -3,7 +3,6 @@ package fr.elias.oreoEssentials.offineplayers;
 import javax.annotation.Nullable;
 import java.util.UUID;
 
-// SnapshotStorage.java – interface (so you can swap to Mongo later)
 public interface SnapshotStorage {
     @Nullable
     InvSnapshot   loadInv(UUID uuid);
@@ -11,7 +10,6 @@ public interface SnapshotStorage {
     @Nullable EnderSnapshot loadEnder(UUID uuid);
     void                    saveEnder(UUID uuid, EnderSnapshot snap);
 
-    // “pending edits” applied on next join for offline targets:
     @Nullable InvSnapshot   loadPendingInv(UUID uuid);
     void                    savePendingInv(UUID uuid, InvSnapshot snap);
     void                    clearPendingInv(UUID uuid);

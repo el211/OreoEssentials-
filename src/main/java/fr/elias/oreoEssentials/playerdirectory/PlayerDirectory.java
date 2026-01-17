@@ -29,11 +29,9 @@ public class PlayerDirectory {
         try { coll.createIndex(new Document("lastServer", 1)); } catch (Throwable ignored) {}
     }
 
-    // ----- legacy helper -----
     public void saveMapping(String name, UUID uuid) { upsertPresence(uuid, name, null); }
     public void saveMapping(UUID uuid, String name) { upsertPresence(uuid, name, null); }
 
-    // ----- lookups -----
     public UUID lookupUuidByName(String name) {
         if (name == null || name.isBlank()) return null;
         Document d = coll.find(eq("nameLower", name.toLowerCase(Locale.ROOT)))
@@ -50,14 +48,12 @@ public class PlayerDirectory {
                 .first();
         return d == null ? null : d.getString("name");
     }
-    // PlayerDirectory.java
     public @org.jetbrains.annotations.Nullable String lookupCurrentServer(UUID uuid) {
         if (uuid == null) return null;
         try {
             var doc = coll.find(eq("uuid", uuid.toString())).first();
             if (doc == null) return null;
-            // Adjust the field path to whatever your presence writer uses.
-            // Common patterns: "currentServer", or nested "presence.currentServer".
+
             String s = doc.getString("currentServer");
             if (s == null && doc.get("presence") instanceof org.bson.Document pres) {
                 s = pres.getString("currentServer");
@@ -68,7 +64,6 @@ public class PlayerDirectory {
         }
     }
 
-    // ----- presence writes -----
     public void upsertPresence(UUID uuid, String name, String server) {
         if (uuid == null) return;
         final String now = Instant.now().toString();
@@ -152,8 +147,7 @@ public class PlayerDirectory {
         String want = (prefix == null) ? "" : prefix.toLowerCase(Locale.ROOT);
         List<String> out = new ArrayList<>();
 
-        // Filter: must have a non-empty currentServer (i.e. online somewhere)
-        // and optionally prefix match on nameLower
+
         var filter = want.isEmpty()
                 ? and(ne("currentServer", null), ne("currentServer", ""))
                 : and(
@@ -172,7 +166,6 @@ public class PlayerDirectory {
             }
         }
 
-        // Clean & pretty ordering
         out.sort(String.CASE_INSENSITIVE_ORDER);
         return out;
     }

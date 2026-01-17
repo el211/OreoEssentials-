@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/trade/ui/TradeMenuRegistry.java
 package fr.elias.oreoEssentials.trade.ui;
 
 import fr.elias.oreoEssentials.trade.TradeSession;

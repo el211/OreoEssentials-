@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/database/MongoDBManager.java
 package fr.elias.oreoEssentials.database;
 
 import com.mongodb.client.MongoClient;
@@ -48,7 +47,6 @@ public class MongoDBManager implements PlayerEconomyDatabase {
             this.database = mongoClient.getDatabase(database);
             this.collection = this.database.getCollection(collection);
 
-            // Unique index on playerUUID for integrity + performance
             this.collection.createIndex(
                     Indexes.ascending("playerUUID"),
                     new IndexOptions().unique(true)
@@ -164,7 +162,6 @@ public class MongoDBManager implements PlayerEconomyDatabase {
         }
     }
 
-    /* ---------------- Leaderboard ---------------- */
 
     @Override
     public boolean supportsLeaderboard() { return true; }
@@ -200,7 +197,6 @@ public class MongoDBManager implements PlayerEconomyDatabase {
         return out;
     }
 
-    /* ---------------- helpers ---------------- */
 
     private static double readNumber(Document doc, String key, double def) {
         Object v = doc.get(key);

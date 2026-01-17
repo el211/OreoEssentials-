@@ -22,10 +22,8 @@ public class JsonEconomyDatabase implements PlayerEconomyDatabase {
     private final Object lock = new Object();
     private File file;
 
-    // uuid -> Account
     private Map<String, Account> accounts = new ConcurrentHashMap<>();
 
-    // Defaults (wire to config later if you want)
     private static final double STARTING_BALANCE = 100.0;
     private static final double MIN_BALANCE = 0.0;
     private final double MAX_BALANCE;
@@ -38,7 +36,6 @@ public class JsonEconomyDatabase implements PlayerEconomyDatabase {
 
     }
 
-    // Signature compatibility; args unused
     @Override
     public boolean connect(String url, String user, String password) {
         try {
@@ -125,11 +122,9 @@ public class JsonEconomyDatabase implements PlayerEconomyDatabase {
 
     @Override
     public void close() {
-        // flush file
         synchronized (lock) { save(); }
     }
 
-    // ---- internals ----
     private double getBalanceInternal(UUID id) {
         Account acc = accounts.get(id.toString());
         if (acc == null) {

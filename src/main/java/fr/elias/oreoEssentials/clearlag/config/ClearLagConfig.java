@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 public class ClearLagConfig {
 
-    // Master enable switch (enable: true/false in clearlag.yml)
     public final boolean masterEnabled;
 
     public final Broadcast broadcast;
@@ -20,10 +19,8 @@ public class ClearLagConfig {
     public final TpsMeter tps;
 
     public ClearLagConfig(FileConfiguration root) {
-        // Master switch
         this.masterEnabled = root.getBoolean("enable", true);
 
-        // ---- Broadcasts ----
         ConfigurationSection gb = root.getConfigurationSection("global-broadcasts");
         this.broadcast = new Broadcast(
                 gb != null && gb.getBoolean("enabled", true),
@@ -32,20 +29,16 @@ public class ClearLagConfig {
                 gb != null ? gb.getString("permission", "bukkit.broadcast") : "bukkit.broadcast"
         );
 
-        // ---- Area filter (never remove) ----
         this.areaFilter = new HashSet<>(root.getStringList("area-filter"));
 
-        // ---- KillMobs ----
         ConfigurationSection km = root.getConfigurationSection("kill-mobs");
         boolean removeNamed = km != null && km.getBoolean("remove-named", false);
         List<String> mobFilter = km != null ? new ArrayList<>(km.getStringList("mob-filter")) : new ArrayList<>();
         this.killMobs = new KillMobs(removeNamed, mobFilter);
 
-        // ---- Auto removal & manual removal ----
         this.auto = parseRemoval(root.getConfigurationSection("auto-removal"));
         this.cmd  = parseRemoval(root.getConfigurationSection("command-remove"));
 
-        // ---- TPS Meter ----
         ConfigurationSection tm = root.getConfigurationSection("tps-meter");
         this.tps = new TpsMeter(
                 tm != null && tm.getBoolean("enabled", false),
@@ -114,10 +107,8 @@ public class ClearLagConfig {
         // token rules
         List<String> tokens = new ArrayList<>(s.getStringList("remove-entities"));
 
-        // warnings
         List<Warning> warns = new ArrayList<>();
         for (String line : s.getStringList("warnings")) {
-            // format: time:400 msg:Message
             int time = 0;
             String msgLine = "";
             String[] parts = line.split("\\s+");
@@ -137,7 +128,6 @@ public class ClearLagConfig {
                 boat, falling, exp, painting, projectile, item, itemframe, minecart, tnt, warns);
     }
 
-    // --- models ---
     public record Broadcast(boolean enabled, boolean async, boolean usePerm, String perm) {}
     public record KillMobs(boolean removeNamed, List<String> mobFilter) {}
     public record Warning(int time, String msg) {}
@@ -148,7 +138,7 @@ public class ClearLagConfig {
         public final boolean broadcastRemoval;
         public final String broadcastMsg;
         public final List<String> worldFilter;
-        public final List<String> removeEntities;    // token rules
+        public final List<String> removeEntities;
         public final Set<Material> itemWhitelist;
 
         public final boolean flagBoat;

@@ -25,7 +25,6 @@ public class VaultEconomyService implements EconomyService {
         return eco.withdrawPlayer(BukkitPlayerAdapter.nameOf(player), amount).transactionSuccess();
     }
 
-    // Small adapter to resolve a name (Vault’s legacy API often uses names)
     private static final class BukkitPlayerAdapter {
         static String nameOf(UUID uuid) {
             var off = org.bukkit.Bukkit.getOfflinePlayer(uuid);

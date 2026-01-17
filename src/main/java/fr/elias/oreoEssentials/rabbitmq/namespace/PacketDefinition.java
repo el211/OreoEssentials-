@@ -12,7 +12,7 @@ public final class PacketDefinition<T extends Packet> {
                             Class<T> packetClass,
                             PacketProvider<T> provider,
                             PacketNamespace namespace) {
-        this.registryId = registryId;            // widen to long
+        this.registryId = registryId;
         this.packetClass = packetClass;
         this.provider = provider;
         this.namespace = namespace;

@@ -16,9 +16,7 @@ public final class JailJoinListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onJoin(PlayerJoinEvent e) {
-        // Check if player is jailed
         if (service.isJailed(e.getPlayer().getUniqueId())) {
-            // Teleport them back to jail cell
             service.teleportToCell(e.getPlayer().getUniqueId());
         }
     }

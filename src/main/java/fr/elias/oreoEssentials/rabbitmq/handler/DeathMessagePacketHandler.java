@@ -16,14 +16,12 @@ public class DeathMessagePacketHandler implements PacketSubscriber<DeathMessageP
 
     @Override
     public void onReceive(PacketChannel channel, DeathMessagePacket packet) {
-        // Defensive null checks in case upstream sent malformed data
         if (packet == null) return;
 
         String message = packet.getMessage();
         String sourceServer = packet.getSourceServer();
         String deadPlayerName = packet.getDeadPlayerName();
 
-        // Sanity check
         if (message == null || message.isEmpty()) {
             plugin.getLogger().warning("[Rabbit] DeathMessagePacket missing message data");
             return;
@@ -31,7 +29,6 @@ public class DeathMessagePacketHandler implements PacketSubscriber<DeathMessageP
 
         String localServer = plugin.getConfigService().serverName();
 
-        // Don't broadcast on the server where death occurred (already shown locally via event)
         if (sourceServer != null && sourceServer.equalsIgnoreCase(localServer)) {
             plugin.getLogger().fine("[Rabbit] Death @" + channel + " -> " + deadPlayerName + " (local server, skipping broadcast)");
             return;
@@ -39,7 +36,6 @@ public class DeathMessagePacketHandler implements PacketSubscriber<DeathMessageP
 
         plugin.getLogger().fine("[Rabbit] Death @" + channel + " from=" + sourceServer + " -> " + deadPlayerName);
 
-        // Broadcast message to all players on this server
         try {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 Bukkit.broadcastMessage(message);

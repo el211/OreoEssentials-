@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/customcraft/OeCraftCommand.java
 package fr.elias.oreoEssentials.customcraft;
 
 import fr.elias.oreoEssentials.util.Lang;

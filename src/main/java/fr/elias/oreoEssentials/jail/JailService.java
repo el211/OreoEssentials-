@@ -18,7 +18,6 @@ public final class JailService {
     private final Map<UUID, JailModels.Sentence> active = new HashMap<>();
     private BukkitTask guardTask;
 
-    // Command blacklist inside jail
     private final Set<String> blockedCommands = new HashSet<>(Arrays.asList(
             "spawn", "home", "sethome", "warp", "rtp", "tpa", "tp", "back",
             "tpahere", "tpaccept", "wild", "randomtp"
@@ -57,7 +56,6 @@ public final class JailService {
         storage.close();
     }
 
-    /* ==================== Admin API ==================== */
 
     public boolean createOrUpdateJail(String name, JailModels.Cuboid region, String world) {
         name = name.toLowerCase(Locale.ROOT);
@@ -67,7 +65,6 @@ public final class JailService {
         j.region = region;
         jails.put(name, j);
 
-        // ✅ Use efficient individual save if supported (MongoDB)
         try {
             storage.saveJail(j);
         } catch (UnsupportedOperationException e) {
@@ -84,7 +81,6 @@ public final class JailService {
 
         j.cells.put(cellId, loc.clone());
 
-        // ✅ Use efficient individual save if supported (MongoDB)
         try {
             storage.saveJail(j);
         } catch (UnsupportedOperationException e) {
@@ -100,11 +96,9 @@ public final class JailService {
         JailModels.Jail removed = jails.remove(name);
 
         if (removed != null) {
-            // ✅ Use efficient individual delete if supported (MongoDB)
             try {
                 storage.deleteJail(name);
             } catch (UnsupportedOperationException e) {
-                // Fallback to bulk save for YAML
                 storage.saveJails(jails);
             }
             return true;
@@ -121,7 +115,6 @@ public final class JailService {
         return jails.get(name.toLowerCase(Locale.ROOT));
     }
 
-    /* ==================== Sentencing ==================== */
 
     /**
      * Jail a player (works even if they're offline).
@@ -136,7 +129,6 @@ public final class JailService {
             return false;
         }
 
-        // Select spawn location
         Location spawn = (cellId != null ? j.cells.get(cellId) : null);
         if (spawn == null && !j.cells.isEmpty()) {
             spawn = j.cells.values().iterator().next();
@@ -145,7 +137,6 @@ public final class JailService {
             return false;
         }
 
-        // Create sentence
         JailModels.Sentence s = new JailModels.Sentence();
         s.player = player;
         s.jailName = jailName;
@@ -154,21 +145,16 @@ public final class JailService {
         s.by = by == null ? "console" : by;
         s.endEpochMs = durationMs <= 0 ? 0 : (System.currentTimeMillis() + durationMs);
 
-        // Save to memory and storage
         active.put(player, s);
 
-        // ✅ Use efficient individual save if supported (MongoDB)
         try {
             storage.saveSentence(s);
         } catch (UnsupportedOperationException e) {
-            // Fallback to bulk save for YAML
             storage.saveSentences(active);
         }
 
-        // ✅ Teleport if online (works for offline too now)
         Player p = Bukkit.getPlayer(player);
         if (p != null && p.isOnline()) {
-            // Delay teleport slightly to ensure it works
             final Location finalSpawn = spawn;
             Bukkit.getScheduler().runTask(plugin, () -> {
                 p.teleport(finalSpawn);
@@ -178,7 +164,6 @@ public final class JailService {
             });
         }
 
-        // Discord notification
         try {
             if (plugin instanceof OreoEssentials oe) {
                 var d = oe.getDiscordMod();
@@ -196,11 +181,9 @@ public final class JailService {
         JailModels.Sentence s = active.remove(player);
 
         if (s != null) {
-            // ✅ Use efficient individual delete if supported (MongoDB)
             try {
                 storage.deleteSentence(player);
             } catch (UnsupportedOperationException e) {
-                // Fallback to bulk save for YAML
                 storage.saveSentences(active);
             }
 
@@ -209,7 +192,6 @@ public final class JailService {
                 p.sendMessage("§aYou have been released from jail.");
             }
 
-            // Discord notification
             try {
                 if (plugin instanceof OreoEssentials oe) {
                     var d = oe.getDiscordMod();
@@ -235,17 +217,13 @@ public final class JailService {
         if (s == null) return false;
 
         if (s.endEpochMs > 0) {
-            // Add time to existing sentence
             s.endEpochMs += additionalMs;
         } else {
-            // Convert permanent to timed
             s.endEpochMs = System.currentTimeMillis() + additionalMs;
         }
 
-        // Update "by" field to show who extended it
         s.by = by == null ? "console" : by;
 
-        // ✅ Use efficient individual save if supported (MongoDB)
         try {
             storage.saveSentence(s);
         } catch (UnsupportedOperationException e) {
@@ -268,12 +246,10 @@ public final class JailService {
         return active.containsKey(player);
     }
 
-    /* ==================== Enforcement ==================== */
 
     private void tick() {
         boolean changed = false;
 
-        // ✅ Expire sentences
         Iterator<Map.Entry<UUID, JailModels.Sentence>> it = active.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<UUID, JailModels.Sentence> e = it.next();
@@ -287,23 +263,21 @@ public final class JailService {
 
                 it.remove();
 
-                // ✅ Individual delete for MongoDB
                 try {
                     storage.deleteSentence(playerId);
                 } catch (UnsupportedOperationException ex) {
-                    changed = true; // Mark for bulk save
+                    changed = true;
                 }
             }
         }
 
-        // Fallback bulk save for YAML
+
         if (changed) {
             try {
                 storage.saveSentences(active);
             } catch (Throwable ignored) {}
         }
 
-        // ✅ Keep inmates inside jail boundaries
         for (Map.Entry<UUID, JailModels.Sentence> e : active.entrySet()) {
             Player p = Bukkit.getPlayer(e.getKey());
             if (p == null || !p.isOnline()) continue;
@@ -311,11 +285,9 @@ public final class JailService {
             JailModels.Jail j = jails.get(e.getValue().jailName);
             if (j == null || !j.isValid()) continue;
 
-            // Check if player is outside jail
             if (!p.getWorld().getName().equalsIgnoreCase(j.world)
                     || !j.region.contains(p.getLocation())) {
 
-                // Get spawn location
                 Location spawn = j.cells.get(e.getValue().cellId);
                 if (spawn == null && !j.cells.isEmpty()) {
                     spawn = j.cells.values().iterator().next();

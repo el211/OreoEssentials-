@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rtp/RtpCrossServerBridge.java
 package fr.elias.oreoEssentials.rtp;
 
 import fr.elias.oreoEssentials.OreoEssentials;

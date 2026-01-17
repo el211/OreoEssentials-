@@ -16,7 +16,6 @@ public class CurrencyService {
     private final CurrencyStorage storage;
     private final CurrencyConfig config;
 
-    // Caches
     private final Map<String, Currency> currencyCache = new ConcurrentHashMap<>();
     private final Map<UUID, Map<String, Double>> balanceCache = new ConcurrentHashMap<>();
 
@@ -68,7 +67,6 @@ public class CurrencyService {
         });
     }
 
-    // ========== Currency Management ==========
 
     public CompletableFuture<Boolean> createCurrency(Currency currency) {
         final String id = currency.getId() == null ? "" : currency.getId().toLowerCase(Locale.ROOT).trim();
@@ -208,7 +206,6 @@ public class CurrencyService {
         });
     }
 
-    // ========== Balance Management ==========
 
     public CompletableFuture<Double> getBalance(UUID playerId, String currencyId) {
         if (playerId == null || currencyId == null) {
@@ -362,7 +359,6 @@ public class CurrencyService {
         return storage.getTopBalances(currencyId, limit);
     }
 
-    // ========== Utility Methods ==========
 
     public String formatBalance(String currencyId, double amount) {
         Currency currency = getCurrency(currencyId);
@@ -465,7 +461,6 @@ public class CurrencyService {
                     .collect(java.util.stream.Collectors.toList());
         });
     }
-    // ========== Private Helper Methods ==========
 
     private void clearPlaceholderCache(UUID playerId) {
         try {

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/trade/pending/InMemoryPendingGrantsDao.java
 package fr.elias.oreoEssentials.trade.pending;
 
 import org.bukkit.inventory.ItemStack;

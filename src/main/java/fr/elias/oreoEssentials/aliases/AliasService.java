@@ -25,17 +25,15 @@ public final class AliasService {
         public int cooldownSeconds = 0;
         public List<String> commands = new ArrayList<>();
 
-        // Checks / logic / fail message (alias-wide)
         public List<Check> checks = new ArrayList<>();
-        public LogicType logic = LogicType.AND; // how to combine checks (AND / OR)
+        public LogicType logic = LogicType.AND;
         public String failMessage = "§cYou don't meet the requirements for %alias%.";
 
-        public boolean permGate = false;  // requires oreo.alias.custom.<alias>
-        public boolean addTabs  = false;  // enable per-alias tab-complete
-        public List<List<String>> customTabs = new ArrayList<>(); // per-arg suggestions
+        public boolean permGate = false;
+        public boolean addTabs  = false;
+        public List<List<String>> customTabs = new ArrayList<>();
     }
 
-    /* ------------------------------ State ------------------------------ */
 
     private final JavaPlugin plugin;
     private final File file;
@@ -45,7 +43,6 @@ public final class AliasService {
     private final Map<String, Long> cooldowns = new ConcurrentHashMap<>();
     private final Map<String, Long> lineCooldowns = new ConcurrentHashMap<>();
 
-    /* --------------------------- Lifecycle ----------------------------- */
 
     public AliasService(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -217,7 +214,6 @@ public final class AliasService {
         }
     }
 
-    /* ----------------------------- API -------------------------------- */
 
     public Map<String, AliasDef> all() {
         return Collections.unmodifiableMap(aliases);
@@ -264,7 +260,6 @@ public final class AliasService {
         return true;
     }
 
-    /* --------------------------- Checks -------------------------------- */
 
     public boolean evaluateAllChecks(org.bukkit.command.CommandSender sender, AliasDef def) {
         if (def == null) return true;
@@ -296,13 +291,11 @@ public final class AliasService {
             return neg ? !has : has;
         }
 
-        // Shorthand numeric stats: money / exp / level
         String lower = expr.toLowerCase(Locale.ROOT);
         if (lower.startsWith("money") || lower.startsWith("exp") || lower.startsWith("level")) {
             return evaluateNumericStat(sender, lower);
         }
 
-        // Generic comparators
         String[] ops = {">=", "<=", "!=", "<-", "!<-", "|-", "!|-", "-|", "!-|", ">", "<", "="};
         String op = null; int idx = -1;
         for (String candidate : ops) {
@@ -332,7 +325,6 @@ public final class AliasService {
             };
         }
 
-        // String comparison (case sensitive)
         return switch (op) {
             case "="   -> Objects.equals(leftResolved, rightResolved);
             case "!="  -> !Objects.equals(leftResolved, rightResolved);

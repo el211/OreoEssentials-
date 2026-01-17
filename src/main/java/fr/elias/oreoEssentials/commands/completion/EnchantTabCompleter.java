@@ -18,8 +18,8 @@ public class EnchantTabCompleter implements TabCompleter {
             List<String> list = new ArrayList<>();
             for (Enchantment e : Enchantment.values()) {
                 NamespacedKey k = e.getKey();
-                list.add(k.getKey());           // sharpness
-                list.add(k.toString());         // minecraft:sharpness
+                list.add(k.getKey());
+                list.add(k.toString());
             }
             return list.stream().distinct().filter(s -> s.toLowerCase().startsWith(cur)).limit(100).toList();
         }

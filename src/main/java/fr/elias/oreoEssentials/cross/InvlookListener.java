@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/cross/InvlookListener.java
 package fr.elias.oreoEssentials.cross;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -21,17 +20,14 @@ public class InvlookListener implements Listener {
         return plugin.getInvlookManager() != null && plugin.getInvlookManager().isReadOnly(p.getUniqueId());
     }
 
-    // Clicks (including shift-click / number key / swap)
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onClick(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
         if (!isInvlook(p)) return;
 
-        // Cancel any attempt to move items in/out
         e.setCancelled(true);
     }
 
-    // Dragging
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDrag(InventoryDragEvent e) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
@@ -39,7 +35,6 @@ public class InvlookListener implements Listener {
         e.setCancelled(true);
     }
 
-    // Prevent creative middle-click clone etc.
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onCreative(InventoryCreativeEvent e) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
@@ -47,7 +42,6 @@ public class InvlookListener implements Listener {
         e.setCancelled(true);
     }
 
-    // When they close, remove read-only flag (so it doesn't affect other menus)
     @EventHandler(priority = EventPriority.MONITOR)
     public void onClose(InventoryCloseEvent e) {
         if (!(e.getPlayer() instanceof Player p)) return;

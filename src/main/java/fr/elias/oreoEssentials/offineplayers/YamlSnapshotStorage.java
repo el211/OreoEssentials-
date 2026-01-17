@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-// YamlSnapshotStorage.java – stored at plugins/YourPlugin/data/<uuid>.yml
 public final class YamlSnapshotStorage implements SnapshotStorage {
     private final File dir;
 

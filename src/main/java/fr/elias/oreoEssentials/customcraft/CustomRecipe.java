@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/customcraft/CustomRecipe.java
 package fr.elias.oreoEssentials.customcraft;
 
 import org.bukkit.inventory.ItemStack;
@@ -8,7 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 public final class CustomRecipe {
-    private final ItemStack[] grid;     // 9 items, row-major (0..8)
+    private final ItemStack[] grid;
     private final ItemStack result;
     private final String name;
     private final boolean shapeless;

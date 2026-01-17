@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/util/Uuids.java
 package fr.elias.oreoEssentials.util;
 
 import org.bukkit.Bukkit;

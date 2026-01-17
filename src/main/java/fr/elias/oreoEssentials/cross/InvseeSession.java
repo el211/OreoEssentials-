@@ -9,10 +9,10 @@ public final class InvseeSession {
 
     private final UUID targetId;
     private final UUID viewerId;
-    private String targetName; // optional, UI only
+    private String targetName;
 
-    private ItemStack[] lastSnapshot; // latest inventory snapshot from owner node
-    private InvseeMenu menu;          // viewer's GUI (SmartInvs)
+    private ItemStack[] lastSnapshot;
+    private InvseeMenu menu;
 
     public InvseeSession(UUID targetId, UUID viewerId) {
         this.targetId = targetId;

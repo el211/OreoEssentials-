@@ -5,13 +5,11 @@ import fr.elias.oreoEssentials.rabbitmq.packet.impl.trade.*;
 
 public final class TradePacketNamespace extends PacketNamespace {
 
-    // Choose a unique short for the namespace, not used by others (1,10,11,12,91 are taken)
     public static final short NS_ID = (short) 27;
 
     public static final int TRADE_START_ID  = 27000;
 
 
-    // Unique IDs inside this namespace (keep them stable)
     public static final int TRADE_INVITE_ID   = 27001;
     public static final int TRADE_STATE_ID    = 27002;
     public static final int TRADE_CONFIRM_ID  = 27003;

@@ -12,7 +12,6 @@ public final class SellItemIdResolver {
     public static String resolveKey(ItemStack item) {
         if (item == null) return null;
 
-        // ItemsAdder
         if (Bukkit.getPluginManager().getPlugin("ItemsAdder") != null) {
             try {
                 CustomStack cs = CustomStack.byItemStack(item);
@@ -25,7 +24,6 @@ public final class SellItemIdResolver {
             } catch (Throwable ignored) {}
         }
 
-        // Nexo
         if (Bukkit.getPluginManager().getPlugin("Nexo") != null) {
             try {
                 String id = NexoItems.idFromItem(item);

@@ -24,7 +24,7 @@ public class ClearLagManager {
     private BukkitRunnable tpsSampleTask;
     private volatile boolean tpsSamplerStarted = false;
     private volatile long lastTickNanos = System.nanoTime();
-    private volatile double rollingTps = 20.0; // EMA-based fallback TPS
+    private volatile double rollingTps = 20.0;
 
     public ClearLagManager(OreoEssentials plugin) {
         this.plugin = plugin;
@@ -171,8 +171,8 @@ public class ClearLagManager {
             for (Entity e : w.getEntities()) {
                 if (e instanceof Player) continue;
 
-                if (!allowedByFlags(e, r)) continue;                 // gate by flags
-                if (EntityMatcher.inAreaFilter(e, cfg.areaFilter)) continue; // never remove
+                if (!allowedByFlags(e, r)) continue;
+                if (EntityMatcher.inAreaFilter(e, cfg.areaFilter)) continue;
                 if (EntityMatcher.matchesTokens(e, r.removeEntities)) {
                     e.remove();
                     removed++;

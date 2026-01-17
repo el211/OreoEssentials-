@@ -6,7 +6,7 @@ import java.io.*;
 import java.util.Base64;
 
 public final class PlayerSyncSnapshot implements Serializable {
-    public ItemStack[] inventory;  // full contents (incl. hotbar)
+    public ItemStack[] inventory;
     public ItemStack[] armor;      // length 4
     public ItemStack   offhand;    // nullable
     public int level;
