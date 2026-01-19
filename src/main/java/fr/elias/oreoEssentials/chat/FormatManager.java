@@ -4,7 +4,7 @@ import net.luckperms.api.LuckPermsProvider;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-
+import me.clip.placeholderapi.PlaceholderAPI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -61,6 +61,13 @@ public class FormatManager {
         if (format.contains("%player_name%")) {
             String nameToUse = format.contains("%player_displayname%") ? plainName : displayName;
             format = format.replace("%player_name%", nameToUse);
+        }
+
+        // Apply PlaceholderAPI placeholders before formatting
+        try {
+            format = PlaceholderAPI.setPlaceholders(p, format);
+        } catch (Exception ignored) {
+            // PlaceholderAPI not loaded or error occurred
         }
 
         if (useMiniMessage) {

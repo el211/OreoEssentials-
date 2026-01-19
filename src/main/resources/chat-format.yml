@@ -11,7 +11,7 @@ chat:
     apply-to-message: true     # allow %placeholders% inside the player's message
 
   # ===================== Rank formats (for chat message itself) =====================
-  default: "<gradient:#ffb300:#ff3d00><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
+  default: "< tu met ton grade ici > <gradient:#ffb300:#ff3d00><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
   helper: "<gradient:#8bc34a:#4caf50><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
   moderator: "<gradient:#00e5ff:#00bfa5><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"
   staff: "<gradient:#00c6ff:#0072ff><head:%player_uuid%> %player_name%</gradient> <gray>[<server_name> • $%vault_eco_balance%]</gray> <dark_gray>»</dark_gray> %chat_message%"

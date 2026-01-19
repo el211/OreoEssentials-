@@ -121,6 +121,7 @@ import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -356,8 +357,15 @@ public final class OreoEssentials extends JavaPlugin {
     public void onEnable() {
 
         instance = this;
-        saveDefaultConfig();
-        fr.elias.oreoEssentials.config.LegacySettingsMigrator.migrate(this);
+        File configFile = new File(getDataFolder(), "config.yml");
+        if (!configFile.exists()) {
+            getDataFolder().mkdirs();
+            saveDefaultConfig();
+            getLogger().info("[Config] Created default config.yml");
+        } else {
+            getLogger().info("[Config] Loading existing config.yml");
+        }        fr.elias.oreoEssentials.config.LegacySettingsMigrator.migrate(this);
+        reloadConfig();
 
         this.settingsConfig = new fr.elias.oreoEssentials.config.SettingsConfig(this);
         this.settings = this.settingsConfig;

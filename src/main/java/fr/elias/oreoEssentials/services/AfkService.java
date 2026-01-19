@@ -11,10 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AfkService {
 
-    // Who is AFK right now
     private final Set<UUID> afkPlayers = ConcurrentHashMap.newKeySet();
 
-    // Original tablist names (before AFK)
     private final Map<UUID, String> originalTabNames = new ConcurrentHashMap<>();
 
     public boolean isAfk(Player player) {

@@ -10,10 +10,6 @@ import org.bukkit.scheduler.BukkitTask;
 import java.lang.reflect.Method;
 import java.util.*;
 
-/**
- * Custom tablist layout handler for creating enhanced tablist
- * Uses native Bukkit methods for maximum compatibility
- */
 public class CustomTablistLayout {
 
     private final OreoEssentials plugin;
@@ -31,7 +27,7 @@ public class CustomTablistLayout {
     public void start(int intervalTicks) {
         stop();
 
-        updateTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+        updateTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 try {
                     updateCustomTablist(player);
@@ -53,16 +49,13 @@ public class CustomTablistLayout {
         try {
             FileConfiguration cfg = tabManager.getConfig();
 
-            // Check if animations are enabled
             boolean headerAnimated = cfg.contains("tab.custom-layout.top-section.texts");
             boolean footerAnimated = cfg.contains("tab.custom-layout.bottom-section.texts");
 
-            // Get animation interval (in ticks)
             int changeInterval = cfg.getInt("tab.custom-layout.change-interval", 80);
 
-            // Update frame if needed
             long currentTime = System.currentTimeMillis();
-            long ticksPassed = (currentTime - lastFrameChange) / 50; // Convert to ticks
+            long ticksPassed = (currentTime - lastFrameChange) / 50;
 
             if (ticksPassed >= changeInterval) {
                 currentFrame++;
@@ -73,7 +66,6 @@ public class CustomTablistLayout {
             if (headerAnimated) {
                 headerText = getAnimatedText(cfg, "tab.custom-layout.top-section.texts", viewer);
             } else {
-                // Static header (original behavior)
                 String line1 = cfg.getString("tab.custom-layout.top-section.line-1", "&f&lWelcome &b%player_displayname%");
                 String line2 = cfg.getString("tab.custom-layout.top-section.line-2", "&6&lWorld: &e%player_world% &a⬛⬛⬛");
                 String line3 = cfg.getString("tab.custom-layout.top-section.line-3", "&6&lPing: &e%player_ping%ms &a⬛⬛⬛");
@@ -89,7 +81,6 @@ public class CustomTablistLayout {
             if (footerAnimated) {
                 footerText = getAnimatedText(cfg, "tab.custom-layout.bottom-section.texts", viewer);
             } else {
-                // Static footer (original behavior)
                 String fLine1 = cfg.getString("tab.custom-layout.bottom-section.line-1", "&6&lPlayers: &e%oe_network_online%");
                 String fLine2 = cfg.getString("tab.custom-layout.bottom-section.line-2", "&6&lBalance: &e$%vault_eco_balance_formatted%");
                 String fLine3 = cfg.getString("tab.custom-layout.bottom-section.line-3", "&c&lTHE RED DRAGON");
@@ -111,9 +102,6 @@ public class CustomTablistLayout {
         }
     }
 
-    /**
-     * Get animated text frame for header or footer
-     */
     private String getAnimatedText(FileConfiguration cfg, String path, Player viewer) {
         List<String> frames = cfg.getStringList(path);
 
@@ -140,6 +128,8 @@ public class CustomTablistLayout {
 
         for (Player target : players) {
             String displayName = formatPlayerName(target, cfg);
+            displayName = applyPlaceholders(target, displayName);
+
             try {
                 target.setPlayerListName(displayName);
             } catch (Exception e) {
@@ -161,9 +151,9 @@ public class CustomTablistLayout {
             }
         }
 
-        format = format.replace("%player_color%", rankColor);
-        format = format.replace("%player_name%", player.getName());
-        format = format.replace("%afk_indicator%", afkIndicator);
+        format = format.replace("%player_color%", rankColor)
+                .replace("%player_name%", player.getName())
+                .replace("%afk_indicator%", afkIndicator);
 
         return color(format);
     }
@@ -223,7 +213,6 @@ public class CustomTablistLayout {
     private String applyPlaceholders(Player player, String text) {
         if (text == null) return "";
 
-        // Apply internal placeholders
         text = text.replace("%player_displayname%", player.getDisplayName());
         text = text.replace("%player_name%", player.getName());
         text = text.replace("%player_world%", player.getWorld().getName());
