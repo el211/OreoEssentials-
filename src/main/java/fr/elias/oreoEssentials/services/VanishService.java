@@ -37,7 +37,7 @@ public class VanishService {
     public void hide(Player p) {
         for (Player other : Bukkit.getOnlinePlayers()) {
             if (other.equals(p)) continue;
-            other.hidePlayer(plugin, p); // <--- plugin REQUIRED
+            other.hidePlayer(plugin, p);
         }
     }
 

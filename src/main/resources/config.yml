@@ -99,6 +99,20 @@ Jail:
       # Collections: "jails" and "jail_sentences" (auto-created)
 
 
+afk:
+  auto:
+    enabled: true
+    # if player is inactive for >= this, they become AFK (and then pool teleport happens)
+    seconds: 300
+    # how often we check inactivity (lower = faster reaction, higher = less CPU)
+    check-interval-seconds: 5
+
+afk-pool:
+  enabled: true
+  region-name: "afk_pool"
+  world-name: "world"
+  server: "hub"
+  cross-server: true
 
 
 # -------- Scoreboard (sidebar) --------

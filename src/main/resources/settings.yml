@@ -3,6 +3,8 @@ features:
   world-sharding:
     enabled: false  # Set to true when ready to use
 
+  afk-pool:
+    enabled: true
 
   bossbar:
     enabled: true
@@ -150,6 +152,29 @@ features:
         z: 10.5
         yaw: 180.0
         pitch: 0.0
+
+auto-reboot:
+  enabled: true
+  mode: "TIME" # TIME or INTERVAL
+  timezone: "Europe/Paris" # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  time: "00:00"
+  interval-minutes: 360
+  broadcast: true
+  warnings: [300, 60, 30, 10, 5, 4, 3, 2, 1]
+  pre-commands: []
+  kick-message: "<red>Server is restarting. Please reconnect in a moment.</red>"
+
+
+  action: "SAFE_ZONE" # KICK or SAFE_ZONE
+
+  safe-zone:
+    enabled: true
+    delay-seconds: 3
+    world-name: "world"
+    region-name: "reboot_safe"
+    server: "" # if not empty -> send to this server instead of local teleport
+    message: "<yellow>Server is rebooting. You have been moved to a safe area.</yellow>"
+
 
 
 

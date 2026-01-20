@@ -183,6 +183,8 @@ public final class OreoEssentials extends JavaPlugin {
     public InventoryManager getInventoryManager() {
         return invManager;
     }
+    private AutoRebootService autoRebootService;
+    public AutoRebootService getAutoRebootService() { return autoRebootService; }
 
     private fr.elias.oreoEssentials.sellgui.SellGuiManager sellGuiManager;
     public fr.elias.oreoEssentials.sellgui.SellGuiManager getSellGuiManager() { return sellGuiManager; }
@@ -254,7 +256,11 @@ public final class OreoEssentials extends JavaPlugin {
     private fr.elias.oreoEssentials.trade.TradeConfig tradeConfig;
     private fr.elias.oreoEssentials.trade.TradeService tradeService;
     public fr.elias.oreoEssentials.trade.TradeService getTradeService() { return tradeService; }
+    private AfkService afkService;
+    private AfkPoolService afkPoolService;
 
+    public AfkService getAfkService() { return afkService; }
+    public AfkPoolService getAfkPoolService() { return afkPoolService; }
     private fr.elias.oreoEssentials.homes.HomeTeleportBroker homeTpBroker;
     private fr.elias.oreoEssentials.config.CrossServerSettings crossServerSettings;
     public fr.elias.oreoEssentials.config.CrossServerSettings getCrossServerSettings() { return crossServerSettings; }
@@ -372,6 +378,11 @@ public final class OreoEssentials extends JavaPlugin {
 
         showStartupBanner();
         this.configService = new ConfigService(this);
+
+        this.autoRebootService = new AutoRebootService(this);
+        this.autoRebootService.start();
+
+
         final String essentialsStorage = getConfig().getString("essentials.storage", "yaml").toLowerCase();
 
         final String economyType       = getConfig().getString("economy.type", "none").toLowerCase();
@@ -609,7 +620,25 @@ public final class OreoEssentials extends JavaPlugin {
         this.proxyMessenger = new ProxyMessenger(this);
         ProxyMessenger proxyMessenger = this.proxyMessenger;
         getLogger().info("[BOOT] Registered proxy plugin messaging channels.");
-
+        this.afkService = new AfkService(this);
+        getServer().getPluginManager().registerEvents(
+                new fr.elias.oreoEssentials.listeners.AfkListener(afkService),
+                this
+        );
+        if (settingsConfig.afkPoolEnabled()) {
+            try {
+                this.afkPoolService = new AfkPoolService(this, afkService);
+                afkService.setPoolService(afkPoolService);
+                getLogger().info("[AfkPool] Enabled with WorldGuard region support");
+            } catch (Throwable t) {
+                getLogger().warning("[AfkPool] Failed to initialize: " + t.getMessage());
+                getLogger().warning("[AfkPool] Make sure WorldGuard is installed for region support");
+                this.afkPoolService = null;
+            }
+        } else {
+            getLogger().info("[AfkPool] Disabled by settings.yml");
+            this.afkPoolService = null;
+        }
         this.invManager = new InventoryManager(this);
         this.invManager.init();
         this.sellGuiManager = new fr.elias.oreoEssentials.sellgui.SellGuiManager(this, this.invManager);
@@ -1266,7 +1295,13 @@ public final class OreoEssentials extends JavaPlugin {
                 );
 
                 this.packetManager.init();
-
+                try {
+                    if (this.afkPoolService != null) {
+                        this.afkPoolService.tryHookCrossServerNow();
+                    }
+                } catch (Throwable t) {
+                    getLogger().warning("[AfkPool] Failed to hook cross-server handlers after PacketManager init: " + t.getMessage());
+                }
                 try {
                     getLogger().info("[RABBIT] Packet registry checksum=" + this.packetManager.registryChecksum());
                 } catch (Throwable ignored) {}
@@ -1596,11 +1631,6 @@ public final class OreoEssentials extends JavaPlugin {
         var nickCmd = new fr.elias.oreoEssentials.commands.core.playercommands.NickCommand();
         this.commands.register(nickCmd);
 
-        var afkService = new fr.elias.oreoEssentials.services.AfkService();
-        getServer().getPluginManager().registerEvents(
-                new fr.elias.oreoEssentials.listeners.AfkListener(afkService),
-                this
-        );
 
         fr.elias.oreoEssentials.jail.JailStorage jailStorage;
 
@@ -2187,6 +2217,15 @@ public final class OreoEssentials extends JavaPlugin {
                 fr.elias.oreoEssentials.currency.rabbitmq.CurrencySyncPacket.class,
                 fr.elias.oreoEssentials.currency.rabbitmq.CurrencySyncPacket::new
         );
+        pm.registerPacket(
+                fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.AfkPoolEnterPacket.class,
+                fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.AfkPoolEnterPacket::new
+        );
+
+        pm.registerPacket(
+                fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.AfkPoolExitPacket.class,
+                fr.elias.oreoEssentials.rabbitmq.packet.impl.tp.AfkPoolExitPacket::new
+        );
 
         getLogger().info("[RABBIT] Registered " + 25 + " packet types deterministically");
     }
@@ -2340,8 +2379,12 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (oreoHolograms != null) oreoHolograms.unload(); } catch (Exception ignored) {}
         try { if (dailyStore != null) dailyStore.close(); } catch (Exception ignored) {}
         try { if (tradeService != null) tradeService.cancelAll(); } catch (Throwable ignored) {}
+        try { if (afkPoolService != null) afkPoolService.cleanupAll(); } catch (Exception ignored) {}
         try { if (shardsModule != null) shardsModule.disable(); } catch (Exception ignored) {}
         try { if (channelManager != null) channelManager.savePlayerData(); } catch (Exception ignored) {}
+        try { if (autoRebootService != null) autoRebootService.stop(); } catch (Exception ignored) {}
+        autoRebootService = null;
+
         try { if (tempFlyService != null) tempFlyService.shutdown(); } catch (Exception ignored) {}
         try {
             if (invlookManager != null) {

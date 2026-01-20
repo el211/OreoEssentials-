@@ -1,6 +1,8 @@
 package fr.elias.oreoEssentials.rabbitmq.namespace;
 
+import fr.elias.oreoEssentials.rabbitmq.namespace.impl.AfkPacketNamespace;
 import fr.elias.oreoEssentials.rabbitmq.namespace.impl.EconomyPacketNamespace;
+import fr.elias.oreoEssentials.rabbitmq.namespace.impl.RebootPacketNamespace;
 
 import java.util.Collection;
 import java.util.Map;
@@ -12,6 +14,8 @@ public final class BuiltinPacketNamespaces {
     private static final Map<Short, PacketNamespace> NAMESPACE_BY_ID = new ConcurrentHashMap<>();
 
     public static final PacketNamespace ECONOMY = add(new EconomyPacketNamespace());
+    public static final PacketNamespace AFK = add(new AfkPacketNamespace());
+    public static final PacketNamespace REBOOT = add(new RebootPacketNamespace());
 
     public static Collection<PacketNamespace> getNamespaces() {
         return NAMESPACE_BY_ID.values();

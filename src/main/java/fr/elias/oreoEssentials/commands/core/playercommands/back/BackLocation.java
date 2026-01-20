@@ -26,14 +26,14 @@ public class BackLocation {
         this.pitch = pitch;
     }
 
-    public String getServer()    { return server; }
+    public String getServer() { return server; }
     public String getWorldName() { return world; }
 
-    public double getX()   { return x; }
-    public double getY()   { return y; }
-    public double getZ()   { return z; }
-    public float  getYaw() { return yaw; }
-    public float  getPitch(){ return pitch; }
+    public double getX() { return x; }
+    public double getY() { return y; }
+    public double getZ() { return z; }
+    public float getYaw() { return yaw; }
+    public float getPitch() { return pitch; }
 
     public Location toLocalLocation() {
         World w = Bukkit.getWorld(world);
@@ -51,8 +51,6 @@ public class BackLocation {
         );
     }
 
-    // ------- sérialisation pour StorageApi -------
-
     public Map<String, Object> toMap() {
         Map<String, Object> m = new HashMap<>();
         m.put("server", server);
@@ -65,12 +63,11 @@ public class BackLocation {
         return m;
     }
 
-    @SuppressWarnings("unchecked")
     public static BackLocation fromMap(Map<String, Object> m) {
         if (m == null) return null;
 
         String server = (String) m.get("server");
-        String world  = (String) m.get("world");
+        String world = (String) m.get("world");
         if (world == null) return null;
 
         Object ox = m.get("x");
@@ -78,6 +75,7 @@ public class BackLocation {
         Object oz = m.get("z");
         Object oyaw = m.get("yaw");
         Object opitch = m.get("pitch");
+
         if (!(ox instanceof Number) || !(oy instanceof Number) || !(oz instanceof Number)
                 || !(oyaw instanceof Number) || !(opitch instanceof Number)) {
             return null;

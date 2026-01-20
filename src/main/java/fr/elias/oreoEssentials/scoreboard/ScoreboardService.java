@@ -63,8 +63,9 @@ public final class ScoreboardService implements Listener {
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             for (Player p : Bukkit.getOnlinePlayers()) {
-                if (isWorldAllowed(p)) show(p);
+                if (shouldShow(p)) show(p);
             }
+
         }, 5L);
 
         taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
@@ -78,10 +79,11 @@ public final class ScoreboardService implements Listener {
                     continue;
                 }
 
-                if (!isWorldAllowed(p)) {
+                if (!shouldShow(p)) {
                     hide(p);
                     continue;
                 }
+
 
                 refresh(p);
             }
@@ -121,10 +123,11 @@ public final class ScoreboardService implements Listener {
 
         for (UUID id : keepShown) {
             Player p = Bukkit.getPlayer(id);
-            if (p != null && isWorldAllowed(p)) {
+            if (p != null && shouldShow(p)) {
                 show(p);
             }
         }
+
     }
 
     public boolean isShown(Player p) {
@@ -132,21 +135,24 @@ public final class ScoreboardService implements Listener {
     }
 
     public void toggle(Player p) {
+        UUID id = p.getUniqueId();
+
         if (isShown(p)) {
             hide(p);
-            toggles.put(p.getUniqueId(), false);
+            toggles.put(id, false);
             return;
         }
 
-        if (!isWorldAllowed(p)) {
+        if (!isWorldAllowedByLists(p)) {
             Lang.send(p, "scoreboard.disabled-in-world",
                     "<red>Scoreboard is disabled in this world.</red>");
             return;
         }
 
         show(p);
-        toggles.put(p.getUniqueId(), true);
+        toggles.put(id, true);
     }
+
 
     public void show(Player p) {
         if (!cfg.enabled()) return;
@@ -255,17 +261,23 @@ public final class ScoreboardService implements Listener {
         return s;
     }
 
-    private boolean isWorldAllowed(Player p) {
+    private boolean isWorldAllowedByLists(Player p) {
         String w = p.getWorld().getName();
         var wl = cfg.worldsWhitelist();
         var bl = cfg.worldsBlacklist();
 
         if (!wl.isEmpty() && !wl.contains(w)) return false;
         if (!bl.isEmpty() && bl.contains(w)) return false;
+        return true;
+    }
+
+    private boolean shouldShow(Player p) {
+        if (!isWorldAllowedByLists(p)) return false;
 
         Boolean pref = toggles.get(p.getUniqueId());
         return pref == null ? cfg.defaultEnabled() : pref;
     }
+
 
     private String render(Player p, String raw) {
         if (raw == null) return "";
@@ -365,8 +377,9 @@ public final class ScoreboardService implements Listener {
         Player p = e.getPlayer();
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (isWorldAllowed(p)) show(p);
+            if (shouldShow(p)) show(p);
             else forceNametagUpdate(p);
+
         }, 2L);
     }
 
@@ -469,7 +482,8 @@ public final class ScoreboardService implements Listener {
     @EventHandler
     public void onWorld(PlayerChangedWorldEvent e) {
         Player p = e.getPlayer();
-        if (isWorldAllowed(p)) show(p);
+        if (shouldShow(p)) show(p);
         else hide(p);
+
     }
 }

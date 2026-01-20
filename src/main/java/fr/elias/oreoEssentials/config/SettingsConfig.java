@@ -43,6 +43,7 @@ public class SettingsConfig {
     public boolean featureOption(String featureKey, String subKey, boolean def) {
         return cfg.getBoolean("features." + featureKey + "." + subKey, def);
     }
+
     public boolean currencyEnabled() {
         return isEnabled("currency");
     }
@@ -128,6 +129,8 @@ public class SettingsConfig {
 
     public boolean sitEnabled() { return isEnabled("sit"); }
 
+    public boolean afkPoolEnabled() { return isEnabled("afk-pool"); }
+
     public boolean getBoolean(String path, boolean def) {
         return cfg.getBoolean(path, def);
     }
@@ -156,6 +159,103 @@ public class SettingsConfig {
 
     public boolean tempFlyEnabled() {
         return isEnabled("tempfly");
+    }
+    // -------------------------
+    // Auto Reboot (settings.yml)
+    // -------------------------
+
+    public boolean autoRebootEnabled() {
+        return cfg.getBoolean("auto-reboot.enabled", false);
+    }
+
+    public String autoRebootMode() {
+        return cfg.getString("auto-reboot.mode", "TIME");
+    }
+
+    public String autoRebootTimezone() {
+        return cfg.getString("auto-reboot.timezone", "Europe/Paris");
+    }
+
+    public String autoRebootTime() {
+        return cfg.getString("auto-reboot.time", "00:00");
+    }
+
+    public int autoRebootIntervalMinutes() {
+        return Math.max(1, cfg.getInt("auto-reboot.interval-minutes", 360));
+    }
+
+    public boolean autoRebootBroadcast() {
+        return cfg.getBoolean("auto-reboot.broadcast", true);
+    }
+
+    public String autoRebootKickMessage() {
+        return cfg.getString("auto-reboot.kick-message",
+                "<red>Server is restarting. Please reconnect in a moment.</red>");
+    }
+
+    public List<String> autoRebootPreCommands() {
+        List<String> list = cfg.getStringList("auto-reboot.pre-commands");
+        return list == null ? List.of() : list;
+    }
+    // -----------------------------------------
+    // Auto Reboot - Action + Safe Zone (settings.yml)
+    // -----------------------------------------
+
+    public String autoRebootAction() {
+        // KICK or SAFE_ZONE
+        return cfg.getString("auto-reboot.action", "KICK");
+    }
+
+    public boolean autoRebootSafeZoneEnabled() {
+        return cfg.getBoolean("auto-reboot.safe-zone.enabled", false);
+    }
+
+    public String autoRebootSafeZoneRegionName() {
+        return cfg.getString("auto-reboot.safe-zone.region-name", "reboot_safe");
+    }
+
+    public String autoRebootSafeZoneWorldName() {
+        return cfg.getString("auto-reboot.safe-zone.world-name", "world");
+    }
+
+    public String autoRebootSafeZoneServer() {
+        // If set, it will send players to that proxy server (like AfkPool)
+        return cfg.getString("auto-reboot.safe-zone.server", "");
+    }
+
+    public String autoRebootSafeZoneMessage() {
+        return cfg.getString("auto-reboot.safe-zone.message",
+                "<yellow>Server is rebooting. You have been moved to a safe area.</yellow>");
+    }
+
+    public List<Integer> autoRebootWarningsSeconds() {
+        List<?> raw = cfg.getList("auto-reboot.warnings");
+        if (raw == null || raw.isEmpty()) {
+            return List.of(300, 60, 30, 10, 5, 4, 3, 2, 1);
+        }
+
+        java.util.ArrayList<Integer> out = new java.util.ArrayList<>();
+        for (Object o : raw) {
+            if (o instanceof Number n) out.add(Math.max(0, n.intValue()));
+            else {
+                try {
+                    out.add(Math.max(0, Integer.parseInt(String.valueOf(o))));
+                } catch (Throwable ignored) {}
+            }
+        }
+        out.sort(java.util.Comparator.reverseOrder());
+        return out.isEmpty() ? List.of(300, 60, 30, 10, 5, 4, 3, 2, 1) : List.copyOf(out);
+    }
+    public String autoRebootSafeZoneWorld() {
+        return autoRebootSafeZoneWorldName();
+    }
+
+    public String autoRebootSafeZoneRegion() {
+        return autoRebootSafeZoneRegionName();
+    }
+
+    public int autoRebootSafeZoneDelaySeconds() {
+        return Math.max(0, cfg.getInt("auto-reboot.safe-zone.delay-seconds", 3));
     }
 
     public FileConfiguration getRoot() {

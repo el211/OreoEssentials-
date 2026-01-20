@@ -47,6 +47,23 @@ public final class ReloadAllCommand implements OreoCommand {
                     Map.of("error", t.getMessage()));
             skip++;
         }
+        try {
+            var ar = plugin.getAutoRebootService();
+            if (ar != null) {
+                ar.reload();
+                Lang.send(sender, "admin.reload.autoreboot",
+                        "<green>✔ Reloaded <white>auto-reboot</white> <gray>(settings.yml)</gray></green>");
+                ok++;
+            } else {
+                Lang.send(sender, "admin.reload.autoreboot-skip",
+                        "<yellow>• Skipped auto-reboot (service unavailable)</yellow>");
+                skip++;
+            }
+        } catch (Throwable t) {
+            Lang.send(sender, "admin.reload.autoreboot-fail",
+                    "<red>✘ Failed reloading auto-reboot: <gray>%error%</gray></red>",
+                    Map.of("error", t.getMessage()));
+        }
 
         // 1) Main config.yml
         try {
