@@ -1,16 +1,25 @@
 command-control:
-  enabled: true
+  enabled: false
+  hide-from-tab: false
 
-  # If true: hides commands from client suggestions as much as possible
-  hide-from-tab: true
+  # Default behavior:
+  # - ALLOW_ALL: allow everything unless blocked by rules/permissions
+  # - DENY_ALL: block everything unless listed in allow-roots + permission-map
+  default-policy: "DENY_ALL"
 
-  # Bypass permission (staff)
-  bypass-permission: "oreo.commandcontrol.bypass"
+  # Roots allowed when default-policy is DENY_ALL
+  allow-roots:
+    - "feed"
 
-  # Message when blocked
+  # Optional: require a permission to even access the root command
+  # (example: feed requires this permission)
+  permission-map:
+    feed: "oreo.commandcontrol.allow.feed"
+
+  # Message sent when a command is blocked
   deny-message: "<red>You can't use that command.</red>"
 
-  # Exact commands blocked globally (any plugin)
+  # Always blocked root commands (even if ALLOW_ALL)
   blocked-commands:
     - "plugins"
     - "pl"
@@ -18,21 +27,8 @@ command-control:
     - "version"
     - "ver"
     - "about"
+    - "?"
+    - "help"
 
-  # Rules for root commands (support subcommands/args)
-  rules:
-    # Block all /cmi ... except home + sethome
-    - root: "cmi"
-      mode: "ALLOW_ONLY"   # ALLOW_ONLY or DENY_LIST
-      allow:
-        - "home"
-        - "sethome"
-      # optionally allow no-arg /cmi (help) if you want:
-      allow-empty: false
-
-    # Example: deny list mode for another command
-    - root: "essentials"
-      mode: "DENY_LIST"
-      deny:
-        - "reload"
-        - "debug"
+  # Optional advanced rules (subcommands filtering)
+  rules: []

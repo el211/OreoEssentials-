@@ -36,11 +36,8 @@ public final class CommandControlService {
     private DefaultPolicy defaultPolicy = DefaultPolicy.ALLOW_ALL;
 
     private final Set<String> allowRoots = new HashSet<>();
-
     private final Map<String, String> permissionMap = new HashMap<>();
-
     private final Set<String> blockedExact = new HashSet<>();
-
     private final Map<String, Rule> rules = new HashMap<>();
 
     public void load(FileConfiguration cfg) {
@@ -60,6 +57,7 @@ public final class CommandControlService {
         enabled = cfg.getBoolean("command-control.enabled", false);
         hideFromTab = cfg.getBoolean("command-control.hide-from-tab", true);
         bypassPerm = cfg.getString("command-control.bypass-permission", "oreo.commandcontrol.bypass");
+
         denyMessage = cfg.getString("command-control.deny-message", "<red>You can't use that command.</red>");
 
         String pol = cfg.getString("command-control.default-policy", "ALLOW_ALL");
@@ -81,8 +79,10 @@ public final class CommandControlService {
                 if (key == null) continue;
                 String root = normalizeRoot(key);
                 if (root.isEmpty()) continue;
+
                 String perm = pmSec.getString(key, "");
                 if (perm != null) perm = perm.trim();
+
                 if (perm != null && !perm.isEmpty()) {
                     permissionMap.put(root, perm);
                 }
@@ -155,11 +155,11 @@ public final class CommandControlService {
         return p.hasPermission(bypassPerm);
     }
 
-    public String normalizeRootPublic(String root) { // helper for listeners
+    public String normalizeRootPublic(String root) {
         return normalizeRoot(root);
     }
 
-    public String normalizeSubPublic(String sub) { // helper for listeners
+    public String normalizeSubPublic(String sub) {
         return normalizeSub(sub);
     }
 
@@ -170,10 +170,8 @@ public final class CommandControlService {
         String r = normalizeRoot(root);
         if (r.isEmpty()) return false;
 
-        // global hard blocks (root-only)
         if (blockedExact.contains(r)) return true;
 
-        // default policy gate
         if (defaultPolicy == DefaultPolicy.DENY_ALL && !allowRoots.contains(r)) {
             return true;
         }
@@ -190,7 +188,6 @@ public final class CommandControlService {
 
         String s = normalizeSub(sub);
 
-        // No subcommand
         if (s.isEmpty()) {
             return rule.mode == Mode.ALLOW_ONLY && !rule.allowEmpty;
         }
@@ -224,7 +221,6 @@ public final class CommandControlService {
 
         Rule rule = rules.get(r);
         if (rule == null) {
-
             return true;
         }
 
