@@ -4,7 +4,7 @@ features:
     enabled: false  # Set to true when ready to use
 
   afk-pool:
-    enabled: true
+    enabled: false
 
   bossbar:
     enabled: true
@@ -126,7 +126,7 @@ features:
 
 
   death-respawn:
-    enabled: true
+    enabled: false
     # NORMAL        -> vanilla behavior
     # GLOBAL_SPAWN  -> uses SpawnService.getSpawn() (same as /spawn)
     # WORLD_SPAWN   -> current world's spawn
@@ -154,7 +154,7 @@ features:
         pitch: 0.0
 
 auto-reboot:
-  enabled: true
+  enabled: false
   mode: "TIME" # TIME or INTERVAL
   timezone: "Europe/Paris" # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
   time: "00:00"

@@ -1,0 +1,38 @@
+command-control:
+  enabled: true
+
+  # If true: hides commands from client suggestions as much as possible
+  hide-from-tab: true
+
+  # Bypass permission (staff)
+  bypass-permission: "oreo.commandcontrol.bypass"
+
+  # Message when blocked
+  deny-message: "<red>You can't use that command.</red>"
+
+  # Exact commands blocked globally (any plugin)
+  blocked-commands:
+    - "plugins"
+    - "pl"
+    - "bukkit:plugins"
+    - "version"
+    - "ver"
+    - "about"
+
+  # Rules for root commands (support subcommands/args)
+  rules:
+    # Block all /cmi ... except home + sethome
+    - root: "cmi"
+      mode: "ALLOW_ONLY"   # ALLOW_ONLY or DENY_LIST
+      allow:
+        - "home"
+        - "sethome"
+      # optionally allow no-arg /cmi (help) if you want:
+      allow-empty: false
+
+    # Example: deny list mode for another command
+    - root: "essentials"
+      mode: "DENY_LIST"
+      deny:
+        - "reload"
+        - "debug"

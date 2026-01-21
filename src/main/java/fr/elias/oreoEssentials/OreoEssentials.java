@@ -579,6 +579,36 @@ public final class OreoEssentials extends JavaPlugin {
             this.database = null;
             this.vaultEconomy = null;
         }
+        try {
+            java.io.File f = new java.io.File(getDataFolder(), "command-control.yml");
+            if (!f.exists()) saveResource("command-control.yml", false);
+
+            var yml = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(f);
+
+            var commandControl = new fr.elias.oreoEssentials.commandcontrol.CommandControlService();
+            commandControl.load(yml);
+
+            if (commandControl.isEnabled()) {
+                Bukkit.getPluginManager().registerEvents(
+                        new fr.elias.oreoEssentials.commandcontrol.CommandControlListener(this, commandControl),
+                        this
+                );
+
+                if (commandControl.isHideFromTab()) {
+                    Bukkit.getPluginManager().registerEvents(
+                            new fr.elias.oreoEssentials.commandcontrol.CommandControlTabHideListener(commandControl),
+                            this
+                    );
+                }
+
+                getLogger().info("[CommandControl] Enabled (hideFromTab=" + commandControl.isHideFromTab() + ")");
+            } else {
+                getLogger().info("[CommandControl] Disabled.");
+            }
+
+        } catch (Throwable t) {
+            getLogger().warning("[CommandControl] Failed to init: " + t.getMessage());
+        }
 
         try {
             java.io.File f = new java.io.File(getDataFolder(), "clearlag.yml");

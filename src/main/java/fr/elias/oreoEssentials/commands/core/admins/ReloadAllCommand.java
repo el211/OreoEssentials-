@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/ReloadAllCommand.java
 package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -295,7 +294,7 @@ public final class ReloadAllCommand implements OreoCommand {
                     "<red>✘ Failed reloading playervaults: <gray>%error%</gray></red>",
                     Map.of("error", t.getMessage()));
         }
-// 13) Nametags
+        // 13) Nametags
         try {
             var nametagMgr = plugin.getNametagManager();
             if (nametagMgr != null) {
@@ -313,7 +312,15 @@ public final class ReloadAllCommand implements OreoCommand {
                     "<red>✘ Failed reloading nametags: <gray>%error%</gray></red>",
                     Map.of("error", t.getMessage()));
         }
-
+        try {
+            for (var p : Bukkit.getOnlinePlayers()) {
+                try {
+                    p.updateCommands(); // Paper: refresh brigadier + command suggestions
+                } catch (Throwable ignored) {}
+            }
+            Lang.send(sender, "admin.reload.commands-refresh",
+                    "<green>✔ Refreshed <white>command suggestions</white> <gray>(updateCommands)</gray></green>");
+        } catch (Throwable ignored) {}
 
         // Summary
         long took = System.currentTimeMillis() - start;
