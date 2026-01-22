@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/listeners/QuitMessagesListener.java
 package fr.elias.oreoEssentials.listeners;
 
 import net.kyori.adventure.text.minimessage.MiniMessage;

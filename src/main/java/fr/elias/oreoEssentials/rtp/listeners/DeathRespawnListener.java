@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rtp/listeners/DeathRespawnListener.java
 package fr.elias.oreoEssentials.rtp.listeners;
 
 import fr.elias.oreoEssentials.OreoEssentials;

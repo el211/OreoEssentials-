@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/listeners/VanishListener.java
 package fr.elias.oreoEssentials.listeners;
 
 import fr.elias.oreoEssentials.services.VanishService;

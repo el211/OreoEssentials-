@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/playerwarp/PlayerWarpCrossServerBroker.java
 package fr.elias.oreoEssentials.playerwarp;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -17,22 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Cross-server teleport broker for /pw.
- *
- * Source server:
- *  - decides that warp is on another server
- *  - calls requestCrossServerTeleport(...)
- *  - sends packet + switches player server via ProxyMessenger
- *
- * Target server:
- *  - receives PlayerWarpTeleportRequestPacket
- *  - if player online -> teleport immediately
- *  - else -> store pending; teleport on next PlayerJoinEvent
- *
- * VERIFIED: No user-facing messages - only logging.
- * All user messages handled by PlayerWarpService.
- */
+
 public final class PlayerWarpCrossServerBroker implements Listener {
 
     private final OreoEssentials plugin;

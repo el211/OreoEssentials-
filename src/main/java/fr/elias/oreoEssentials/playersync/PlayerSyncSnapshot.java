@@ -7,10 +7,10 @@ import java.util.Base64;
 
 public final class PlayerSyncSnapshot implements Serializable {
     public ItemStack[] inventory;
-    public ItemStack[] armor;      // length 4
-    public ItemStack   offhand;    // nullable
+    public ItemStack[] armor;
+    public ItemStack   offhand;
     public int level;
-    public float exp;              // 0..1 progress
+    public float exp;
     public double health;
     public int food;
     public float saturation;

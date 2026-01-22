@@ -6,10 +6,7 @@ import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteOutputStream;
 
 import java.util.UUID;
 
-/**
- * Sent from Server A → Server B
- * Tells Server B: "When this player arrives here, run RTP in worldName"
- */
+
 public final class RtpTeleportRequestPacket extends Packet {
 
     private UUID playerId;

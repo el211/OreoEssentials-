@@ -9,12 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * PlayerWarp data model.
- *
- * VERIFIED: No user-facing messages - pure data class.
- * All messaging handled by PlayerWarpService and PlayerWarpCommand.
- */
+
 public class PlayerWarp {
 
     private final String id;

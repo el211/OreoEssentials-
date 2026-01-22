@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/services/mongoservices/MongoPlayerWarpDirectory.java
 package fr.elias.oreoEssentials.playerwarp.mongo;
 
 import com.mongodb.client.MongoClient;
@@ -20,19 +19,15 @@ public class MongoPlayerWarpDirectory implements PlayerWarpDirectory {
 
     private final MongoCollection<Document> col;
 
-    /**
-     * @param collectionName e.g. prefix + "playerwarp_directory"
-     */
+
     public MongoPlayerWarpDirectory(MongoClient client, String dbName, String collectionName) {
         this.col = client.getDatabase(dbName).getCollection(collectionName);
-        // Unique per warp id
         col.createIndex(Indexes.ascending(F_ID), new IndexOptions().unique(true));
         try {
             col.createIndex(Indexes.ascending(F_SERVER));
         } catch (Throwable ignored) {}
     }
 
-    /* ---------- server owner ---------- */
 
     @Override
     public void setWarpServer(String warpId, String server) {
@@ -59,7 +54,6 @@ public class MongoPlayerWarpDirectory implements PlayerWarpDirectory {
         col.deleteOne(Filters.eq(F_ID, warpId));
     }
 
-    /* ---------- per-warp permission ---------- */
 
     @Override
     public String getWarpPermission(String warpId) {
@@ -73,7 +67,6 @@ public class MongoPlayerWarpDirectory implements PlayerWarpDirectory {
     @Override
     public void setWarpPermission(String warpId, String permission) {
         if (permission == null || permission.isBlank()) {
-            // clear perm
             col.updateOne(
                     Filters.eq(F_ID, warpId),
                     Updates.unset(F_PERMISSION)

@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/services/mongoservices/MongoPlayerWarpStorage.java
 package fr.elias.oreoEssentials.playerwarp.mongo;
 
 import com.mongodb.client.MongoClient;
@@ -19,7 +18,6 @@ import java.util.stream.Collectors;
 
 public class MongoPlayerWarpStorage implements PlayerWarpStorage {
 
-    // Core fields
     private static final String F_ID       = "id";
     private static final String F_OWNER    = "owner";
     private static final String F_NAME     = "name";
@@ -30,18 +28,15 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
     private static final String F_YAW      = "yaw";
     private static final String F_PITCH    = "pitch";
 
-    // Extra metadata
     private static final String F_DESC     = "description";
     private static final String F_CATEGORY = "category";
     private static final String F_LOCKED   = "locked";
     private static final String F_COST     = "cost";
     private static final String F_ICON     = "icon";
 
-    // Whitelist
     private static final String F_WL_ENABLED = "whitelist_enabled";
     private static final String F_WL_PLAYERS = "whitelist_players";
 
-    //  managers & password
     private static final String F_MANAGERS = "managers";
     private static final String F_PASSWORD = "password";
 
@@ -53,19 +48,15 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
     public MongoPlayerWarpStorage(MongoClient client, String dbName, String collectionName) {
         this.col = client.getDatabase(dbName).getCollection(collectionName);
 
-        // Unique id per warp
         col.createIndex(Indexes.ascending(F_ID), new IndexOptions().unique(true));
 
-        // Fast lookup by owner + name (what /pw <name> uses)
         col.createIndex(Indexes.compoundIndex(
                 Indexes.ascending(F_OWNER),
                 Indexes.ascending(F_NAME)
         ));
     }
 
-    // ------------------------------------------------------
-    // Storage API
-    // ------------------------------------------------------
+
 
     @Override
     public void save(PlayerWarp warp) {
@@ -123,9 +114,7 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         return out;
     }
 
-    // ------------------------------------------------------
-    // Document <-> PlayerWarp
-    // ------------------------------------------------------
+
 
     private Document toDoc(PlayerWarp warp) {
         Location loc = warp.getLocation();
@@ -133,7 +122,6 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
 
         d.put(F_ID, warp.getId());
         d.put(F_OWNER, warp.getOwner().toString());
-        // store lowercase name for consistent lookup
         d.put(F_NAME, warp.getName() == null
                 ? ""
                 : warp.getName().trim().toLowerCase(Locale.ROOT));
@@ -154,21 +142,18 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         d.put(F_LOCKED, warp.isLocked());
         d.put(F_COST, warp.getCost());
 
-        // Icon (serialized map)
         if (warp.getIcon() != null) {
             d.put(F_ICON, warp.getIcon().serialize());
         } else {
             d.remove(F_ICON);
         }
 
-        // Whitelist
         d.put(F_WL_ENABLED, warp.isWhitelistEnabled());
         List<String> wl = warp.getWhitelist().stream()
                 .map(UUID::toString)
                 .collect(Collectors.toList());
         d.put(F_WL_PLAYERS, wl);
 
-        //  managers
         if (warp.getManagers() != null && !warp.getManagers().isEmpty()) {
             List<String> mgr = warp.getManagers().stream()
                     .map(UUID::toString)
@@ -178,7 +163,6 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
             d.remove(F_MANAGERS);
         }
 
-        //  password
         if (warp.getPassword() != null && !warp.getPassword().isEmpty()) {
             d.put(F_PASSWORD, warp.getPassword());
         } else {
@@ -195,7 +179,6 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         String worldName = d.getString(F_WORLD);
         World world = (worldName == null ? null : Bukkit.getWorld(worldName));
         if (world == null) {
-            // World not loaded or missing → skip this warp
             return null;
         }
 
@@ -221,7 +204,6 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         String name = d.getString(F_NAME);
         if (name == null) name = "";
 
-        // Whitelist fields (safe defaults for legacy docs)
         boolean whitelistEnabled = d.getBoolean(F_WL_ENABLED, false);
         Set<UUID> whitelist = new HashSet<>();
         Object rawList = d.get(F_WL_PLAYERS);
@@ -235,16 +217,13 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
             }
         }
 
-        // Use constructor that supports whitelist
         PlayerWarp warp = new PlayerWarp(id, owner, name, loc, whitelistEnabled, whitelist);
 
-        // Extra metadata
         warp.setDescription(d.getString(F_DESC));
         warp.setCategory(d.getString(F_CATEGORY));
         warp.setLocked(d.getBoolean(F_LOCKED, false));
         warp.setCost(num(d, F_COST, 0.0));
 
-        // Icon
         Object rawIcon = d.get(F_ICON);
         if (rawIcon instanceof Map<?, ?> rawMap) {
             try {
@@ -253,11 +232,9 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
                 ItemStack icon = ItemStack.deserialize(iconMap);
                 warp.setIcon(icon);
             } catch (Exception ignored) {
-                // if something is wrong with stored data, just ignore and keep default icon
             }
         }
 
-        //  managers
         Object rawMgrList = d.get(F_MANAGERS);
         Set<UUID> managers = new HashSet<>();
         if (rawMgrList instanceof List<?> mgrList) {
@@ -271,9 +248,8 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         }
         warp.setManagers(managers);
 
-        //  password
         String pwd = d.getString(F_PASSWORD);
-        warp.setPassword(pwd); // PlayerWarp already normalizes null / empty
+        warp.setPassword(pwd);
 
         return warp;
     }

@@ -15,14 +15,11 @@ public final class RtpConfig {
     private File file;
     private volatile FileConfiguration cfg;
 
-    // Master toggle
     private volatile boolean enabled = true;
 
-    // cached lookups
     private Set<String> allowedWorlds = Collections.emptySet();
     private Set<String> unsafeBlocks  = Collections.emptySet();
 
-    //   cross-server RTP
     private boolean crossServerEnabled = false;
     private Map<String, String> worldServers = Collections.emptyMap(); // world -> server
     private String defaultTargetWorld; // optional
@@ -42,17 +39,14 @@ public final class RtpConfig {
             cfg = new YamlConfiguration();
         }
 
-        // Master toggle (defaults to true)
         enabled = cfg.getBoolean("enabled", true);
 
-        // refresh caches
         List<String> aw = cfg.getStringList("allowed-worlds");
         allowedWorlds = new HashSet<>(aw == null ? Collections.emptyList() : aw);
 
         List<String> ub = cfg.getStringList("unsafe-blocks");
         unsafeBlocks = new HashSet<>(ub == null ? Collections.emptyList() : ub);
 
-        //   cross-server section
         var cs = cfg.getConfigurationSection("cross-server");
         if (cs != null) {
             crossServerEnabled = cs.getBoolean("enabled", false);
@@ -76,7 +70,6 @@ public final class RtpConfig {
         }
     }
 
-    /** Persist ONLY the toggle so we don't rewrite the user's YAML layout. */
     public void save() {
         if (cfg == null || file == null) return;
         try {
@@ -87,7 +80,6 @@ public final class RtpConfig {
         }
     }
 
-    /* ----------------- Basic getters ----------------- */
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean v) { this.enabled = v; }
@@ -100,39 +92,29 @@ public final class RtpConfig {
     public Set<String> allowedWorlds() { return allowedWorlds; }
     public Set<String> unsafeBlocks()  { return unsafeBlocks; }
 
-    /** True if world is allowed (empty list means all). */
     public boolean isWorldAllowed(World w) {
         return allowedWorlds.isEmpty() || allowedWorlds.contains(w.getName());
     }
 
-    /* -----------------  Cross-server helpers ----------------- */
 
     public boolean isCrossServerEnabled() {
         return crossServerEnabled;
     }
 
-    /** Returns the server name hosting this world, or null if unknown. */
     public String serverForWorld(String worldName) {
         if (worldName == null) return null;
         return worldServers.get(worldName);
     }
 
-    /** Returns the default target world for RTP, or null if not configured. */
     public String getDefaultTargetWorld() {
         return defaultTargetWorld;
     }
 
-    /** All configured world -> server mappings (read-only copy). */
     public Map<String, String> worldServerMappings() {
         return Collections.unmodifiableMap(worldServers);
     }
 
-    /**
-     * Decide the *logical* target world for this player:
-     * - if current world is allowed: keep it
-     * - else, if default-target-world is set and allowed: use that
-     * - else, null (no valid world)
-     */
+
     public String chooseTargetWorld(Player p) {
         String current = p.getWorld().getName();
 
@@ -149,19 +131,14 @@ public final class RtpConfig {
         return null;
     }
     public int minRadiusFor(Player p, String worldName) {
-        // 1) Base global min-radius
         int base = Math.max(0, cfg.getInt("min-radius", 0));
 
-        // 2) Global per-tier overrides (optional)
         base = applyTierOverrides(p, base, "min-radius-tiers");
 
-        // 3) Per-world overrides
         if (worldName != null && cfg.isConfigurationSection("worlds." + worldName)) {
             String root = "worlds." + worldName;
 
             base = Math.max(0, cfg.getInt(root + ".min-radius", base));
-
-            // 4) Per-world per-tier overrides (optional)
             base = applyTierOverrides(p, base, root + ".min-radius-tiers");
         }
 
@@ -171,7 +148,6 @@ public final class RtpConfig {
     private int applyTierOverrides(Player p, int current, String sectionPath) {
         if (!cfg.isConfigurationSection(sectionPath)) return current;
 
-        // Keys are permission strings like "oreo.tier.vip"
         var sec = cfg.getConfigurationSection(sectionPath);
         if (sec == null) return current;
 
@@ -185,32 +161,20 @@ public final class RtpConfig {
         return best;
     }
 
-    /**
-     * Version qui priorise un monde demandé explicitement.
-     */
     public String chooseTargetWorld(Player p, String requestedWorld) {
-        // 1) Si un monde est demandé
         if (requestedWorld != null && !requestedWorld.isBlank()) {
             if (allowedWorlds.isEmpty() || allowedWorlds.contains(requestedWorld)) {
                 return requestedWorld;
             }
         }
 
-        // 2) Sinon, fallback sur l’ancienne logique
         return chooseTargetWorld(p);
     }
 
-    /* ----------------- Radius logic (inchangé) ----------------- */
-
-    /**
-     * Get the best radius for a player, honoring per-world overrides and tier permissions.
-     * Falls back to global "default" when no world override applies.
-     */
     public int radiusFor(Player p, Collection<String> tierPermissionKeys) {
         // We ignore tierPermissionKeys for now and always check real permission nodes.
         Predicate<String> hasPerm = p::hasPermission;
 
-        // Check per-world section first
         String worldKey = "worlds." + p.getWorld().getName();
         if (cfg.isConfigurationSection(worldKey)) {
             int worldDefault = cfg.getInt(worldKey + ".default", cfg.getInt("default", 200));
@@ -221,8 +185,6 @@ public final class RtpConfig {
 
                 int val = cfg.getInt(worldKey + "." + key, -1);
                 if (val <= 0) continue;
-
-                // 🔴 IMPORTANT: keys like "vip" → permission "oreo.tier.vip"
                 String permNode = "oreo.tier." + key;
                 if (hasPerm.test(permNode) && val > best) {
                     best = val;
@@ -231,11 +193,9 @@ public final class RtpConfig {
             return best;
         }
 
-        // Fallback: global section
         return bestRadiusFor(permNode -> p.hasPermission(permNode));
     }
 
-    /** Backward-compatible global best-radius calculator. */
     public int bestRadiusFor(Predicate<String> hasTierPerm) {
         int best = cfg.getInt("default", 200);
 
@@ -245,7 +205,6 @@ public final class RtpConfig {
             int val = cfg.getInt(key, -1);
             if (val <= 0) continue;
 
-            // 🔴 IMPORTANT: keys like "vip" → permission "oreo.tier.vip"
             String permNode = "oreo.tier." + key;
             if (hasTierPerm.test(permNode) && val > best) {
                 best = val;
@@ -254,27 +213,21 @@ public final class RtpConfig {
         return best;
     }
 
-    /* -----------------  Cooldown logic (NOUVEAU) ----------------- */
-
     /**
-     * Cooldown RTP en secondes pour un joueur, basé sur:
      * - cooldown.worlds.<world>.default
      * - cooldown.worlds.<world>.<tier>
      * - cooldown.default
      * - cooldown.<tier>
      *
-     * Tiers = mêmes clés que pour le radius :
+     * Tiers = same key as radius :
      *   "vip"  -> permission "oreo.tier.vip"
      *   "legend" -> "oreo.tier.legend"
      *
-     * On prend le *plus petit* cooldown parmi les perms que le joueur a.
      */
     public int cooldownFor(Player p) {
         String base = "cooldown";
-        // cooldown.global default
         int globalDefault = cfg.getInt(base + ".default", 0);
 
-        // 1) Per-world override : cooldown.worlds.<world>.*
         String worldPath = base + ".worlds." + p.getWorld().getName();
         if (cfg.isConfigurationSection(worldPath)) {
             int best = cfg.getInt(worldPath + ".default", globalDefault);
@@ -298,7 +251,6 @@ public final class RtpConfig {
             return best;
         }
 
-        // 2) Sinon, global cooldown: cooldown.*
         int best = globalDefault;
         var cooldownSec = cfg.getConfigurationSection(base);
         if (cooldownSec != null) {
@@ -320,8 +272,6 @@ public final class RtpConfig {
         return best;
     }
 
-    /* ----------------- internal helpers ----------------- */
-
     private boolean isNonTierKey(String key) {
         return "enabled".equalsIgnoreCase(key)
                 || "default".equalsIgnoreCase(key)
@@ -332,6 +282,6 @@ public final class RtpConfig {
                 || "max-y".equalsIgnoreCase(key)
                 || "worlds".equalsIgnoreCase(key)
                 || "cross-server".equalsIgnoreCase(key)
-                || "cooldown".equalsIgnoreCase(key); //  important: ignorer la section cooldown pour le radius
+                || "cooldown".equalsIgnoreCase(key);
     }
 }

@@ -48,11 +48,9 @@ public final class RtpCrossServerBridge {
             return;
         }
 
-        //  Always store pending (consistent behavior)
         plugin.getRtpPendingService().add(playerId, worldName);
         plugin.getLogger().info("[RTP-BRIDGE] Stored pending RTP for " + playerId + " in world=" + worldName);
 
-        // If player is already online on this server, consume & execute next tick
         Player p = Bukkit.getPlayer(playerId);
         if (p != null && p.isOnline()) {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -69,10 +67,6 @@ public final class RtpCrossServerBridge {
         }
     }
 
-    /**
-     * Called by /rtp on Server A when it decides the RTP must happen on Server B.
-     * IMPORTANT: call this AFTER warmup finishes on Server A.
-     */
     public void requestCrossServerRtp(Player p, String targetWorld, String targetServer) {
         if (p == null) return;
 
@@ -102,8 +96,6 @@ public final class RtpCrossServerBridge {
                 + " player=" + p.getName()
                 + " → server=" + targetServer
                 + " world=" + targetWorld);
-
-// ❌ do NOT switch server here
 
     }
 }

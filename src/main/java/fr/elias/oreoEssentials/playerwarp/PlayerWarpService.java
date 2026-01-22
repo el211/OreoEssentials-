@@ -13,18 +13,7 @@ import org.bukkit.OfflinePlayer;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * PlayerWarp service layer with comprehensive Lang support.
- *
- * ✅ VERIFIED EXCELLENT - Already uses Lang.send() for all 14 user messages!
- *
- * Features:
- * - Teleport with permission checks
- * - Cost system with Vault
- * - Whitelist management
- * - Cross-server support
- * - All messages use Lang
- */
+
 public class PlayerWarpService {
 
     private final PlayerWarpStorage storage;

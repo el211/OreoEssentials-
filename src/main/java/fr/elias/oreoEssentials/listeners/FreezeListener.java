@@ -1,4 +1,3 @@
-// src/main/java/fr/elias/oreoEssentials/listeners/FreezeListener.java
 package fr.elias.oreoEssentials.listeners;
 
 import fr.elias.oreoEssentials.services.FreezeService;

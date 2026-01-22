@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 /**
  * Simple YAML-backed implementation of PlayerWarpStorage.
  *
- * File layout (playerwarps.yml):
+ * (playerwarps.yml):
  *
  * playerwarps:
  *   <id>:

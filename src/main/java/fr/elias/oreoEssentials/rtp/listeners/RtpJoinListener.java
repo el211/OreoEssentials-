@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/rtp/listeners/RtpJoinListener.java
 package fr.elias.oreoEssentials.rtp.listeners;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -21,7 +20,6 @@ public class RtpJoinListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
 
-        // Delay so player is fully spawned/world loaded (avoid failed teleports).
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             String worldName = plugin.getRtpPendingService().consume(p.getUniqueId());
             if (worldName == null || worldName.isBlank()) return;
@@ -31,11 +29,9 @@ public class RtpJoinListener implements Listener {
             boolean ok = RtpCommand.doLocalRtp(plugin, p, worldName);
             if (!ok) {
                 plugin.getLogger().warning("[RTP] Failed to perform pending RTP for " + p.getName() + " in world=" + worldName);
-                // why: cooldown is NOT applied on failure; user can try again
                 return;
             }
 
-            // ✅ Apply cooldown only after a successful cross-server RTP
             RtpCommand.applyCooldownNow(plugin, p);
         }, 1L);
     }

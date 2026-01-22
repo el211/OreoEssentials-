@@ -31,9 +31,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Browse all player warps GUI with password support.
- *
- * ✅ VERIFIED EXCELLENT - Uses § for GUI ItemStack styling (correct) + Lang for chat
  *
  * Features:
  * - Browse all warps
@@ -88,9 +85,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
             PlayerWarp warp = allWarps.get(i);
             items[i] = ClickableItem.of(buildWarpItem(player, warp), e -> {
 
-                // If password-protected → open password prompt
                 if (isPasswordProtectedFor(player, warp)) {
-                    // ✅ Chat message uses Lang
                     Lang.send(player, "pw.password-required",
                             "<red>Warp <yellow>%warp%</yellow> requires a password.</red>",
                             Map.of("warp", warp.getName()));
@@ -99,10 +94,8 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
                     return;
                 }
 
-                // Otherwise, normal teleport
                 boolean ok = service.teleportToPlayerWarp(player, warp.getOwner(), warp.getName());
                 if (!ok) {
-                    // ✅ Chat message uses Lang
                     Lang.send(player, "pw.teleport-failed",
                             "<red>Teleportation failed.</red>",
                             Map.of("error", "unknown"));
@@ -111,8 +104,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
         }
 
         pagination.setItems(items);
-        pagination.setItemsPerPage(9 * 4); // rows 1-4
-
+        pagination.setItemsPerPage(9 * 4);
         pagination.addToIterator(contents.newIterator(SlotIterator.Type.HORIZONTAL, 1, 0)
                 .allowOverride(true));
 
@@ -142,14 +134,6 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
         }));
     }
 
-    /* ============================================================
-     * PASSWORD CHAT PROMPT
-     * ============================================================ */
-
-    /**
-     * Asks the player to type the password in chat.
-     * The next chat message from this player is captured as the password.
-     */
     private void openPasswordChatPrompt(Player player, PlayerWarp warp) {
         OreoEssentials plugin = OreoEssentials.get();
 
@@ -165,7 +149,6 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
         plugin.getLogger().info("[PW/DEBUG] [CHAT] Waiting for password in chat for player "
                 + player.getName() + " warp=" + warp.getName());
 
-        // Interactive prompt (hardcoded is acceptable for prompts)
         player.sendMessage(ChatColor.YELLOW + "Type the password for warp "
                 + ChatColor.AQUA + warp.getName()
                 + ChatColor.YELLOW + " in chat, or type "
@@ -180,7 +163,6 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
                     return;
                 }
 
-                // Capture this message as the password attempt
                 event.setCancelled(true);
                 HandlerList.unregisterAll(this);
 
@@ -194,7 +176,6 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
                                 + player.getName() + " typed password='" + typed + "' for warp=" + warp.getName()
                 );
 
-                // Handle "cancel"
                 if (typed.equalsIgnoreCase("cancel")) {
                     Bukkit.getScheduler().runTask(plugin, () -> {
                         player.sendMessage(ChatColor.RED + "Password entry cancelled for warp "
@@ -204,27 +185,22 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
                 }
 
                 String finalTyped = typed;
-                // Back to main thread for warp logic
                 Bukkit.getScheduler().runTask(plugin, () -> handlePasswordResult(player, warp, finalTyped));
             }
 
             @EventHandler
             public void onClose(InventoryCloseEvent event) {
-                // GUI is already closed
             }
 
             @EventHandler
             public void onClick(InventoryClickEvent event) {
-                // We only listen to chat
             }
         };
 
         Bukkit.getPluginManager().registerEvents(listener, plugin);
     }
 
-    /**
-     * Called after the player provided a password (via chat).
-     */
+
     private void handlePasswordResult(Player player, PlayerWarp warp, String typedPassword) {
         // Refresh warp from service
         PlayerWarp current = service.listAll().stream()
@@ -234,7 +210,6 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
                 .orElse(null);
 
         if (current == null) {
-            // ✅ Chat message uses Lang
             Lang.send(player, "pw.not-found",
                     "<red>Warp <yellow>%name%</yellow> not found.</red>",
                     Map.of("name", warp.getName().toLowerCase(Locale.ROOT)));
@@ -254,14 +229,12 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
         );
 
         if (realPassword == null || realPassword.isEmpty()) {
-            // No password anymore → normal teleport
             OreoEssentials.get().getLogger().info(
                     "[PW/DEBUG] [CHAT] Warp '" + current.getName()
                             + "' has no password anymore, teleporting normally."
             );
             boolean ok = service.teleportToPlayerWarp(player, current.getOwner(), current.getName());
             if (!ok) {
-                // ✅ Chat message uses Lang
                 Lang.send(player, "pw.teleport-failed",
                         "<red>Teleportation failed.</red>",
                         Map.of("error", "unknown"));
@@ -269,9 +242,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
             return;
         }
 
-        // Access checks BEFORE password comparison
         if (!service.canUse(player, current)) {
-            // ✅ Chat message uses Lang
             Lang.send(player, "pw.no-permission-warp",
                     "<red>You don't have permission to use <yellow>%name%</yellow>.</red>",
                     Map.of("name", current.getName()));
@@ -282,7 +253,6 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
             return;
         }
 
-        // Call /pw use <warp> <password> for consistency
         String cmd = "pw use " + current.getName() + " " + typedPassword;
         OreoEssentials.get().getLogger().info(
                 "[PW/DEBUG] [CHAT] Executing '/" + cmd + "' for " + player.getName()
@@ -291,9 +261,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
         player.performCommand(cmd);
     }
 
-    /* ============================================================
-     * HELPERS
-     * ============================================================ */
+
 
     private boolean isPasswordProtectedFor(Player viewer, PlayerWarp warp) {
         String pwd = warp.getPassword();
@@ -324,7 +292,6 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
                 ? ownerOff.getName()
                 : warp.getOwner().toString();
 
-        // ✅ GUI ItemStack display name (visual styling - § is correct)
         meta.setDisplayName("§a" + name);
 
         List<String> lore = new ArrayList<>();
@@ -342,7 +309,6 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
             lore.add("§7Cost: §e" + cost);
         }
 
-        // Status (locked / whitelist / public + viewer's access)
         lore.add("");
         UUID viewerId = viewer.getUniqueId();
 
@@ -376,7 +342,6 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
             lore.add("§7Status: §aPublic");
         }
 
-        // Password indicator
         String pwd = warp.getPassword();
         if (pwd != null && !pwd.isEmpty()) {
             lore.add("§7Protection: §cPassword");

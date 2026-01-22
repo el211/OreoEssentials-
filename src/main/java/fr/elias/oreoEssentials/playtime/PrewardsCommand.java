@@ -37,7 +37,6 @@ public final class PrewardsCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // /prewards reload
         if ("reload".equalsIgnoreCase(args[0])) {
             if (!sender.hasPermission("oreo.prewards.admin")) {
                 sender.sendMessage("No permission.");
@@ -48,7 +47,6 @@ public final class PrewardsCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // /prewards toggle (NEW)
         if ("toggle".equalsIgnoreCase(args[0])) {
             if (!sender.hasPermission("oreo.prewards.admin")) {
                 sender.sendMessage("No permission.");
@@ -59,7 +57,6 @@ public final class PrewardsCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // /prewards claim <id> [player]
         if ("claim".equalsIgnoreCase(args[0])) {
             if (!svc.isEnabled()) {
                 sender.sendMessage(svc.color("&cPlaytime Rewards are disabled."));
@@ -75,7 +72,6 @@ public final class PrewardsCommand implements CommandExecutor, TabCompleter {
             }
             String id = args[1];
 
-            // Claim for someone else
             if (args.length >= 3) {
                 if (!sender.hasPermission("oreo.prewards.claim.others")) {
                     sender.sendMessage("No permission.");
@@ -91,7 +87,6 @@ public final class PrewardsCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            // Claim for self
             if (!(sender instanceof Player)) {
                 sender.sendMessage("Players only.");
                 return true;
@@ -101,7 +96,6 @@ public final class PrewardsCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Fallback help
         sender.sendMessage("/" + label + " [claim <id> [player]] | /" + label + " reload | /" + label + " toggle");
         return true;
     }

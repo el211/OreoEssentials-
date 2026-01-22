@@ -9,7 +9,7 @@ public final class CrossRtpPayload {
     private String kind = "RTP";
     private UUID   player;
     private String world;
-    private String targetServer; // optional filter
+    private String targetServer;
 
     public String getKind()        { return kind; }
     public UUID getPlayer()        { return player; }

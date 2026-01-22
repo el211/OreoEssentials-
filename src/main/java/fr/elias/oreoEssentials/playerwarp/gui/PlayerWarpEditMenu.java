@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/playerwarp/gui/PlayerWarpEditMenu.java
 package fr.elias.oreoEssentials.playerwarp.gui;
 
 import fr.elias.oreoEssentials.playerwarp.PlayerWarp;
@@ -18,9 +17,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 
 /**
- * Edit warp GUI with all quick-access settings.
- *
- * ✅ VERIFIED EXCELLENT - Uses § for GUI ItemStack styling (correct) + Lang for chat
  *
  * Features:
  * - Teleport to warp
@@ -68,13 +64,11 @@ public class PlayerWarpEditMenu implements InventoryProvider {
 
     @Override
     public void init(Player player, InventoryContents contents) {
-        // ---------- CENTER INFO ----------
         ItemStack info = warp.getIcon() != null
                 ? warp.getIcon().clone()
                 : new ItemStack(Material.OAK_SIGN);
 
         ItemMeta meta = info.getItemMeta();
-        // ✅ GUI ItemStack display name (visual styling - § is correct)
         meta.setDisplayName("§a" + warp.getName());
 
         double cost = warp.getCost();
@@ -105,7 +99,6 @@ public class PlayerWarpEditMenu implements InventoryProvider {
 
         contents.set(1, 4, ClickableItem.empty(info));
 
-        // ---------- BACK BUTTON ----------
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta backMeta = back.getItemMeta();
         backMeta.setDisplayName("§cBack to My Warps");
@@ -116,7 +109,6 @@ public class PlayerWarpEditMenu implements InventoryProvider {
             MyPlayerWarpsMenu.open(player, service, categoryFilter);
         }));
 
-        // ---------- TELEPORT ----------
         ItemStack tp = new ItemStack(Material.ENDER_PEARL);
         ItemMeta tpMeta = tp.getItemMeta();
         tpMeta.setDisplayName("§aTeleport");
@@ -130,14 +122,12 @@ public class PlayerWarpEditMenu implements InventoryProvider {
         contents.set(1, 1, ClickableItem.of(tp, e -> {
             boolean ok = service.teleportToPlayerWarp(player, warp.getOwner(), warp.getName());
             if (!ok) {
-                // ✅ Chat message uses Lang
                 Lang.send(player, "pw.teleport-failed",
                         "<red>Teleportation failed.</red>",
                         Map.of("error", "unknown"));
             }
         }));
 
-        // ---------- RESET LOCATION ----------
         ItemStack reset = new ItemStack(Material.COMPASS);
         ItemMeta resetMeta = reset.getItemMeta();
         resetMeta.setDisplayName("§eReset to current location");
@@ -159,7 +149,6 @@ public class PlayerWarpEditMenu implements InventoryProvider {
             open(player, service, warp, categoryFilter);
         }));
 
-        // ---------- TOGGLE LOCK ----------
         ItemStack lockItem = new ItemStack(Material.IRON_DOOR);
         ItemMeta lockMeta = lockItem.getItemMeta();
         boolean lockedNow = warp.isLocked();
@@ -182,7 +171,6 @@ public class PlayerWarpEditMenu implements InventoryProvider {
             open(player, service, warp, categoryFilter);
         }));
 
-        // ---------- WHITELIST ENABLE/DISABLE ----------
         ItemStack wlItem = new ItemStack(Material.PLAYER_HEAD);
         ItemMeta wlMeta = wlItem.getItemMeta();
         boolean wlEnabled = warp.isWhitelistEnabled();
@@ -199,7 +187,6 @@ public class PlayerWarpEditMenu implements InventoryProvider {
             boolean newState = !warp.isWhitelistEnabled();
             warp.setWhitelistEnabled(newState);
             service.saveWarp(warp);
-            // ✅ Chat message uses Lang
             if (newState) {
                 Lang.send(player, "pw.whitelist-enabled",
                         "<green>Whitelist enabled for <white>%warp%</white>.</green>",
@@ -212,7 +199,6 @@ public class PlayerWarpEditMenu implements InventoryProvider {
             open(player, service, warp, categoryFilter);
         }));
 
-        // ---------- ICON FROM HAND ----------
         ItemStack iconItem = new ItemStack(Material.ITEM_FRAME);
         ItemMeta iconMeta = iconItem.getItemMeta();
         iconMeta.setDisplayName("§eSet icon from hand");
@@ -227,7 +213,6 @@ public class PlayerWarpEditMenu implements InventoryProvider {
         contents.set(1, 6, ClickableItem.of(iconItem, e -> {
             ItemStack hand = player.getInventory().getItemInMainHand();
             if (hand == null || hand.getType().isAir()) {
-                // ✅ Chat message uses Lang
                 Lang.send(player, "pw.icon-no-item",
                         "<red>You must hold an item in your main hand.</red>",
                         Map.of());
@@ -235,14 +220,12 @@ public class PlayerWarpEditMenu implements InventoryProvider {
             }
             warp.setIcon(hand.clone());
             service.saveWarp(warp);
-            // ✅ Chat message uses Lang
             Lang.send(player, "pw.icon-set",
                     "<green>Set icon for <aqua>%warp%</aqua>.</green>",
                     Map.of("warp", warp.getName()));
             open(player, service, warp, categoryFilter);
         }));
 
-        // ---------- DELETE ----------
         ItemStack delete = new ItemStack(Material.BARRIER);
         ItemMeta deleteMeta = delete.getItemMeta();
         deleteMeta.setDisplayName("§cDelete warp");
@@ -255,14 +238,12 @@ public class PlayerWarpEditMenu implements InventoryProvider {
 
         contents.set(1, 7, ClickableItem.of(delete, e -> {
             service.deleteWarp(warp);
-            // ✅ Chat message uses Lang
             Lang.send(player, "pw.remove-success",
                     "<green>Removed warp <aqua>%name%</aqua>.</green>",
                     Map.of("name", warp.getName()));
             player.closeInventory();
         }));
 
-        // ---------- PASSWORD TOGGLE ----------
         boolean hasPwd = warp.getPassword() != null && !warp.getPassword().isEmpty();
 
         ItemStack pwdItem = new ItemStack(Material.TRIPWIRE_HOOK);
@@ -291,14 +272,12 @@ public class PlayerWarpEditMenu implements InventoryProvider {
             if (warp.getPassword() == null || warp.getPassword().isEmpty()) {
                 warp.setPassword("changeme");
                 service.saveWarp(warp);
-                // ✅ Chat message uses Lang
                 Lang.send(player, "pw.password-placeholder-set",
                         "<green>Set default password '<white>%password%</white>' for <aqua>%warp%</aqua>. Change it with <yellow>/pw password %warp% <your-password></yellow></green>",
                         Map.of("warp", warp.getName(), "password", "changeme"));
             } else {
                 warp.setPassword(null);
                 service.saveWarp(warp);
-                // ✅ Chat message uses Lang
                 Lang.send(player, "pw.password-cleared",
                         "<green>Cleared password for <aqua>%warp%</aqua>.</green>",
                         Map.of("warp", warp.getName()));
@@ -306,7 +285,6 @@ public class PlayerWarpEditMenu implements InventoryProvider {
             open(player, service, warp, categoryFilter);
         }));
 
-        // ---------- META / COMMAND HINTS ROW ----------
         ItemStack metaItem = new ItemStack(Material.BOOK);
         ItemMeta metaMeta = metaItem.getItemMeta();
         metaMeta.setDisplayName("§bAdvanced settings");
@@ -328,7 +306,6 @@ public class PlayerWarpEditMenu implements InventoryProvider {
 
     @Override
     public void update(Player player, InventoryContents contents) {
-        // Static menu; we re-open it after actions
     }
 
     private List<String> splitColored(String text, int maxLength) {

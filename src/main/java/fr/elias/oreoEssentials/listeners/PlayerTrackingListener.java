@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/listeners/PlayerTrackingListener.java
 package fr.elias.oreoEssentials.listeners;
 
 import fr.elias.oreoEssentials.commands.core.playercommands.back.BackService;

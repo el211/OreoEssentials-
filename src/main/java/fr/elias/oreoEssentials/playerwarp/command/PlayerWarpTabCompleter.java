@@ -33,11 +33,9 @@ public class PlayerWarpTabCompleter implements TabCompleter {
             return Collections.emptyList();
         }
 
-        // /pw
         if (args.length == 1) {
             String prefix = args[0].toLowerCase(Locale.ROOT);
 
-            // All known subcommands (including stubs)
             List<String> base = new ArrayList<>(Arrays.asList(
                     "help",
                     "set",
@@ -66,16 +64,13 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                     "ban",
                     "managers",
                     "favourite",
-
-                    // NEW / GUI
                     "gui",
                     "mywarps",
 
-                    // 🔹  /pw use <warp> <password>
+
                     "use"
             ));
 
-            // Also allow directly typing warp names as first arg: /pw <warp>
             for (PlayerWarp warp : safeListAll()) {
                 if (warp.getName() != null && !warp.getName().isBlank()) {
                     base.add(warp.getName());
@@ -89,13 +84,11 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                     .collect(Collectors.toList());
         }
 
-        // /pw <sub> ...
         if (args.length == 2) {
             String sub = args[0].toLowerCase(Locale.ROOT);
             String prefix = args[1].toLowerCase(Locale.ROOT);
 
             switch (sub) {
-                // Player-owned warp name (remove/reset/rename)
                 case "remove", "reset", "rename" -> {
                     if (!(sender instanceof Player player)) {
                         return Collections.emptyList();
@@ -108,7 +101,6 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                             .collect(Collectors.toList());
                 }
 
-                // /pw whitelist <action> <warp> [player]
                 case "whitelist" -> {
                     List<String> actions = Arrays.asList("enable", "disable", "list", "set", "remove");
                     return actions.stream()
@@ -116,9 +108,7 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                             .collect(Collectors.toList());
                 }
 
-                // /pw use <warp> <password>
                 case "use" -> {
-                    // Suggest ALL warps, not only password-protected ones
                     return safeListAll().stream()
                             .map(PlayerWarp::getName)
                             .filter(Objects::nonNull)
@@ -128,7 +118,6 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                 }
 
 
-                // Global warp name (admin-ish)
                 case "setowner",
                      "desc",
                      "icon",
@@ -148,7 +137,6 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                             .collect(Collectors.toList());
                 }
 
-                // Target player (list/amount/removeall/addwarps)
                 case "list",
                      "amount",
                      "removeall",
@@ -160,9 +148,7 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                             .collect(Collectors.toList());
                 }
 
-                // near [page]
                 case "near" -> {
-                    // Suggest simple page numbers
                     List<String> pages = Arrays.asList("1", "2", "3", "4", "5");
                     return pages.stream()
                             .filter(p -> p.startsWith(prefix))
@@ -175,16 +161,13 @@ public class PlayerWarpTabCompleter implements TabCompleter {
             }
         }
 
-        // /pw <sub> <arg2> <arg3> ...
         if (args.length == 3) {
             String sub = args[0].toLowerCase(Locale.ROOT);
             String prefix = args[2].toLowerCase(Locale.ROOT);
 
             switch (sub) {
-                // /pw whitelist <action> <warp> [player]
                 case "whitelist" -> {
                     String action = args[1].toLowerCase(Locale.ROOT);
-                    // For all actions, arg2 is warp name
                     if (!Arrays.asList("enable", "disable", "list", "set", "remove").contains(action)) {
                         return Collections.emptyList();
                     }
@@ -197,8 +180,6 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                             .collect(Collectors.toList());
                 }
 
-                // /pw setowner <warp> <player>
-                // /pw <ban|managers|favourite> <warp> <player>
                 case "setowner",
                      "ban",
                      "managers",
@@ -210,7 +191,6 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                             .collect(Collectors.toList());
                 }
 
-                // /pw addwarps <player> <amount> — suggest some common numbers
                 case "addwarps" -> {
                     List<String> amounts = Arrays.asList("1", "3", "5", "10", "20");
                     return amounts.stream()
@@ -218,7 +198,6 @@ public class PlayerWarpTabCompleter implements TabCompleter {
                             .collect(Collectors.toList());
                 }
 
-                // /pw use <warp> <password> -> we don't tab-complete the password itself
                 case "use" -> {
                     return Collections.emptyList();
                 }
@@ -229,7 +208,6 @@ public class PlayerWarpTabCompleter implements TabCompleter {
             }
         }
 
-        // /pw whitelist <action> <warp> <player>
         if (args.length == 4) {
             String sub = args[0].toLowerCase(Locale.ROOT);
             String action = args[1].toLowerCase(Locale.ROOT);
@@ -249,7 +227,6 @@ public class PlayerWarpTabCompleter implements TabCompleter {
         return Collections.emptyList();
     }
 
-    // -------- Helpers --------
 
     private List<PlayerWarp> safeListAll() {
         try {

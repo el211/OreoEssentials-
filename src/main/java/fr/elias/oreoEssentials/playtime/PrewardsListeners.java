@@ -16,7 +16,6 @@ public final class PrewardsListeners implements Listener {
     private final OreoEssentials plugin;
     private final PlaytimeRewardsService svc;
 
-    // one reminder task per player
     private final Map<UUID, BukkitTask> remindTasks = new HashMap<>();
 
     public PrewardsListeners(OreoEssentials plugin, PlaytimeRewardsService svc) {
@@ -28,17 +27,14 @@ public final class PrewardsListeners implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         final Player p = e.getPlayer();
 
-        // autoclaim checks
         svc.checkPlayer(p, true);
 
         final int mins = svc.notifyEveryMinutes;
         if (mins <= 0) return;
 
-        // cancel old task for this player if any
         BukkitTask old = remindTasks.remove(p.getUniqueId());
         if (old != null) old.cancel();
 
-        // schedule per-player reminder
         BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(
                 plugin,
                 () -> {
@@ -49,8 +45,8 @@ public final class PrewardsListeners implements Listener {
                         p.sendMessage(svc.color("&aYou have rewards ready: &f" + ready));
                     }
                 },
-                20L * 60,                           // first run in 60s
-                20L * 60 * Math.max(1, mins)        // repeat every X minutes
+                20L * 60,
+                20L * 60 * Math.max(1, mins)
         );
 
         remindTasks.put(p.getUniqueId(), task);
