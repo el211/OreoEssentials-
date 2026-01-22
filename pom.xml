@@ -109,6 +109,10 @@
             <url>https://repo.dmulloy2.net/repository/public/</url>
         </repository>
         <repository>
+            <id>matteodev</id>
+            <url>https://maven.devs.beer/</url>
+        </repository>
+        <repository>
             <id>enginehub</id>
             <url>https://maven.enginehub.org/repo/</url>
         </repository>
@@ -218,11 +222,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <systemPath>${basedir}/libs/ItemsAdder_4.0.15.jar</systemPath>
-            <scope>system</scope>
+            <groupId>dev.lone</groupId>
             <artifactId>api-itemsadder</artifactId>
-            <version>4.0.15</version>
-            <groupId>dev.lone.itemsadder</groupId>
+            <version>4.0.10</version> <!-- Replace {version} with the latest version -->
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>redis.clients</groupId>
