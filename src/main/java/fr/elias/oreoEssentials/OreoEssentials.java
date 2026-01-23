@@ -618,7 +618,6 @@ public final class OreoEssentials extends JavaPlugin {
         } catch (Throwable ignored) {}
 
         fr.elias.oreoEssentials.util.SkinRefresherBootstrap.init(this);
-        fr.elias.oreoEssentials.util.SkinDebug.init(this);
 
         Lang.init(this);
         boolean kitsFeature   = settingsConfig.kitsEnabled();
