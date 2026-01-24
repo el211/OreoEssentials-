@@ -95,7 +95,11 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
 
         // Server placeholders
         if (id.equals("server_name")) {
-            return Bukkit.getServer().getName();
+            try {
+                return plugin.getConfigService().serverName();
+            } catch (Throwable t) {
+                return Bukkit.getServer().getName();
+            }
         }
 
         if (id.equals("server_nick")) {

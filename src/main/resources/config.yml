@@ -124,41 +124,58 @@ afk-pool:
 scoreboard:
   default-enabled: true
   update-ticks: 10
-
   title:
     frame-ticks: 10
     frames:
       - '&9&lOreo&b&lEssentials'
       - '&b&lOreo&9&lEssentials'
       - '&9&lOreo&b&lEssentials'
-
   worlds:
     whitelist: []
     blacklist: []
-
   lines:
     - |-
-      %animations_<tag interval=10>
-      &8&m------------------------
+      %animations_<tag interval=5>
+      <gradient:#0099FF:#00FFFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
       |
-      &9&m------------------------
+      <gradient:#00CCFF:#0099FF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      |
+      <gradient:#00FFFF:#00CCFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      |
+      <gradient:#00CCFF:#00FFFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      |
+      <gradient:#0099FF:#00CCFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
       </tag>%
+    - ''
+    - '&7Player: &b{player}'
+    - '&7Rank: %luckperms_prefix%%luckperms_primary_group_name%'
+    - ''
     - |-
       %animations_<tag interval=10>
-      &7Player: &9{player}
+      <gradient:#FFD700:#FFA500>Balance:</gradient> &e%vault_eco_balance_formatted%
       |
-      &7Player: &b{player}
+      <gradient:#FFA500:#FFD700>Balance:</gradient> &6%vault_eco_balance_formatted%
+      |
+      <gradient:#FFFF00:#FFD700>Balance:</gradient> &e%vault_eco_balance_formatted%
+      |
+      <gradient:#FFD700:#FFFF00>Balance:</gradient> &6%vault_eco_balance_formatted%
       </tag>%
+    - ''
+    - '&7Online: &a%oreo_network_online%&7/&a%server_max_players%'
+    - ''
     - |-
-      %animations_<tag interval=10>
-      <gradient:#FFD700:#FFA500>Money:</gradient> &e%vault_eco_balance_formatted%
+      %animations_<tag interval=5>
+      <gradient:#0099FF:#00FFFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
       |
-      <gradient:#FFA500:#FFD700>Money:</gradient> &6%vault_eco_balance_formatted%
+      <gradient:#00CCFF:#0099FF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
       |
-      <gradient:#FFFF00:#FFD700>Money:</gradient> &e%vault_eco_balance_formatted%
+      <gradient:#00FFFF:#00CCFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
       |
-      <gradient:#FFD700:#FFFF00>Money:</gradient> &6%vault_eco_balance_formatted%
+      <gradient:#00CCFF:#00FFFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      |
+      <gradient:#0099FF:#00CCFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
       </tag>%
+    - '&7&oplay.example.com'
 # ---------------------------------------------------------------------
 # Alternative if you want slower updates but visible animations:
 # Keep update-ticks: 20 but change line intervals to 15 or 25
