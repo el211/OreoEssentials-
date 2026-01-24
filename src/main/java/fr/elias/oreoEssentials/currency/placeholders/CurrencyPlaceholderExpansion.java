@@ -44,8 +44,6 @@ public class CurrencyPlaceholderExpansion extends PlaceholderExpansion {
         this.currencyService = plugin.getCurrencyService();
         this.decimalFormat = new DecimalFormat("#,##0.00");
 
-        plugin.getLogger().info("[Currency/PAPI] CurrencyService = " +
-                (currencyService == null ? "NULL!" : "OK"));
     }
 
     @Override
@@ -75,8 +73,6 @@ public class CurrencyPlaceholderExpansion extends PlaceholderExpansion {
 
     @Override
     public @Nullable String onPlaceholderRequest(Player player, @NotNull String params) {
-        plugin.getLogger().info("[Currency/PAPI] Request: " + params + " for player: " +
-                (player == null ? "NULL" : player.getName()));
 
         if (currencyService == null) {
             return null;

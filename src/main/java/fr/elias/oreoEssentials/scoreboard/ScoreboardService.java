@@ -233,10 +233,27 @@ public final class ScoreboardService implements Listener {
 
     private void applyLines(Player p, Scoreboard board, Objective obj) {
         List<String> lines = cfg.lines();
-        int score = lines.size();
+        List<String> expandedLines = new ArrayList<>();
 
         for (String raw : lines) {
-            String line = truncateVisible(render(p, raw), 40);
+            String rendered = render(p, raw);
+
+            if (rendered.contains("\n")) {
+                String[] split = rendered.split("\n");
+                for (String part : split) {
+                    if (!part.trim().isEmpty()) {
+                        expandedLines.add(part);
+                    }
+                }
+            } else {
+                expandedLines.add(rendered);
+            }
+        }
+
+        int score = expandedLines.size();
+
+        for (String line : expandedLines) {
+            line = truncateVisible(line, 40);
             if (line.isEmpty()) line = ChatColor.RESET.toString();
 
             String entry = ensureUnique(board, line);
@@ -288,15 +305,14 @@ public final class ScoreboardService implements Listener {
         // Step 2: Replace {player} placeholder
         s = s.replace("{player}", p.getName());
 
-        // Step 3: Process PlaceholderAPI placeholders
+// Step 3: Process PlaceholderAPI placeholders
         try {
             if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-                String before = s;
+                // Parse multiple times to ensure all placeholders resolve
                 s = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, s);
 
-
-                // Try again if placeholder wasn't resolved
-                if (s.contains("%oreo_balance_formatted%")) {
+                // Retry if any placeholders are still unresolved
+                if (s.contains("%")) {
                     s = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, s);
                 }
             }

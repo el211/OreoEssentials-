@@ -11,6 +11,7 @@ features:
     debug: false
     debug-echo-to-player: false
 
+placeholder-debug: false
 
 tradedebug: true
 

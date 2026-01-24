@@ -618,6 +618,7 @@ public final class OreoEssentials extends JavaPlugin {
         } catch (Throwable ignored) {}
 
         fr.elias.oreoEssentials.util.SkinRefresherBootstrap.init(this);
+        fr.elias.oreoEssentials.util.SkinDebug.init(this);
 
         Lang.init(this);
         boolean kitsFeature   = settingsConfig.kitsEnabled();
@@ -2451,23 +2452,28 @@ public final class OreoEssentials extends JavaPlugin {
             placeholderHook = new PlaceholderAPIHook(this);
 
             Bukkit.getScheduler().runTaskLater(this, () -> {
-                if (placeholderHook.register()) {
-                    getLogger().info("✓ PlaceholderAPI expansion 'oreo' registered successfully!");
-                    getLogger().info("  Available: %oreo_balance%, %oreo_balance_formatted%, etc.");
+                try {
+                    if (placeholderHook.register()) {
+                        getLogger().info("✓ PlaceholderAPI expansion 'oreo' registered successfully!");
+                        getLogger().info("  Available: %oreo_balance%, %oreo_balance_formatted%, %oreo_network_online%, etc.");
 
-                    if (getConfig().getBoolean("placeholder-debug", false)) {
-                        getLogger().info("[PAPI TEST] Testing placeholder registration...");
-                        Player testPlayer = Bukkit.getOnlinePlayers().stream().findFirst().orElse(null);
-                        if (testPlayer != null) {
-                            String test = placeholderHook.onRequest(testPlayer, "balance_formatted");
-                            getLogger().info("[PAPI TEST] %oreo_balance_formatted% = " + test);
+                        if (getConfig().getBoolean("placeholder-debug", false)) {
+                            getLogger().info("[PAPI TEST] Testing placeholder registration...");
+                            Player testPlayer = Bukkit.getOnlinePlayers().stream().findFirst().orElse(null);
+                            if (testPlayer != null) {
+                                String test = placeholderHook.onRequest(testPlayer, "network_online");
+                                getLogger().info("[PAPI TEST] %oreo_network_online% = " + test);
+                            }
                         }
+                    } else {
+                        getLogger().severe("✗ Failed to register PlaceholderAPI expansion!");
+                        getLogger().severe("  Check if another plugin is using the 'oreo' identifier.");
                     }
-                } else {
-                    getLogger().severe("✗ Failed to register PlaceholderAPI expansion!");
-                    getLogger().severe("  This may cause placeholders to not work in scoreboards.");
+                } catch (Exception e) {
+                    getLogger().severe("✗ Error during PlaceholderAPI registration: " + e.getMessage());
+                    e.printStackTrace();
                 }
-            }, 10L);
+            }, 60L);
 
         } catch (Throwable t) {
             getLogger().severe("Failed to register PlaceholderAPI: " + t.getMessage());

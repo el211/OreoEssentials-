@@ -107,7 +107,10 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             if (serverId.isBlank()) return "";
             return resolveServerNick(serverId);
         }
-
+        // Network online count
+        if (id.equals("network_online")) {
+            return String.valueOf(Bukkit.getOnlinePlayers().size());
+        }
         // Kits placeholders
         if (id.equals("kits_enabled")) {
             KitsManager km = kits();
