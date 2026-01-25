@@ -111,6 +111,25 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             if (serverId.isBlank()) return "";
             return resolveServerNick(serverId);
         }
+        // World placeholders
+        if (id.equals("world_name") || id.equals("world")) {
+            Player p = player.getPlayer();
+            if (p == null) return "";
+            return p.getWorld().getName(); // example: "world", "world_nether"
+        }
+
+        if (id.equals("world_nick")) {
+            Player p = player.getPlayer();
+            if (p == null) return "";
+            return resolveWorldNick(p.getWorld().getName()); // example: "OVERWORLD", "NETHER"
+        }
+
+        if (id.startsWith("world_nick_")) {
+            String worldId = id.substring("world_nick_".length());
+            if (worldId.isBlank()) return "";
+            return resolveWorldNick(worldId);
+        }
+
         // Network online count
         if (id.equals("network_online")) {
             return String.valueOf(Bukkit.getOnlinePlayers().size());
@@ -389,6 +408,24 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             return def;
         } catch (Throwable t) {
             return serverName;
+        }
+    }
+    private String resolveWorldNick(String worldName) {
+        try {
+            var c = plugin.getConfig();
+            String def = c.getString("world_nicknames.default", worldName);
+
+            var sec = c.getConfigurationSection("world_nicknames.map");
+            if (sec == null) return def;
+
+            for (String key : sec.getKeys(false)) {
+                if (key != null && key.equalsIgnoreCase(worldName)) {
+                    return sec.getString(key, def);
+                }
+            }
+            return def;
+        } catch (Throwable t) {
+            return worldName;
         }
     }
 

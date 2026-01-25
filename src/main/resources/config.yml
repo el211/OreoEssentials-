@@ -415,9 +415,11 @@ zessentials-migration:
   table-prefix: "zessentials_"
 
 
-server_nicknames:
+world_nicknames:
   default: "UNKNOWN"
   map:
-    afeliav7: "MINING"
-    afeliav7_nether: "NETHER"
+    world: "OVERWORLD"
+    world_nether: "NETHER"
+    world_the_end: "THE END"
+
 
