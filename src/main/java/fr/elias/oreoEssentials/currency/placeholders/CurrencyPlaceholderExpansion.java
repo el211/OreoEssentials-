@@ -48,9 +48,8 @@ public class CurrencyPlaceholderExpansion extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getIdentifier() {
-        return "oreo";
+        return "oreocurrency"; // Changed from "oreo"
     }
-
     @Override
     public @NotNull String getAuthor() {
         return "OreoEssentials";
