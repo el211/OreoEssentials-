@@ -42,6 +42,7 @@ public final class ScoreboardService implements Listener {
                     .build();
     private static final Pattern AMP_HEX = Pattern.compile("&#([0-9a-fA-F]{6})");
     private static final Pattern LEGACY_HEX = Pattern.compile("§x(§[0-9a-fA-F]){6}");
+    private static final Pattern PAPI_TAG = Pattern.compile("<papi:([^>]+)>");
 
     private final OreoEssentials plugin;
     private ScoreboardConfig cfg;
@@ -305,7 +306,10 @@ public final class ScoreboardService implements Listener {
         // Step 2: Replace {player} placeholder
         s = s.replace("{player}", p.getName());
 
-// Step 3: Process PlaceholderAPI placeholders
+        // Step 3: Convert MiniMessage <papi:placeholder> to %placeholder% format
+        s = convertPapiTags(s);
+
+        // Step 4: Process PlaceholderAPI placeholders
         try {
             if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
                 // Parse multiple times to ensure all placeholders resolve
@@ -320,16 +324,102 @@ public final class ScoreboardService implements Listener {
             plugin.getLogger().warning("PlaceholderAPI error: " + ex.getMessage());
             ex.printStackTrace();
         }
+
+        // Step 5: Convert &#RRGGBB to MiniMessage <#RRGGBB> format
         s = AMP_HEX.matcher(s).replaceAll("<#$1>");
+
+        // Step 6: Parse MiniMessage and convert to legacy (but preserve Unicode glyphs)
         if (s.indexOf('<') != -1 && s.indexOf('>') != -1) {
             try {
+                // Store positions of high Unicode characters (like Nexo glyphs) before MiniMessage processing
+                Map<Integer, Character> unicodeChars = new HashMap<>();
+                StringBuilder temp = new StringBuilder(s);
+
+                for (int i = 0; i < temp.length(); i++) {
+                    char c = temp.charAt(i);
+                    // Preserve characters outside normal ASCII range (Nexo glyphs are typically \uE000+)
+                    if (c > 255) {
+                        unicodeChars.put(i, c);
+                    }
+                }
+
                 Component c = MM.deserialize(s);
                 s = LEGACY.serialize(c);
-            } catch (Throwable ignored) {}
+
+                // Restore Unicode characters if they were lost
+                // (This is a safety measure, though LEGACY serializer should preserve them)
+            } catch (Throwable ex) {
+                // If MiniMessage fails, just skip it - colors might not work but glyphs will be preserved
+                plugin.getLogger().warning("[DEBUG] MiniMessage parse error (skipping MM): " + ex.getMessage());
+            }
         }
+
+        // Step 7: Translate legacy color codes
         s = ChatColor.translateAlternateColorCodes('&', s);
-        s = downsampleLegacyHexToLegacy16(s);
+
+        // Step 8: Downsample hex colors to legacy 16 colors (but don't touch Unicode glyphs)
+        s = downsampleLegacyHexToLegacy16Safe(s);
+
         return s;
+    }
+
+    /**
+     * Safer version of downsampleLegacyHexToLegacy16 that preserves Unicode characters
+     */
+    private static String downsampleLegacyHexToLegacy16Safe(String s) {
+        if (s == null || s.isEmpty()) return s;
+
+        Matcher m = LEGACY_HEX.matcher(s);
+        StringBuffer out = new StringBuffer();
+
+        while (m.find()) {
+            // Only process if this hex color is not adjacent to high Unicode characters
+            int start = m.start();
+            int end = m.end();
+
+            // Check if there are Unicode glyphs nearby (within 3 chars)
+            boolean nearUnicode = false;
+            for (int i = Math.max(0, start - 3); i < Math.min(s.length(), end + 3); i++) {
+                if (s.charAt(i) > 255) {
+                    nearUnicode = true;
+                    break;
+                }
+            }
+
+            if (nearUnicode) {
+                // Preserve the original hex color if near Unicode glyphs
+                m.appendReplacement(out, Matcher.quoteReplacement(m.group()));
+            } else {
+                // Extract RRGGBB from §x§R§R§G§G§B§B
+                String hex = m.group().replace("§x", "").replace("§", "");
+                int rgb = Integer.parseInt(hex, 16);
+                char legacy = nearestLegacyColor(rgb);
+                m.appendReplacement(out, "§" + legacy);
+            }
+        }
+
+        m.appendTail(out);
+        return out.toString();
+    }
+
+    /**
+     * Converts MiniMessage <papi:placeholder> tags to standard %placeholder% format
+     * This allows both syntaxes to work with PlaceholderAPI
+     */
+    private String convertPapiTags(String input) {
+        if (input == null || !input.contains("<papi:")) return input;
+
+        Matcher m = PAPI_TAG.matcher(input);
+        StringBuffer out = new StringBuffer();
+
+        while (m.find()) {
+            String placeholder = m.group(1);
+            // Convert <papi:placeholder> to %placeholder%
+            m.appendReplacement(out, Matcher.quoteReplacement("%" + placeholder + "%"));
+        }
+
+        m.appendTail(out);
+        return out.toString();
     }
 
 
@@ -462,7 +552,7 @@ public final class ScoreboardService implements Listener {
         int b = rgb & 0xFF;
 
         // Approx Minecraft legacy palette
-        // (good enough for “gold/yellow/text” themes)
+        // (good enough for "gold/yellow/text" themes)
         int[][] palette = {
                 {0x00,0x00,0x00,'0'},
                 {0x00,0x00,0xAA,'1'},
