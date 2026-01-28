@@ -8,7 +8,7 @@ import org.bukkit.entity.Entity;
 public final class GrinchHook {
     private static boolean lookedUp = false;
     private static UltimateChristmas uc = null;
-    private static Object grinchManager = null; // don’t import manager types
+    private static Object grinchManager = null;
 
     private GrinchHook() {}
 

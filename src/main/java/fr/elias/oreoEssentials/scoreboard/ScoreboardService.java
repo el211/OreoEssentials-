@@ -234,33 +234,59 @@ public final class ScoreboardService implements Listener {
 
     private void applyLines(Player p, Scoreboard board, Objective obj) {
         List<String> lines = cfg.lines();
-        List<String> expandedLines = new ArrayList<>();
+        List<String> expanded = new ArrayList<>();
 
         for (String raw : lines) {
             String rendered = render(p, raw);
 
             if (rendered.contains("\n")) {
-                String[] split = rendered.split("\n");
-                for (String part : split) {
-                    if (!part.trim().isEmpty()) {
-                        expandedLines.add(part);
-                    }
+                for (String part : rendered.split("\n")) {
+                    if (!part.trim().isEmpty()) expanded.add(part);
                 }
             } else {
-                expandedLines.add(rendered);
+                expanded.add(rendered);
             }
         }
 
-        int score = expandedLines.size();
+        for (int i = 0; i < 64; i++) {
+            String teamName = "oe_ln_" + i;
+            var t = board.getTeam(teamName);
+            if (t != null) t.unregister();
+        }
+        for (String e : new HashSet<>(board.getEntries())) {
+            board.resetScores(e);
+        }
 
-        for (String line : expandedLines) {
-            line = truncateVisible(line, 40);
-            if (line.isEmpty()) line = ChatColor.RESET.toString();
+        int score = expanded.size();
 
-            String entry = ensureUnique(board, line);
+        for (int i = 0; i < expanded.size(); i++) {
+            String text = expanded.get(i);
+
+            text = truncateVisible(text, 80);
+
+            String entry = "§" + Integer.toHexString(i % 16);
+
+            String teamName = "oe_ln_" + i;
+            var team = board.getTeam(teamName);
+            if (team == null) team = board.registerNewTeam(teamName);
+
+            String prefix = text;
+            String suffix = "";
+
+            if (text.length() > 64) {
+                prefix = text.substring(0, 64);
+                suffix = text.substring(64);
+                if (suffix.length() > 64) suffix = suffix.substring(0, 64);
+            }
+
+            team.addEntry(entry);
+            team.prefix(Component.text(prefix));
+            team.suffix(Component.text(suffix));
+
             obj.getScore(entry).setScore(score--);
         }
     }
+
 
     private static String ensureUnique(Scoreboard board, String base) {
         String s = base;
@@ -300,22 +326,20 @@ public final class ScoreboardService implements Listener {
     private String render(Player p, String raw) {
         if (raw == null) return "";
 
-        // Step 1: Apply tag animations first
+        //1
         String s = applyTagAnimations(raw);
 
-        // Step 2: Replace {player} placeholder
+        //2
         s = s.replace("{player}", p.getName());
 
-        // Step 3: Convert MiniMessage <papi:placeholder> to %placeholder% format
+        //3
         s = convertPapiTags(s);
 
-        // Step 4: Process PlaceholderAPI placeholders
+        //4
         try {
             if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-                // Parse multiple times to ensure all placeholders resolve
                 s = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, s);
 
-                // Retry if any placeholders are still unresolved
                 if (s.contains("%")) {
                     s = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, s);
                 }
@@ -325,43 +349,58 @@ public final class ScoreboardService implements Listener {
             ex.printStackTrace();
         }
 
-        // Step 5: Convert &#RRGGBB to MiniMessage <#RRGGBB> format
+        //5
         s = AMP_HEX.matcher(s).replaceAll("<#$1>");
 
-        // Step 6: Parse MiniMessage and convert to legacy (but preserve Unicode glyphs)
+
+        //6
         if (s.indexOf('<') != -1 && s.indexOf('>') != -1) {
             try {
-                // Store positions of high Unicode characters (like Nexo glyphs) before MiniMessage processing
-                Map<Integer, Character> unicodeChars = new HashMap<>();
-                StringBuilder temp = new StringBuilder(s);
+                boolean nexoEnabled = Bukkit.getPluginManager().getPlugin("Nexo") != null
+                        && Bukkit.getPluginManager().getPlugin("Nexo").isEnabled();
 
-                for (int i = 0; i < temp.length(); i++) {
-                    char c = temp.charAt(i);
-                    // Preserve characters outside normal ASCII range (Nexo glyphs are typically \uE000+)
-                    if (c > 255) {
-                        unicodeChars.put(i, c);
-                    }
+                if (nexoEnabled) {
+                    s = parseWithNexoAdventureUtils(s);
+                } else {
+                    Component comp = MM.deserialize(s);
+                    s = LEGACY.serialize(comp);
                 }
-
-                Component c = MM.deserialize(s);
-                s = LEGACY.serialize(c);
-
-                // Restore Unicode characters if they were lost
-                // (This is a safety measure, though LEGACY serializer should preserve them)
-            } catch (Throwable ex) {
-                // If MiniMessage fails, just skip it - colors might not work but glyphs will be preserved
-                plugin.getLogger().warning("[DEBUG] MiniMessage parse error (skipping MM): " + ex.getMessage());
+            } catch (Throwable ignored) {
             }
         }
 
-        // Step 7: Translate legacy color codes
+        //7
         s = ChatColor.translateAlternateColorCodes('&', s);
 
-        // Step 8: Downsample hex colors to legacy 16 colors (but don't touch Unicode glyphs)
+        //8
         s = downsampleLegacyHexToLegacy16Safe(s);
 
         return s;
     }
+    private String parseWithNexoAdventureUtils(String input) {
+        try {
+            Class<?> adv = Class.forName("com.nexomc.nexo.utils.AdventureUtils");
+
+            try {
+                return (String) adv.getMethod("parseLegacyThroughMiniMessage", String.class)
+                        .invoke(null, input);
+            } catch (NoSuchMethodException ignored) {}
+
+            try {
+                return (String) adv.getMethod("parseLegacy", String.class)
+                        .invoke(null, input);
+            } catch (NoSuchMethodException ignored) {}
+
+        } catch (Throwable ignored) {}
+
+        try {
+            Component comp = MM.deserialize(input);
+            return LEGACY.serialize(comp);
+        } catch (Throwable ignored) {
+            return input;
+        }
+    }
+
 
     /**
      * Safer version of downsampleLegacyHexToLegacy16 that preserves Unicode characters
@@ -373,11 +412,9 @@ public final class ScoreboardService implements Listener {
         StringBuffer out = new StringBuffer();
 
         while (m.find()) {
-            // Only process if this hex color is not adjacent to high Unicode characters
             int start = m.start();
             int end = m.end();
 
-            // Check if there are Unicode glyphs nearby (within 3 chars)
             boolean nearUnicode = false;
             for (int i = Math.max(0, start - 3); i < Math.min(s.length(), end + 3); i++) {
                 if (s.charAt(i) > 255) {
@@ -387,10 +424,8 @@ public final class ScoreboardService implements Listener {
             }
 
             if (nearUnicode) {
-                // Preserve the original hex color if near Unicode glyphs
                 m.appendReplacement(out, Matcher.quoteReplacement(m.group()));
             } else {
-                // Extract RRGGBB from §x§R§R§G§G§B§B
                 String hex = m.group().replace("§x", "").replace("§", "");
                 int rgb = Integer.parseInt(hex, 16);
                 char legacy = nearestLegacyColor(rgb);

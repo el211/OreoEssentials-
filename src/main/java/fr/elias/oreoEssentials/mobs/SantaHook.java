@@ -24,7 +24,7 @@ public final class SantaHook {
         var plugin = Bukkit.getPluginManager().getPlugin("UltimateChristmas");
         if (plugin instanceof UltimateChristmas uc) {
             try {
-                cachedSantaManager = uc.getSantaManager(); // <-- you MUST expose this getter in UltimateChristmas
+                cachedSantaManager = uc.getSantaManager();
             } catch (Throwable ignored) {
                 cachedSantaManager = null;
             }

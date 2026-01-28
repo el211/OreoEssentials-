@@ -40,15 +40,13 @@ public final class HealthBarListener implements Listener {
     private final boolean includePassive, includePlayers, onlyWhenDamaged, mythicEnabled;
     private final double yOffset, lineOffset;
     private final int updateInterval;
-    private final double viewDistance;     // blocks
-    private final double viewDistanceSq;   // cached
+    private final double viewDistance;
+    private final double viewDistanceSq;
     private final boolean requireLOS;
-    private final int spawnPerTickCap;     // cap for new holograms per sweep
+    private final int spawnPerTickCap;
 
-    // holograms
     private final Map<UUID, ArmorStand> topLine = new HashMap<>();
     private final Map<UUID, ArmorStand> bottomLine = new HashMap<>();
-
     private BukkitTask sweeper;
 
 
@@ -61,7 +59,6 @@ public final class HealthBarListener implements Listener {
 
         var hb = (root != null) ? root.getConfigurationSection("healthbar") : null;
 
-        // format (string or list, max 2 lines)
         List<String> linesTmp = new ArrayList<>();
         if (hb != null) {
             if (hb.isList("format")) {
@@ -116,13 +113,11 @@ public final class HealthBarListener implements Listener {
         bottomLine.clear();
     }
 
-    /* ---------------- Events ---------------- */
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onSpawn(CreatureSpawnEvent e) {
         if (!enabled) return;
 
-        // ignore armor stands and our own holograms
         if (e.getEntity().getType() == EntityType.ARMOR_STAND) return;
         if (e.getEntity().getScoreboardTags().contains(HOLO_TAG)) return;
 
@@ -139,7 +134,7 @@ public final class HealthBarListener implements Listener {
         if (!(e.getEntity() instanceof LivingEntity le)) return;
         if (!shouldTrack(le)) return;
 
-        Bukkit.getScheduler().runTask(plugin, () -> update(le)); // after health applied
+        Bukkit.getScheduler().runTask(plugin, () -> update(le));
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -192,25 +187,21 @@ public final class HealthBarListener implements Listener {
 
     private boolean shouldTrack(LivingEntity le) {
 
-        // 1. never track armor stands / holograms
         if (le.getType() == EntityType.ARMOR_STAND) return false;
         if (le.getScoreboardTags().contains(HOLO_TAG)) return false;
 
-        // 2. Don't track special NPCs (safe even if UltimateChristmas isn't present)
         try {
             if (SantaHook.isSanta(le) || GrinchHook.isGrinch(le)) {
                 return false;
             }
         } catch (Throwable ignored) {}
 
-        // 2b. Back-compat safety: if you kept xmas API around, skip Santa via API too
         if (xmas != null) {
             try {
                 if (xmas.isSantaEntity(le)) return false;
             } catch (Throwable ignored) {}
         }
 
-        // 3. respect config for players/passives
         if (le instanceof Player) {
             return includePlayers;
         }
@@ -236,7 +227,6 @@ public final class HealthBarListener implements Listener {
 
     private void update(LivingEntity le) {
 
-        // Hide hologram if nobody nearby OR if this is Santa/Grinch (safety double-check)
         if (!hasViewer(le)
                 || SantaHook.isSanta(le)
                 || GrinchHook.isGrinch(le)

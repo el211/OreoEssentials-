@@ -58,8 +58,7 @@ public final class SpawnMobCommand implements TabExecutor {
                 Entity e = w.spawnEntity(loc, type);
                 if (e != null) spawned++;
             } catch (Throwable t) {
-                // Some types may throw if conditions aren't met (e.g., missing blocks/fluids)
-                // We ignore per-entity errors and report how many succeeded.
+
             }
         }
 
