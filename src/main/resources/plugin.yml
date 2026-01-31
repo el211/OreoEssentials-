@@ -1,5 +1,5 @@
 name: OreoEssentials
-version: "3.2-SNAPSHOT"
+version: "3.3-SNAPSHOT"
 main: fr.elias.oreoEssentials.OreoEssentials
 api-version: "1.21"
 description: "All-in-one essentials plugin with homes/warps/spawn, RTP, economy (Vault), chat tools, portals/jump pads, cross-server EC & player sync."
@@ -73,6 +73,12 @@ commands:
     usage: "/pw help"
     aliases: [playerwarp, playerwarps]
     permission: "oe.pw"
+
+  commandtoggle:
+    description: Manage command toggles
+    usage: /<command> [list|enable|disable|status|reload] [command]
+    permission: oreo.commandtoggle.admin
+    aliases: [cmdtoggle, cmdt]
 
   modgui:
     description: Open Server Management GUI
@@ -969,6 +975,14 @@ permissions:
 
   oreo.trade:
     default: true
+
+  oreo.commandtoggle.admin:
+    description: Allows managing command toggles
+    default: op
+
+  oreo.commandtoggle.bypass:
+    description: Allows bypassing disabled commands
+    default: op
 
   oreo.warps.admin:
     description: Use the admin warps GUI (delete/toggle permission)

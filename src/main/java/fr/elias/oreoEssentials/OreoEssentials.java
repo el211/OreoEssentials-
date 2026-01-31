@@ -11,6 +11,9 @@ import fr.elias.oreoEssentials.commands.core.playercommands.back.BackCommand;
 import fr.elias.oreoEssentials.commands.core.playercommands.back.BackLocation;
 import fr.elias.oreoEssentials.commands.core.playercommands.back.BackService;
 import fr.elias.oreoEssentials.commands.core.playercommands.back.BackJoinListener;
+import fr.elias.oreoEssentials.commandtoggle.CommandToggleConfig;
+import fr.elias.oreoEssentials.commandtoggle.CommandToggleListener;
+import fr.elias.oreoEssentials.commandtoggle.CommandToggleService;
 import fr.elias.oreoEssentials.cross.InvlookListener;
 import fr.elias.oreoEssentials.cross.InvlookManager;
 import fr.elias.oreoEssentials.currency.CurrencyConfig;
@@ -21,6 +24,7 @@ import fr.elias.oreoEssentials.currency.commands.CurrencySendCommand;
 import fr.elias.oreoEssentials.currency.commands.CurrencyTopCommand;
 import fr.elias.oreoEssentials.currency.placeholders.CurrencyPlaceholderExpansion;
 import fr.elias.oreoEssentials.currency.rabbitmq.CurrencyPacketNamespace;
+import fr.elias.oreoEssentials.commandtoggle.CommandToggleCommand;
 import fr.elias.oreoEssentials.currency.storage.CurrencyStorage;
 import fr.elias.oreoEssentials.currency.storage.JsonCurrencyStorage;
 import fr.elias.oreoEssentials.currency.storage.MongoCurrencyStorage;
@@ -160,6 +164,8 @@ public final class OreoEssentials extends JavaPlugin {
     private PlaceholderAPIHook placeholderHook;
     private CurrencyService currencyService;
     private CurrencyConfig currencyConfig;
+    private CommandToggleConfig commandToggleConfig;
+    private CommandToggleService commandToggleService;
 
     public CurrencyService getCurrencyService() { return currencyService; }
     public CurrencyConfig getCurrencyConfig() { return currencyConfig; }
@@ -619,7 +625,21 @@ public final class OreoEssentials extends JavaPlugin {
 
         fr.elias.oreoEssentials.util.SkinRefresherBootstrap.init(this);
         fr.elias.oreoEssentials.util.SkinDebug.init(this);
+        try {
+            this.commandToggleConfig = new CommandToggleConfig(this);
+            this.commandToggleService = new CommandToggleService(this, commandToggleConfig);
 
+            // Register the listener to intercept disabled commands
+            getServer().getPluginManager().registerEvents(
+                    new CommandToggleListener(this, commandToggleConfig),
+                    this
+            );
+
+            getLogger().info("[CommandToggle] Command toggle system initialized");
+        } catch (Exception e) {
+            getLogger().severe("[CommandToggle] Failed to initialize: " + e.getMessage());
+            e.printStackTrace();
+        }
         Lang.init(this);
         boolean kitsFeature   = settingsConfig.kitsEnabled();
         boolean kitsRegister  = settingsConfig.kitsCommandsEnabled();
@@ -1845,7 +1865,12 @@ public final class OreoEssentials extends JavaPlugin {
             getCommand("aliaseditor").setExecutor(aliasCmd);
             getCommand("aliaseditor").setTabCompleter(aliasCmd);
         }
-
+        if (getCommand("commandtoggle") != null && commandToggleConfig != null && commandToggleService != null) {
+            var cmdToggleCmd = new CommandToggleCommand(this, commandToggleConfig, commandToggleService);
+            getCommand("commandtoggle").setExecutor(cmdToggleCmd);
+            getCommand("commandtoggle").setTabCompleter(cmdToggleCmd);
+            getLogger().info("[CommandToggle] /commandtoggle command registered");
+        }
         if (getCommand("otherhome") != null) {
             var otherHome = new fr.elias.oreoEssentials.commands.core.admins.OtherHomeCommand(this, homeService);
             this.commands.register(otherHome);
@@ -2112,12 +2137,21 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[Nametag] Disabled by settings.yml");
         }
         tryRegisterPlaceholderAPI();
-
+        try {
+            if (commandToggleService != null) {
+                commandToggleService.applyToggles();
+                getLogger().info("[CommandToggle] Command toggles applied successfully");
+            }
+        } catch (Exception e) {
+            getLogger().severe("[CommandToggle] Failed to apply command toggles: " + e.getMessage());
+            e.printStackTrace();
+        }
         getLogger().info("OreoEssentials enabled.");
     }
 
     public fr.elias.oreoEssentials.playervaults.PlayerVaultsService getPlayerVaultsService() {
         return playervaultsService;
+
     }
 
     private void registerAllPacketsDeterministically(PacketManager pm) {

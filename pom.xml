@@ -6,7 +6,7 @@
 
     <groupId>fr.elias</groupId>
     <artifactId>OreoEssentials</artifactId>
-    <version>3.2-SNAPSHOT</version>
+    <version>3.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>OreoEssentials</name>
@@ -218,7 +218,7 @@
         <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-text-minimessage</artifactId>
-            <version>4.24.0</version>
+            <version> 4.24.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -272,7 +272,7 @@
             <artifactId>ultimateChristmas</artifactId>
             <version>1.0</version>
             <scope>system</scope>
-            <systemPath>${basedir}/libs/UltimateChristmas-3.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${basedir}/libs/UltimateChristmas-3.2-SNAPSHOT.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.github.MilkBowl</groupId>

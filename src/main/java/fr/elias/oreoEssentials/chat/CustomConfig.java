@@ -36,7 +36,10 @@ public class CustomConfig {
             plugin.getLogger().severe("Error creating " + fileName + ": " + e.getMessage());
         }
 
+        // Load the existing config FIRST
         config = YamlConfiguration.loadConfiguration(file);
+
+        // Only merge defaults if needed
         mergeDefaults();
     }
 
@@ -68,18 +71,22 @@ public class CustomConfig {
         for (String key : defaultKeys) {
             String fullPath = path.isEmpty() ? key : path + "." + key;
 
+            // ONLY add if the key doesn't exist
             if (!current.contains(key)) {
                 Object defaultValue = defaults.get(key);
                 current.set(key, defaultValue);
                 modified = true;
                 plugin.getLogger().info("[" + fileName + "] Added missing field: " + fullPath);
-            } else if (defaults.isConfigurationSection(key) && current.isConfigurationSection(key)) {
+            }
+            // If both are sections, recursively merge
+            else if (defaults.isConfigurationSection(key) && current.isConfigurationSection(key)) {
                 ConfigurationSection defaultSection = defaults.getConfigurationSection(key);
                 ConfigurationSection currentSection = current.getConfigurationSection(key);
                 if (defaultSection != null && currentSection != null) {
                     modified |= mergeSection(defaultSection, currentSection, fullPath);
                 }
             }
+            // IMPORTANT: If key exists but is NOT a section, DO NOT OVERWRITE IT
         }
 
         return modified;
@@ -98,7 +105,10 @@ public class CustomConfig {
     }
 
     public void reloadCustomConfig() {
+        // Load from file FIRST (this preserves your custom values)
         config = YamlConfiguration.loadConfiguration(file);
+
+        // Then merge any NEW defaults that might have been added
         mergeDefaults();
     }
 }
