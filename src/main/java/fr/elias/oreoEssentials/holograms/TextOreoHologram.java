@@ -6,6 +6,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -69,16 +70,16 @@ public final class TextOreoHologram extends OreoHologram {
 
     @Override
     public void despawn() {
-        // ⬇️ NEW: untrack from per-player service first
         var svc = getPerPlayerSvc();
         if (svc != null && entityId != null) {
             svc.untrack(entityId);
         }
+
         removeAllTaggedCopies();
         entityId = null;
     }
 
-    // helpers (inject via main plugin singleton; replace with your accessor)
+
     private boolean isPerPlayerEnabled() {
         // settings.yml: holograms.text.per-player: true|false
         try {
@@ -254,7 +255,8 @@ public final class TextOreoHologram extends OreoHologram {
         final var world = loc.getWorld();
         final String nameKey = getName().toLowerCase(Locale.ROOT);
 
-        for (var td : world.getEntitiesByClass(TextDisplay.class)) {
+        for (var e : world.getNearbyEntities(loc, 5, 5, 5, ent -> ent instanceof TextDisplay)) {
+            var td = (TextDisplay) e;
             var pdc = td.getPersistentDataContainer();
             if (pdc.has(K_IS_OREO, PersistentDataType.BYTE)) {
                 String n = pdc.get(K_NAME, PersistentDataType.STRING);
@@ -263,6 +265,7 @@ public final class TextOreoHologram extends OreoHologram {
                 }
             }
         }
+
         findEntity().ifPresent(e -> { try { e.remove(); } catch (Throwable ignored) {} });
     }
 

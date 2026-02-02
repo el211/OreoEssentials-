@@ -21,7 +21,6 @@ import java.util.Optional;
 
 public final class ItemOreoHologram extends OreoHologram {
 
-    // Static keys
     private static final NamespacedKey K_IS_OREO = NamespacedKey.fromString("oreoessentials:oreo_hologram");
     private static final NamespacedKey K_NAME    = NamespacedKey.fromString("oreoessentials:name");
     private static final NamespacedKey K_TYPE    = NamespacedKey.fromString("oreoessentials:type");
@@ -30,7 +29,6 @@ public final class ItemOreoHologram extends OreoHologram {
         super(name, data);
     }
 
-    /** Try to find an already-tagged ItemDisplay for this hologram name near the target location / in the chunk. */
     private Optional<ItemDisplay> findTaggedExisting() {
         var loc = data.location.toLocation();
         if (loc == null || loc.getWorld() == null) return Optional.empty();
@@ -38,7 +36,6 @@ public final class ItemOreoHologram extends OreoHologram {
         final var world = loc.getWorld();
         final String nameKey = getName().toLowerCase(Locale.ROOT);
 
-        // Fast radius search
         for (var e : world.getNearbyEntities(loc, 3, 3, 3, ent -> ent instanceof ItemDisplay)) {
             var id = (ItemDisplay) e;
             PersistentDataContainer pdc = id.getPersistentDataContainer();
@@ -48,7 +45,6 @@ public final class ItemOreoHologram extends OreoHologram {
             }
         }
 
-        // Fallback: scan the chunk
         for (var e : world.getChunkAt(loc).getEntities()) {
             if (e instanceof ItemDisplay id) {
                 var pdc = id.getPersistentDataContainer();
@@ -67,7 +63,6 @@ public final class ItemOreoHologram extends OreoHologram {
         if (loc == null) return;
         if (findEntity().isPresent()) return;
 
-        // Re-attach if a tagged ItemDisplay already exists
         var existing = findTaggedExisting();
         ItemDisplay id;
         if (existing.isPresent()) {
@@ -77,7 +72,6 @@ public final class ItemOreoHologram extends OreoHologram {
             id = (ItemDisplay) loc.getWorld().spawnEntity(loc, EntityType.ITEM_DISPLAY);
             entityId = id.getUniqueId();
 
-            // Tag it so we can reattach / clean up next time
             var pdc = id.getPersistentDataContainer();
             pdc.set(K_IS_OREO, PersistentDataType.BYTE, (byte) 1);
             pdc.set(K_NAME, PersistentDataType.STRING, getName().toLowerCase(Locale.ROOT));
@@ -85,10 +79,9 @@ public final class ItemOreoHologram extends OreoHologram {
         }
 
         applyTransform();
-        applyCommon();   // billboard, view range, scale, brightness, etc.
+        applyCommon();
         applyVisibility();
 
-        // load stored item (might be null on first spawn)
         ItemStack stack = decodeItem(data.itemStackBase64);
         if (stack == null || stack.getType() == org.bukkit.Material.AIR) {
             stack = new org.bukkit.inventory.ItemStack(org.bukkit.Material.DIAMOND_BLOCK);
@@ -100,12 +93,13 @@ public final class ItemOreoHologram extends OreoHologram {
 
     @Override
     public void despawn() {
-        // Remove ALL tagged copies with this hologram name
         var loc = data.location.toLocation();
         if (loc != null && loc.getWorld() != null) {
             String nameKey = getName().toLowerCase(Locale.ROOT);
             var world = loc.getWorld();
-            for (var id : world.getEntitiesByClass(ItemDisplay.class)) {
+
+            for (var e : world.getNearbyEntities(loc, 5, 5, 5, ent -> ent instanceof ItemDisplay)) {
+                var id = (ItemDisplay) e;
                 var pdc = id.getPersistentDataContainer();
                 if (pdc.has(K_IS_OREO, PersistentDataType.BYTE)) {
                     String n = pdc.get(K_NAME, PersistentDataType.STRING);
@@ -115,7 +109,7 @@ public final class ItemOreoHologram extends OreoHologram {
                 }
             }
         }
-        // Also remove tracked entity & clear id
+
         findEntity().ifPresent(e -> { try { e.remove(); } catch (Throwable ignored) {} });
         entityId = null;
     }
@@ -141,7 +135,6 @@ public final class ItemOreoHologram extends OreoHologram {
 
     @Override
     protected void applyVisibility() {
-        // Global entity for now.
     }
 
     public void setItem(ItemStack stack) {
@@ -149,7 +142,6 @@ public final class ItemOreoHologram extends OreoHologram {
         findEntity().ifPresent(e -> ((ItemDisplay) e).setItemStack(stack));
     }
 
-    /* ----------------- (de)serialization helpers ----------------- */
 
     private static String encodeItem(ItemStack stack) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();

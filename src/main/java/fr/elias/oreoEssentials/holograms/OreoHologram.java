@@ -182,8 +182,12 @@ public abstract class OreoHologram {
         t.setLineWidth(Integer.MAX_VALUE);
 
         boolean transparent = "TRANSPARENT".equalsIgnoreCase(data.backgroundColor);
-        t.setSeeThrough(transparent);
-        if (!transparent) {
+
+        if (transparent) {
+            t.setDefaultBackground(false);
+            t.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));  //
+        } else {
+            t.setDefaultBackground(false);
             t.setBackgroundColor(parseColor(data.backgroundColor));
         }
 

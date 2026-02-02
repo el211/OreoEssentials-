@@ -17,7 +17,6 @@ public final class OreoHolograms {
 
     }
 
-    /* -------------------- lifecycle -------------------- */
 
     public void load() {
         holos.clear();
@@ -25,20 +24,15 @@ public final class OreoHolograms {
 
         for (OreoHologramData d : store.loadAll()) {
             try {
-                // If not explicitly FIXED, keep autorotate (CENTER) across restarts
-                if (d.billboard == null || d.billboard != OreoHologramBillboard.FIXED) {
-                    if (d.billboard != OreoHologramBillboard.CENTER) migrated = true;
+                if (d.billboard == null) {
                     d.billboard = OreoHologramBillboard.CENTER;
+                    migrated = true;
                 }
 
-                // Sane default view range to avoid culling
                 if (d.visibilityDistance <= 0) {
                     d.visibilityDistance = 64.0;
                     migrated = true;
                 }
-
-                // IMPORTANT: do NOT force updateIntervalTicks for autorotation
-                // Client billboard handles smooth facing; ticking is unnecessary.
 
                 OreoHologram h = OreoHologramFactory.fromData(d);
                 holos.put(h.getName().toLowerCase(Locale.ROOT), h);

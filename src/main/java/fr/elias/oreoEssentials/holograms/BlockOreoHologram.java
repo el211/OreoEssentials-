@@ -4,10 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.entity.BlockDisplay;
-import org.bukkit.entity.Display;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
+import org.bukkit.entity.*;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -94,12 +91,14 @@ public final class BlockOreoHologram extends OreoHologram {
 
     @Override
     public void despawn() {
-        // Remove ALL tagged copies with this hologram name (avoid orphans)
         var loc = data.location.toLocation();
         if (loc != null && loc.getWorld() != null) {
             String nameKey = getName().toLowerCase(Locale.ROOT);
             var world = loc.getWorld();
-            for (var bd : world.getEntitiesByClass(BlockDisplay.class)) {
+
+            // blockDisplay for block holograms
+            for (var e : world.getNearbyEntities(loc, 5, 5, 5, ent -> ent instanceof BlockDisplay)) {
+                var bd = (BlockDisplay) e;
                 var pdc = bd.getPersistentDataContainer();
                 if (pdc.has(K_IS_OREO, PersistentDataType.BYTE)) {
                     String n = pdc.get(K_NAME, PersistentDataType.STRING);
@@ -109,7 +108,7 @@ public final class BlockOreoHologram extends OreoHologram {
                 }
             }
         }
-        // Also remove the tracked one and clear id
+
         findEntity().ifPresent(e -> { try { e.remove(); } catch (Throwable ignored) {} });
         entityId = null;
     }
