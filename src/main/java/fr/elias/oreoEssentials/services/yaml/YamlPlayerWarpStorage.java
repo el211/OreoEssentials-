@@ -1,8 +1,8 @@
 package fr.elias.oreoEssentials.services.yaml;
 
 import fr.elias.oreoEssentials.OreoEssentials;
-import fr.elias.oreoEssentials.playerwarp.PlayerWarp;
-import fr.elias.oreoEssentials.playerwarp.PlayerWarpStorage;
+import fr.elias.oreoEssentials.modules.playerwarp.PlayerWarp;
+import fr.elias.oreoEssentials.modules.playerwarp.PlayerWarpStorage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;

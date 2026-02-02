@@ -1,7 +1,7 @@
 package fr.elias.oreoEssentials.playersync;
 
 import fr.elias.oreoEssentials.OreoEssentials;
-import fr.elias.oreoEssentials.enderchest.EnderChestStorage;
+import fr.elias.oreoEssentials.modules.enderchest.EnderChestStorage;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
@@ -28,7 +28,6 @@ public final class PlayerSyncService {
                 s.armor     = p.getInventory().getArmorContents();
                 s.offhand   = p.getInventory().getItemInOffHand();
             } else {
-                // Store empty payloads so other servers won't overwrite local items when inv sync is off
                 s.inventory = new ItemStack[0];
                 s.armor     = new ItemStack[0];
                 s.offhand   = null;
@@ -45,7 +44,7 @@ public final class PlayerSyncService {
             if (pr.health) {
                 s.health = Math.max(0.0, p.getHealth());
             } else {
-                s.health = p.getHealth(); // keep current snapshot so applying elsewhere won’t hurt
+                s.health = p.getHealth();
             }
 
             if (pr.hunger) {
@@ -68,10 +67,8 @@ public final class PlayerSyncService {
             PlayerSyncSnapshot s = storage.load(p.getUniqueId());
             if (s == null) return;
 
-            // Inventory/armor/offhand
             if (pr.inv) {
                 if (s.inventory != null) {
-                    // main inventory has 36 slots (0..35) -> clamp to 36
                     ItemStack[] main = EnderChestStorage.clamp(s.inventory, 4); // 4 rows = 36 slots
                     p.getInventory().setContents(main);
                 }
@@ -87,7 +84,6 @@ public final class PlayerSyncService {
                 p.setExp(Math.max(0f, Math.min(1f, s.exp)));
             }
 
-            // Health (Attribute.MAX_HEALTH on 1.21)
             if (pr.health) {
                 AttributeInstance maxHealthAttr = p.getAttribute(Attribute.MAX_HEALTH);
                 double max = (maxHealthAttr != null ? maxHealthAttr.getValue() : 20.0);
@@ -95,7 +91,6 @@ public final class PlayerSyncService {
                 double raw = s.health;
                 double target;
 
-                // If snapshot health is 0 or negative, treat it as "no stored value" → full health
                 if (raw <= 0.0) {
                     target = max;
                 } else {
@@ -105,7 +100,6 @@ public final class PlayerSyncService {
                 try {
                     p.setHealth(target);
                 } catch (IllegalArgumentException ignored) {
-                    // In case of weird attributes, fall back to full health
                     p.setHealth(Math.min(max, p.getHealth()));
                 }
             }
@@ -116,7 +110,6 @@ public final class PlayerSyncService {
                 float sat = s.saturation;
 
                 if (food <= 0 && sat <= 0f) {
-                    // Treat "empty" snapshot as "no data" → give normal starting hunger
                     p.setFoodLevel(20);
                     p.setSaturation(10f);
                 } else {

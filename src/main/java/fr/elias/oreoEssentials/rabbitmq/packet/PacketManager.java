@@ -9,7 +9,7 @@ import fr.elias.oreoEssentials.rabbitmq.packet.event.IncomingPacketListener;
 import fr.elias.oreoEssentials.rabbitmq.packet.event.PacketSender;
 import fr.elias.oreoEssentials.rabbitmq.packet.event.PacketSubscriber;
 import fr.elias.oreoEssentials.rabbitmq.packet.event.PacketSubscriptionQueue;
-import fr.elias.oreoEssentials.rabbitmq.packet.impl.HomeTeleportRequestPacket;
+import fr.elias.oreoEssentials.modules.homes.rabbit.packet.HomeTeleportRequestPacket;
 import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteInputStream;
 import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteOutputStream;
 

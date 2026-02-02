@@ -14,7 +14,8 @@ features:
 placeholder-debug: false
 
 tradedebug: true
-
+skins:
+  debug: false
 server:
   # Unique logical name for THIS server (used to tag who "owns" a home)
   name: "survival-1"

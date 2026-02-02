@@ -1,11 +1,10 @@
 package fr.elias.oreoEssentials.migration.commands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
-import fr.elias.oreoEssentials.services.HomeDirectory;
+import fr.elias.oreoEssentials.modules.homes.home.HomeDirectory;
 import fr.elias.oreoEssentials.services.StorageApi;
 import fr.elias.oreoEssentials.migration.ZEssentialsHomeImporter;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

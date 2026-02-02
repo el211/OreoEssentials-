@@ -2,7 +2,7 @@ package fr.elias.oreoEssentials.commands.core.moderation;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
-import fr.elias.oreoEssentials.integration.DiscordModerationNotifier;
+import fr.elias.oreoEssentials.modules.integration.DiscordModerationNotifier;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;

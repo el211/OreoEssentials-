@@ -2,7 +2,7 @@
 package fr.elias.oreoEssentials.modgui.invsee;
 
 import fr.elias.oreoEssentials.OreoEssentials;
-import fr.elias.oreoEssentials.cross.InvseeService;
+import fr.elias.oreoEssentials.modules.invsee.InvseeService;
 import fr.elias.oreoEssentials.modgui.util.ItemBuilder;
 import fr.elias.oreoEssentials.services.InventoryService;
 import fr.minuskube.inv.ClickableItem;

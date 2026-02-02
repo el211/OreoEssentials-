@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.services;
 
-import fr.elias.oreoEssentials.commands.core.playercommands.back.BackLocation;
+import fr.elias.oreoEssentials.modules.back.BackLocation;
+import fr.elias.oreoEssentials.modules.homes.home.HomeService;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
@@ -34,7 +35,7 @@ public interface StorageApi {
     boolean delHome(UUID uuid, String name);
     Location getHome(UUID uuid, String name);
     Set<String> homes(UUID uuid);
-    Map<String, fr.elias.oreoEssentials.services.HomeService.StoredHome> listHomes(UUID owner);
+    Map<String, HomeService.StoredHome> listHomes(UUID owner);
 
 
     void setBackData(UUID uuid, Map<String, Object> data);

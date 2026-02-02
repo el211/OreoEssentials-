@@ -2,7 +2,7 @@
 package fr.elias.oreoEssentials.modgui.ecsee;
 
 import fr.elias.oreoEssentials.OreoEssentials;
-import fr.elias.oreoEssentials.enderchest.EnderChestService;
+import fr.elias.oreoEssentials.modules.enderchest.EnderChestService;
 import fr.elias.oreoEssentials.modgui.util.ItemBuilder;
 import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.ClickableItem;

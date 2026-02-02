@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/modgui/ModGuiService.java
 package fr.elias.oreoEssentials.modgui;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -30,7 +29,6 @@ public class ModGuiService implements TabExecutor {
         this.config = new ModGuiConfig(plugin);
         this.config.load();
 
-        // Register command
         if (plugin.getCommand("modgui") != null) {
             plugin.getCommand("modgui").setExecutor(this);
             plugin.getCommand("modgui").setTabCompleter(this);
@@ -73,7 +71,6 @@ public class ModGuiService implements TabExecutor {
         return List.of();
     }
 
-    // Chat moderation state
     private boolean chatMuted = false;
     private int slowmodeSeconds = 0;
     private final Map<UUID, Boolean> staffChat = new HashMap<>();

@@ -1,11 +1,11 @@
 package fr.elias.oreoEssentials;
 
-import fr.elias.oreoEssentials.kits.Kit;
-import fr.elias.oreoEssentials.kits.KitsManager;
-import fr.elias.oreoEssentials.playervaults.PlayerVaultsConfig;
-import fr.elias.oreoEssentials.playervaults.PlayerVaultsService;
-import fr.elias.oreoEssentials.playtime.PlaytimeRewardsService;
-import fr.elias.oreoEssentials.playtime.PlaytimeTracker;
+import fr.elias.oreoEssentials.modules.kits.Kit;
+import fr.elias.oreoEssentials.modules.kits.KitsManager;
+import fr.elias.oreoEssentials.modules.playervaults.PlayerVaultsConfig;
+import fr.elias.oreoEssentials.modules.playervaults.PlayerVaultsService;
+import fr.elias.oreoEssentials.modules.playtime.PlaytimeRewardsService;
+import fr.elias.oreoEssentials.modules.playtime.PlaytimeTracker;
 import fr.elias.oreoEssentials.util.Lang;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.milkbowl.vault.economy.Economy;

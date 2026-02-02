@@ -2,7 +2,7 @@ package fr.elias.oreoEssentials.commands.core.admins;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
-import fr.elias.oreoEssentials.tab.TabListManager;
+import fr.elias.oreoEssentials.modules.tab.TabListManager;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -249,7 +249,7 @@ public final class ReloadAllCommand implements OreoCommand {
                 }
             } catch (Throwable ignored) {}
 
-            var hbl = new fr.elias.oreoEssentials.mobs.HealthBarListener(core, xmasHook);
+            var hbl = new fr.elias.oreoEssentials.modules.mobs.HealthBarListener(core, xmasHook);
 
             if (hbl.isEnabled()) {
                 Bukkit.getPluginManager().registerEvents(hbl, core);
@@ -344,7 +344,7 @@ public final class ReloadAllCommand implements OreoCommand {
         }
     }
 
-    private static String pvStorageName(fr.elias.oreoEssentials.playervaults.PlayerVaultsService svc) {
+    private static String pvStorageName(fr.elias.oreoEssentials.modules.playervaults.PlayerVaultsService svc) {
         try {
             var f = svc.getClass().getDeclaredField("storage");
             f.setAccessible(true);

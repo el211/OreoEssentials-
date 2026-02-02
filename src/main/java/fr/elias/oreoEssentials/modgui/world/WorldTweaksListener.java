@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/modgui/world/WorldTweaksListener.java
 package fr.elias.oreoEssentials.modgui.world;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -36,10 +35,6 @@ public class WorldTweaksListener implements Listener {
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
-    /* =========================
-       NETHER: WATER OVERRIDE
-       ========================= */
-
     @EventHandler(ignoreCancelled = true)
     public void onBucketEmpty(PlayerBucketEmptyEvent e) {
         Player p = e.getPlayer();
@@ -47,23 +42,18 @@ public class WorldTweaksListener implements Listener {
         if (w.getEnvironment() != Environment.NETHER) return;
         if (!cfg.netherAllowWater(w)) return;
 
-        // Only care about water buckets
         ItemStack inHand = e.getItemStack();
         if (inHand == null || inHand.getType() != Material.WATER_BUCKET) return;
 
-        // Place water manually
         e.setCancelled(true);
         Location target = e.getBlockClicked().getRelative(e.getBlockFace()).getLocation();
         target.getBlock().setType(Material.WATER);
 
-        // Turn bucket into empty bucket
         inHand.setType(Material.BUCKET);
         p.getInventory().setItem(e.getHand(), inHand);
     }
 
-    /* =========================
-       NETHER: BEDS SAFE
-       ========================= */
+
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onBedEnter(PlayerBedEnterEvent e) {
@@ -75,7 +65,6 @@ public class WorldTweaksListener implements Listener {
         e.setCancelled(false);
     }
 
-    // Cancel the actual explosion triggered by beds in Nether/End
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onBlockExplode(BlockExplodeEvent e) {
         World w = e.getBlock().getWorld();
@@ -87,16 +76,13 @@ public class WorldTweaksListener implements Listener {
         }
     }
 
-    /* =========================
-       NETHER: NO FIRE/LAVA DMG
-       ========================= */
+
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onDamage(EntityDamageEvent e) {
         Entity ent = e.getEntity();
         World w = ent.getWorld();
 
-        // Nether fire/lava immunity
         if (w.getEnvironment() == Environment.NETHER && cfg.netherNoFireDamage(w)) {
             switch (e.getCause()) {
                 case FIRE:
@@ -109,7 +95,6 @@ public class WorldTweaksListener implements Listener {
             }
         }
 
-        // END: void teleport
         if (w.getEnvironment() == Environment.THE_END
                 && e.getCause() == EntityDamageEvent.DamageCause.VOID
                 && cfg.endVoidTeleport(w)
@@ -124,10 +109,7 @@ public class WorldTweaksListener implements Listener {
         }
     }
 
-    /* =========================
-       NETHER: NO GHAST GRIEF
-       + END: NO DRAGON GRIEF
-       ========================= */
+
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onEntityExplode(EntityExplodeEvent e) {
@@ -135,7 +117,6 @@ public class WorldTweaksListener implements Listener {
         World w = e.getLocation().getWorld();
         if (w == null) return;
 
-        // Nether: Ghast fireballs don't break blocks
         if (w.getEnvironment() == Environment.NETHER
                 && cfg.netherNoGhastGrief(w)
                 && entity != null
@@ -143,17 +124,12 @@ public class WorldTweaksListener implements Listener {
             e.blockList().clear();
         }
 
-        // End: Dragon doesn't break blocks
         if (w.getEnvironment() == Environment.THE_END
                 && cfg.endNoDragonGrief(w)
                 && entity instanceof EnderDragon) {
             e.blockList().clear();
         }
     }
-
-    /* =========================
-       END: NO ENDERMAN GRIEF
-       ========================= */
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onEndermanChangeBlock(EntityChangeBlockEvent e) {
@@ -167,9 +143,7 @@ public class WorldTweaksListener implements Listener {
         }
     }
 
-    /* =========================
-       ELYTRA / TRIDENT / PVP
-       ========================= */
+
 
     @EventHandler
     public void onGlide(EntityToggleGlideEvent e) {
@@ -209,13 +183,11 @@ public class WorldTweaksListener implements Listener {
         if (attacker == null) return;
 
         World w = attacker.getWorld();
-        // Global PVP toggle
         if (!cfg.pvpEnabled(w)) {
             e.setCancelled(true);
             return;
         }
 
-        // Disable projectile-based PVP separately
         if (damager instanceof Projectile && cfg.disableProjectilePvp(w)) {
             e.setCancelled(true);
         }

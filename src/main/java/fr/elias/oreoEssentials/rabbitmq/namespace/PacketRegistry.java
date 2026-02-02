@@ -1,11 +1,11 @@
 package fr.elias.oreoEssentials.rabbitmq.namespace;
 
-import fr.elias.oreoEssentials.rabbitmq.namespace.impl.HomesPacketNamespace;
-import fr.elias.oreoEssentials.rabbitmq.namespace.impl.SpawnPacketNamespace;
-import fr.elias.oreoEssentials.rabbitmq.namespace.impl.WarpsPacketNamespace;
-import fr.elias.oreoEssentials.rabbitmq.namespace.impl.CrossInvPacketNamespace;
+import fr.elias.oreoEssentials.modules.homes.rabbit.packet.HomesPacketNamespace;
+import fr.elias.oreoEssentials.modules.spawn.rabbit.namespace.SpawnPacketNamespace;
+import fr.elias.oreoEssentials.modules.warps.rabbit.namespace.WarpsPacketNamespace;
+import fr.elias.oreoEssentials.modules.cross.rabbit.namespace.CrossInvPacketNamespace;
 import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
-import fr.elias.oreoEssentials.rabbitmq.namespace.impl.TradePacketNamespace;
+import fr.elias.oreoEssentials.modules.trade.rabbit.namespace.TradePacketNamespace;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

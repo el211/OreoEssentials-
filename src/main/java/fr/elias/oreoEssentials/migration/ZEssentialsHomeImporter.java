@@ -1,7 +1,7 @@
 // src/main/java/fr/elias/oreoEssentials/migration/ZEssentialsHomeImporter.java
 package fr.elias.oreoEssentials.migration;
 
-import fr.elias.oreoEssentials.services.HomeDirectory;
+import fr.elias.oreoEssentials.modules.homes.home.HomeDirectory;
 import fr.elias.oreoEssentials.services.StorageApi;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

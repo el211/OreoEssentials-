@@ -1,8 +1,8 @@
 package fr.elias.oreoEssentials.rabbitmq.namespace;
 
-import fr.elias.oreoEssentials.rabbitmq.namespace.impl.AfkPacketNamespace;
-import fr.elias.oreoEssentials.rabbitmq.namespace.impl.EconomyPacketNamespace;
-import fr.elias.oreoEssentials.rabbitmq.namespace.impl.RebootPacketNamespace;
+import fr.elias.oreoEssentials.modules.afk.rabbit.namespace.AfkPacketNamespace;
+import fr.elias.oreoEssentials.modules.economy.rabbit.namespace.EconomyPacketNamespace;
+import fr.elias.oreoEssentials.modules.autoreboot.rabbit.RebootPacketNamespace;
 
 import java.util.Collection;
 import java.util.Map;
