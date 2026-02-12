@@ -1,0 +1,232 @@
+# OreoEssentials — aliases.yml
+# Notes:
+# - For each alias:
+#     enabled: true|false
+#     run-as: PLAYER|CONSOLE
+#     cooldown-seconds: <number>   # per-player, whole-alias cooldown
+#     commands:                    # each line supports inline directives:
+#       - asConsole! / asPlayer!
+#       - delay! <seconds>
+#       - cooldown:<seconds>?!     # per-line cooldown (skips that line if cooling)
+#       - moneycost:<amount>?!     # withdraws via Vault; skips line if not enough
+#       - check:<expr>!            # per-line check; skips line if false
+#         (expr examples: permission:my.perm, !permission:my.perm,
+#          money>=1000, level>=20, %world%<-lobby-, %player_health%>=10 )
+#     checks:                      # alias-wide checks (all lines gated by these)
+#       - "<expr>"
+#     logic: AND|OR                # how to combine alias-wide checks
+#     fail-message: "text"         # shown if alias-wide checks fail (supports %alias%)
+#     perm-gate: false             # if true: requires oreo.alias.custom.<alias>
+#     add-tabs: false              # if true: enable custom tab completion
+#     custom-tabs:                 # per-argument suggestions (1 line = one arg level)
+#       - "arg1,opt1,opt2"
+#       - "arg2,optA,optB"
+
+aliases:
+
+  # ------------------- Your existing examples (fixed for [playerName]) -------------------
+
+  fer:
+    enabled: true
+    run-as: CONSOLE
+    cooldown-seconds: 0
+    commands:
+      - "minecraft:give [playerName] iron_ingot 1"
+    checks: []
+    logic: AND
+    fail-message: "§cYou don't meet the requirements for /%alias%."
+    perm-gate: false
+    add-tabs: false
+    custom-tabs: []
+
+  maison:
+    enabled: true
+    run-as: PLAYER
+    cooldown-seconds: 0
+    commands:
+      - "home coucou"
+    checks: []
+    logic: AND
+    fail-message: "§cYou don't meet the requirements for /%alias%."
+    perm-gate: false
+    add-tabs: false
+    custom-tabs: []
+
+  iron:
+    enabled: true
+    run-as: CONSOLE
+    cooldown-seconds: 5
+    commands:
+      - "minecraft:give [playerName] iron_ingot 1"
+    checks: []
+    logic: AND
+    fail-message: "§cYou don't meet the requirements for /%alias%."
+    perm-gate: false
+    add-tabs: false
+    custom-tabs: []
+
+  feedme:
+    enabled: true
+    run-as: CONSOLE
+    cooldown-seconds: 0
+    commands:
+      - " feed [playerName]"
+    checks: []
+    logic: AND
+    fail-message: "§cYou don't meet the requirements for /%alias%."
+    perm-gate: false
+    add-tabs: false
+    custom-tabs: []
+
+  pierre:
+    enabled: true
+    run-as: CONSOLE
+    cooldown-seconds: 0
+    commands:
+      - "minecraft:give [playerName] stone 1"
+    checks: []
+    logic: AND
+    fail-message: "§cYou don't meet the requirements for /%alias%."
+    perm-gate: false
+    add-tabs: false
+    custom-tabs: []
+
+  # ------------------- Showcase aliases (new) -------------------
+
+  daily:
+    enabled: true
+    run-as: CONSOLE
+    cooldown-seconds: 86400
+    commands:
+      - "eco give [playerName] 500"
+      - "broadcast [playerName] claimed the daily reward!"
+    checks: []
+    logic: AND
+    fail-message: "§cYou already claimed your daily reward."
+    perm-gate: false
+    add-tabs: false
+    custom-tabs: []
+
+  kitiron:
+    enabled: true
+    run-as: CONSOLE
+    cooldown-seconds: 0
+    commands:
+      - "minecraft:give [playerName] iron_sword 1"
+      - "minecraft:give [playerName] iron_chestplate 1"
+      - "minecraft:tell [playerName] You received the Iron Kit!"
+    checks:
+      - "permission:kits.iron"
+    logic: AND
+    fail-message: "§cYou need the §7kits.iron§c permission to use /%alias%."
+    perm-gate: false
+    add-tabs: false
+    custom-tabs: []
+
+  vanish:
+    enabled: true
+    run-as: CONSOLE
+    cooldown-seconds: 0
+    commands:
+      - "lp user [playerName] parent set vanished"
+    checks: []
+    logic: AND
+    fail-message: "§cYou can't use /%alias%."
+    perm-gate: true         # requires oreo.alias.custom.vanish
+    add-tabs: false
+    custom-tabs: []
+
+  # ------------------- Advanced example with inline directives -------------------
+  # Usage: /wizard <weather|day|night> [sun|rain|thunder]
+  wizard:
+    enabled: true
+    run-as: CONSOLE
+    cooldown-seconds: 3
+    commands:
+      # weather clear/rain/thunder with mana cost & checks
+      - "check:$1==weather! check:$2==sun!      check:%auraskills_mana_int%>=50! asConsole! minecraft:weather clear 1d"
+      - "check:$1==weather! check:$2==sun!      check:%auraskills_mana_int%>=50! asConsole! mana remove [playerName] 50"
+      - "check:$1==weather! check:$2==rain!     check:%auraskills_mana_int%>=50! asConsole! minecraft:weather rain 1d"
+      - "check:$1==weather! check:$2==rain!     check:%auraskills_mana_int%>=50! asConsole! mana remove [playerName] 50"
+      - "check:$1==weather! check:$2==thunder!  check:%auraskills_mana_int%>=50! asConsole! minecraft:weather thunder 1d"
+      - "check:$1==weather! check:$2==thunder!  check:%auraskills_mana_int%>=50! asConsole! mana remove [playerName] 50"
+
+      # time set day/midnight with cost
+      - "check:$1==day!   check:%auraskills_mana_int%>=50! asConsole! minecraft:time set day"
+      - "check:$1==day!   check:%auraskills_mana_int%>=50! asConsole! mana remove [playerName] 50"
+      - "check:$1==night! check:%auraskills_mana_int%>=50! asConsole! minecraft:time set midnight"
+      - "check:$1==night! check:%auraskills_mana_int%>=50! asConsole! mana remove [playerName] 50"
+    checks: []
+    logic: AND
+    fail-message: "§cInvalid usage. Try /wizard weather <sun|rain|thunder>, /wizard day, or /wizard night."
+    perm-gate: false
+    add-tabs: true
+    custom-tabs:
+      - "weather,day,night"     # arg1 suggestions
+      - "sun,rain,thunder"      # arg2 suggestions (used when arg1=weather)
+
+  # A fun particle/effect macro with delays & per-line cooldowns
+  atom:
+    enabled: true
+    run-as: CONSOLE
+    cooldown-seconds: 0
+    commands:
+      - "effect [playerName] WaterBreathing 120 2 -s"
+      - "effect [playerName] Speed 120 2 -s"
+      - "scale clear [playerName] -s"
+      - "scale set [playerName] 1.1 -s"
+      - "delay! 1"
+      - "scale set [playerName] 1.2 -s"
+      - "delay! 1"
+      - "scale set [playerName] 1.3 -s"
+      - "delay! 1"
+      - "scale set [playerName] 1.4 -s"
+      - "delay! 1"
+      - "scale set [playerName] 1.5 -s"
+      - "delay! 1"
+      - "scale set [playerName] 1.4 -s"
+      - "delay! 1"
+      - "scale set [playerName] 1.3 -s"
+      - "delay! 1"
+      - "scale set [playerName] 1.2 -s"
+      - "delay! 1"
+      - "scale set [playerName] 1.1 -s"
+      - "delay! 1"
+      - "scale set [playerName] 1.0 -s"
+      - "scale clear [playerName] -s"
+    checks: []
+    logic: AND
+    fail-message: "§cCannot run /%alias% right now."
+    perm-gate: false
+    add-tabs: false
+    custom-tabs: []
+
+  # Money-cost sample
+  eat:
+    enabled: true
+    run-as: CONSOLE
+    cooldown-seconds: 0
+    commands:
+      - " effect [playerName] Speed 10 2 -s"
+      - "moneycost:1000?! cooldown:30?! feed [playerName] -s"
+      - "moneycost:1000?! cooldown:30?! actionbarmsg [playerName] &6&lВы вкусно поели на &f&l1000 &6&lмонет!"
+    checks: []
+    logic: AND
+    fail-message: "§cYou can't use /%alias% right now."
+    perm-gate: false
+    add-tabs: false
+    custom-tabs: []
+
+  # Simple back-to-grave showcase
+  bback:
+    enabled: true
+    run-as: PLAYER
+    cooldown-seconds: 0
+    commands:
+      - "graves teleport"
+    checks: []
+    logic: AND
+    fail-message: "§cNo grave to teleport to."
+    perm-gate: false
+    add-tabs: false
+    custom-tabs: []

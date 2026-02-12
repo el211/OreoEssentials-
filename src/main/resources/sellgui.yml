@@ -1,0 +1,35 @@
+settings:
+  gui:
+    title: "<gradient:#ff7a00:#ffd000>Sell Items</gradient>"
+    confirm_title: "<gradient:#ff7a00:#ffd000>Confirm Sale</gradient>"
+
+  buttons:
+    sell:
+      material: LIME_CONCRETE
+      name: "<green><bold>SELL</bold></green>"
+      lore:
+        - "<gray>Sell all items placed in the sell area.</gray>"
+    close:
+      material: BARRIER
+      name: "<red><bold>CLOSE</bold></red>"
+      lore:
+        - "<gray>Close the menu (items are returned).</gray>"
+    clear:
+      material: RED_CONCRETE
+      name: "<yellow><bold>CLEAR</bold></yellow>"
+      lore:
+        - "<gray>Return all items to your inventory.</gray>"
+
+  messages:
+    nothing_sellable: "<red>Nothing sellable in the sell slots.</red>"
+    returned_all: "<green>Returned all items.</green>"
+
+  money_format: "#,###.##"
+  allow_unsellable_items_in_gui: false
+
+prices:
+  COBBLESTONE: 0.10
+  DIAMOND: 50.0
+  IRON_INGOT: 5.0
+  PAPER:1001: 250.0
+  PAPER:1002: 500.0

@@ -1,0 +1,372 @@
+# =========================
+# OreoEssentials — kits.yml
+# =========================
+# GLOBAL NOTES
+# ------------
+# - This file is read by the KitsManager in OreoEssentials.
+# - Reload it via your global reload command (ex: /oreo reload) or by restarting.
+#
+# FORMATS SUPPORTED BY ItemParser
+# -------------------------------
+# 1) Vanilla short:
+#      "DIAMOND_SWORD"
+#
+# 2) Vanilla detailed:
+#      "type:MATERIAL_NAME;amount:1;enchants:SHARPNESS:2,UNBREAKING:1"
+#
+#    • type:          Required. Any Bukkit material name.
+#    • amount:        Optional. Default: 1.
+#    • enchants:      Optional. Comma-separated list: ENCHANT:LEVEL
+#
+# 3) Potions:
+#      "type:POTION;potion_type:healing;amount:4"
+#      "type:SPLASH_POTION;potion_type:strong_healing;amount:2"
+#      "type:POTION;potion_type:long_swiftness"
+#
+#    • type:        POTION / SPLASH_POTION / LINGERING_POTION
+#    • potion_type: Friendly names mapped to PotionType, for example:
+#         healing / heal              -> HEALING
+#         strong_healing              -> STRONG_HEALING
+#         harming / harm              -> HARMING
+#         strong_harming              -> STRONG_HARMING
+#         speed / swiftness           -> SWIFTNESS
+#         long_swiftness              -> LONG_SWIFTNESS
+#         strength                    -> STRENGTH
+#         strong_strength             -> STRONG_STRENGTH
+#         long_strength               -> LONG_STRENGTH
+#         regen / regeneration        -> REGENERATION
+#         strong_regeneration         -> STRONG_REGENERATION
+#         long_regeneration           -> LONG_REGENERATION
+#         jump / jump_boost / leaping -> LEAPING
+#         strong_leaping              -> STRONG_LEAPING
+#         long_leaping                -> LONG_LEAPING
+#         fire_resistance / fireres   -> FIRE_RESISTANCE
+#         long_fire_resistance        -> LONG_FIRE_RESISTANCE
+#         night_vision / nightvision  -> NIGHT_VISION
+#         long_night_vision           -> LONG_NIGHT_VISION
+#         poison                      -> POISON
+#         strong_poison               -> STRONG_POISON
+#         long_poison                 -> LONG_POISON
+#         slow_falling / slowfall     -> SLOW_FALLING
+#         long_slow_falling           -> LONG_SLOW_FALLING
+#         slowness / slow             -> SLOWNESS
+#         strong_slowness             -> STRONG_SLOWNESS
+#         long_slowness               -> LONG_SLOWNESS
+#         water_breathing             -> WATER_BREATHING
+#         long_water_breathing        -> LONG_WATER_BREATHING
+#         weakness                    -> WEAKNESS
+#         long_weakness               -> LONG_WEAKNESS
+#
+#    • You can also directly use any enum name from PotionType, e.g.:
+#         potion_type:HEALING
+#         potion_type:STRONG_SWIFTNESS
+#
+# 4) ItemsAdder (if enabled):
+#      "ia:namespace:item_id"
+#
+# COMMANDS & DELAYS
+# -----------------
+# - Every string in `commands:` is executed in order when the kit is claimed.
+# - Supported prefixes:
+#       "console:..."  -> run as console
+#       "player:..."   -> run as the player
+#   If no prefix, it defaults to console.
+#
+# - Special "delay!" pseudo-command (handled by KitsManager):
+#       "delay! 1"     -> wait 1 second (20 ticks) before running the next commands
+#       "delay! 20t"   -> wait 20 ticks
+#       "delay! 2.5s"  -> wait 2.5 seconds (~50 ticks)
+#
+#   Example:
+#     commands:
+#       - "delay! 1"
+#       - "console:stackpotions %player% 5.2 -s"
+#
+# PER-KIT FIELDS
+# --------------
+#   display-name:      Colored name in menus/messages
+#   icon:              Menu icon (MATERIAL name or ia:namespace:item)
+#   cooldown-seconds:  Cooldown per player (0 = no cooldown)
+#   slot:              Optional fixed slot in GUI (0..53)
+#   commands:          Optional commands run on claim
+#   items:             List of item strings (see formats above)
+#
+# PERMISSIONS
+# -----------
+#   oreo.kits.open          — open the kits menu (/kits)
+#   oreo.kit.claim          — required to claim any kit
+#   oreo.kit.bypasscooldown — ignore kit cooldowns
+#   oreo.kits.admin         — toggle kits feature on/off via /kits toggle
+#
+# NOTE: There is currently no per-kit permission check inside the kit itself;
+# all kits here are visible. You can still restrict `/kit <id>` with your
+# permission plugin if you want rank-based access.
+
+
+
+use-itemadder: true     # If true and ItemsAdder is installed, "ia:ns:id" is allowed.
+
+menu:
+  title: "&6Kits"       # Title of the SmartInvs GUI.
+  rows: 4               # 1–6 rows. Extra kits auto-flow / paginate.
+  fill: true            # Whether to fill empty slots with glass panes.
+  fill-material: "GRAY_STAINED_GLASS_PANE"
+
+  # Preview window (used by SmartInvs preview GUI).
+  preview:
+    enabled: true
+    title: "&6Preview: &e%kit_name%"
+    rows: 6
+    show-commands: true   # Shows a “This kit runs:” book if kit has commands.
+
+kits:
+  # ---------------------------------------------------------------------------
+  # BASIC / PROGRESSION KITS
+  # ---------------------------------------------------------------------------
+
+  starter:
+    # Basic starter kit for everyone. Good for /kit starter at first join.
+    display-name: "&aStarter"
+    icon: "STONE_SWORD"
+    cooldown-seconds: 86400        # 24h
+    slot: 10
+    commands:
+      - "player:msg %player% &aYou claimed the &2Starter &akit!"
+    items:
+      - "type:STONE_SWORD;amount:1;enchants:SHARPNESS:1,UNBREAKING:1"
+      - "type:STONE_PICKAXE;amount:1"
+      - "type:STONE_AXE;amount:1"
+      - "type:COOKED_BEEF;amount:16"
+      - "type:TORCH;amount:16"
+      - "type:LEATHER_HELMET;amount:1"
+      - "type:LEATHER_CHESTPLATE;amount:1"
+      - "type:LEATHER_LEGGINGS;amount:1"
+      - "type:LEATHER_BOOTS;amount:1"
+
+  tools:
+    # Simple “/kit tools” to get basic mining + building tools.
+    display-name: "&7Tools"
+    icon: "IRON_PICKAXE"
+    cooldown-seconds: 1800         # 30 min
+    slot: 11
+    items:
+      - "type:IRON_PICKAXE;amount:1"
+      - "type:IRON_AXE;amount:1"
+      - "type:IRON_SHOVEL;amount:1"
+      - "type:STONE;amount:64"
+      - "type:OAK_PLANKS;amount:64"
+
+  food:
+    # Food-only kit. Nice for survival servers.
+    display-name: "&6Food"
+    icon: "COOKED_BEEF"
+    cooldown-seconds: 3600         # 1h
+    slot: 12
+    items:
+      - "type:COOKED_BEEF;amount:32"
+      - "type:COOKED_CHICKEN;amount:32"
+      - "type:BREAD;amount:32"
+
+  # ---------------------------------------------------------------------------
+  # ROLE-ORIENTED KITS (MINER / WARRIOR / ARCHER / FARMER / BUILDER / EXPLORER)
+  # ---------------------------------------------------------------------------
+
+  miner:
+    # Mining-focused kit: pickaxe + torches + food.
+    display-name: "&bMiner"
+    icon: "IRON_PICKAXE"
+    cooldown-seconds: 3600         # 1h
+    slot: 13
+    items:
+      # Example IA tool (uncomment if you have it):
+      # - "ia:myitems:starter_pickaxe"
+      - "type:IRON_PICKAXE;amount:1;enchants:EFFICIENCY:2,UNBREAKING:2"
+      - "type:TORCH;amount:48"
+      - "type:COOKED_PORKCHOP;amount:12"
+      - "type:STONE;amount:64"
+
+  warrior:
+    # Combat kit with iron gear + enchants.
+    display-name: "&cWarrior"
+    icon: "IRON_SWORD"
+    cooldown-seconds: 7200         # 2h
+    slot: 14
+    items:
+      - "type:IRON_SWORD;amount:1;enchants:SHARPNESS:2,UNBREAKING:2"
+      - "type:SHIELD;amount:1"
+      - "type:IRON_HELMET;amount:1;enchants:PROTECTION:2"
+      - "type:IRON_CHESTPLATE;amount:1;enchants:PROTECTION:2"
+      - "type:IRON_LEGGINGS;amount:1;enchants:PROTECTION:2"
+      - "type:IRON_BOOTS;amount:1;enchants:PROTECTION:2"
+      - "type:COOKED_BEEF;amount:16"
+
+  archer:
+    # Ranged damage kit with Power bow.
+    display-name: "&eArcher"
+    icon: "BOW"
+    cooldown-seconds: 5400         # 1.5h
+    slot: 15
+    items:
+      - "type:BOW;amount:1;enchants:POWER:2,UNBREAKING:2"
+      - "type:ARROW;amount:64"
+      - "type:LEATHER_CHESTPLATE;amount:1;enchants:PROJECTILE_PROTECTION:2"
+      - "type:LEATHER_BOOTS;amount:1"
+
+  farmer:
+    # Farming kit: seeds, basic hoe, water bucket.
+    display-name: "&2Farmer"
+    icon: "IRON_HOE"
+    cooldown-seconds: 1800         # 30 min
+    slot: 16
+    items:
+      - "type:IRON_HOE;amount:1"
+      - "type:WHEAT_SEEDS;amount:32"
+      - "type:CARROT;amount:16"
+      - "type:POTATO;amount:16"
+      - "type:BEETROOT_SEEDS;amount:16"
+      - "type:WATER_BUCKET;amount:1"
+      - "type:BONE_MEAL;amount:16"
+
+  builder:
+    # Building-focused kit with lots of blocks.
+    display-name: "&dBuilder"
+    icon: "OAK_PLANKS"
+    cooldown-seconds: 1800         # 30 min
+    slot: 19
+    items:
+      - "type:OAK_PLANKS;amount:64"
+      - "type:OAK_PLANKS;amount:64"
+      - "type:OAK_LOG;amount:32"
+      - "type:STONE;amount:64"
+      - "type:GLASS;amount:32"
+      - "type:LADDER;amount:16"
+      - "type:TORCH;amount:16"
+
+  explorer:
+    # Exploration kit: compass, boat, some food & a map.
+    display-name: "&6Explorer"
+    icon: "COMPASS"
+    cooldown-seconds: 3600         # 1h
+    slot: 20
+    items:
+      - "type:COMPASS;amount:1"
+      - "type:OAK_BOAT;amount:1"
+      - "type:COOKED_SALMON;amount:16"
+      - "type:MAP;amount:1"
+      - "type:TORCH;amount:16"
+
+  # ---------------------------------------------------------------------------
+  # POTION KITS (USING potion_type: + DELAY!)
+  # ---------------------------------------------------------------------------
+
+  potion:
+    # Advanced potion kit, then auto-stack via external plugin after a short delay.
+    display-name: "&5Potion Master"
+    icon: "BREWING_STAND"
+    cooldown-seconds: 43200        # 12h
+    slot: 21
+    items:
+      - "type:POTION;potion_type:strong_healing;amount:16"
+      - "type:SPLASH_POTION;potion_type:strong_healing;amount:16"
+      - "type:SPLASH_POTION;potion_type:long_swiftness;amount:16"
+      - "type:SPLASH_POTION;potion_type:strong_strength;amount:8"
+      - "type:POTION;potion_type:long_fire_resistance;amount:4"
+      - "type:SPLASH_POTION;potion_type:poison;amount:3"
+      - "type:POTION;potion_type:regeneration;amount:3"
+      - "type:SPLASH_POTION;potion_type:harming;amount:1"
+      - "type:SPLASH_POTION;potion_type:slow_falling;amount:1"
+    commands:
+      # Wait 1 second so items are fully in the inventory, then stack them.
+      - "delay! 1"
+      - "console:stackpotions %player% 5.2 -s"
+
+  potions_support:
+    # Support / utility potions.
+    display-name: "&3Support Potions"
+    icon: "POTION"
+    cooldown-seconds: 5400         # 1.5h
+    slot: 22
+    items:
+      - "type:POTION;potion_type:fire_resistance;amount:2"
+      - "type:POTION;potion_type:water_breathing;amount:2"
+      - "type:POTION;potion_type:night_vision;amount:2"
+      - "type:POTION;potion_type:slow_falling;amount:2"
+
+  # ---------------------------------------------------------------------------
+  # DAILY / WEEKLY REWARD KITS
+  # ---------------------------------------------------------------------------
+
+  daily:
+    # Simple daily reward every 24h.
+    display-name: "&aDaily"
+    icon: "CHEST"
+    cooldown-seconds: 86400        # 24h
+    slot: 23
+    commands:
+      - "player:msg %player% &aCome back tomorrow for another daily reward!"
+    items:
+      - "type:COOKED_BEEF;amount:16"
+      - "type:IRON_INGOT;amount:8"
+      - "type:COAL;amount:16"
+      - "type:EXP_BOTTLE;amount:8"
+
+  weekly:
+    # Bigger weekly reward.
+    display-name: "&9Weekly"
+    # Example ItemsAdder icon (uncomment if present):
+    # icon: "ia:rewards:weekly_crate"
+    icon: "ENDER_CHEST"
+    cooldown-seconds: 604800       # 7 days
+    slot: 24
+    commands:
+      - "console:give %player% diamond 3"
+      - "player:msg %player% &bWeekly kit delivered!"
+    items:
+      - "type:DIAMOND_PICKAXE;amount:1;enchants:EFFICIENCY:3,UNBREAKING:3"
+      - "type:DIAMOND;amount:3"
+      - "type:EXP_BOTTLE;amount:24"
+      - "type:GOLDEN_APPLE;amount:2"
+
+  # ---------------------------------------------------------------------------
+  # “RANK-STYLE” KITS (ALL PLAYERS CAN SEE THEM; LIMIT /kit WITH PERMS)
+  # ---------------------------------------------------------------------------
+
+  vip:
+    # Example “VIP” kit. Use your perms plugin to restrict /kit vip if needed.
+    display-name: "&eVIP"
+    icon: "GOLDEN_SWORD"
+    cooldown-seconds: 43200        # 12h
+    slot: 28
+    items:
+      - "type:GOLDEN_SWORD;amount:1;enchants:SHARPNESS:2,UNBREAKING:2"
+      - "type:GOLDEN_HELMET;amount:1"
+      - "type:GOLDEN_CHESTPLATE;amount:1"
+      - "type:GOLDEN_LEGGINGS;amount:1"
+      - "type:GOLDEN_BOOTS;amount:1"
+      - "type:GOLDEN_APPLE;amount:4"
+
+  mvp:
+    display-name: "&bMVP"
+    icon: "DIAMOND_SWORD"
+    cooldown-seconds: 43200        # 12h
+    slot: 29
+    items:
+      - "type:DIAMOND_SWORD;amount:1;enchants:SHARPNESS:3,UNBREAKING:3"
+      - "type:DIAMOND_CHESTPLATE;amount:1;enchants:PROTECTION:3"
+      - "type:DIAMOND_LEGGINGS;amount:1;enchants:PROTECTION:3"
+      - "type:DIAMOND_BOOTS;amount:1;enchants:DEPTH_STRIDER:2"
+      - "type:ENDER_PEARL;amount:8"
+      - "type:GOLDEN_APPLE;amount:8"
+
+  legend:
+    display-name: "&6Legend"
+    icon: "NETHERITE_SWORD"
+    cooldown-seconds: 86400        # 24h
+    slot: 30
+    items:
+      - "type:NETHERITE_SWORD;amount:1;enchants:SHARPNESS:4,UNBREAKING:3"
+      - "type:NETHERITE_HELMET;amount:1;enchants:PROTECTION:4"
+      - "type:NETHERITE_CHESTPLATE;amount:1;enchants:PROTECTION:4"
+      - "type:NETHERITE_LEGGINGS;amount:1;enchants:PROTECTION:4"
+      - "type:NETHERITE_BOOTS;amount:1;enchants:PROTECTION:4"
+      - "type:ENCHANTED_GOLDEN_APPLE;amount:1"

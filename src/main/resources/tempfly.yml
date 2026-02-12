@@ -1,0 +1,27 @@
+# TempFly Configuration
+# Choose which systems to use (you can enable both)
+
+# Option 1: Permission-based groups
+# Players need permission: oe.tempfly.vip (or whatever you name the group)
+use-permission-groups: true
+
+permission-groups:
+  vip: 300      # 5 minutes
+  premium: 600  # 10 minutes
+  elite: 1800   # 30 minutes
+
+# Option 2: LuckPerms group-based
+# Plugin automatically detects player's LuckPerms primary group
+use-luckperms-groups: true
+
+luckperms-groups:
+  vip: 300      # 5 minutes (if player is in "vip" group)
+  premium: 600  # 10 minutes (if player is in "premium" group)
+  elite: 1800   # 30 minutes (if player is in "elite" group)
+  default: 180  # 3 minutes (fallback for default group)
+
+# Notes:
+# - Times are in seconds
+# - If both options are enabled, permission groups are checked first
+# - Use permission "oe.tempfly.infinite" for unlimited fly time
+# - Players in creative/spectator mode are not affected

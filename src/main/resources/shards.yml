@@ -1,0 +1,70 @@
+# OreoEssentials Sharding Configuration
+# Seamless world sharding like Donut SMP
+
+sharding:
+  enabled: false
+  proxy: VELOCITY  # VELOCITY or BUNGEECORD
+
+  # Transfer cooldown (prevents rapid back-and-forth exploits)
+  transfer-cooldown-ms: 3000
+
+  # Redis connection (for ultra-fast handoff)
+  redis:
+    host: localhost
+    port: 6379
+    password: ""  # Leave empty if no password
+
+  # World configurations
+  worlds:
+    # Example: Main survival world with grid sharding
+    world:
+      enabled: true
+      mode: GRID  # GRID or RADIAL
+
+      # Size of each shard in blocks
+      shard-size: 10000
+
+      # How many blocks before border to start transfer
+      # Smaller = more precise, but player might notice
+      # Larger = smoother, but transfers happen further from actual border
+      transfer-buffer: 12
+
+      # Safe zone near borders (no combat, no teleports)
+      safe-zone: 16
+
+      # Server names for each dimension
+      # %shard% = shard ID placeholder
+      dimension-servers:
+        overworld: "smp-%shard%"
+        nether: "nether-%shard%"
+        end: "end-main"
+
+    # Example: Resource world with radial sharding
+    resource:
+      enabled: true
+      mode: RADIAL  # Concentric rings from spawn
+      shard-size: 5000  # Radius of each ring
+      transfer-buffer: 10
+      safe-zone: 20
+      dimension-servers:
+        overworld: "resource-ring-%shard%"
+
+# Example shard to server mapping (for reference):
+#
+# Grid mode (2x2 grid):
+#   shard-0-0  -> smp-0-0  (Northwest quadrant)
+#   shard-0-1  -> smp-0-1  (Northeast quadrant)
+#   shard-1-0  -> smp-1-0  (Southwest quadrant)
+#   shard-1-1  -> smp-1-1  (Southeast quadrant)
+#
+# Radial mode:
+#   shard-ring-0 -> resource-ring-0 (Center, 0-5000 blocks)
+#   shard-ring-1 -> resource-ring-1 (First ring, 5000-10000 blocks)
+#   shard-ring-2 -> resource-ring-2 (Second ring, 10000-15000 blocks)
+
+# Important notes:
+# 1. All shard servers MUST use the same world seed
+# 2. All shard servers MUST have OreoEssentials installed
+# 3. All shard servers MUST connect to the same Redis instance
+# 4. View distance should be kept low (4-6 chunks) for best performance
+# 5. Servers should be on same machine or same datacenter for <1ms latency

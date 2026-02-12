@@ -1,0 +1,272 @@
+Enabled: true
+
+# ===========================================
+# OreoEssentials - Death Messages (expanded)
+# ===========================================
+# Prefix shown before every message
+Prefix: "💀 "
+
+# Hover info is currently not rendered (reserved for future Adventure-component output)
+PlayerHover:
+  - ""
+KillerHover:
+  - ""
+
+# -------------------------------------------------
+# Player vs Player death (killer is a PLAYER)
+# Priority inside this group:
+#   Item > Projectile > General
+# -------------------------------------------------
+Player:
+  General:
+    - "&2[playerDisplayName] &7was slain by &2[sourceDisplayName]"
+    - "&2[playerDisplayName] &7fell to &2[sourceDisplayName]"
+    - "&2[playerDisplayName] &7was bested by &2[sourceDisplayName]"
+  Item:
+    - "&2[playerDisplayName] &7was cut down by &2[sourceDisplayName] &7using &2[item]"
+    - "&2[playerDisplayName] &7couldn't withstand &2[sourceDisplayName]'s &2[item]"
+  Projectile:
+    - "&2[playerDisplayName] &7was shot by &2[sourceDisplayName] &7with &2[type]"
+    - "&2[playerDisplayName] &7was picked off by &2[sourceDisplayName]'s &2[type]"
+  Fireball:
+    - "&2[playerDisplayName] &7was fireballed by &2[sourceDisplayName]"
+  Firework:
+    - "&2[playerDisplayName] &7went out with a bang courtesy of &2[sourceDisplayName]"
+  Tnt:
+    - "&2[playerDisplayName] &7was blown up by &2[sourceDisplayName]"
+
+# ----------------------------------------
+# Projectiles (generic fallbacks, optional)
+# ----------------------------------------
+Projectile:
+  Arrow:
+    - "&2[playerDisplayName] &7was shot by arrow"
+  Spectral_arrow:
+    - "&2[playerDisplayName] &7was marked and shot by spectral arrow"
+  Tipped_arrow:
+    - "&2[playerDisplayName] &7succumbed to a tipped arrow"
+  Trident:
+    - "&2[playerDisplayName] &7was struck by a trident"
+  Fireball:
+    - "&2[playerDisplayName] &7was fireballed"
+  Firework:
+    - "&2[playerDisplayName] &7exploded into fireworks"
+
+# ------------------------------------------------
+# Mob kills (killer is a MOB) — use lowercase keys
+# Priority inside a mob group:
+#   Item > General
+# [sourceDisplayName] is the mob's prettified name.
+# ------------------------------------------------
+Mob:
+  creeper:
+    General:
+      - "&2[playerDisplayName] &7was blown up by &2[sourceDisplayName]"
+  skeleton:
+    General:
+      - "&2[playerDisplayName] &7was shot down by &2[sourceDisplayName]"
+    Item:
+      - "&2[playerDisplayName] &7fell to &2[sourceDisplayName] &7wielding &2[item]"
+  stray:
+    General:
+      - "&2[playerDisplayName] &7was chilled by the icy arrows of &2[sourceDisplayName]"
+  husk:
+    General:
+      - "&2[playerDisplayName] &7was drained by &2[sourceDisplayName]"
+  zombie:
+    General:
+      - "&2[playerDisplayName] &7was overwhelmed by &2[sourceDisplayName]"
+  drowned:
+    General:
+      - "&2[playerDisplayName] &7was pulled under by &2[sourceDisplayName]"
+  spider:
+    General:
+      - "&2[playerDisplayName] &7was caught in the web of &2[sourceDisplayName]"
+  cave_spider:
+    General:
+      - "&2[playerDisplayName] &7was poisoned by &2[sourceDisplayName]"
+  enderman:
+    General:
+      - "&2[playerDisplayName] &7lost a teleport duel with &2[sourceDisplayName]"
+  witch:
+    General:
+      - "&2[playerDisplayName] &7succumbed to the dark brews of &2[sourceDisplayName]"
+  blaze:
+    General:
+      - "&2[playerDisplayName] &7was scorched by &2[sourceDisplayName]"
+  ghast:
+    General:
+      - "&2[playerDisplayName] &7was blasted by &2[sourceDisplayName]"
+  magma_cube:
+    General:
+      - "&2[playerDisplayName] &7was melted by &2[sourceDisplayName]"
+  slime:
+    General:
+      - "&2[playerDisplayName] &7was consumed by &2[sourceDisplayName]"
+  guardian:
+    General:
+      - "&2[playerDisplayName] &7was zapped by &2[sourceDisplayName]"
+  elder_guardian:
+    General:
+      - "&2[playerDisplayName] &7succumbed to the ancient power of &2[sourceDisplayName]"
+  shulker:
+    General:
+      - "&2[playerDisplayName] &7was levitated to doom by &2[sourceDisplayName]"
+  wither_skeleton:
+    General:
+      - "&2[playerDisplayName] &7withered away from &2[sourceDisplayName]"
+  piglin:
+    General:
+      - "&2[playerDisplayName] &7failed the deal with &2[sourceDisplayName]"
+  piglin_brute:
+    General:
+      - "&2[playerDisplayName] &7was no match for &2[sourceDisplayName]"
+  hoglin:
+    General:
+      - "&2[playerDisplayName] &7was skewered by &2[sourceDisplayName]"
+  zoglin:
+    General:
+      - "&2[playerDisplayName] &7was mauled by &2[sourceDisplayName]"
+  phantom:
+    General:
+      - "&2[playerDisplayName] &7was haunted by &2[sourceDisplayName]"
+  pillager:
+    General:
+      - "&2[playerDisplayName] &7was peppered by &2[sourceDisplayName]"
+  vindicator:
+    General:
+      - "&2[playerDisplayName] &7was chopped down by &2[sourceDisplayName]"
+  ravager:
+    General:
+      - "&2[playerDisplayName] &7was trampled by &2[sourceDisplayName]"
+  vex:
+    General:
+      - "&2[playerDisplayName] &7was harried by &2[sourceDisplayName]"
+  warden:
+    General:
+      - "&2[playerDisplayName] &7succumbed to the heavy footsteps of &2[sourceDisplayName]"
+  ender_dragon:
+    General:
+      - "&2[playerDisplayName] &7was ended by &2[sourceDisplayName]"
+  wither:
+    General:
+      - "&2[playerDisplayName] &7was obliterated by &2[sourceDisplayName]"
+
+Mythic:
+  AncientOverlord:
+    General:
+      - "&2[playerDisplayName] &7was obliterated by &5[mobMythicName]"
+      - "&2[playerDisplayName] &7fell before the might of &5[mobMythicId]"
+    Item:
+      - "&2[playerDisplayName] &7was felled by &5[mobMythicName] &7wielding &2[item]"
+
+  FrostGiant:
+    General:
+      - "&2[playerDisplayName] &7was crushed by &b[mobMythicName]"
+
+# ---------------------------------------------------------
+# Environmental / custom causes under "Custom.*"
+# The service maps Bukkit DamageCause -> these paths:
+#   LAVA                -> Custom.Block.Lava
+#   FIRE/FIRE_TICK      -> Custom.Fire
+#   LIGHTNING           -> Custom.Lightning
+#   SUFFOCATION         -> Custom.Suffocation
+#   DROWNING            -> Custom.Drowning
+#   STARVATION          -> Custom.Starvation
+#   VOID                -> Custom.Void
+#   FREEZE              -> Custom.Freeze
+#   FALL                -> Custom.Fall (tries .General, then Fall.Low.General)
+#   ENTITY/BLOCK_EXPLOSION -> Custom.Block_explosion
+#   DRAGON_BREATH       -> Custom.EndCrystal (rough mapping)
+# ---------------------------------------------------------
+Custom:
+  Block:
+    Lava:
+      General:
+        - "&2[playerDisplayName] &7tried to swim in lava"
+  Fire:
+    General:
+      - "&2[playerDisplayName] &7went up in flames"
+  Fire_tick:
+    General:
+      - "&2[playerDisplayName] &7burned to a crisp"
+  Lightning:
+    General:
+      - "&2[playerDisplayName] &7was struck by lightning"
+  Suffocation:
+    General:
+      - "&2[playerDisplayName] &7suffocated in a wall"
+  Drowning:
+    General:
+      - "&2[playerDisplayName] &7drowned"
+  Starvation:
+    General:
+      - "&2[playerDisplayName] &7starved to death"
+  Void:
+    General:
+      - "&2[playerDisplayName] &7fell out of the world"
+  Freeze:
+    General:
+      - "&2[playerDisplayName] &7froze to death"
+  Suicide:
+    General:
+      - "&2[playerDisplayName] &7took their own life"
+  EndCrystal:
+    General:
+      - "&2[playerDisplayName] &7shattered like a crystal"
+  Wither:
+    General:
+      - "&2[playerDisplayName] &7withered away"
+  Fly_into_wall:
+    General:
+      - "&2[playerDisplayName] &7experienced kinetic energy"
+      - "&2[playerDisplayName] &7learned about momentum"
+  Block_explosion:
+    General:
+      - "&2[playerDisplayName] &7was blown up"
+  Fall:
+    Low:
+      General:
+        - "&2[playerDisplayName] &7hit the ground too hard"
+        - "&2[playerDisplayName] &7missed a step"
+    High:
+      General:
+        - "&2[playerDisplayName] &7fell from a high place"
+        - "&2[playerDisplayName] &7forgot a water bucket"
+    General:
+      - "&2[playerDisplayName] &7fell to their demise"
+
+# ----------------------------
+# Optional: Falling block type
+# ----------------------------
+FallingBlocks:
+  Anvil:
+    General:
+      - "&2[playerDisplayName] &7was squashed by a falling anvil"
+      - "&2[playerDisplayName] &7was crushed by an anvil"
+  Pointed_dripstone:
+    General:
+      - "&2[playerDisplayName] &7was skewered by a falling stalactite"
+
+# ----------------------------
+# Optional: Hazard block texts
+# (These are not directly used by mapping, but kept for parity)
+# ----------------------------
+Block:
+  Cactus:
+    General:
+      - "&2[playerDisplayName] &7was pricked to death"
+  Magma_block:
+    General:
+      - "&2[playerDisplayName] &7discovered the floor was lava"
+  Sweet_berry_bush:
+    General:
+      - "&2[playerDisplayName] &7was poked to death by a sweet berry bush"
+  Lava:
+    General:
+      - "&2[playerDisplayName] &7bathed in lava"
+  Dispenser:
+    Arrow:
+      - "&2[playerDisplayName] &7was shot by a dispenser"
+    Splash_potion:
+      - "&2[playerDisplayName] &7was splashed by a dispenser"

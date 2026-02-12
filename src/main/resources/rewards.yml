@@ -1,0 +1,34 @@
+# ================= Daily Rewards — rewards.yml =================
+#  Extras.CustomModelData (integer) — optional
+# If set, the GUI icon uses this custom model data.
+
+Day Example:
+  RewardName: "Daily Reward!"
+  RewardIcon: "SUNFLOWER"
+  RewardCommands:
+    - "eco give <playerName> 5000"
+    - "give <playerName> DIAMOND 1"
+  RewardMessage: "You have claimed a special reward!"
+  Extras:
+    Enchanted: false
+    CustomModelData: 1201     # <— NEW (optional)
+    GUI Position: 1
+    GUI Page: 1
+
+Day 1:
+  RewardName: "Welcome"
+  RewardIcon: "EMERALD"
+  RewardCommands:
+    - "eco give <playerName> 100"
+  Extras:
+    Enchanted: false
+    CustomModelData: 0        # 0 or omit = no custom model data
+
+Day 2:
+  RewardName: ""
+  RewardIcon: ""
+  RewardCommands:
+    - ""
+  Extras:
+    Enchanted: false
+    # CustomModelData: 0

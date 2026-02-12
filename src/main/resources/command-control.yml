@@ -1,0 +1,34 @@
+command-control:
+  enabled: false
+  hide-from-tab: false
+
+  # Default behavior:
+  # - ALLOW_ALL: allow everything unless blocked by rules/permissions
+  # - DENY_ALL: block everything unless listed in allow-roots + permission-map
+  default-policy: "DENY_ALL"
+
+  # Roots allowed when default-policy is DENY_ALL
+  allow-roots:
+    - "feed"
+
+  # Optional: require a permission to even access the root command
+  # (example: feed requires this permission)
+  permission-map:
+    feed: "oreo.commandcontrol.allow.feed"
+
+  # Message sent when a command is blocked
+  deny-message: "<red>You can't use that command.</red>"
+
+  # Always blocked root commands (even if ALLOW_ALL)
+  blocked-commands:
+    - "plugins"
+    - "pl"
+    - "bukkit:plugins"
+    - "version"
+    - "ver"
+    - "about"
+    - "?"
+    - "help"
+
+  # Optional advanced rules (subcommands filtering)
+  rules: []

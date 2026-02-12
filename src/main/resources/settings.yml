@@ -1,0 +1,192 @@
+features:
+
+  world-sharding:
+    enabled: false  # Set to true when ready to use
+
+  afk-pool:
+    enabled: false
+
+  bossbar:
+    enabled: true
+
+  chat:
+    enabled: true
+    discord-bridge: true
+    banned-words:
+      enabled: true
+      list:
+        - "badword"
+        - "anotherbadword"
+        - "insult"
+  home:
+    enabled: true
+
+    cooldown: false
+    cooldown-amount: 5
+
+  currency:
+    enabled: true
+  economy:
+    enabled: true
+
+  jumppads:
+    enabled: true
+
+  kits:
+    enabled: true
+    register-commands: true
+
+  mobs:
+    enabled: true
+    healthbar: true
+
+  clearlag:
+    enabled: true   # Master switch for ClearLag module (/olagg, auto clear, TPS monitor)
+
+  oreoholograms:
+    enabled: true
+
+    per-player: true        # enable per-player placeholders/permissions for TEXT holograms
+
+  playervaults:
+    enabled: true
+
+  playtime-rewards:
+    enabled: true
+
+  portals:
+    enabled: true
+
+  rtp:
+    enabled: true
+
+    warmup: true
+    warmup-amount: 5
+
+  scoreboard:
+    enabled: true
+
+  sit:
+    enabled: true
+
+  tempfly:
+    enabled: true
+
+  trade:
+    enabled: true
+    cross-server: true
+
+  discord-moderation:
+    enabled: true
+
+  cross-server:
+    homes: true
+    warps: true
+    spawn: true
+    economy: true
+    enderchest: true
+    inventory: true
+    invsee: true
+
+  tab:
+    enabled: true
+
+  playerwarps:
+    enabled: true        # turn /pw on/off
+    cross-server: true   # only effective when essentials.storage = mongodb
+
+    features:
+      description: true
+      rating: true
+      categories: true
+      cost: true
+      whitelist: true
+      managers: true
+      favourites: true
+      password: true
+      lock: true
+      rtp: true
+      gui: true
+
+    limit:
+      default: 3
+      vip: 10
+      mvp: 25
+
+  tpa:
+    cooldown: true #false
+    cooldown-amount: 5 # in sec
+  warp:
+    cooldown: true #false
+    cooldown-amount: 5 # in sec
+
+  spawn:
+    cooldown: true        # Enable/disable spawn countdown
+    cooldown-amount: 5    # Seconds before teleport; 0 or negative = instant
+
+
+  death-respawn:
+    enabled: false
+    # NORMAL        -> vanilla behavior
+    # GLOBAL_SPAWN  -> uses SpawnService.getSpawn() (same as /spawn)
+    # WORLD_SPAWN   -> current world's spawn
+    # CUSTOM        -> fixed location (with optional per-world overrides)
+    mode: GLOBAL_SPAWN
+    respect-bed-anchor: true
+
+    # Used only when mode: CUSTOM
+    custom:
+      world: "world"
+      x: 0.5
+      y: 64.0
+      z: 0.5
+      yaw: 0.0
+      pitch: 0.0
+
+    # Optional per-world overrides (only for mode: CUSTOM)
+    per-world:
+      world_nether:
+        world: "world_nether"
+        x: 10.5
+        y: 65.0
+        z: 10.5
+        yaw: 180.0
+        pitch: 0.0
+
+auto-reboot:
+  enabled: false
+  mode: "TIME" # TIME or INTERVAL
+  timezone: "Europe/Paris" # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  time: "00:00"
+  interval-minutes: 360
+  broadcast: true
+  warnings: [300, 60, 30, 10, 5, 4, 3, 2, 1]
+  pre-commands: []
+  kick-message: "<red>Server is restarting. Please reconnect in a moment.</red>"
+
+
+  action: "SAFE_ZONE" # KICK or SAFE_ZONE
+
+  safe-zone:
+    enabled: true
+    delay-seconds: 3
+    world-name: "world"
+    region-name: "reboot_safe"
+    server: "" # if not empty -> send to this server instead of local teleport
+    message: "<yellow>Server is rebooting. You have been moved to a safe area.</yellow>"
+
+
+maintenance:
+  enabled: true  # Enable/disable the entire maintenance system
+
+holograms:
+  text:
+    per-player: true        # enable per-player placeholders/permissions for TEXT holograms
+
+
+nametag:
+  enabled: true
+  update-interval-ticks: 100
+  team-prefix: "&6[%luckperms_primary_group%] &f"
+  team-suffix: " &c❤%player_health%"
+

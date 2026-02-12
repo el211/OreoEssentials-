@@ -1,0 +1,32 @@
+enabled: true       # Master switch
+title: "&8Trade — <you> &7⇄ &8<them>"
+rows: 6
+
+divider:
+  material: "PURPLE_STAINED_GLASS_PANE"
+  name: "&5— Trade —"
+
+buttons:
+  confirm:
+    material: "EMERALD_BLOCK"
+    text: "&aConfirm"
+  confirmed:
+    material: "LIME_CONCRETE"
+    text: "&aReady ✔"
+  cancel:
+    material: "BARRIER"
+    text: "&cCancel"
+
+labels:
+  you: "&fYou"
+  them: "&fThem"
+
+sounds:
+  open: "UI_BUTTON_CLICK"
+  click: "UI_BUTTON_CLICK"
+  confirm: "BLOCK_NOTE_BLOCK_PLING"
+  cancel: "ENTITY_VILLAGER_NO"
+  complete: "ENTITY_PLAYER_LEVELUP"
+
+require-empty-cursor-on-confirm: true
+min-distance-blocks: 0

@@ -1,0 +1,1421 @@
+# ============================================================================
+# OREOESSENTIALS - 完全な本番環境用 LANG.YML (日本語)
+# ============================================================================
+# 包括的なカラーシステム統合プロジェクトから生成
+# 11の検証セッションで102以上の検証済みファイルをカバー
+#
+# フォーマット: MiniMessage (例: <red>, <green>, <#RRGGBB>)
+# ドキュメント: https://docs.advntr.dev/minimessage/format.html
+#
+# 共通変数:
+#   %player%, %target%    - プレイヤー名
+#   %server%, %world%     - サーバー/ワールド名
+#   %label%               - コマンドラベル
+#   %amount%, %balance%   - 数値
+#   %name%, %warp%, %home% - 場所の名前
+#   %id%                  - 識別子
+# ============================================================================
+
+# ============================================================================
+# 一般メッセージ
+# ============================================================================
+
+general:
+  prefix: '<gold><bold>Oreo</bold></gold><white><bold>Essentials</bold></white> <dark_gray>»</dark_gray> '
+  no-permission: "<red>権限がありません。</red>"
+  player-only: "<red>このコマンドはプレイヤーのみ使用できます。</red>"
+  console-only: "<red>このコマンドはコンソールのみ使用できます。</red>"
+  invalid-player: "<red>プレイヤー <yellow>%player%</yellow> が見つかりません。</red>"
+  player-offline: "<red>プレイヤー <yellow>%player%</yellow> はオンラインではありません。</red>"
+  reload-success: "<green>設定を正常にリロードしました。</green>"
+  reload-failed: "<red>設定のリロードに失敗しました。</red>"
+  command-cooldown: "<yellow>このコマンドを再度使用するには <white>%time%</white> 待つ必要があります。</yellow>"
+
+# ============================================================================
+# キットシステム (6ファイル検証済み)
+# ============================================================================
+
+kits:
+  # コアメッセージ (KitsManager.java - 9つのLang呼び出し)
+  unknown-kit: "<red>不明なキット: <yellow>%kit_id%</yellow></red>"
+  disabled: "<red>キットは現在無効になっています。</red>"
+  disabled-hint: "<gray><white>%cmd%</white> を使用して有効にしてください。</gray>"
+
+  # 権限
+  no-permission: "<red>権限がありません。</red>"
+  no-permission-claim: "<red>キットを受け取る権限がありません。</red>"
+  no-permission-specific: "<red>キット <yellow>%kit_name%</yellow> の権限がありません。必要: <white>%perm%</white></red>"
+
+  # クールダウン
+  cooldown: "<yellow>キット <aqua>%kit_name%</aqua> はクールダウン中です。<white>%cooldown_left%</white> 待ってください。</yellow>"
+  bypass-cooldown: "<green><aqua>%kit_name%</aqua> のクールダウンをバイパスしています。</green>"
+
+  # 成功
+  claimed: "<green><aqua>%kit_name%</aqua> キットを受け取りました！</green>"
+  commands-ran: "<gray><aqua>%kit_name%</aqua> のコマンドが実行されました。</gray>"
+
+  # コマンド (KitCommands.java - 8つのLang呼び出し)
+  player-only: "<red>このコマンドはプレイヤーのみ使用できます。</red>"
+  usage-kit: "<yellow>使用方法: /kit <n></yellow>"
+  toggle-enabled: "<green>キット機能が <white>有効</white> になりました。</green>"
+  toggle-disabled: "<yellow>キット機能が <white>無効</white> になりました。</yellow>"
+
+  # GUI説明 (KitsMenuSI.java - 5つのLang呼び出し)
+  gui:
+    lore:
+      claimable: "<green>✓ 受け取り可能！</green>\n<gray>クールダウン: <white>なし</white></gray>"
+      on-cooldown: "<yellow>⏱ クールダウン中</yellow>\n<gray>待機時間: <white>%cooldown_left%</white></gray>"
+    sounds:
+      claim:
+        enabled: true
+        sound: "minecraft:entity.experience_orb.pickup"
+        volume: 0.8
+        pitch: 1.2
+      denied:
+        enabled: true
+        sound: "minecraft:block.note_block.bass"
+        volume: 0.7
+        pitch: 0.7
+
+# ============================================================================
+# プレイヤーワープシステム (10ファイル検証済み - 65以上のLangキー)
+# ============================================================================
+
+# サービスレベルメッセージ (PlayerWarpService.java - 15のLang呼び出し)
+playerwarps:
+  no-permission-base: "<red>プレイヤーワープを使用する権限がありません。</red>"
+  only-players-sub: "<red>/%sub% はプレイヤーのみ使用できます。</red>"
+
+  teleport:
+    not-found: "<red>ワープ <yellow>%name%</yellow> が見つかりませんでした。</red>"
+    no-permission: "<red><yellow>%name%</yellow> を使用する権限がありません。</red>"
+    local: "<green>ワープ</green> <yellow>%name%</yellow> <green>にテレポートしました。</green>"
+    cross-disabled: "<gray>クロスサーバーワープは無効です。<white>%name%</white> にローカルでテレポートします。</gray>"
+    messaging-disabled: "<gray>メッセージングがオフラインです。<white>%name%</white> にローカルでテレポートします。</gray>"
+    cross-send: "<gray>ワープ</gray> <white>%name%</white> <gray>のためサーバー</gray> <yellow>%server%</yellow> <gray>に送信中…</gray>"
+
+  whitelist:
+    not-found: "<red>ワープ <yellow>%name%</yellow> が見つかりません。</red>"
+    not-enabled: "<red><yellow>%name%</yellow> のホワイトリストは有効ではありません。</red>"
+    player-not-found: "<red>対象プレイヤーが見つかりません。</red>"
+    already: "<yellow>%target%</yellow> は既に <white>%name%</white> のホワイトリストに登録されています。"
+    added: "<green><yellow>%target%</yellow> を <white>%name%</white> のホワイトリストに追加しました。</green>"
+    not-in: "<red><yellow>%target%</yellow> は <white>%name%</white> のホワイトリストにいません。</red>"
+    removed: "<green><yellow>%target%</yellow> を <white>%name%</white> のホワイトリストから削除しました。</green>"
+    enabled: "<green><white>%warp%</white> のホワイトリストを有効にしました。</green>"
+    disabled: "<yellow><white>%warp%</white> のホワイトリストを無効にしました。</yellow>"
+    not-owner: "<red><yellow>%warp%</yellow> の所有者ではありません。</red>"
+
+# コマンドメッセージ (PlayerWarpCommand.java - 50以上のLang呼び出し)
+pw:
+  # ヘルプ
+  help-header: "<gold><bold>プレイヤーワープ ヘルプ</bold></gold>"
+  help-body: |
+    <yellow>/%label% set <n></yellow> <gray>- ワープを作成</gray>
+    <yellow>/%label% remove <n></yellow> <gray>- ワープを削除</gray>
+    <yellow>/%label% list [プレイヤー]</yellow> <gray>- ワープ一覧</gray>
+    <yellow>/%label% gui</yellow> <gray>- 全ワープを閲覧</gray>
+    <yellow>/%label% mywarps</yellow> <gray>- ワープを管理</gray>
+    <yellow>/%label% <warp></yellow> <gray>- ワープにテレポート</gray>
+  help-footer: "<gray>詳細は <yellow>/%label% help</yellow> を使用してください。</gray>"
+
+  # 権限 (20以上のキー)
+  no-permission-base: "<red>プレイヤーワープを使用する権限がありません。</red>"
+  no-permission-set: "<red>ワープを設定する権限がありません。</red>"
+  no-permission-remove: "<red>ワープを削除する権限がありません。</red>"
+  no-permission-list: "<red>ワープを一覧表示する権限がありません。</red>"
+  no-permission-warp: "<red><yellow>%name%</yellow> を使用する権限がありません。</red>"
+  no-permission-amount: "<red>権限がありません。</red>"
+  no-permission-rtp: "<red>権限がありません。</red>"
+  no-permission-near: "<red>権限がありません。</red>"
+  no-permission-reset: "<red>権限がありません。</red>"
+  no-permission-rename: "<red>権限がありません。</red>"
+  no-permission-setowner: "<red>権限がありません。</red>"
+  no-permission-removeall: "<red>権限がありません。</red>"
+  no-permission-reload: "<red>権限がありません。</red>"
+  no-permission-addwarps: "<red>権限がありません。</red>"
+  no-permission-whitelist: "<red>権限がありません。</red>"
+  no-permission-desc: "<red>権限がありません。</red>"
+  no-permission-category: "<red>権限がありません。</red>"
+  no-permission-lock: "<red>権限がありません。</red>"
+  no-permission-icon: "<red>権限がありません。</red>"
+  no-permission-cost: "<red>権限がありません。</red>"
+  no-permission-managers: "<red>権限がありません。</red>"
+  no-permission-password: "<red>権限がありません。</red>"
+
+  # 使用方法メッセージ (15以上のキー)
+  usage-set: "<yellow>使用方法: /%label% set <n></yellow>"
+  usage-remove: "<yellow>使用方法: /%label% remove <warp></yellow>"
+  usage-reset: "<yellow>使用方法: /%label% reset <warp></yellow>"
+  usage-rename: "<yellow>使用方法: /%label% rename <warp> <新しい名前></yellow>"
+  usage-setowner: "<yellow>使用方法: /%label% setowner <warp> <プレイヤー></yellow>"
+  usage-removeall: "<yellow>使用方法: /%label% removeall <プレイヤー></yellow>"
+  usage-addwarps: "<yellow>使用方法: /%label% addwarps <プレイヤー> <数></yellow>"
+  usage-whitelist: "<yellow>使用方法: /%label% whitelist <enable|disable|list|set|remove> <warp> [プレイヤー]</yellow>"
+  usage-whitelist-set: "<yellow>使用方法: /%label% whitelist set <warp> <プレイヤー></yellow>"
+  usage-whitelist-remove: "<yellow>使用方法: /%label% whitelist remove <warp> <プレイヤー></yellow>"
+  usage-desc: "<yellow>使用方法: /%label% desc <warp> [説明...]</yellow>"
+  usage-category: "<yellow>使用方法: /%label% category <warp> [カテゴリ]</yellow>"
+  usage-lock: "<yellow>使用方法: /%label% lock <warp> [on|off|toggle]</yellow>"
+  usage-icon: "<yellow>使用方法: /%label% icon <warp> [clear]</yellow>"
+  usage-cost: "<yellow>使用方法: /%label% cost <warp> <金額></yellow>"
+  usage-managers: "<yellow>使用方法: /%label% managers <warp> [プレイヤー]</yellow>"
+  usage-password: "<yellow>使用方法: /%label% password <warp> <パスワード|off></yellow>"
+  usage-use: "<yellow>使用方法: /%label% use <warp> [パスワード]</yellow>"
+
+  # ワープ設定
+  limit-reached: "<red>ワープの上限 (<white>%limit%</white>) に達しました。</red>"
+  already-exists: "<red>既に <yellow>%name%</yellow> という名前のワープがあります。</red>"
+  set-success: "<green>ワープ <aqua>%name%</aqua> を作成しました。</green>"
+
+  # ワープ削除
+  not-found-owner: "<red><yellow>%name%</yellow> という名前のワープはありません。</red>"
+  not-found: "<red>ワープ <yellow>%name%</yellow> が見つかりません。</red>"
+  remove-success: "<green>ワープ <aqua>%name%</aqua> を削除しました。</green>"
+  remove-failed: "<red>ワープ <yellow>%name%</yellow> の削除に失敗しました。</red>"
+
+  # リスト
+  list-header: "<gold><yellow>%owner%</yellow> のワープ:</gold>"
+  list-empty: "<gray>ワープが見つかりません。</gray>"
+  list-entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua>"
+  list-footer: "<gray>───────────────────────</gray>"
+  list-target-offline: "<red>プレイヤー <yellow>%player%</yellow> はオンラインではありません。</red>"
+
+  # 数量
+  amount-console-usage: "<red>使用方法: /pw amount <プレイヤー></red>"
+  amount-target-offline: "<red>プレイヤー <yellow>%player%</yellow> はオンラインではありません。</red>"
+  amount-self: "<green><white>%amount%</white> 個のワープがあります。</green>"
+  amount-other: "<green><yellow>%player%</yellow> は <white>%amount%</white> 個のワープを持っています。</green>"
+
+  # RTP
+  rtp-none: "<red>ランダムテレポート用のワープがありません。</red>"
+  rtp-none-usable: "<red>アクセスできるワープがありません。</red>"
+
+  # 近く
+  near-none: "<gray><white>%radius%</white> ブロック以内にワープが見つかりません。</gray>"
+  near-page-empty: "<red>ページ <yellow>%page%</yellow> は空です。</red>"
+
+  # リセット
+  reset-success: "<green>ワープ <aqua>%name%</aqua> を現在位置にリセットしました。</green>"
+  reset-failed: "<red>ワープ <yellow>%name%</yellow> のリセットに失敗しました。</red>"
+
+  # 名前変更
+  rename-success: "<green><yellow>%old%</yellow> を <aqua>%name%</aqua> に名前変更しました。</green>"
+  rename-failed: "<red><yellow>%old%</yellow> から <yellow>%name%</yellow> への名前変更に失敗しました。</red>"
+
+  # 所有者設定
+  setowner-success: "<green>ワープ <aqua>%warp%</aqua> を <yellow>%player%</yellow> に譲渡しました。</green>"
+  setowner-failed: "<red>ワープ <yellow>%warp%</yellow> の譲渡に失敗しました。</red>"
+  player-resolve-failed: "<red>プレイヤー <yellow>%player%</yellow> を解決できませんでした。</red>"
+
+  # 全削除
+  removeall-success: "<green><yellow>%player%</yellow> から <white>%amount%</white> 個のワープを削除しました。</green>"
+
+  # リロード
+  reload-success: "<green>設定をリロードしました。</green>"
+
+  # ワープ追加
+  addwarps-invalid-amount: "<red>無効な数量です。</red>"
+  addwarps-success: "<green><yellow>%player%</yellow> に <white>%amount%</white> 個の追加ワープスロットを追加しました。合計追加: <white>%total%</white>。</green>"
+
+  # ホワイトリスト
+  whitelist-added: "<green><yellow>%player%</yellow> を <white>%warp%</white> のホワイトリストに追加しました。</green>"
+  whitelist-removed: "<green><yellow>%player%</yellow> を <white>%warp%</white> のホワイトリストから削除しました。</green>"
+  whitelist-already: "<yellow>%player%</yellow> は既に <white>%warp%</white> のホワイトリストにいます。"
+  whitelist-not-found: "<red><yellow>%player%</yellow> は <white>%warp%</white> のホワイトリストにいません。</red>"
+
+  # 説明
+  desc-empty: "<gray>ワープ <white>%warp%</white> には説明がありません。</gray>"
+  desc-show: "<gold><aqua>%warp%</aqua> の説明:</gold> <white>%desc%</white>"
+  desc-cleared: "<green><aqua>%warp%</aqua> の説明をクリアしました。</green>"
+  desc-set: "<green><aqua>%warp%</aqua> の説明を設定しました: <white>%desc%</white></green>"
+
+  # カテゴリ
+  category-empty: "<gray>ワープ <white>%warp%</white> にはカテゴリがありません。</gray>"
+  category-show: "<gold><aqua>%warp%</aqua> のカテゴリ:</gold> <white>%category%</white>"
+  category-cleared: "<green><aqua>%warp%</aqua> のカテゴリをクリアしました。</green>"
+  category-set: "<green><aqua>%warp%</aqua> のカテゴリを設定しました: <white>%category%</white></green>"
+
+  # ロック
+  locked: "<green>ワープ <aqua>%warp%</aqua> をロックしました。</green>"
+  unlocked: "<green>ワープ <aqua>%warp%</aqua> のロックを解除しました。</green>"
+
+  # アイコン
+  icon-no-item: "<red>メインハンドにアイテムを持っている必要があります。</red>"
+  icon-set: "<green><aqua>%warp%</aqua> のアイコンを設定しました。</green>"
+  icon-cleared: "<green><aqua>%warp%</aqua> のアイコンをクリアしました。</green>"
+
+  # コスト
+  cost-invalid: "<red>無効な金額: <yellow>%input%</yellow></red>"
+  cost-cleared: "<green><aqua>%warp%</aqua> のコストをクリアしました (無料になりました)。</green>"
+  cost-set: "<green><aqua>%warp%</aqua> のコストを <yellow>$%amount%</yellow> に設定しました。</green>"
+  cost-not-enough: "<red>残高不足 (<white>$%amount%</white> 必要)。</red>"
+  cost-charged: "<gray>課金</gray> <yellow>$%amount%</yellow> <gray>(</gray><white>%owner%</white><gray> に支払い)。</gray>"
+
+  # マネージャー
+  managers-player-not-found: "<red>プレイヤー <yellow>%player%</yellow> が見つかりません。</red>"
+  manager-added: "<green><yellow>%player%</yellow> を <white>%warp%</white> のマネージャーに追加しました。</green>"
+  manager-removed: "<green><yellow>%player%</yellow> を <white>%warp%</white> のマネージャーから削除しました。</green>"
+
+  # パスワード
+  password-required: "<red>ワープ <yellow>%warp%</yellow> にはパスワードが必要です。</red> <gray>使用方法: <white>/pw use %warp% <パスワード></white></gray>"
+  password-wrong: "<red><yellow>%warp%</yellow> のパスワードが間違っています。</red>"
+  password-cleared: "<green><aqua>%warp%</aqua> のパスワードをクリアしました。</green>"
+  password-set: "<green><aqua>%warp%</aqua> のパスワードを設定しました。</green>"
+  password-placeholder-set: "<green><aqua>%warp%</aqua> のデフォルトパスワード '<white>%password%</white>' を設定しました。<yellow>/pw password %warp% <あなたのパスワード></yellow> で変更してください。</green>"
+
+  # テレポート
+  teleport-failed: "<red>テレポートに失敗しました。</red>"
+  teleported: "<green>プレイヤーワープ <aqua>%name%</aqua> にテレポートしました。</green>"
+  sending: "<yellow><aqua>%server%</aqua> に送信中... 到着時にプレイヤーワープ <aqua>%warp%</aqua> にテレポートします。</yellow>"
+  messaging-disabled: "<red>クロスサーバーメッセージングは無効です。</red>"
+
+# ============================================================================
+# プレイヤーボルトシステム (2つのGUIファイル検証済み - 1つのLangキー)
+# ============================================================================
+
+playervaults:
+  # ロックされたボルトへのアクセス時の権限拒否 (VaultMenu.java)
+  deny: "<red>ボルト <yellow>%id%</yellow> にアクセスする権限がありません。</red>"
+
+  # オプション成功メッセージ
+  opened: "<green>ボルト <aqua>%id%</aqua> を開きました。</green>"
+  saved: "<gray>ボルト <white>%id%</white> を自動保存しました。</gray>"
+
+# ============================================================================
+# テレポートシステム (TPA, HOME, SPAWN, WARP, BACK)
+# ============================================================================
+
+teleport:
+  # 共有カウントダウン
+  countdown:
+    title: "<yellow>テレポート中...</yellow>"
+    subtitle: "<gray><white>%seconds%</white>秒後...</gray>"
+
+  # クロスサーバーテレポート (/tp 管理者コマンド)
+  cross-server:
+    no-messaging: "<red>クロスサーバーメッセージングが利用できません。サーバー間で /tp を使用できません。</red>"
+    jumping: "<gray><aqua>%server%</aqua> の <aqua>%target%</aqua> にテレポート中…</gray>"
+    arrived: "<green><aqua>%target%</aqua> にテレポートしました。</green>"
+    target-offline: "<red>テレポート失敗: 対象プレイヤーがオンラインではなくなりました。</red>"
+
+  # クロスサーバー /back
+  back:
+    cross-server:
+      no-messaging: "<red>クロスサーバーメッセージングが利用できません。サーバー間で /back を使用できません。</red>"
+      no-server: "<red>戻る位置にターゲットサーバーがありません。</red>"
+      jumping: "<gray><aqua>%server%</aqua> の前の位置にテレポート中…</gray>"
+      world-not-loaded: "<red>テレポート失敗: ワールド <yellow>%world%</yellow> がロードされていません。</red>"
+      success: "<green>前の位置に戻りました。</green>"
+
+# TPAシステム
+tpa:
+  usage: "<red>使用方法: /%label% <プレイヤー></red>"
+  self: "<red>自分にTPAすることはできません。</red>"
+
+  not-found:
+    name-hint: "<red>プレイヤー <white>%input%</white> はオンラインではありません。<gray>(別のサーバーにいる場合は、正確なMinecraft名を使用してください。)</gray></red>"
+    generic: "<red>プレイヤー <white>%input%</white> がオンラインで見つかりません。<gray>(オフラインか、別のプロキシクラスタにいる可能性があります。)</gray></red>"
+
+  sent:
+    local: "<green><aqua>%target%</aqua> にTPAを送信しました。</green>"
+    cross-server: "<gray><aqua>%server%</aqua> の <aqua>%target%</aqua> にリクエストを送信しました。</gray><green>/tpaccept</green><gray> で承認できます。</gray>"
+    global: "<gray>ネットワーク全体で <white>%target%</white> にリクエストをブロードキャストしました。オンラインの場合、</gray><green>/tpaccept</green><gray> で承認できます。</gray>"
+
+  request-target: "<aqua>%player%</aqua> <yellow>があなたにテレポートしたがっています。</yellow> <green>/tpaccept</green> <yellow>または</yellow> <red>/tpdeny</red> <yellow>(<white>%timeout%</white>秒)</yellow>"
+
+  broker-unavailable: "<red>クロスサーバーTPAブローカーは現在利用できません。<gray></gray><white>%target%</white><gray> にサーバーに直接参加するよう依頼してください。</gray></red>"
+
+  accept:
+    none: "<red>保留中のテレポートリクエストがありません。</red>"
+    failed: "<red>テレポートリクエストの承認に失敗しました。</red>"
+    debug-hint: "<gray>デバッグ: TeleportServiceにリクエストが見つかりません。</gray>"
+
+  # デバッグエコー
+  debug:
+    echo: "<dark_gray>[<aqua>TPA</aqua>/<gray>%id%</gray>]</dark_gray> <gray>%message%</gray>"
+
+# ホームシステム
+home:
+  disabled: "<red>ホーム機能は現在無効になっています。</red>"
+  no-homes: "<yellow>ホームがありません。<aqua>%sethome%</aqua> を使用して作成してください。</yellow>"
+  list: "<gray>あなたのホーム:</gray> <aqua>%homes%</aqua>"
+  tip: "<gray><yellow>/%label% <名前></yellow> でテレポートできます。</gray>"
+  not-found: "<red>ホーム <yellow>%name%</yellow> が見つかりません。</red>"
+  suggest: "<gray>もしかして:</gray> <aqua>%suggestions%</aqua>"
+  teleported: "<green>ホーム <yellow>%name%</yellow> にテレポートしました。</green>"
+  cancelled-moved: "<red>テレポートがキャンセルされました: 移動しました。</red>"
+  cross-disabled: "<red>クロスサーバーホームは無効です。</red>"
+  cross-disabled-tip: "<gray>管理者にクロスサーバーホームの有効化を依頼するか、<yellow>/server %server%</yellow> してから <yellow>/home %name%</yellow> を使用してください。</gray>"
+  messaging-disabled: "<red>クロスサーバーメッセージングは無効です。</red>"
+  messaging-disabled-tip: "<gray>管理者にメッセージングの有効化を依頼するか、<yellow>/server %server%</yellow> してから <yellow>/home %name%</yellow> を使用してください。</gray>"
+  sending: "<gray>ホーム <aqua>%name%</aqua> のため <yellow>%server%</yellow> に送信中...</gray>"
+  switch-failed: "<red>サーバー <yellow>%server%</yellow> への切り替えに失敗しました。</red>"
+  switch-failed-tip: "<gray>手動で <yellow>/server %server%</yellow> を試してください。</gray>"
+
+homes:
+  not-found: "<red>ホームが見つかりません: <yellow>%name%</yellow></red>"
+  available: "<gray>利用可能:</gray> <aqua>%homes%</aqua>"
+  teleported: "<green>ホーム <aqua>%name%</aqua> にテレポートしました。</green>"
+  cross-disabled: "<red>クロスサーバーホームはサーバー設定で無効になっています。</red>"
+  cross-disabled-manual: "<gray><aqua>/server %server%</aqua> を使用してから <aqua>/homes %name%</aqua> を実行してください。</gray>"
+  messaging-disabled: "<red>クロスサーバーメッセージングは無効です。管理者にRabbitMQの有効化を依頼してください。</red>"
+  messaging-disabled-manual: "<gray><aqua>/server %server%</aqua> で切り替えてから <aqua>/homes %name%</aqua> を実行できます。</gray>"
+  sending: "<yellow><aqua>%server%</aqua> に送信中... 到着時にホーム <aqua>%name%</aqua> にテレポートします。</yellow>"
+  switch-failed: "<red>%server% への切り替えに失敗しました。</red>"
+  no-homes: "<yellow>ホームがありません。<aqua>/sethome <名前></aqua> を使用してください。</yellow>"
+  list: "<gold>ホーム (%count%):</gold> <aqua>%homes%</aqua>"
+  tip: "<gray>ヒント: <aqua>/homes <名前></aqua> でテレポート。</gray>"
+
+  gui:
+    title: "<dark_green>あなたのホーム</dark_green>"
+    not-found: "<red>ホームが見つかりません: <yellow>%name%</yellow></red>"
+    teleported: "<green><aqua>%name%</aqua> にテレポートしました。</green>"
+    cross-disabled: "<red>クロスサーバーホームはサーバー設定で無効になっています。</red>"
+    cross-disabled-manual: "<gray><aqua>/server %server%</aqua> を使用してから <aqua>/home %name%</aqua> を実行してください。</gray>"
+    messaging-disabled: "<red>クロスサーバーメッセージングは無効です。管理者にRabbitMQの有効化を依頼してください。</red>"
+    messaging-disabled-manual: "<gray><aqua>/server %server%</aqua> してから <aqua>/home %name%</aqua> を実行できます。</gray>"
+    sending: "<yellow><aqua>%server%</aqua> に送信中... (到着時にテレポート)。</yellow>"
+    switch-failed: "<red>%server% への切り替えに失敗しました。</red>"
+
+    refresh:
+      title: "<yellow>更新</yellow>"
+      lore: "<gray>クリックしてホームをリロード。</gray>"
+
+    counter:
+      title: "<gold>ホーム <white>(%count%)</white></gold>"
+      lore:
+        0: "<gray>左クリックでテレポート。</gray>"
+        1: "<gray>右クリックで削除。</gray>"
+
+    nav:
+      previous: "<yellow>前のページ</yellow>"
+      next: "<yellow>次のページ</yellow>"
+
+    home:
+      title: "<aqua>%name%</aqua>"
+      lore:
+        server: "<gray>サーバー: <yellow>%server%</yellow></gray>"
+        world: "<gray>ワールド: <yellow>%world%</yellow></gray>"
+        coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+        left-click: "<green>左クリック: <white>テレポート</white></green>"
+        right-click: "<red>右クリック: <white>削除</white></red>"
+
+  delete:
+    title: "<dark_red>'%home%' を削除しますか？</dark_red>"
+    yes: "<green>はい、削除</green>"
+    no: "<red>いいえ、キャンセル</red>"
+    success: "<red>ホーム <yellow>%home%</yellow> を削除しました。</red>"
+    failed: "<red>ホーム <yellow>%home%</yellow> の削除に失敗しました。</red>"
+    info:
+      title: "<gold>ホームを削除</gold>"
+      lore:
+        0: "<gray>本当に削除しますか</gray>"
+        1: "<yellow>%home%</yellow><gray>？</gray>"
+
+# Sethome
+sethome:
+  limit: "<red>ホームの上限 <yellow>%max%</yellow> に達しました。</red>"
+  set: "<green>ホーム <yellow>%name%</yellow> を設定しました。</green>"
+
+# Delhome
+delhome:
+  usage: "<yellow>使用方法: /%label% <名前></yellow>"
+  removed: "<green>ホーム <yellow>%name%</yellow> を削除しました。</green>"
+  not-found: "<red><yellow>%name%</yellow> という名前のホームはありません。</red>"
+
+# スポーンシステム
+spawn:
+  disabled: "<red>スポーンコマンドは現在無効になっています。</red>"
+  not-set: "<red>スポーン位置が設定されていません。</red>"
+  teleported: "<green>スポーンにテレポートしました。</green>"
+  cancelled-moved: "<red>テレポートがキャンセルされました: 移動しました。</red>"
+  teleport-failed: "<red>テレポート失敗: %error%</red>"
+  cross-disabled: "<red>クロスサーバースポーンは無効です。</red>"
+  cross-disabled-tip: "<gray>管理者にクロスサーバースポーンの有効化を依頼するか、<yellow>/server %server%</yellow> してから <yellow>/spawn</yellow> を使用してください。</gray>"
+  messaging-disabled: "<red>クロスサーバーメッセージングは無効です。</red>"
+  messaging-disabled-tip: "<gray>管理者にメッセージングの有効化を依頼するか、<yellow>/server %server%</yellow> してから <yellow>/spawn</yellow> を使用してください。</gray>"
+  sending: "<gray>スポーンのため <yellow>%server%</yellow> に送信中...</gray>"
+  switch-failed: "<red>サーバー <yellow>%server%</yellow> への切り替えに失敗しました。</red>"
+
+# ワープシステム
+warp:
+  list-empty: "<yellow>ワープ: <gray>(なし)</gray></yellow>"
+  list: "<yellow>ワープ:</yellow> <gray>%warps%</gray>"
+
+  no-permission: "<red>このワープの権限がありません。</red>"
+  no-permission-with-node: "<red>このワープの権限がありません。<gray>(%permission%)</gray></red>"
+  no-permission-others: "<red>他のプレイヤーをワープさせる権限がありません。</red>"
+
+  console-usage: "<red>コンソールからの使用方法: /warp <warp> <プレイヤー></red>"
+  player-not-found: "<red>プレイヤー '<yellow>%player%</yellow>' はオンラインではありません。</red>"
+
+  not-found: "<red>ワープが見つかりません。</red>"
+  teleport-failed: "<red>テレポート失敗: <gray>%error%</gray></red>"
+
+  teleported: "<green>ワープ <aqua>%warp%</aqua> にテレポートしました。</green>"
+  teleported-other: "<green><yellow>%player%</yellow> をワープ <aqua>%warp%</aqua> にテレポートしました。</green>"
+  cancelled-moved: "<red>ワープ <yellow>%warp%</yellow> へのテレポートがキャンセルされました: 移動しました。</red>"
+
+  cross-disabled: "<red>クロスサーバーワープはサーバー設定で無効になっています。</red>"
+  cross-disabled-tip: "<gray><aqua>/server %server%</aqua> を使用してから <aqua>/warp %warp%</aqua> を実行してください。</gray>"
+  messaging-disabled: "<red>クロスサーバーメッセージングは無効です。</red>"
+  messaging-disabled-tip: "<gray><aqua>/server %server%</aqua> を使用してから <aqua>/warp %warp%</aqua> を実行してください。</gray>"
+  sending: "<yellow><aqua>%server%</aqua> に送信中... 到着時にワープ <aqua>%warp%</aqua> にテレポートします。</yellow>"
+  sending-other: "<green><yellow>%player%</yellow> を <aqua>%server%</aqua> に送信中 (ワープ <yellow>%warp%</yellow>)。</green>"
+  switch-failed: "<red>%server% への切り替えに失敗しました。</red>"
+
+  delete:
+    title: "<dark_red>'%warp%' を削除しますか？</dark_red>"
+    yes: "<green>はい、削除</green>"
+    no: "<red>いいえ、キャンセル</red>"
+    success: "<red>ワープ <yellow>%warp%</yellow> を削除しました。</red>"
+    failed: "<red>ワープ <yellow>%warp%</yellow> の削除に失敗しました。</red>"
+    info:
+      title: "<gold>ワープを削除</gold>"
+      lore:
+        0: "<gray>本当に削除しますか</gray>"
+        1: "<yellow>%warp%</yellow><gray>？</gray>"
+
+  admin:
+    list:
+      title: "<dark_aqua>ワープ (管理者)</dark_aqua>"
+      refresh: "<yellow>更新</yellow>"
+      refresh-lore: "<gray>クリックしてワープをリロード。</gray>"
+      counter: "<gold>ワープ <white>(%count%)</white></gold>"
+      counter-lore:
+        0: "<gray>左/右クリック: <white>ワープを管理</white></gray>"
+        1: "<gray>Shift+左クリックまたは中クリック: <white>クイックテレポート</white></gray>"
+      previous: "<yellow>前のページ</yellow>"
+      next: "<yellow>次のページ</yellow>"
+      warp-name: "<aqua>%name%</aqua>"
+      warp-server: "<gray>サーバー: <yellow>%server%</yellow></gray>"
+      warp-world: "<gray>ワールド: <yellow>%world%</yellow></gray>"
+      warp-coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+      warp-perm-protected: "<gray>権限: <gold>%perm%</gold></gray>"
+      warp-perm-public: "<gray>権限: <green>公開</green></gray>"
+      warp-click: "<green>クリック: <white>アクションを開く</white></green>"
+      warp-quick-tp: "<aqua>Shift+左/中: <white>クイックテレポート</white></aqua>"
+
+    gui:
+      title: "<dark_aqua>ワープ: <aqua>%warp%</aqua></dark_aqua>"
+      info:
+        server: "<gray>サーバー: <yellow>%server%</yellow></gray>"
+        permission-open: "<gray>権限: <green>オープン (全員)</green></gray>"
+        permission-required: "<gray>権限: <yellow>%permission%</yellow></gray>"
+      teleport: "<green>テレポート</green>"
+      set-permission: "<aqua>権限を設定/変更</aqua>"
+      make-public: "<green>公開にする (権限をクリア)</green>"
+      rename: "<gold>ワープ名を変更</gold>"
+      delete: "<red>ワープを削除</red>"
+      back: "<red>← 戻る</red>"
+
+    prompt:
+      permission: "<yellow>ワープ <aqua>%warp%</aqua> の権限をチャットに入力してください (<white>cancel</white> でキャンセル)。</yellow>"
+      rename: "<yellow>ワープ <aqua>%warp%</aqua> の新しい名前をチャットに入力してください (<white>cancel</white> でキャンセル)。</yellow>"
+      cancelled: "<gray>操作をキャンセルしました。</gray>"
+
+    directory-unavailable: "<red>WarpDirectory が利用できません。権限を変更できません。</red>"
+    permission-cleared: "<green>権限をクリアしました。ワープは公開になりました。</green>"
+    permission-set: "<green>権限を <yellow>%permission%</yellow> に設定しました。</green>"
+    rename-empty: "<red>名前を空にすることはできません。</red>"
+    rename-failed: "<red>ワープの名前変更に失敗しました。</red>"
+    rename-success: "<green>ワープ名を <aqua>%new_name%</aqua> に変更しました。</green>"
+    not-found: "<red>ワープが見つかりません: <yellow>%warp%</yellow></red>"
+    teleported: "<green>ワープ <aqua>%warp%</aqua> にテレポートしました。</green>"
+    sending: "<yellow><aqua>%server%</aqua> に送信中... (到着時にテレポート)。</yellow>"
+    switch-failed: "<red>%server% への切り替えに失敗しました。</red>"
+
+  player:
+    no-permission: "<red>このワープの権限がありません。</red>"
+    list:
+      refresh: "<yellow>更新</yellow>"
+      refresh-lore: "<gray>クリックしてワープをリロード。</gray>"
+      counter: "<gold>ワープ <white>(%count%)</white></gold>"
+      counter-lore: "<gray>左クリック: <white>テレポート</white></gray>"
+      previous: "<yellow>前のページ</yellow>"
+      next: "<yellow>次のページ</yellow>"
+      warp-name-allowed: "<aqua>%name%</aqua>"
+      warp-name-locked: "<dark_red>%name%</dark_red>"
+      warp-server: "<gray>サーバー: <yellow>%server%</yellow></gray>"
+      warp-world: "<gray>ワールド: <yellow>%world%</yellow></gray>"
+      warp-coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+      warp-click: "<green>左クリック: <white>テレポート</white></green>"
+      warp-locked: "<red>アクセス権がありません。</red>"
+
+  head:
+    usage: "<yellow>使用方法: /<white>%label% <プレイヤー></white></yellow>"
+    fetching: "<gray><white>%target%</white> の頭を取得中...</gray>"
+    cannot-resolve: "<red>プレイヤー <white>%target%</white> が見つかりません。</red>"
+    fetch-failed: "<red><white>%target%</white> の頭の取得に失敗しました。</red>"
+    item-name: "<aqua>%target%</aqua><gray> の頭</gray>"
+    dropped: "<yellow>頭を入手しました！<gray>(インベントリが満杯のため足元にドロップ)</gray></yellow>"
+    given: "<green><white>%target%</white> の頭を入手しました！</green>"
+
+# RTPシステム
+rtp:
+  disabled: "<red>ランダムテレポートは現在無効になっています。</red>"
+  cooldown-wait: "<red>/%label% を使用する前に <yellow>%seconds%</yellow> 秒待つ必要があります。</red>"
+  no-world: "<red>ランダムテレポート用の有効なワールドが見つかりません。</red>"
+  cross-switch: "<gray><aqua>%world%</aqua> でのランダムテレポートのため <aqua>%server%</aqua> に切り替え中...</gray>"
+  not-configured: "<red>ランダムテレポートはこのサーバーで設定されていません。</red>"
+  world-not-loaded: "<red>ワールド <yellow>%world%</yellow> がこのサーバーでロードされていません。</red>"
+  not-allowed-world: "<red>このワールドではランダムテレポートは許可されていません。</red>"
+  trying: "<gray><aqua>%world%</aqua> で <aqua>%radius%</aqua> ブロック以内のランダムテレポートを試行中...</gray>"
+  no-safe-spot: "<red>安全な場所が見つかりませんでした。再試行してください。</red>"
+  teleported: "<green><aqua>%world%</aqua> の <aqua>%x%</aqua>, <aqua>%y%</aqua>, <aqua>%z%</aqua> にテレポートしました。</green>"
+  failed: "<red>テレポートに失敗しました。</red>"
+  cancelled-moved: "<red>RTPがキャンセルされました: 移動しました。</red>"
+  warmup:
+    title: "<yellow>%seconds%</yellow>"
+    subtitle: "<gray>ランダムテレポート...</gray>"
+
+# Deathback
+deathback:
+  no-location: "<red>保存された死亡位置がありません。</red>"
+  success: "<green>最後の死亡位置にテレポートしました。</green>"
+  failed: "<red>テレポートに失敗しました。</red>"
+
+# ============================================================================
+# 経済システム
+# ============================================================================
+
+economy:
+  currency:
+    symbol: "$"
+    name: "ドル"
+    name_plural: "ドル"
+
+  errors:
+    not-a-number: "<red>無効な金額です。</red>"
+    amount-not-positive: "<red>金額は正の数である必要があります。</red>"
+    player-not-found: "<red>プレイヤーが見つかりません: <yellow>%target%</yellow>。</red>"
+    no-economy: "<red>経済システムが利用できません。</red>"
+    no-permission: "<red>権限がありません。</red>"
+
+  money:
+    usage:
+      view: "<yellow>使用方法: /money [プレイヤー]</yellow>"
+      admin: "<yellow>使用方法: /money <give|take|set> <プレイヤー> <金額></yellow>"
+    view-self: "<gray>あなたの残高: <green>%currency_symbol%%balance_formatted%</green></gray>"
+    view-other: "<gray>%target% の残高: <green>%currency_symbol%%balance_formatted%</green></gray>"
+    give:
+      sender: "<green><yellow>%target%</yellow> に <white>%currency_symbol%%amount_formatted%</white> を付与しました。</green>"
+      receiver: "<green><white>%currency_symbol%%amount_formatted%</white> を受け取りました。新しい残高: <green>%currency_symbol%%balance_formatted%</green>。</green>"
+    take:
+      sender: "<green><yellow>%target%</yellow> から <white>%currency_symbol%%amount_formatted%</white> を取りました。</green>"
+      receiver: "<red><bold>%currency_symbol%%amount_formatted%</bold></red> <gray>があなたの残高から削除されました。新しい残高: <green>%currency_symbol%%balance_formatted%</green>。</gray>"
+    set:
+      sender: "<green><yellow>%target%</yellow> の残高を <white>%currency_symbol%%amount_formatted%</white> に設定しました。</green>"
+      receiver: "<gray>あなたの残高が <green>%currency_symbol%%amount_formatted%</green> に設定されました。</gray>"
+
+  pay:
+    usage: "<yellow>使用方法: /pay <プレイヤー> <金額></yellow>"
+    self: "<red>自分に支払うことはできません。</red>"
+    success-sender: "<green><aqua>%target%</aqua> に <gray>%currency_symbol%%amount_formatted%</gray> を支払いました。</green>"
+    success-receiver: "<green><aqua>%player%</aqua> から <gray>%currency_symbol%%amount_formatted%</gray> を受け取りました。</green>"
+    fail-insufficient: "<red><white>%currency_symbol%%amount_formatted%</white> が不足しています。</red>"
+
+  format:
+    thousands-separator: ","
+    decimal-separator: "."
+    decimals: 2
+
+# ============================================================================
+# モデレーションシステム
+# ============================================================================
+
+moderation:
+  # Ban
+  ban:
+    usage: "<yellow>使用方法: /%label% <プレイヤー> [期間] [理由]</yellow>"
+    usage-examples: "<gray>期間の例: 10m, 2h, 3d4h, 1w</gray>"
+    player-not-found: "<red>プレイヤーが見つかりません: %player%</red>"
+    default-reason: "オペレーターによってBANされました。"
+    kick-message-temp: "<red>%reason%</red>\n<gray>期限: %expires%</gray>"
+    kick-message-perm: "<red>%reason%</red>"
+    success-temp: "<green><aqua>%player%</aqua> を <yellow>%expires%</yellow> までBANしました。理由: <yellow>%reason%</yellow></green>"
+    success-perm: "<green><aqua>%player%</aqua> を永久BANしました。理由: <yellow>%reason%</yellow></green>"
+
+  # Broadcast
+  broadcast:
+    prefix: "<gold>[ブロードキャスト]</gold> "
+
+  # Godモード
+  god:
+    usage: "<yellow>使用方法: /%label% <プレイヤー></yellow>"
+    self-enabled: "<green>Godモードが <aqua>有効</aqua> になりました。無敵です。</green>"
+    self-disabled: "<red>Godモードが <aqua>無効</aqua> になりました。</red>"
+    no-permission-others: "<red>他のプレイヤーのGodモードを切り替える権限がありません。</red>"
+    player-not-found: "<red>プレイヤーが見つからないかオンラインではありません: <yellow>%player%</yellow></red>"
+    target-enabled: "<green>管理者があなたのGodモードを有効にしました。</green>"
+    target-disabled: "<red>管理者があなたのGodモードを無効にしました。</red>"
+    other-enabled: "<green><aqua>%player%</aqua> のGodモードを有効にしました。</green>"
+    other-disabled: "<red><aqua>%player%</aqua> のGodモードを無効にしました。</red>"
+
+  # Heal
+  heal:
+    console-usage: "<red>使用方法: /%label% <プレイヤー></red>"
+    not-found: "<red>プレイヤーが見つかりません。</red>"
+    healed: "<green>回復しました。</green>"
+    healed-other: "<yellow><aqua>%player%</aqua> を回復しました。</yellow>"
+
+  # Kick
+  kick:
+    usage: "<yellow>使用方法: /%label% <プレイヤー> [理由...]</yellow>"
+    default-reason: "オペレーターによってキックされました。"
+    kick-message: "<red>%reason%</red>"
+    player-not-found: "<red>プレイヤーが見つかりません。</red>"
+    success: "<green><aqua>%player%</aqua> をキックしました。理由: <yellow>%reason%</yellow></green>"
+    success-cross-server: "<green><aqua>%player%</aqua> のキックリクエストを送信しました (クロスサーバー)。</green>"
+    no-bridge: "<red>対象がこのサーバーにおらず、クロスサーバーモデレーションブリッジが利用できません。</red>"
+
+  # Mute
+  mute:
+    usage: "<yellow>使用方法: /%label% <プレイヤー> <期間> [理由]</yellow>"
+    player-not-found: "<red>プレイヤーが見つかりません: %target%</red>"
+    invalid-duration: "<red>無効な期間です。30s、10m、2h、1dまたは秒数を使用してください。</red>"
+    broadcast-failed: "<red>警告: 他のサーバーへのミュートのブロードキャストに失敗しました。</red>"
+    reason-suffix: " <gray>| 理由: <yellow>%reason%</yellow></gray>"
+    executor:
+      success: "<green><yellow>%target%</yellow> を <white>%duration%</white> ミュートしました%reason_suffix%。</green>"
+    target:
+      notified: "<red><white>%duration%</white> ミュートされました。%reason_suffix%</red>"
+    broadcast: "<gold>[モデレーション]</gold> <yellow>%target%</yellow> <gray>が</gray> <aqua>%staff%</aqua> <gray>によって</gray> <white>%duration%</white> <gray>ミュートされました</gray>%reason_suffix%<gray>。</gray>"
+    broadcast-console: "[モデレーション] %target% が %staff% によって %duration% ミュートされました%reason_suffix%。"
+
+  # Unban
+  unban:
+    usage: "<yellow>使用方法: /%label% <プレイヤー></yellow>"
+    not-banned: "<gray>%player% はBANされていません。</gray>"
+    success: "<green><aqua>%player%</aqua> のBANを解除しました。</green>"
+
+  # Unmute
+  unmute:
+    usage: "<yellow>使用方法: /%label% <プレイヤー></yellow>"
+    player-not-found: "<red>プレイヤーが見つかりません: %player%</red>"
+    not-muted: "<gray>%player% はミュートされていません。</gray>"
+    success: "<green><aqua>%player%</aqua> のミュートを解除しました。</green>"
+    notified: "<green>ミュートが解除されました。</green>"
+
+  # Vanish
+  vanish:
+    enabled: "<green>透明化しました。</green>"
+    disabled: "<yellow>可視化しました。</yellow>"
+
+# ============================================================================
+# チャットとメッセージング
+# ============================================================================
+
+chat:
+  cleared-by: "<red>チャットが <yellow>%actor%</yellow> によってクリアされました。</red>"
+  global-muted: "<red>グローバルチャットが <yellow>%actor%</yellow> によってミュートされました。</red>"
+  global-unmuted: "<green>グローバルチャットのミュートが解除されました。</green>"
+  slowmode-set: "<yellow>スローモードが <gold>%seconds%</gold>秒 <gray>(ネットワーク)</gray> になりました。</yellow>"
+
+# プライベートメッセージング
+msg:
+  usage: "<red>使用方法: /%label% <プレイヤー> <メッセージ...></red>"
+  not-found: "<red>プレイヤーが見つかりません。</red>"
+  receive: "<gray>[<light_purple>MSG</light_purple>] <aqua>%sender%</aqua>: <white>%message%</white></gray>"
+  send: "<gray>[<light_purple>MSG</light_purple>] <white>-></white> <aqua>%target%</aqua>: <white>%message%</white></gray>"
+
+# Reply
+reply:
+  usage: "<red>使用方法: /%label% <メッセージ...></red>"
+  no-one: "<red>返信する相手がいません。</red>"
+  offline: "<red>そのプレイヤーはオフラインです。</red>"
+
+# ============================================================================
+# ユーティリティコマンド
+# ============================================================================
+
+# AFK
+afk:
+  now-afk: "<yellow>AFKになりました。</yellow>"
+  no-longer-afk: "<green>AFKが解除されました。</green>"
+
+# Anvil
+anvil:
+  title: "<dark_gray>金床</dark_gray>"
+
+# Cook
+cook:
+  no-item: "<red>メインハンドに精錬したいアイテムを持ってください。</red>"
+  no-recipe: "<red>そのアイテムの精錬レシピが見つかりません。</red>"
+  invalid-amount: "<red>数量は数値または 'max' である必要があります。</red>"
+  nothing-to-smelt: "<red>精錬するものがありません。</red>"
+  inventory-full: "<yellow>インベントリが満杯でした。精錬されたアイテムを足元にドロップしました。</yellow>"
+  success: "<green><aqua>%input%</aqua> を精錬 → <aqua>%output%</aqua> <gray>%item%</gray>。</green>"
+
+# Ender Chest
+ec:
+  title: "<dark_purple>エンダーチェスト</dark_purple>"
+
+ecsee:
+  no-permission: "<red>権限がありません。</red>"
+  usage: "<red>使用方法: /ecsee <プレイヤー></red>"
+  not-found: "<red>プレイヤーが見つかりません。</red>"
+  not-configured: "<red>エンダーチェストストレージが設定されていません。</red>"
+  gui:
+    title: "<dark_purple>エンダーチェスト</dark_purple> <gray>(%player%)</gray>"
+  saved: "<green><aqua>%player%</aqua> のエンダーチェストへの変更を保存しました。</green>"
+
+# Feed
+feed:
+  not-found: "<red>プレイヤーが見つかりません。</red>"
+  console-self: "<red>コンソールは自分自身を満腹にできません。プレイヤーを指定してください。</red>"
+  fed: "<green>満腹にしました。</green>"
+  fed-other: "<yellow><aqua>%player%</aqua> を満腹にしました。</yellow>"
+
+# Furnace
+furnace:
+  title: "<gold>⚒</gold> <dark_gray>かまど</dark_gray> <gold>⚒</gold>"
+
+# Invsee
+invsee:
+  no-permission: "<red>権限がありません。</red>"
+  usage: "<red>使用方法: /invsee <プレイヤー></red>"
+  not-available: "<red>Invseeサービスはこのサーバーで利用できません。</red>"
+  not-found: "<red>プレイヤーが見つかりません。</red>"
+  opening: "<gray><aqua>%player%</aqua> のライブインベントリを開いています (クロスサーバー)...</gray>"
+
+# Invlook
+invlook:
+  no-permission: "<red>権限がありません。</red>"
+  usage: "<red>使用方法: /invlook <プレイヤー></red>"
+  service-unavailable: "<red>Invseeサービスはこのサーバーで利用できません。</red>"
+  player-not-found: "<red>プレイヤーが見つかりません。</red>"
+  opening: "<gray><aqua>%player%</aqua> の読み取り専用インベントリを開いています (クロスサーバー)...</gray>"
+
+# Kill
+kill:
+  console-usage: "<red>使用方法: /%label% <プレイヤー></red>"
+  self:
+    no-permission: "<red>自分を殺す権限がありません。</red>"
+    slain: "<gray>倒されました。</gray>"
+  others:
+    no-permission: "<red>他のプレイヤーを殺す権限がありません。</red>"
+    killed: "<gray><yellow>%player%</yellow> を殺しました。</gray>"
+  target-not-found: "<red>プレイヤーが見つかりません。</red>"
+
+# Near
+near:
+  radius-not-number: "<red>半径は数値である必要があります。入力: <yellow>%input%</yellow></red>"
+  none: "<yellow><aqua>%radius%</aqua> ブロック以内にプレイヤーがいません。</yellow>"
+  list: "<gray><aqua>%radius%</aqua> ブロック以内のプレイヤー:</gray> %list%"
+  entry:
+    format: "<aqua>%name%</aqua> <gray>(<yellow>%distance%</yellow>m)</gray>"
+    separator: "<gray>, </gray>"
+
+# Nick
+nick:
+  usage: "<yellow>使用方法: /%label% <新しい名前>  または  /%label% unnick</yellow>"
+  reset: "<green>ニックネームをリセットしました。</green>"
+  too-long: "<red>名前が長すぎます (最大 %max% 文字)。</red>"
+  invalid: "<red>無効な名前です。文字、数字、アンダースコア (3–16) を使用してください。</red>"
+  set: "<green>ニックネームが <aqua>%nick%</aqua> になりました。</green>"
+
+# Ping
+ping:
+  self: "<green>あなたのping: <yellow>%ping%</yellow>ms</green>"
+
+# Playtime
+playtime:
+  console-usage: "<red>コンソールはプレイヤーを指定する必要があります: /%label% <プレイヤー></red>"
+  self: "<green>あなたのプレイ時間: <yellow>%time%</yellow></green>"
+  other: "<aqua>%player%</aqua><gray> のプレイ時間:</gray> <yellow>%time%</yellow>"
+  no-permission: "<red>他のプレイヤーのプレイ時間を表示する権限がありません。</red>"
+  player-not-found: "<red>プレイヤーが見つかりません。</red>"
+
+# Realname
+realname:
+  usage: "<red>使用方法: /realname <ニックネーム></red>"
+  found: "<gold>%nickname%</gold> <gray>は</gray> <aqua>%realname%</aqua> <gray>です</gray>"
+  not-found: "<red>そのニックネームのプレイヤーが見つかりません。</red>"
+
+# Seen
+seen:
+  usage: "<red>使用方法: /seen <プレイヤー></red>"
+  no-data: "<red>プレイヤー <yellow>%player%</yellow> のデータがありません。</red>"
+  online: "<green>%player% は現在オンラインです。</green>"
+  never-joined: "<yellow>%player% は参加したことがありません。</yellow>"
+  last-seen: "<gold>%player%</gold> <gray>は</gray> <aqua>%timestamp%</aqua> <gray>に最後に見られました (</gray><yellow>%ago%</yellow> <gray>前)</gray>"
+
+# Sell GUI
+sellgui:
+  not-initialized: "<red>SellGUIが初期化されていません。</red>"
+
+# Server
+server:
+  usage: "<yellow>使用方法: /%label% <サーバー名></yellow>"
+  connecting: "<gray><aqua>%server%</aqua> に接続中...</gray>"
+
+# Sit
+sit:
+  player-only: "<red>このコマンドはプレイヤーのみ使用できます。</red>"
+  stand: "<gray>立ち上がりました。</gray>"
+  already-riding: "<red>既に何かに乗っています。</red>"
+  not-on-ground: "<red>座るには地面にいる必要があります。</red>"
+  not-while-flying: "<red>飛行中または滑空中は座れません。</red>"
+  no-block: "<red>座るブロックがありません。</red>"
+  sat: "<green><yellow>%block%</yellow> に座りました。</green>"
+
+# UUID
+uuid:
+  usage: "<yellow>使用方法: /%label% <プレイヤー></yellow>"
+  no-permission-others: "<red>他のプレイヤーのUUIDを表示する権限がありません。</red>"
+  show: "<gold><aqua>%player%</aqua> のUUID:</gold> <aqua>%uuid%</aqua>"
+  bedrock: "<gray>Bedrock UUID: <aqua>%bedrock_uuid%</aqua></gray>"
+
+# Vaults
+vaults:
+  player-only: "<red>プレイヤーのみ。</red>"
+  disabled: "<red>PlayerVaultsは無効です。</red>"
+  usage: "<red>使用方法: /%label% %usage%</red>"
+
+# ============================================================================
+# 管理者コマンド
+# ============================================================================
+
+admin:
+  # Tphere
+  tphere:
+    usage: "<yellow>使用方法: /%label% <プレイヤー></yellow>"
+    not-found: "<red>プレイヤーが見つかりません: <yellow>%target%</yellow>。</red>"
+    brought: "<green><aqua>%target%</aqua> を呼び寄せました。</green>"
+    notice: "<yellow><aqua>%player%</aqua> にテレポートされました。</yellow>"
+
+  # Weather
+  weather:
+    no-permission: "<red>権限がありません (oreo.weather)。</red>"
+    no-worlds: "<red>対象ワールドが解決されませんでした。</red>"
+    success: "<green><white>%world%</white> の天気を <white>%type%</white> に設定しました。</green>"
+    success-duration: "<green><white>%world%</white> の天気を <white>%seconds%</white>秒間 <white>%type%</white> に設定しました。</green>"
+    success-locked: "<green><white>%world%</white> の天気を <white>%type%</white> <dark_gray>(ロック)</dark_gray> に設定しました。</green>"
+    success-duration-locked: "<green><white>%world%</white> の天気を <white>%seconds%</white>秒間 <white>%type%</white> <dark_gray>(ロック)</dark_gray> に設定しました。</green>"
+    tip-unlock: "<dark_gray>ヒント: /weather %type% unlock %world%</dark_gray>"
+    usage:
+      header: "<yellow>使用方法:</yellow>"
+      format: "<white>/%label% <sun|rain|storm> [lock|seconds] [world|all]</white>"
+      examples: "<gray>例: <white>/sun</white> <dark_gray>|</dark_gray> <white>/rain</white> <dark_gray>|</dark_gray> <white>/storm</white> <dark_gray>|</dark_gray> <white>/sun lock</white> <dark_gray>|</dark_gray> <white>/sun 120</white> <dark_gray>|</dark_gray> <white>/sun world</white></gray>"
+
+  # World
+  world:
+    no-permission: "<red>権限がありません (oreo.world)。</red>"
+    no-world-permission: "<red>権限がありません: <white>%permission%</white></red>"
+    usage: "<yellow>使用方法: <white>/world <n|normal|nether|end|index> [プレイヤー名] [-s]</white></yellow>"
+    examples: "<gray>例: <white>/world world_nether</white>  <dark_gray>|</dark_gray>  <white>/world nether</white>  <dark_gray>|</dark_gray>  <white>/world 2</white>  <dark_gray>|</dark_gray>  <white>/world end Steve -s</white></gray>"
+    console-needs-player: "<red>コンソールからの使用には対象プレイヤーが必要です: <white>/world <n> <プレイヤー名> [-s]</white></red>"
+    console-must-specify: "<red>コンソールは対象プレイヤーを指定する必要があります: <white>/world <n> <プレイヤー名> [-s]</white></red>"
+    player-not-found: "<red>プレイヤーが見つかりません: <white>%player%</white></red>"
+    world-not-found: "<red>ワールドが見つからない/サポートされていません: <white>%world%</white></red>"
+    teleport-failed: "<red>テレポートに失敗しました。</red>"
+    teleported-self: "<green><white>%world%</white> にテレポートしました</green>"
+    teleported-other: "<green><white>%player%</white> を <white>%world%</white> にテレポートしました</green>"
+    target-notified: "<green><white>%staff%</white> によって <white>%world%</white> にテレポートされました</green>"
+
+  # TP
+  tp:
+    usage: "<red>使用方法: /tp <プレイヤー></red>"
+    self: "<red>あなたは既にあなた自身です。</red>"
+    not-found: "<red>プレイヤーがオンラインで見つかりません。</red>"
+    not-found-no-directory: "<red>プレイヤーがオンラインで見つかりません。<gray>(クロスサーバーディレクトリが利用できません。)</gray></red>"
+    no-broker: "<red>クロスサーバーテレポートブローカーが利用できません。他のサーバーに /tp できません。</red>"
+    teleported: "<green><aqua>%target%</aqua> にテレポートしました。</green>"
+
+  # Setwarp
+  setwarp:
+    usage: "<yellow>使用方法: /%label% <n></yellow>"
+    set: "<green>ワープ <aqua>%warp%</aqua> を設定しました。</green>"
+    cross-server-info: "<gray>(クロスサーバー) ワープの所有者を <aqua>%server%</aqua> に設定しました。</gray>"
+
+  # Setspawn
+  setspawn:
+    set: "<green>スポーンを設定しました。</green>"
+    cross-server-info: "<gray>(クロスサーバー) スポーンの所有者を <aqua>%server%</aqua> に設定しました。</gray>"
+
+  # Reload
+  reload:
+    settings: "<green>✔ <white>settings.yml</white> をリロードしました <gray>(+ クロスサーバー設定)</gray></green>"
+    settings-skip: "<yellow>• settings.yml / クロスサーバーをスキップ: <gray>%error%</gray></yellow>"
+    config: "<green>✔ <white>config.yml</white> をリロードしました</green>"
+    config-fail: "<red>✘ config.yml のリロードに失敗: <gray>%error%</gray></red>"
+    lang: "<green>✔ <white>lang.yml</white> をリロードしました</green>"
+    lang-skip: "<yellow>• lang.yml をスキップ: <gray>%error%</gray></yellow>"
+    chat: "<green>✔ <white>chat-format.yml</white> をリロードしました <gray>(/afelius reload all 経由)</gray></green>"
+    chat-skip: "<yellow>• chat-format.yml をスキップ: <gray>%error%</gray></yellow>"
+    tab: "<green>✔ <white>tab.yml</white> をリロードしました</green>"
+    tab-skip: "<yellow>• tab.yml をスキップ: <gray>%error%</gray></yellow>"
+    kits: "<green>✔ <white>kits.yml</white> をリロードしました</green>"
+    kits-skip: "<yellow>• kits.yml をスキップ: <gray>%error%</gray></yellow>"
+    rtp: "<green>✔ <white>rtp.yml</white> をリロードしました</green>"
+    rtp-skip: "<yellow>• rtp.yml をスキップ: <gray>%error%</gray></yellow>"
+    enderchest: "<green>✔ <white>enderchest.yml</white> をリロードしました</green>"
+    enderchest-skip: "<yellow>• enderchest.yml をスキップ (リロードフックなし)</yellow>"
+    bossbar: "<green>✔ <white>bossbar</white> をリロードしました</green>"
+    bossbar-skip: "<yellow>• bossbar をスキップ (サービス利用不可)</yellow>"
+    bossbar-fail: "<red>✘ bossbar のリロードに失敗: <gray>%error%</gray></red>"
+    scoreboard: "<green>✔ <white>scoreboard</white> をリロードしました <gray>(設定 + ライブ更新)</gray></green>"
+    scoreboard-skip: "<yellow>• scoreboard をスキップ (サービス利用不可)</yellow>"
+    scoreboard-fail: "<red>✘ scoreboard のリロードに失敗: <gray>%error%</gray></red>"
+    discord: "<green>✔ <white>discord統合</white> をリロードしました</green>"
+    discord-skip: "<yellow>• discord統合をスキップ (リロードフックなし)</yellow>"
+    healthbars: "<green>✔ <white>mob体力バー</white> をリロードしました</green>"
+    healthbars-disabled: "<yellow>• mob体力バーは設定で無効</yellow>"
+    healthbars-skip: "<yellow>• mob体力バーをスキップ: <gray>%error%</gray></yellow>"
+    playervaults: "<green>✔ <white>playervaults</white> をリロードしました <gray>(%storage%)</gray></green>"
+    playervaults-skip: "<yellow>• playervaults をスキップ (サービス利用不可)</yellow>"
+    playervaults-fail: "<red>✘ playervaults のリロードに失敗: <gray>%error%</gray></red>"
+    summary: "<gray>リロード完了: <green>%ok% OK</green>、<yellow>%skip% スキップ</yellow>。(<white>%ms% ms</white>)</gray>"
+    note: "<dark_gray>(一部のモジュールはホットリロードに未対応。サーバーの再起動が必要な場合があります。)</dark_gray>"
+
+  # Otherhome
+  otherhome:
+    no-permission: "<red>権限がありません。</red>"
+    usage: "<yellow>使用方法: <gold>/%label% <プレイヤー> <ホーム></gold></yellow>"
+    player-not-found: "<red>不明なプレイヤー: <yellow>%player%</yellow></red>"
+    not-found: "<red>ホームが見つかりません: <yellow>%home%</yellow></red>"
+    world-not-loaded: "<red>ワールドがロードされていません: <yellow>%world%</yellow></red>"
+    teleported: "<green><aqua>%owner%</aqua> のホーム <aqua>%home%</aqua> にテレポートしました。</green>"
+    cross-disabled: "<red>クロスサーバーホームはサーバー設定で無効になっています。</red>"
+    cross-disabled-manual: "<gray><aqua>/server %server%</aqua> を使用してから <aqua>/otherhome %owner% %home%</aqua> を実行してください</gray>"
+    messaging-disabled: "<red>クロスサーバーメッセージングは無効です。管理者にRabbitMQの有効化を依頼してください。</red>"
+    messaging-disabled-manual: "<gray><aqua>/server %server%</aqua> で切り替えてから <aqua>/otherhome %owner% %home%</aqua> を実行できます</gray>"
+    sending: "<yellow><aqua>%server%</aqua> に送信中… 到着時に <aqua>%owner%</aqua> のホーム <aqua>%home%</aqua> にテレポートします。</yellow>"
+    switch-failed: "<red>%server% への切り替えに失敗しました。</red>"
+    switch-failed-tip: "<gray>サーバー名がプロキシ設定と一致していることを確認してください。</gray>"
+
+  # Otherhomes
+  otherhomes:
+    no-permission: "<red>権限がありません。</red>"
+    usage: "<yellow>使用方法: <gold>/%label% <プレイヤー></gold></yellow>"
+    player-not-found: "<red>不明なプレイヤー: <yellow>%player%</yellow></red>"
+    no-homes: "<gray>%player% はホームを持っていません。</gray>"
+    header: "<gold><yellow>%player%</yellow> のホーム:</gold>"
+    entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua> <gray>@ <white>%world%</white> (%x%, %y%, %z%) <dark_gray>[サーバー: %server%]</dark_gray></gray>"
+    tip: "<gray>ヒント: <yellow>/otherhome %player% <ホーム></yellow></gray>"
+
+  # Clear
+  clear:
+    no-service: "<yellow>注意: インベントリサービスが利用できません - ローカルのみクリア。</yellow>"
+    console-usage: "<red>使用方法: /%label% <プレイヤー></red>"
+    others-no-permission: "<red>他のプレイヤーのインベントリをクリアする権限がありません。</red>"
+    target-not-found: "<red>プレイヤーが見つかりません: <yellow>%target%</yellow></red>"
+    self:
+      all-servers: "<green>全サーバーでインベントリをクリアしました。</green>"
+      this-server: "<green>このサーバーでインベントリをクリアしました。</green>"
+    target-notified-all: "<yellow><aqua>%player%</aqua> によって全サーバーであなたのインベントリがクリアされました。</yellow>"
+    target-notified-local: "<yellow><aqua>%player%</aqua> によってこのサーバーであなたのインベントリがクリアされました。</yellow>"
+    sender-confirm-all: "<green><aqua>%target%</aqua> のインベントリを全サーバーでクリアしました。</green>"
+    sender-confirm-local: "<green><aqua>%target%</aqua> のインベントリをこのサーバーでクリアしました。</green>"
+
+  # Delwarp
+  delwarp:
+    usage: "<yellow>使用方法: /%label% <n></yellow>"
+    deleted: "<green>ワープ <aqua>%warp%</aqua> を削除しました。</green>"
+    not-found: "<red>ワープが見つかりません: <yellow>%warp%</yellow></red>"
+
+  # Disenchant
+  disenchant:
+    usage: "<yellow>使用方法: /%label% <エンチャント|all> [削除レベル数]</yellow>"
+    hold-item: "<red>メインハンドにアイテムを持っている必要があります。</red>"
+    none: "<red>このアイテムにはエンチャントがありません。</red>"
+    unknown: "<red>不明なエンチャント: <yellow>%input%</yellow></red>"
+    not-present: "<red>このアイテムには <yellow>%ench%</yellow> がありません。</red>"
+    all: "<green>すべてのエンチャントを削除しました。</green>"
+    partial: "<green><aqua>%ench%</aqua> のレベルを <white>%removed%</white> 削除しました。<white>%remaining%</white> レベル残っています。</green>"
+    removed: "<green><aqua>%ench%</aqua> を完全に削除しました。</green>"
+
+  # Fly
+  fly:
+    console-usage: "<red>使用方法: /%label% <プレイヤー></red>"
+    not-found: "<red>プレイヤーが見つかりません: <yellow>%target%</yellow></red>"
+    enabled: "<green>飛行が <aqua>有効</aqua> になりました。</green>"
+    disabled: "<red>飛行が <aqua>無効</aqua> になりました。</red>"
+    toggled-other: "<green><aqua>%target%</aqua> の飛行を <aqua>%state%</aqua> にしました。</green>"
+
+  # Enchant
+  enchant:
+    usage: "<yellow>使用方法: /%label% <エンチャント> [レベル] [unsafe] [ignoreConflicts]</yellow>"
+    hold-item: "<red>メインハンドにアイテムを持っている必要があります。</red>"
+    unknown: "<red>不明なエンチャント: <yellow>%input%</yellow></red>"
+    too-high: "<red>レベル <yellow>%level%</yellow> は <aqua>%ench%</aqua> には高すぎます (最大: <white>%max%</white>)。'unsafe' パラメータまたは oreo.enchant.unsafe 権限を使用してください。</red>"
+    conflict: "<red><aqua>%ench%</aqua> は既存の <aqua>%with%</aqua> と競合します。'ignoreConflicts' パラメータまたは oreo.enchant.ignoreconflicts 権限を使用してください。</red>"
+    applied: "<green>アイテムに <aqua>%ench%</aqua> <white>%level%</white> を適用しました。</green>"
+    failed: "<red>エンチャントの適用に失敗: <yellow>%reason%</yellow></red>"
+
+  # Flyspeed
+  flyspeed:
+    player-only: "<red>/flyspeed はプレイヤーのみ使用できます (自分の飛行速度を設定)。</red>"
+    no-permission: "<red>権限がありません (oreo.flyspeed)。</red>"
+    usage: "<yellow>使用方法: <white>/flyspeed <1-10|reset></white></yellow>"
+    example: "<gray>例: <white>/flyspeed 7</white></gray>"
+    invalid: "<red>無効な速度です。数値 <white>1-10</white> または <white>reset</white> を使用してください。</red>"
+    reset: "<green>飛行速度を <white>0.1</white> にリセットしました <gray>(= レベル 1)</gray>。</green>"
+    set: "<green>飛行速度を <white>%speed%</white> に設定しました <gray>(<white>レベル %level%</white>)</gray>。</green>"
+    set-not-flying: "<green>飛行速度を <white>%speed%</white> に設定しました <gray>(<white>レベル %level%</white>)</gray>。<dark_gray>(現在飛行が許可されていません。)</dark_gray></green>"
+
+  # Gamemode
+  gamemode:
+    unknown: "<red>不明なモード: <yellow>%mode%</yellow></red>"
+    no-permission-others: "<red>他のプレイヤーのゲームモードを変更する権限がありません。</red>"
+    player-not-found: "<red>プレイヤーが見つかりません。</red>"
+    self: "<green>ゲームモードを <aqua>%mode%</aqua> に設定しました。</green>"
+    other: "<green><aqua>%target%</aqua> を <aqua>%mode%</aqua> に設定しました。</green>"
+    notified: "<green><yellow>%staff%</yellow> によってゲームモードが <aqua>%mode%</aqua> に設定されました</green>"
+
+# ============================================================================
+# 取引システム
+# ============================================================================
+
+trade:
+  opening: "<green><white>%partner%</white> との取引GUIを開いています…</green>"
+  failed-to-open: "<red>取引を開けませんでした: <yellow>%error%</yellow></red>"
+  player-name: "<yellow>%name%</yellow>"
+  partner-ready: "<green>相手が準備完了</green>"
+  partner-not-ready: "<red>相手が未準備</red>"
+  locked: "<gray>ロック済み</gray>"
+  player-only: "<red>プレイヤーのみ。</red>"
+  disabled: "<red>取引は現在無効です。</red>"
+  no-permission: "<red>権限がありません。</red>"
+  usage: "<yellow>使用方法: /trade <プレイヤー></yellow>"
+  self: "<red>自分自身と取引することはできません。</red>"
+  not-found-cross-server: "<red>プレイヤーがここで見つかりません。</red> <gray>クロスサーバー取引の場合、招待を受け取ったサーバーで <aqua>/trade %player%</aqua> を入力してください。</gray>"
+
+# ============================================================================
+# スコアボードシステム
+# ============================================================================
+
+scoreboard:
+  enabled: "<green>スコアボードを有効にしました。</green>"
+  disabled: "<yellow>スコアボードを無効にしました。</yellow>"
+  disabled-in-world: "<red>このワールドではスコアボードが無効です。</red>"
+
+# ============================================================================
+# ポータルシステム
+# ============================================================================
+
+portals:
+  player-only: "<red>プレイヤーのみ。</red>"
+  no-permission: "<red>権限がありません。</red>"
+  no-portal-permission: "<red>このポータルを使用する権限がありません。</red>"
+  unknown-subcommand: "<red>不明なサブコマンド。<yellow>/%label% help</yellow> を使用してください</red>"
+
+  pos1-set: "<green>ポータル pos1 を <aqua>%location%</aqua> に設定しました</green>"
+  pos2-set: "<green>ポータル pos2 を <aqua>%location%</aqua> に設定しました</green>"
+
+  create:
+    usage: "<yellow>使用方法: /%label% create <n> <ワールド> <x> <y> <z> [keepYaw] [permission]</yellow>"
+    world-not-found: "<red>ワールドが見つかりません: <yellow>%world%</yellow></red>"
+    invalid-coords: "<red>無効な座標です。</red>"
+    failed: "<red>失敗: <yellow>%error%</yellow></red>"
+    success: "<green>ポータル <aqua>%name%</aqua> → <white>%location%</white> を作成しました</green>"
+
+  remove:
+    usage: "<yellow>使用方法: /%label% remove <n></yellow>"
+    success: "<green>ポータル <aqua>%name%</aqua> を削除しました。</green>"
+    not-found: "<red>ポータルが見つかりません: <yellow>%name%</yellow></red>"
+
+  list:
+    empty: "<gray>設定されたポータルがありません。</gray>"
+    header: "<gold>ポータル (%count%):</gold>"
+    entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua> <gray>→ <white>%dest%</white></gray>"
+
+  info:
+    usage: "<yellow>使用方法: /%label% info <n></yellow>"
+    not-found: "<red>ポータルが見つかりません: <yellow>%name%</yellow></red>"
+    header: "<gold>ポータル情報: <aqua>%name%</aqua></gold>"
+    world: " <gray>ワールド:</gray> <white>%world%</white>"
+    destination: " <gray>目的地:</gray> <white>%dest%</white>"
+    keep-yaw: " <gray>Yaw/Pitch維持:</gray> <white>%keep%</white>"
+    permission: " <gray>権限:</gray> <white>%perm%</white>"
+
+  reload:
+    success: "<green>ポータルをリロードしました。<white>%count%</white> 個のポータルをロードしました。</green>"
+
+  help:
+    header: "<gold><bold>ポータル ヘルプ</bold></gold>"
+    pos1: " <yellow>/%label% pos1</yellow> <gray>- ポータルの角1を設定</gray>"
+    pos2: " <yellow>/%label% pos2</yellow> <gray>- ポータルの角2を設定</gray>"
+    create: " <yellow>/%label% create <n> <ワールド> <x> <y> <z> [keepYaw] [perm]</yellow>"
+    remove: " <yellow>/%label% remove <n></yellow> <gray>- ポータルを削除</gray>"
+    list: " <yellow>/%label% list</yellow> <gray>- すべてのポータルを一覧表示</gray>"
+    info: " <yellow>/%label% info <n></yellow> <gray>- ポータルの詳細を表示</gray>"
+    reload: " <yellow>/%label% reload</yellow> <gray>- portals.yml をリロード</gray>"
+
+# ============================================================================
+# カスタムクラフトシステム
+# ============================================================================
+
+customcraft:
+  errors:
+    no-permission: "<red>権限がありません。</red>"
+    player-only: "<red>このサブコマンドにはプレイヤーが必要です。</red>"
+    unknown-subcommand: "<red>不明なサブコマンド。</red> <yellow>使用方法</yellow> /%label% help"
+    usage-craft: "<red>使用方法:</red> /%label% craft <n>"
+    usage-delete: "<red>使用方法:</red> /%label% delete <n>"
+
+  help:
+    header: "<yellow>OreoEssentials カスタムクラフティング</yellow>"
+    browse: "<yellow>/%label% browse</yellow> <gray>→ レシピブラウザを開く (GUI)</gray>"
+    craft: "<yellow>/%label% craft <n></yellow> <gray>→ デザイナーGUIを開く</gray>"
+    list: "<yellow>/%label% list</yellow> <gray>→ レシピ名を一覧表示</gray>"
+    reload: "<yellow>/%label% reload</yellow> <gray>→ recipes.yml をリロードして再登録</gray>"
+    delete: "<yellow>/%label% delete <n></yellow> <gray>→ レシピを削除</gray>"
+
+  messages:
+    saved: "<green>レシピ <yellow>%name%</yellow> を保存しました (<white>%mode%</white>) %perm_note%。</green>"
+    invalid: "<red>レシピが見つかりません: <yellow>%name%</yellow>。</red>"
+    deleted: "<green>レシピ <yellow>%name%</yellow> を削除しました。</green>"
+    reloaded: "<green>カスタムレシピをリロードしました。</green>"
+    list: "<yellow>レシピ</yellow> (<white>%count%</white>): <gray>%names%</gray>"
+
+  browse:
+    title: "<#00bcd4><bold>OreoCraft</bold></#00bcd4> <gray>—</gray> <white>レシピ</white>"
+    hint: "<yellow>レシピをクリックして編集</yellow>"
+    icon-lore:
+      0: "<gray>モード:</gray> <white>%mode%</white>"
+      1: "<gray>権限:</gray> <white>%permission_or_none%</white>"
+      2: "<green>クリックして編集</green>"
+    prev: "<yellow>前へ</yellow>"
+    next: "<yellow>次へ</yellow>"
+
+  format:
+    mode:
+      shaped: "成形"
+      shapeless: "不定形"
+    permission:
+      none: "<gray>なし</gray>"
+
+# ============================================================================
+# その他のコマンド (OE)
+# ============================================================================
+
+oe:
+  usage: "<yellow>使用方法: /%label% server <サーバー名></yellow>"
+  connecting: "<green><aqua>%server%</aqua> に接続中...</green>"
+  failed: "<red>%server% に接続できませんでした。プロキシ/チャンネルは設定されていますか？</red>"
+
+# ============================================================================
+# 時間フォーマット (期間表示用)
+# ============================================================================
+
+time:
+  years: "%value%年"
+  months: "%value%ヶ月"
+  weeks: "%value%週"
+  days: "%value%日"
+  hours: "%value%時間"
+  minutes: "%value%分"
+  seconds: "%value%秒"
+
+# ============================================================================
+# ジャンプパッドシステム
+# ============================================================================
+
+jumpads:
+  # 権限
+  no-permission: "<red>権限がありません。</red>"
+  player-only: "<red>プレイヤーのみ。</red>"
+
+  # ヘルプ
+  list-inline: "<gold>ジャンプパッド:</gold> <gray>%names%</gray>"
+  help:
+    header: "<yellow>使用方法:</yellow>"
+    create: "<yellow>  /%label% create <n> [power] [upward] [useLookDir]</yellow>  <gray>(足元のブロック)</gray>"
+    remove: "<yellow>  /%label% remove <n></yellow>"
+    list: "<yellow>  /%label% list</yellow>"
+    info: "<yellow>  /%label% info <n></yellow>"
+
+  # Create
+  usage-create: "<red>使用方法: /%label% create <n> [power] [upward] [useLookDir]</red>"
+  defaults: "<gray>デフォルト → power=%power%, upward=%upward%, useLookDir=%look%</gray>"
+  created: "<green>ジャンプパッド '<aqua>%name%</aqua>' を <aqua>%x%,%y%,%z%</aqua> に作成 (power=%power%, upward=%upward%, look=%look%)</green>"
+  create-failed: "<red>作成失敗 (無効な位置または名前)。</red>"
+
+  # Remove
+  usage-remove: "<red>使用方法: /%label% remove <n></red>"
+  removed: "<green>ジャンプパッド '<aqua>%name%</aqua>' を削除しました。</green>"
+  not-found: "<red>ジャンプパッド '<yellow>%name%</yellow>' が見つかりません。</red>"
+
+  # List
+  list: "<gold>ジャンプパッド (%count%):</gold> <gray>%names%</gray>"
+
+  # Info
+  usage-info: "<red>使用方法: /%label% info <n></red>"
+  info:
+    name: "<aqua>名前:</aqua> <white>%name%</white>"
+    location: "<aqua>ワールド:</aqua> <white>%world%</white>  <aqua>XYZ:</aqua> <white>%x% %y% %z%</white>"
+    settings: "<aqua>Power:</aqua> <white>%power%</white>  <aqua>Upward:</aqua> <white>%upward%</white>  <aqua>UseLookDir:</aqua> <white>%look%</white>"
+
+  # 不明なサブコマンド
+  unknown-subcommand: "<red>不明なサブコマンド。/%label% を試してください</red>"
+
+# ============================================================================
+# MODGUIシステム
+# ============================================================================
+
+modgui:
+  # コマンド
+  player-only: "<red>プレイヤーのみ。</red>"
+  no-permission: "<red>権限がありません: <white>oreo.modgui.open</white></red>"
+
+  # メインメニュー
+  main:
+    title: "&8モデレーションパネル"
+    player:
+      name: "&eプレイヤーモデレーション"
+      lore:
+        - "&7個々のプレイヤーを管理"
+        - "&7ノート表示、ミュート、BANなど"
+    world:
+      name: "&aワールドモデレーション"
+      lore:
+        - "&7ワールド設定を構成"
+        - "&7ネザー/エンド調整、PVPなど"
+    server:
+      name: "&cサーバーモデレーション"
+      lore:
+        - "&7サーバー全体の制御"
+        - "&7チャット、パフォーマンスツール"
+    titles:
+      player: "&8プレイヤーモデレーション"
+      world: "&8ワールドを選択"
+      server: "&8サーバーモデレーション"
+
+  # プレイヤーメニュー
+  player:
+    title-local: "&8プレイヤー: %name%"
+    title-network: "&8プレイヤー: %name% &7(%server%)"
+
+  # プレイヤーアクションメニュー
+  actions:
+    bridge-unavailable: "<red>クロスサーバーモデレーションブリッジが利用できません。</red>"
+    ecsee-title: "&8エンダーチェスト: %name%"
+    inspect-title: "&8検査: %name%"
+    notes-title: "&8ノート: %name%"
+    ip-alts-title: "&8IP とサブ垢: %name%"
+
+  # プレイヤーノート
+  notes:
+    prompt: "<yellow>ノートをチャットに入力してください。</yellow> <gray>('cancel' で中止)</gray>"
+    cancelled: "<red>ノートをキャンセルしました。</red>"
+    added: "<green>ノートを追加しました。</green>"
+
+  # パフォーマンスツール
+  perf:
+    kill-mobs: "<green>すべてのワールドから <yellow>%count%</yellow> 体のモンスターを削除しました。</green>"
+    clear-items: "<green>すべてのワールドから <yellow>%count%</yellow> 個のドロップアイテムを削除しました。</green>"
+    clear-tnt: "<green>すべてのワールドから <yellow>%count%</yellow> 個の起爆済みTNTを削除しました。</green>"
+
+  # チャットモデレーション
+  chat:
+    cleared: "<green>チャットをクリアしました。</green>"
+    clear-broadcast: "<red>チャットが <yellow>%actor%</yellow> によってクリアされました。</red>"
+    muted: "<red>グローバルチャットが <yellow>%actor%</yellow> によってミュートされました。</red>"
+    unmuted: "<green>グローバルチャットのミュートが解除されました。</green>"
+    slowmode-set: "<yellow>スローモードを <gold>%seconds%</gold>秒に設定しました</yellow>"
+    staff-enabled: "<green>スタッフチャットを有効にしました。</green>"
+    staff-disabled: "<red>スタッフチャットを無効にしました。</red>"
+    service-unavailable: "<red>ModGUIサービスが利用できません。</red>"
+
+  # ワールド調整
+  world:
+    elytra-disabled: "<red>このワールドではエリトラ飛行が無効です。</red>"
+    trident-disabled: "<red>このワールドではトライデントが無効です。</red>"
+    void-saved: "<yellow>奈落から救出されスポーンにテレポートしました。</yellow>"
+
+  # サーバーメニュー
+  server:
+    difficulty-set: "<yellow>難易度を <gold>%difficulty%</gold> に設定しました</yellow>"
+    gamemode-set: "<yellow>デフォルトゲームモードが <gold>%gamemode%</gold> になりました</yellow>"
+    whitelist-toggled: "<yellow>ホワイトリストが %state% になりました</yellow>"
+    spawn-cooldown: "<red>再スポーンする前に1秒待ってください。</red>"
+    spawn-peaceful: "<red><green>平和</green> 難易度では敵対的Mobをスポーンできません。</red>"
+    spawned: "<green><yellow>%count%</yellow> 体の <gray>%type%</gray> をスポーンしました。</green>"
+    tps-title: "&8TPS とパフォーマンス"
+    chat-title: "&8チャットモデレーション"
+    perf-title: "&8パフォーマンスツール"
+
+  # ワールドアクションメニュー
+  world-actions:
+    time-set: "<yellow>時間を <gold>%time%</gold> に設定しました</yellow>"
+    weather-set: "<yellow>天気を <gold>%weather%</gold> に設定しました</yellow>"
+    spawn-set: "<green>ワールドスポーンを <white>%x% %y% %z%</white> に設定しました</green>"
+    border-set: "<yellow>ワールド境界を <gold>%size%</gold> に設定しました</yellow>"
+    gamerules-title: "&8ゲームルール: %world%"
+    whitelist-title: "&8ホワイトリスト: %world%"
+    banned-mobs-title: "&8禁止Mob: %world%"
+
+  # 禁止Mobメニュー
+  banned-mobs:
+    banned: "<red>%mob%</red> <gray>が</gray> <white>%world%</white> <gray>で</gray> <red>禁止</red> <gray>になりました</gray>"
+    allowed: "<green>%mob%</green> <gray>が</gray> <white>%world%</white> <gray>で</gray> <green>許可</green> <gray>されました</gray>"
+
+  # ワールドリストメニュー
+  world-list:
+    world-title: "&8ワールド: %world%"
+
+  # ワールドホワイトリストメニュー
+  world-whitelist:
+    back-title: "&8ワールド: %world%"
+
+  # EcSee (エンダーチェストビューアー) メニュー
+  ecsee:
+    service-missing: "<red>エンダーチェストサービスがありません。</red>"
+    title: "&b%target% のエンダーチェストを編集中"
+
+# プレイヤー検査 (ライブ統計ビューアー)
+playerinspect:
+  target-offline: "<red>対象プレイヤーがオフラインです。</red>"
+  no-permission-invsee: "<red>インベントリを表示する権限がありません。</red>"
+  head-name: "&b%player% &7(&e%server%&7)"
+  invsee-name: "&bインベントリを表示"
+  invsee-lore1: "&7クリックして開く"
+  invsee-lore2: "&7%player% のインベントリ"
+  lore:
+    health: "&7体力: &c%current%&7/&c%max%"
+    health-na: "&7体力: &f不明 (&8リモート&f)"
+    food: "&7満腹度: &e%food%"
+    food-na: "&7満腹度: &f不明 (&8リモート&f)"
+    gamemode: "&7ゲームモード: &f%gm%"
+    world: "&7ワールド/サーバー: &a%world%"
+    location: "&7位置: &f%x% %y% %z%"
+    location-na: "&7位置: &f不明 (&8リモート&f)"
+    ping: "&7Ping: &f%ping%"
+    ping-na: "&7Ping: &f不明 (&8リモート&f)"
+    tps: "&7TPS: &f%tps%"
+    tps-na: "&7TPS: &f不明 (&8リモート&f)"
+
+enderchest:
+  storage:
+    opened-cross-server: "<gray>クロスサーバーエンダーチェストを開いています...</gray>"
+    save-failed: "<red>エンダーチェストの保存に失敗しました。管理者に連絡してください。</red>"
+
+  gui:
+    title: "&5エンダーチェスト"
+    locked-slot-name: "&cロック済みスロット"
+    locked-slot-lore:
+      - "&7アンロック済みスロット: &f%slots%"
+      - "&7ランクアップでさらに解除！"
+
+daily:
+  no-permission-toggle: "<red>この機能を切り替える権限がありません。</red>"
+  no-permission: "<red>これを使用する権限がありません。</red>"
+  players-only: "<red>このコマンドはゲーム内で実行する必要があります。</red>"
+  disabled: "<red>デイリー報酬は現在無効です。</red>"
+  disabled-hint: "<gray><white>/%command% toggle</white> で有効にしてください。</gray>"
+  toggled: "<yellow>デイリー報酬が %state% になりました</yellow>"
+  usage: "<gray>使用方法: <white>/%command%</white> または <white>/%command% claim</white> または <white>/%command% top</white></gray>"
+  usage-admin: "<gray>使用方法: <white>/%command%</white> または <white>/%command% claim</white> または <white>/%command% top</white> または <white>/%command% toggle</white></gray>"
+
+  top:
+    title: "&b&lデイリー &fトップ連続記録"
+    row: "&7#&f%rank% &b%player% &8» &a連続: &f%streak% &8(&7%hours%時間&8)"
+    empty: "&7まだデータがありません。"
+
+  # GUIメッセージ
+  gui:
+    disabled: "<red>デイリー報酬は無効です。</red>"
+    toggled: "<yellow>デイリー報酬が %state% になりました</yellow>"

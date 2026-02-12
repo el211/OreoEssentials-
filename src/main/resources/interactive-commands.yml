@@ -1,0 +1,212 @@
+ic:
+
+  # --- healer: click a block to get regen + actionbar ---
+  healer:
+    public: false
+    cmds:
+      - "asConsole! delay! 1 effect give [playerName] regeneration 5 1"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Healed!\",\"color\":\"green\"}"
+    blocks:
+      - "world;100;64;200"
+    entities: []
+
+  # --- warp: PUBLIC sign; put the warp name on line 2 -> $1 ---
+  # Sign:
+  #   [ic:warp]
+  #   spawn
+  warp:
+    public: true
+    cmds:
+      - "asPlayer! warp $1"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Warping to $1\",\"color\":\"gold\"}"
+    blocks: []
+    entities: []
+
+  # --- server: send player to a proxy/server using your /oeserver ---
+  # Sign:
+  #   [ic:server]
+  #   lobby
+  server:
+    public: true
+    cmds:
+      - "asConsole! oeserver $1 [playerName]"
+      - "asConsole! delay! 1 title [playerName] subtitle {\"text\":\"Connecting...\",\"color\":\"yellow\"}"
+    blocks: []
+    entities: []
+
+  # --- rtp_pad: random teleport pad using Oreo /rtp ---
+  rtp_pad:
+    public: false
+    cmds:
+      - "asPlayer! rtp"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Random Teleporting...\",\"color\":\"aqua\"}"
+    blocks:
+      - "world;130;64;205"
+    entities: []
+
+  # --- world_tp: PUBLIC sign; $1 is world name, optional $2 flags (e.g. -s) ---
+  # Sign:
+  #   [ic:world]
+  #   world_nether
+  #   -s
+  world:
+    public: true
+    cmds:
+      - "asConsole! world $1 [playerName] $2"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Sending to $1\",\"color\":\"red\"}"
+    blocks: []
+    entities: []
+
+  # --- time board: PUBLIC sign; $1 is day|night|<hour> ---
+  # Sign:
+  #   [ic:oetime]
+  #   day
+  oetime:
+    public: true
+    cmds:
+      - "asConsole! oetime $1"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Time: $1\",\"color\":\"yellow\"}"
+    blocks:
+      - "world;75;64;175"
+    entities: []
+
+  # --- weather board: PUBLIC sign; $1 is sun|rain|storm, $2 lock|<seconds>|<world> ---
+  # Sign:
+  #   [ic:weather]
+  #   sun
+  #   lock
+  weather:
+    public: true
+    cmds:
+      - "asConsole! weather $1 $2"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Weather: $1 $2\",\"color\":\"blue\"}"
+    blocks: []
+    entities: []
+
+  # --- kit_giver: bound to an entity (example UUID placeholder) ---
+  kit_giver:
+    public: false
+    cmds:
+      - "asConsole! msg [playerName] &aStarter items granted!"
+      - "asConsole! give [playerName] bread 8"
+      - "asConsole! give [playerName] stone_sword 1"
+    blocks: []
+    entities:
+      - "11111111-2222-3333-4444-555555555555"
+
+  # --- enderchest opener (Oreo /ec) ---
+  ender:
+    public: true
+    cmds:
+      - "asPlayer! ec"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Ender Chest\",\"color\":\"light_purple\"}"
+    blocks:
+      - "world;90;64;190"
+    entities: []
+
+  # --- vaults GUI (Oreo /vaults) ---
+  vaults:
+    public: true
+    cmds:
+      - "asPlayer! vaults"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Player Vaults\",\"color\":\"gold\"}"
+    blocks: []
+    entities: []
+
+  # --- trash (Oreo /trash) ---
+  trash:
+    public: true
+    cmds:
+      - "asPlayer! trash"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Trash Bin\",\"color\":\"gray\"}"
+    blocks: []
+    entities: []
+
+  # --- workbench/anvil utilities (Oreo commands) ---
+  workbench:
+    public: true
+    cmds:
+      - "asPlayer! workbench"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Workbench\",\"color\":\"green\"}"
+    blocks: []
+    entities: []
+
+  anvil:
+    public: true
+    cmds:
+      - "asPlayer! anvil"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Anvil\",\"color\":\"green\"}"
+    blocks: []
+    entities: []
+
+  # --- invsee self-trigger: PUBLIC sign; $1 is target player ---
+  # Sign:
+  #   [ic:invsee]
+  #   <PlayerName>
+  invsee:
+    public: true
+    cmds:
+      - "asPlayer! invsee $1"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Opening $1's inventory\",\"color\":\"yellow\"}"
+    blocks: []
+    entities: []
+
+  # --- soundboard: $1 sound, $2 volume, $3 pitch (vanilla playsound) ---
+  # Sign:
+  #   [ic:sound]
+  #   entity.villager.yes
+  #   1
+  #   1
+  sound:
+    public: true
+    cmds:
+      - "asConsole! playsound $1 master [playerName] ~ ~ ~ $2 $3"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Playing $1\",\"color\":\"yellow\"}"
+    blocks: []
+    entities: []
+
+  # --- message board (runs as PLAYER for context-required cmds) ---
+  bulletin:
+    public: true
+    cmds:
+      - "asPlayer! msg console I pressed the bulletin at spawn!"
+      - "asConsole! tell [playerName] &7(Logged your interaction)"
+    blocks:
+      - "world;85;64;185"
+    entities: []
+
+  # --- title showcase with chained delays ---
+  title_show:
+    public: false
+    cmds:
+      - "asConsole! title [playerName] title {\"text\":\"Welcome\",\"color\":\"gold\"}"
+      - "asConsole! delay! 2 title [playerName] subtitle {\"text\":\"to the Hub\",\"color\":\"yellow\"}"
+      - "asConsole! delay! 4 title [playerName] actionbar {\"text\":\"Have fun!\",\"color\":\"green\"}"
+    blocks:
+      - "world;70;64;170"
+    entities: []
+
+  # --- custom_effect: PUBLIC sign; $1=effect $2=seconds ---
+  # Sign:
+  #   [ic:custom_effect]
+  #   speed
+  #   10
+  custom_effect:
+    public: true
+    cmds:
+      - "asConsole! effect give [playerName] $1 $2 1"
+      - "asConsole! title [playerName] actionbar {\"text\":\"$1 for $2s\",\"color\":\"green\"}"
+    blocks: []
+    entities: []
+
+  # --- arena join example; $1 optional flag like -s ---
+  # Sign:
+  #   [ic:arena]
+  #   -s
+  arena:
+    public: true
+    cmds:
+      - "asConsole! world nether [playerName] $1"
+      - "asConsole! title [playerName] actionbar {\"text\":\"Entering Arena\",\"color\":\"red\"}"
+    blocks: []
+    entities: []

@@ -1,0 +1,109 @@
+# ===========================
+# OreoEssentials - ClearLag
+# ===========================
+config-version: 1
+
+enable: true
+
+settings:
+  language: "English"
+  enable-api: true
+  use-internal-tps: true
+  auto-update: false
+
+global-broadcasts:
+  enabled: true
+  async: false
+  use-permission-for-broadcasts: false
+  permission: "bukkit.broadcast"
+
+area-filter:
+  - ITEM_FRAME
+  - GLOW_ITEM_FRAME
+  - MINECART
+  - ARMOR_STAND
+  - VILLAGER
+  - HORSE
+  - WOLF
+
+kill-mobs:
+  remove-named: false
+  mob-filter:
+    - VILLAGER
+    - WOLF
+    - ARMOR_STAND
+    - HORSE
+
+auto-kill-mobs:
+  enabled: false
+  interval: 600
+  remove-named: false
+  broadcast-removal: true
+  broadcast-message: "&6[OreoLag] &aRemoved +RemoveAmount mobs automatically!"
+  world-filter: []
+  mob-filter:
+    - VILLAGER
+    - WOLF
+    - ARMOR_STAND
+    - HORSE
+    - ZOMBIE hasName
+    - SKELETON hasName
+  warnings:
+    - 'time:540 msg:&6[OreoLag] &cMobs will be cleared in &7+remaining &cseconds!'
+    - 'time:580 msg:&6[OreoLag] &cMobs will be cleared in &7+remaining &cseconds!'
+
+auto-removal:
+  enabled: true
+  autoremoval-interval: 480
+  broadcast-removal: true
+  broadcast-message: "&6[OreoLag] &aRemoved +RemoveAmount entities!"
+  world-filter: []
+  flags:
+    boat: false
+    falling-block: true
+    experience-orb: true
+    painting: false
+    projectile: false
+    item: true
+    itemframe: false
+    minecart: false
+    primed-tnt: true
+  item-filter: []
+  remove-entities:
+    - "ARROW onGround"
+    - "SNOWBALL"
+    - "EGG"
+    - "FIREBALL"
+    - "BOAT !isMounted"
+    - "MINECART_TNT"
+  warnings:
+    - 'time:420 msg:&6[OreoLag] &cGround items cleared in &7+remaining &cseconds!'
+    - 'time:460 msg:&6[OreoLag] &cGround items cleared in &7+remaining &cseconds!'
+
+command-remove:
+  broadcast-removal: false
+  world-filter: []
+  flags:
+    boat: true
+    falling-block: true
+    experience-orb: true
+    painting: false
+    projectile: true
+    item: true
+    itemframe: false
+    minecart: true
+    primed-tnt: true
+  item-filter: []
+  remove-entities: []
+
+tps-meter:
+  enabled: true
+  interval: 15
+  tps-trigger: 14.0
+  tps-recover: 19.0
+  broadcast-enabled: true
+  trigger-broadcast-message: "&6[OreoLag] &cLow TPS detected. Running cleanup…"
+  recover-broadcast-message: "&6[OreoLag] &aTPS recovered!"
+  commands:
+    - "olagg clear"
+  recover-commands: []

@@ -1,0 +1,439 @@
+# ===========================
+# OreoEssentials - config.yml
+# ===========================
+# Reorganized for clarity and maintainability
+# Last updated: 2026-02-12
+
+# ==================== CORE SERVER SETTINGS ====================
+server:
+  name: "survival-1"  # Unique logical name for THIS server
+  language: en        # Options: en, fr, es, de, pt
+
+# ==================== FEATURE TOGGLES ====================
+features:
+  tpa:
+    debug: false
+    debug-echo-to-player: false
+
+debug: false
+placeholder-debug: false
+tradedebug: true
+
+skins:
+  debug: false
+
+logging:
+  debug: false
+
+# ==================== STORAGE & DATABASE ====================
+
+# Primary essentials data store (homes/warps/spawn/back)
+essentials:
+  storage: "yaml"  # Options: yaml | json | mongodb
+  # yaml/json = local-only (no cross-server home directory)
+  # mongodb   = enables cross-server home ownership + shared data
+
+# MongoDB configuration (used when essentials.storage = mongodb)
+storage:
+  mongo:
+    uri: "mongodb://localhost:27017"
+    database: "oreo"
+    collectionPrefix: "oreo_"
+    # Collections created:
+    #   - <prefix>homes
+    #   - <prefix>warps
+    #   - <prefix>meta
+    #   - <prefix>home_directory (cross-server ownership)
+
+# Economy system
+economy:
+  type: "json"  # Options: none | json | mongodb | postgresql
+
+  # Balance configuration
+  starting-balance: 100.0
+  max-balance: 1000000000
+  min-balance: 0.0
+  allow-negative: false
+  baltop-size: 10
+
+  # MongoDB economy backend (if type = mongodb)
+  mongodb:
+    uri: "mongodb://localhost:27017"
+    database: "minecraft_economy"
+    collection: "balances"
+    # Need MongoDB? Contact: https://discord.gg/A6wCGJD2Ez ($2/month)
+
+  # PostgreSQL economy backend (if type = postgresql)
+  postgresql:
+    url: "jdbc:postgresql://localhost:5432/minecraft_economy"
+    user: "postgres"
+    password: "postgres211"
+    table: "balances"
+
+# Player vaults storage
+playervaults:
+  storage: auto  # Options: auto | yaml | mongodb
+  # "auto" uses mongodb when essentials.storage=mongodb
+  collection: "oreo_playervaults"
+
+# Redis cache (optional)
+redis:
+  enabled: false
+  host: "localhost"
+  port: 6379
+  password: ""
+  cache-expiry: 600  # TTL in seconds
+
+# ==================== NETWORK & CROSS-SERVER ====================
+
+network:
+  cross-server: true
+  transport: "plugin_message"  # Server switching uses proxy plugin messaging
+
+# RabbitMQ (optional - for ChatSync and home-teleport coordination)
+rabbitmq:
+  enabled: false
+  uri: "amqps://user:pass@host/vhost"
+  # Need RabbitMQ? Contact: https://discord.gg/A6wCGJD2Ez ($2/month)
+
+# ==================== PLAYER FEATURES ====================
+
+# Homes system
+homes:
+  maxPerPlayer: 5
+  permissionBased: true  # If true, "oreo.homes.<N>" permission overrides max
+
+# Teleport requests
+tpa:
+  timeoutSeconds: 60
+
+# Inventory synchronization
+invsee:
+  allow-edit-while-online-elsewhere: true
+
+# Player sync (default toggle states for new players)
+playersync:
+  inventory: true
+  xp: true
+  health: true
+  hunger: true
+
+# AFK system
+afk:
+  auto:
+    enabled: true
+    seconds: 300  # Player becomes AFK after 5 minutes
+    check-interval-seconds: 5
+
+afk-pool:
+  enabled: true
+  region-name: "afk_pool"
+  world-name: "world"
+  server: "hub"
+  cross-server: true
+
+# Jail system
+Jail:
+  Storage:
+    Mongo:
+      Enabled: false  # Set true for cross-server jail sync
+      Uri: "mongodb://localhost:27017"
+      Database: "oreo"
+      # Collections: "jails" and "jail_sentences" (auto-created)
+
+# ==================== WORLD FEATURES ====================
+
+# Portals
+portals:
+  cooldown_ms: 1000
+  sound: "ENTITY_ENDERMAN_TELEPORT"
+  particle: "PORTAL"
+  particle_count: 20
+  allow_keep_yaw_pitch: true
+  teleport_async: false
+  max_portal_volume: 100000
+
+# Jump pads
+jumpads:
+  default_power: 1.2
+  default_upward: 1.0
+  default_useLookDir: true
+  cooldown_ms: 800
+  sound: "ENTITY_FIREWORK_ROCKET_LAUNCH"
+  particle: "CLOUD"
+  particle_count: 12
+
+# Mob health bars
+mobs:
+  healthbar:
+    update-interval-ticks: 5
+    view-distance: 32.0
+    require-line-of-sight: true
+    spawn-per-tick-cap: 40
+
+    format:
+      - "&f<name>"
+      - "&c❤ <bar> &7(<current>/<max>)"
+
+    show-numbers: true
+    segments: 10
+    full: "█"
+    empty: "░"
+    rounded: true
+    left-edge: "❮"
+    right-edge: "❯"
+
+    color-full: "&a"
+    color-mid: "&e"
+    color-low: "&c"
+    mid-threshold: 0.5
+    low-threshold: 0.2
+
+    include-passive: true
+    include-players: false
+    only-when-damaged: false
+
+    line-offset: 0.35
+    y-offset: 0.5
+    use-mythicmobs: true
+
+# World nicknames
+world_nicknames:
+  default: "UNKNOWN"
+  map:
+    world: "OVERWORLD"
+    world_nether: "NETHER"
+    world_the_end: "THE END"
+
+# ==================== PLAYER VAULTS ====================
+
+playervaults:
+  # Storage already defined in STORAGE section above
+
+  # Slots configuration (not rows!)
+  slots-cap: 54  # Maximum 1-54 slots
+  default-slots: 9  # Fallback if no permissions match
+
+  deny-message: "&cYou don't have permission to access vault &f#%id%&c."
+
+  sounds:
+    open: UI_BUTTON_CLICK
+    deny: ENTITY_VILLAGER_NO
+
+  vault-title: "&8Vault &f#<id> &7(<rows>x9)"
+
+  menu:
+    title: "&8Player Vaults"
+    item-unlocked-name: "&aVault &f#<id>"
+    item-locked-name: "&cVault &f#<id> &7(locked)"
+    item-unlocked-lore: "&7Click to open"
+    item-locked-lore: "&7You don't have access"
+
+  # Vault permissions by rank
+  vaults-per-rank:
+    global:
+      default: 1  # Number of vault IDs accessible
+      vip: 4
+      mvp: 5
+      admin: 6
+
+    per-vault:
+      "1":
+        default: 2  # Slots in vault #1
+        vip: 5
+      "2":
+        vip: 6  # Slots in vault #2
+
+# ==================== UI ELEMENTS ====================
+
+# Boss bar
+bossbar:
+  text: "<gradient:#FF1493:#00FF7F>Welcome</gradient> {player}"
+  color: PURPLE  # Options: WHITE, BLUE, GREEN, PINK, PURPLE, RED, YELLOW
+  style: SEGMENTED_10  # Options: SOLID, SEGMENTED_6, SEGMENTED_10, SEGMENTED_12, SEGMENTED_20
+  progress: 1.0  # 0.0 to 1.0
+  update-ticks: 40  # Re-render every 2 seconds (20 ticks = 1s)
+
+# Scoreboard (sidebar)
+scoreboard:
+  default-enabled: true
+  update-ticks: 10  # Refresh every 0.5 seconds
+
+  title:
+    frame-ticks: 10
+    frames:
+      - '&9&lOreo&b&lEssentials'
+      - '&b&lOreo&9&lEssentials'
+      - '&9&lOreo&b&lEssentials'
+
+  worlds:
+    whitelist: []
+    blacklist: []
+
+  lines:
+    - |-
+      %animations_<tag interval=5>
+      <gradient:#0099FF:#00FFFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      |
+      <gradient:#00CCFF:#0099FF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      |
+      <gradient:#00FFFF:#00CCFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      |
+      <gradient:#00CCFF:#00FFFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      |
+      <gradient:#0099FF:#00CCFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      </tag>%
+    - ''
+    - '&7Player: &b{player}'
+    - '&7Rank: %luckperms_prefix%%luckperms_primary_group_name%'
+    - ''
+    - |-
+      %animations_<tag interval=10>
+      <gradient:#FFD700:#FFA500>Balance:</gradient> &e%vault_eco_balance_formatted%
+      |
+      <gradient:#FFA500:#FFD700>Balance:</gradient> &6%vault_eco_balance_formatted%
+      |
+      <gradient:#FFFF00:#FFD700>Balance:</gradient> &e%vault_eco_balance_formatted%
+      |
+      <gradient:#FFD700:#FFFF00>Balance:</gradient> &6%vault_eco_balance_formatted%
+      </tag>%
+    - ''
+    - '&7Online: &a%oreo_network_online%&7/&a%server_max_players%'
+    - ''
+    - |-
+      %animations_<tag interval=5>
+      <gradient:#0099FF:#00FFFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      |
+      <gradient:#00CCFF:#0099FF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      |
+      <gradient:#00FFFF:#00CCFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      |
+      <gradient:#00CCFF:#00FFFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      |
+      <gradient:#0099FF:#00CCFF>━━━━━━━━━━━━━━━━━━━━━━</gradient>
+      </tag>%
+    - '&7&oplay.example.com'
+
+# ==================== CHAT & MESSAGING ====================
+
+# Join messages
+Join_messages:
+  enable: true
+  disable_on_backend: true
+  use_backend_list_as: "blacklist"
+  backend_server_names:
+    - "faction_world"
+    - "faction_nether"
+
+  look_like_player: true
+  player_name: "<gradient:#9BE8FF:#00D4FF>Oreobot</gradient>"
+  player_prefix: "<gradient:#00D4FF:#1E90FF>[</gradient>"
+  delimiter: " | "
+  join_message_delay: 0
+
+  # Default messages (fallback)
+  first_join: "<gradient:#00D4FF:#1E90FF>Welcome</gradient> <gradient:#1E90FF:#9BE8FF>{name}</gradient> <gradient:#9BE8FF:#00D4FF>to the server for the first time!</gradient>"
+  rejoin_message: "<gradient:#1E90FF:#9BE8FF>{name}</gradient> <gradient:#9BE8FF:#00D4FF>has joined the game.</gradient>"
+
+  # Per-rank overrides (optional)
+  formats:
+    first_join:
+      - permission: "oreo.rank.vip"
+        text: "<gradient:#FFD700:#FFA500>[VIP]</gradient> <white>{name}</white> <gray>joined for the first time!</gray>"
+      - permission: "oreo.rank.default"
+        text: "<gray>[Player]</gray> <white>{name}</white> <gray>joined for the first time!</gray>"
+
+    rejoin_message:
+      - permission: "oreo.rank.vip"
+        text: "<gradient:#FFD700:#FFA500>[VIP]</gradient> <white>{name}</white> <gray>is back!</gray>"
+      - permission: "oreo.rank.default"
+        text: "<gray>[Player]</gray> <white>{name}</white> <gray>joined.</gray>"
+
+# Quit messages
+Quit_messages:
+  enable: true
+  disable_on_backend: true
+  use_backend_list_as: "blacklist"
+  backend_server_names:
+    - "faction_world"
+    - "faction_nether"
+
+  look_like_player: true
+  player_name: "<gradient:#9BE8FF:#00D4FF>Oreobot</gradient>"
+  player_prefix: "<gradient:#00D4FF:#1E90FF>[</gradient>"
+  delimiter: " | "
+
+  # Default message
+  message: "<gradient:#1E90FF:#9BE8FF>{name}</gradient> <gradient:#9BE8FF:#00D4FF>has left the game.</gradient>"
+
+  # Per-rank overrides
+  formats:
+    message:
+      - permission: "oreo.rank.vip"
+        text: "<gradient:#FFD700:#FFA500>[VIP]</gradient> <white>{name}</white> <gray>left the game.</gray>"
+      - permission: "oreo.rank.default"
+        text: "<gray>[Player]</gray> <white>{name}</white> <gray>left the game.</gray>"
+
+# Automatic messages (Oreobot)
+Automatic_message:
+  enable: true
+  look_like_player: true
+  player_name: "<gradient:#9BE8FF:#00D4FF>Oreobot</gradient>"
+  player_prefix: "<gradient:#00D4FF:#1E90FF>[</gradient>"
+  delimiter: " | "
+
+  messages:
+    message1:
+      text: "<gradient:#00D4FF:#1E90FF>Don't forget to check our</gradient> <gradient:#1E90FF:#9BE8FF>website</gradient> <gradient:#9BE8FF:#00D4FF>for updates!</gradient>"
+      timer_loop: 50
+
+    message2:
+      text: "<gradient:#00D4FF:#1E90FF>Type</gradient> <gradient:#1E90FF:#9BE8FF>/help</gradient> <gradient:#9BE8FF:#00D4FF>for a list of commands!</gradient>"
+      timer_loop: 60
+
+# Chat bot (Oreobot conversations)
+conversations:
+  enabled: true
+
+  oreobot:
+    custom_call_name: "oreobot"
+
+    self_mention_reply: "<gradient:#00D4FF:#1E90FF>Hello</gradient>, <gradient:#1E90FF:#9BE8FF>{name}</gradient><gradient:#9BE8FF:#00D4FF>! How can I assist you today?</gradient>"
+
+    player_name: "<gradient:#9BE8FF:#00D4FF>OREOBOT</gradient>"
+    player_prefix: "<gradient:#00D4FF:#1E90FF>[</gradient>"
+    delimiter: " | "
+
+    questions:
+      question1:
+        keyword: "help"
+        key_phrase: "i need help"
+        replies:
+          - "<gradient:#00D4FF:#1E90FF>Sure</gradient>, <gradient:#1E90FF:#9BE8FF>{name}</gradient><gradient:#9BE8FF:#00D4FF> — what do you need help with?</gradient>"
+          - "<gradient:#1E90FF:#00D4FF>Feel free to</gradient> <gradient:#9BE8FF:#00D4FF>ask any questions!</gradient>"
+
+      question2:
+        keyword: "commands"
+        key_phrase: "what are the commands"
+        replies:
+          - "<gradient:#00D4FF:#1E90FF>You can type</gradient> <gradient:#1E90FF:#9BE8FF>/help</gradient> <gradient:#9BE8FF:#00D4FF>to see all available commands.</gradient>"
+          - "<gradient:#1E90FF:#00D4FF>Check the</gradient> <gradient:#9BE8FF:#00D4FF>website for a detailed command list.</gradient>"
+
+# Economy messages
+messages:
+  pay-sent: "You have paid {receiver} {amount} USD!"
+  pay-received: "{sender} has paid you {amount} USD!"
+  money-admin: "You have been given {amount} USD!"
+  money-paid: "{sender} has paid you {amount} USD!"
+  cheque-created: "You have created a cheque for {amount} USD!"
+  cheque-redeemed: "You have redeemed a cheque for {amount} USD!"
+
+# ==================== MIGRATION & COMPATIBILITY ====================
+
+# zEssentials migration
+zessentials-migration:
+  enabled: true
+  jdbc-url: "jdbc:sqlite:plugins/zEssentials/data.db"
+  user: ""
+  password: ""
+  table-prefix: "zessentials_"

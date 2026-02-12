@@ -1,0 +1,13 @@
+# jumpads.yml — generated/maintained at runtime by the plugin.
+# One JumpPad is bound to a single block position.
+
+jumpads:
+  lobby_pad:
+    name: "lobby_pad"
+    world: "world"
+    x: 200
+    y: 65
+    z: -20
+    power: 1.25      # horizontal push multiplier
+    upward: 1.05     # vertical boost
+    useLookDir: true # launch towards player look direction

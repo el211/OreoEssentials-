@@ -1,0 +1,565 @@
+# ╔════════════════════════════════════════════════════════════╗
+# ║              OREOESSENTIALS COMMAND TOGGLE CONFIG          ║
+# ║                                                            ║
+# ║  Enable or disable any command individually.               ║
+# ║  When disabled, the command will be completely removed.    ║
+# ║                                                            ║
+# ║  enabled: true  = Command works normally                   ║
+# ║  enabled: false = Command is completely disabled           ║
+# ╚════════════════════════════════════════════════════════════╝
+
+# When a player tries to use a disabled command, show this message:
+disabled-command-message: "&cThis command is currently disabled."
+
+# ═══════════════════════════════════════════════════════════
+#                    TELEPORTATION COMMANDS
+# ═══════════════════════════════════════════════════════════
+
+commands:
+  spawn:
+    enabled: true
+    aliases: ["hub", "lobby", "main"]
+
+  setspawn:
+    enabled: true
+    aliases: ["createspawn", "makespawn", "spawnset"]
+
+  back:
+    enabled: true
+    aliases: ["b", "return", "goback"]
+
+  warp:
+    enabled: true
+    aliases: ["w", "warpto", "goto"]
+
+  setwarp:
+    enabled: true
+    aliases: ["createwarp", "makewarp", "warpset", "addwarp"]
+
+  warps:
+    enabled: true
+    aliases: ["warplist", "listwarp", "listwarps", "allwarps"]
+
+  warpsadmin:
+    enabled: true
+    aliases: ["adminwarps", "warpsa", "managewarp", "warpmanage"]
+
+  delwarp:
+    enabled: true
+    aliases: ["deletewarp", "removewarp", "warpdelete", "warpremove", "unwarp"]
+
+  home:
+    enabled: true
+    aliases: ["h", "gohome", "myhome"]
+
+  sethome:
+    enabled: true
+    aliases: ["createhome", "makehome", "homeset", "addhome"]
+
+  delhome:
+    enabled: true
+    aliases: ["deletehome", "removehome", "homedelete", "homeremove", "unhome"]
+
+  homes:
+    enabled: true
+    aliases: ["homelist", "listhome", "listhomes", "myhomes", "allhomes"]
+
+  homesgui:
+    enabled: true
+    aliases: ["homemenu", "homesui", "guihomes", "homesinv"]
+
+  otherhomes:
+    enabled: true
+    aliases: ["playerhomes", "checkthomes", "seehomes"]
+
+  otherhome:
+    enabled: true
+    aliases: ["playerhome", "checkhome", "seehome", "viewhome"]
+
+  tpa:
+    enabled: true
+    aliases: ["tprequest", "tpask", "teleportask", "call"]
+
+  tpaccept:
+    enabled: true
+    aliases: ["tpyes", "tpaccept", "accepttp", "tpallow"]
+
+  tpdeny:
+    enabled: true
+    aliases: ["tpno", "tpdecline", "declinetp", "refusetp", "tpreject"]
+
+  tp:
+    enabled: true
+    aliases: ["teleport", "tele"]
+
+  tphere:
+    enabled: true
+    aliases: ["tph", "s", "summon", "bring"]
+
+  move:
+    enabled: true
+    aliases: ["teleportto", "moveto", "gotoplayer"]
+
+  rtp:
+    enabled: true
+    aliases: ["wild", "randomtp", "wilderness", "random"]
+
+  deathback:
+    enabled: true
+    aliases: ["dback", "deathreturn", "grave", "retrieval"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    PLAYER WARPS COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  pw:
+    enabled: true
+    aliases: ["playerwarp", "pwarp", "playerwarps"]
+
+  pwwhitelist:
+    enabled: true
+    aliases: ["pwwl", "playerwarpwhitelist", "pwarpwhitelist"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    MODERATION COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  ban:
+    enabled: true
+    aliases: ["banplayer", "permban", "banhammer"]
+
+  unban:
+    enabled: true
+    aliases: ["pardon", "unbanplayer", "removeban"]
+
+  kick:
+    enabled: true
+    aliases: ["kickplayer", "boot", "remove"]
+
+  mute:
+    enabled: true
+    aliases: ["muteplayer", "silence", "gag", "stfu"]
+
+  unmute:
+    enabled: true
+    aliases: ["unmuteplayer", "unsilence", "ungag"]
+
+  freeze:
+    enabled: true
+    aliases: ["freezeplayer", "ss", "screenshare", "halt", "stop"]
+
+  jail:
+    enabled: true
+    aliases: ["jailplayer", "imprison", "arrest", "lockup"]
+
+  jailedit:
+    enabled: true
+    aliases: ["jailmodify", "editjail", "managejail", "jailsetup"]
+
+  jaillist:
+    enabled: true
+    aliases: ["jails", "listjails", "jailslist", "alljails"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    ADMINISTRATIVE COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  fly:
+    enabled: true
+    aliases: ["flight", "flymode", "enablefly"]
+
+  flyspeed:
+    enabled: true
+    aliases: ["fspeed", "flightspeed", "speedfly", "flysp"]
+
+  tempfly:
+    enabled: true
+    aliases: ["tfly", "temporaryflight", "flytemp", "timedfly"]
+
+  heal:
+    enabled: true
+    aliases: ["fix", "health", "hp", "restore"]
+
+  feed:
+    enabled: true
+    aliases: ["eat", "food", "hunger", "satisfy"]
+
+  god:
+    enabled: true
+    aliases: ["godmode", "invincible", "invulnerable", "immortal"]
+
+  vanish:
+    enabled: true
+    aliases: ["v", "invis", "invisible", "hide", "disappear"]
+
+  gamemode:
+    enabled: true
+    aliases: ["gm", "gms", "gmc", "gma", "gmsp", "mode"]
+
+  clear:
+    enabled: true
+    aliases: ["ci", "clearinv", "clearinventory", "wipeinv"]
+
+  world:
+    enabled: true
+    aliases: ["teleportworld", "worldtp", "worldteleport", "gotoworld"]
+
+  oetime:
+    enabled: true
+    aliases: ["time", "settime", "timechange", "changetime"]
+
+  weather:
+    enabled: true
+    aliases: ["setweather", "changeweather", "weatherchange"]
+
+  sun:
+    enabled: true
+    aliases: ["clear", "clearweather", "sunny", "day"]
+
+  rain:
+    enabled: true
+    aliases: ["rainy", "downpour", "rainfall"]
+
+  storm:
+    enabled: true
+    aliases: ["thunder", "thunderstorm", "lightning"]
+
+  reloadall:
+    enabled: true
+    aliases: ["rl", "reload", "reloadserver", "pluginreload"]
+
+  modgui:
+    enabled: true
+    aliases: ["moderationgui", "modmenu", "adminmenu", "modpanel"]
+
+  oesettings:
+    enabled: true
+    aliases: ["settings", "oresettings", "config", "configuration"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    COMMUNICATION COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  msg:
+    enabled: true
+    aliases: ["m", "tell", "w", "whisper", "pm", "dm", "message", "t"]
+
+  reply:
+    enabled: true
+    aliases: ["r", "respond"]
+
+  broadcast:
+    enabled: true
+    aliases: ["bc", "announce", "alert", "shout", "bcast"]
+
+  channelannounce:
+    enabled: true
+    aliases: ["channelbc", "channelbroadcast", "channelmsg"]
+
+  oechannel:
+    enabled: true
+    aliases: ["channel", "ch", "joinchannel", "switchchannel"]
+
+  oechannels:
+    enabled: true
+    aliases: ["channels", "listchannels", "chlist", "allchannels"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    ECONOMY COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  money:
+    enabled: true
+    aliases: ["moneymanage", "econmanage", "cash", "funds"]
+
+  pay:
+    enabled: true
+    aliases: ["send", "give", "transfer", "sendmoney", "paymoney"]
+
+  cheque:
+    enabled: true
+    aliases: ["check", "moneycheque", "banknote", "voucher"]
+
+  balance:
+    enabled: true
+    aliases: ["bal", "money", "cash", "wallet", "$", "eco", "econ"]
+
+  baltop:
+    enabled: true
+    aliases: ["balancetop", "moneytop", "richest", "top", "leaderboard", "wealthiest"]
+
+  currency:
+    enabled: true
+    aliases: ["currencies", "customcurrency", "tokens", "points"]
+
+  currencybalance:
+    enabled: true
+    aliases: ["cbal", "currencybal", "tokenbal", "pointsbal"]
+
+  currencysend:
+    enabled: true
+    aliases: ["csend", "sendcurrency", "currencypay", "tokensend"]
+
+  currencytop:
+    enabled: true
+    aliases: ["ctop", "currencyleaderboard", "tokentop", "pointstop"]
+
+  currencyadmin:
+    enabled: true
+    aliases: ["cadmin", "managecurrency", "currencymanage", "tokenadmin"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    PLAYER UTILITY COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  nick:
+    enabled: true
+    aliases: ["nickname", "name", "rename", "displayname"]
+
+  realname:
+    enabled: true
+    aliases: ["truename", "originalname", "playername", "actualnick"]
+
+  skin:
+    enabled: true
+    aliases: ["changeskin", "setskin", "skinchange"]
+
+  clone:
+    enabled: true
+    aliases: ["copy", "duplicate", "replicate"]
+
+  head:
+    enabled: true
+    aliases: ["skull", "playerhead", "headitem"]
+
+  hat:
+    enabled: true
+    aliases: ["helmet", "wear", "headwear"]
+
+  seen:
+    enabled: true
+    aliases: ["lastseen", "whois", "lookup", "check"]
+
+  ping:
+    enabled: true
+    aliases: ["latency", "ms", "connection"]
+
+  near:
+    enabled: true
+    aliases: ["nearby", "nearbyme", "playernear", "around"]
+
+  afk:
+    enabled: true
+    aliases: ["away", "awayfromkeyboard", "idle"]
+
+  uuid:
+    enabled: true
+    aliases: ["uniqueid", "playerid", "uid"]
+
+  playtime:
+    enabled: true
+    aliases: ["timeplayed", "playedtime", "onlinetime", "time"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    INVENTORY COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  invsee:
+    enabled: true
+    aliases: ["inv", "inventory", "openinv", "viewinv", "checkinv"]
+
+  invlook:
+    enabled: true
+    aliases: ["lookinv", "viewinventory", "inspectinv"]
+
+  ec:
+    enabled: true
+    aliases: ["enderchest", "echest", "ender"]
+
+  ecsee:
+    enabled: true
+    aliases: ["enderchestsee", "echestsee", "viewec", "openenderchest"]
+
+  vaults:
+    enabled: true
+    aliases: ["vault", "pv", "playervault", "personalvault", "storage"]
+
+  trash:
+    enabled: true
+    aliases: ["dispose", "delete", "bin", "garbage", "dump"]
+
+  workbench:
+    enabled: true
+    aliases: ["craft", "wb", "crafting", "craftingtable", "ct"]
+
+  anvil:
+    enabled: true
+    aliases: ["repair", "fix", "anvilgui", "combine"]
+
+  furnace:
+    enabled: true
+    aliases: ["smelt", "furnacegui", "cook", "kiln"]
+
+  playersync:
+    enabled: true
+    aliases: ["psync", "sync", "inventorysync", "syncplayer"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    ITEM COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  enchant:
+    enabled: true
+    aliases: ["ench", "enchantitem", "addenchant", "enchantment"]
+
+  disenchant:
+    enabled: true
+    aliases: ["deenchant", "removeenchant", "unenchant", "stripenchant"]
+
+  cook:
+    enabled: true
+    aliases: ["cookitem", "smeltitem", "bake"]
+
+  sellgui:
+    enabled: true
+    aliases: ["sell", "shop", "sellitems", "sellmenu"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    EFFECTS & MOBS COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  effectme:
+    enabled: true
+    aliases: ["effect", "potion", "addeffect", "potioneffect"]
+
+  effectto:
+    enabled: true
+    aliases: ["giveeffect", "effectplayer", "potionplayer"]
+
+  spawnmob:
+    enabled: true
+    aliases: ["mob", "spawncreature", "summonmob", "mobspawn"]
+
+  kill:
+    enabled: true
+    aliases: ["suicide", "die", "kms"]
+
+  killallr:
+    enabled: true
+    aliases: ["killall", "removeall", "clearentities", "killentities"]
+
+  killallrlog:
+    enabled: true
+    aliases: ["killlog", "killalllog", "entitylog"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    FEATURE COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  kits:
+    enabled: true
+    aliases: ["kitlist", "listkits", "allkits", "showkits"]
+
+  kit:
+    enabled: true
+    aliases: ["getkit", "claimkit", "takekit"]
+
+  trade:
+    enabled: true
+    aliases: ["swap", "exchange", "tradeplayer", "playertrade"]
+
+  sit:
+    enabled: true
+    aliases: ["chair", "sitdown", "rest"]
+
+  bossbar:
+    enabled: true
+    aliases: ["bb", "actionbar", "bar", "topbar"]
+
+  scoreboard:
+    enabled: true
+    aliases: ["sb", "sidebar", "board", "score"]
+
+  daily:
+    enabled: true
+    aliases: ["dailyreward", "dailybonus", "claimdaily", "reward"]
+
+  prewards:
+    enabled: true
+    aliases: ["playtimerewards", "timerewards", "playrewards"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    SPECIAL FEATURE COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  portal:
+    enabled: true
+    aliases: ["createportal", "portalcreate", "makeportal", "portals"]
+
+  jumpad:
+    enabled: true
+    aliases: ["jumppad", "jumpblock", "booster", "launcher"]
+
+  ic:
+    enabled: true
+    aliases: ["itemcase", "showcase", "display", "itemdisplay"]
+
+  oecraft:
+    enabled: true
+    aliases: ["customcraft", "specialcraft", "craftcustom"]
+
+  hologram:
+    enabled: true
+    aliases: ["holo", "holograms", "textdisplay", "floatingtext"]
+
+  ohologram:
+    enabled: true
+    aliases: ["oreohologram", "oreoholo", "oholo"]
+
+  aliaseditor:
+    enabled: true
+    aliases: ["editaliases", "aliasmanager", "managealiases", "aliases"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    CLEARLAG COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  olagg:
+    enabled: true
+    aliases: ["clearlag", "lag", "removelag", "antilag", "lagg"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    EVENTS COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  oevents:
+    enabled: true
+    aliases: ["events", "eventmanager", "manageevents", "eventconfig"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    SERVER COMMANDS
+  # ═══════════════════════════════════════════════════════════
+
+  oeserver:
+    enabled: true
+    aliases: ["server", "servers", "changeserver", "switchserver"]
+
+  oe:
+    enabled: true
+    aliases: ["oreoessentials", "oreo", "essentials"]
+
+  afeliusreload:
+    enabled: true
+    aliases: ["afreload", "reloadafelius", "afelreload"]
+
+  zessentialshomesimport:
+    enabled: true
+    aliases: ["zehomesimport", "importhomes", "zessimport", "homesimport"]
+
+  # ═══════════════════════════════════════════════════════════
+  #                    COMMAND TOGGLE MANAGEMENT
+  # ═══════════════════════════════════════════════════════════
+
+  commandtoggle:
+    enabled: true
+    aliases: ["cmdtoggle", "cmdt", "togglecommand", "commandmanager"]

@@ -1,0 +1,1421 @@
+# ============================================================================
+# OREOESSENTIALS - VOLLEDIGE PRODUCTIE LANG.YML (NEDERLANDS)
+# ============================================================================
+# Gegenereerd uit uitgebreid kleurensysteem unificatieproject
+# Omvat 102+ geverifieerde bestanden over 11 verificatiesessies
+#
+# Formaat: MiniMessage (bijv. <red>, <green>, <#RRGGBB>)
+# Documentatie: https://docs.advntr.dev/minimessage/format.html
+#
+# Veel voorkomende variabelen:
+#   %player%, %target%    - Spelersnamen
+#   %server%, %world%     - Server/wereld namen
+#   %label%               - Commandolabel
+#   %amount%, %balance%   - Numerieke waarden
+#   %name%, %warp%, %home% - Locatienamen
+#   %id%                  - Identificatienummers
+# ============================================================================
+
+# ============================================================================
+# ALGEMENE BERICHTEN
+# ============================================================================
+
+general:
+  prefix: '<gold><bold>Oreo</bold></gold><white><bold>Essentials</bold></white> <dark_gray>»</dark_gray> '
+  no-permission: "<red>Je hebt geen toestemming.</red>"
+  player-only: "<red>Alleen spelers kunnen dit commando gebruiken.</red>"
+  console-only: "<red>Alleen de console kan dit commando gebruiken.</red>"
+  invalid-player: "<red>Speler <yellow>%player%</yellow> niet gevonden.</red>"
+  player-offline: "<red>Speler <yellow>%player%</yellow> is niet online.</red>"
+  reload-success: "<green>Configuratie succesvol herladen.</green>"
+  reload-failed: "<red>Configuratie herladen mislukt.</red>"
+  command-cooldown: "<yellow>Je moet <white>%time%</white> wachten voordat je dit commando opnieuw kunt gebruiken.</yellow>"
+
+# ============================================================================
+# KITS SYSTEEM (6 bestanden geverifieerd)
+# ============================================================================
+
+kits:
+  # Kernberichten (KitsManager.java - 9 Lang oproepen)
+  unknown-kit: "<red>Onbekende kit: <yellow>%kit_id%</yellow></red>"
+  disabled: "<red>Kits zijn momenteel uitgeschakeld.</red>"
+  disabled-hint: "<gray>Gebruik <white>%cmd%</white> om het in te schakelen.</gray>"
+
+  # Toestemmingen
+  no-permission: "<red>Je hebt geen toestemming.</red>"
+  no-permission-claim: "<red>Je hebt geen toestemming om kits te claimen.</red>"
+  no-permission-specific: "<red>Je hebt geen toestemming voor kit <yellow>%kit_name%</yellow>. Vereist: <white>%perm%</white></red>"
+
+  # Afkoeltijd
+  cooldown: "<yellow>Kit <aqua>%kit_name%</aqua> heeft een afkoeltijd. Wacht <white>%cooldown_left%</white>.</yellow>"
+  bypass-cooldown: "<green>Afkoeltijd omzeilen voor <aqua>%kit_name%</aqua>.</green>"
+
+  # Succes
+  claimed: "<green>Je hebt de <aqua>%kit_name%</aqua> kit ontvangen!</green>"
+  commands-ran: "<gray>Commando's van <aqua>%kit_name%</aqua> uitgevoerd.</gray>"
+
+  # Commando's (KitCommands.java - 8 Lang oproepen)
+  player-only: "<red>Alleen spelers kunnen dit commando gebruiken.</red>"
+  usage-kit: "<yellow>Gebruik: /kit <n></yellow>"
+  toggle-enabled: "<green>Kits functie is nu <white>INGESCHAKELD</white>.</green>"
+  toggle-disabled: "<yellow>Kits functie is nu <white>UITGESCHAKELD</white>.</yellow>"
+
+  # GUI lore (KitsMenuSI.java - 5 Lang oproepen)
+  gui:
+    lore:
+      claimable: "<green>✓ Klaar om te claimen!</green>\n<gray>Afkoeltijd: <white>Geen</white></gray>"
+      on-cooldown: "<yellow>⏱ In afkoeltijd</yellow>\n<gray>Wacht: <white>%cooldown_left%</white></gray>"
+    sounds:
+      claim:
+        enabled: true
+        sound: "minecraft:entity.experience_orb.pickup"
+        volume: 0.8
+        pitch: 1.2
+      denied:
+        enabled: true
+        sound: "minecraft:block.note_block.bass"
+        volume: 0.7
+        pitch: 0.7
+
+# ============================================================================
+# PLAYERWARP SYSTEEM (10 bestanden geverifieerd - 65+ Lang sleutels)
+# ============================================================================
+
+# Service-niveau berichten (PlayerWarpService.java - 15 Lang oproepen)
+playerwarps:
+  no-permission-base: "<red>Je hebt geen toestemming om speler warps te gebruiken.</red>"
+  only-players-sub: "<red>Alleen spelers kunnen /%sub% gebruiken.</red>"
+
+  teleport:
+    not-found: "<red>Warp <yellow>%name%</yellow> niet gevonden.</red>"
+    no-permission: "<red>Je hebt geen toestemming om <yellow>%name%</yellow> te gebruiken.</red>"
+    local: "<green>Geteleporteerd naar warp</green> <yellow>%name%</yellow>."
+    cross-disabled: "<gray>Cross-server warps zijn uitgeschakeld. Lokaal teleporteren naar <white>%name%</white>.</gray>"
+    messaging-disabled: "<gray>Messaging offline. Lokaal teleporteren naar <white>%name%</white>.</gray>"
+    cross-send: "<gray>Je wordt gestuurd naar server</gray> <yellow>%server%</yellow> <gray>voor warp</gray> <white>%name%</white>…"
+
+  whitelist:
+    not-found: "<red>Warp <yellow>%name%</yellow> niet gevonden.</red>"
+    not-enabled: "<red>Whitelist is niet ingeschakeld voor <yellow>%name%</yellow>.</red>"
+    player-not-found: "<red>Doelspeler niet gevonden.</red>"
+    already: "<yellow>%target%</yellow> staat al op de whitelist van <white>%name%</white>."
+    added: "<green>Toegevoegd</green> <yellow>%target%</yellow> <green>aan de whitelist van</green> <white>%name%</white>."
+    not-in: "<red><yellow>%target%</yellow> staat niet op de whitelist van <white>%name%</white>.</red>"
+    removed: "<green>Verwijderd</green> <yellow>%target%</yellow> <green>van de whitelist van</green> <white>%name%</white>."
+    enabled: "<green>Whitelist ingeschakeld voor <white>%warp%</white>.</green>"
+    disabled: "<yellow>Whitelist uitgeschakeld voor <white>%warp%</white>.</yellow>"
+    not-owner: "<red>Je bent niet de eigenaar van <yellow>%warp%</yellow>.</red>"
+
+# Commandoberichten (PlayerWarpCommand.java - 50+ Lang oproepen)
+pw:
+  # Hulp
+  help-header: "<gold><bold>PlayerWarp Hulp</bold></gold>"
+  help-body: |
+    <yellow>/%label% set <n></yellow> <gray>- Maak een warp</gray>
+    <yellow>/%label% remove <n></yellow> <gray>- Verwijder je warp</gray>
+    <yellow>/%label% list [speler]</yellow> <gray>- Lijst warps</gray>
+    <yellow>/%label% gui</yellow> <gray>- Bekijk alle warps</gray>
+    <yellow>/%label% mywarps</yellow> <gray>- Beheer je warps</gray>
+    <yellow>/%label% <warp></yellow> <gray>- Teleporteer naar warp</gray>
+  help-footer: "<gray>Gebruik <yellow>/%label% help</yellow> voor meer info.</gray>"
+
+  # Toestemmingen (20+ sleutels)
+  no-permission-base: "<red>Je hebt geen toestemming om speler warps te gebruiken.</red>"
+  no-permission-set: "<red>Je hebt geen toestemming om warps in te stellen.</red>"
+  no-permission-remove: "<red>Je hebt geen toestemming om warps te verwijderen.</red>"
+  no-permission-list: "<red>Je hebt geen toestemming om warps te tonen.</red>"
+  no-permission-warp: "<red>Je hebt geen toestemming om <yellow>%name%</yellow> te gebruiken.</red>"
+  no-permission-amount: "<red>Je hebt geen toestemming.</red>"
+  no-permission-rtp: "<red>Je hebt geen toestemming.</red>"
+  no-permission-near: "<red>Je hebt geen toestemming.</red>"
+  no-permission-reset: "<red>Je hebt geen toestemming.</red>"
+  no-permission-rename: "<red>Je hebt geen toestemming.</red>"
+  no-permission-setowner: "<red>Je hebt geen toestemming.</red>"
+  no-permission-removeall: "<red>Je hebt geen toestemming.</red>"
+  no-permission-reload: "<red>Je hebt geen toestemming.</red>"
+  no-permission-addwarps: "<red>Je hebt geen toestemming.</red>"
+  no-permission-whitelist: "<red>Je hebt geen toestemming.</red>"
+  no-permission-desc: "<red>Je hebt geen toestemming.</red>"
+  no-permission-category: "<red>Je hebt geen toestemming.</red>"
+  no-permission-lock: "<red>Je hebt geen toestemming.</red>"
+  no-permission-icon: "<red>Je hebt geen toestemming.</red>"
+  no-permission-cost: "<red>Je hebt geen toestemming.</red>"
+  no-permission-managers: "<red>Je hebt geen toestemming.</red>"
+  no-permission-password: "<red>Je hebt geen toestemming.</red>"
+
+  # Gebruiksberichten (15+ sleutels)
+  usage-set: "<yellow>Gebruik: /%label% set <n></yellow>"
+  usage-remove: "<yellow>Gebruik: /%label% remove <warp></yellow>"
+  usage-reset: "<yellow>Gebruik: /%label% reset <warp></yellow>"
+  usage-rename: "<yellow>Gebruik: /%label% rename <warp> <nieuweNaam></yellow>"
+  usage-setowner: "<yellow>Gebruik: /%label% setowner <warp> <speler></yellow>"
+  usage-removeall: "<yellow>Gebruik: /%label% removeall <speler></yellow>"
+  usage-addwarps: "<yellow>Gebruik: /%label% addwarps <speler> <aantal></yellow>"
+  usage-whitelist: "<yellow>Gebruik: /%label% whitelist <enable|disable|list|set|remove> <warp> [speler]</yellow>"
+  usage-whitelist-set: "<yellow>Gebruik: /%label% whitelist set <warp> <speler></yellow>"
+  usage-whitelist-remove: "<yellow>Gebruik: /%label% whitelist remove <warp> <speler></yellow>"
+  usage-desc: "<yellow>Gebruik: /%label% desc <warp> [beschrijving...]</yellow>"
+  usage-category: "<yellow>Gebruik: /%label% category <warp> [categorie]</yellow>"
+  usage-lock: "<yellow>Gebruik: /%label% lock <warp> [on|off|toggle]</yellow>"
+  usage-icon: "<yellow>Gebruik: /%label% icon <warp> [clear]</yellow>"
+  usage-cost: "<yellow>Gebruik: /%label% cost <warp> <bedrag></yellow>"
+  usage-managers: "<yellow>Gebruik: /%label% managers <warp> [speler]</yellow>"
+  usage-password: "<yellow>Gebruik: /%label% password <warp> <wachtwoord|off></yellow>"
+  usage-use: "<yellow>Gebruik: /%label% use <warp> [wachtwoord]</yellow>"
+
+  # Warp instellen
+  limit-reached: "<red>Je hebt je warp limiet bereikt (<white>%limit%</white>).</red>"
+  already-exists: "<red>Je hebt al een warp genaamd <yellow>%name%</yellow>.</red>"
+  set-success: "<green>Warp <aqua>%name%</aqua> aangemaakt.</green>"
+
+  # Warp verwijderen
+  not-found-owner: "<red>Je hebt geen warp genaamd <yellow>%name%</yellow>.</red>"
+  not-found: "<red>Warp <yellow>%name%</yellow> niet gevonden.</red>"
+  remove-success: "<green>Warp <aqua>%name%</aqua> verwijderd.</green>"
+  remove-failed: "<red>Warp <yellow>%name%</yellow> verwijderen mislukt.</red>"
+
+  # Lijst
+  list-header: "<gold>Warps van <yellow>%owner%</yellow>:</gold>"
+  list-empty: "<gray>Geen warps gevonden.</gray>"
+  list-entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua>"
+  list-footer: "<gray>───────────────────────</gray>"
+  list-target-offline: "<red>Speler <yellow>%player%</yellow> is niet online.</red>"
+
+  # Aantal
+  amount-console-usage: "<red>Gebruik: /pw amount <speler></red>"
+  amount-target-offline: "<red>Speler <yellow>%player%</yellow> is niet online.</red>"
+  amount-self: "<green>Je hebt <white>%amount%</white> warp(s).</green>"
+  amount-other: "<green><yellow>%player%</yellow> heeft <white>%amount%</white> warp(s).</green>"
+
+  # RTP
+  rtp-none: "<red>Geen warps beschikbaar voor willekeurige teleportatie.</red>"
+  rtp-none-usable: "<red>Geen warps waar je toegang toe hebt.</red>"
+
+  # Dichtbij
+  near-none: "<gray>Geen warps gevonden binnen <white>%radius%</white> blokken.</gray>"
+  near-page-empty: "<red>Pagina <yellow>%page%</yellow> is leeg.</red>"
+
+  # Reset
+  reset-success: "<green>Warp <aqua>%name%</aqua> gereset naar je huidige locatie.</green>"
+  reset-failed: "<red>Warp <yellow>%name%</yellow> resetten mislukt.</red>"
+
+  # Hernoemen
+  rename-success: "<green>Hernoemd <yellow>%old%</yellow> naar <aqua>%name%</aqua>.</green>"
+  rename-failed: "<red>Hernoemen van <yellow>%old%</yellow> naar <yellow>%name%</yellow> mislukt.</red>"
+
+  # Eigenaar instellen
+  setowner-success: "<green>Warp <aqua>%warp%</aqua> overgedragen aan <yellow>%player%</yellow>.</green>"
+  setowner-failed: "<red>Warp <yellow>%warp%</yellow> overdragen mislukt.</red>"
+  player-resolve-failed: "<red>Kon speler <yellow>%player%</yellow> niet oplossen.</red>"
+
+  # Alles verwijderen
+  removeall-success: "<green><white>%amount%</white> warp(s) verwijderd van <yellow>%player%</yellow>.</green>"
+
+  # Herladen
+  reload-success: "<green>Configuratie herladen.</green>"
+
+  # Warps toevoegen
+  addwarps-invalid-amount: "<red>Ongeldig bedrag.</red>"
+  addwarps-success: "<green><white>%amount%</white> extra warp slot(s) toegevoegd aan <yellow>%player%</yellow>. Totaal extra: <white>%total%</white>.</green>"
+
+  # Whitelist
+  whitelist-added: "<green><yellow>%player%</yellow> toegevoegd aan whitelist van <white>%warp%</white>.</green>"
+  whitelist-removed: "<green><yellow>%player%</yellow> verwijderd van whitelist van <white>%warp%</white>.</green>"
+  whitelist-already: "<yellow>%player%</yellow> staat al op de whitelist van <white>%warp%</white>."
+  whitelist-not-found: "<red><yellow>%player%</yellow> staat niet op de whitelist van <white>%warp%</white>.</red>"
+
+  # Beschrijving
+  desc-empty: "<gray>Warp <white>%warp%</white> heeft geen beschrijving.</gray>"
+  desc-show: "<gold>Beschrijving van <aqua>%warp%</aqua>:</gold> <white>%desc%</white>"
+  desc-cleared: "<green>Beschrijving van <aqua>%warp%</aqua> gewist.</green>"
+  desc-set: "<green>Beschrijving van <aqua>%warp%</aqua> ingesteld op: <white>%desc%</white></green>"
+
+  # Categorie
+  category-empty: "<gray>Warp <white>%warp%</white> heeft geen categorie.</gray>"
+  category-show: "<gold>Categorie van <aqua>%warp%</aqua>:</gold> <white>%category%</white>"
+  category-cleared: "<green>Categorie van <aqua>%warp%</aqua> gewist.</green>"
+  category-set: "<green>Categorie van <aqua>%warp%</aqua> ingesteld op: <white>%category%</white></green>"
+
+  # Vergrendelen
+  locked: "<green>Warp <aqua>%warp%</aqua> vergrendeld.</green>"
+  unlocked: "<green>Warp <aqua>%warp%</aqua> ontgrendeld.</green>"
+
+  # Icoon
+  icon-no-item: "<red>Je moet een item in je hoofdhand hebben.</red>"
+  icon-set: "<green>Icoon ingesteld voor <aqua>%warp%</aqua>.</green>"
+  icon-cleared: "<green>Icoon gewist voor <aqua>%warp%</aqua>.</green>"
+
+  # Kosten
+  cost-invalid: "<red>Ongeldig bedrag: <yellow>%input%</yellow></red>"
+  cost-cleared: "<green>Kosten gewist voor <aqua>%warp%</aqua> (nu gratis).</green>"
+  cost-set: "<green>Kosten ingesteld voor <aqua>%warp%</aqua> op <yellow>$%amount%</yellow>.</green>"
+  cost-not-enough: "<red>Onvoldoende saldo (<white>$%amount%</white> vereist).</red>"
+  cost-charged: "<gray>In rekening gebracht</gray> <yellow>$%amount%</yellow> <gray>(betaald aan</gray> <white>%owner%</white><gray>).</gray>"
+
+  # Beheerders
+  managers-player-not-found: "<red>Speler <yellow>%player%</yellow> niet gevonden.</red>"
+  manager-added: "<green><yellow>%player%</yellow> toegevoegd als beheerder van <white>%warp%</white>.</green>"
+  manager-removed: "<green><yellow>%player%</yellow> verwijderd als beheerder van <white>%warp%</white>.</green>"
+
+  # Wachtwoord
+  password-required: "<red>Warp <yellow>%warp%</yellow> vereist een wachtwoord.</red> <gray>Gebruik: <white>/pw use %warp% <wachtwoord></white></gray>"
+  password-wrong: "<red>Verkeerd wachtwoord voor <yellow>%warp%</yellow>.</red>"
+  password-cleared: "<green>Wachtwoord gewist voor <aqua>%warp%</aqua>.</green>"
+  password-set: "<green>Wachtwoord ingesteld voor <aqua>%warp%</aqua>.</green>"
+  password-placeholder-set: "<green>Standaard wachtwoord '<white>%password%</white>' ingesteld voor <aqua>%warp%</aqua>. Wijzig het met <yellow>/pw password %warp% <jouw-wachtwoord></yellow></green>"
+
+  # Teleporteren
+  teleport-failed: "<red>Teleportatie mislukt.</red>"
+  teleported: "<green>Geteleporteerd naar speler warp <aqua>%name%</aqua>.</green>"
+  sending: "<yellow>Je wordt gestuurd naar <aqua>%server%</aqua>... je wordt bij aankomst geteleporteerd naar speler warp <aqua>%warp%</aqua>.</yellow>"
+  messaging-disabled: "<red>Cross-server messaging is uitgeschakeld.</red>"
+
+# ============================================================================
+# PLAYERVAULTS SYSTEEM (2 GUI bestanden geverifieerd - 1 Lang sleutel)
+# ============================================================================
+
+playervaults:
+  # Toestemming geweigerd bij toegang tot vergrendelde vault (VaultMenu.java)
+  deny: "<red>Je hebt geen toestemming om vault <yellow>%id%</yellow> te openen.</red>"
+
+  # Optionele succesberichten
+  opened: "<green>Vault <aqua>%id%</aqua> geopend.</green>"
+  saved: "<gray>Vault <white>%id%</white> automatisch opgeslagen.</gray>"
+
+# ============================================================================
+# TELEPORTATIE SYSTEMEN (TPA, HOME, SPAWN, WARP, BACK)
+# ============================================================================
+
+teleport:
+  # Gedeeld aftellen
+  countdown:
+    title: "<yellow>Teleporteren...</yellow>"
+    subtitle: "<gray>Over <white>%seconds%</white>s...</gray>"
+
+  # Cross-server teleportatie (/tp admin commando)
+  cross-server:
+    no-messaging: "<red>Cross-server messaging is niet beschikbaar; kan niet /tp tussen servers.</red>"
+    jumping: "<gray>Teleporteren naar <aqua>%target%</aqua> op <aqua>%server%</aqua>…</gray>"
+    arrived: "<green>Geteleporteerd naar <aqua>%target%</aqua>.</green>"
+    target-offline: "<red>Teleportatie mislukt: doelspeler is niet meer online.</red>"
+
+  # Cross-server /back
+  back:
+    cross-server:
+      no-messaging: "<red>Cross-server messaging is niet beschikbaar; kan niet /back tussen servers.</red>"
+      no-server: "<red>Terugkeerlocatie heeft geen doelserver.</red>"
+      jumping: "<gray>Teleporteren naar je vorige locatie op <aqua>%server%</aqua>…</gray>"
+      world-not-loaded: "<red>Teleportatie mislukt: wereld <yellow>%world%</yellow> is niet geladen.</red>"
+      success: "<green>Terug geteleporteerd.</green>"
+
+# TPA Systeem
+tpa:
+  usage: "<red>Gebruik: /%label% <speler></red>"
+  self: "<red>Je kunt niet naar jezelf TPAen.</red>"
+
+  not-found:
+    name-hint: "<red>Speler <white>%input%</white> is niet online. <gray>(Als ze op een andere server zijn, gebruik dan hun exacte Minecraft naam.)</gray></red>"
+    generic: "<red>Speler <white>%input%</white> niet online gevonden. <gray>(Ze kunnen offline zijn of op een ander proxy cluster.)</gray></red>"
+
+  sent:
+    local: "<green>TPA verzonden naar <aqua>%target%</aqua>.</green>"
+    cross-server: "<gray>Verzoek verzonden naar <aqua>%target%</aqua> op <aqua>%server%</aqua>. Ze kunnen </gray><green>/tpaccept</green><gray> gebruiken.</gray>"
+    global: "<gray>We hebben je verzoek uitgezonden naar <white>%target%</white> over het netwerk. Als ze online zijn, kunnen ze </gray><green>/tpaccept</green><gray> gebruiken.</gray>"
+
+  request-target: "<aqua>%player%</aqua> <yellow>wil naar je toe teleporteren.</yellow> <green>/tpaccept</green> <yellow>of</yellow> <red>/tpdeny</red> <yellow>(<white>%timeout%</white>s)</yellow>"
+
+  broker-unavailable: "<red>Cross-server TPA broker is momenteel niet beschikbaar. <gray>Vraag </gray><white>%target%</white><gray> om direct naar je server te komen.</gray></red>"
+
+  accept:
+    none: "<red>Geen wachtende teleportatieverzoeken.</red>"
+    failed: "<red>Teleportatieverzoek accepteren mislukt.</red>"
+    debug-hint: "<gray>Debug: Geen verzoek gevonden in TeleportService.</gray>"
+
+  # Debug echo
+  debug:
+    echo: "<dark_gray>[<aqua>TPA</aqua>/<gray>%id%</gray>]</dark_gray> <gray>%message%</gray>"
+
+# Home Systeem
+home:
+  disabled: "<red>Home functie is momenteel uitgeschakeld.</red>"
+  no-homes: "<yellow>Je hebt geen homes. Gebruik <aqua>%sethome%</aqua> om er een te maken.</yellow>"
+  list: "<gray>Je homes:</gray> <aqua>%homes%</aqua>"
+  tip: "<gray>Gebruik <yellow>/%label% <naam></yellow> om te teleporteren.</gray>"
+  not-found: "<red>Home <yellow>%name%</yellow> niet gevonden.</red>"
+  suggest: "<gray>Bedoelde je:</gray> <aqua>%suggestions%</aqua>"
+  teleported: "<green>Geteleporteerd naar home <yellow>%name%</yellow>.</green>"
+  cancelled-moved: "<red>Teleportatie geannuleerd: je bent bewogen.</red>"
+  cross-disabled: "<red>Cross-server homes zijn uitgeschakeld.</red>"
+  cross-disabled-tip: "<gray>Vraag een admin om cross-server homes in te schakelen of gebruik <yellow>/server %server%</yellow> en dan <yellow>/home %name%</yellow>.</gray>"
+  messaging-disabled: "<red>Cross-server messaging is uitgeschakeld.</red>"
+  messaging-disabled-tip: "<gray>Vraag een admin om messaging in te schakelen of gebruik <yellow>/server %server%</yellow> en dan <yellow>/home %name%</yellow>.</gray>"
+  sending: "<gray>Je wordt gestuurd naar <yellow>%server%</yellow> voor home <aqua>%name%</aqua>...</gray>"
+  switch-failed: "<red>Overschakelen naar server <yellow>%server%</yellow> mislukt.</red>"
+  switch-failed-tip: "<gray>Probeer handmatig <yellow>/server %server%</yellow>.</gray>"
+
+homes:
+  not-found: "<red>Home niet gevonden: <yellow>%name%</yellow></red>"
+  available: "<gray>Beschikbaar:</gray> <aqua>%homes%</aqua>"
+  teleported: "<green>Geteleporteerd naar home <aqua>%name%</aqua>.</green>"
+  cross-disabled: "<red>Cross-server homes zijn uitgeschakeld door serverconfiguratie.</red>"
+  cross-disabled-manual: "<gray>Gebruik <aqua>/server %server%</aqua> en voer dan <aqua>/homes %name%</aqua> uit.</gray>"
+  messaging-disabled: "<red>Cross-server messaging is uitgeschakeld. Vraag een admin om RabbitMQ in te schakelen.</red>"
+  messaging-disabled-manual: "<gray>Je kunt nog steeds wisselen met <aqua>/server %server%</aqua> en <aqua>/homes %name%</aqua> uitvoeren.</gray>"
+  sending: "<yellow>Je wordt gestuurd naar <aqua>%server%</aqua>... je wordt bij aankomst geteleporteerd naar home <aqua>%name%</aqua>.</yellow>"
+  switch-failed: "<red>Overschakelen naar %server% mislukt.</red>"
+  no-homes: "<yellow>Je hebt geen homes. Gebruik <aqua>/sethome <naam></aqua>.</yellow>"
+  list: "<gold>Homes (%count%):</gold> <aqua>%homes%</aqua>"
+  tip: "<gray>Tip: <aqua>/homes <naam></aqua> om te teleporteren.</gray>"
+
+  gui:
+    title: "<dark_green>Je Homes</dark_green>"
+    not-found: "<red>Home niet gevonden: <yellow>%name%</yellow></red>"
+    teleported: "<green>Geteleporteerd naar <aqua>%name%</aqua>.</green>"
+    cross-disabled: "<red>Cross-server homes zijn uitgeschakeld door serverconfiguratie.</red>"
+    cross-disabled-manual: "<gray>Gebruik <aqua>/server %server%</aqua> en dan <aqua>/home %name%</aqua>.</gray>"
+    messaging-disabled: "<red>Cross-server messaging is uitgeschakeld. Vraag een admin om RabbitMQ in te schakelen.</red>"
+    messaging-disabled-manual: "<gray>Je kunt nog steeds <aqua>/server %server%</aqua> en dan <aqua>/home %name%</aqua> gebruiken.</gray>"
+    sending: "<yellow>Je wordt gestuurd naar <aqua>%server%</aqua>... (teleportatie bij aankomst).</yellow>"
+    switch-failed: "<red>Overschakelen naar %server% mislukt.</red>"
+
+    refresh:
+      title: "<yellow>Vernieuwen</yellow>"
+      lore: "<gray>Klik om homes te herladen.</gray>"
+
+    counter:
+      title: "<gold>Homes <white>(%count%)</white></gold>"
+      lore:
+        0: "<gray>Linkermuisklik op een home om te teleporteren.</gray>"
+        1: "<gray>Rechtermuisklik op een home om te verwijderen.</gray>"
+
+    nav:
+      previous: "<yellow>Vorige Pagina</yellow>"
+      next: "<yellow>Volgende Pagina</yellow>"
+
+    home:
+      title: "<aqua>%name%</aqua>"
+      lore:
+        server: "<gray>Server: <yellow>%server%</yellow></gray>"
+        world: "<gray>Wereld: <yellow>%world%</yellow></gray>"
+        coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+        left-click: "<green>Linkermuisklik: <white>Teleporteren</white></green>"
+        right-click: "<red>Rechtermuisklik: <white>Verwijderen</white></red>"
+
+  delete:
+    title: "<dark_red>'%home%' verwijderen?</dark_red>"
+    yes: "<green>Ja, verwijder</green>"
+    no: "<red>Nee, annuleer</red>"
+    success: "<red>Home <yellow>%home%</yellow> verwijderd.</red>"
+    failed: "<red>Home <yellow>%home%</yellow> verwijderen mislukt.</red>"
+    info:
+      title: "<gold>Home Verwijderen</gold>"
+      lore:
+        0: "<gray>Weet je zeker dat je wilt verwijderen</gray>"
+        1: "<yellow>%home%</yellow><gray>?</gray>"
+
+# Sethome
+sethome:
+  limit: "<red>Je hebt je home limiet van <yellow>%max%</yellow> bereikt.</red>"
+  set: "<green>Home <yellow>%name%</yellow> is ingesteld.</green>"
+
+# Delhome
+delhome:
+  usage: "<yellow>Gebruik: /%label% <naam></yellow>"
+  removed: "<green>Home <yellow>%name%</yellow> is verwijderd.</green>"
+  not-found: "<red>Geen home genaamd <yellow>%name%</yellow>.</red>"
+
+# Spawn Systeem
+spawn:
+  disabled: "<red>Spawn commando is momenteel uitgeschakeld.</red>"
+  not-set: "<red>Spawn locatie is niet ingesteld.</red>"
+  teleported: "<green>Geteleporteerd naar spawn.</green>"
+  cancelled-moved: "<red>Teleportatie geannuleerd: je bent bewogen.</red>"
+  teleport-failed: "<red>Teleportatie mislukt: %error%</red>"
+  cross-disabled: "<red>Cross-server spawn is uitgeschakeld.</red>"
+  cross-disabled-tip: "<gray>Vraag een admin om cross-server spawn in te schakelen of gebruik <yellow>/server %server%</yellow> en dan <yellow>/spawn</yellow>.</gray>"
+  messaging-disabled: "<red>Cross-server messaging is uitgeschakeld.</red>"
+  messaging-disabled-tip: "<gray>Vraag een admin om messaging in te schakelen of gebruik <yellow>/server %server%</yellow> en dan <yellow>/spawn</yellow>.</gray>"
+  sending: "<gray>Je wordt gestuurd naar <yellow>%server%</yellow> voor spawn...</gray>"
+  switch-failed: "<red>Overschakelen naar server <yellow>%server%</yellow> mislukt.</red>"
+
+# Warp Systeem
+warp:
+  list-empty: "<yellow>Warps: <gray>(geen)</gray></yellow>"
+  list: "<yellow>Warps:</yellow> <gray>%warps%</gray>"
+
+  no-permission: "<red>Je hebt geen toestemming voor deze warp.</red>"
+  no-permission-with-node: "<red>Je hebt geen toestemming voor deze warp. <gray>(%permission%)</gray></red>"
+  no-permission-others: "<red>Je hebt geen toestemming om andere spelers te warpen.</red>"
+
+  console-usage: "<red>Gebruik vanuit console: /warp <warp> <speler></red>"
+  player-not-found: "<red>Speler '<yellow>%player%</yellow>' is niet online.</red>"
+
+  not-found: "<red>Warp niet gevonden.</red>"
+  teleport-failed: "<red>Teleportatie mislukt: <gray>%error%</gray></red>"
+
+  teleported: "<green>Geteleporteerd naar warp <aqua>%warp%</aqua>.</green>"
+  teleported-other: "<green><yellow>%player%</yellow> geteleporteerd naar warp <aqua>%warp%</aqua>.</green>"
+  cancelled-moved: "<red>Teleportatie naar warp <yellow>%warp%</yellow> geannuleerd: je bent bewogen.</red>"
+
+  cross-disabled: "<red>Cross-server warps zijn uitgeschakeld door serverconfiguratie.</red>"
+  cross-disabled-tip: "<gray>Gebruik <aqua>/server %server%</aqua> en voer dan <aqua>/warp %warp%</aqua> uit</gray>"
+  messaging-disabled: "<red>Cross-server messaging is uitgeschakeld.</red>"
+  messaging-disabled-tip: "<gray>Gebruik <aqua>/server %server%</aqua> en voer dan <aqua>/warp %warp%</aqua> uit</gray>"
+  sending: "<yellow>Je wordt gestuurd naar <aqua>%server%</aqua>... je wordt bij aankomst geteleporteerd naar warp <aqua>%warp%</aqua>.</yellow>"
+  sending-other: "<green><yellow>%player%</yellow> wordt gestuurd naar <aqua>%server%</aqua> (warp <yellow>%warp%</yellow>).</green>"
+  switch-failed: "<red>Overschakelen naar %server% mislukt.</red>"
+
+  delete:
+    title: "<dark_red>'%warp%' verwijderen?</dark_red>"
+    yes: "<green>Ja, verwijder</green>"
+    no: "<red>Nee, annuleer</red>"
+    success: "<red>Warp <yellow>%warp%</yellow> verwijderd.</red>"
+    failed: "<red>Warp <yellow>%warp%</yellow> verwijderen mislukt.</red>"
+    info:
+      title: "<gold>Warp Verwijderen</gold>"
+      lore:
+        0: "<gray>Weet je zeker dat je wilt verwijderen</gray>"
+        1: "<yellow>%warp%</yellow><gray>?</gray>"
+
+  admin:
+    list:
+      title: "<dark_aqua>Warps (Admin)</dark_aqua>"
+      refresh: "<yellow>Vernieuwen</yellow>"
+      refresh-lore: "<gray>Klik om warps te herladen.</gray>"
+      counter: "<gold>Warps <white>(%count%)</white></gold>"
+      counter-lore:
+        0: "<gray>Links/Rechtsklik: <white>Warp beheren</white></gray>"
+        1: "<gray>Shift-Links of Middelklik: <white>Snel teleporteren</white></gray>"
+      previous: "<yellow>Vorige Pagina</yellow>"
+      next: "<yellow>Volgende Pagina</yellow>"
+      warp-name: "<aqua>%name%</aqua>"
+      warp-server: "<gray>Server: <yellow>%server%</yellow></gray>"
+      warp-world: "<gray>Wereld: <yellow>%world%</yellow></gray>"
+      warp-coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+      warp-perm-protected: "<gray>Toestemming: <gold>%perm%</gold></gray>"
+      warp-perm-public: "<gray>Toestemming: <green>publiek</green></gray>"
+      warp-click: "<green>Klik: <white>Acties openen</white></green>"
+      warp-quick-tp: "<aqua>Shift-Links/Midden: <white>Snel teleporteren</white></aqua>"
+
+    gui:
+      title: "<dark_aqua>Warp: <aqua>%warp%</aqua></dark_aqua>"
+      info:
+        server: "<gray>Server: <yellow>%server%</yellow></gray>"
+        permission-open: "<gray>Toestemming: <green>OPEN (iedereen)</green></gray>"
+        permission-required: "<gray>Toestemming: <yellow>%permission%</yellow></gray>"
+      teleport: "<green>Teleporteren</green>"
+      set-permission: "<aqua>Toestemming Instellen/Wijzigen</aqua>"
+      make-public: "<green>Publiek Maken (toestemming wissen)</green>"
+      rename: "<gold>Warp Hernoemen</gold>"
+      delete: "<red>Warp Verwijderen</red>"
+      back: "<red>← Terug</red>"
+
+    prompt:
+      permission: "<yellow>Typ de toestemming in chat voor warp <aqua>%warp%</aqua> (of typ <white>cancel</white>).</yellow>"
+      rename: "<yellow>Typ de nieuwe naam in chat voor warp <aqua>%warp%</aqua> (of typ <white>cancel</white>).</yellow>"
+      cancelled: "<gray>Bewerking geannuleerd.</gray>"
+
+    directory-unavailable: "<red>WarpDirectory niet beschikbaar; kan toestemming niet wijzigen.</red>"
+    permission-cleared: "<green>Toestemming gewist. Warp is nu publiek.</green>"
+    permission-set: "<green>Toestemming ingesteld op <yellow>%permission%</yellow>.</green>"
+    rename-empty: "<red>Naam kan niet leeg zijn.</red>"
+    rename-failed: "<red>Warp hernoemen mislukt.</red>"
+    rename-success: "<green>Warp hernoemd naar <aqua>%new_name%</aqua>.</green>"
+    not-found: "<red>Warp niet gevonden: <yellow>%warp%</yellow></red>"
+    teleported: "<green>Geteleporteerd naar warp <aqua>%warp%</aqua>.</green>"
+    sending: "<yellow>Je wordt gestuurd naar <aqua>%server%</aqua>... (teleportatie bij aankomst).</yellow>"
+    switch-failed: "<red>Overschakelen naar %server% mislukt.</red>"
+
+  player:
+    no-permission: "<red>Je hebt geen toestemming voor deze warp.</red>"
+    list:
+      refresh: "<yellow>Vernieuwen</yellow>"
+      refresh-lore: "<gray>Klik om warps te herladen.</gray>"
+      counter: "<gold>Warps <white>(%count%)</white></gold>"
+      counter-lore: "<gray>Linkermuisklik: <white>Teleporteren</white></gray>"
+      previous: "<yellow>Vorige Pagina</yellow>"
+      next: "<yellow>Volgende Pagina</yellow>"
+      warp-name-allowed: "<aqua>%name%</aqua>"
+      warp-name-locked: "<dark_red>%name%</dark_red>"
+      warp-server: "<gray>Server: <yellow>%server%</yellow></gray>"
+      warp-world: "<gray>Wereld: <yellow>%world%</yellow></gray>"
+      warp-coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+      warp-click: "<green>Linkermuisklik: <white>Teleporteren</white></green>"
+      warp-locked: "<red>Je hebt geen toegang.</red>"
+
+  head:
+    usage: "<yellow>Gebruik: /<white>%label% <speler></white></yellow>"
+    fetching: "<gray>Hoofd ophalen van <white>%target%</white>...</gray>"
+    cannot-resolve: "<red>Speler <white>%target%</white> niet gevonden.</red>"
+    fetch-failed: "<red>Hoofd ophalen van <white>%target%</white> mislukt.</red>"
+    item-name: "<aqua>%target%</aqua><gray>'s Hoofd</gray>"
+    dropped: "<yellow>Hoofd gegeven! <gray>(Bij je voeten gedropt - inventaris vol)</gray></yellow>"
+    given: "<green>Hoofd van <white>%target%</white> gegeven!</green>"
+
+# RTP Systeem
+rtp:
+  disabled: "<red>Willekeurige teleportatie is momenteel uitgeschakeld.</red>"
+  cooldown-wait: "<red>Je moet <yellow>%seconds%</yellow>s wachten voordat je /%label% gebruikt.</red>"
+  no-world: "<red>Geen geldige wereld gevonden voor willekeurige teleportatie.</red>"
+  cross-switch: "<gray>Je wordt overgeschakeld naar <aqua>%server%</aqua> voor willekeurige teleportatie in <aqua>%world%</aqua>...</gray>"
+  not-configured: "<red>Willekeurige teleportatie is niet geconfigureerd op deze server.</red>"
+  world-not-loaded: "<red>Wereld <yellow>%world%</yellow> is niet geladen op deze server.</red>"
+  not-allowed-world: "<red>Willekeurige teleportatie is niet toegestaan in deze wereld.</red>"
+  trying: "<gray>Willekeurige teleportatie proberen in <aqua>%world%</aqua> tot <aqua>%radius%</aqua> blokken...</gray>"
+  no-safe-spot: "<red>Kon geen veilige plek vinden. Probeer opnieuw.</red>"
+  teleported: "<green>Geteleporteerd naar <aqua>%x%</aqua>, <aqua>%y%</aqua>, <aqua>%z%</aqua> in <aqua>%world%</aqua>.</green>"
+  failed: "<red>Teleportatie mislukt.</red>"
+  cancelled-moved: "<red>RTP geannuleerd: je bent bewogen.</red>"
+  warmup:
+    title: "<yellow>%seconds%</yellow>"
+    subtitle: "<gray>Willekeurige teleportatie...</gray>"
+
+# Deathback
+deathback:
+  no-location: "<red>Geen doodlocatie opgeslagen.</red>"
+  success: "<green>Geteleporteerd naar je laatste dood.</green>"
+  failed: "<red>Teleportatie mislukt.</red>"
+
+# ============================================================================
+# ECONOMIE SYSTEEM
+# ============================================================================
+
+economy:
+  currency:
+    symbol: "$"
+    name: "dollar"
+    name_plural: "dollars"
+
+  errors:
+    not-a-number: "<red>Ongeldig bedrag.</red>"
+    amount-not-positive: "<red>Bedrag moet positief zijn.</red>"
+    player-not-found: "<red>Speler niet gevonden: <yellow>%target%</yellow>.</red>"
+    no-economy: "<red>Economie is niet beschikbaar.</red>"
+    no-permission: "<red>Je hebt geen toestemming.</red>"
+
+  money:
+    usage:
+      view: "<yellow>Gebruik: /money [speler]</yellow>"
+      admin: "<yellow>Gebruik: /money <give|take|set> <speler> <bedrag></yellow>"
+    view-self: "<gray>Je saldo: <green>%currency_symbol%%balance_formatted%</green></gray>"
+    view-other: "<gray>Saldo van %target%: <green>%currency_symbol%%balance_formatted%</green></gray>"
+    give:
+      sender: "<green><white>%currency_symbol%%amount_formatted%</white> gegeven aan <yellow>%target%</yellow>.</green>"
+      receiver: "<green>Je hebt <white>%currency_symbol%%amount_formatted%</white> ontvangen. Nieuw saldo: <green>%currency_symbol%%balance_formatted%</green>.</green>"
+    take:
+      sender: "<green><white>%currency_symbol%%amount_formatted%</white> afgenomen van <yellow>%target%</yellow>.</green>"
+      receiver: "<red><bold>%currency_symbol%%amount_formatted%</bold></red> <gray>is verwijderd van je saldo. Nieuw saldo: <green>%currency_symbol%%balance_formatted%</green>.</gray>"
+    set:
+      sender: "<green>Saldo van <yellow>%target%</yellow> ingesteld op <white>%currency_symbol%%amount_formatted%</white>.</green>"
+      receiver: "<gray>Je saldo is ingesteld op <green>%currency_symbol%%amount_formatted%</green>.</gray>"
+
+  pay:
+    usage: "<yellow>Gebruik: /pay <speler> <bedrag></yellow>"
+    self: "<red>Je kunt jezelf niet betalen.</red>"
+    success-sender: "<green><aqua>%target%</aqua> betaald <gray>%currency_symbol%%amount_formatted%</gray>.</green>"
+    success-receiver: "<green>Je hebt <gray>%currency_symbol%%amount_formatted%</gray> ontvangen van <aqua>%player%</aqua>.</green>"
+    fail-insufficient: "<red>Je hebt niet genoeg <white>%currency_symbol%%amount_formatted%</white>.</red>"
+
+  format:
+    thousands-separator: "."
+    decimal-separator: ","
+    decimals: 2
+
+# ============================================================================
+# MODERATIE SYSTEEM
+# ============================================================================
+
+moderation:
+  # Ban
+  ban:
+    usage: "<yellow>Gebruik: /%label% <speler> [duur] [reden]</yellow>"
+    usage-examples: "<gray>Duur voorbeelden: 10m, 2h, 3d4h, 1w</gray>"
+    player-not-found: "<red>Speler niet gevonden: %player%</red>"
+    default-reason: "Verbannen door een operator."
+    kick-message-temp: "<red>%reason%</red>\n<gray>Tot: %expires%</gray>"
+    kick-message-perm: "<red>%reason%</red>"
+    success-temp: "<green><aqua>%player%</aqua> verbannen tot <yellow>%expires%</yellow>. Reden: <yellow>%reason%</yellow></green>"
+    success-perm: "<green><aqua>%player%</aqua> permanent verbannen. Reden: <yellow>%reason%</yellow></green>"
+
+  # Broadcast
+  broadcast:
+    prefix: "<gold>[Broadcast]</gold> "
+
+  # God modus
+  god:
+    usage: "<yellow>Gebruik: /%label% <speler></yellow>"
+    self-enabled: "<green>God modus <aqua>ingeschakeld</aqua>. Je bent nu onverslaanbaar.</green>"
+    self-disabled: "<red>God modus <aqua>uitgeschakeld</aqua>.</red>"
+    no-permission-others: "<red>Je hebt geen toestemming om god modus voor anderen te wijzigen.</red>"
+    player-not-found: "<red>Speler niet gevonden of niet online: <yellow>%player%</yellow></red>"
+    target-enabled: "<green>Een admin heeft je god modus ingeschakeld.</green>"
+    target-disabled: "<red>Een admin heeft je god modus uitgeschakeld.</red>"
+    other-enabled: "<green>God modus ingeschakeld voor <aqua>%player%</aqua>.</green>"
+    other-disabled: "<red>God modus uitgeschakeld voor <aqua>%player%</aqua>.</red>"
+
+  # Heal
+  heal:
+    console-usage: "<red>Gebruik: /%label% <speler></red>"
+    not-found: "<red>Speler niet gevonden.</red>"
+    healed: "<green>Genezen.</green>"
+    healed-other: "<yellow><aqua>%player%</aqua> genezen.</yellow>"
+
+  # Kick
+  kick:
+    usage: "<yellow>Gebruik: /%label% <speler> [reden...]</yellow>"
+    default-reason: "Gekickt door een operator."
+    kick-message: "<red>%reason%</red>"
+    player-not-found: "<red>Speler niet gevonden.</red>"
+    success: "<green><aqua>%player%</aqua> gekickt. Reden: <yellow>%reason%</yellow></green>"
+    success-cross-server: "<green>Kick verzoek verzonden voor <aqua>%player%</aqua> (cross-server).</green>"
+    no-bridge: "<red>Doel is niet op deze server en cross-server mod bridge is niet beschikbaar.</red>"
+
+  # Mute
+  mute:
+    usage: "<yellow>Gebruik: /%label% <speler> <duur> [reden]</yellow>"
+    player-not-found: "<red>Speler niet gevonden: %target%</red>"
+    invalid-duration: "<red>Ongeldige duur. Gebruik zoals 30s, 10m, 2h, 1d of seconden.</red>"
+    broadcast-failed: "<red>Waarschuwing: mute uitzenden naar andere servers mislukt.</red>"
+    reason-suffix: " <gray>| Reden: <yellow>%reason%</yellow></gray>"
+    executor:
+      success: "<green><yellow>%target%</yellow> gemute voor <white>%duration%</white>%reason_suffix%.</green>"
+    target:
+      notified: "<red>Je bent gemute voor <white>%duration%</white>.%reason_suffix%</red>"
+    broadcast: "<gold>[Moderatie]</gold> <yellow>%target%</yellow> <gray>is gemute door</gray> <aqua>%staff%</aqua> <gray>voor</gray> <white>%duration%</white>%reason_suffix%<gray>.</gray>"
+    broadcast-console: "[Moderatie] %target% is gemute door %staff% voor %duration%%reason_suffix%."
+
+  # Unban
+  unban:
+    usage: "<yellow>Gebruik: /%label% <speler></yellow>"
+    not-banned: "<gray>%player% is niet verbannen.</gray>"
+    success: "<green><aqua>%player%</aqua> is niet meer verbannen.</green>"
+
+  # Unmute
+  unmute:
+    usage: "<yellow>Gebruik: /%label% <speler></yellow>"
+    player-not-found: "<red>Speler niet gevonden: %player%</red>"
+    not-muted: "<gray>%player% is niet gemute.</gray>"
+    success: "<green><aqua>%player%</aqua> is niet meer gemute.</green>"
+    notified: "<green>Je bent niet meer gemute.</green>"
+
+  # Vanish
+  vanish:
+    enabled: "<green>Je bent nu onzichtbaar.</green>"
+    disabled: "<yellow>Je bent nu zichtbaar.</yellow>"
+
+# ============================================================================
+# CHAT & BERICHTEN
+# ============================================================================
+
+chat:
+  cleared-by: "<red>Chat is gewist door <yellow>%actor%</yellow>.</red>"
+  global-muted: "<red>Globale chat is gemute door <yellow>%actor%</yellow>.</red>"
+  global-unmuted: "<green>Globale chat is niet meer gemute.</green>"
+  slowmode-set: "<yellow>Slowmode is nu <gold>%seconds%</gold>s <gray>(netwerk)</gray>.</yellow>"
+
+# Privéberichten
+msg:
+  usage: "<red>Gebruik: /%label% <speler> <bericht...></red>"
+  not-found: "<red>Speler niet gevonden.</red>"
+  receive: "<gray>[<light_purple>MSG</light_purple>] <aqua>%sender%</aqua>: <white>%message%</white></gray>"
+  send: "<gray>[<light_purple>MSG</light_purple>] <white>-></white> <aqua>%target%</aqua>: <white>%message%</white></gray>"
+
+# Reply
+reply:
+  usage: "<red>Gebruik: /%label% <bericht...></red>"
+  no-one: "<red>Niemand om op te antwoorden.</red>"
+  offline: "<red>Die speler is offline.</red>"
+
+# ============================================================================
+# HULPPROGRAMMA COMMANDO'S
+# ============================================================================
+
+# AFK
+afk:
+  now-afk: "<yellow>Je bent nu AFK.</yellow>"
+  no-longer-afk: "<green>Je bent niet langer AFK.</green>"
+
+# Anvil
+anvil:
+  title: "<dark_gray>Aambeeld</dark_gray>"
+
+# Cook
+cook:
+  no-item: "<red>Houd het item dat je wilt smelten in je hoofdhand.</red>"
+  no-recipe: "<red>Geen smeltrecept gevonden voor dat item.</red>"
+  invalid-amount: "<red>Aantal moet een getal zijn of 'max'.</red>"
+  nothing-to-smelt: "<red>Niets om te smelten.</red>"
+  inventory-full: "<yellow>Je inventaris was vol; enkele gesmolten items zijn bij je voeten gedropt.</yellow>"
+  success: "<green>Gesmolten <aqua>%input%</aqua> → <aqua>%output%</aqua> <gray>%item%</gray>.</green>"
+
+# Ender Chest
+ec:
+  title: "<dark_purple>Ender Chest</dark_purple>"
+
+ecsee:
+  no-permission: "<red>Je mist de toestemming.</red>"
+  usage: "<red>Gebruik: /ecsee <speler></red>"
+  not-found: "<red>Speler niet gevonden.</red>"
+  not-configured: "<red>Ender chest opslag is niet geconfigureerd.</red>"
+  gui:
+    title: "<dark_purple>Ender Chest</dark_purple> <gray>(%player%)</gray>"
+  saved: "<green>Wijzigingen opgeslagen in ender chest van <aqua>%player%</aqua>.</green>"
+
+# Feed
+feed:
+  not-found: "<red>Speler niet gevonden.</red>"
+  console-self: "<red>Console kan zichzelf niet voeden. Specificeer een speler.</red>"
+  fed: "<green>Gevoed.</green>"
+  fed-other: "<yellow><aqua>%player%</aqua> gevoed.</yellow>"
+
+# Furnace
+furnace:
+  title: "<gold>⚒</gold> <dark_gray>Oven</dark_gray> <gold>⚒</gold>"
+
+# Invsee
+invsee:
+  no-permission: "<red>Je mist de toestemming.</red>"
+  usage: "<red>Gebruik: /invsee <speler></red>"
+  not-available: "<red>Invsee service is niet beschikbaar op deze server.</red>"
+  not-found: "<red>Speler niet gevonden.</red>"
+  opening: "<gray>Live inventaris van <aqua>%player%</aqua> openen (cross-server)...</gray>"
+
+# Invlook
+invlook:
+  no-permission: "<red>Je mist de toestemming.</red>"
+  usage: "<red>Gebruik: /invlook <speler></red>"
+  service-unavailable: "<red>Invsee service is niet beschikbaar op deze server.</red>"
+  player-not-found: "<red>Speler niet gevonden.</red>"
+  opening: "<gray>Alleen-lezen inventaris van <aqua>%player%</aqua> openen (cross-server)...</gray>"
+
+# Kill
+kill:
+  console-usage: "<red>Gebruik: /%label% <speler></red>"
+  self:
+    no-permission: "<red>Je hebt geen toestemming om jezelf te doden.</red>"
+    slain: "<gray>Je bent gedood.</gray>"
+  others:
+    no-permission: "<red>Je mist de toestemming om anderen te doden.</red>"
+    killed: "<gray><yellow>%player%</yellow> gedood.</gray>"
+  target-not-found: "<red>Speler niet gevonden.</red>"
+
+# Near
+near:
+  radius-not-number: "<red>Radius moet een getal zijn. Je typte: <yellow>%input%</yellow></red>"
+  none: "<yellow>Geen spelers binnen <aqua>%radius%</aqua> blokken.</yellow>"
+  list: "<gray>Spelers binnen <aqua>%radius%</aqua> blokken:</gray> %list%"
+  entry:
+    format: "<aqua>%name%</aqua> <gray>(<yellow>%distance%</yellow>m)</gray>"
+    separator: "<gray>, </gray>"
+
+# Nick
+nick:
+  usage: "<yellow>Gebruik: /%label% <nieuweNaam>  of  /%label% unnick</yellow>"
+  reset: "<green>Je nickname is gereset.</green>"
+  too-long: "<red>Naam te lang (max %max% tekens).</red>"
+  invalid: "<red>Ongeldige naam. Gebruik letters, cijfers, underscores (3–16).</red>"
+  set: "<green>Je hebt nu de nickname <aqua>%nick%</aqua>.</green>"
+
+# Ping
+ping:
+  self: "<green>Je ping: <yellow>%ping%</yellow>ms</green>"
+
+# Playtime
+playtime:
+  console-usage: "<red>Console moet een speler specificeren: /%label% <speler></red>"
+  self: "<green>Je speeltijd: <yellow>%time%</yellow></green>"
+  other: "<aqua>%player%</aqua><gray> speeltijd:</gray> <yellow>%time%</yellow>"
+  no-permission: "<red>Je hebt geen toestemming om de speeltijd van anderen te bekijken.</red>"
+  player-not-found: "<red>Speler niet gevonden.</red>"
+
+# Realname
+realname:
+  usage: "<red>Gebruik: /realname <nickname></red>"
+  found: "<gold>%nickname%</gold> <gray>is</gray> <aqua>%realname%</aqua>"
+  not-found: "<red>Geen speler gevonden met die nickname.</red>"
+
+# Seen
+seen:
+  usage: "<red>Gebruik: /seen <speler></red>"
+  no-data: "<red>Geen data voor speler <yellow>%player%</yellow>.</red>"
+  online: "<green>%player% is momenteel online.</green>"
+  never-joined: "<yellow>%player% is nooit gejoined.</yellow>"
+  last-seen: "<gold>%player%</gold> <gray>is voor het laatst gezien op</gray> <aqua>%timestamp%</aqua> <gray>(</gray><yellow>%ago%</yellow> <gray>geleden)</gray>"
+
+# Sell GUI
+sellgui:
+  not-initialized: "<red>SellGUI is niet geïnitialiseerd.</red>"
+
+# Server
+server:
+  usage: "<yellow>Gebruik: /%label% <server-naam></yellow>"
+  connecting: "<gray>Verbinden met <aqua>%server%</aqua>...</gray>"
+
+# Sit
+sit:
+  player-only: "<red>Alleen spelers kunnen dit commando gebruiken.</red>"
+  stand: "<gray>Je bent opgestaan.</gray>"
+  already-riding: "<red>Je zit al op iets.</red>"
+  not-on-ground: "<red>Je moet op de grond zijn om te zitten.</red>"
+  not-while-flying: "<red>Je kunt niet zitten tijdens het vliegen of zweven.</red>"
+  no-block: "<red>Geen blok om op te zitten.</red>"
+  sat: "<green>Je zit nu op <yellow>%block%</yellow>.</green>"
+
+# UUID
+uuid:
+  usage: "<yellow>Gebruik: /%label% <speler></yellow>"
+  no-permission-others: "<red>Je hebt geen toestemming om UUID's van anderen te bekijken.</red>"
+  show: "<gold>UUID van <aqua>%player%</aqua>:</gold> <aqua>%uuid%</aqua>"
+  bedrock: "<gray>Bedrock UUID: <aqua>%bedrock_uuid%</aqua></gray>"
+
+# Vaults
+vaults:
+  player-only: "<red>Alleen spelers.</red>"
+  disabled: "<red>PlayerVaults zijn uitgeschakeld.</red>"
+  usage: "<red>Gebruik: /%label% %usage%</red>"
+
+# ============================================================================
+# ADMIN COMMANDO'S
+# ============================================================================
+
+admin:
+  # Tphere
+  tphere:
+    usage: "<yellow>Gebruik: /%label% <speler></yellow>"
+    not-found: "<red>Speler niet gevonden: <yellow>%target%</yellow>.</red>"
+    brought: "<green><aqua>%target%</aqua> naar je toe gebracht.</green>"
+    notice: "<yellow>Je bent geteleporteerd door <aqua>%player%</aqua>.</yellow>"
+
+  # Weather
+  weather:
+    no-permission: "<red>Je hebt geen toestemming (oreo.weather).</red>"
+    no-worlds: "<red>Geen doelwerelden opgelost.</red>"
+    success: "<green>Weer ingesteld op <white>%type%</white> in <white>%world%</white>.</green>"
+    success-duration: "<green>Weer ingesteld op <white>%type%</white> voor <white>%seconds%</white>s in <white>%world%</white>.</green>"
+    success-locked: "<green>Weer ingesteld op <white>%type%</white> <dark_gray>(vergrendeld)</dark_gray> in <white>%world%</white>.</green>"
+    success-duration-locked: "<green>Weer ingesteld op <white>%type%</white> voor <white>%seconds%</white>s <dark_gray>(vergrendeld)</dark_gray> in <white>%world%</white>.</green>"
+    tip-unlock: "<dark_gray>Tip: /weather %type% unlock %world%</dark_gray>"
+    usage:
+      header: "<yellow>Gebruik:</yellow>"
+      format: "<white>/%label% <sun|rain|storm> [lock|seconds] [world|all]</white>"
+      examples: "<gray>Voorbeelden: <white>/sun</white> <dark_gray>|</dark_gray> <white>/rain</white> <dark_gray>|</dark_gray> <white>/storm</white> <dark_gray>|</dark_gray> <white>/sun lock</white> <dark_gray>|</dark_gray> <white>/sun 120</white> <dark_gray>|</dark_gray> <white>/sun world</white></gray>"
+
+  # World
+  world:
+    no-permission: "<red>Je hebt geen toestemming (oreo.world).</red>"
+    no-world-permission: "<red>Je mist de toestemming: <white>%permission%</white></red>"
+    usage: "<yellow>Gebruik: <white>/world <n|normal|nether|end|index> [spelernaam] [-s]</white></yellow>"
+    examples: "<gray>Voorbeelden: <white>/world world_nether</white>  <dark_gray>|</dark_gray>  <white>/world nether</white>  <dark_gray>|</dark_gray>  <white>/world 2</white>  <dark_gray>|</dark_gray>  <white>/world end Steve -s</white></gray>"
+    console-needs-player: "<red>Console gebruik vereist een doelspeler: <white>/world <n> <spelernaam> [-s]</white></red>"
+    console-must-specify: "<red>Console moet een doelspeler specificeren: <white>/world <n> <spelernaam> [-s]</white></red>"
+    player-not-found: "<red>Speler niet gevonden: <white>%player%</white></red>"
+    world-not-found: "<red>Wereld niet gevonden / ondersteund: <white>%world%</white></red>"
+    teleport-failed: "<red>Teleportatie mislukt.</red>"
+    teleported-self: "<green>Geteleporteerd naar <white>%world%</white></green>"
+    teleported-other: "<green><white>%player%</white> geteleporteerd naar <white>%world%</white></green>"
+    target-notified: "<green>Je bent geteleporteerd naar <white>%world%</white> door <white>%staff%</white></green>"
+
+  # TP
+  tp:
+    usage: "<red>Gebruik: /tp <speler></red>"
+    self: "<red>Je bent al jezelf.</red>"
+    not-found: "<red>Speler niet online gevonden.</red>"
+    not-found-no-directory: "<red>Speler niet online gevonden. <gray>(Cross-server directory is niet beschikbaar.)</gray></red>"
+    no-broker: "<red>Cross-server teleportatie broker niet beschikbaar; kan niet /tp naar andere servers.</red>"
+    teleported: "<green>Geteleporteerd naar <aqua>%target%</aqua>.</green>"
+
+  # Setwarp
+  setwarp:
+    usage: "<yellow>Gebruik: /%label% <n></yellow>"
+    set: "<green>Warp <aqua>%warp%</aqua> is ingesteld.</green>"
+    cross-server-info: "<gray>(Cross-server) Warp eigenaar ingesteld op <aqua>%server%</aqua>.</gray>"
+
+  # Setspawn
+  setspawn:
+    set: "<green>Spawn ingesteld.</green>"
+    cross-server-info: "<gray>(Cross-server) Spawn eigenaar ingesteld op <aqua>%server%</aqua>.</gray>"
+
+  # Reload
+  reload:
+    settings: "<green>✔ <white>settings.yml</white> herladen <gray>(+ cross-server instellingen)</gray></green>"
+    settings-skip: "<yellow>• settings.yml / cross-server overgeslagen: <gray>%error%</gray></yellow>"
+    config: "<green>✔ <white>config.yml</white> herladen</green>"
+    config-fail: "<red>✘ config.yml herladen mislukt: <gray>%error%</gray></red>"
+    lang: "<green>✔ <white>lang.yml</white> herladen</green>"
+    lang-skip: "<yellow>• lang.yml overgeslagen: <gray>%error%</gray></yellow>"
+    chat: "<green>✔ <white>chat-format.yml</white> herladen <gray>(via /afelius reload all)</gray></green>"
+    chat-skip: "<yellow>• chat-format.yml overgeslagen: <gray>%error%</gray></yellow>"
+    tab: "<green>✔ <white>tab.yml</white> herladen</green>"
+    tab-skip: "<yellow>• tab.yml overgeslagen: <gray>%error%</gray></yellow>"
+    kits: "<green>✔ <white>kits.yml</white> herladen</green>"
+    kits-skip: "<yellow>• kits.yml overgeslagen: <gray>%error%</gray></yellow>"
+    rtp: "<green>✔ <white>rtp.yml</white> herladen</green>"
+    rtp-skip: "<yellow>• rtp.yml overgeslagen: <gray>%error%</gray></yellow>"
+    enderchest: "<green>✔ <white>enderchest.yml</white> herladen</green>"
+    enderchest-skip: "<yellow>• enderchest.yml overgeslagen (geen reload hook)</yellow>"
+    bossbar: "<green>✔ <white>bossbar</white> herladen</green>"
+    bossbar-skip: "<yellow>• bossbar overgeslagen (service niet beschikbaar)</yellow>"
+    bossbar-fail: "<red>✘ bossbar herladen mislukt: <gray>%error%</gray></red>"
+    scoreboard: "<green>✔ <white>scoreboard</white> herladen <gray>(config + live update)</gray></green>"
+    scoreboard-skip: "<yellow>• scoreboard overgeslagen (service niet beschikbaar)</yellow>"
+    scoreboard-fail: "<red>✘ scoreboard herladen mislukt: <gray>%error%</gray></red>"
+    discord: "<green>✔ <white>discord integratie</white> herladen</green>"
+    discord-skip: "<yellow>• discord integratie overgeslagen (geen reload hook)</yellow>"
+    healthbars: "<green>✔ <white>mob health bars</white> herladen</green>"
+    healthbars-disabled: "<yellow>• Mob health bars uitgeschakeld door config</yellow>"
+    healthbars-skip: "<yellow>• mob health bars overgeslagen: <gray>%error%</gray></yellow>"
+    playervaults: "<green>✔ <white>playervaults</white> herladen <gray>(%storage%)</gray></green>"
+    playervaults-skip: "<yellow>• playervaults overgeslagen (service niet beschikbaar)</yellow>"
+    playervaults-fail: "<red>✘ playervaults herladen mislukt: <gray>%error%</gray></red>"
+    summary: "<gray>Reload voltooid: <green>%ok% OK</green>, <yellow>%skip% overgeslagen</yellow>. (<white>%ms% ms</white>)</gray>"
+    note: "<dark_gray>(Sommige modules ondersteunen nog geen hot reload; server herstart kan nodig zijn.)</dark_gray>"
+
+  # Otherhome
+  otherhome:
+    no-permission: "<red>Je hebt geen toestemming.</red>"
+    usage: "<yellow>Gebruik: <gold>/%label% <speler> <home></gold></yellow>"
+    player-not-found: "<red>Onbekende speler: <yellow>%player%</yellow></red>"
+    not-found: "<red>Home niet gevonden: <yellow>%home%</yellow></red>"
+    world-not-loaded: "<red>Wereld niet geladen: <yellow>%world%</yellow></red>"
+    teleported: "<green>Geteleporteerd naar <aqua>%owner%</aqua>'s home <aqua>%home%</aqua>.</green>"
+    cross-disabled: "<red>Cross-server homes zijn uitgeschakeld door serverconfiguratie.</red>"
+    cross-disabled-manual: "<gray>Gebruik <aqua>/server %server%</aqua> en voer dan <aqua>/otherhome %owner% %home%</aqua> uit</gray>"
+    messaging-disabled: "<red>Cross-server messaging is uitgeschakeld. Vraag een admin om RabbitMQ in te schakelen.</red>"
+    messaging-disabled-manual: "<gray>Je kunt nog steeds wisselen met <aqua>/server %server%</aqua> en <aqua>/otherhome %owner% %home%</aqua> uitvoeren</gray>"
+    sending: "<yellow>Je wordt gestuurd naar <aqua>%server%</aqua>… je wordt bij aankomst geteleporteerd naar <aqua>%owner%</aqua>'s home <aqua>%home%</aqua>.</yellow>"
+    switch-failed: "<red>Overschakelen naar %server% mislukt.</red>"
+    switch-failed-tip: "<gray>Zorg ervoor dat de servernaam overeenkomt met je proxy configuratie.</gray>"
+
+  # Otherhomes
+  otherhomes:
+    no-permission: "<red>Je hebt geen toestemming.</red>"
+    usage: "<yellow>Gebruik: <gold>/%label% <speler></gold></yellow>"
+    player-not-found: "<red>Onbekende speler: <yellow>%player%</yellow></red>"
+    no-homes: "<gray>%player% heeft geen homes.</gray>"
+    header: "<gold>Homes van <yellow>%player%</yellow>:</gold>"
+    entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua> <gray>@ <white>%world%</white> (%x%, %y%, %z%) <dark_gray>[server: %server%]</dark_gray></gray>"
+    tip: "<gray>Tip: <yellow>/otherhome %player% <home></yellow></gray>"
+
+  # Clear
+  clear:
+    no-service: "<yellow>Let op: Inventaris service niet beschikbaar - alleen lokaal gewist.</yellow>"
+    console-usage: "<red>Gebruik: /%label% <speler></red>"
+    others-no-permission: "<red>Je hebt geen toestemming om de inventarissen van anderen te wissen.</red>"
+    target-not-found: "<red>Speler niet gevonden: <yellow>%target%</yellow></red>"
+    self:
+      all-servers: "<green>Inventaris gewist op alle servers.</green>"
+      this-server: "<green>Inventaris gewist op deze server.</green>"
+    target-notified-all: "<yellow>Je inventaris is gewist op alle servers door <aqua>%player%</aqua>.</yellow>"
+    target-notified-local: "<yellow>Je inventaris is gewist op deze server door <aqua>%player%</aqua>.</yellow>"
+    sender-confirm-all: "<green>Inventaris van <aqua>%target%</aqua> gewist op alle servers.</green>"
+    sender-confirm-local: "<green>Inventaris van <aqua>%target%</aqua> gewist op deze server.</green>"
+
+  # Delwarp
+  delwarp:
+    usage: "<yellow>Gebruik: /%label% <n></yellow>"
+    deleted: "<green>Warp <aqua>%warp%</aqua> is verwijderd.</green>"
+    not-found: "<red>Warp niet gevonden: <yellow>%warp%</yellow></red>"
+
+  # Disenchant
+  disenchant:
+    usage: "<yellow>Gebruik: /%label% <enchantment|all> [levels-te-verwijderen]</yellow>"
+    hold-item: "<red>Je moet een item in je hoofdhand hebben.</red>"
+    none: "<red>Dit item heeft geen enchantments.</red>"
+    unknown: "<red>Onbekend enchantment: <yellow>%input%</yellow></red>"
+    not-present: "<red>Dit item heeft geen <yellow>%ench%</yellow>.</red>"
+    all: "<green>Alle enchantments verwijderd.</green>"
+    partial: "<green><white>%removed%</white> level(s) van <aqua>%ench%</aqua> verwijderd. <white>%remaining%</white> level(s) over.</green>"
+    removed: "<green><aqua>%ench%</aqua> volledig verwijderd.</green>"
+
+  # Fly
+  fly:
+    console-usage: "<red>Gebruik: /%label% <speler></red>"
+    not-found: "<red>Speler niet gevonden: <yellow>%target%</yellow></red>"
+    enabled: "<green>Vliegen <aqua>ingeschakeld</aqua>.</green>"
+    disabled: "<red>Vliegen <aqua>uitgeschakeld</aqua>.</red>"
+    toggled-other: "<green>Vliegen <aqua>%state%</aqua> voor <aqua>%target%</aqua>.</green>"
+
+  # Enchant
+  enchant:
+    usage: "<yellow>Gebruik: /%label% <enchantment> [level] [unsafe] [ignoreConflicts]</yellow>"
+    hold-item: "<red>Je moet een item in je hoofdhand hebben.</red>"
+    unknown: "<red>Onbekend enchantment: <yellow>%input%</yellow></red>"
+    too-high: "<red>Level <yellow>%level%</yellow> is te hoog voor <aqua>%ench%</aqua> (max: <white>%max%</white>). Gebruik 'unsafe' parameter of oreo.enchant.unsafe toestemming.</red>"
+    conflict: "<red><aqua>%ench%</aqua> conflicteert met bestaand <aqua>%with%</aqua>. Gebruik 'ignoreConflicts' parameter of oreo.enchant.ignoreconflicts toestemming.</red>"
+    applied: "<green><aqua>%ench%</aqua> <white>%level%</white> toegepast op je item.</green>"
+    failed: "<red>Enchantment toepassen mislukt: <yellow>%reason%</yellow></red>"
+
+  # Flyspeed
+  flyspeed:
+    player-only: "<red>Alleen spelers kunnen /flyspeed gebruiken (stel je eigen vliegsnelheid in).</red>"
+    no-permission: "<red>Je hebt geen toestemming (oreo.flyspeed).</red>"
+    usage: "<yellow>Gebruik: <white>/flyspeed <1-10|reset></white></yellow>"
+    example: "<gray>Voorbeeld: <white>/flyspeed 7</white></gray>"
+    invalid: "<red>Ongeldige snelheid. Gebruik een getal <white>1-10</white> of <white>reset</white>.</red>"
+    reset: "<green>Vliegsnelheid gereset naar <white>0.1</white> <gray>(= level 1)</gray>.</green>"
+    set: "<green>Vliegsnelheid ingesteld op <white>%speed%</white> <gray>(<white>level %level%</white>)</gray>.</green>"
+    set-not-flying: "<green>Vliegsnelheid ingesteld op <white>%speed%</white> <gray>(<white>level %level%</white>)</gray>. <dark_gray>(Je hebt momenteel geen toestemming om te vliegen.)</dark_gray></green>"
+
+  # Gamemode
+  gamemode:
+    unknown: "<red>Onbekende modus: <yellow>%mode%</yellow></red>"
+    no-permission-others: "<red>Je hebt geen toestemming om de gamemode van anderen te wijzigen.</red>"
+    player-not-found: "<red>Speler niet gevonden.</red>"
+    self: "<green>Gamemode ingesteld op <aqua>%mode%</aqua>.</green>"
+    other: "<green><aqua>%target%</aqua> ingesteld op <aqua>%mode%</aqua>.</green>"
+    notified: "<green>Je gamemode is ingesteld op <aqua>%mode%</aqua> door <yellow>%staff%</yellow></green>"
+
+# ============================================================================
+# HANDEL SYSTEEM
+# ============================================================================
+
+trade:
+  opening: "<green>Handel GUI openen met <white>%partner%</white>…</green>"
+  failed-to-open: "<red>Handel openen mislukt: <yellow>%error%</yellow></red>"
+  player-name: "<yellow>%name%</yellow>"
+  partner-ready: "<green>Partner Klaar</green>"
+  partner-not-ready: "<red>Partner Niet Klaar</red>"
+  locked: "<gray>Vergrendeld</gray>"
+  player-only: "<red>Alleen spelers.</red>"
+  disabled: "<red>Handelen is momenteel uitgeschakeld.</red>"
+  no-permission: "<red>Je hebt geen toestemming.</red>"
+  usage: "<yellow>Gebruik: /trade <speler></yellow>"
+  self: "<red>Je kunt niet met jezelf handelen.</red>"
+  not-found-cross-server: "<red>Speler niet hier gevonden.</red> <gray>Als dit cross-server handelen is, typ <aqua>/trade %player%</aqua> op de server waar je de uitnodiging ontving.</gray>"
+
+# ============================================================================
+# SCOREBOARD SYSTEEM
+# ============================================================================
+
+scoreboard:
+  enabled: "<green>Scoreboard ingeschakeld.</green>"
+  disabled: "<yellow>Scoreboard uitgeschakeld.</yellow>"
+  disabled-in-world: "<red>Scoreboard is uitgeschakeld in deze wereld.</red>"
+
+# ============================================================================
+# PORTALS SYSTEEM
+# ============================================================================
+
+portals:
+  player-only: "<red>Alleen spelers.</red>"
+  no-permission: "<red>Je hebt geen toestemming.</red>"
+  no-portal-permission: "<red>Je hebt geen toestemming om deze portal te gebruiken.</red>"
+  unknown-subcommand: "<red>Onbekend subcommando. Gebruik <yellow>/%label% help</yellow></red>"
+
+  pos1-set: "<green>Portal pos1 ingesteld op <aqua>%location%</aqua></green>"
+  pos2-set: "<green>Portal pos2 ingesteld op <aqua>%location%</aqua></green>"
+
+  create:
+    usage: "<yellow>Gebruik: /%label% create <n> <wereld> <x> <y> <z> [keepYaw] [permission]</yellow>"
+    world-not-found: "<red>Wereld niet gevonden: <yellow>%world%</yellow></red>"
+    invalid-coords: "<red>Ongeldige coördinaten.</red>"
+    failed: "<red>Mislukt: <yellow>%error%</yellow></red>"
+    success: "<green>Portal <aqua>%name%</aqua> → <white>%location%</white> aangemaakt</green>"
+
+  remove:
+    usage: "<yellow>Gebruik: /%label% remove <n></yellow>"
+    success: "<green>Portal <aqua>%name%</aqua> verwijderd.</green>"
+    not-found: "<red>Portal niet gevonden: <yellow>%name%</yellow></red>"
+
+  list:
+    empty: "<gray>Geen portals geconfigureerd.</gray>"
+    header: "<gold>Portals (%count%):</gold>"
+    entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua> <gray>→ <white>%dest%</white></gray>"
+
+  info:
+    usage: "<yellow>Gebruik: /%label% info <n></yellow>"
+    not-found: "<red>Portal niet gevonden: <yellow>%name%</yellow></red>"
+    header: "<gold>Portal Info: <aqua>%name%</aqua></gold>"
+    world: " <gray>Wereld:</gray> <white>%world%</white>"
+    destination: " <gray>Bestemming:</gray> <white>%dest%</white>"
+    keep-yaw: " <gray>Behoud Yaw/Pitch:</gray> <white>%keep%</white>"
+    permission: " <gray>Toestemming:</gray> <white>%perm%</white>"
+
+  reload:
+    success: "<green>Portals herladen. <white>%count%</white> portal(s) geladen.</green>"
+
+  help:
+    header: "<gold><bold>Portals Hulp</bold></gold>"
+    pos1: " <yellow>/%label% pos1</yellow> <gray>- Stel portal hoek 1 in</gray>"
+    pos2: " <yellow>/%label% pos2</yellow> <gray>- Stel portal hoek 2 in</gray>"
+    create: " <yellow>/%label% create <n> <wereld> <x> <y> <z> [keepYaw] [perm]</yellow>"
+    remove: " <yellow>/%label% remove <n></yellow> <gray>- Verwijder een portal</gray>"
+    list: " <yellow>/%label% list</yellow> <gray>- Toon alle portals</gray>"
+    info: " <yellow>/%label% info <n></yellow> <gray>- Bekijk portal details</gray>"
+    reload: " <yellow>/%label% reload</yellow> <gray>- Herlaad portals.yml</gray>"
+
+# ============================================================================
+# CUSTOMCRAFT SYSTEEM
+# ============================================================================
+
+customcraft:
+  errors:
+    no-permission: "<red>Je hebt geen toestemming.</red>"
+    player-only: "<red>Dit subcommando vereist een speler.</red>"
+    unknown-subcommand: "<red>Onbekend subcommando.</red> <yellow>Gebruik</yellow> /%label% help"
+    usage-craft: "<red>Gebruik:</red> /%label% craft <n>"
+    usage-delete: "<red>Gebruik:</red> /%label% delete <n>"
+
+  help:
+    header: "<yellow>OreoEssentials Custom Crafting</yellow>"
+    browse: "<yellow>/%label% browse</yellow> <gray>→ open receptenbrowser (GUI)</gray>"
+    craft: "<yellow>/%label% craft <n></yellow> <gray>→ open designer GUI</gray>"
+    list: "<yellow>/%label% list</yellow> <gray>→ toon receptnamen</gray>"
+    reload: "<yellow>/%label% reload</yellow> <gray>→ herlaad recipes.yml en herregistreer</gray>"
+    delete: "<yellow>/%label% delete <n></yellow> <gray>→ verwijder een recept</gray>"
+
+  messages:
+    saved: "<green>Recept <yellow>%name%</yellow> is opgeslagen (<white>%mode%</white>) %perm_note%.</green>"
+    invalid: "<red>Recept niet gevonden: <yellow>%name%</yellow>.</red>"
+    deleted: "<green>Recept <yellow>%name%</yellow> verwijderd.</green>"
+    reloaded: "<green>Custom recepten herladen.</green>"
+    list: "<yellow>Recepten</yellow> (<white>%count%</white>): <gray>%names%</gray>"
+
+  browse:
+    title: "<#00bcd4><bold>OreoCraft</bold></#00bcd4> <gray>—</gray> <white>Recepten</white>"
+    hint: "<yellow>Klik op een recept om te bewerken</yellow>"
+    icon-lore:
+      0: "<gray>Modus:</gray> <white>%mode%</white>"
+      1: "<gray>Toestemming:</gray> <white>%permission_or_none%</white>"
+      2: "<green>Klik om te bewerken</green>"
+    prev: "<yellow>Vorige</yellow>"
+    next: "<yellow>Volgende</yellow>"
+
+  format:
+    mode:
+      shaped: "Gevormd"
+      shapeless: "Vormloos"
+    permission:
+      none: "<gray>Geen</gray>"
+
+# ============================================================================
+# DIVERSEN COMMANDO'S (OE)
+# ============================================================================
+
+oe:
+  usage: "<yellow>Gebruik: /%label% server <servernaam></yellow>"
+  connecting: "<green>Verbinden met <aqua>%server%</aqua>...</green>"
+  failed: "<red>Kon niet verbinden met %server%. Is proxy/channel geconfigureerd?</red>"
+
+# ============================================================================
+# TIJD FORMAAT (voor duur weergaven)
+# ============================================================================
+
+time:
+  years: "%value%j"
+  months: "%value%m"
+  weeks: "%value%w"
+  days: "%value%d"
+  hours: "%value%u"
+  minutes: "%value%m"
+  seconds: "%value%s"
+
+# ============================================================================
+# JUMPPADS SYSTEEM
+# ============================================================================
+
+jumpads:
+  # Toestemmingen
+  no-permission: "<red>Je hebt geen toestemming.</red>"
+  player-only: "<red>Alleen spelers.</red>"
+
+  # Hulp
+  list-inline: "<gold>JumpPads:</gold> <gray>%names%</gray>"
+  help:
+    header: "<yellow>Gebruik:</yellow>"
+    create: "<yellow>  /%label% create <n> [power] [upward] [useLookDir]</yellow>  <gray>(blok onder je)</gray>"
+    remove: "<yellow>  /%label% remove <n></yellow>"
+    list: "<yellow>  /%label% list</yellow>"
+    info: "<yellow>  /%label% info <n></yellow>"
+
+  # Create
+  usage-create: "<red>Gebruik: /%label% create <n> [power] [upward] [useLookDir]</red>"
+  defaults: "<gray>Standaard → power=%power%, upward=%upward%, useLookDir=%look%</gray>"
+  created: "<green>JumpPad '<aqua>%name%</aqua>' aangemaakt op <aqua>%x%,%y%,%z%</aqua> (power=%power%, upward=%upward%, look=%look%)</green>"
+  create-failed: "<red>Aanmaken mislukt (ongeldige locatie of naam).</red>"
+
+  # Remove
+  usage-remove: "<red>Gebruik: /%label% remove <n></red>"
+  removed: "<green>JumpPad '<aqua>%name%</aqua>' verwijderd.</green>"
+  not-found: "<red>JumpPad '<yellow>%name%</yellow>' niet gevonden.</red>"
+
+  # List
+  list: "<gold>JumpPads (%count%):</gold> <gray>%names%</gray>"
+
+  # Info
+  usage-info: "<red>Gebruik: /%label% info <n></red>"
+  info:
+    name: "<aqua>Naam:</aqua> <white>%name%</white>"
+    location: "<aqua>Wereld:</aqua> <white>%world%</white>  <aqua>XYZ:</aqua> <white>%x% %y% %z%</white>"
+    settings: "<aqua>Power:</aqua> <white>%power%</white>  <aqua>Upward:</aqua> <white>%upward%</white>  <aqua>UseLookDir:</aqua> <white>%look%</white>"
+
+  # Onbekend subcommando
+  unknown-subcommand: "<red>Onbekend subcommando. Probeer /%label%</red>"
+
+# ============================================================================
+# MODGUI SYSTEEM
+# ============================================================================
+
+modgui:
+  # Commando
+  player-only: "<red>Alleen spelers.</red>"
+  no-permission: "<red>Geen toestemming: <white>oreo.modgui.open</white></red>"
+
+  # Hoofdmenu
+  main:
+    title: "&8Moderatie Paneel"
+    player:
+      name: "&eSpeler Moderatie"
+      lore:
+        - "&7Beheer individuele spelers"
+        - "&7Bekijk notities, mute, ban, etc."
+    world:
+      name: "&aWereld Moderatie"
+      lore:
+        - "&7Configureer wereld instellingen"
+        - "&7Nether/End aanpassingen, PVP, etc."
+    server:
+      name: "&cServer Moderatie"
+      lore:
+        - "&7Server-brede controles"
+        - "&7Chat, performance tools"
+    titles:
+      player: "&8Speler Moderatie"
+      world: "&8Selecteer Wereld"
+      server: "&8Server Moderatie"
+
+  # Speler menu
+  player:
+    title-local: "&8Speler: %name%"
+    title-network: "&8Speler: %name% &7(%server%)"
+
+  # Speler acties menu
+  actions:
+    bridge-unavailable: "<red>Cross-server moderatie bridge is niet beschikbaar.</red>"
+    ecsee-title: "&8Ender Chest: %name%"
+    inspect-title: "&8Inspecteer: %name%"
+    notes-title: "&8Notities: %name%"
+    ip-alts-title: "&8IP & Alts: %name%"
+
+  # Speler notities
+  notes:
+    prompt: "<yellow>Typ de notitie in chat.</yellow> <gray>(Of typ 'cancel' om te annuleren)</gray>"
+    cancelled: "<red>Notitie geannuleerd.</red>"
+    added: "<green>Notitie toegevoegd.</green>"
+
+  # Performance tools
+  perf:
+    kill-mobs: "<green><yellow>%count%</yellow> monsters verwijderd van alle werelden.</green>"
+    clear-items: "<green><yellow>%count%</yellow> gevallen items verwijderd van alle werelden.</green>"
+    clear-tnt: "<green><yellow>%count%</yellow> ontstoken TNT verwijderd van alle werelden.</green>"
+
+  # Chat moderatie
+  chat:
+    cleared: "<green>Chat gewist.</green>"
+    clear-broadcast: "<red>Chat is gewist door <yellow>%actor%</yellow>.</red>"
+    muted: "<red>Globale chat is gemute door <yellow>%actor%</yellow>.</red>"
+    unmuted: "<green>Globale chat is niet meer gemute.</green>"
+    slowmode-set: "<yellow>Slowmode ingesteld op <gold>%seconds%</gold>s</yellow>"
+    staff-enabled: "<green>Staff chat ingeschakeld.</green>"
+    staff-disabled: "<red>Staff chat uitgeschakeld.</red>"
+    service-unavailable: "<red>ModGUI service niet beschikbaar.</red>"
+
+  # Wereld aanpassingen
+  world:
+    elytra-disabled: "<red>Elytra vliegen is uitgeschakeld in deze wereld.</red>"
+    trident-disabled: "<red>Tridents zijn uitgeschakeld in deze wereld.</red>"
+    void-saved: "<yellow>Je bent gered van de void en geteleporteerd naar spawn.</yellow>"
+
+  # Server menu
+  server:
+    difficulty-set: "<yellow>Moeilijkheidsgraad ingesteld op <gold>%difficulty%</gold></yellow>"
+    gamemode-set: "<yellow>Standaard gamemode is nu <gold>%gamemode%</gold></yellow>"
+    whitelist-toggled: "<yellow>Whitelist is nu %state%</yellow>"
+    spawn-cooldown: "<red>Wacht alsjeblieft een seconde voordat je opnieuw spawnt.</red>"
+    spawn-peaceful: "<red>Kan geen vijandige mobs spawnen in <green>PEACEFUL</green> moeilijkheid.</red>"
+    spawned: "<green><yellow>%count%</yellow> <gray>%type%</gray> gespawnd.</green>"
+    tps-title: "&8TPS & Performance"
+    chat-title: "&8Chat Moderatie"
+    perf-title: "&8Performance Tools"
+
+  # Wereld acties menu
+  world-actions:
+    time-set: "<yellow>Tijd ingesteld op <gold>%time%</gold></yellow>"
+    weather-set: "<yellow>Weer ingesteld op <gold>%weather%</gold></yellow>"
+    spawn-set: "<green>Wereld spawn ingesteld op <white>%x% %y% %z%</white></green>"
+    border-set: "<yellow>Wereld grens ingesteld op <gold>%size%</gold></yellow>"
+    gamerules-title: "&8Game Regels: %world%"
+    whitelist-title: "&8Whitelist: %world%"
+    banned-mobs-title: "&8Verboden Mobs: %world%"
+
+  # Verboden mobs menu
+  banned-mobs:
+    banned: "<red>%mob%</red> <gray>is nu</gray> <red>VERBODEN</red> <gray>in</gray> <white>%world%</white>"
+    allowed: "<green>%mob%</green> <gray>is nu</gray> <green>TOEGESTAAN</green> <gray>in</gray> <white>%world%</white>"
+
+  # Wereld lijst menu
+  world-list:
+    world-title: "&8Wereld: %world%"
+
+  # Wereld whitelist menu
+  world-whitelist:
+    back-title: "&8Wereld: %world%"
+
+  # EcSee (ender chest viewer) menu
+  ecsee:
+    service-missing: "<red>Ender chest service ontbreekt.</red>"
+    title: "&bBewerk Ender Chest van &e%target%"
+
+# Speler inspectie (live statistieken viewer)
+playerinspect:
+  target-offline: "<red>Doelspeler is offline.</red>"
+  no-permission-invsee: "<red>Je hebt geen toestemming om inventarissen te bekijken.</red>"
+  head-name: "&b%player% &7(&e%server%&7)"
+  invsee-name: "&bBekijk Inventaris"
+  invsee-lore1: "&7Klik om te openen"
+  invsee-lore2: "&7%player%'s inventaris"
+  lore:
+    health: "&7Leven: &c%current%&7/&c%max%"
+    health-na: "&7Leven: &fN.v.t. (&8remote&f)"
+    food: "&7Voedsel: &e%food%"
+    food-na: "&7Voedsel: &fN.v.t. (&8remote&f)"
+    gamemode: "&7Modus: &f%gm%"
+    world: "&7Wereld/Server: &a%world%"
+    location: "&7Locatie: &f%x% %y% %z%"
+    location-na: "&7Locatie: &fN.v.t. (&8remote&f)"
+    ping: "&7Ping: &f%ping%"
+    ping-na: "&7Ping: &fN.v.t. (&8remote&f)"
+    tps: "&7TPS: &f%tps%"
+    tps-na: "&7TPS: &fN.v.t. (&8remote&f)"
+
+enderchest:
+  storage:
+    opened-cross-server: "<gray>Je cross-server ender chest openen...</gray>"
+    save-failed: "<red>Je ender chest opslaan mislukt. Neem contact op met een administrator.</red>"
+
+  gui:
+    title: "&5Ender Chest"
+    locked-slot-name: "&cVergrendeld Slot"
+    locked-slot-lore:
+      - "&7Je hebt &f%slots% &7slots ontgrendeld."
+      - "&7Upgrade je rank om meer te ontgrendelen!"
+
+daily:
+  no-permission-toggle: "<red>Je hebt geen toestemming om deze functie te wisselen.</red>"
+  no-permission: "<red>Je hebt geen toestemming om dit te gebruiken.</red>"
+  players-only: "<red>Dit commando moet in-game uitgevoerd worden.</red>"
+  disabled: "<red>Dagelijkse Beloningen zijn momenteel uitgeschakeld.</red>"
+  disabled-hint: "<gray>Gebruik <white>/%command% toggle</white> om het in te schakelen.</gray>"
+  toggled: "<yellow>Dagelijkse Beloningen zijn nu %state%</yellow>"
+  usage: "<gray>Gebruik: <white>/%command%</white> of <white>/%command% claim</white> of <white>/%command% top</white></gray>"
+  usage-admin: "<gray>Gebruik: <white>/%command%</white> of <white>/%command% claim</white> of <white>/%command% top</white> of <white>/%command% toggle</white></gray>"
+
+  top:
+    title: "&b&lDagelijks &fTop Streaks"
+    row: "&7#&f%rank% &b%player% &8» &aStreak: &f%streak% &8(&7%hours%u&8)"
+    empty: "&7Nog geen data."
+
+  # GUI berichten
+  gui:
+    disabled: "<red>Dagelijkse Beloningen zijn uitgeschakeld.</red>"
+    toggled: "<yellow>Dagelijkse Beloningen zijn nu %state%</yellow>"

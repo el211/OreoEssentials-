@@ -1,0 +1,164 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║                      OREOESSENTIALS CRAFT ACTIONS                          ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+#
+# Define commands and messages to execute/send when items are crafted.
+#
+# USAGE:
+# ------
+# For VANILLA items: Use the Material name (e.g., DIAMOND_PICKAXE, IRON_SWORD)
+# For CUSTOM recipes: Use the recipe name from recipes.yml (e.g., custom_sword)
+#
+# PLACEHOLDERS:
+# -------------
+#   %player%       - Player's name
+#   %player_uuid%  - Player's UUID
+#   %world%        - World name
+#   %item%         - Item material name
+#   %amount%       - Item amount
+#
+# Plus any PlaceholderAPI placeholders (if PlaceholderAPI is installed)
+#
+# COMMANDS:
+# ---------
+# - Commands are executed as CONSOLE
+# - Support for any Bukkit command (including other plugin commands)
+# - Use & for color codes in commands
+#
+# MESSAGES:
+# ---------
+# - Messages support MiniMessage format
+# - Examples: <green>text</green>, <gold>text</gold>, <#FF5555>hex color</#FF5555>
+#
+# ════════════════════════════════════════════════════════════════════════════
+
+actions:
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # VANILLA ITEMS EXAMPLES
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  # Diamond Pickaxe - Give money and broadcast
+  DIAMOND_PICKAXE:
+    commands:
+      - "eco give %player% 50"
+      - "broadcast &e%player% &acrafted a &bDiamond Pickaxe&a!"
+    message: "<green>âœ" You earned <gold>$50</gold> for crafting this pickaxe!</green>"
+
+  # Diamond Sword - Give strength effect
+  DIAMOND_SWORD:
+    commands:
+      - "effect give %player% minecraft:strength 60 1"
+    message: "<aqua>âš"ï¸ You feel powerful wielding this sword!</aqua>"
+
+  # Golden Apple - Heal and give achievement points
+  GOLDEN_APPLE:
+    commands:
+      - "heal %player%"
+      - "eco give %player% 100"
+      - "broadcast &6%player% &ecrafted a &6&lGolden Apple&e!"
+    message: |
+      <gradient:gold:yellow>âœ¨ You crafted a Golden Apple!</gradient>
+      <green>+$100</green> <gray>|</gray> <red>â™¥ Full Health</red>
+
+  # Enchanting Table - Give XP levels
+  ENCHANTING_TABLE:
+    commands:
+      - "xp add %player% 10 levels"
+    message: "<light_purple>âœ¨ +10 XP Levels for crafting an enchanting table!</light_purple>"
+
+  # Beacon - Rare craft reward
+  BEACON:
+    commands:
+      - "eco give %player% 1000"
+      - "broadcast &d&l[RARE CRAFT] &e%player% &dcrafted a &5&lBeacon&d!"
+      - "give %player% diamond 5"
+    message: |
+      <gradient:dark_purple:light_purple><bold>★ LEGENDARY CRAFT ★</bold></gradient>
+      <gold>+$1000</gold> <gray>|</gray> <aqua>+5 Diamonds</aqua>
+
+  # TNT - Warning message
+  TNT:
+    message: "<red>⚠ï¸ Be careful with that TNT!</red>"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # CUSTOM RECIPES EXAMPLES
+  # ═══════════════════════════════════════════════════════════════════════════
+  # These reference recipe names from recipes.yml
+
+  # Example custom sword (if you have a recipe named 'legendary_sword')
+  legendary_sword:
+    commands:
+      - "eco give %player% 500"
+      - "broadcast &6&l✦ &e%player% &6forged a &c&lLegendary Sword&6!"
+      - "playsound minecraft:block.anvil.use master %player% ~ ~ ~ 1.0 0.5"
+    message: |
+      <gradient:red:dark_red><bold>⚔ LEGENDARY CRAFT ⚔</bold></gradient>
+      <yellow>You crafted a powerful weapon!</yellow>
+      <green>+$500 bonus!</green>
+
+  # Example custom armor (if you have a recipe named 'custom_chestplate')
+  custom_chestplate:
+    commands:
+      - "eco give %player% 250"
+      - "effect give %player% minecraft:resistance 300 1"
+    message: "<blue>ğŸ›¡ï¸ Custom Armor crafted! +Resistance II (5min)</blue>"
+
+  # Example special tool (if you have a recipe named 'mega_pickaxe')
+  mega_pickaxe:
+    commands:
+      - "eco give %player% 300"
+      - "effect give %player% minecraft:haste 600 2"
+    message: |
+      <aqua>â›ï¸ Mega Pickaxe crafted!</aqua>
+      <yellow>+Haste III (10min)</yellow>
+      <green>+$300</green>
+
+  # Example potion/consumable (if you have a recipe named 'energy_drink')
+  energy_drink:
+    commands:
+      - "effect give %player% minecraft:speed 120 2"
+      - "effect give %player% minecraft:jump_boost 120 1"
+    message: "<gold>⚡ Energy Drink crafted! +Speed III & Jump Boost</gold>"
+
+  # Example quest item (if you have a recipe named 'quest_token')
+  quest_token:
+    commands:
+      - "give %player% diamond 1"
+      - "playsound minecraft:entity.player.levelup master %player% ~ ~ ~ 1.0 1.0"
+    message: "<light_purple>🎯 Quest Token crafted! You received a Diamond!</light_purple>"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # ADVANCED EXAMPLES
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  # Multiple commands with PlaceholderAPI support
+  NETHERITE_INGOT:
+    commands:
+      - "eco give %player% 200"
+      - "broadcast &5%player% &dcrafted a &4Netherite Ingot&d!"
+      # If you have PlaceholderAPI, you can use its placeholders too:
+      # - "tellraw @a {\"text\":\"Player in world %player_world%\",\"color\":\"yellow\"}"
+    message: "<dark_purple>💎 Netherite Ingot crafted! +$200</dark_purple>"
+
+  # Conditional commands (using other plugin features)
+  ENDER_CHEST:
+    commands:
+      - "eco give %player% 150"
+      # Example with permission check (requires vault/permissions plugin)
+      # - "pex user %player% add special.enderchest.bonus"
+    message: "<gradient:dark_purple:purple>🎒 Ender Chest crafted! +$150</gradient>"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# NOTES:
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# 1. Commands run ASYNCHRONOUSLY to prevent server lag
+# 2. Use /oecraft reload to reload this config
+# 3. Messages support multi-line using YAML's | syntax (see examples above)
+# 4. You can disable messages by removing the "message:" line
+# 5. You can disable commands by using an empty list: commands: []
+# 6. Material names are case-insensitive (DIAMOND_SWORD = diamond_sword)
+# 7. Custom recipe names must match exactly (case-sensitive)
+#
+# ═══════════════════════════════════════════════════════════════════════════

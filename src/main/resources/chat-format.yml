@@ -1,0 +1,272 @@
+# FINAL WORKING CHAT FORMAT with Parsley
+# This handles FactionsUUID returning "0" for players without factions
+
+chat:
+  enabled: true
+  strip-name-colors: false
+  use-minimessage: true
+  minimessage-translate-legacy-amp: true
+
+  # ===================== SOLUTION 1: Use Parsley ifempty (BEST) =====================
+  # This automatically hides the faction if it's empty or "0"
+
+  default: "§2§l%player_name% §7[§6%factionsuuid_faction_name% §8• §a$%vault_eco_balance%§7] §0»  § %chat_message%"
+
+
+  # ===================== DISCORD & HOVER (Keep existing settings) =====================
+  discord:
+    enabled: true
+    webhook_url: "https://discord.com/api/webhooks/examplewebhookhere"
+
+  hover:
+    enabled: true
+    lines:
+      - "<gradient:#FFD700:#FFA500><bold>%player_name%</bold></gradient>"
+      - ""
+      - "<gray>━━━━━━━━━━━━━━━━━━━━</gray>"
+      - ""
+      - "<gold>⚔ Stats:</gold>"
+      - "  <red>❤</red> Health: <white>%player_health%/%player_max_health%</white>"
+      - "  <green>✦</green> Level: <white>%player_level%</white>"
+      - "  <aqua>⚡</aqua> Ping: <white>%player_ping%ms</white>"
+      - ""
+      - "<gold>🌍 Location:</gold>"
+      - "  <gray>World:</gray> <white>%player_world%</white>"
+      - "  <gray>Coords:</gray> <white>%player_x%, %player_y%, %player_z%</white>"
+      - ""
+      - "<gold>👤 Info:</gold>"
+      - "  <gray>Rank:</gray> <white>%luckperms_primary_group%</white>"
+      - "  <gray>Mode:</gray> <white>%player_gamemode%</white>"
+      - ""
+      - "<gray>━━━━━━━━━━━━━━━━━━━━</gray>"
+
+
+  # ===================== TESTING STEPS =====================
+  # 1. Install Parsley: https://github.com/ThomasWega/Parsley/releases/latest
+  # 2. Put in: /plugins/PlaceholderAPI/expansions/
+  # 3. Run: /papi reload
+  # 4. Test: /papi parse me %parsley_ifempty_{factionsuuid_faction_name}_NO_FACTION_HAS_FACTION%
+  #    - If you have faction, should show: HAS_FACTION
+  #    - If you don't have faction, should show: NO_FACTION
+  # 5. Replace your chat.yml with this file
+  # 6. Run: /afelius reload chat-format
+  # 7. Test in chat!
+
+  # Expected Results:
+  # - Player WITH faction: [Server • $1050 • FactionName]
+  # - Player WITHOUT faction: [Server • $1050]
+  # - No more "0" showing in chat!
+
+  # ===================== Channel system configuration =====================
+  channels:
+    enabled: true
+
+    default_channel: "global"
+    remember_last_channel: true
+
+    cross_server:
+      enabled: false  # Set to true to use MongoDB from config.yml
+      # When enabled, players will stay in the same channel across all servers
+      # Requires: MongoDB configured in config.yml (storage.mongo section)
+      # When disabled, each server tracks channels independently (YAML files)
+
+    formatting:
+      enabled: true
+      fallback_format: "<gray>{player}</gray><dark_gray>: </dark_gray><white>{message}</white>"
+
+    gui:
+      title: "<gold>Oreo Channels</gold>"
+      rows: 4
+      fill_empty_with_glass: true
+
+    list_order:
+      - "global"
+      - "announcements"    # NRead-only announcements channel
+      - "staff"
+      - "trade"
+      - "local"
+      - "help"
+
+    channel_definitions:
+      # ==================== GLOBAL CHANNEL ====================
+      global:
+        enabled: true
+        display_name: "<gradient:#FF1493:#00FF7F>Global</gradient>"
+        description: "<gray>Server-wide chat</gray>"
+
+        talk_permission: "oreo.chat.channel.global.talk"
+        view_permission: "oreo.chat.channel.global.view"
+        join_permission: "oreo.chat.channel.global.join"
+
+        scope:
+          type: "ALL"
+          range_blocks: 0
+
+        formatting:
+          enabled: true
+          # Default format for everyone
+          format: "<gray>[<gradient:#FF1493:#00FF7F>G</gradient>]</gray> {message}"
+
+          # Per-rank formats (optional)
+          rank_formats:
+            # VIPs get a star
+            vip: "<gold>[<white>★</white> G]</gold> {message}"
+            mvp: "<gradient:#ffd700:#ff8c00>[<white>✦</white> G]</gradient> {message}"
+
+            # Staff get lightning bolt
+            admin: "<red>[<yellow>⚡</yellow> G]</red> {message}"
+            owner: "<gradient:#8e2de2:#4a00e0>[<white>♔</white> G]</gradient> {message}"
+
+        # Join message when switching to this channel
+        join_message: "<gray>You are now chatting in </gray><gradient:#FF1493:#00FF7F>Global</gradient><gray>!</gray>"
+
+        # Discord webhook for announcements
+        discord_webhook: null  # Set to send announcements to Discord
+      # ==================== ANNOUNCEMENTS CHANNEL (READ-ONLY) ====================
+      announcements:
+        enabled: true
+        display_name: "<gold><bold>📢 Announcements</bold></gold>"
+        description: "<gray>Official server announcements (read-only)</gray>"
+
+        # IMPORTANT: This makes it read-only - only players with this permission can send messages
+        talk_permission: "oreo.chat.channel.announcements.talk"
+        view_permission: null  # Everyone can view
+        join_permission: null  # Everyone can join
+
+        scope:
+          type: "ALL"
+          range_blocks: 0
+
+        formatting:
+          enabled: true
+          format: "<gold><bold>[📢]</bold></gold> {message}"
+
+          # Staff announcements get different prefixes
+          rank_formats:
+            admin: "<gold><bold>[📢 Admin]</bold></gold> {message}"
+            owner: "<gradient:#ffd700:#ff8c00><bold>[📢 Owner]</bold></gradient> {message}"
+
+        join_message: "<gray>You are viewing </gray><gold><bold>Announcements</bold></gold><gray>. This channel is </gray><red>read-only</red><gray>.</gray>"
+
+        # Discord webhook for announcements
+        discord_webhook: null  # Set to send announcements to Discord
+
+      # ==================== LOCAL CHANNEL ====================
+      local:
+        enabled: true
+        display_name: "<yellow>Local</yellow>"
+        description: "<gray>Talk to nearby players (100 blocks)</gray>"
+
+        talk_permission: null
+        view_permission: null
+        join_permission: null
+
+        scope:
+          type: "RANGE"
+          range_blocks: 100
+
+        formatting:
+          enabled: true
+          format: "<yellow>[L]</yellow> {message}"
+
+          # Example: Different local prefixes for ranks
+          rank_formats:
+            vip: "<gold>[L+]</gold> {message}"
+            admin: "<red>[ADMIN-L]</red> {message}"
+
+        # NEW: Join message
+        join_message: "<gray>You are now chatting in </gray><yellow>Local</yellow><gray> (100 blocks range)</gray>"
+
+        # Discord webhook for announcements
+        discord_webhook: null  # Set to send announcements to Discord
+      # ==================== TRADE CHANNEL ====================
+      trade:
+        enabled: true
+        display_name: "<green>Trade</green>"
+        description: "<gray>Buy and sell items</gray>"
+
+        talk_permission: "oreo.chat.channel.trade.talk"
+        view_permission: "oreo.chat.channel.trade.view"
+        join_permission: "oreo.chat.channel.trade.join"
+
+        scope:
+          type: "ALL"
+          range_blocks: 0
+
+        formatting:
+          enabled: true
+          format: "<green>[<gold>$</gold>T]</green> {message}"
+
+          # Example: Premium traders get special prefix
+          rank_formats:
+            vip: "<gold>[<white>💰</white> VIP Trade]</gold> {message}"
+            mvp: "<gradient:#ffd700:#ff8c00>[<white>💎</white> MVP Trade]</gradient> {message}"
+
+        #Join message
+        join_message: "<gray>You are now in </gray><green>Trade</green><gray> channel. Buy & sell items here!</gray>"
+
+        # Discord webhook for announcements
+        discord_webhook: null  # Set to send announcements to Discord
+      # ==================== STAFF CHANNEL ====================
+      staff:
+        enabled: true
+        display_name: "<red>Staff</red>"
+        description: "<gray>Staff-only channel</gray>"
+
+        talk_permission: "oreo.chat.channel.staff.talk"
+        view_permission: "oreo.chat.channel.staff.view"
+        join_permission: "oreo.chat.channel.staff.join"
+
+        scope:
+          type: "ALL"
+          range_blocks: 0
+
+        formatting:
+          enabled: true
+          format: "<dark_red><bold>[STAFF]</bold></dark_red> {message}"
+
+          # Different staff ranks
+          rank_formats:
+            moderator: "<aqua><bold>[MOD]</bold></aqua> {message}"
+            admin: "<red><bold>[ADMIN]</bold></red> {message}"
+            owner: "<gradient:#8e2de2:#4a00e0><bold>[OWNER]</bold></gradient> {message}"
+
+        join_message: "<gray>You are now in </gray><red><bold>Staff Chat</bold></red><gray>!</gray>"
+
+        # Discord webhook for announcements
+        discord_webhook: null  # Set to send announcements to Discord
+      # ==================== HELP CHANNEL ====================
+      help:
+        enabled: true
+        display_name: "<aqua>Help</aqua>"
+        description: "<gray>Ask for help from staff</gray>"
+
+        talk_permission: null
+        view_permission: "oreo.chat.channel.help.view"
+        join_permission: null
+
+        scope:
+          type: "ALL"
+          range_blocks: 0
+
+        formatting:
+          enabled: true
+          format: "<aqua>[<white>?</white>]</aqua> {message}"
+
+          # Staff helping get different prefix
+          rank_formats:
+            helper: "<green>[<white>✓</white> Helper]</green> {message}"
+            moderator: "<aqua>[<white>✓</white> Mod]</aqua> {message}"
+            admin: "<red>[<white>✓</white> Admin]</red> {message}"
+
+        # Join message
+        join_message: "<gray>You are now in </gray><aqua>Help</aqua><gray> channel. Ask your questions!</gray>"
+
+        # Discord webhook for announcements
+        discord_webhook: null  # Set to send announcements to Discord
+
+
+MongoDB_rabbitmq:
+  enabled: false
+  rabbitmq:
+    uri: "amqp://guest:guest@localhost:5672/"

@@ -1,0 +1,1116 @@
+name: OreoEssentials
+version: "3.5-SNAPSHOT"
+main: fr.elias.oreoEssentials.OreoEssentials
+api-version: "1.21"
+description: "All-in-one essentials plugin with homes/warps/spawn, RTP, economy (Vault), chat tools, portals/jump pads, cross-server EC & player sync."
+authors: [ "elias" ]
+
+softdepend:
+  - Vault
+  - PlaceholderAPI
+  - ItemsAdder
+  - SmartInvs
+  - PacketEvents
+  - Nexo
+
+loadbefore: [EconomyShopGUI]
+
+commands:
+  spawn:
+    description: Teleport to spawn
+    permission: oreo.spawn
+
+  maintenance:
+    description: Manage server maintenance mode
+    aliases: [ maint ]
+    usage: /<command> [on|off|toggle|status|whitelist|clock|motd|reload]
+    permission: oreo.maintenance.admin
+
+  tempfly:
+    description: Toggle temporary flight
+    usage: /<command> [on|off|time]
+    aliases: [tfly, temporaryflight]
+    permission: oe.tempfly.use
+
+  oecurrency:
+    description: Manage currencies
+    aliases: [currency, currencies, curr]
+    permission: oreo.currency.admin
+
+  currencyadmin:
+    description: Open the currency admin GUI
+    aliases: [ cadmin, currencygui ]
+    permission: oreo.currency.admin
+
+  currencybalance:
+    description: Check currency balance
+    aliases: [cbal, cbalance, currbal]
+    permission: oreo.currency.balance
+
+  currencysend:
+    description: Send currency to players
+    aliases: [csend, sendcurrency, paycurrency]
+    permission: oreo.currency.send
+
+  currencytop:
+    description: View top currency balances
+    aliases: [ctop, currencyleaderboard, cbalancetop]
+    permission: oreo.currency.top
+  trade:
+    description: Open a trade with another player
+    usage: /trade <player>
+    permission: oreo.trade
+
+  setspawn:
+    description: Set the server spawn
+    permission: oreo.setspawn
+
+  move:
+    description: "Move a player to another player (cross-server aware)"
+    usage: "/move <player> [target]"
+    permission: "oreo.move"
+
+  back:
+    description: Return to your last location
+    permission: oreo.back
+
+  pw:
+    description: Player warps (set/list/teleport)
+    usage: "/pw help"
+    aliases: [playerwarp, playerwarps]
+    permission: "oe.pw"
+
+  commandtoggle:
+    description: Manage command toggles
+    usage: /<command> [list|enable|disable|status|reload] [command]
+    permission: oreo.commandtoggle.admin
+    aliases: [cmdtoggle, cmdt]
+
+  modgui:
+    description: Open Server Management GUI
+    permission: oreo.modgui.open
+    usage: /modgui
+  warp:
+    description: Teleport to a warp
+    permission: oreo.warp
+    usage: "/warp <name>"
+
+  setwarp:
+    description: Create or overwrite a warp
+    permission: oreo.setwarp
+    usage: "/setwarp <name>"
+
+  delwarp:
+    description: Delete a warp
+    permission: oreo.delwarp
+    usage: "/delwarp <name>"
+
+  home:
+    description: Teleport to a home
+    permission: oreo.home
+    usage: "/home <name>"
+
+  sethome:
+    description: Set a home
+    permission: oreo.sethome
+    usage: "/sethome <name>"
+
+  delhome:
+    description: Delete a home
+    permission: oreo.delhome
+    usage: "/delhome <name>"
+
+  homes:
+    description: List your homes or teleport to one
+    aliases: [ listhomes ]
+    permission: oreo.homes
+    usage: "/homes [name]"
+
+  tpa:
+    description: Request to teleport to a player
+    permission: oreo.tpa
+    usage: "/tpa <player>"
+
+  tpaccept:
+    description: Accept a teleport request
+    permission: oreo.tpa
+
+  tpdeny:
+    description: Deny a teleport request
+    permission: oreo.tpa
+
+  tp:
+    description: Teleport to a player, or teleport a player to another
+    permission: oreo.tp
+    usage: "/tp <player> [target]"
+
+  tphere:
+    description: Teleport a player to your location
+    permission: oreo.tphere
+    usage: "/tphere <player>"
+
+  fly:
+    description: Toggle flight
+    permission: oreo.fly
+
+  disenchant:
+    description: "Remove or lower enchantments from the item in your hand"
+    usage: "/disenchant <enchantment|all> [levels-to-remove]"
+    permission: "oreo.disenchant"
+    aliases: [ "unenchant", "deench" ]
+
+  heal:
+    description: Heal yourself or others
+    permission: oreo.heal
+    usage: "/heal [player]"
+
+  feed:
+    description: Feed yourself or others
+    permission: oreo.feed
+    usage: "/feed [player]"
+
+  msg:
+    description: Private message a player
+    permission: oreo.msg
+    usage: "/msg <player> <message>"
+
+  reply:
+    description: Reply to the last private message
+    aliases: [ r ]
+    permission: oreo.msg
+
+  broadcast:
+    description: Broadcast a message
+    permission: oreo.broadcast
+    usage: "/broadcast <message>"
+
+  # Economy core
+  money:
+    description: View/give/take/set player balances
+    permission: oreo.money
+    usage: "/money [player] | /money <give|take|set> <player> <amount>"
+
+  pay:
+    description: Pay a player money
+    permission: oreo.pay
+    usage: "/pay <player> <amount>"
+
+  cheque:
+    description: Create/redeem money cheques
+    permission: oreo.cheque.create
+    usage: "/cheque <create|redeem> ..."
+
+  balance:
+    description: Show your balance or another player's balance
+    aliases: [ bal ]
+    permission: oreo.balance
+    usage: "/balance [player]"
+
+  baltop:
+    description: Show the richest players
+    permission: oreo.baltop
+    usage: "/baltop [size]"
+
+  # Utilities
+  deathback:
+    description: Teleport to your last death location
+    permission: oreo.deathback
+    usage: "/deathback"
+
+  god:
+    description: Toggle invulnerability (god mode)
+    permission: oreo.god
+    usage: "/god [player]"
+
+  portal:
+    description: Manage cuboid portals
+    permission: oreo.portal
+    usage: "/portal <pos1|pos2|create|remove|list|info>"
+
+  jumpad:
+    description: Manage jump pads
+    permission: oreo.jumpad
+    usage: "/jumpad <create|remove|list|info>"
+
+  vanish:
+    description: Toggle vanish (hide from players and mobs)
+    aliases: [ v ]
+    permission: oreo.vanish
+    usage: "/vanish [on|off]"
+
+  importzhomes:
+    description: "Import homes from zEssentials into OreoEssentials"
+    usage: "/importzhomes"
+    permission: oreo.admin.import
+
+  ban:
+    description: Ban a player (optionally temporary)
+    permission: oreo.ban
+    usage: "/ban <player> [duration] [reason...]"
+
+  unban:
+    description: Unban a player
+    permission: oreo.unban
+    usage: "/unban <player>"
+
+  kick:
+    description: Kick a player
+    permission: oreo.kick
+    usage: "/kick <player> [reason...]"
+
+  freeze:
+    description: Freeze/unfreeze a player
+    permission: oreo.freeze
+    usage: "/freeze <player> [on|off]"
+
+  enchant:
+    description: Enchant the item in your hand
+    permission: oreo.enchant
+    usage: "/enchant <enchantment> [level] [unsafe] [ignoreConflicts]"
+
+  afelius:
+    description: Reload Afelius chat configs
+    aliases: [ af ]
+    permission: oreo.afelius.reload
+    usage: "/afelius reload <all|config|chat-format>"
+
+  mute:
+    description: Mute a player for a duration (e.g., 10m) with optional reason
+    permission: oreo.mute
+    usage: "/mute <player> <duration> [reason]"
+
+  unmute:
+    description: Unmute a player
+    permission: oreo.unmute
+    usage: "/unmute <player>"
+
+  # Proxy / utility roots
+  oe:
+    description: OreoEssentials utility root command
+    permission: oreo.oe
+    usage: "/oe server <servername>"
+
+  oeserver:
+    description: Switch to another server on the proxy
+    aliases: [ server ]
+    permission: oreo.server
+    usage: "/oeserver <server>"
+
+  # Cosmetics & misc
+  head:
+    description: Give yourself a player head of the specified player
+    permission: oreo.head
+    usage: "/head <player>"
+
+  nick:
+    description: Change your displayed name (chat + tab) or reset it
+    permission: oreo.nick
+    usage: "/nick <newName> | /nick unnick"
+
+  kits:
+    description: Open the kits GUI
+    permission: oreo.kits.open
+    usage: "/kits"
+
+  kit:
+    description: Claim a specific kit by name
+    permission: oreo.kit.claim
+    usage: "/kit <name>"
+
+  # RTP & EnderChest
+  rtp:
+    description: Randomly teleport within a radius (tier-based)
+    aliases: [ randomtp ]
+    permission: oreo.rtp
+    usage: "/rtp"
+
+  ec:
+    description: Open your Ender Chest (tier-based rows)
+    aliases: [ enderchest ]
+    permission: oreo.ec
+    usage: "/ec"
+
+  # Player sync toggle GUI
+  sync:
+    description: Open the Player Sync toggle menu (inventory/xp/health/hunger)
+    permission: oreo.sync
+    usage: "/sync"
+
+  # QoL / utilities
+  afk:
+    description: Toggle AFK status
+    permission: oreo.afk
+
+  trash:
+    description: Open a disposable inventory that is not saved
+    permission: oreo.trash
+
+  workbench:
+    description: Open a virtual crafting table
+    aliases: [ wb ]
+    permission: oreo.workbench
+
+  anvil:
+    description: Open a virtual anvil
+    permission: oreo.anvil
+
+  furnace:
+    description: Open a virtual furnace GUI
+    permission: oreo.furnace
+
+  cook:
+    description: Quick-smelt the item in your hand using its furnace recipe
+    permission: oreo.cook
+    usage: "/cook [amount|max]"
+
+
+  shard:
+    description: Manage world sharding
+    usage: /shard <create|info|list|setup|reload>
+    permission: oreo.shard.admin
+    aliases: [ shards, worldshard ]
+
+  clear:
+    description: Clear inventory (/clear or /ci [player])
+    aliases: [ ci ]
+    permission: oreo.clear
+    usage: "/clear [player]"
+
+  seen:
+    description: Show when a player was last seen
+    permission: oreo.seen
+    usage: "/seen <player>"
+
+  ping:
+    description: Show your ping
+    permission: oreo.ping
+
+  hat:
+    description: Wear the item in your hand as a hat
+    permission: oreo.hat
+
+  realname:
+    description: Resolve a nickname to the player's real name
+    permission: oreo.realname
+    usage: "/realname <nickname>"
+
+  near:
+    description: List nearby players within a radius
+    permission: oreo.near
+    usage: "/near [radius]"
+
+  kill:
+    description: Kill yourself or another player
+    permission: oreo.kill
+    usage: "/kill [player]"
+
+  invsee:
+    description: View/edit a player's inventory
+    permission: oreo.invsee
+    usage: "/invsee <player>"
+
+  invlook:
+    description: View a player's inventory in read-only mode
+    usage: /invlook <player>
+    permission: oreo.invlook
+    aliases: [invview]
+
+  sellgui:
+    description: Open the Sell GUI
+    aliases: [ sell ]
+    permission: oreo.sellgui
+    usage: "/sellgui"
+
+
+  ecsee:
+    description: View/edit a player's ender chest (online = live; offline = virtual)
+    permission: oreo.ecsee
+    usage: "/ecsee <player>"
+
+  skin:
+    description: Change or reset your skin
+    permission: oreo.skin
+    usage: "/skin <player|url|reset>"
+
+  clone:
+    description: Clone a player's inventory (admin)
+    permission: oreo.clone
+    usage: "/clone <player>"
+
+  bossbar:
+    description: Toggle your personal boss bar
+    usage: "/bossbar toggle"
+    permission: oreo.bossbar.toggle
+
+  oereload:
+    description: Reload all OreoEssentials configs
+    aliases: [ oereloadall, oer ]
+    permission: oreo.reload
+  # subcommand lives under the existing /oe manager; this is the literal executor:
+  oevault:
+    description: Open the PlayerVaults menu or a specific vault
+    usage: "/oevault [id]"
+
+  killallr:
+    description: Kill entities within a radius and record the action
+    usage: /killallr <radius> [--type=ALL|HOSTILE|PASSIVE|NAMED|CUSTOM] [--dry-run] [--reason="text"]
+    permission: oreo.killall.radius
+
+  killallrlog:
+    description: Show recent killall records
+    usage: /killallrlog [limit]
+    permission: oreo.killall.view
+
+  olagg:
+    description: OreoEssentials ClearLag controls
+    usage: /olagg <help|reload|clear|killmobs>
+    permission: oreo.lag.use
+
+  otherhomes:
+    description: List another player's homes
+    permission: oreo.homes.other
+    usage: "/otherhomes <player>"
+    aliases: [ listhomesof, ohomes ]
+
+  otherhome:
+    description: Teleport to another player's home
+    permission: oreo.homes.other
+    usage: "/otherhome <player> [home]"
+    aliases: [ ohome ]
+  uuid:
+    description: Show your UUID (and Floodgate Bedrock UUID if applicable)
+    permission: oreo.uuid
+  gamemode:
+    aliases: [ gm ]
+    description: Change your or another player's gamemode (supports visitor)
+    usage: "/gamemode <survival|creative|spectator|visitor|s|c|sp|v> [player]"
+    permission: oreo.gamemode
+
+  aliaseditor:
+    description: Create/list/edit/remove runtime command aliases
+    permission: oreo.alias.manage
+    usage: "/aliaseditor <list|create|remove|edit|toggle|reload> [...]"
+    aliases: [ alias, aliases ]
+  jail:
+    description: Jail/release players
+    permission: oreo.jail.use
+    usage: "/jail <player> (time) (jailName) (cellId) (-s) (r:reason...) | /jail release <player>"
+
+  jailedit:
+    description: Create and edit jails/cells
+    permission: oreo.jail.edit
+    usage: "/jailedit <pos1|pos2|save <name>|addcell <name> <cellId>>"
+
+  jaillist:
+    description: List jails, cells, or inmates
+    permission: oreo.jail.list
+    usage: "/jaillist [jailName] [cellId|*]"
+
+  oecraft:
+    description: Open OreoEssentials custom craft designer
+    usage: /oecraft craft <name> | /oecraft list | /oecraft reload
+    permission: oreo.craft
+
+  effectme:
+    description: Give yourself a potion effect (or clear it).
+    permission: oreo.effect.me
+    usage: "/effectme <effect|clear> [seconds] [level] [hideParticles]"
+    aliases: [eme, myeffect]
+  effectto:
+    description: Give a potion effect to another player (or clear it).
+    permission: oreo.effect.to
+    usage: "/effectto <player> <effect|clear> [seconds] [level] [hideParticles]"
+    aliases: [eto, effectgive]
+  spawnmob:
+    description: Spawns an entity at your location.
+    permission: oreo.spawnmob
+    usage: "/spawnmob <EntityType> [amount]"
+    aliases: [smob, sm]
+  flyspeed:
+    description: Set your flight speed (1-10) or reset to default.
+    permission: oreo.flyspeed
+    usage: "/flyspeed <1-10|reset>"
+    aliases: [fspeed, fs]
+  oetime:
+    description: Set time to day/night or a specific hour (1-23).
+    permission: oreo.time
+    usage: "/oetime <day|night|hour(1-23)> [world|all]"
+    aliases: [settime, oetime]
+
+  weather:
+    description: Controls server weather.
+    permission: oreo.weather
+    usage: "/weather <sun|rain|storm> [lock|seconds] [world|all]"
+
+  sun:
+    description: Shortcut for /weather sun
+    permission: oreo.weather
+    usage: "/sun [lock|seconds] [world|all]"
+
+  rain:
+    description: Shortcut for /weather rain
+    permission: oreo.weather
+    usage: "/rain [lock|seconds] [world|all]"
+
+  storm:
+    description: Shortcut for /weather storm
+    permission: oreo.weather
+    usage: "/storm [lock|seconds] [world|all]"
+  world:
+    description: Teleport to another world (supports name, normal/nether/end, or index).
+    permission: oreo.world
+    usage: "/world <name|normal|nether|end|index> [playerName] [-s]"
+    aliases: [ oworld, tpworld ]
+
+  ic:
+    description: Interactive Commands editor (create/bind blocks/entities/signs).
+    permission: oreo.ic
+    usage: "/ic <new|addblock|addentity|addcmd|public|list|info>"
+
+  oevents:
+    description: Reload event commands and death messages.
+    permission: oreo.events
+    usage: "/oevents reload"
+
+  prewards:
+    description: Open Playtime Rewards GUI, claim rewards, or reload its config
+    aliases: [ preward, ptrewards, prew ]
+    permission: oreo.prewards
+    usage: "/prewards [claim <id> [player]] | /prewards reload"
+
+  oesettings:
+    description: Open settings GUI
+    usage: /<command>
+    aliases: [ oeconfig, oecfg ]
+    permission: oreo.admin.settings
+
+  daily:
+    description: Daily rewards command
+    usage: /daily [claim|top]
+    aliases: [dr, dailyrewards]
+    permission: oreo.daily
+
+  playtime:
+    description: Show your (or another player's) playtime
+    permission: oreo.playtime
+    usage: "/playtime [player]"
+
+  ohologram:
+    description: Manage Oreo holograms
+    permission: OreoHolograms.admin
+    usage: "/ohologram help"
+
+  hologram:
+    description: (Legacy alias) Manage Oreo holograms
+    permission: OreoHolograms.admin
+    usage: "/hologram help"
+    aliases: [ ohologram ]
+  homesgui:
+    description: Open the Homes GUI
+    usage: /homesgui
+    aliases: [homesmenu, homegui]
+    permission: oreo.homes.gui
+  warps:
+    description: Open the Warps GUI (player)
+    usage: /warps
+    aliases: [ warplist ]
+    permission: oreo.warps
+
+  warpsadmin:
+    description: Open the Warps Admin GUI (cross-server aware)
+    usage: /warpsadmin
+    aliases: [ warpsgui, warpguiadmin ]
+    permission: oreo.warps.admin
+
+  pwwhitelist:
+    description: Manage player warp whitelists
+    usage: /pwwhitelist <add|remove> <warp> <player>
+    permission: oreo.playerwarps.whitelist
+
+  # ═══════════════════════════════════════════════════════════════
+  # CHAT CHANNELS SYSTEM COMMANDS
+  # ═══════════════════════════════════════════════════════════════
+  channelannounce:
+    description: Send an announcement to a specific channel
+    usage: /<command> <channel> <message>
+    permission: oreo.channel.announce
+    aliases: [channelbroadcast, chanannounce, ca]
+
+  oechannels:
+    description: Open chat channels GUI
+    usage: /<command>
+    aliases: [channels, ch]
+    permission: oreo.chat.channels
+
+  oechannel:
+    description: Switch to a specific chat channel
+    usage: /<command> <channel>
+    aliases: [channel, setchannel]
+    permission: oreo.chat.channel
+
+  # ═══════════════════════════════════════════════════════════════
+  # END CHAT CHANNELS COMMANDS
+  # ═══════════════════════════════════════════════════════════════
+
+permissions:
+  oreo.*:
+    description: All OreoEssentials features
+    default: op
+    children:
+      oreo.spawn: true
+      oreo.setspawn: true
+      oreo.back: true
+      oreo.warp: true
+      oreo.setwarp: true
+      oreo.delwarp: true
+      oreo.home: true
+      oreo.sethome: true
+      oreo.delhome: true
+      oreo.homes: true
+      oreo.tpa: true
+      oreo.tp: true
+      oreo.tphere: true
+      oreo.fly: true
+      oreo.heal: true
+      oreo.feed: true
+      oreo.msg: true
+      oreo.broadcast: true
+      oreo.money: true
+      oreo.money.give: true
+      oreo.money.take: true
+      oreo.money.set: true
+      oreo.pay: true
+      oreo.cheque.create: true
+      oreo.cheque.redeem: true
+      oreo.balance: true
+      oreo.balance.others: true
+      oreo.baltop: true
+      oreo.deathback: true
+      oreo.god: true
+      oreo.portal: true
+      oreo.jumpad: true
+      oreo.vanish: true
+      oreo.homes.other: true
+      oreo.ban: true
+      oreo.unban: true
+      oreo.kick: true
+      oreo.freeze: true
+      oreo.enchant: true
+      oreo.enchant.unsafe: true
+      oreo.enchant.ignoreconflicts: true
+      oreo.afelius.reload: true
+      oreo.mute: true
+      oreo.unmute: true
+      oreo.oe: true
+      oreo.server: true
+      oreo.skin: true
+      oreo.clone: true
+      oreo.head: true
+      oreo.nick: true
+      oreo.kits.open: true
+      oreo.kit.claim: true
+      oreo.kit.bypasscooldown: true
+      oreo.rtp: true
+      oreo.ec: true
+      oreo.sync: true
+      oreo.afk: true
+      oreo.hat: true
+      oreo.trash: true
+      oreo.workbench: true
+      oreo.anvil: true
+      oreo.furnace: true
+      oreo.cook: true
+      oreo.clear: true
+      oreo.clear.others: true
+      oreo.realname: true
+      oreo.seen: true
+      oreo.ping: true
+      oreo.near: true
+      oreo.kill: true
+      oreo.kill.others: true
+      oreo.invsee: true
+      oreo.ecsee: true
+      oreo.bossbar.toggle: true
+      oreo.chat.channels: true
+      oreo.chat.channel: true
+
+  # Basics
+  oreo.spawn:               { default: true }
+  oreo.setspawn:            { default: op }
+  oreo.back:                { default: true }
+  oreo.warp:                { default: true }
+  oreo.setwarp:             { default: op }
+  oreo.delwarp:             { default: op }
+  oreo.home:                { default: true }
+  oreo.sethome:             { default: true }
+  oreo.delhome:             { default: true }
+  oreo.homes:               { default: true }
+  oreo.tpa:                 { default: true }
+  oreo.tp:                  { default: op }
+  oreo.tphere:              { default: op }
+
+  oreo.fly:                 { default: op }
+  oreo.heal:                { default: op }
+  oreo.feed:                { default: op }
+  oreo.msg:                 { default: true }
+  oreo.broadcast:           { default: op }
+
+  # Economy
+  oreo.money:               { default: op }
+  oreo.money.give:          { default: op }
+  oreo.money.take:          { default: op }
+  oreo.money.set:           { default: op }
+  oreo.pay:                 { default: true }
+  oreo.cheque.create:       { default: op }
+  oreo.cheque.redeem:       { default: true }
+  oreo.balance:             { default: true }
+  oreo.balance.others:      { default: op }
+  oreo.baltop:              { default: true }
+
+  # Utilities & misc
+  oreo.deathback:           { default: true }
+  oreo.god:                 { default: op }
+  oreo.portal:              { default: op }
+  oreo.jumpad:              { default: op }
+  oreo.vanish:              { default: op }
+  oreo.ban:                 { default: op }
+  oreo.unban:               { default: op }
+  oreo.kick:                { default: op }
+  oreo.freeze:              { default: op }
+  oreo.enchant:             { default: op }
+  oreo.enchant.unsafe:      { default: op }
+  oreo.enchant.ignoreconflicts: { default: op }
+  oreo.afelius.reload:      { default: op }
+  oreo.mute:                { default: op }
+  oreo.unmute:              { default: op }
+  oreo.oe:                  { default: true }
+  oreo.server:              { default: true }
+  oreo.skin:                { default: true }
+  oreo.clone:               { default: op }
+  oreo.head:                { default: op }
+  oreo.nick:                { default: op }
+  oreo.kits.open:           { default: true }
+  oreo.kit.claim:           { default: true }
+  oreo.kit.bypasscooldown:  { default: op }
+  oreo.vault.use.*:         {default: false}
+  oreo.vault.use.1:         { default: false }
+  oreo.vault.use.2:         { default: false }
+
+  # QoL toggles & GUIs
+  oreo.sync:                { default: true }
+  oreo.afk:                 { default: true }
+  oreo.hat:                 { default: true }
+  oreo.trash:               { default: true }
+  oreo.workbench:           { default: true }
+  oreo.anvil:               { default: true }
+  oreo.furnace:             { default: true }
+  oreo.cook:                { default: op }
+  oreo.clear:               { default: true }
+  oreo.clear.others:        { default: op }
+  oreo.realname:            { default: op }
+  oreo.seen:                { default: true }
+  oreo.ping:                { default: true }
+  oreo.near:                { default: true }
+  oreo.kill:                { default: op }
+  oreo.kill.others:         { default: op }
+  oreo.invsee:              { default: op }
+  oreo.ecsee:               { default: op }
+
+  # RTP & EC
+  oreo.rtp:                 { default: true }
+  oreo.ec:                  { default: true }
+
+  # Optional rank/tier nodes (used by RTP radius & EnderChest rows)
+  oreo.tier.vip:            { default: false }
+  oreo.tier.mvp:            { default: false }
+  oreo.vault.rows.global.3: { default: true }
+  oreo.vault.rows.global.4: { default: false }
+  oreo.vault.rows.global.5: { default: false }
+  oreo.vault.rows.global.6: { default: false }
+
+
+  # per-vault overrides
+  oreo.vault.rows.1.5: { default: false }
+  oreo.vault.rows.2.6: { default: false }
+  oreo.lag.use: { default: op }
+  oreo.lag.reload: { default: op }
+  oreo.lag.clear:  { default: op }
+  oreo.lag.killmobs: { default: op }
+  # BossBar
+  oreo.bossbar.toggle:
+    description: Allows toggling the boss bar
+    default: true
+  oreo.reload:
+    description: Allows reloading all OreoEssentials configs
+    default: op
+  oreo.vault.bypass:
+    default: op
+  oreo.homes.other:
+    description: Allow admins to list and teleport to other players' homes
+    default: op
+  oreo.uuid:
+    default: true
+  oreo.sit:
+    description: "Allows using /sit"
+    default: true
+  oreo.sellgui:
+    description: Allows opening the Sell GUI
+    default: true
+  oreo.god.others:
+    default: op
+  oreo.gamemode:
+    default: op
+  oreo.gamemode.others:
+    default: op
+    # Alias Editor
+  oreo.alias.manage:
+    description: Access to /aliaseditor (create/remove/edit/toggle/reload)
+    default: op
+  oreo.alias.use.*:
+    description: Allow using all defined aliases (if you plan to gate them)
+    default: true
+  oreo.jail:
+    description: Allows using /jail
+    default: op
+
+  oreo.jail.silent:
+    description: Allows using -s to silently jail
+    default: op
+
+  oreo.modgui.open:
+    default: op
+
+  oreo.jail.manage:
+    description: Allows managing jails (/jailedit)
+    default: op
+
+  oreo.jail.list:
+    description: Allows listing jails (/jaillist)
+    default: true
+  oe.pw:
+    description: "Base permission for /pw"
+    default: true
+
+  oe.pw.set:
+    description: "Set your own player warps"
+    default: true
+
+  oe.pw.remove:
+    description: "Remove your own warps"
+    default: true
+
+  oe.pw.list:
+    description: "List your own warps"
+    default: true
+
+  oe.pw.amount:
+    description: "Check your warp amount"
+    default: true
+
+  oe.pw.warp:
+    description: "Teleport to your own warps"
+    default: true
+
+  oe.pw.limit.bypass:
+    description: "Bypass player warp limits"
+    default: op
+
+  oreo.maintenance.admin:
+    description: Allows access to all maintenance commands
+    default: op
+
+  oreo.maintenance.bypass:
+    description: Allows joining during maintenance mode
+    default: op
+
+  oreo.jail.bypass:
+    description: Bypass jail restrictions (movement/blocked commands)
+    default: op
+
+  oreo.craft:
+    description: Use the custom craft designer
+    default: op
+  oe.pw.whitelist:
+    description: "Manage whitelist for your own warps"
+    default: true
+
+  oe.pw.admin.whitelist:
+    description: "Manage whitelist for any warp"
+    default: op
+  oreo.effect.me:
+    default: true
+    description: Allow using /effectme
+  oreo.effect.to:
+    default: op
+    description: Allow using /effectto
+  oreo.spawnmob:
+    default: op
+    description: Allow using /spawnmob
+  oreo.flyspeed:
+    default: true
+    description: Allow using /flyspeed on yourself
+  oreo.time:
+    default: op
+    description: Use /oetime
+  oreo.weather:
+    default: op
+    description: Use /weather and /sun /rain /storm
+  oreo.world:
+    default: op
+    description: Use /world
+  oreo.ic:
+    default: op
+    description: Manage Interactive Commands
+  cmi.interactivesign:
+    default: op
+    description: Place public IC signs like [ic:name]
+  oreo.events:
+    default: op
+    description: Manage OreoEssentials event system
+  # Playtime Rewards (Prewards)
+  oreo.prewards:
+    description: Use /prewards (open GUI, claim own rewards)
+    default: true
+
+  oreo.prewards.notify:
+    description: Receive reminders when rewards are ready
+    default: true
+
+  oreo.prewards.admin:
+    description: Reload playtime rewards config (/prewards reload)
+    default: op
+
+  oreo.prewards.claim.others:
+    description: Claim a reward for another player (/prewards claim <id> <player>)
+    default: op
+  oreo.warps:
+    description: Use the player warps GUI
+    default: true
+
+  oreo.trade:
+    default: true
+
+  oreo.commandtoggle.admin:
+    description: Allows managing command toggles
+    default: op
+
+  oreo.commandtoggle.bypass:
+    description: Allows bypassing disabled commands
+    default: op
+
+  oreo.warps.admin:
+    description: Use the admin warps GUI (delete/toggle permission)
+    default: op
+
+  oreo.shard.admin:
+    description: Access to shard management commands
+    default: op
+
+  oreo.warp.delete:
+    description: Allows deleting warps from the admin GUI
+    default: op
+  # Optional per-reward gates (only add the ones you actually use)
+  oreo.prewards.vip_hourly: { default: false }
+  oreo.prewards.mvp_daily:  { default: false }
+    # Example: any other reward ids you define can get a matching perm:
+    # oreo.prewards.hourly1:  { default: true }
+  # oreo.prewards.daily1:   { default: true }
+  oreo.prewards.*:             { default: op }
+
+  OreoHolograms.admin:
+    default: op
+
+  oreo.vault.menu:
+    default: true
+
+  oreo.homes.gui:
+    description: Allows opening the Homes GUI
+    default: true
+
+  # ═══════════════════════════════════════════════════════════════
+  # CHAT CHANNELS SYSTEM PERMISSIONS
+  # ═══════════════════════════════════════════════════════════════
+
+  # Base channel permissions
+  oreo.chat.channels:
+    description: Open the chat channels GUI (/oechannels)
+    default: true
+
+  oreo.chat.channel:
+    description: Switch channels using /oechannel
+    default: true
+
+  # Per-channel permissions (optional - if permission is null in config, everyone can use)
+  # Global channel
+  oreo.chat.channel.global.talk:
+    description: Send messages in global channel
+    default: true
+
+  oreo.chat.channel.global.view:
+    description: See messages in global channel
+    default: true
+
+  oreo.chat.channel.global.join:
+    description: Join the global channel
+    default: true
+
+  # Local channel
+  oreo.chat.channel.local.talk:
+    description: Send messages in local channel
+    default: true
+
+  oreo.chat.channel.local.view:
+    description: See messages in local channel
+    default: true
+
+  oreo.chat.channel.local.join:
+    description: Join the local channel
+    default: true
+
+  # Trade channel
+  oreo.chat.channel.trade.talk:
+    description: Send messages in trade channel
+    default: true
+
+  oreo.chat.channel.trade.view:
+    description: See messages in trade channel
+    default: true
+
+  oreo.chat.channel.trade.join:
+    description: Join the trade channel
+    default: true
+
+  # Help channel
+  oreo.chat.channel.help.talk:
+    description: Send messages in help channel
+    default: true
+
+  oreo.chat.channel.help.view:
+    description: See messages in help channel (usually for staff)
+    default: op
+
+  oreo.chat.channel.help.join:
+    description: Join the help channel
+    default: true
+
+  # Staff channel
+  oreo.chat.channel.staff.talk:
+    description: Send messages in staff channel
+    default: op
+
+  oreo.chat.channel.staff.view:
+    description: See messages in staff channel
+    default: op
+
+  oreo.chat.channel.staff.join:
+    description: Join the staff channel
+    default: op
+
+  # Admin permission - bypass all channel restrictions
+  oreo.chat.channel.admin:
+    description: Bypass all channel restrictions
+    default: op
+
+  # ═══════════════════════════════════════════════════════════════
+  # END CHAT CHANNELS PERMISSIONS
+  # ═══════════════════════════════════════════════════════════════

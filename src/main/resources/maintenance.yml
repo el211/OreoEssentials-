@@ -1,0 +1,132 @@
+# ═══════════════════════════════════════════════════════════════════════
+#                    OreoEssentials - Maintenance System
+# ═══════════════════════════════════════════════════════════════════════
+#
+# This configuration controls the server maintenance mode.
+# When enabled, only whitelisted players can join the server.
+#
+# ═══════════════════════════════════════════════════════════════════════
+
+maintenance:
+  # Is maintenance mode currently enabled?
+  enabled: false
+
+  # ─────────────────────────────────────────────────────────────────────
+  # MOTD (Message of the Day)
+  # ─────────────────────────────────────────────────────────────────────
+  # The server list message shown when maintenance is active
+  # Supports color codes with & (e.g., &c for red, &a for green)
+  # Use \n for line breaks in messages
+
+  motd:
+    line1: "&c&l⚠ MAINTENANCE ⚠"
+    line2: "&7Server is currently under maintenance"
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Messages
+  # ─────────────────────────────────────────────────────────────────────
+
+  # Message shown when kicking players during maintenance activation
+  kick-message: |
+    &c&l⚠ MAINTENANCE MODE ⚠
+    &7
+    &7The server is entering maintenance mode.
+    &7Please try again later.
+    &7
+    &eThank you for your patience!
+
+  # Message shown when a player tries to join during maintenance
+  join-denied-message: |
+    &c&l⚠ SERVER UNDER MAINTENANCE ⚠
+    &7
+    &7The server is currently undergoing maintenance.
+    &7Please check back later.
+    &7
+    &eJoin our Discord for updates!
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Whitelist
+  # ─────────────────────────────────────────────────────────────────────
+  # Players who can join during maintenance
+  # Can contain UUIDs or player names
+  # Players with permission 'oreo.maintenance.bypass' can also join
+
+  whitelist: []
+  # Example:
+  # - "PlayerName"
+  # - "550e8400-e29b-41d4-a716-446655440000"
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Timer System
+  # ─────────────────────────────────────────────────────────────────────
+  # Automatically disable maintenance after a set duration
+
+  timer:
+    # Is the timer system enabled?
+    enabled: false
+
+    # Unix timestamp (in milliseconds) when maintenance should end
+    # This is automatically set by commands - don't edit manually
+    end-time: 0
+
+    # Show remaining time in the MOTD?
+    show-in-motd: true
+
+    # Format for displaying the timer in MOTD
+    # {TIME} will be replaced with the formatted time remaining
+    format: "&eTime remaining: &f{TIME}"
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Server List Display Options
+  # ─────────────────────────────────────────────────────────────────────
+  # How the server appears in the multiplayer server list during maintenance
+
+  server-list:
+    # Show server as "full" (0/0 players) in server list
+    # This makes the server appear completely full during maintenance
+    show-as-full: true
+
+    # Hide player count entirely (shows "???" on modern clients)
+    # Note: This takes priority over show-as-full if both are enabled
+    # Some older clients may still show 0/0
+    hide-player-count: false
+
+# ═══════════════════════════════════════════════════════════════════════
+#                              Commands
+# ═══════════════════════════════════════════════════════════════════════
+#
+# /maintenance on              - Enable maintenance mode
+# /maintenance off             - Disable maintenance mode
+# /maintenance toggle          - Toggle maintenance mode
+# /maintenance status          - Show current status
+#
+# /maintenance whitelist add <player>     - Add player to whitelist
+# /maintenance whitelist remove <player>  - Remove player from whitelist
+# /maintenance whitelist list             - Show all whitelisted players
+# /maintenance whitelist clear            - Clear the whitelist
+#
+# /maintenance clock set <duration>   - Set maintenance timer
+# /maintenance clock add <duration>   - Add time to timer
+# /maintenance clock remove           - Remove timer
+# /maintenance clock status           - Show timer status
+#
+# /maintenance motd line1 <message>   - Set MOTD line 1
+# /maintenance motd line2 <message>   - Set MOTD line 2
+#
+# /maintenance reload                 - Reload this config
+#
+# Duration format: 1d 2h 30m 45s (days, hours, minutes, seconds)
+# Examples:
+#   - "2h"        = 2 hours
+#   - "30m"       = 30 minutes
+#   - "1d 12h"    = 1 day and 12 hours
+#   - "2h 30m"    = 2 hours and 30 minutes
+#
+# ═══════════════════════════════════════════════════════════════════════
+#                            Permissions
+# ═══════════════════════════════════════════════════════════════════════
+#
+# oreo.maintenance.admin   - Use all maintenance commands
+# oreo.maintenance.bypass  - Join during maintenance mode
+#
+# ═══════════════════════════════════════════════════════════════════════

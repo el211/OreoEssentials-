@@ -1,0 +1,297 @@
+# ==========================================================
+# OreoEssentials — Playtime Rewards (SmartInvs GUI)
+# File: plugins/OreoEssentials/playtime_rewards.yml
+# ==========================================================
+# How it works:
+# - One-time rewards: trigger once when total playtime >= PayFor (seconds)
+# - Repeating rewards: trigger every PayEvery seconds (can stack when offline)
+# - AutoClaim: true => reward executes immediately; false => shown in GUI to click
+# - Commands support directives:
+#     asConsole! <cmd>     run as console
+#     asPlayer!  <cmd>     run as the player
+#     delay! <sec> <cmd>   run after delay (in seconds)
+# - Placeholders in commands:
+#     [playerName]  -> player name
+# - GUI:
+#     You can theme the inventory globally AND/OR per reward (slot + icon skin).
+#     Slots are 0-based indices across the inventory grid (row*9 + col).
+# ==========================================================
+
+settings:
+  # Use the plugin's internal per-server tracker (recommended).
+  # Other option: "bukkit" (uses vanilla lifetime across all servers).
+  source: internal
+
+  # On first time we see a player, copy their vanilla lifetime into the internal tracker once.
+  baseline-from-bukkit-on-first-seen: true
+
+  # On first sighting, mark repeating rewards as already paid up to current time
+  # to prevent a burst of retroactive payouts.
+  baseline-on-first-seen: true
+
+  # How often to remind players if they have unclaimed manual rewards (0 = off)
+  notify-every-minutes: 10
+
+  # If true, repeating rewards will pay for every missed cycle
+  # (e.g., offline for 3 hours on a 1h reward => 3x payout on next join)
+  stack-rewards: true
+
+  # Only used when source: bukkit. Safe to leave false here.
+  use-bukkit-statistic: false
+
+  # ---------- SmartInvs GUI skin ----------
+  gui:
+    # Inventory title & size
+    title: "&bPlaytime Rewards"
+    rows: 5                    # 1..6 rows
+    fill-empty: true
+
+    # Background filler item (when fill-empty = true)
+    filler:
+      material: GRAY_STAINED_GLASS_PANE
+      name: "&7"
+      custom-model-data: 0
+
+    # Global state skins (applied on top of the per-reward icon)
+    # You can override names/glow per-state globally here.
+    states:
+      LOCKED:
+        material: BARRIER
+        name: "&cLocked"
+        glow: false
+
+      READY:
+        material: LIME_DYE
+        name: "&aClick to claim"
+        glow: true
+
+      CLAIMED:
+        material: SUNFLOWER
+        name: "&eClaimed"
+        glow: false
+
+      REPEATING:
+        material: CLOCK
+        name: "&6Repeating"
+        glow: true
+
+# ----------------------------------------------------------
+# Rewards
+# - Use either PayFor (one-time) OR PayEvery (repeating).
+# - AutoClaim: true => executes immediately; false => manual claim via GUI.
+# - StackRewards: per-reward override of the global setting (true/false).
+# - gui.slot is optional; if not set, items auto-flow left-to-right.
+# ----------------------------------------------------------
+rewards:
+
+  # =======================================
+  # REPEATING: Every 1 hour (AutoClaim)
+  # =======================================
+  hourly1:
+    DisplayName: "&7Hourly reward"
+    AutoClaim: true
+    Description:
+      - "&2Get a reward for every hour you are online."
+      - "&7This one auto-claims!"
+    PayEvery: 3600
+    StackRewards: true
+    Commands:
+      - "asConsole! heal [playerName] -s"
+      - "asConsole! money give [playerName] 20"
+    gui:
+      slot: 10
+      icon:
+        material: GOLD_NUGGET
+        custom-model-data: 1201
+        name: "&eHourly Reward"
+        lore:
+          - "&7Earned every &f1h&7 of playtime."
+          - "&7Ready payouts will auto-claim."
+
+  # =======================================
+  # REPEATING: Every 24 hours (AutoClaim)
+  # =======================================
+  daily1:
+    DisplayName: "&7Daily reward"
+    AutoClaim: true
+    Description:
+      - "&2Get a reward for every 24 hours of playtime."
+    PayEvery: 86400
+    StackRewards: true
+    Commands:
+      - "asConsole! money give [playerName] 2000"
+    gui:
+      slot: 12
+      icon:
+        material: EMERALD
+        custom-model-data: 1202
+        name: "&aDaily Reward"
+        lore:
+          - "&7Earned every &f24h&7 of playtime."
+          - "&7100% auto-claimed."
+
+  # =======================================
+  # ONE-TIME: First hour (Manual)
+  # =======================================
+  "1hour":
+    DisplayName: "&fOne hour reward"
+    AutoClaim: false
+    Description:
+      - "&2Get this once when you hit your first hour!"
+    PayFor: 3600
+    Commands:
+      - "asConsole! money give [playerName] 500"
+    gui:
+      slot: 14
+      icon:
+        material: IRON_INGOT
+        custom-model-data: 1203
+        name: "&f1h Milestone"
+        lore:
+          - "&7One-time reward at &f1h&7 total."
+          - "&7Status shows &aREADY &7when claimable."
+
+  # =======================================
+  # ONE-TIME: 6 hours (Manual)
+  # =======================================
+  "6hour":
+    DisplayName: "&f6 hour reward"
+    AutoClaim: false
+    Description:
+      - "&2Get this once when you reach &f6h&2 of total playtime."
+    PayFor: 21600
+    Commands:
+      - "asConsole! money give [playerName] 2000"
+    gui:
+      slot: 16
+      icon:
+        material: DIAMOND
+        custom-model-data: 1204
+        name: "&b6h Milestone"
+        lore:
+          - "&7One-time reward at &f6h&7 total."
+
+  # =======================================
+  # ONE-TIME: 12 hours (Manual)
+  # =======================================
+  "12hour":
+    DisplayName: "&f12 hour reward"
+    AutoClaim: false
+    Description:
+      - "&2Reach &f12h&2 total playtime to claim this."
+    PayFor: 43200
+    Commands:
+      - "asConsole! money give [playerName] 5000"
+    gui:
+      slot: 28
+      icon:
+        material: NETHERITE_SCRAP
+        custom-model-data: 1205
+        name: "&d12h Milestone"
+        lore:
+          - "&7One-time reward at &f12h&7 total."
+
+  # =======================================
+  # ONE-TIME: 24 hours (Manual)
+  # =======================================
+  "24hour":
+    DisplayName: "&f24 hour reward"
+    AutoClaim: false
+    Description:
+      - "&2Hit &f24h&2 total playtime and grab this big one!"
+    PayFor: 86400
+    Commands:
+      - "asConsole! money give [playerName] 15000"
+    gui:
+      slot: 30
+      icon:
+        material: NETHER_STAR
+        custom-model-data: 1206
+        name: "&f24h Milestone"
+        lore:
+          - "&7One-time reward at &f24h&7 total."
+
+  # =======================================
+  # ONE-TIME: 7 days (Manual)
+  # =======================================
+  "7days":
+    DisplayName: "&f7 day reward"
+    AutoClaim: false
+    Description:
+      - "&2A full &f7 days&2 of playtime. Respect."
+    PayFor: 604800
+    Commands:
+      - "asConsole! money give [playerName] 50000"
+    gui:
+      slot: 32
+      icon:
+        material: TOTEM_OF_UNDYING
+        custom-model-data: 1207
+        name: "&67d Milestone"
+        lore:
+          - "&7One-time reward at &f7d&7 total."
+
+  # =======================================
+  # ONE-TIME: 30 days (Manual)
+  # =======================================
+  "30days":
+    DisplayName: "&f30 day reward"
+    AutoClaim: false
+    Description:
+      - "&230 days of playtime — absolute legend!"
+    PayFor: 2592000
+    Commands:
+      - "asConsole! money give [playerName] 500000"
+    gui:
+      slot: 34
+      icon:
+        material: DRAGON_EGG
+        custom-model-data: 1208
+        name: "&530d Milestone"
+        lore:
+          - "&7One-time reward at &f30d&7 total."
+
+  # =======================================
+  # (Optional) Rank-Gated Examples
+  # Give only to players with `oreo.prewards.vip_hourly` permission.
+  # =======================================
+  vip_hourly:
+    DisplayName: "&6VIP Hourly"
+    AutoClaim: true
+    requires-permission: true
+    Description:
+      - "&eVIP: &7extra hourly stipend."
+    PayEvery: 3600
+    StackRewards: true
+    Commands:
+      - "asConsole! money give [playerName] 75"
+    gui:
+      slot: 19
+      icon:
+        material: GOLD_INGOT
+        custom-model-data: 1211
+        name: "&6VIP Hourly"
+        lore:
+          - "&7Requires &eoreo.prewards.vip_hourly"
+          - "&7Earned every &f1h&7 of playtime."
+
+  # Give only to players with `oreo.prewards.mvp_daily` permission.
+  mvp_daily:
+    DisplayName: "&dMVP Daily"
+    AutoClaim: true
+    requires-permission: true
+    Description:
+      - "&dMVP: &7daily stipend."
+    PayEvery: 86400
+    StackRewards: true
+    Commands:
+      - "asConsole! money give [playerName] 5000"
+    gui:
+      slot: 21
+      icon:
+        material: DIAMOND_BLOCK
+        custom-model-data: 1212
+        name: "&dMVP Daily"
+        lore:
+          - "&7Requires &doreo.prewards.mvp_daily"
+          - "&7Earned every &f24h&7 of playtime."

@@ -1,0 +1,1421 @@
+# ============================================================================
+# OREOESSENTIALS - LANG.YML DI PRODUZIONE COMPLETO (ITALIANO)
+# ============================================================================
+# Generato dal progetto di unificazione del sistema di colori completo
+# Copre oltre 102 file verificati attraverso 11 sessioni di verifica
+#
+# Formato: MiniMessage (es. <red>, <green>, <#RRGGBB>)
+# Documentazione: https://docs.advntr.dev/minimessage/format.html
+#
+# Variabili comuni:
+#   %player%, %target%    - Nomi dei giocatori
+#   %server%, %world%     - Nomi di server/mondo
+#   %label%               - Etichetta del comando
+#   %amount%, %balance%   - Valori numerici
+#   %name%, %warp%, %home% - Nomi di posizioni
+#   %id%                  - Identificatori numerici
+# ============================================================================
+
+# ============================================================================
+# MESSAGGI GENERALI
+# ============================================================================
+
+general:
+  prefix: '<gold><bold>Oreo</bold></gold><white><bold>Essentials</bold></white> <dark_gray>»</dark_gray> '
+  no-permission: "<red>Non hai il permesso.</red>"
+  player-only: "<red>Solo i giocatori possono usare questo comando.</red>"
+  console-only: "<red>Solo la console può usare questo comando.</red>"
+  invalid-player: "<red>Giocatore <yellow>%player%</yellow> non trovato.</red>"
+  player-offline: "<red>Il giocatore <yellow>%player%</yellow> non è online.</red>"
+  reload-success: "<green>Configurazione ricaricata con successo.</green>"
+  reload-failed: "<red>Errore nel ricaricare la configurazione.</red>"
+  command-cooldown: "<yellow>Devi attendere <white>%time%</white> prima di usare questo comando di nuovo.</yellow>"
+
+# ============================================================================
+# SISTEMA KITS (6 file verificati)
+# ============================================================================
+
+kits:
+  # Messaggi principali (KitsManager.java - 9 chiamate Lang)
+  unknown-kit: "<red>Kit sconosciuto: <yellow>%kit_id%</yellow></red>"
+  disabled: "<red>I kit sono attualmente disabilitati.</red>"
+  disabled-hint: "<gray>Usa <white>%cmd%</white> per abilitarlo.</gray>"
+
+  # Permessi
+  no-permission: "<red>Non hai il permesso.</red>"
+  no-permission-claim: "<red>Non hai il permesso di reclamare kit.</red>"
+  no-permission-specific: "<red>Non hai il permesso per il kit <yellow>%kit_name%</yellow>. Necessario: <white>%perm%</white></red>"
+
+  # Tempo di attesa
+  cooldown: "<yellow>Il kit <aqua>%kit_name%</aqua> è in cooldown. Attendi <white>%cooldown_left%</white>.</yellow>"
+  bypass-cooldown: "<green>Bypass del cooldown per <aqua>%kit_name%</aqua>.</green>"
+
+  # Successo
+  claimed: "<green>Hai ricevuto il kit <aqua>%kit_name%</aqua>!</green>"
+  commands-ran: "<gray>Comandi da <aqua>%kit_name%</aqua> eseguiti.</gray>"
+
+  # Comandi (KitCommands.java - 8 chiamate Lang)
+  player-only: "<red>Solo i giocatori possono usare questo comando.</red>"
+  usage-kit: "<yellow>Uso: /kit <n></yellow>"
+  toggle-enabled: "<green>La funzione kit è ora <white>ABILITATA</white>.</green>"
+  toggle-disabled: "<yellow>La funzione kit è ora <white>DISABILITATA</white>.</yellow>"
+
+  # Descrizioni GUI (KitsMenuSI.java - 5 chiamate Lang)
+  gui:
+    lore:
+      claimable: "<green>✓ Pronto da reclamare!</green>\n<gray>Cooldown: <white>Nessuno</white></gray>"
+      on-cooldown: "<yellow>⏱ In cooldown</yellow>\n<gray>Attendi: <white>%cooldown_left%</white></gray>"
+    sounds:
+      claim:
+        enabled: true
+        sound: "minecraft:entity.experience_orb.pickup"
+        volume: 0.8
+        pitch: 1.2
+      denied:
+        enabled: true
+        sound: "minecraft:block.note_block.bass"
+        volume: 0.7
+        pitch: 0.7
+
+# ============================================================================
+# SISTEMA PLAYERWARP (10 file verificati - oltre 65 chiavi Lang)
+# ============================================================================
+
+# Messaggi a livello di servizio (PlayerWarpService.java - 15 chiamate Lang)
+playerwarps:
+  no-permission-base: "<red>Non hai il permesso di usare i warp dei giocatori.</red>"
+  only-players-sub: "<red>Solo i giocatori possono usare /%sub%.</red>"
+
+  teleport:
+    not-found: "<red>Il warp <yellow>%name%</yellow> non è stato trovato.</red>"
+    no-permission: "<red>Non hai il permesso di usare <yellow>%name%</yellow>.</red>"
+    local: "<green>Teletrasportato al warp</green> <yellow>%name%</yellow>."
+    cross-disabled: "<gray>I warp cross-server sono disabilitati. Teletrasporto locale a <white>%name%</white>.</gray>"
+    messaging-disabled: "<gray>Messaggistica offline. Teletrasporto locale a <white>%name%</white>.</gray>"
+    cross-send: "<gray>Ti stiamo inviando al server</gray> <yellow>%server%</yellow> <gray>per il warp</gray> <white>%name%</white>…"
+
+  whitelist:
+    not-found: "<red>Warp <yellow>%name%</yellow> non trovato.</red>"
+    not-enabled: "<red>La whitelist non è abilitata per <yellow>%name%</yellow>.</red>"
+    player-not-found: "<red>Giocatore target non trovato.</red>"
+    already: "<yellow>%target%</yellow> è già nella whitelist di <white>%name%</white>."
+    added: "<green>Aggiunto</green> <yellow>%target%</yellow> <green>alla whitelist di</green> <white>%name%</white>."
+    not-in: "<red><yellow>%target%</yellow> non è nella whitelist di <white>%name%</white>.</red>"
+    removed: "<green>Rimosso</green> <yellow>%target%</yellow> <green>dalla whitelist di</green> <white>%name%</white>."
+    enabled: "<green>Whitelist abilitata per <white>%warp%</white>.</green>"
+    disabled: "<yellow>Whitelist disabilitata per <white>%warp%</white>.</yellow>"
+    not-owner: "<red>Non sei il proprietario di <yellow>%warp%</yellow>.</red>"
+
+# Messaggi dei comandi (PlayerWarpCommand.java - oltre 50 chiamate Lang)
+pw:
+  # Aiuto
+  help-header: "<gold><bold>Aiuto PlayerWarp</bold></gold>"
+  help-body: |
+    <yellow>/%label% set <n></yellow> <gray>- Crea un warp</gray>
+    <yellow>/%label% remove <n></yellow> <gray>- Elimina il tuo warp</gray>
+    <yellow>/%label% list [giocatore]</yellow> <gray>- Elenca i warp</gray>
+    <yellow>/%label% gui</yellow> <gray>- Sfoglia tutti i warp</gray>
+    <yellow>/%label% mywarps</yellow> <gray>- Gestisci i tuoi warp</gray>
+    <yellow>/%label% <warp></yellow> <gray>- Teletrasportati al warp</gray>
+  help-footer: "<gray>Usa <yellow>/%label% help</yellow> per maggiori informazioni.</gray>"
+
+  # Permessi (oltre 20 chiavi)
+  no-permission-base: "<red>Non hai il permesso di usare i warp dei giocatori.</red>"
+  no-permission-set: "<red>Non hai il permesso di impostare warp.</red>"
+  no-permission-remove: "<red>Non hai il permesso di rimuovere warp.</red>"
+  no-permission-list: "<red>Non hai il permesso di elencare i warp.</red>"
+  no-permission-warp: "<red>Non hai il permesso di usare <yellow>%name%</yellow>.</red>"
+  no-permission-amount: "<red>Non hai il permesso.</red>"
+  no-permission-rtp: "<red>Non hai il permesso.</red>"
+  no-permission-near: "<red>Non hai il permesso.</red>"
+  no-permission-reset: "<red>Non hai il permesso.</red>"
+  no-permission-rename: "<red>Non hai il permesso.</red>"
+  no-permission-setowner: "<red>Non hai il permesso.</red>"
+  no-permission-removeall: "<red>Non hai il permesso.</red>"
+  no-permission-reload: "<red>Non hai il permesso.</red>"
+  no-permission-addwarps: "<red>Non hai il permesso.</red>"
+  no-permission-whitelist: "<red>Non hai il permesso.</red>"
+  no-permission-desc: "<red>Non hai il permesso.</red>"
+  no-permission-category: "<red>Non hai il permesso.</red>"
+  no-permission-lock: "<red>Non hai il permesso.</red>"
+  no-permission-icon: "<red>Non hai il permesso.</red>"
+  no-permission-cost: "<red>Non hai il permesso.</red>"
+  no-permission-managers: "<red>Non hai il permesso.</red>"
+  no-permission-password: "<red>Non hai il permesso.</red>"
+
+  # Messaggi di utilizzo (oltre 15 chiavi)
+  usage-set: "<yellow>Uso: /%label% set <n></yellow>"
+  usage-remove: "<yellow>Uso: /%label% remove <warp></yellow>"
+  usage-reset: "<yellow>Uso: /%label% reset <warp></yellow>"
+  usage-rename: "<yellow>Uso: /%label% rename <warp> <nuovoNome></yellow>"
+  usage-setowner: "<yellow>Uso: /%label% setowner <warp> <giocatore></yellow>"
+  usage-removeall: "<yellow>Uso: /%label% removeall <giocatore></yellow>"
+  usage-addwarps: "<yellow>Uso: /%label% addwarps <giocatore> <quantità></yellow>"
+  usage-whitelist: "<yellow>Uso: /%label% whitelist <enable|disable|list|set|remove> <warp> [giocatore]</yellow>"
+  usage-whitelist-set: "<yellow>Uso: /%label% whitelist set <warp> <giocatore></yellow>"
+  usage-whitelist-remove: "<yellow>Uso: /%label% whitelist remove <warp> <giocatore></yellow>"
+  usage-desc: "<yellow>Uso: /%label% desc <warp> [descrizione...]</yellow>"
+  usage-category: "<yellow>Uso: /%label% category <warp> [categoria]</yellow>"
+  usage-lock: "<yellow>Uso: /%label% lock <warp> [on|off|toggle]</yellow>"
+  usage-icon: "<yellow>Uso: /%label% icon <warp> [clear]</yellow>"
+  usage-cost: "<yellow>Uso: /%label% cost <warp> <importo></yellow>"
+  usage-managers: "<yellow>Uso: /%label% managers <warp> [giocatore]</yellow>"
+  usage-password: "<yellow>Uso: /%label% password <warp> <password|off></yellow>"
+  usage-use: "<yellow>Uso: /%label% use <warp> [password]</yellow>"
+
+  # Imposta warp
+  limit-reached: "<red>Hai raggiunto il limite di warp (<white>%limit%</white>).</red>"
+  already-exists: "<red>Hai già un warp chiamato <yellow>%name%</yellow>.</red>"
+  set-success: "<green>Warp <aqua>%name%</aqua> creato.</green>"
+
+  # Rimuovi warp
+  not-found-owner: "<red>Non hai un warp chiamato <yellow>%name%</yellow>.</red>"
+  not-found: "<red>Warp <yellow>%name%</yellow> non trovato.</red>"
+  remove-success: "<green>Warp <aqua>%name%</aqua> rimosso.</green>"
+  remove-failed: "<red>Errore nella rimozione del warp <yellow>%name%</yellow>.</red>"
+
+  # Lista
+  list-header: "<gold>Warp di <yellow>%owner%</yellow>:</gold>"
+  list-empty: "<gray>Nessun warp trovato.</gray>"
+  list-entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua>"
+  list-footer: "<gray>───────────────────────</gray>"
+  list-target-offline: "<red>Il giocatore <yellow>%player%</yellow> non è online.</red>"
+
+  # Quantità
+  amount-console-usage: "<red>Uso: /pw amount <giocatore></red>"
+  amount-target-offline: "<red>Il giocatore <yellow>%player%</yellow> non è online.</red>"
+  amount-self: "<green>Hai <white>%amount%</white> warp.</green>"
+  amount-other: "<green><yellow>%player%</yellow> ha <white>%amount%</white> warp.</green>"
+
+  # RTP
+  rtp-none: "<red>Nessun warp disponibile per teletrasporto casuale.</red>"
+  rtp-none-usable: "<red>Nessun warp a cui puoi accedere.</red>"
+
+  # Vicino
+  near-none: "<gray>Nessun warp trovato entro <white>%radius%</white> blocchi.</gray>"
+  near-page-empty: "<red>La pagina <yellow>%page%</yellow> è vuota.</red>"
+
+  # Reset
+  reset-success: "<green>Warp <aqua>%name%</aqua> reimpostato alla tua posizione attuale.</green>"
+  reset-failed: "<red>Errore nella reimpostazione del warp <yellow>%name%</yellow>.</red>"
+
+  # Rinomina
+  rename-success: "<green>Rinominato <yellow>%old%</yellow> in <aqua>%name%</aqua>.</green>"
+  rename-failed: "<red>Errore nella rinomina di <yellow>%old%</yellow> in <yellow>%name%</yellow>.</red>"
+
+  # Imposta proprietario
+  setowner-success: "<green>Warp <aqua>%warp%</aqua> trasferito a <yellow>%player%</yellow>.</green>"
+  setowner-failed: "<red>Errore nel trasferimento del warp <yellow>%warp%</yellow>.</red>"
+  player-resolve-failed: "<red>Impossibile risolvere il giocatore <yellow>%player%</yellow>.</red>"
+
+  # Rimuovi tutti
+  removeall-success: "<green>Rimossi <white>%amount%</white> warp da <yellow>%player%</yellow>.</green>"
+
+  # Ricarica
+  reload-success: "<green>Configurazione ricaricata.</green>"
+
+  # Aggiungi warp
+  addwarps-invalid-amount: "<red>Importo non valido.</red>"
+  addwarps-success: "<green>Aggiunti <white>%amount%</white> slot warp extra a <yellow>%player%</yellow>. Totale extra: <white>%total%</white>.</green>"
+
+  # Whitelist
+  whitelist-added: "<green>Aggiunto <yellow>%player%</yellow> alla whitelist di <white>%warp%</white>.</green>"
+  whitelist-removed: "<green>Rimosso <yellow>%player%</yellow> dalla whitelist di <white>%warp%</white>.</green>"
+  whitelist-already: "<yellow>%player%</yellow> è già nella whitelist di <white>%warp%</white>."
+  whitelist-not-found: "<red><yellow>%player%</yellow> non è nella whitelist di <white>%warp%</white>.</red>"
+
+  # Descrizione
+  desc-empty: "<gray>Il warp <white>%warp%</white> non ha descrizione.</gray>"
+  desc-show: "<gold>Descrizione di <aqua>%warp%</aqua>:</gold> <white>%desc%</white>"
+  desc-cleared: "<green>Descrizione di <aqua>%warp%</aqua> rimossa.</green>"
+  desc-set: "<green>Descrizione di <aqua>%warp%</aqua> impostata a: <white>%desc%</white></green>"
+
+  # Categoria
+  category-empty: "<gray>Il warp <white>%warp%</white> non ha categoria.</gray>"
+  category-show: "<gold>Categoria di <aqua>%warp%</aqua>:</gold> <white>%category%</white>"
+  category-cleared: "<green>Categoria di <aqua>%warp%</aqua> rimossa.</green>"
+  category-set: "<green>Categoria di <aqua>%warp%</aqua> impostata a: <white>%category%</white></green>"
+
+  # Blocca
+  locked: "<green>Warp <aqua>%warp%</aqua> bloccato.</green>"
+  unlocked: "<green>Warp <aqua>%warp%</aqua> sbloccato.</green>"
+
+  # Icona
+  icon-no-item: "<red>Devi tenere un oggetto nella mano principale.</red>"
+  icon-set: "<green>Icona impostata per <aqua>%warp%</aqua>.</green>"
+  icon-cleared: "<green>Icona rimossa per <aqua>%warp%</aqua>.</green>"
+
+  # Costo
+  cost-invalid: "<red>Importo non valido: <yellow>%input%</yellow></red>"
+  cost-cleared: "<green>Costo rimosso per <aqua>%warp%</aqua> (ora gratuito).</green>"
+  cost-set: "<green>Costo impostato per <aqua>%warp%</aqua> a <yellow>$%amount%</yellow>.</green>"
+  cost-not-enough: "<red>Saldo insufficiente (<white>$%amount%</white> richiesto).</red>"
+  cost-charged: "<gray>Addebitato</gray> <yellow>$%amount%</yellow> <gray>(pagato a</gray> <white>%owner%</white><gray>).</gray>"
+
+  # Manager
+  managers-player-not-found: "<red>Giocatore <yellow>%player%</yellow> non trovato.</red>"
+  manager-added: "<green>Aggiunto <yellow>%player%</yellow> come manager di <white>%warp%</white>.</green>"
+  manager-removed: "<green>Rimosso <yellow>%player%</yellow> come manager di <white>%warp%</white>.</green>"
+
+  # Password
+  password-required: "<red>Il warp <yellow>%warp%</yellow> richiede una password.</red> <gray>Usa: <white>/pw use %warp% <password></white></gray>"
+  password-wrong: "<red>Password errata per <yellow>%warp%</yellow>.</red>"
+  password-cleared: "<green>Password rimossa per <aqua>%warp%</aqua>.</green>"
+  password-set: "<green>Password impostata per <aqua>%warp%</aqua>.</green>"
+  password-placeholder-set: "<green>Password predefinita '<white>%password%</white>' impostata per <aqua>%warp%</aqua>. Cambiala con <yellow>/pw password %warp% <tua-password></yellow></green>"
+
+  # Teletrasporto
+  teleport-failed: "<red>Teletrasporto fallito.</red>"
+  teleported: "<green>Teletrasportato al warp giocatore <aqua>%name%</aqua>.</green>"
+  sending: "<yellow>Ti stiamo inviando a <aqua>%server%</aqua>... sarai teletrasportato al warp giocatore <aqua>%warp%</aqua> all'arrivo.</yellow>"
+  messaging-disabled: "<red>La messaggistica cross-server è disabilitata.</red>"
+
+# ============================================================================
+# SISTEMA PLAYERVAULTS (2 file GUI verificati - 1 chiave Lang)
+# ============================================================================
+
+playervaults:
+  # Permesso negato quando si accede al vault bloccato (VaultMenu.java)
+  deny: "<red>Non hai il permesso di accedere al vault <yellow>%id%</yellow>.</red>"
+
+  # Messaggi di successo opzionali
+  opened: "<green>Vault <aqua>%id%</aqua> aperto.</green>"
+  saved: "<gray>Vault <white>%id%</white> salvato automaticamente.</gray>"
+
+# ============================================================================
+# SISTEMI DI TELETRASPORTO (TPA, HOME, SPAWN, WARP, BACK)
+# ============================================================================
+
+teleport:
+  # Conto alla rovescia condiviso
+  countdown:
+    title: "<yellow>Teletrasporto...</yellow>"
+    subtitle: "<gray>Tra <white>%seconds%</white>s...</gray>"
+
+  # Teletrasporto cross-server (comando /tp admin)
+  cross-server:
+    no-messaging: "<red>La messaggistica cross-server non è disponibile; impossibile usare /tp tra server.</red>"
+    jumping: "<gray>Teletrasporto a <aqua>%target%</aqua> su <aqua>%server%</aqua>…</gray>"
+    arrived: "<green>Teletrasportato a <aqua>%target%</aqua>.</green>"
+    target-offline: "<red>Teletrasporto fallito: il giocatore target non è più online.</red>"
+
+  # /back cross-server
+  back:
+    cross-server:
+      no-messaging: "<red>La messaggistica cross-server non è disponibile; impossibile usare /back tra server.</red>"
+      no-server: "<red>La posizione di ritorno non ha un server di destinazione.</red>"
+      jumping: "<gray>Teletrasporto alla tua posizione precedente su <aqua>%server%</aqua>…</gray>"
+      world-not-loaded: "<red>Teletrasporto fallito: il mondo <yellow>%world%</yellow> non è caricato.</red>"
+      success: "<green>Teletrasportato indietro.</green>"
+
+# Sistema TPA
+tpa:
+  usage: "<red>Uso: /%label% <giocatore></red>"
+  self: "<red>Non puoi fare TPA a te stesso.</red>"
+
+  not-found:
+    name-hint: "<red>Il giocatore <white>%input%</white> non è online. <gray>(Se è su un altro server, usa il suo nome Minecraft esatto.)</gray></red>"
+    generic: "<red>Giocatore <white>%input%</white> non trovato online. <gray>(Potrebbe essere offline o su un altro cluster proxy.)</gray></red>"
+
+  sent:
+    local: "<green>TPA inviato a <aqua>%target%</aqua>.</green>"
+    cross-server: "<gray>Richiesta inviata a <aqua>%target%</aqua> su <aqua>%server%</aqua>. Può usare </gray><green>/tpaccept</green><gray>.</gray>"
+    global: "<gray>Abbiamo trasmesso la tua richiesta a <white>%target%</white> attraverso la rete. Se è online, può usare </gray><green>/tpaccept</green><gray>.</gray>"
+
+  request-target: "<aqua>%player%</aqua> <yellow>vuole teletrasportarsi da te.</yellow> <green>/tpaccept</green> <yellow>o</yellow> <red>/tpdeny</red> <yellow>(<white>%timeout%</white>s)</yellow>"
+
+  broker-unavailable: "<red>Il broker TPA cross-server non è attualmente disponibile. <gray>Chiedi a </gray><white>%target%</white><gray> di unirsi direttamente al tuo server.</gray></red>"
+
+  accept:
+    none: "<red>Nessuna richiesta di teletrasporto in sospeso.</red>"
+    failed: "<red>Errore nell'accettare la richiesta di teletrasporto.</red>"
+    debug-hint: "<gray>Debug: Nessuna richiesta trovata in TeleportService.</gray>"
+
+  # Echo di debug
+  debug:
+    echo: "<dark_gray>[<aqua>TPA</aqua>/<gray>%id%</gray>]</dark_gray> <gray>%message%</gray>"
+
+# Sistema Home
+home:
+  disabled: "<red>La funzione home è attualmente disabilitata.</red>"
+  no-homes: "<yellow>Non hai home. Usa <aqua>%sethome%</aqua> per crearne una.</yellow>"
+  list: "<gray>Le tue home:</gray> <aqua>%homes%</aqua>"
+  tip: "<gray>Usa <yellow>/%label% <nome></yellow> per teletrasportarti.</gray>"
+  not-found: "<red>Home <yellow>%name%</yellow> non trovata.</red>"
+  suggest: "<gray>Intendevi:</gray> <aqua>%suggestions%</aqua>"
+  teleported: "<green>Teletrasportato alla home <yellow>%name%</yellow>.</green>"
+  cancelled-moved: "<red>Teletrasporto annullato: ti sei mosso.</red>"
+  cross-disabled: "<red>Le home cross-server sono disabilitate.</red>"
+  cross-disabled-tip: "<gray>Chiedi a un admin di abilitare le home cross-server o usa <yellow>/server %server%</yellow> poi <yellow>/home %name%</yellow>.</gray>"
+  messaging-disabled: "<red>La messaggistica cross-server è disabilitata.</red>"
+  messaging-disabled-tip: "<gray>Chiedi a un admin di abilitare la messaggistica o usa <yellow>/server %server%</yellow> poi <yellow>/home %name%</yellow>.</gray>"
+  sending: "<gray>Ti stiamo inviando a <yellow>%server%</yellow> per la home <aqua>%name%</aqua>...</gray>"
+  switch-failed: "<red>Errore nel passaggio al server <yellow>%server%</yellow>.</red>"
+  switch-failed-tip: "<gray>Prova <yellow>/server %server%</yellow> manualmente.</gray>"
+
+homes:
+  not-found: "<red>Home non trovata: <yellow>%name%</yellow></red>"
+  available: "<gray>Disponibili:</gray> <aqua>%homes%</aqua>"
+  teleported: "<green>Teletrasportato alla home <aqua>%name%</aqua>.</green>"
+  cross-disabled: "<red>Le home cross-server sono disabilitate dalla configurazione del server.</red>"
+  cross-disabled-manual: "<gray>Usa <aqua>/server %server%</aqua> poi esegui <aqua>/homes %name%</aqua>.</gray>"
+  messaging-disabled: "<red>La messaggistica cross-server è disabilitata. Chiedi a un admin di abilitare RabbitMQ.</red>"
+  messaging-disabled-manual: "<gray>Puoi comunque passare con <aqua>/server %server%</aqua> ed eseguire <aqua>/homes %name%</aqua>.</gray>"
+  sending: "<yellow>Ti stiamo inviando a <aqua>%server%</aqua>... sarai teletrasportato alla home <aqua>%name%</aqua> all'arrivo.</yellow>"
+  switch-failed: "<red>Errore nel passaggio a %server%.</red>"
+  no-homes: "<yellow>Non hai home. Usa <aqua>/sethome <nome></aqua>.</yellow>"
+  list: "<gold>Home (%count%):</gold> <aqua>%homes%</aqua>"
+  tip: "<gray>Suggerimento: <aqua>/homes <nome></aqua> per teletrasportarti.</gray>"
+
+  gui:
+    title: "<dark_green>Le Tue Home</dark_green>"
+    not-found: "<red>Home non trovata: <yellow>%name%</yellow></red>"
+    teleported: "<green>Teletrasportato a <aqua>%name%</aqua>.</green>"
+    cross-disabled: "<red>Le home cross-server sono disabilitate dalla configurazione del server.</red>"
+    cross-disabled-manual: "<gray>Usa <aqua>/server %server%</aqua> poi <aqua>/home %name%</aqua>.</gray>"
+    messaging-disabled: "<red>La messaggistica cross-server è disabilitata. Chiedi a un admin di abilitare RabbitMQ.</red>"
+    messaging-disabled-manual: "<gray>Puoi comunque usare <aqua>/server %server%</aqua> poi <aqua>/home %name%</aqua>.</gray>"
+    sending: "<yellow>Ti stiamo inviando a <aqua>%server%</aqua>... (teletrasporto all'arrivo).</yellow>"
+    switch-failed: "<red>Errore nel passaggio a %server%.</red>"
+
+    refresh:
+      title: "<yellow>Aggiorna</yellow>"
+      lore: "<gray>Clicca per ricaricare le home.</gray>"
+
+    counter:
+      title: "<gold>Home <white>(%count%)</white></gold>"
+      lore:
+        0: "<gray>Click sinistro su una home per teletrasportarti.</gray>"
+        1: "<gray>Click destro su una home per eliminarla.</gray>"
+
+    nav:
+      previous: "<yellow>Pagina Precedente</yellow>"
+      next: "<yellow>Pagina Successiva</yellow>"
+
+    home:
+      title: "<aqua>%name%</aqua>"
+      lore:
+        server: "<gray>Server: <yellow>%server%</yellow></gray>"
+        world: "<gray>Mondo: <yellow>%world%</yellow></gray>"
+        coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+        left-click: "<green>Click Sinistro: <white>Teletrasporto</white></green>"
+        right-click: "<red>Click Destro: <white>Elimina</white></red>"
+
+  delete:
+    title: "<dark_red>Eliminare '%home%'?</dark_red>"
+    yes: "<green>Sì, elimina</green>"
+    no: "<red>No, annulla</red>"
+    success: "<red>Home <yellow>%home%</yellow> eliminata.</red>"
+    failed: "<red>Errore nell'eliminazione della home <yellow>%home%</yellow>.</red>"
+    info:
+      title: "<gold>Elimina Home</gold>"
+      lore:
+        0: "<gray>Sei sicuro di voler eliminare</gray>"
+        1: "<yellow>%home%</yellow><gray>?</gray>"
+
+# Sethome
+sethome:
+  limit: "<red>Hai raggiunto il limite di home di <yellow>%max%</yellow>.</red>"
+  set: "<green>Home <yellow>%name%</yellow> è stata impostata.</green>"
+
+# Delhome
+delhome:
+  usage: "<yellow>Uso: /%label% <nome></yellow>"
+  removed: "<green>Home <yellow>%name%</yellow> è stata rimossa.</green>"
+  not-found: "<red>Nessuna home chiamata <yellow>%name%</yellow>.</red>"
+
+# Sistema Spawn
+spawn:
+  disabled: "<red>Il comando spawn è attualmente disabilitato.</red>"
+  not-set: "<red>La posizione dello spawn non è impostata.</red>"
+  teleported: "<green>Teletrasportato allo spawn.</green>"
+  cancelled-moved: "<red>Teletrasporto annullato: ti sei mosso.</red>"
+  teleport-failed: "<red>Teletrasporto fallito: %error%</red>"
+  cross-disabled: "<red>Lo spawn cross-server è disabilitato.</red>"
+  cross-disabled-tip: "<gray>Chiedi a un admin di abilitare lo spawn cross-server o usa <yellow>/server %server%</yellow> poi <yellow>/spawn</yellow>.</gray>"
+  messaging-disabled: "<red>La messaggistica cross-server è disabilitata.</red>"
+  messaging-disabled-tip: "<gray>Chiedi a un admin di abilitare la messaggistica o usa <yellow>/server %server%</yellow> poi <yellow>/spawn</yellow>.</gray>"
+  sending: "<gray>Ti stiamo inviando a <yellow>%server%</yellow> per lo spawn...</gray>"
+  switch-failed: "<red>Errore nel passaggio al server <yellow>%server%</yellow>.</red>"
+
+# Sistema Warp
+warp:
+  list-empty: "<yellow>Warp: <gray>(nessuno)</gray></yellow>"
+  list: "<yellow>Warp:</yellow> <gray>%warps%</gray>"
+
+  no-permission: "<red>Non hai il permesso per questo warp.</red>"
+  no-permission-with-node: "<red>Non hai il permesso per questo warp. <gray>(%permission%)</gray></red>"
+  no-permission-others: "<red>Non hai il permesso di teletrasportare altri giocatori.</red>"
+
+  console-usage: "<red>Uso da console: /warp <warp> <giocatore></red>"
+  player-not-found: "<red>Il giocatore '<yellow>%player%</yellow>' non è online.</red>"
+
+  not-found: "<red>Warp non trovato.</red>"
+  teleport-failed: "<red>Teletrasporto fallito: <gray>%error%</gray></red>"
+
+  teleported: "<green>Teletrasportato al warp <aqua>%warp%</aqua>.</green>"
+  teleported-other: "<green>Teletrasportato <yellow>%player%</yellow> al warp <aqua>%warp%</aqua>.</green>"
+  cancelled-moved: "<red>Teletrasporto al warp <yellow>%warp%</yellow> annullato: ti sei mosso.</red>"
+
+  cross-disabled: "<red>I warp cross-server sono disabilitati dalla configurazione del server.</red>"
+  cross-disabled-tip: "<gray>Usa <aqua>/server %server%</aqua> poi esegui <aqua>/warp %warp%</aqua></gray>"
+  messaging-disabled: "<red>La messaggistica cross-server è disabilitata.</red>"
+  messaging-disabled-tip: "<gray>Usa <aqua>/server %server%</aqua> poi esegui <aqua>/warp %warp%</aqua></gray>"
+  sending: "<yellow>Ti stiamo inviando a <aqua>%server%</aqua>... sarai teletrasportato al warp <aqua>%warp%</aqua> all'arrivo.</yellow>"
+  sending-other: "<green>Invio di <yellow>%player%</yellow> a <aqua>%server%</aqua> (warp <yellow>%warp%</yellow>).</green>"
+  switch-failed: "<red>Errore nel passaggio a %server%.</red>"
+
+  delete:
+    title: "<dark_red>Eliminare '%warp%'?</dark_red>"
+    yes: "<green>Sì, elimina</green>"
+    no: "<red>No, annulla</red>"
+    success: "<red>Warp <yellow>%warp%</yellow> eliminato.</red>"
+    failed: "<red>Errore nell'eliminazione del warp <yellow>%warp%</yellow>.</red>"
+    info:
+      title: "<gold>Elimina Warp</gold>"
+      lore:
+        0: "<gray>Sei sicuro di voler eliminare</gray>"
+        1: "<yellow>%warp%</yellow><gray>?</gray>"
+
+  admin:
+    list:
+      title: "<dark_aqua>Warp (Admin)</dark_aqua>"
+      refresh: "<yellow>Aggiorna</yellow>"
+      refresh-lore: "<gray>Clicca per ricaricare i warp.</gray>"
+      counter: "<gold>Warp <white>(%count%)</white></gold>"
+      counter-lore:
+        0: "<gray>Click sinistro/destro: <white>Gestisci warp</white></gray>"
+        1: "<gray>Shift-Sinistro o Click centrale: <white>Teletrasporto rapido</white></gray>"
+      previous: "<yellow>Pagina Precedente</yellow>"
+      next: "<yellow>Pagina Successiva</yellow>"
+      warp-name: "<aqua>%name%</aqua>"
+      warp-server: "<gray>Server: <yellow>%server%</yellow></gray>"
+      warp-world: "<gray>Mondo: <yellow>%world%</yellow></gray>"
+      warp-coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+      warp-perm-protected: "<gray>Permesso: <gold>%perm%</gold></gray>"
+      warp-perm-public: "<gray>Permesso: <green>pubblico</green></gray>"
+      warp-click: "<green>Click: <white>Apri azioni</white></green>"
+      warp-quick-tp: "<aqua>Shift-Sinistro/Centrale: <white>Teletrasporto rapido</white></aqua>"
+
+    gui:
+      title: "<dark_aqua>Warp: <aqua>%warp%</aqua></dark_aqua>"
+      info:
+        server: "<gray>Server: <yellow>%server%</yellow></gray>"
+        permission-open: "<gray>Permesso: <green>APERTO (tutti)</green></gray>"
+        permission-required: "<gray>Permesso: <yellow>%permission%</yellow></gray>"
+      teleport: "<green>Teletrasporto</green>"
+      set-permission: "<aqua>Imposta/Cambia Permesso</aqua>"
+      make-public: "<green>Rendi Pubblico (rimuovi permesso)</green>"
+      rinomina: "<gold>Rinomina Warp</gold>"
+      delete: "<red>Elimina Warp</red>"
+      back: "<red>← Indietro</red>"
+
+    prompt:
+      permission: "<yellow>Digita il permesso in chat per il warp <aqua>%warp%</aqua> (o digita <white>cancel</white>).</yellow>"
+      rename: "<yellow>Digita il nuovo nome in chat per il warp <aqua>%warp%</aqua> (o digita <white>cancel</white>).</yellow>"
+      cancelled: "<gray>Operazione annullata.</gray>"
+
+    directory-unavailable: "<red>WarpDirectory non disponibile; impossibile modificare il permesso.</red>"
+    permission-cleared: "<green>Permesso rimosso. Il warp è ora pubblico.</green>"
+    permission-set: "<green>Permesso impostato a <yellow>%permission%</yellow>.</green>"
+    rename-empty: "<red>Il nome non può essere vuoto.</red>"
+    rename-failed: "<red>Errore nella rinomina del warp.</red>"
+    rename-success: "<green>Warp rinominato in <aqua>%new_name%</aqua>.</green>"
+    not-found: "<red>Warp non trovato: <yellow>%warp%</yellow></red>"
+    teleported: "<green>Teletrasportato al warp <aqua>%warp%</aqua>.</green>"
+    sending: "<yellow>Ti stiamo inviando a <aqua>%server%</aqua>... (teletrasporto all'arrivo).</yellow>"
+    switch-failed: "<red>Errore nel passaggio a %server%.</red>"
+
+  player:
+    no-permission: "<red>Non hai il permesso per questo warp.</red>"
+    list:
+      refresh: "<yellow>Aggiorna</yellow>"
+      refresh-lore: "<gray>Clicca per ricaricare i warp.</gray>"
+      counter: "<gold>Warp <white>(%count%)</white></gold>"
+      counter-lore: "<gray>Click sinistro: <white>Teletrasporto</white></gray>"
+      previous: "<yellow>Pagina Precedente</yellow>"
+      next: "<yellow>Pagina Successiva</yellow>"
+      warp-name-allowed: "<aqua>%name%</aqua>"
+      warp-name-locked: "<dark_red>%name%</dark_red>"
+      warp-server: "<gray>Server: <yellow>%server%</yellow></gray>"
+      warp-world: "<gray>Mondo: <yellow>%world%</yellow></gray>"
+      warp-coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+      warp-click: "<green>Click Sinistro: <white>Teletrasporto</white></green>"
+      warp-locked: "<red>Non hai accesso.</red>"
+
+  head:
+    usage: "<yellow>Uso: /<white>%label% <giocatore></white></yellow>"
+    fetching: "<gray>Recupero della testa di <white>%target%</white>...</gray>"
+    cannot-resolve: "<red>Giocatore <white>%target%</white> non trovato.</red>"
+    fetch-failed: "<red>Errore nel recupero della testa di <white>%target%</white>.</red>"
+    item-name: "<aqua>%target%</aqua><gray> Testa di</gray>"
+    dropped: "<yellow>Testa ricevuta! <gray>(Lasciata ai tuoi piedi - inventario pieno)</gray></yellow>"
+    given: "<green>Testa di <white>%target%</white> ricevuta!</green>"
+
+# Sistema RTP
+rtp:
+  disabled: "<red>Il teletrasporto casuale è attualmente disabilitato.</red>"
+  cooldown-wait: "<red>Devi attendere <yellow>%seconds%</yellow>s prima di usare /%label%.</red>"
+  no-world: "<red>Nessun mondo valido trovato per il teletrasporto casuale.</red>"
+  cross-switch: "<gray>Ti stiamo spostando a <aqua>%server%</aqua> per il teletrasporto casuale in <aqua>%world%</aqua>...</gray>"
+  not-configured: "<red>Il teletrasporto casuale non è configurato su questo server.</red>"
+  world-not-loaded: "<red>Il mondo <yellow>%world%</yellow> non è caricato su questo server.</red>"
+  not-allowed-world: "<red>Il teletrasporto casuale non è permesso in questo mondo.</red>"
+  trying: "<gray>Tentativo di teletrasporto casuale in <aqua>%world%</aqua> fino a <aqua>%radius%</aqua> blocchi...</gray>"
+  no-safe-spot: "<red>Impossibile trovare un posto sicuro. Riprova.</red>"
+  teleported: "<green>Teletrasportato a <aqua>%x%</aqua>, <aqua>%y%</aqua>, <aqua>%z%</aqua> in <aqua>%world%</aqua>.</green>"
+  failed: "<red>Teletrasporto fallito.</red>"
+  cancelled-moved: "<red>RTP annullato: ti sei mosso.</red>"
+  warmup:
+    title: "<yellow>%seconds%</yellow>"
+    subtitle: "<gray>Teletrasporto casuale...</gray>"
+
+# Deathback
+deathback:
+  no-location: "<red>Nessuna posizione di morte memorizzata.</red>"
+  success: "<green>Teletrasportato alla tua ultima morte.</green>"
+  failed: "<red>Teletrasporto fallito.</red>"
+
+# ============================================================================
+# SISTEMA ECONOMIA
+# ============================================================================
+
+economy:
+  currency:
+    symbol: "$"
+    name: "dollaro"
+    name_plural: "dollari"
+
+  errors:
+    not-a-number: "<red>Importo non valido.</red>"
+    amount-not-positive: "<red>L'importo deve essere positivo.</red>"
+    player-not-found: "<red>Giocatore non trovato: <yellow>%target%</yellow>.</red>"
+    no-economy: "<red>L'economia non è disponibile.</red>"
+    no-permission: "<red>Non hai il permesso.</red>"
+
+  money:
+    usage:
+      view: "<yellow>Uso: /money [giocatore]</yellow>"
+      admin: "<yellow>Uso: /money <give|take|set> <giocatore> <importo></yellow>"
+    view-self: "<gray>Il tuo saldo: <green>%currency_symbol%%balance_formatted%</green></gray>"
+    view-other: "<gray>Saldo di %target%: <green>%currency_symbol%%balance_formatted%</green></gray>"
+    give:
+      sender: "<green>Dato <white>%currency_symbol%%amount_formatted%</white> a <yellow>%target%</yellow>.</green>"
+      receiver: "<green>Hai ricevuto <white>%currency_symbol%%amount_formatted%</white>. Nuovo saldo: <green>%currency_symbol%%balance_formatted%</green>.</green>"
+    take:
+      sender: "<green>Preso <white>%currency_symbol%%amount_formatted%</white> da <yellow>%target%</yellow>.</green>"
+      receiver: "<red><bold>%currency_symbol%%amount_formatted%</bold></red> <gray>è stato rimosso dal tuo saldo. Nuovo saldo: <green>%currency_symbol%%balance_formatted%</green>.</gray>"
+    set:
+      sender: "<green>Saldo di <yellow>%target%</yellow> impostato a <white>%currency_symbol%%amount_formatted%</white>.</green>"
+      receiver: "<gray>Il tuo saldo è stato impostato a <green>%currency_symbol%%amount_formatted%</green>.</gray>"
+
+  pay:
+    usage: "<yellow>Uso: /pay <giocatore> <importo></yellow>"
+    self: "<red>Non puoi pagarti da solo.</red>"
+    success-sender: "<green>Pagato <aqua>%target%</aqua> <gray>%currency_symbol%%amount_formatted%</gray>.</green>"
+    success-receiver: "<green>Hai ricevuto <gray>%currency_symbol%%amount_formatted%</gray> da <aqua>%player%</aqua>.</green>"
+    fail-insufficient: "<red>Non hai <white>%currency_symbol%%amount_formatted%</white>.</red>"
+
+  format:
+    thousands-separator: "."
+    decimal-separator: ","
+    decimals: 2
+
+# ============================================================================
+# SISTEMA DI MODERAZIONE
+# ============================================================================
+
+moderation:
+  # Ban
+  ban:
+    usage: "<yellow>Uso: /%label% <giocatore> [durata] [motivo]</yellow>"
+    usage-examples: "<gray>Esempi di durata: 10m, 2h, 3d4h, 1w</gray>"
+    player-not-found: "<red>Giocatore non trovato: %player%</red>"
+    default-reason: "Bannato da un operatore."
+    kick-message-temp: "<red>%reason%</red>\n<gray>Fino a: %expires%</gray>"
+    kick-message-perm: "<red>%reason%</red>"
+    success-temp: "<green>Bannato <aqua>%player%</aqua> fino a <yellow>%expires%</yellow>. Motivo: <yellow>%reason%</yellow></green>"
+    success-perm: "<green>Bannato <aqua>%player%</aqua> permanentemente. Motivo: <yellow>%reason%</yellow></green>"
+
+  # Broadcast
+  broadcast:
+    prefix: "<gold>[Broadcast]</gold> "
+
+  # Modalità dio
+  god:
+    usage: "<yellow>Uso: /%label% <giocatore></yellow>"
+    self-enabled: "<green>Modalità dio <aqua>abilitata</aqua>. Ora sei imbattibile.</green>"
+    self-disabled: "<red>Modalità dio <aqua>disabilitata</aqua>.</red>"
+    no-permission-others: "<red>Non hai il permesso di attivare/disattivare la modalità dio per altri.</red>"
+    player-not-found: "<red>Giocatore non trovato o non online: <yellow>%player%</yellow></red>"
+    target-enabled: "<green>Un admin ha abilitato la tua modalità dio.</green>"
+    target-disabled: "<red>Un admin ha disabilitato la tua modalità dio.</red>"
+    other-enabled: "<green>Modalità dio abilitata per <aqua>%player%</aqua>.</green>"
+    other-disabled: "<red>Modalità dio disabilitata per <aqua>%player%</aqua>.</red>"
+
+  # Heal
+  heal:
+    console-usage: "<red>Uso: /%label% <giocatore></red>"
+    not-found: "<red>Giocatore non trovato.</red>"
+    healed: "<green>Curato.</green>"
+    healed-other: "<yellow>Curato <aqua>%player%</aqua></yellow>"
+
+  # Kick
+  kick:
+    usage: "<yellow>Uso: /%label% <giocatore> [motivo...]</yellow>"
+    default-reason: "Espulso da un operatore."
+    kick-message: "<red>%reason%</red>"
+    player-not-found: "<red>Giocatore non trovato.</red>"
+    success: "<green>Espulso <aqua>%player%</aqua>. Motivo: <yellow>%reason%</yellow></green>"
+    success-cross-server: "<green>Richiesta di espulsione inviata per <aqua>%player%</aqua> (cross-server).</green>"
+    no-bridge: "<red>Il target non è su questo server e il bridge di moderazione cross-server non è disponibile.</red>"
+
+  # Mute
+  mute:
+    usage: "<yellow>Uso: /%label% <giocatore> <durata> [motivo]</yellow>"
+    player-not-found: "<red>Giocatore non trovato: %target%</red>"
+    invalid-duration: "<red>Durata non valida. Usa come 30s, 10m, 2h, 1d o secondi.</red>"
+    broadcast-failed: "<red>Avviso: errore nella trasmissione del mute ad altri server.</red>"
+    reason-suffix: " <gray>| Motivo: <yellow>%reason%</yellow></gray>"
+    executor:
+      success: "<green>Silenziato <yellow>%target%</yellow> per <white>%duration%</white>%reason_suffix%.</green>"
+    target:
+      notified: "<red>Sei stato silenziato per <white>%duration%</white>.%reason_suffix%</red>"
+    broadcast: "<gold>[Moderazione]</gold> <yellow>%target%</yellow> <gray>è stato silenziato da</gray> <aqua>%staff%</aqua> <gray>per</gray> <white>%duration%</white>%reason_suffix%<gray>.</gray>"
+    broadcast-console: "[Moderazione] %target% è stato silenziato da %staff% per %duration%%reason_suffix%."
+
+  # Unban
+  unban:
+    usage: "<yellow>Uso: /%label% <giocatore></yellow>"
+    not-banned: "<gray>%player% non è bannato.</gray>"
+    success: "<green>Sbannato <aqua>%player%</aqua>.</green>"
+
+  # Unmute
+  unmute:
+    usage: "<yellow>Uso: /%label% <giocatore></yellow>"
+    player-not-found: "<red>Giocatore non trovato: %player%</red>"
+    not-muted: "<gray>%player% non è silenziato.</gray>"
+    success: "<green>Riattivato audio di <aqua>%player%</aqua>.</green>"
+    notified: "<green>Il tuo audio è stato riattivato.</green>"
+
+  # Vanish
+  vanish:
+    enabled: "<green>Ora sei invisibile.</green>"
+    disabled: "<yellow>Ora sei visibile.</yellow>"
+
+# ============================================================================
+# CHAT E MESSAGGISTICA
+# ============================================================================
+
+chat:
+  cleared-by: "<red>La chat è stata pulita da <yellow>%actor%</yellow>.</red>"
+  global-muted: "<red>La chat globale è stata silenziata da <yellow>%actor%</yellow>.</red>"
+  global-unmuted: "<green>La chat globale è stata riattivata.</green>"
+  slowmode-set: "<yellow>La modalità lenta è ora <gold>%seconds%</gold>s <gray>(rete)</gray>.</yellow>"
+
+# Messaggistica privata
+msg:
+  usage: "<red>Uso: /%label% <giocatore> <messaggio...></red>"
+  not-found: "<red>Giocatore non trovato.</red>"
+  receive: "<gray>[<light_purple>MSG</light_purple>] <aqua>%sender%</aqua>: <white>%message%</white></gray>"
+  send: "<gray>[<light_purple>MSG</light_purple>] <white>-></white> <aqua>%target%</aqua>: <white>%message%</white></gray>"
+
+# Reply
+reply:
+  usage: "<red>Uso: /%label% <messaggio...></red>"
+  no-one: "<red>Nessuno a cui rispondere.</red>"
+  offline: "<red>Quel giocatore è offline.</red>"
+
+# ============================================================================
+# COMANDI UTILITY
+# ============================================================================
+
+# AFK
+afk:
+  now-afk: "<yellow>Ora sei AFK.</yellow>"
+  no-longer-afk: "<green>Non sei più AFK.</green>"
+
+# Anvil
+anvil:
+  title: "<dark_gray>Incudine</dark_gray>"
+
+# Cook
+cook:
+  no-item: "<red>Tieni l'oggetto che vuoi fondere nella mano principale.</red>"
+  no-recipe: "<red>Nessuna ricetta di fusione trovata per quell'oggetto.</red>"
+  invalid-amount: "<red>La quantità deve essere un numero o 'max'.</red>"
+  nothing-to-smelt: "<red>Nulla da fondere.</red>"
+  inventory-full: "<yellow>Il tuo inventario era pieno; alcuni oggetti fusi sono stati lasciati ai tuoi piedi.</yellow>"
+  success: "<green>Fuso <aqua>%input%</aqua> → <aqua>%output%</aqua> <gray>%item%</gray>.</green>"
+
+# Ender Chest
+ec:
+  title: "<dark_purple>Baule dell'Ender</dark_purple>"
+
+ecsee:
+  no-permission: "<red>Ti manca il permesso.</red>"
+  usage: "<red>Uso: /ecsee <giocatore></red>"
+  not-found: "<red>Giocatore non trovato.</red>"
+  not-configured: "<red>Lo storage del baule dell'ender non è configurato.</red>"
+  gui:
+    title: "<dark_purple>Baule dell'Ender</dark_purple> <gray>(%player%)</gray>"
+  saved: "<green>Modifiche salvate al baule dell'ender di <aqua>%player%</aqua>.</green>"
+
+# Feed
+feed:
+  not-found: "<red>Giocatore non trovato.</red>"
+  console-self: "<red>La console non può nutrirsi da sola. Specifica un giocatore.</red>"
+  fed: "<green>Nutrito.</green>"
+  fed-other: "<yellow>Nutrito <aqua>%player%</aqua>.</yellow>"
+
+# Furnace
+furnace:
+  title: "<gold>⚒</gold> <dark_gray>Fornace</dark_gray> <gold>⚒</gold>"
+
+# Invsee
+invsee:
+  no-permission: "<red>Ti manca il permesso.</red>"
+  usage: "<red>Uso: /invsee <giocatore></red>"
+  not-available: "<red>Il servizio Invsee non è disponibile su questo server.</red>"
+  not-found: "<red>Giocatore non trovato.</red>"
+  opening: "<gray>Apertura inventario live di <aqua>%player%</aqua> (cross-server)...</gray>"
+
+# Invlook
+invlook:
+  no-permission: "<red>Ti manca il permesso.</red>"
+  usage: "<red>Uso: /invlook <giocatore></red>"
+  service-unavailable: "<red>Il servizio Invsee non è disponibile su questo server.</red>"
+  player-not-found: "<red>Giocatore non trovato.</red>"
+  opening: "<gray>Apertura inventario in sola lettura di <aqua>%player%</aqua> (cross-server)...</gray>"
+
+# Kill
+kill:
+  console-usage: "<red>Uso: /%label% <giocatore></red>"
+  self:
+    no-permission: "<red>Non hai il permesso di ucciderti.</red>"
+    slain: "<gray>Sei stato ucciso.</gray>"
+  others:
+    no-permission: "<red>Ti manca il permesso di uccidere altri.</red>"
+    killed: "<gray>Ucciso <yellow>%player%</yellow>.</gray>"
+  target-not-found: "<red>Giocatore non trovato.</red>"
+
+# Near
+near:
+  radius-not-number: "<red>Il raggio deve essere un numero. Hai inserito: <yellow>%input%</yellow></red>"
+  none: "<yellow>Nessun giocatore entro <aqua>%radius%</aqua> blocchi.</yellow>"
+  list: "<gray>Giocatori entro <aqua>%radius%</aqua> blocchi:</gray> %list%"
+  entry:
+    format: "<aqua>%name%</aqua> <gray>(<yellow>%distance%</yellow>m)</gray>"
+    separator: "<gray>, </gray>"
+
+# Nick
+nick:
+  usage: "<yellow>Uso: /%label% <nuovoNome>  o  /%label% unnick</yellow>"
+  reset: "<green>Il tuo nickname è stato ripristinato.</green>"
+  too-long: "<red>Nome troppo lungo (max %max% caratteri).</red>"
+  invalid: "<red>Nome non valido. Usa lettere, numeri, underscore (3–16).</red>"
+  set: "<green>Ora hai il nickname <aqua>%nick%</aqua>.</green>"
+
+# Ping
+ping:
+  self: "<green>Il tuo ping: <yellow>%ping%</yellow>ms</green>"
+
+# Playtime
+playtime:
+  console-usage: "<red>La console deve specificare un giocatore: /%label% <giocatore></red>"
+  self: "<green>Il tuo tempo di gioco: <yellow>%time%</yellow></green>"
+  other: "<aqua>%player%</aqua><gray> tempo di gioco:</gray> <yellow>%time%</yellow>"
+  no-permission: "<red>Non hai il permesso di vedere il tempo di gioco di altri giocatori.</red>"
+  player-not-found: "<red>Giocatore non trovato.</red>"
+
+# Realname
+realname:
+  usage: "<red>Uso: /realname <nickname></red>"
+  found: "<gold>%nickname%</gold> <gray>è</gray> <aqua>%realname%</aqua>"
+  not-found: "<red>Nessun giocatore trovato con quel nickname.</red>"
+
+# Seen
+seen:
+  usage: "<red>Uso: /seen <giocatore></red>"
+  no-data: "<red>Nessun dato per il giocatore <yellow>%player%</yellow>.</red>"
+  online: "<green>%player% è attualmente online.</green>"
+  never-joined: "<yellow>%player% non si è mai unito.</yellow>"
+  last-seen: "<gold>%player%</gold> <gray>è stato visto l'ultima volta il</gray> <aqua>%timestamp%</aqua> <gray>(</gray><yellow>%ago%</yellow> <gray>fa)</gray>"
+
+# Sell GUI
+sellgui:
+  not-initialized: "<red>SellGUI non è inizializzato.</red>"
+
+# Server
+server:
+  usage: "<yellow>Uso: /%label% <nome-server></yellow>"
+  connecting: "<gray>Connessione a <aqua>%server%</aqua>...</gray>"
+
+# Sit
+sit:
+  player-only: "<red>Solo i giocatori possono usare questo comando.</red>"
+  stand: "<gray>Ti sei alzato.</gray>"
+  already-riding: "<red>Stai già cavalcando qualcosa.</red>"
+  not-on-ground: "<red>Devi essere a terra per sederti.</red>"
+  not-while-flying: "<red>Non puoi sederti mentre voli o planando.</red>"
+  no-block: "<red>Non c'è nessun blocco su cui sedersi.</red>"
+  sat: "<green>Ti sei seduto su <yellow>%block%</yellow>.</green>"
+
+# UUID
+uuid:
+  usage: "<yellow>Uso: /%label% <giocatore></yellow>"
+  no-permission-others: "<red>Non hai il permesso di vedere gli UUID altrui.</red>"
+  show: "<gold>UUID di <aqua>%player%</aqua>:</gold> <aqua>%uuid%</aqua>"
+  bedrock: "<gray>UUID Bedrock: <aqua>%bedrock_uuid%</aqua></gray>"
+
+# Vaults
+vaults:
+  player-only: "<red>Solo giocatori.</red>"
+  disabled: "<red>I PlayerVaults sono disabilitati.</red>"
+  usage: "<red>Uso: /%label% %usage%</red>"
+
+# ============================================================================
+# COMANDI ADMIN
+# ============================================================================
+
+admin:
+  # Tphere
+  tphere:
+    usage: "<yellow>Uso: /%label% <giocatore></yellow>"
+    not-found: "<red>Giocatore non trovato: <yellow>%target%</yellow>.</red>"
+    brought: "<green>Portato <aqua>%target%</aqua> da te.</green>"
+    notice: "<yellow>Sei stato teletrasportato da <aqua>%player%</aqua>.</yellow>"
+
+  # Weather
+  weather:
+    no-permission: "<red>Non hai il permesso (oreo.weather).</red>"
+    no-worlds: "<red>Nessun mondo target risolto.</red>"
+    success: "<green>Meteo impostato a <white>%type%</white> in <white>%world%</white>.</green>"
+    success-duration: "<green>Meteo impostato a <white>%type%</white> per <white>%seconds%</white>s in <white>%world%</white>.</green>"
+    success-locked: "<green>Meteo impostato a <white>%type%</white> <dark_gray>(bloccato)</dark_gray> in <white>%world%</white>.</green>"
+    success-duration-locked: "<green>Meteo impostato a <white>%type%</white> per <white>%seconds%</white>s <dark_gray>(bloccato)</dark_gray> in <white>%world%</white>.</green>"
+    tip-unlock: "<dark_gray>Suggerimento: /weather %type% unlock %world%</dark_gray>"
+    usage:
+      header: "<yellow>Uso:</yellow>"
+      format: "<white>/%label% <sun|rain|storm> [lock|seconds] [world|all]</white>"
+      examples: "<gray>Esempi: <white>/sun</white> <dark_gray>|</dark_gray> <white>/rain</white> <dark_gray>|</dark_gray> <white>/storm</white> <dark_gray>|</dark_gray> <white>/sun lock</white> <dark_gray>|</dark_gray> <white>/sun 120</white> <dark_gray>|</dark_gray> <white>/sun world</white></gray>"
+
+  # World
+  world:
+    no-permission: "<red>Non hai il permesso (oreo.world).</red>"
+    no-world-permission: "<red>Ti manca il permesso: <white>%permission%</white></red>"
+    usage: "<yellow>Uso: <white>/world <n|normal|nether|end|index> [nomeGiocatore] [-s]</white></yellow>"
+    examples: "<gray>Esempi: <white>/world world_nether</white>  <dark_gray>|</dark_gray>  <white>/world nether</white>  <dark_gray>|</dark_gray>  <white>/world 2</white>  <dark_gray>|</dark_gray>  <white>/world end Steve -s</white></gray>"
+    console-needs-player: "<red>L'uso da console richiede un giocatore target: <white>/world <n> <nomeGiocatore> [-s]</white></red>"
+    console-must-specify: "<red>La console deve specificare un giocatore target: <white>/world <n> <nomeGiocatore> [-s]</white></red>"
+    player-not-found: "<red>Giocatore non trovato: <white>%player%</white></red>"
+    world-not-found: "<red>Mondo non trovato / non supportato: <white>%world%</white></red>"
+    teleport-failed: "<red>Teletrasporto fallito.</red>"
+    teleported-self: "<green>Teletrasportato a <white>%world%</white></green>"
+    teleported-other: "<green>Teletrasportato <white>%player%</white> a <white>%world%</white></green>"
+    target-notified: "<green>Sei stato teletrasportato a <white>%world%</white> da <white>%staff%</white></green>"
+
+  # TP
+  tp:
+    usage: "<red>Uso: /tp <giocatore></red>"
+    self: "<red>Sei già te stesso.</red>"
+    not-found: "<red>Giocatore non trovato online.</red>"
+    not-found-no-directory: "<red>Giocatore non trovato online. <gray>(La directory cross-server non è disponibile.)</gray></red>"
+    no-broker: "<red>Broker di teletrasporto cross-server non disponibile; impossibile /tp ad altri server.</red>"
+    teleported: "<green>Teletrasportato a <aqua>%target%</aqua>.</green>"
+
+  # Setwarp
+  setwarp:
+    usage: "<yellow>Uso: /%label% <n></yellow>"
+    set: "<green>Warp <aqua>%warp%</aqua> è stato impostato.</green>"
+    cross-server-info: "<gray>(Cross-server) Proprietario del warp impostato a <aqua>%server%</aqua>.</gray>"
+
+  # Setspawn
+  setspawn:
+    set: "<green>Spawn impostato.</green>"
+    cross-server-info: "<gray>(Cross-server) Proprietario dello spawn impostato a <aqua>%server%</aqua>.</gray>"
+
+  # Reload
+  reload:
+    settings: "<green>✔ Ricaricato <white>settings.yml</white> <gray>(+ impostazioni cross-server)</gray></green>"
+    settings-skip: "<yellow>• Saltato settings.yml / cross-server: <gray>%error%</gray></yellow>"
+    config: "<green>✔ Ricaricato <white>config.yml</white></green>"
+    config-fail: "<red>✘ Errore nel ricaricare config.yml: <gray>%error%</gray></red>"
+    lang: "<green>✔ Ricaricato <white>lang.yml</white></green>"
+    lang-skip: "<yellow>• Saltato lang.yml: <gray>%error%</gray></yellow>"
+    chat: "<green>✔ Ricaricato <white>chat-format.yml</white> <gray>(via /afelius reload all)</gray></green>"
+    chat-skip: "<yellow>• Saltato chat-format.yml: <gray>%error%</gray></yellow>"
+    tab: "<green>✔ Ricaricato <white>tab.yml</white></green>"
+    tab-skip: "<yellow>• Saltato tab.yml: <gray>%error%</gray></yellow>"
+    kits: "<green>✔ Ricaricato <white>kits.yml</white></green>"
+    kits-skip: "<yellow>• Saltato kits.yml: <gray>%error%</gray></yellow>"
+    rtp: "<green>✔ Ricaricato <white>rtp.yml</white></green>"
+    rtp-skip: "<yellow>• Saltato rtp.yml: <gray>%error%</gray></yellow>"
+    enderchest: "<green>✔ Ricaricato <white>enderchest.yml</white></green>"
+    enderchest-skip: "<yellow>• Saltato enderchest.yml (nessun hook di ricarica)</yellow>"
+    bossbar: "<green>✔ Ricaricato <white>bossbar</white></green>"
+    bossbar-skip: "<yellow>• Saltato bossbar (servizio non disponibile)</yellow>"
+    bossbar-fail: "<red>✘ Errore nel ricaricare bossbar: <gray>%error%</gray></red>"
+    scoreboard: "<green>✔ Ricaricato <white>scoreboard</white> <gray>(config + aggiornamento live)</gray></green>"
+    scoreboard-skip: "<yellow>• Saltato scoreboard (servizio non disponibile)</yellow>"
+    scoreboard-fail: "<red>✘ Errore nel ricaricare scoreboard: <gray>%error%</gray></red>"
+    discord: "<green>✔ Ricaricato <white>integrazione discord</white></green>"
+    discord-skip: "<yellow>• Saltata integrazione discord (nessun hook di ricarica)</yellow>"
+    healthbars: "<green>✔ Ricaricato <white>barre vita mob</white></green>"
+    healthbars-disabled: "<yellow>• Barre vita mob disabilitate dalla configurazione</yellow>"
+    healthbars-skip: "<yellow>• Saltate barre vita mob: <gray>%error%</gray></yellow>"
+    playervaults: "<green>✔ Ricaricato <white>playervaults</white> <gray>(%storage%)</gray></green>"
+    playervaults-skip: "<yellow>• Saltato playervaults (servizio non disponibile)</yellow>"
+    playervaults-fail: "<red>✘ Errore nel ricaricare playervaults: <gray>%error%</gray></red>"
+    summary: "<gray>Ricarica completata: <green>%ok% OK</green>, <yellow>%skip% saltati</yellow>. (<white>%ms% ms</white>)</gray>"
+    note: "<dark_gray>(Alcuni moduli non supportano ancora il ricaricamento a caldo; potrebbe essere necessario un riavvio del server.)</dark_gray>"
+
+  # Otherhome
+  otherhome:
+    no-permission: "<red>Non hai il permesso.</red>"
+    usage: "<yellow>Uso: <gold>/%label% <giocatore> <home></gold></yellow>"
+    player-not-found: "<red>Giocatore sconosciuto: <yellow>%player%</yellow></red>"
+    not-found: "<red>Home non trovata: <yellow>%home%</yellow></red>"
+    world-not-loaded: "<red>Mondo non caricato: <yellow>%world%</yellow></red>"
+    teleported: "<green>Teletrasportato alla home <aqua>%home%</aqua> di <aqua>%owner%</aqua>.</green>"
+    cross-disabled: "<red>Le home cross-server sono disabilitate dalla configurazione del server.</red>"
+    cross-disabled-manual: "<gray>Usa <aqua>/server %server%</aqua> poi esegui <aqua>/otherhome %owner% %home%</aqua></gray>"
+    messaging-disabled: "<red>La messaggistica cross-server è disabilitata. Chiedi a un admin di abilitare RabbitMQ.</red>"
+    messaging-disabled-manual: "<gray>Puoi comunque passare con <aqua>/server %server%</aqua> ed eseguire <aqua>/otherhome %owner% %home%</aqua></gray>"
+    sending: "<yellow>Ti stiamo inviando a <aqua>%server%</aqua>… sarai teletrasportato alla home <aqua>%home%</aqua> di <aqua>%owner%</aqua> all'arrivo.</yellow>"
+    switch-failed: "<red>Errore nel passaggio a %server%.</red>"
+    switch-failed-tip: "<gray>Assicurati che il nome del server corrisponda alla configurazione del tuo proxy.</gray>"
+
+  # Otherhomes
+  otherhomes:
+    no-permission: "<red>Non hai il permesso.</red>"
+    usage: "<yellow>Uso: <gold>/%label% <giocatore></gold></yellow>"
+    player-not-found: "<red>Giocatore sconosciuto: <yellow>%player%</yellow></red>"
+    no-homes: "<gray>%player% non ha home.</gray>"
+    header: "<gold>Home di <yellow>%player%</yellow>:</gold>"
+    entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua> <gray>@ <white>%world%</white> (%x%, %y%, %z%) <dark_gray>[server: %server%]</dark_gray></gray>"
+    tip: "<gray>Suggerimento: <yellow>/otherhome %player% <home></yellow></gray>"
+
+  # Clear
+  clear:
+    no-service: "<yellow>Nota: Servizio inventario non disponibile - pulizia solo locale.</yellow>"
+    console-usage: "<red>Uso: /%label% <giocatore></red>"
+    others-no-permission: "<red>Non hai il permesso di pulire gli inventari di altri giocatori.</red>"
+    target-not-found: "<red>Giocatore non trovato: <yellow>%target%</yellow></red>"
+    self:
+      all-servers: "<green>Inventario pulito su tutti i server.</green>"
+      this-server: "<green>Inventario pulito su questo server.</green>"
+    target-notified-all: "<yellow>Il tuo inventario è stato pulito su tutti i server da <aqua>%player%</aqua>.</yellow>"
+    target-notified-local: "<yellow>Il tuo inventario è stato pulito su questo server da <aqua>%player%</aqua>.</yellow>"
+    sender-confirm-all: "<green>Inventario di <aqua>%target%</aqua> pulito su tutti i server.</green>"
+    sender-confirm-local: "<green>Inventario di <aqua>%target%</aqua> pulito su questo server.</green>"
+
+  # Delwarp
+  delwarp:
+    usage: "<yellow>Uso: /%label% <n></yellow>"
+    deleted: "<green>Warp <aqua>%warp%</aqua> è stato eliminato.</green>"
+    not-found: "<red>Warp non trovato: <yellow>%warp%</yellow></red>"
+
+  # Disenchant
+  disenchant:
+    usage: "<yellow>Uso: /%label% <incantesimo|all> [livelli-da-rimuovere]</yellow>"
+    hold-item: "<red>Devi tenere un oggetto nella mano principale.</red>"
+    none: "<red>Questo oggetto non ha incantesimi.</red>"
+    unknown: "<red>Incantesimo sconosciuto: <yellow>%input%</yellow></red>"
+    not-present: "<red>Questo oggetto non ha <yellow>%ench%</yellow>.</red>"
+    all: "<green>Tutti gli incantesimi rimossi.</green>"
+    partial: "<green>Rimossi <white>%removed%</white> livello/i di <aqua>%ench%</aqua>. Rimangono <white>%remaining%</white> livello/i.</green>"
+    removed: "<green>Rimosso <aqua>%ench%</aqua> completamente.</green>"
+
+  # Fly
+  fly:
+    console-usage: "<red>Uso: /%label% <giocatore></red>"
+    not-found: "<red>Giocatore non trovato: <yellow>%target%</yellow></red>"
+    enabled: "<green>Volo <aqua>abilitato</aqua>.</green>"
+    disabled: "<red>Volo <aqua>disabilitato</aqua>.</red>"
+    toggled-other: "<green>Volo <aqua>%state%</aqua> per <aqua>%target%</aqua>.</green>"
+
+  # Enchant
+  enchant:
+    usage: "<yellow>Uso: /%label% <incantesimo> [livello] [unsafe] [ignoreConflicts]</yellow>"
+    hold-item: "<red>Devi tenere un oggetto nella mano principale.</red>"
+    unknown: "<red>Incantesimo sconosciuto: <yellow>%input%</yellow></red>"
+    too-high: "<red>Il livello <yellow>%level%</yellow> è troppo alto per <aqua>%ench%</aqua> (max: <white>%max%</white>). Usa il parametro 'unsafe' o il permesso oreo.enchant.unsafe.</red>"
+    conflict: "<red><aqua>%ench%</aqua> è in conflitto con <aqua>%with%</aqua> esistente. Usa il parametro 'ignoreConflicts' o il permesso oreo.enchant.ignoreconflicts.</red>"
+    applied: "<green>Applicato <aqua>%ench%</aqua> <white>%level%</white> al tuo oggetto.</green>"
+    failed: "<red>Errore nell'applicazione dell'incantesimo: <yellow>%reason%</yellow></red>"
+
+  # Flyspeed
+  flyspeed:
+    player-only: "<red>Solo i giocatori possono usare /flyspeed (imposta la tua velocità di volo).</red>"
+    no-permission: "<red>Non hai il permesso (oreo.flyspeed).</red>"
+    usage: "<yellow>Uso: <white>/flyspeed <1-10|reset></white></yellow>"
+    example: "<gray>Esempio: <white>/flyspeed 7</white></gray>"
+    invalid: "<red>Velocità non valida. Usa un numero <white>1-10</white> o <white>reset</white>.</red>"
+    reset: "<green>Velocità di volo ripristinata a <white>0.1</white> <gray>(= livello 1)</gray>.</green>"
+    set: "<green>Velocità di volo impostata a <white>%speed%</white> <gray>(<white>livello %level%</white>)</gray>.</green>"
+    set-not-flying: "<green>Velocità di volo impostata a <white>%speed%</white> <gray>(<white>livello %level%</white>)</gray>. <dark_gray>(Non hai il permesso di volare al momento.)</dark_gray></green>"
+
+  # Gamemode
+  gamemode:
+    unknown: "<red>Modalità sconosciuta: <yellow>%mode%</yellow></red>"
+    no-permission-others: "<red>Non hai il permesso di cambiare la modalità di gioco altrui.</red>"
+    player-not-found: "<red>Giocatore non trovato.</red>"
+    self: "<green>Modalità di gioco impostata a <aqua>%mode%</aqua>.</green>"
+    other: "<green>Impostato <aqua>%target%</aqua> a <aqua>%mode%</aqua>.</green>"
+    notified: "<green>La tua modalità di gioco è stata impostata a <aqua>%mode%</aqua> da <yellow>%staff%</yellow></green>"
+
+# ============================================================================
+# SISTEMA COMMERCIO
+# ============================================================================
+
+trade:
+  opening: "<green>Apertura GUI commercio con <white>%partner%</white>…</green>"
+  failed-to-open: "<red>Errore nell'apertura del commercio: <yellow>%error%</yellow></red>"
+  player-name: "<yellow>%name%</yellow>"
+  partner-ready: "<green>Partner Pronto</green>"
+  partner-not-ready: "<red>Partner Non Pronto</red>"
+  locked: "<gray>Bloccato</gray>"
+  player-only: "<red>Solo giocatori.</red>"
+  disabled: "<red>Il commercio è attualmente disabilitato.</red>"
+  no-permission: "<red>Non hai il permesso.</red>"
+  usage: "<yellow>Uso: /trade <giocatore></yellow>"
+  self: "<red>Non puoi commerciare con te stesso.</red>"
+  not-found-cross-server: "<red>Giocatore non trovato qui.</red> <gray>Se questo è un commercio cross-server, digita <aqua>/trade %player%</aqua> sul server dove hai ricevuto l'invito.</gray>"
+
+# ============================================================================
+# SISTEMA SCOREBOARD
+# ============================================================================
+
+scoreboard:
+  enabled: "<green>Scoreboard abilitato.</green>"
+  disabled: "<yellow>Scoreboard disabilitato.</yellow>"
+  disabled-in-world: "<red>Lo scoreboard è disabilitato in questo mondo.</red>"
+
+# ============================================================================
+# SISTEMA PORTALI
+# ============================================================================
+
+portals:
+  player-only: "<red>Solo giocatori.</red>"
+  no-permission: "<red>Non hai il permesso.</red>"
+  no-portal-permission: "<red>Non hai il permesso di usare questo portale.</red>"
+  unknown-subcommand: "<red>Sottocomando sconosciuto. Usa <yellow>/%label% help</yellow></red>"
+
+  pos1-set: "<green>Portale pos1 impostato a <aqua>%location%</aqua></green>"
+  pos2-set: "<green>Portale pos2 impostato a <aqua>%location%</aqua></green>"
+
+  create:
+    usage: "<yellow>Uso: /%label% create <n> <mondo> <x> <y> <z> [keepYaw] [permission]</yellow>"
+    world-not-found: "<red>Mondo non trovato: <yellow>%world%</yellow></red>"
+    invalid-coords: "<red>Coordinate non valide.</red>"
+    failed: "<red>Fallito: <yellow>%error%</yellow></red>"
+    success: "<green>Portale <aqua>%name%</aqua> → <white>%location%</white> creato</green>"
+
+  remove:
+    usage: "<yellow>Uso: /%label% remove <n></yellow>"
+    success: "<green>Portale <aqua>%name%</aqua> rimosso.</green>"
+    not-found: "<red>Portale non trovato: <yellow>%name%</yellow></red>"
+
+  list:
+    empty: "<gray>Nessun portale configurato.</gray>"
+    header: "<gold>Portali (%count%):</gold>"
+    entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua> <gray>→ <white>%dest%</white></gray>"
+
+  info:
+    usage: "<yellow>Uso: /%label% info <n></yellow>"
+    not-found: "<red>Portale non trovato: <yellow>%name%</yellow></red>"
+    header: "<gold>Info Portale: <aqua>%name%</aqua></gold>"
+    world: " <gray>Mondo:</gray> <white>%world%</white>"
+    destination: " <gray>Destinazione:</gray> <white>%dest%</white>"
+    keep-yaw: " <gray>Mantieni Yaw/Pitch:</gray> <white>%keep%</white>"
+    permission: " <gray>Permesso:</gray> <white>%perm%</white>"
+
+  reload:
+    success: "<green>Portali ricaricati. <white>%count%</white> portale/i caricato/i.</green>"
+
+  help:
+    header: "<gold><bold>Aiuto Portali</bold></gold>"
+    pos1: " <yellow>/%label% pos1</yellow> <gray>- Imposta angolo 1 del portale</gray>"
+    pos2: " <yellow>/%label% pos2</yellow> <gray>- Imposta angolo 2 del portale</gray>"
+    create: " <yellow>/%label% create <n> <mondo> <x> <y> <z> [keepYaw] [perm]</yellow>"
+    remove: " <yellow>/%label% remove <n></yellow> <gray>- Elimina un portale</gray>"
+    list: " <yellow>/%label% list</yellow> <gray>- Elenca tutti i portali</gray>"
+    info: " <yellow>/%label% info <n></yellow> <gray>- Visualizza dettagli portale</gray>"
+    reload: " <yellow>/%label% reload</yellow> <gray>- Ricarica portals.yml</gray>"
+
+# ============================================================================
+# SISTEMA CUSTOMCRAFT
+# ============================================================================
+
+customcraft:
+  errors:
+    no-permission: "<red>Non hai il permesso.</red>"
+    player-only: "<red>Questo sottocomando richiede un giocatore.</red>"
+    unknown-subcommand: "<red>Sottocomando sconosciuto.</red> <yellow>Usa</yellow> /%label% help"
+    usage-craft: "<red>Uso:</red> /%label% craft <n>"
+    usage-delete: "<red>Uso:</red> /%label% delete <n>"
+
+  help:
+    header: "<yellow>OreoEssentials Custom Crafting</yellow>"
+    browse: "<yellow>/%label% browse</yellow> <gray>→ apri browser ricette (GUI)</gray>"
+    craft: "<yellow>/%label% craft <n></yellow> <gray>→ apri GUI designer</gray>"
+    list: "<yellow>/%label% list</yellow> <gray>→ elenca nomi ricette</gray>"
+    reload: "<yellow>/%label% reload</yellow> <gray>→ ricarica recipes.yml e re-registra</gray>"
+    delete: "<yellow>/%label% delete <n></yellow> <gray>→ elimina una ricetta</gray>"
+
+  messages:
+    saved: "<green>Ricetta <yellow>%name%</yellow> è stata salvata (<white>%mode%</white>) %perm_note%.</green>"
+    invalid: "<red>Ricetta non trovata: <yellow>%name%</yellow>.</red>"
+    deleted: "<green>Ricetta <yellow>%name%</yellow> eliminata.</green>"
+    reloaded: "<green>Ricette personalizzate ricaricate.</green>"
+    list: "<yellow>Ricette</yellow> (<white>%count%</white>): <gray>%names%</gray>"
+
+  browse:
+    title: "<#00bcd4><bold>OreoCraft</bold></#00bcd4> <gray>—</gray> <white>Ricette</white>"
+    hint: "<yellow>Clicca su una ricetta per modificare</yellow>"
+    icon-lore:
+      0: "<gray>Modalità:</gray> <white>%mode%</white>"
+      1: "<gray>Perm:</gray> <white>%permission_or_none%</white>"
+      2: "<green>Clicca per modificare</green>"
+    prev: "<yellow>Precedente</yellow>"
+    next: "<yellow>Successivo</yellow>"
+
+  format:
+    mode:
+      shaped: "Con Forma"
+      shapeless: "Senza Forma"
+    permission:
+      none: "<gray>Nessuno</gray>"
+
+# ============================================================================
+# COMANDI VARI (OE)
+# ============================================================================
+
+oe:
+  usage: "<yellow>Uso: /%label% server <nomeserver></yellow>"
+  connecting: "<green>Connessione a <aqua>%server%</aqua>...</green>"
+  failed: "<red>Impossibile connetterti a %server%. Il proxy/canale è configurato?</red>"
+
+# ============================================================================
+# FORMATO TEMPO (per visualizzazioni durata)
+# ============================================================================
+
+time:
+  years: "%value%a"
+  months: "%value%m"
+  weeks: "%value%s"
+  days: "%value%g"
+  hours: "%value%h"
+  minutes: "%value%m"
+  seconds: "%value%s"
+
+# ============================================================================
+# SISTEMA JUMPADS
+# ============================================================================
+
+jumpads:
+  # Permessi
+  no-permission: "<red>Non hai il permesso.</red>"
+  player-only: "<red>Solo giocatori.</red>"
+
+  # Aiuto
+  list-inline: "<gold>JumpPads:</gold> <gray>%names%</gray>"
+  help:
+    header: "<yellow>Uso:</yellow>"
+    create: "<yellow>  /%label% create <n> [power] [upward] [useLookDir]</yellow>  <gray>(blocco sotto di te)</gray>"
+    remove: "<yellow>  /%label% remove <n></yellow>"
+    list: "<yellow>  /%label% list</yellow>"
+    info: "<yellow>  /%label% info <n></yellow>"
+
+  # Create
+  usage-create: "<red>Uso: /%label% create <n> [power] [upward] [useLookDir]</red>"
+  defaults: "<gray>Predefiniti → power=%power%, upward=%upward%, useLookDir=%look%</gray>"
+  created: "<green>JumpPad '<aqua>%name%</aqua>' creato a <aqua>%x%,%y%,%z%</aqua> (power=%power%, upward=%upward%, look=%look%)</green>"
+  create-failed: "<red>Errore nella creazione (posizione o nome non valido).</red>"
+
+  # Remove
+  usage-remove: "<red>Uso: /%label% remove <n></red>"
+  removed: "<green>JumpPad '<aqua>%name%</aqua>' rimosso.</green>"
+  not-found: "<red>JumpPad '<yellow>%name%</yellow>' non trovato.</red>"
+
+  # List
+  list: "<gold>JumpPads (%count%):</gold> <gray>%names%</gray>"
+
+  # Info
+  usage-info: "<red>Uso: /%label% info <n></red>"
+  info:
+    name: "<aqua>Nome:</aqua> <white>%name%</white>"
+    location: "<aqua>Mondo:</aqua> <white>%world%</white>  <aqua>XYZ:</aqua> <white>%x% %y% %z%</white>"
+    settings: "<aqua>Power:</aqua> <white>%power%</white>  <aqua>Upward:</aqua> <white>%upward%</white>  <aqua>UseLookDir:</aqua> <white>%look%</white>"
+
+  # Sottocomando sconosciuto
+  unknown-subcommand: "<red>Sottocomando sconosciuto. Prova /%label%</red>"
+
+# ============================================================================
+# SISTEMA MODGUI
+# ============================================================================
+
+modgui:
+  # Comando
+  player-only: "<red>Solo giocatori.</red>"
+  no-permission: "<red>Nessun permesso: <white>oreo.modgui.open</white></red>"
+
+  # Menu principale
+  main:
+    title: "&8Pannello Moderazione"
+    player:
+      name: "&eModerazione giocatori"
+      lore:
+        - "&7Gestisci giocatori individuali"
+        - "&7Visualizza note, silenzia, banna, ecc."
+    world:
+      name: "&aModerazione mondi"
+      lore:
+        - "&7Configura impostazioni mondi"
+        - "&7Modifiche Nether/End, PVP, ecc."
+    server:
+      name: "&cModerazione server"
+      lore:
+        - "&7Controlli server"
+        - "&7Chat, strumenti performance"
+    titles:
+      player: "&8Moderazione giocatori"
+      world: "&8Seleziona Mondo"
+      server: "&8Moderazione server"
+
+  # Menu giocatore
+  player:
+    title-local: "&8Giocatore: %name%"
+    title-network: "&8Giocatore: %name% &7(%server%)"
+
+  # Menu azioni giocatore
+  actions:
+    bridge-unavailable: "<red>Il bridge di moderazione cross-server non è disponibile.</red>"
+    ecsee-title: "&8Baule Ender: %name%"
+    inspect-title: "&8Ispeziona: %name%"
+    notes-title: "&8Note: %name%"
+    ip-alts-title: "&8IP e Alt: %name%"
+
+  # Note giocatore
+  notes:
+    prompt: "<yellow>Digita la nota in chat.</yellow> <gray>(O digita 'cancel' per annullare)</gray>"
+    cancelled: "<red>Nota annullata.</red>"
+    added: "<green>Nota aggiunta.</green>"
+
+  # Strumenti performance
+  perf:
+    kill-mobs: "<green>Rimossi <yellow>%count%</yellow> mostri da tutti i mondi.</green>"
+    clear-items: "<green>Rimossi <yellow>%count%</yellow> oggetti caduti da tutti i mondi.</green>"
+    clear-tnt: "<green>Rimossa <yellow>%count%</yellow> TNT innescata da tutti i mondi.</green>"
+
+  # Moderazione chat
+  chat:
+    cleared: "<green>Chat pulita.</green>"
+    clear-broadcast: "<red>La chat è stata pulita da <yellow>%actor%</yellow>.</red>"
+    muted: "<red>La chat globale è stata silenziata da <yellow>%actor%</yellow>.</red>"
+    unmuted: "<green>La chat globale è stata riattivata.</green>"
+    slowmode-set: "<yellow>Modalità lenta impostata a <gold>%seconds%</gold>s</yellow>"
+    staff-enabled: "<green>Chat staff abilitata.</green>"
+    staff-disabled: "<red>Chat staff disabilitata.</red>"
+    service-unavailable: "<red>Servizio ModGUI non disponibile.</red>"
+
+  # Modifiche mondo
+  world:
+    elytra-disabled: "<red>Il volo con elitre è disabilitato in questo mondo.</red>"
+    trident-disabled: "<red>I tridenti sono disabilitati in questo mondo.</red>"
+    void-saved: "<yellow>Sei stato salvato dal vuoto e teletrasportato allo spawn.</yellow>"
+
+  # Menu server
+  server:
+    difficulty-set: "<yellow>Difficoltà impostata a <gold>%difficulty%</gold></yellow>"
+    gamemode-set: "<yellow>La modalità di gioco predefinita è ora <gold>%gamemode%</gold></yellow>"
+    whitelist-toggled: "<yellow>La whitelist è ora %state%</yellow>"
+    spawn-cooldown: "<red>Per favore attendi un secondo prima di generare di nuovo.</red>"
+    spawn-peaceful: "<red>Impossibile generare mob ostili in difficoltà <green>PACIFICA</green>.</red>"
+    spawned: "<green>Generato/i <yellow>%count%</yellow> <gray>%type%</gray>.</green>"
+    tps-title: "&8TPS e Performance"
+    chat-title: "&8Moderazione chat"
+    perf-title: "&8Strumenti performance"
+
+  # Menu azioni mondo
+  world-actions:
+    time-set: "<yellow>Tempo impostato a <gold>%time%</gold></yellow>"
+    weather-set: "<yellow>Meteo impostato a <gold>%weather%</gold></yellow>"
+    spawn-set: "<green>Spawn del mondo impostato a <white>%x% %y% %z%</white></green>"
+    border-set: "<yellow>Confine del mondo impostato a <gold>%size%</gold></yellow>"
+    gamerules-title: "&8Regole gioco: %world%"
+    whitelist-title: "&8Whitelist: %world%"
+    banned-mobs-title: "&8Mob Bannati: %world%"
+
+  # Menu mob bannati
+  banned-mobs:
+    banned: "<red>%mob%</red> <gray>è ora</gray> <red>BANNATO</red> <gray>in</gray> <white>%world%</white>"
+    allowed: "<green>%mob%</green> <gray>è ora</gray> <green>PERMESSO</green> <gray>in</gray> <white>%world%</white>"
+
+  # Menu lista mondi
+  world-list:
+    world-title: "&8Mondo: %world%"
+
+  # Menu whitelist mondo
+  world-whitelist:
+    back-title: "&8Mondo: %world%"
+
+  # Menu EcSee (visualizzatore baule ender)
+  ecsee:
+    service-missing: "<red>Servizio baule dell'ender mancante.</red>"
+    title: "&bModifica Baule Ender di &e%target%"
+
+# Ispezione giocatore (visualizzatore statistiche live)
+playerinspect:
+  target-offline: "<red>Il giocatore target è offline.</red>"
+  no-permission-invsee: "<red>Non hai il permesso di visualizzare inventari.</red>"
+  head-name: "&b%player% &7(&e%server%&7)"
+  invsee-name: "&bVisualizza inventario"
+  invsee-lore1: "&7Clicca per aprire"
+  invsee-lore2: "&7l'inventario di &e%player%"
+  lore:
+    health: "&7Vita: &c%current%&7/&c%max%"
+    health-na: "&7Vita: &fN/D (&8remoto&f)"
+    food: "&7Cibo: &e%food%"
+    food-na: "&7Cibo: &fN/D (&8remoto&f)"
+    gamemode: "&7Modalità: &f%gm%"
+    world: "&7Mondo/Server: &a%world%"
+    location: "&7Posizione: &f%x% %y% %z%"
+    location-na: "&7Posizione: &fN/D (&8remoto&f)"
+    ping: "&7Ping: &f%ping%"
+    ping-na: "&7Ping: &fN/D (&8remoto&f)"
+    tps: "&7TPS: &f%tps%"
+    tps-na: "&7TPS: &fN/D (&8remoto&f)"
+
+enderchest:
+  storage:
+    opened-cross-server: "<gray>Apertura del tuo baule dell'ender cross-server...</gray>"
+    save-failed: "<red>Errore nel salvataggio del tuo baule dell'ender. Per favore contatta un amministratore.</red>"
+
+  gui:
+    title: "&5Baule dell'Ender"
+    locked-slot-name: "&cSlot bloccato"
+    locked-slot-lore:
+      - "&7Hai &f%slots% &7slot sbloccati."
+      - "&7Migliora il tuo grado per sbloccarne altri!"
+
+daily:
+  no-permission-toggle: "<red>Non hai il permesso di attivare/disattivare questa funzione.</red>"
+  no-permission: "<red>Non hai il permesso di usare questo.</red>"
+  players-only: "<red>Questo comando deve essere eseguito in gioco.</red>"
+  disabled: "<red>Le Ricompense Giornaliere sono attualmente disabilitate.</red>"
+  disabled-hint: "<gray>Usa <white>/%command% toggle</white> per abilitarle.</gray>"
+  toggled: "<yellow>Le Ricompense Giornaliere sono ora %state%</yellow>"
+  usage: "<gray>Uso: <white>/%command%</white> o <white>/%command% claim</white> o <white>/%command% top</white></gray>"
+  usage-admin: "<gray>Uso: <white>/%command%</white> o <white>/%command% claim</white> o <white>/%command% top</white> o <white>/%command% toggle</white></gray>"
+
+  top:
+    title: "&b&lGiornaliere &fTop Serie"
+    row: "&7#&f%rank% &b%player% &8» &aSerie: &f%streak% &8(&7%hours%h&8)"
+    empty: "&7Nessun dato ancora."
+
+  # Messaggi GUI
+  gui:
+    disabled: "<red>Le Ricompense Giornaliere sono disabilitate.</red>"
+    toggled: "<yellow>Le Ricompense Giornaliere sono ora %state%</yellow>"

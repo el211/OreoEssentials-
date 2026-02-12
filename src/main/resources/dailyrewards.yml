@@ -1,0 +1,105 @@
+# ===================== Daily Rewards (Mongo) =====================
+Storage:
+  Mongo:
+    Enabled: true
+    Uri: "mongodb://reconomy:ELIASps4@88.99.150.35:25580/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.5.3"
+    Database: "oreo"
+    Collection: "oreo_"
+
+
+General:
+  Enabled: true            # <—  master ON/OFF switch for Daily Rewards
+  PrintErrorsToConsole: true
+  PluginPrefix: "&8[&b&lOREO&8·&6&lDaily&b&lRewards&8]"
+  PluginGuiTitle: "&b&lOREO &6&lDaily &b&lRewards"
+  CheckForUpdates: true
+
+
+Claiming:
+  ResetWhenStreakCompleted: true
+  AvailableOnNewDay: false       # false = 24h cadence, true = 1 per calendar day
+  PauseStreakWhenMissed: false
+  SkipMissedDays: false
+
+Join:
+  RewardAutoClaim: false
+  RewardInstantPopup: false
+  DailyRewardReminderEnabled: true
+  DailyRewardClaimReminder: 1200
+  DailyRewardReminderClickable: true
+  DailyRewardReminderBlacklistedWorlds:
+    - ""
+
+GUI:
+  InventoryRows: 6
+  ShowDayQuantity: true
+  CloseOnClaim: false
+  LiveUpdateTimer: true
+  HideAttributes: true
+  ButtonsDisabled: false
+
+# =================================================================
+# Rewards section (replaces the old rewards.yml)
+#  Extras.CustomModelData (integer > 0) is supported.
+# =================================================================
+Rewards:
+
+  Day Example:
+    RewardName: "Daily Reward!"
+    RewardIcon: "SUNFLOWER"
+    RewardCommands:
+      - "eco give <playerName> 5000"
+      - "give <playerName> DIAMOND 1"
+    RewardMessage: "You have claimed a special reward!"
+    Extras:
+      Enchanted: false
+      CustomModelData: 1201
+      GUI Position: 1
+      GUI Page: 1
+
+  Day 1:
+    RewardName: "Welcome"
+    RewardIcon: "EMERALD"
+    RewardCommands:
+      - "eco give <playerName> 100"
+    Extras:
+      Enchanted: false
+      CustomModelData: 0
+
+  Day 2:
+    RewardName: ""
+    RewardIcon: ""
+    RewardCommands:
+      - ""
+    Extras:
+      Enchanted: false
+      CustomModelData: 0
+
+  Day 3:  { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 4:  { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 5:  { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 6:  { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 7:  { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 8:  { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 9:  { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 10: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 11: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 12: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 13: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 14: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 15: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 16: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 17: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 18: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 19: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 20: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 21: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 22: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 23: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 24: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 25: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 26: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 27: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 28: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 29: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }
+  Day 30: { RewardName: "", RewardIcon: "", RewardCommands: [""], Extras: { Enchanted: false, CustomModelData: 0 } }

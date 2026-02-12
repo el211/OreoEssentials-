@@ -1,0 +1,40 @@
+default_webhook: "https://discord.com/api/webhooks/..."
+include_server_name: true
+
+events:
+  mute:
+    enabled: true
+    username: "Oreo Moderation"
+    prefix: "**[MUTE]**"
+    message: "{server} **{by}** muted **{player}** ({uuid}) — Reason: {reason} — {until_desc}"
+  unmute:
+    enabled: true
+    username: "Oreo Moderation"
+    prefix: "**[UNMUTE]**"
+    message: "{server} **{by}** unmuted **{player}** ({uuid})"
+  ban:
+    enabled: true
+    username: "Oreo Moderation"
+    prefix: "**[BAN]**"
+    message: "{server} **{by}** banned **{player}** ({uuid}) — Reason: {reason} — {until_desc}"
+  unban:
+    enabled: true
+    username: "Oreo Moderation"
+    prefix: "**[UNBAN]**"
+    message: "{server} **{by}** unbanned **{player}** ({uuid})"
+  kick:
+    enabled: true
+    username: "Oreo Moderation"
+    prefix: "**[KICK]**"
+    message: "{server} **{by}** kicked **{player}** ({uuid}) — Reason: {reason}"
+  jail:
+    enabled: true
+    username: "Oreo Moderation"
+    prefix: "**[JAIL]**"
+    message: "{server} **{by}** jailed **{player}** ({uuid}) — Jail: **{jail}** Cell: **{cell}** — Reason: {reason} — {until_desc}"
+
+  unjail:
+    enabled: true
+    username: "Oreo Moderation"
+    prefix: "**[UNJAIL]**"
+    message: "{server} **{by}** released **{player}** ({uuid}) from jail"

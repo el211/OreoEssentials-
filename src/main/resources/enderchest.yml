@@ -1,0 +1,8 @@
+# Number of "rows" (cases) available per player by rank.
+# Each "case" is one row of 9 slots.
+# Vanilla GUIs support 1..6 rows. Values above 6 are capped at 6 per GUI.
+# Keys map to the *permission* "oreo.tier.<key>" (e.g., oreo.tier.vip)
+default: 3
+vip: 5
+mvp: 6
+#

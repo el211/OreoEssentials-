@@ -1,0 +1,23 @@
+# portals.yml — generated/maintained at runtime by the plugin.
+# You can safely edit or add entries while the server is offline.
+# Each portal is a cuboid with a destination.
+
+portals:
+  spawn_gate:
+    name: "spawn_gate"
+    world: "world"
+    box:
+      x1: 100.0
+      y1: 64.0
+      z1: 100.0
+      x2: 105.0
+      y2: 70.0
+      z2: 105.0
+    dest:
+      world: "world_nether"
+      x: 0.5
+      y: 64.0
+      z: 0.5
+      yaw: 0.0
+      pitch: 0.0
+    keepYawPitch: true

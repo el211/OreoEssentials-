@@ -1,0 +1,205 @@
+tab:
+  enabled: true
+  use-placeholderapi: true
+  interval-ticks: 20
+  layout-mode: "CUSTOM"
+
+  network:
+    all-servers: true
+
+  # ====================================================================
+  # 🌊 OREOESSENTIALS BLUE GRADIENT FLOWING WAVES! 🌊
+  # Matches the circular wave logo design
+  # ====================================================================
+  custom-layout:
+    enabled: true
+    change-interval: 8  # Smooth flowing animation!
+
+    # ====================================================================
+    # 🌊 ANIMATED FLOWING BLUE WAVE HEADER
+    # ====================================================================
+    top-section:
+      texts:
+        # Frame 1 - Bright cyan/aqua peak
+        - "&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━&#000BFF&m━&#0016FF&m━&#0021FF&m━&#002CFF&m━&#0037FF&m━&#0043FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 2
+        - "&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━&#000BFF&m━&#0016FF&m━&#0021FF&m━&#002CFF&m━&#0037FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 3
+        - "&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━&#000BFF&m━&#0016FF&m━&#0021FF&m━&#002CFF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 4
+        - "&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━&#000BFF&m━&#0016FF&m━&#0021FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 5
+        - "&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━&#000BFF&m━&#0016FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 6
+        - "&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━&#000BFF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 7
+        - "&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 8
+        - "&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 9
+        - "&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 10
+        - "&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 11
+        - "&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 12
+        - "&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 13
+        - "&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 14
+        - "&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 15
+        - "&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 16
+        - "&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 17
+        - "&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 18
+        - "&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 19
+        - "&#0037FF&m━&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 20
+        - "&#002CFF&m━&#0037FF&m━&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 21
+        - "&#0021FF&m━&#002CFF&m━&#0037FF&m━&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 22
+        - "&#0016FF&m━&#0021FF&m━&#002CFF&m━&#0037FF&m━&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00B1FF&m━&#00A6FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 23
+        - "&#000BFF&m━&#0016FF&m━&#0021FF&m━&#002CFF&m━&#0037FF&m━&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+
+        # Frame 24 - Loop completes
+        - "&#0000FF&m━&#000BFF&m━&#0016FF&m━&#0021FF&m━&#002CFF&m━&#0037FF&m━&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━\n&9&lOREO&b&lESSENTIALS\n&7Welcome &b%player_displayname% &8| &7Ping: &b%player_ping%ms"
+    # ====================================================================
+    # 👥 PLAYER LIST SECTION (Middle)
+    # ====================================================================
+    player-section:
+      enabled: true
+      player-format:
+        format: "%player_color%%player_name%%afk_indicator%"
+        rank-colors:
+          owner: "&9"      # Dark Blue
+          admin: "&b"      # Aqua
+          moderator: "&3"  # Dark Aqua
+          helper: "&e"     # Yellow
+          vip: "&b"        # Aqua
+          default: "&f"    # White
+        show-afk: true
+        afk-format: " &7AFK"
+        show-ping-bars: true
+
+    # ====================================================================
+    # ANIMATED FLOWING BLUE WAVE FOOTER
+    # ====================================================================
+
+    bottom-section:
+      texts:
+        # Frame 1
+        - "\n&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━&#000BFF&m━&#0016FF&m━&#0021FF&m━&#002CFF&m━&#0037FF&m━&#0043FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+
+        # Frame 2
+        - "\n&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━&#000BFF&m━&#0016FF&m━&#0021FF&m━&#002CFF&m━&#0037FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+
+        # Frame 3
+        - "\n&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━&#000BFF&m━&#0016FF&m━&#0021FF&m━&#002CFF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+
+        # Frame 4
+        - "\n&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━&#000BFF&m━&#0016FF&m━&#0021FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+
+        # Frame 5
+        - "\n&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━&#000BFF&m━&#0016FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 6
+        - "\n&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━&#000BFF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 7
+        - "\n&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━&#0000FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 8
+        - "\n&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━&#000BFF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 9
+        - "\n&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━&#0016FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 10
+        - "\n&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━&#0021FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 11
+        - "\n&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━&#002CFF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 12
+        - "\n&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━&#0037FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 13
+        - "\n&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━&#0043FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 14
+        - "\n&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━&#004EFF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 15
+        - "\n&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━&#0059FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 16
+        - "\n&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━&#0064FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 17
+        - "\n&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━&#006FFF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 18
+        - "\n&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━&#007AFF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 19
+        - "\n&#0037FF&m━&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━&#0085FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 20
+        - "\n&#002CFF&m━&#0037FF&m━&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━&#0090FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 21
+        - "\n&#0021FF&m━&#002CFF&m━&#0037FF&m━&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━&#00A6FF&m━&#009BFF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 22
+        - "\n&#0016FF&m━&#0021FF&m━&#002CFF&m━&#0037FF&m━&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00B1FF&m━&#00A6FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 23
+        - "\n&#000BFF&m━&#0016FF&m━&#0021FF&m━&#002CFF&m━&#0037FF&m━&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━&#00B1FF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+        # Frame 24 - Loop completes
+        - "\n&#0000FF&m━&#000BFF&m━&#0016FF&m━&#0021FF&m━&#002CFF&m━&#0037FF&m━&#0043FF&m━&#004EFF&m━&#0059FF&m━&#0064FF&m━&#006FFF&m━&#007AFF&m━&#0085FF&m━&#0090FF&m━&#009BFF&m━&#00A6FF&m━&#00B1FF&m━&#00BCFF&m━&#00C8FF&m━&#00D3FF&m━&#00DEFF&m━&#00E9FF&m━&#00F4FF&m━&#00FFFF&m━&#00F4FF&m━&#00E9FF&m━&#00DEFF&m━&#00D3FF&m━&#00C8FF&m━&#00BCFF&m━\n&7Players: &b%oe_network_online% &8| &7Balance: &b$%vault_eco_balance_formatted%\n&9&lOREO&b&lESSENTIALS &7- &fYourServer.com"
+
+    sorting:
+      method: "RANK"
+      rank-priority:
+        owner: 100
+        admin: 90
+        moderator: 80
+        helper: 70
+        vip: 60
+        default: 10
+
+  title:
+    enabled: true
+    show-on-join: true
+    text: "&9&lOREO&b&lESSENTIALS"
+    subtitle: "&7Welcome &b%player_displayname%&7!"
+    fade-in: 10
+    stay: 60
+    fade-out: 10
+
+  name-format:
+    enabled: true
+    use-rank-formats: true
+    rank-key: "%luckperms_primary_group%"
+    server-tag: " &8(&9%server_name%&8)"
+    pattern: "&f%nick_or_name%%oe_server_tag%"
+    rank-formats:
+      default: "&f%nick_or_name%%oe_server_tag%"
+      owner: "&9%nick_or_name%%oe_server_tag%"
+      admin: "&b%nick_or_name%%oe_server_tag%"
+      moderator: "&3%nick_or_name%%oe_server_tag%"
+      helper: "&e%nick_or_name%%oe_server_tag%"
+      vip: "&b%nick_or_name%%oe_server_tag%"
+    enforce-max-length: true
+    max-length: 16
+    overflow: "TRIM"

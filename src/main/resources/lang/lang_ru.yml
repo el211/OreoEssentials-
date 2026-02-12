@@ -1,0 +1,1421 @@
+# ============================================================================
+# OREOESSENTIALS - ПОЛНЫЙ PRODUCTION LANG.YML (РУССКИЙ)
+# ============================================================================
+# Создан из проекта унификации комплексной цветовой системы
+# Охватывает более 102 проверенных файлов в 11 проверочных сессиях
+#
+# Формат: MiniMessage (напр. <red>, <green>, <#RRGGBB>)
+# Документация: https://docs.advntr.dev/minimessage/format.html
+#
+# Общие переменные:
+#   %player%, %target%    - Имена игроков
+#   %server%, %world%     - Названия сервера/мира
+#   %label%               - Метка команды
+#   %amount%, %balance%   - Числовые значения
+#   %name%, %warp%, %home% - Названия мест
+#   %id%                  - Числовые идентификаторы
+# ============================================================================
+
+# ============================================================================
+# ОБЩИЕ СООБЩЕНИЯ
+# ============================================================================
+
+general:
+  prefix: '<gold><bold>Oreo</bold></gold><white><bold>Essentials</bold></white> <dark_gray>»</dark_gray> '
+  no-permission: "<red>У вас нет прав.</red>"
+  player-only: "<red>Только игроки могут использовать эту команду.</red>"
+  console-only: "<red>Только консоль может использовать эту команду.</red>"
+  invalid-player: "<red>Игрок <yellow>%player%</yellow> не найден.</red>"
+  player-offline: "<red>Игрок <yellow>%player%</yellow> не в сети.</red>"
+  reload-success: "<green>Конфигурация успешно перезагружена.</green>"
+  reload-failed: "<red>Не удалось перезагрузить конфигурацию.</red>"
+  command-cooldown: "<yellow>Вам нужно подождать <white>%time%</white> перед повторным использованием этой команды.</yellow>"
+
+# ============================================================================
+# СИСТЕМА КИТОВ (6 файлов проверено)
+# ============================================================================
+
+kits:
+  # Основные сообщения (KitsManager.java - 9 вызовов Lang)
+  unknown-kit: "<red>Неизвестный кит: <yellow>%kit_id%</yellow></red>"
+  disabled: "<red>Киты в данный момент отключены.</red>"
+  disabled-hint: "<gray>Используйте <white>%cmd%</white> чтобы включить.</gray>"
+
+  # Права
+  no-permission: "<red>У вас нет прав.</red>"
+  no-permission-claim: "<red>У вас нет прав на получение китов.</red>"
+  no-permission-specific: "<red>У вас нет прав на кит <yellow>%kit_name%</yellow>. Требуется: <white>%perm%</white></red>"
+
+  # Кулдаун
+  cooldown: "<yellow>Кит <aqua>%kit_name%</aqua> на перезарядке. Подождите <white>%cooldown_left%</white>.</yellow>"
+  bypass-cooldown: "<green>Обход перезарядки для <aqua>%kit_name%</aqua>.</green>"
+
+  # Успех
+  claimed: "<green>Вы получили кит <aqua>%kit_name%</aqua>!</green>"
+  commands-ran: "<gray>Команды из <aqua>%kit_name%</aqua> выполнены.</gray>"
+
+  # Команды (KitCommands.java - 8 вызовов Lang)
+  player-only: "<red>Только игроки могут использовать эту команду.</red>"
+  usage-kit: "<yellow>Использование: /kit <n></yellow>"
+  toggle-enabled: "<green>Функция китов теперь <white>ВКЛЮЧЕНА</white>.</green>"
+  toggle-disabled: "<yellow>Функция китов теперь <white>ОТКЛЮЧЕНА</white>.</yellow>"
+
+  # GUI описания (KitsMenuSI.java - 5 вызовов Lang)
+  gui:
+    lore:
+      claimable: "<green>✓ Готов к получению!</green>\n<gray>Перезарядка: <white>Нет</white></gray>"
+      on-cooldown: "<yellow>⏱ На перезарядке</yellow>\n<gray>Ожидание: <white>%cooldown_left%</white></gray>"
+    sounds:
+      claim:
+        enabled: true
+        sound: "minecraft:entity.experience_orb.pickup"
+        volume: 0.8
+        pitch: 1.2
+      denied:
+        enabled: true
+        sound: "minecraft:block.note_block.bass"
+        volume: 0.7
+        pitch: 0.7
+
+# ============================================================================
+# СИСТЕМА PLAYERWARP (10 файлов проверено - более 65 ключей Lang)
+# ============================================================================
+
+# Сообщения уровня сервиса (PlayerWarpService.java - 15 вызовов Lang)
+playerwarps:
+  no-permission-base: "<red>У вас нет прав на использование варпов игроков.</red>"
+  only-players-sub: "<red>Только игроки могут использовать /%sub%.</red>"
+
+  teleport:
+    not-found: "<red>Варп <yellow>%name%</yellow> не найден.</red>"
+    no-permission: "<red>У вас нет прав на использование <yellow>%name%</yellow>.</red>"
+    local: "<green>Телепортирован на варп</green> <yellow>%name%</yellow>."
+    cross-disabled: "<gray>Кросс-серверные варпы отключены. Локальная телепортация на <white>%name%</white>.</gray>"
+    messaging-disabled: "<gray>Сообщения оффлайн. Локальная телепортация на <white>%name%</white>.</gray>"
+    cross-send: "<gray>Отправка на сервер</gray> <yellow>%server%</yellow> <gray>для варпа</gray> <white>%name%</white>…"
+
+  whitelist:
+    not-found: "<red>Варп <yellow>%name%</yellow> не найден.</red>"
+    not-enabled: "<red>Белый список не включен для <yellow>%name%</yellow>.</red>"
+    player-not-found: "<red>Целевой игрок не найден.</red>"
+    already: "<yellow>%target%</yellow> уже в белом списке <white>%name%</white>."
+    added: "<green>Добавлен</green> <yellow>%target%</yellow> <green>в белый список</green> <white>%name%</white>."
+    not-in: "<red><yellow>%target%</yellow> не в белом списке <white>%name%</white>.</red>"
+    removed: "<green>Удален</green> <yellow>%target%</yellow> <green>из белого списка</green> <white>%name%</white>."
+    enabled: "<green>Белый список включен для <white>%warp%</white>.</green>"
+    disabled: "<yellow>Белый список отключен для <white>%warp%</white>.</yellow>"
+    not-owner: "<red>Вы не владелец <yellow>%warp%</yellow>.</red>"
+
+# Сообщения команд (PlayerWarpCommand.java - более 50 вызовов Lang)
+pw:
+  # Помощь
+  help-header: "<gold><bold>Помощь по PlayerWarp</bold></gold>"
+  help-body: |
+    <yellow>/%label% set <n></yellow> <gray>- Создать варп</gray>
+    <yellow>/%label% remove <n></yellow> <gray>- Удалить свой варп</gray>
+    <yellow>/%label% list [игрок]</yellow> <gray>- Список варпов</gray>
+    <yellow>/%label% gui</yellow> <gray>- Просмотреть все варпы</gray>
+    <yellow>/%label% mywarps</yellow> <gray>- Управление варпами</gray>
+    <yellow>/%label% <warp></yellow> <gray>- Телепорт на варп</gray>
+  help-footer: "<gray>Используйте <yellow>/%label% help</yellow> для доп. информации.</gray>"
+
+  # Права (более 20 ключей)
+  no-permission-base: "<red>У вас нет прав на использование варпов игроков.</red>"
+  no-permission-set: "<red>У вас нет прав на установку варпов.</red>"
+  no-permission-remove: "<red>У вас нет прав на удаление варпов.</red>"
+  no-permission-list: "<red>У вас нет прав на просмотр варпов.</red>"
+  no-permission-warp: "<red>У вас нет прав на использование <yellow>%name%</yellow>.</red>"
+  no-permission-amount: "<red>У вас нет прав.</red>"
+  no-permission-rtp: "<red>У вас нет прав.</red>"
+  no-permission-near: "<red>У вас нет прав.</red>"
+  no-permission-reset: "<red>У вас нет прав.</red>"
+  no-permission-rename: "<red>У вас нет прав.</red>"
+  no-permission-setowner: "<red>У вас нет прав.</red>"
+  no-permission-removeall: "<red>У вас нет прав.</red>"
+  no-permission-reload: "<red>У вас нет прав.</red>"
+  no-permission-addwarps: "<red>У вас нет прав.</red>"
+  no-permission-whitelist: "<red>У вас нет прав.</red>"
+  no-permission-desc: "<red>У вас нет прав.</red>"
+  no-permission-category: "<red>У вас нет прав.</red>"
+  no-permission-lock: "<red>У вас нет прав.</red>"
+  no-permission-icon: "<red>У вас нет прав.</red>"
+  no-permission-cost: "<red>У вас нет прав.</red>"
+  no-permission-managers: "<red>У вас нет прав.</red>"
+  no-permission-password: "<red>У вас нет прав.</red>"
+
+  # Сообщения использования (более 15 ключей)
+  usage-set: "<yellow>Использование: /%label% set <n></yellow>"
+  usage-remove: "<yellow>Использование: /%label% remove <warp></yellow>"
+  usage-reset: "<yellow>Использование: /%label% reset <warp></yellow>"
+  usage-rename: "<yellow>Использование: /%label% rename <warp> <новоеИмя></yellow>"
+  usage-setowner: "<yellow>Использование: /%label% setowner <warp> <игрок></yellow>"
+  usage-removeall: "<yellow>Использование: /%label% removeall <игрок></yellow>"
+  usage-addwarps: "<yellow>Использование: /%label% addwarps <игрок> <кол-во></yellow>"
+  usage-whitelist: "<yellow>Использование: /%label% whitelist <enable|disable|list|set|remove> <warp> [игрок]</yellow>"
+  usage-whitelist-set: "<yellow>Использование: /%label% whitelist set <warp> <игрок></yellow>"
+  usage-whitelist-remove: "<yellow>Использование: /%label% whitelist remove <warp> <игрок></yellow>"
+  usage-desc: "<yellow>Использование: /%label% desc <warp> [описание...]</yellow>"
+  usage-category: "<yellow>Использование: /%label% category <warp> [категория]</yellow>"
+  usage-lock: "<yellow>Использование: /%label% lock <warp> [on|off|toggle]</yellow>"
+  usage-icon: "<yellow>Использование: /%label% icon <warp> [clear]</yellow>"
+  usage-cost: "<yellow>Использование: /%label% cost <warp> <сумма></yellow>"
+  usage-managers: "<yellow>Использование: /%label% managers <warp> [игрок]</yellow>"
+  usage-password: "<yellow>Использование: /%label% password <warp> <пароль|off></yellow>"
+  usage-use: "<yellow>Использование: /%label% use <warp> [пароль]</yellow>"
+
+  # Установка варпа
+  limit-reached: "<red>Вы достигли лимита варпов (<white>%limit%</white>).</red>"
+  already-exists: "<red>У вас уже есть варп с именем <yellow>%name%</yellow>.</red>"
+  set-success: "<green>Варп <aqua>%name%</aqua> создан.</green>"
+
+  # Удаление варпа
+  not-found-owner: "<red>У вас нет варпа с именем <yellow>%name%</yellow>.</red>"
+  not-found: "<red>Варп <yellow>%name%</yellow> не найден.</red>"
+  remove-success: "<green>Варп <aqua>%name%</aqua> удален.</green>"
+  remove-failed: "<red>Не удалось удалить варп <yellow>%name%</yellow>.</red>"
+
+  # Список
+  list-header: "<gold>Варпы <yellow>%owner%</yellow>:</gold>"
+  list-empty: "<gray>Варпы не найдены.</gray>"
+  list-entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua>"
+  list-footer: "<gray>───────────────────────</gray>"
+  list-target-offline: "<red>Игрок <yellow>%player%</yellow> не в сети.</red>"
+
+  # Количество
+  amount-console-usage: "<red>Использование: /pw amount <игрок></red>"
+  amount-target-offline: "<red>Игрок <yellow>%player%</yellow> не в сети.</red>"
+  amount-self: "<green>У вас <white>%amount%</white> варп(ов).</green>"
+  amount-other: "<green>У <yellow>%player%</yellow> <white>%amount%</white> варп(ов).</green>"
+
+  # RTP
+  rtp-none: "<red>Нет доступных варпов для случайной телепортации.</red>"
+  rtp-none-usable: "<red>Нет варпов, к которым у вас есть доступ.</red>"
+
+  # Рядом
+  near-none: "<gray>Варпы не найдены в пределах <white>%radius%</white> блоков.</gray>"
+  near-page-empty: "<red>Страница <yellow>%page%</yellow> пуста.</red>"
+
+  # Сброс
+  reset-success: "<green>Варп <aqua>%name%</aqua> сброшен на вашу текущую позицию.</green>"
+  reset-failed: "<red>Не удалось сбросить варп <yellow>%name%</yellow>.</red>"
+
+  # Переименование
+  rename-success: "<green>Переименован <yellow>%old%</yellow> в <aqua>%name%</aqua>.</green>"
+  rename-failed: "<red>Не удалось переименовать <yellow>%old%</yellow> в <yellow>%name%</yellow>.</red>"
+
+  # Смена владельца
+  setowner-success: "<green>Варп <aqua>%warp%</aqua> передан <yellow>%player%</yellow>.</green>"
+  setowner-failed: "<red>Не удалось передать варп <yellow>%warp%</yellow>.</red>"
+  player-resolve-failed: "<red>Не удалось определить игрока <yellow>%player%</yellow>.</red>"
+
+  # Удалить все
+  removeall-success: "<green>Удалено <white>%amount%</white> варп(ов) у <yellow>%player%</yellow>.</green>"
+
+  # Перезагрузка
+  reload-success: "<green>Конфигурация перезагружена.</green>"
+
+  # Добавить варпы
+  addwarps-invalid-amount: "<red>Недействительная сумма.</red>"
+  addwarps-success: "<green>Добавлено <white>%amount%</white> дополнительных слотов варпов для <yellow>%player%</yellow>. Всего дополнительных: <white>%total%</white>.</green>"
+
+  # Белый список
+  whitelist-added: "<green>Добавлен <yellow>%player%</yellow> в белый список <white>%warp%</white>.</green>"
+  whitelist-removed: "<green>Удален <yellow>%player%</yellow> из белого списка <white>%warp%</white>.</green>"
+  whitelist-already: "<yellow>%player%</yellow> уже в белом списке <white>%warp%</white>."
+  whitelist-not-found: "<red><yellow>%player%</yellow> не в белом списке <white>%warp%</white>.</red>"
+
+  # Описание
+  desc-empty: "<gray>Варп <white>%warp%</white> не имеет описания.</gray>"
+  desc-show: "<gold>Описание <aqua>%warp%</aqua>:</gold> <white>%desc%</white>"
+  desc-cleared: "<green>Описание <aqua>%warp%</aqua> очищено.</green>"
+  desc-set: "<green>Описание <aqua>%warp%</aqua> установлено: <white>%desc%</white></green>"
+
+  # Категория
+  category-empty: "<gray>Варп <white>%warp%</white> не имеет категории.</gray>"
+  category-show: "<gold>Категория <aqua>%warp%</aqua>:</gold> <white>%category%</white>"
+  category-cleared: "<green>Категория <aqua>%warp%</aqua> очищена.</green>"
+  category-set: "<green>Категория <aqua>%warp%</aqua> установлена: <white>%category%</white></green>"
+
+  # Блокировка
+  locked: "<green>Варп <aqua>%warp%</aqua> заблокирован.</green>"
+  unlocked: "<green>Варп <aqua>%warp%</aqua> разблокирован.</green>"
+
+  # Иконка
+  icon-no-item: "<red>Вы должны держать предмет в основной руке.</red>"
+  icon-set: "<green>Иконка установлена для <aqua>%warp%</aqua>.</green>"
+  icon-cleared: "<green>Иконка очищена для <aqua>%warp%</aqua>.</green>"
+
+  # Стоимость
+  cost-invalid: "<red>Недействительная сумма: <yellow>%input%</yellow></red>"
+  cost-cleared: "<green>Стоимость очищена для <aqua>%warp%</aqua> (теперь бесплатно).</green>"
+  cost-set: "<green>Стоимость установлена для <aqua>%warp%</aqua> на <yellow>$%amount%</yellow>.</green>"
+  cost-not-enough: "<red>Недостаточно средств (требуется <white>$%amount%</white>).</red>"
+  cost-charged: "<gray>Списано</gray> <yellow>$%amount%</yellow> <gray>(оплачено</gray> <white>%owner%</white><gray>).</gray>"
+
+  # Управляющие
+  managers-player-not-found: "<red>Игрок <yellow>%player%</yellow> не найден.</red>"
+  manager-added: "<green>Добавлен <yellow>%player%</yellow> как управляющий <white>%warp%</white>.</green>"
+  manager-removed: "<green>Удален <yellow>%player%</yellow> как управляющий <white>%warp%</white>.</green>"
+
+  # Пароль
+  password-required: "<red>Варп <yellow>%warp%</yellow> требует пароль.</red> <gray>Используйте: <white>/pw use %warp% <пароль></white></gray>"
+  password-wrong: "<red>Неверный пароль для <yellow>%warp%</yellow>.</red>"
+  password-cleared: "<green>Пароль очищен для <aqua>%warp%</aqua>.</green>"
+  password-set: "<green>Пароль установлен для <aqua>%warp%</aqua>.</green>"
+  password-placeholder-set: "<green>Установлен стандартный пароль '<white>%password%</white>' для <aqua>%warp%</aqua>. Измените его командой <yellow>/pw password %warp% <ваш-пароль></yellow></green>"
+
+  # Телепортация
+  teleport-failed: "<red>Телепортация не удалась.</red>"
+  teleported: "<green>Телепортирован на варп игрока <aqua>%name%</aqua>.</green>"
+  sending: "<yellow>Отправка на <aqua>%server%</aqua>... вы будете телепортированы на варп игрока <aqua>%warp%</aqua> по прибытии.</yellow>"
+  messaging-disabled: "<red>Кросс-серверные сообщения отключены.</red>"
+
+# ============================================================================
+# СИСТЕМА PLAYERVAULTS (2 файла GUI проверено - 1 ключ Lang)
+# ============================================================================
+
+playervaults:
+  # Отказ в доступе при попытке открыть заблокированное хранилище (VaultMenu.java)
+  deny: "<red>У вас нет прав на доступ к хранилищу <yellow>%id%</yellow>.</red>"
+
+  # Необязательные сообщения об успехе
+  opened: "<green>Хранилище <aqua>%id%</aqua> открыто.</green>"
+  saved: "<gray>Хранилище <white>%id%</white> автоматически сохранено.</gray>"
+
+# ============================================================================
+# СИСТЕМЫ ТЕЛЕПОРТАЦИИ (TPA, HOME, SPAWN, WARP, BACK)
+# ============================================================================
+
+teleport:
+  # Общий обратный отсчет
+  countdown:
+    title: "<yellow>Телепортация...</yellow>"
+    subtitle: "<gray>Через <white>%seconds%</white>с...</gray>"
+
+  # Кросс-серверная телепортация (админ команда /tp)
+  cross-server:
+    no-messaging: "<red>Кросс-серверные сообщения недоступны; невозможно использовать /tp между серверами.</red>"
+    jumping: "<gray>Телепортация к <aqua>%target%</aqua> на <aqua>%server%</aqua>…</gray>"
+    arrived: "<green>Телепортирован к <aqua>%target%</aqua>.</green>"
+    target-offline: "<red>Телепортация не удалась: целевой игрок больше не в сети.</red>"
+
+  # Кросс-серверный /back
+  back:
+    cross-server:
+      no-messaging: "<red>Кросс-серверные сообщения недоступны; невозможно использовать /back между серверами.</red>"
+      no-server: "<red>Место возврата не имеет целевого сервера.</red>"
+      jumping: "<gray>Телепортация на предыдущее место на <aqua>%server%</aqua>…</gray>"
+      world-not-loaded: "<red>Телепортация не удалась: мир <yellow>%world%</yellow> не загружен.</red>"
+      success: "<green>Возврат выполнен.</green>"
+
+# Система TPA
+tpa:
+  usage: "<red>Использование: /%label% <игрок></red>"
+  self: "<red>Вы не можете отправить TPA самому себе.</red>"
+
+  not-found:
+    name-hint: "<red>Игрок <white>%input%</white> не в сети. <gray>(Если он на другом сервере, используйте точное имя Minecraft.)</gray></red>"
+    generic: "<red>Игрок <white>%input%</white> не найден в сети. <gray>(Может быть оффлайн или на другом прокси-кластере.)</gray></red>"
+
+  sent:
+    local: "<green>TPA отправлен <aqua>%target%</aqua>.</green>"
+    cross-server: "<gray>Запрос отправлен <aqua>%target%</aqua> на <aqua>%server%</aqua>. Может использовать </gray><green>/tpaccept</green><gray>.</gray>"
+    global: "<gray>Мы разослали ваш запрос для <white>%target%</white> по сети. Если в сети, может использовать </gray><green>/tpaccept</green><gray>.</gray>"
+
+  request-target: "<aqua>%player%</aqua> <yellow>хочет телепортироваться к вам.</yellow> <green>/tpaccept</green> <yellow>или</yellow> <red>/tpdeny</red> <yellow>(<white>%timeout%</white>с)</yellow>"
+
+  broker-unavailable: "<red>Кросс-серверный TPA брокер в данный момент недоступен. <gray>Попросите </gray><white>%target%</white><gray> присоединиться к вашему серверу напрямую.</gray></red>"
+
+  accept:
+    none: "<red>Нет ожидающих запросов на телепортацию.</red>"
+    failed: "<red>Не удалось принять запрос на телепортацию.</red>"
+    debug-hint: "<gray>Отладка: Запрос не найден в TeleportService.</gray>"
+
+  # Отладочное эхо
+  debug:
+    echo: "<dark_gray>[<aqua>TPA</aqua>/<gray>%id%</gray>]</dark_gray> <gray>%message%</gray>"
+
+# Система Дома
+home:
+  disabled: "<red>Функция дома в данный момент отключена.</red>"
+  no-homes: "<yellow>У вас нет домов. Используйте <aqua>%sethome%</aqua> чтобы создать.</yellow>"
+  list: "<gray>Ваши дома:</gray> <aqua>%homes%</aqua>"
+  tip: "<gray>Используйте <yellow>/%label% <имя></yellow> для телепортации.</gray>"
+  not-found: "<red>Дом <yellow>%name%</yellow> не найден.</red>"
+  suggest: "<gray>Возможно вы имели в виду:</gray> <aqua>%suggestions%</aqua>"
+  teleported: "<green>Телепортирован домой <yellow>%name%</yellow>.</green>"
+  cancelled-moved: "<red>Телепортация отменена: вы переместились.</red>"
+  cross-disabled: "<red>Кросс-серверные дома отключены.</red>"
+  cross-disabled-tip: "<gray>Попросите админа включить кросс-серверные дома или используйте <yellow>/server %server%</yellow> затем <yellow>/home %name%</yellow>.</gray>"
+  messaging-disabled: "<red>Кросс-серверные сообщения отключены.</red>"
+  messaging-disabled-tip: "<gray>Попросите админа включить сообщения или используйте <yellow>/server %server%</yellow> затем <yellow>/home %name%</yellow>.</gray>"
+  sending: "<gray>Отправка на <yellow>%server%</yellow> для дома <aqua>%name%</aqua>...</gray>"
+  switch-failed: "<red>Не удалось переключиться на сервер <yellow>%server%</yellow>.</red>"
+  switch-failed-tip: "<gray>Попробуйте вручную <yellow>/server %server%</yellow>.</gray>"
+
+homes:
+  not-found: "<red>Дом не найден: <yellow>%name%</yellow></red>"
+  available: "<gray>Доступно:</gray> <aqua>%homes%</aqua>"
+  teleported: "<green>Телепортирован домой <aqua>%name%</aqua>.</green>"
+  cross-disabled: "<red>Кросс-серверные дома отключены конфигурацией сервера.</red>"
+  cross-disabled-manual: "<gray>Используйте <aqua>/server %server%</aqua> затем выполните <aqua>/homes %name%</aqua>.</gray>"
+  messaging-disabled: "<red>Кросс-серверные сообщения отключены. Попросите админа включить RabbitMQ.</red>"
+  messaging-disabled-manual: "<gray>Вы все еще можете переключиться с помощью <aqua>/server %server%</aqua> и выполнить <aqua>/homes %name%</aqua>.</gray>"
+  sending: "<yellow>Отправка на <aqua>%server%</aqua>... вы будете телепортированы домой <aqua>%name%</aqua> по прибытии.</yellow>"
+  switch-failed: "<red>Не удалось переключиться на %server%.</red>"
+  no-homes: "<yellow>У вас нет домов. Используйте <aqua>/sethome <имя></aqua>.</yellow>"
+  list: "<gold>Дома (%count%):</gold> <aqua>%homes%</aqua>"
+  tip: "<gray>Подсказка: <aqua>/homes <имя></aqua> для телепортации.</gray>"
+
+  gui:
+    title: "<dark_green>Ваши Дома</dark_green>"
+    not-found: "<red>Дом не найден: <yellow>%name%</yellow></red>"
+    teleported: "<green>Телепортирован в <aqua>%name%</aqua>.</green>"
+    cross-disabled: "<red>Кросс-серверные дома отключены конфигурацией сервера.</red>"
+    cross-disabled-manual: "<gray>Используйте <aqua>/server %server%</aqua> затем <aqua>/home %name%</aqua>.</gray>"
+    messaging-disabled: "<red>Кросс-серверные сообщения отключены. Попросите админа включить RabbitMQ.</red>"
+    messaging-disabled-manual: "<gray>Вы все еще можете использовать <aqua>/server %server%</aqua> затем <aqua>/home %name%</aqua>.</gray>"
+    sending: "<yellow>Отправка на <aqua>%server%</aqua>... (телепортация по прибытии).</yellow>"
+    switch-failed: "<red>Не удалось переключиться на %server%.</red>"
+
+    refresh:
+      title: "<yellow>Обновить</yellow>"
+      lore: "<gray>Нажмите чтобы перезагрузить дома.</gray>"
+
+    counter:
+      title: "<gold>Дома <white>(%count%)</white></gold>"
+      lore:
+        0: "<gray>Левый клик на доме для телепортации.</gray>"
+        1: "<gray>Правый клик на доме для удаления.</gray>"
+
+    nav:
+      previous: "<yellow>Предыдущая Страница</yellow>"
+      next: "<yellow>Следующая Страница</yellow>"
+
+    home:
+      title: "<aqua>%name%</aqua>"
+      lore:
+        server: "<gray>Сервер: <yellow>%server%</yellow></gray>"
+        world: "<gray>Мир: <yellow>%world%</yellow></gray>"
+        coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+        left-click: "<green>Левый Клик: <white>Телепортация</white></green>"
+        right-click: "<red>Правый Клик: <white>Удалить</white></red>"
+
+  delete:
+    title: "<dark_red>Удалить '%home%'?</dark_red>"
+    yes: "<green>Да, удалить</green>"
+    no: "<red>Нет, отмена</red>"
+    success: "<red>Дом <yellow>%home%</yellow> удален.</red>"
+    failed: "<red>Не удалось удалить дом <yellow>%home%</yellow>.</red>"
+    info:
+      title: "<gold>Удаление Дома</gold>"
+      lore:
+        0: "<gray>Вы уверены, что хотите удалить</gray>"
+        1: "<yellow>%home%</yellow><gray>?</gray>"
+
+# Sethome
+sethome:
+  limit: "<red>Вы достигли лимита домов <yellow>%max%</yellow>.</red>"
+  set: "<green>Дом <yellow>%name%</yellow> установлен.</green>"
+
+# Delhome
+delhome:
+  usage: "<yellow>Использование: /%label% <имя></yellow>"
+  removed: "<green>Дом <yellow>%name%</yellow> удален.</green>"
+  not-found: "<red>Нет дома с именем <yellow>%name%</yellow>.</red>"
+
+# Система Спавна
+spawn:
+  disabled: "<red>Команда спавна в данный момент отключена.</red>"
+  not-set: "<red>Местоположение спавна не установлено.</red>"
+  teleported: "<green>Телепортирован на спавн.</green>"
+  cancelled-moved: "<red>Телепортация отменена: вы переместились.</red>"
+  teleport-failed: "<red>Телепортация не удалась: %error%</red>"
+  cross-disabled: "<red>Кросс-серверный спавн отключен.</red>"
+  cross-disabled-tip: "<gray>Попросите админа включить кросс-серверный спавн или используйте <yellow>/server %server%</yellow> затем <yellow>/spawn</yellow>.</gray>"
+  messaging-disabled: "<red>Кросс-серверные сообщения отключены.</red>"
+  messaging-disabled-tip: "<gray>Попросите админа включить сообщения или используйте <yellow>/server %server%</yellow> затем <yellow>/spawn</yellow>.</gray>"
+  sending: "<gray>Отправка на <yellow>%server%</yellow> для спавна...</gray>"
+  switch-failed: "<red>Не удалось переключиться на сервер <yellow>%server%</yellow>.</red>"
+
+# Система Варпа
+warp:
+  list-empty: "<yellow>Варпы: <gray>(нет)</gray></yellow>"
+  list: "<yellow>Варпы:</yellow> <gray>%warps%</gray>"
+
+  no-permission: "<red>У вас нет прав на этот варп.</red>"
+  no-permission-with-node: "<red>У вас нет прав на этот варп. <gray>(%permission%)</gray></red>"
+  no-permission-others: "<red>У вас нет прав на телепортацию других игроков.</red>"
+
+  console-usage: "<red>Использование из консоли: /warp <warp> <игрок></red>"
+  player-not-found: "<red>Игрок '<yellow>%player%</yellow>' не в сети.</red>"
+
+  not-found: "<red>Варп не найден.</red>"
+  teleport-failed: "<red>Телепортация не удалась: <gray>%error%</gray></red>"
+
+  teleported: "<green>Телепортирован на варп <aqua>%warp%</aqua>.</green>"
+  teleported-other: "<green>Телепортирован <yellow>%player%</yellow> на варп <aqua>%warp%</aqua>.</green>"
+  cancelled-moved: "<red>Телепортация на варп <yellow>%warp%</yellow> отменена: вы переместились.</red>"
+
+  cross-disabled: "<red>Кросс-серверные варпы отключены конфигурацией сервера.</red>"
+  cross-disabled-tip: "<gray>Используйте <aqua>/server %server%</aqua> затем выполните <aqua>/warp %warp%</aqua></gray>"
+  messaging-disabled: "<red>Кросс-серверные сообщения отключены.</red>"
+  messaging-disabled-tip: "<gray>Используйте <aqua>/server %server%</aqua> затем выполните <aqua>/warp %warp%</aqua></gray>"
+  sending: "<yellow>Отправка на <aqua>%server%</aqua>... вы будете телепортированы на варп <aqua>%warp%</aqua> по прибытии.</yellow>"
+  sending-other: "<green>Отправка <yellow>%player%</yellow> на <aqua>%server%</aqua> (варп <yellow>%warp%</yellow>).</green>"
+  switch-failed: "<red>Не удалось переключиться на %server%.</red>"
+
+  delete:
+    title: "<dark_red>Удалить '%warp%'?</dark_red>"
+    yes: "<green>Да, удалить</green>"
+    no: "<red>Нет, отмена</red>"
+    success: "<red>Варп <yellow>%warp%</yellow> удален.</red>"
+    failed: "<red>Не удалось удалить варп <yellow>%warp%</yellow>.</red>"
+    info:
+      title: "<gold>Удаление Варпа</gold>"
+      lore:
+        0: "<gray>Вы уверены, что хотите удалить</gray>"
+        1: "<yellow>%warp%</yellow><gray>?</gray>"
+
+  admin:
+    list:
+      title: "<dark_aqua>Варпы (Админ)</dark_aqua>"
+      refresh: "<yellow>Обновить</yellow>"
+      refresh-lore: "<gray>Нажмите чтобы перезагрузить варпы.</gray>"
+      counter: "<gold>Варпы <white>(%count%)</white></gold>"
+      counter-lore:
+        0: "<gray>Левый/Правый Клик: <white>Управление варпом</white></gray>"
+        1: "<gray>Shift-Левый или Средний Клик: <white>Быстрая телепортация</white></gray>"
+      previous: "<yellow>Предыдущая Страница</yellow>"
+      next: "<yellow>Следующая Страница</yellow>"
+      warp-name: "<aqua>%name%</aqua>"
+      warp-server: "<gray>Сервер: <yellow>%server%</yellow></gray>"
+      warp-world: "<gray>Мир: <yellow>%world%</yellow></gray>"
+      warp-coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+      warp-perm-protected: "<gray>Право: <gold>%perm%</gold></gray>"
+      warp-perm-public: "<gray>Право: <green>публичный</green></gray>"
+      warp-click: "<green>Клик: <white>Открыть действия</white></green>"
+      warp-quick-tp: "<aqua>Shift-Левый/Средний: <white>Быстрая телепортация</white></aqua>"
+
+    gui:
+      title: "<dark_aqua>Варп: <aqua>%warp%</aqua></dark_aqua>"
+      info:
+        server: "<gray>Сервер: <yellow>%server%</yellow></gray>"
+        permission-open: "<gray>Право: <green>ОТКРЫТ (все)</green></gray>"
+        permission-required: "<gray>Право: <yellow>%permission%</yellow></gray>"
+      teleport: "<green>Телепортация</green>"
+      set-permission: "<aqua>Установить/Изменить Право</aqua>"
+      make-public: "<green>Сделать Публичным (очистить право)</green>"
+      rename: "<gold>Переименовать Варп</gold>"
+      delete: "<red>Удалить Варп</red>"
+      back: "<red>← Назад</red>"
+
+    prompt:
+      permission: "<yellow>Введите право в чате для варпа <aqua>%warp%</aqua> (или введите <white>cancel</white>).</yellow>"
+      rename: "<yellow>Введите новое имя в чате для варпа <aqua>%warp%</aqua> (или введите <white>cancel</white>).</yellow>"
+      cancelled: "<gray>Операция отменена.</gray>"
+
+    directory-unavailable: "<red>WarpDirectory недоступен; невозможно изменить право.</red>"
+    permission-cleared: "<green>Право очищено. Варп теперь публичный.</green>"
+    permission-set: "<green>Право установлено на <yellow>%permission%</yellow>.</green>"
+    rename-empty: "<red>Имя не может быть пустым.</red>"
+    rename-failed: "<red>Не удалось переименовать варп.</red>"
+    rename-success: "<green>Варп переименован в <aqua>%new_name%</aqua>.</green>"
+    not-found: "<red>Варп не найден: <yellow>%warp%</yellow></red>"
+    teleported: "<green>Телепортирован на варп <aqua>%warp%</aqua>.</green>"
+    sending: "<yellow>Отправка на <aqua>%server%</aqua>... (телепортация по прибытии).</yellow>"
+    switch-failed: "<red>Не удалось переключиться на %server%.</red>"
+
+  player:
+    no-permission: "<red>У вас нет прав на этот варп.</red>"
+    list:
+      refresh: "<yellow>Обновить</yellow>"
+      refresh-lore: "<gray>Нажмите чтобы перезагрузить варпы.</gray>"
+      counter: "<gold>Варпы <white>(%count%)</white></gold>"
+      counter-lore: "<gray>Левый Клик: <white>Телепортация</white></gray>"
+      previous: "<yellow>Предыдущая Страница</yellow>"
+      next: "<yellow>Следующая Страница</yellow>"
+      warp-name-allowed: "<aqua>%name%</aqua>"
+      warp-name-locked: "<dark_red>%name%</dark_red>"
+      warp-server: "<gray>Сервер: <yellow>%server%</yellow></gray>"
+      warp-world: "<gray>Мир: <yellow>%world%</yellow></gray>"
+      warp-coords: "<gray>XYZ: <yellow>%coords%</yellow></gray>"
+      warp-click: "<green>Левый Клик: <white>Телепортация</white></green>"
+      warp-locked: "<red>У вас нет доступа.</red>"
+
+  head:
+    usage: "<yellow>Использование: /<white>%label% <игрок></white></yellow>"
+    fetching: "<gray>Получение головы <white>%target%</white>...</gray>"
+    cannot-resolve: "<red>Игрок <white>%target%</white> не найден.</red>"
+    fetch-failed: "<red>Не удалось получить голову <white>%target%</white>.</red>"
+    item-name: "<aqua>%target%</aqua><gray> Голова</gray>"
+    dropped: "<yellow>Голова получена! <gray>(Выброшена к вашим ногам - инвентарь полон)</gray></yellow>"
+    given: "<green>Голова <white>%target%</white> получена!</green>"
+
+# Система RTP
+rtp:
+  disabled: "<red>Случайная телепортация в данный момент отключена.</red>"
+  cooldown-wait: "<red>Вам нужно подождать <yellow>%seconds%</yellow>с перед использованием /%label%.</red>"
+  no-world: "<red>Не найден подходящий мир для случайной телепортации.</red>"
+  cross-switch: "<gray>Переключение на <aqua>%server%</aqua> для случайной телепортации в <aqua>%world%</aqua>...</gray>"
+  not-configured: "<red>Случайная телепортация не настроена на этом сервере.</red>"
+  world-not-loaded: "<red>Мир <yellow>%world%</yellow> не загружен на этом сервере.</red>"
+  not-allowed-world: "<red>Случайная телепортация не разрешена в этом мире.</red>"
+  trying: "<gray>Попытка случайной телепортации в <aqua>%world%</aqua> в пределах <aqua>%radius%</aqua> блоков...</gray>"
+  no-safe-spot: "<red>Не удалось найти безопасное место. Попробуйте снова.</red>"
+  teleported: "<green>Телепортирован на <aqua>%x%</aqua>, <aqua>%y%</aqua>, <aqua>%z%</aqua> в <aqua>%world%</aqua>.</green>"
+  failed: "<red>Телепортация не удалась.</red>"
+  cancelled-moved: "<red>RTP отменен: вы переместились.</red>"
+  warmup:
+    title: "<yellow>%seconds%</yellow>"
+    subtitle: "<gray>Случайная телепортация...</gray>"
+
+# Deathback
+deathback:
+  no-location: "<red>Нет сохраненного места смерти.</red>"
+  success: "<green>Телепортирован на место последней смерти.</green>"
+  failed: "<red>Телепортация не удалась.</red>"
+
+# ============================================================================
+# СИСТЕМА ЭКОНОМИКИ
+# ============================================================================
+
+economy:
+  currency:
+    symbol: "$"
+    name: "доллар"
+    name_plural: "долларов"
+
+  errors:
+    not-a-number: "<red>Недействительная сумма.</red>"
+    amount-not-positive: "<red>Сумма должна быть положительной.</red>"
+    player-not-found: "<red>Игрок не найден: <yellow>%target%</yellow>.</red>"
+    no-economy: "<red>Экономика недоступна.</red>"
+    no-permission: "<red>У вас нет прав.</red>"
+
+  money:
+    usage:
+      view: "<yellow>Использование: /money [игрок]</yellow>"
+      admin: "<yellow>Использование: /money <give|take|set> <игрок> <сумма></yellow>"
+    view-self: "<gray>Ваш баланс: <green>%currency_symbol%%balance_formatted%</green></gray>"
+    view-other: "<gray>Баланс %target%: <green>%currency_symbol%%balance_formatted%</green></gray>"
+    give:
+      sender: "<green>Выдано <white>%currency_symbol%%amount_formatted%</white> игроку <yellow>%target%</yellow>.</green>"
+      receiver: "<green>Вы получили <white>%currency_symbol%%amount_formatted%</white>. Новый баланс: <green>%currency_symbol%%balance_formatted%</green>.</green>"
+    take:
+      sender: "<green>Снято <white>%currency_symbol%%amount_formatted%</white> у <yellow>%target%</yellow>.</green>"
+      receiver: "<red><bold>%currency_symbol%%amount_formatted%</bold></red> <gray>было снято с вашего баланса. Новый баланс: <green>%currency_symbol%%balance_formatted%</green>.</gray>"
+    set:
+      sender: "<green>Баланс <yellow>%target%</yellow> установлен на <white>%currency_symbol%%amount_formatted%</white>.</green>"
+      receiver: "<gray>Ваш баланс установлен на <green>%currency_symbol%%amount_formatted%</green>.</gray>"
+
+  pay:
+    usage: "<yellow>Использование: /pay <игрок> <сумма></yellow>"
+    self: "<red>Вы не можете заплатить самому себе.</red>"
+    success-sender: "<green>Оплачено <aqua>%target%</aqua> <gray>%currency_symbol%%amount_formatted%</gray>.</green>"
+    success-receiver: "<green>Вы получили <gray>%currency_symbol%%amount_formatted%</gray> от <aqua>%player%</aqua>.</green>"
+    fail-insufficient: "<red>У вас недостаточно <white>%currency_symbol%%amount_formatted%</white>.</red>"
+
+  format:
+    thousands-separator: " "
+    decimal-separator: ","
+    decimals: 2
+
+# ============================================================================
+# СИСТЕМА МОДЕРАЦИИ
+# ============================================================================
+
+moderation:
+  # Ban
+  ban:
+    usage: "<yellow>Использование: /%label% <игрок> [длительность] [причина]</yellow>"
+    usage-examples: "<gray>Примеры длительности: 10m, 2h, 3d4h, 1w</gray>"
+    player-not-found: "<red>Игрок не найден: %player%</red>"
+    default-reason: "Забанен оператором."
+    kick-message-temp: "<red>%reason%</red>\n<gray>До: %expires%</gray>"
+    kick-message-perm: "<red>%reason%</red>"
+    success-temp: "<green>Забанен <aqua>%player%</aqua> до <yellow>%expires%</yellow>. Причина: <yellow>%reason%</yellow></green>"
+    success-perm: "<green>Забанен <aqua>%player%</aqua> навсегда. Причина: <yellow>%reason%</yellow></green>"
+
+  # Broadcast
+  broadcast:
+    prefix: "<gold>[Объявление]</gold> "
+
+  # Режим бога
+  god:
+    usage: "<yellow>Использование: /%label% <игрок></yellow>"
+    self-enabled: "<green>Режим бога <aqua>включен</aqua>. Вы теперь неуязвимы.</green>"
+    self-disabled: "<red>Режим бога <aqua>отключен</aqua>.</red>"
+    no-permission-others: "<red>У вас нет прав на переключение режима бога для других.</red>"
+    player-not-found: "<red>Игрок не найден или не в сети: <yellow>%player%</yellow></red>"
+    target-enabled: "<green>Админ включил ваш режим бога.</green>"
+    target-disabled: "<red>Админ отключил ваш режим бога.</red>"
+    other-enabled: "<green>Режим бога включен для <aqua>%player%</aqua>.</green>"
+    other-disabled: "<red>Режим бога отключен для <aqua>%player%</aqua>.</red>"
+
+  # Heal
+  heal:
+    console-usage: "<red>Использование: /%label% <игрок></red>"
+    not-found: "<red>Игрок не найден.</red>"
+    healed: "<green>Исцелен.</green>"
+    healed-other: "<yellow>Исцелен <aqua>%player%</aqua>.</yellow>"
+
+  # Kick
+  kick:
+    usage: "<yellow>Использование: /%label% <игрок> [причина...]</yellow>"
+    default-reason: "Кикнут оператором."
+    kick-message: "<red>%reason%</red>"
+    player-not-found: "<red>Игрок не найден.</red>"
+    success: "<green>Кикнут <aqua>%player%</aqua>. Причина: <yellow>%reason%</yellow></green>"
+    success-cross-server: "<green>Запрос на кик отправлен для <aqua>%player%</aqua> (кросс-сервер).</green>"
+    no-bridge: "<red>Цель не на этом сервере и кросс-серверный мост модерации недоступен.</red>"
+
+  # Mute
+  mute:
+    usage: "<yellow>Использование: /%label% <игрок> <длительность> [причина]</yellow>"
+    player-not-found: "<red>Игрок не найден: %target%</red>"
+    invalid-duration: "<red>Недействительная длительность. Используйте 30s, 10m, 2h, 1d или секунды.</red>"
+    broadcast-failed: "<red>Предупреждение: не удалось транслировать мут на другие серверы.</red>"
+    reason-suffix: " <gray>| Причина: <yellow>%reason%</yellow></gray>"
+    executor:
+      success: "<green>Замьючен <yellow>%target%</yellow> на <white>%duration%</white>%reason_suffix%.</green>"
+    target:
+      notified: "<red>Вы замьючены на <white>%duration%</white>.%reason_suffix%</red>"
+    broadcast: "<gold>[Модерация]</gold> <yellow>%target%</yellow> <gray>был замьючен</gray> <aqua>%staff%</aqua> <gray>на</gray> <white>%duration%</white>%reason_suffix%<gray>.</gray>"
+    broadcast-console: "[Модерация] %target% был замьючен %staff% на %duration%%reason_suffix%."
+
+  # Unban
+  unban:
+    usage: "<yellow>Использование: /%label% <игрок></yellow>"
+    not-banned: "<gray>%player% не забанен.</gray>"
+    success: "<green>Разбанен <aqua>%player%</aqua>.</green>"
+
+  # Unmute
+  unmute:
+    usage: "<yellow>Использование: /%label% <игрок></yellow>"
+    player-not-found: "<red>Игрок не найден: %player%</red>"
+    not-muted: "<gray>%player% не замьючен.</gray>"
+    success: "<green>Размьючен <aqua>%player%</aqua>.</green>"
+    notified: "<green>Вы размьючены.</green>"
+
+  # Vanish
+  vanish:
+    enabled: "<green>Вы теперь невидимы.</green>"
+    disabled: "<yellow>Вы теперь видимы.</yellow>"
+
+# ============================================================================
+# ЧАТ И СООБЩЕНИЯ
+# ============================================================================
+
+chat:
+  cleared-by: "<red>Чат очищен <yellow>%actor%</yellow>.</red>"
+  global-muted: "<red>Глобальный чат замьючен <yellow>%actor%</yellow>.</red>"
+  global-unmuted: "<green>Глобальный чат размьючен.</green>"
+  slowmode-set: "<yellow>Медленный режим теперь <gold>%seconds%</gold>с <gray>(сеть)</gray>.</yellow>"
+
+# Личные сообщения
+msg:
+  usage: "<red>Использование: /%label% <игрок> <сообщение...></red>"
+  not-found: "<red>Игрок не найден.</red>"
+  receive: "<gray>[<light_purple>ЛС</light_purple>] <aqua>%sender%</aqua>: <white>%message%</white></gray>"
+  send: "<gray>[<light_purple>ЛС</light_purple>] <white>-></white> <aqua>%target%</aqua>: <white>%message%</white></gray>"
+
+# Reply
+reply:
+  usage: "<red>Использование: /%label% <сообщение...></red>"
+  no-one: "<red>Некому ответить.</red>"
+  offline: "<red>Этот игрок не в сети.</red>"
+
+# ============================================================================
+# УТИЛИТАРНЫЕ КОМАНДЫ
+# ============================================================================
+
+# AFK
+afk:
+  now-afk: "<yellow>Вы теперь AFK.</yellow>"
+  no-longer-afk: "<green>Вы больше не AFK.</green>"
+
+# Anvil
+anvil:
+  title: "<dark_gray>Наковальня</dark_gray>"
+
+# Cook
+cook:
+  no-item: "<red>Держите предмет для плавки в основной руке.</red>"
+  no-recipe: "<red>Рецепт плавки для этого предмета не найден.</red>"
+  invalid-amount: "<red>Количество должно быть числом или 'max'.</red>"
+  nothing-to-smelt: "<red>Нечего плавить.</red>"
+  inventory-full: "<yellow>Ваш инвентарь был полон; некоторые переплавленные предметы выброшены к вашим ногам.</yellow>"
+  success: "<green>Переплавлено <aqua>%input%</aqua> → <aqua>%output%</aqua> <gray>%item%</gray>.</green>"
+
+# Ender Chest
+ec:
+  title: "<dark_purple>Сундук Края</dark_purple>"
+
+ecsee:
+  no-permission: "<red>У вас нет прав.</red>"
+  usage: "<red>Использование: /ecsee <игрок></red>"
+  not-found: "<red>Игрок не найден.</red>"
+  not-configured: "<red>Хранилище сундуков Края не настроено.</red>"
+  gui:
+    title: "<dark_purple>Сундук Края</dark_purple> <gray>(%player%)</gray>"
+  saved: "<green>Изменения сохранены в сундук Края <aqua>%player%</aqua>.</green>"
+
+# Feed
+feed:
+  not-found: "<red>Игрок не найден.</red>"
+  console-self: "<red>Консоль не может накормить себя. Укажите игрока.</red>"
+  fed: "<green>Накормлен.</green>"
+  fed-other: "<yellow>Накормлен <aqua>%player%</aqua>.</yellow>"
+
+# Furnace
+furnace:
+  title: "<gold>⚒</gold> <dark_gray>Печь</dark_gray> <gold>⚒</gold>"
+
+# Invsee
+invsee:
+  no-permission: "<red>У вас нет прав.</red>"
+  usage: "<red>Использование: /invsee <игрок></red>"
+  not-available: "<red>Сервис Invsee недоступен на этом сервере.</red>"
+  not-found: "<red>Игрок не найден.</red>"
+  opening: "<gray>Открытие живого инвентаря <aqua>%player%</aqua> (кросс-сервер)...</gray>"
+
+# Invlook
+invlook:
+  no-permission: "<red>У вас нет прав.</red>"
+  usage: "<red>Использование: /invlook <игрок></red>"
+  service-unavailable: "<red>Сервис Invsee недоступен на этом сервере.</red>"
+  player-not-found: "<red>Игрок не найден.</red>"
+  opening: "<gray>Открытие инвентаря только для чтения <aqua>%player%</aqua> (кросс-сервер)...</gray>"
+
+# Kill
+kill:
+  console-usage: "<red>Использование: /%label% <игрок></red>"
+  self:
+    no-permission: "<red>У вас нет прав убить себя.</red>"
+    slain: "<gray>Вы были убиты.</gray>"
+  others:
+    no-permission: "<red>У вас нет прав убивать других.</red>"
+    killed: "<gray>Убит <yellow>%player%</yellow>.</gray>"
+  target-not-found: "<red>Игрок не найден.</red>"
+
+# Near
+near:
+  radius-not-number: "<red>Радиус должен быть числом. Вы ввели: <yellow>%input%</yellow></red>"
+  none: "<yellow>Нет игроков в пределах <aqua>%radius%</aqua> блоков.</yellow>"
+  list: "<gray>Игроки в пределах <aqua>%radius%</aqua> блоков:</gray> %list%"
+  entry:
+    format: "<aqua>%name%</aqua> <gray>(<yellow>%distance%</yellow>м)</gray>"
+    separator: "<gray>, </gray>"
+
+# Nick
+nick:
+  usage: "<yellow>Использование: /%label% <новоеИмя>  или  /%label% unnick</yellow>"
+  reset: "<green>Ваш ник сброшен.</green>"
+  too-long: "<red>Имя слишком длинное (макс %max% символов).</red>"
+  invalid: "<red>Недействительное имя. Используйте буквы, цифры, подчеркивания (3–16).</red>"
+  set: "<green>Ваш ник теперь <aqua>%nick%</aqua>.</green>"
+
+# Ping
+ping:
+  self: "<green>Ваш пинг: <yellow>%ping%</yellow>мс</green>"
+
+# Playtime
+playtime:
+  console-usage: "<red>Консоль должна указать игрока: /%label% <игрок></red>"
+  self: "<green>Ваше время игры: <yellow>%time%</yellow></green>"
+  other: "<aqua>%player%</aqua><gray> время игры:</gray> <yellow>%time%</yellow>"
+  no-permission: "<red>У вас нет прав на просмотр времени игры других игроков.</red>"
+  player-not-found: "<red>Игрок не найден.</red>"
+
+# Realname
+realname:
+  usage: "<red>Использование: /realname <ник></red>"
+  found: "<gold>%nickname%</gold> <gray>это</gray> <aqua>%realname%</aqua>"
+  not-found: "<red>Игрок с таким ником не найден.</red>"
+
+# Seen
+seen:
+  usage: "<red>Использование: /seen <игрок></red>"
+  no-data: "<red>Нет данных для игрока <yellow>%player%</yellow>.</red>"
+  online: "<green>%player% сейчас в сети.</green>"
+  never-joined: "<yellow>%player% никогда не заходил.</yellow>"
+  last-seen: "<gold>%player%</gold> <gray>был замечен в последний раз</gray> <aqua>%timestamp%</aqua> <gray>(</gray><yellow>%ago%</yellow> <gray>назад)</gray>"
+
+# Sell GUI
+sellgui:
+  not-initialized: "<red>SellGUI не инициализирован.</red>"
+
+# Server
+server:
+  usage: "<yellow>Использование: /%label% <имя-сервера></yellow>"
+  connecting: "<gray>Подключение к <aqua>%server%</aqua>...</gray>"
+
+# Sit
+sit:
+  player-only: "<red>Только игроки могут использовать эту команду.</red>"
+  stand: "<gray>Вы встали.</gray>"
+  already-riding: "<red>Вы уже на чем-то сидите.</red>"
+  not-on-ground: "<red>Вы должны быть на земле, чтобы сесть.</red>"
+  not-while-flying: "<red>Вы не можете сидеть во время полета или планирования.</red>"
+  no-block: "<red>Нет блока для сидения.</red>"
+  sat: "<green>Вы сели на <yellow>%block%</yellow>.</green>"
+
+# UUID
+uuid:
+  usage: "<yellow>Использование: /%label% <игрок></yellow>"
+  no-permission-others: "<red>У вас нет прав на просмотр UUID других.</red>"
+  show: "<gold>UUID <aqua>%player%</aqua>:</gold> <aqua>%uuid%</aqua>"
+  bedrock: "<gray>UUID Bedrock: <aqua>%bedrock_uuid%</aqua></gray>"
+
+# Vaults
+vaults:
+  player-only: "<red>Только игроки.</red>"
+  disabled: "<red>PlayerVaults отключены.</red>"
+  usage: "<red>Использование: /%label% %usage%</red>"
+
+# ============================================================================
+# АДМИН КОМАНДЫ
+# ============================================================================
+
+admin:
+  # Tphere
+  tphere:
+    usage: "<yellow>Использование: /%label% <игрок></yellow>"
+    not-found: "<red>Игрок не найден: <yellow>%target%</yellow>.</red>"
+    brought: "<green>Призван <aqua>%target%</aqua> к вам.</green>"
+    notice: "<yellow>Вы были телепортированы <aqua>%player%</aqua>.</yellow>"
+
+  # Weather
+  weather:
+    no-permission: "<red>У вас нет прав (oreo.weather).</red>"
+    no-worlds: "<red>Целевые миры не найдены.</red>"
+    success: "<green>Погода установлена на <white>%type%</white> в <white>%world%</white>.</green>"
+    success-duration: "<green>Погода установлена на <white>%type%</white> на <white>%seconds%</white>с в <white>%world%</white>.</green>"
+    success-locked: "<green>Погода установлена на <white>%type%</white> <dark_gray>(заблокировано)</dark_gray> в <white>%world%</white>.</green>"
+    success-duration-locked: "<green>Погода установлена на <white>%type%</white> на <white>%seconds%</white>с <dark_gray>(заблокировано)</dark_gray> в <white>%world%</white>.</green>"
+    tip-unlock: "<dark_gray>Подсказка: /weather %type% unlock %world%</dark_gray>"
+    usage:
+      header: "<yellow>Использование:</yellow>"
+      format: "<white>/%label% <sun|rain|storm> [lock|seconds] [world|all]</white>"
+      examples: "<gray>Примеры: <white>/sun</white> <dark_gray>|</dark_gray> <white>/rain</white> <dark_gray>|</dark_gray> <white>/storm</white> <dark_gray>|</dark_gray> <white>/sun lock</white> <dark_gray>|</dark_gray> <white>/sun 120</white> <dark_gray>|</dark_gray> <white>/sun world</white></gray>"
+
+  # World
+  world:
+    no-permission: "<red>У вас нет прав (oreo.world).</red>"
+    no-world-permission: "<red>У вас нет прав: <white>%permission%</white></red>"
+    usage: "<yellow>Использование: <white>/world <n|normal|nether|end|index> [имяИгрока] [-s]</white></yellow>"
+    examples: "<gray>Примеры: <white>/world world_nether</white>  <dark_gray>|</dark_gray>  <white>/world nether</white>  <dark_gray>|</dark_gray>  <white>/world 2</white>  <dark_gray>|</dark_gray>  <white>/world end Steve -s</white></gray>"
+    console-needs-player: "<red>Использование из консоли требует целевого игрока: <white>/world <n> <имяИгрока> [-s]</white></red>"
+    console-must-specify: "<red>Консоль должна указать целевого игрока: <white>/world <n> <имяИгрока> [-s]</white></red>"
+    player-not-found: "<red>Игрок не найден: <white>%player%</white></red>"
+    world-not-found: "<red>Мир не найден / не поддерживается: <white>%world%</white></red>"
+    teleport-failed: "<red>Телепортация не удалась.</red>"
+    teleported-self: "<green>Телепортирован в <white>%world%</white></green>"
+    teleported-other: "<green>Телепортирован <white>%player%</white> в <white>%world%</white></green>"
+    target-notified: "<green>Вы были телепортированы в <white>%world%</white> <white>%staff%</white></green>"
+
+  # TP
+  tp:
+    usage: "<red>Использование: /tp <игрок></red>"
+    self: "<red>Вы уже сами себя.</red>"
+    not-found: "<red>Игрок не найден в сети.</red>"
+    not-found-no-directory: "<red>Игрок не найден в сети. <gray>(Кросс-серверный каталог недоступен.)</gray></red>"
+    no-broker: "<red>Брокер кросс-серверной телепортации недоступен; невозможно использовать /tp на другие серверы.</red>"
+    teleported: "<green>Телепортирован к <aqua>%target%</aqua>.</green>"
+
+  # Setwarp
+  setwarp:
+    usage: "<yellow>Использование: /%label% <n></yellow>"
+    set: "<green>Варп <aqua>%warp%</aqua> установлен.</green>"
+    cross-server-info: "<gray>(Кросс-сервер) Владелец варпа установлен на <aqua>%server%</aqua>.</gray>"
+
+  # Setspawn
+  setspawn:
+    set: "<green>Спавн установлен.</green>"
+    cross-server-info: "<gray>(Кросс-сервер) Владелец спавна установлен на <aqua>%server%</aqua>.</gray>"
+
+  # Reload
+  reload:
+    settings: "<green>✔ Перезагружен <white>settings.yml</white> <gray>(+ кросс-серверные настройки)</gray></green>"
+    settings-skip: "<yellow>• Пропущен settings.yml / кросс-сервер: <gray>%error%</gray></yellow>"
+    config: "<green>✔ Перезагружен <white>config.yml</white></green>"
+    config-fail: "<red>✘ Не удалось перезагрузить config.yml: <gray>%error%</gray></red>"
+    lang: "<green>✔ Перезагружен <white>lang.yml</white></green>"
+    lang-skip: "<yellow>• Пропущен lang.yml: <gray>%error%</gray></yellow>"
+    chat: "<green>✔ Перезагружен <white>chat-format.yml</white> <gray>(через /afelius reload all)</gray></green>"
+    chat-skip: "<yellow>• Пропущен chat-format.yml: <gray>%error%</gray></yellow>"
+    tab: "<green>✔ Перезагружен <white>tab.yml</white></green>"
+    tab-skip: "<yellow>• Пропущен tab.yml: <gray>%error%</gray></yellow>"
+    kits: "<green>✔ Перезагружен <white>kits.yml</white></green>"
+    kits-skip: "<yellow>• Пропущен kits.yml: <gray>%error%</gray></yellow>"
+    rtp: "<green>✔ Перезагружен <white>rtp.yml</white></green>"
+    rtp-skip: "<yellow>• Пропущен rtp.yml: <gray>%error%</gray></yellow>"
+    enderchest: "<green>✔ Перезагружен <white>enderchest.yml</white></green>"
+    enderchest-skip: "<yellow>• Пропущен enderchest.yml (нет хука перезагрузки)</yellow>"
+    bossbar: "<green>✔ Перезагружен <white>bossbar</white></green>"
+    bossbar-skip: "<yellow>• Пропущен bossbar (сервис недоступен)</yellow>"
+    bossbar-fail: "<red>✘ Не удалось перезагрузить bossbar: <gray>%error%</gray></red>"
+    scoreboard: "<green>✔ Перезагружен <white>scoreboard</white> <gray>(конфиг + живое обновление)</gray></green>"
+    scoreboard-skip: "<yellow>• Пропущен scoreboard (сервис недоступен)</yellow>"
+    scoreboard-fail: "<red>✘ Не удалось перезагрузить scoreboard: <gray>%error%</gray></red>"
+    discord: "<green>✔ Перезагружена <white>интеграция discord</white></green>"
+    discord-skip: "<yellow>• Пропущена интеграция discord (нет хука перезагрузки)</yellow>"
+    healthbars: "<green>✔ Перезагружены <white>полосы здоровья мобов</white></green>"
+    healthbars-disabled: "<yellow>• Полосы здоровья мобов отключены в конфиге</yellow>"
+    healthbars-skip: "<yellow>• Пропущены полосы здоровья мобов: <gray>%error%</gray></yellow>"
+    playervaults: "<green>✔ Перезагружен <white>playervaults</white> <gray>(%storage%)</gray></green>"
+    playervaults-skip: "<yellow>• Пропущен playervaults (сервис недоступен)</yellow>"
+    playervaults-fail: "<red>✘ Не удалось перезагрузить playervaults: <gray>%error%</gray></red>"
+    summary: "<gray>Перезагрузка завершена: <green>%ok% OK</green>, <yellow>%skip% пропущено</yellow>. (<white>%ms% мс</white>)</gray>"
+    note: "<dark_gray>(Некоторые модули еще не поддерживают горячую перезагрузку; может потребоваться перезапуск сервера.)</dark_gray>"
+
+  # Otherhome
+  otherhome:
+    no-permission: "<red>У вас нет прав.</red>"
+    usage: "<yellow>Использование: <gold>/%label% <игрок> <дом></gold></yellow>"
+    player-not-found: "<red>Неизвестный игрок: <yellow>%player%</yellow></red>"
+    not-found: "<red>Дом не найден: <yellow>%home%</yellow></red>"
+    world-not-loaded: "<red>Мир не загружен: <yellow>%world%</yellow></red>"
+    teleported: "<green>Телепортирован в дом <aqua>%home%</aqua> игрока <aqua>%owner%</aqua>.</green>"
+    cross-disabled: "<red>Кросс-серверные дома отключены конфигурацией сервера.</red>"
+    cross-disabled-manual: "<gray>Используйте <aqua>/server %server%</aqua> затем выполните <aqua>/otherhome %owner% %home%</aqua></gray>"
+    messaging-disabled: "<red>Кросс-серверные сообщения отключены. Попросите админа включить RabbitMQ.</red>"
+    messaging-disabled-manual: "<gray>Вы все еще можете переключиться с помощью <aqua>/server %server%</aqua> и выполнить <aqua>/otherhome %owner% %home%</aqua></gray>"
+    sending: "<yellow>Отправка на <aqua>%server%</aqua>… вы будете телепортированы в дом <aqua>%home%</aqua> игрока <aqua>%owner%</aqua> по прибытии.</yellow>"
+    switch-failed: "<red>Не удалось переключиться на %server%.</red>"
+    switch-failed-tip: "<gray>Убедитесь, что имя сервера совпадает с конфигурацией прокси.</gray>"
+
+  # Otherhomes
+  otherhomes:
+    no-permission: "<red>У вас нет прав.</red>"
+    usage: "<yellow>Использование: <gold>/%label% <игрок></gold></yellow>"
+    player-not-found: "<red>Неизвестный игрок: <yellow>%player%</yellow></red>"
+    no-homes: "<gray>У %player% нет домов.</gray>"
+    header: "<gold>Дома <yellow>%player%</yellow>:</gold>"
+    entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua> <gray>@ <white>%world%</white> (%x%, %y%, %z%) <dark_gray>[сервер: %server%]</dark_gray></gray>"
+    tip: "<gray>Подсказка: <yellow>/otherhome %player% <дом></yellow></gray>"
+
+  # Clear
+  clear:
+    no-service: "<yellow>Внимание: Сервис инвентаря недоступен - очищен только локально.</yellow>"
+    console-usage: "<red>Использование: /%label% <игрок></red>"
+    others-no-permission: "<red>У вас нет прав на очистку инвентарей других игроков.</red>"
+    target-not-found: "<red>Игрок не найден: <yellow>%target%</yellow></red>"
+    self:
+      all-servers: "<green>Инвентарь очищен на всех серверах.</green>"
+      this-server: "<green>Инвентарь очищен на этом сервере.</green>"
+    target-notified-all: "<yellow>Ваш инвентарь был очищен на всех серверах <aqua>%player%</aqua>.</yellow>"
+    target-notified-local: "<yellow>Ваш инвентарь был очищен на этом сервере <aqua>%player%</aqua>.</yellow>"
+    sender-confirm-all: "<green>Инвентарь <aqua>%target%</aqua> очищен на всех серверах.</green>"
+    sender-confirm-local: "<green>Инвентарь <aqua>%target%</aqua> очищен на этом сервере.</green>"
+
+  # Delwarp
+  delwarp:
+    usage: "<yellow>Использование: /%label% <n></yellow>"
+    deleted: "<green>Варп <aqua>%warp%</aqua> был удален.</green>"
+    not-found: "<red>Варп не найден: <yellow>%warp%</yellow></red>"
+
+  # Disenchant
+  disenchant:
+    usage: "<yellow>Использование: /%label% <зачарование|all> [уровни-для-удаления]</yellow>"
+    hold-item: "<red>Вы должны держать предмет в основной руке.</red>"
+    none: "<red>У этого предмета нет зачарований.</red>"
+    unknown: "<red>Неизвестное зачарование: <yellow>%input%</yellow></red>"
+    not-present: "<red>У этого предмета нет <yellow>%ench%</yellow>.</red>"
+    all: "<green>Все зачарования удалены.</green>"
+    partial: "<green>Удалено <white>%removed%</white> уровн(я/ей) <aqua>%ench%</aqua>. Осталось <white>%remaining%</white> уровн(я/ей).</green>"
+    removed: "<green>Полностью удален <aqua>%ench%</aqua>.</green>"
+
+  # Fly
+  fly:
+    console-usage: "<red>Использование: /%label% <игрок></red>"
+    not-found: "<red>Игрок не найден: <yellow>%target%</yellow></red>"
+    enabled: "<green>Полет <aqua>включен</aqua>.</green>"
+    disabled: "<red>Полет <aqua>отключен</aqua>.</red>"
+    toggled-other: "<green>Полет <aqua>%state%</aqua> для <aqua>%target%</aqua>.</green>"
+
+  # Enchant
+  enchant:
+    usage: "<yellow>Использование: /%label% <зачарование> [уровень] [unsafe] [ignoreConflicts]</yellow>"
+    hold-item: "<red>Вы должны держать предмет в основной руке.</red>"
+    unknown: "<red>Неизвестное зачарование: <yellow>%input%</yellow></red>"
+    too-high: "<red>Уровень <yellow>%level%</yellow> слишком высок для <aqua>%ench%</aqua> (макс: <white>%max%</white>). Используйте параметр 'unsafe' или право oreo.enchant.unsafe.</red>"
+    conflict: "<red><aqua>%ench%</aqua> конфликтует с существующим <aqua>%with%</aqua>. Используйте параметр 'ignoreConflicts' или право oreo.enchant.ignoreconflicts.</red>"
+    applied: "<green>Применено <aqua>%ench%</aqua> <white>%level%</white> к вашему предмету.</green>"
+    failed: "<red>Не удалось применить зачарование: <yellow>%reason%</yellow></red>"
+
+  # Flyspeed
+  flyspeed:
+    player-only: "<red>Только игроки могут использовать /flyspeed (установить свою скорость полета).</red>"
+    no-permission: "<red>У вас нет прав (oreo.flyspeed).</red>"
+    usage: "<yellow>Использование: <white>/flyspeed <1-10|reset></white></yellow>"
+    example: "<gray>Пример: <white>/flyspeed 7</white></gray>"
+    invalid: "<red>Недействительная скорость. Используйте число <white>1-10</white> или <white>reset</white>.</red>"
+    reset: "<green>Скорость полета сброшена на <white>0.1</white> <gray>(= уровень 1)</gray>.</green>"
+    set: "<green>Скорость полета установлена на <white>%speed%</white> <gray>(<white>уровень %level%</white>)</gray>.</green>"
+    set-not-flying: "<green>Скорость полета установлена на <white>%speed%</white> <gray>(<white>уровень %level%</white>)</gray>. <dark_gray>(У вас сейчас нет прав на полет.)</dark_gray></green>"
+
+  # Gamemode
+  gamemode:
+    unknown: "<red>Неизвестный режим: <yellow>%mode%</yellow></red>"
+    no-permission-others: "<red>У вас нет прав на изменение режима игры других.</red>"
+    player-not-found: "<red>Игрок не найден.</red>"
+    self: "<green>Режим игры установлен на <aqua>%mode%</aqua>.</green>"
+    other: "<green>Установлен <aqua>%target%</aqua> на <aqua>%mode%</aqua>.</green>"
+    notified: "<green>Ваш режим игры был установлен на <aqua>%mode%</aqua> <yellow>%staff%</yellow></green>"
+
+# ============================================================================
+# СИСТЕМА ТОРГОВЛИ
+# ============================================================================
+
+trade:
+  opening: "<green>Открытие GUI торговли с <white>%partner%</white>…</green>"
+  failed-to-open: "<red>Не удалось открыть торговлю: <yellow>%error%</yellow></red>"
+  player-name: "<yellow>%name%</yellow>"
+  partner-ready: "<green>Партнер Готов</green>"
+  partner-not-ready: "<red>Партнер Не Готов</red>"
+  locked: "<gray>Заблокировано</gray>"
+  player-only: "<red>Только игроки.</red>"
+  disabled: "<red>Торговля в данный момент отключена.</red>"
+  no-permission: "<red>У вас нет прав.</red>"
+  usage: "<yellow>Использование: /trade <игрок></yellow>"
+  self: "<red>Вы не можете торговать с собой.</red>"
+  not-found-cross-server: "<red>Игрок не найден здесь.</red> <gray>Если это кросс-серверная торговля, введите <aqua>/trade %player%</aqua> на сервере, где вы получили приглашение.</gray>"
+
+# ============================================================================
+# СИСТЕМА SCOREBOARD
+# ============================================================================
+
+scoreboard:
+  enabled: "<green>Scoreboard включен.</green>"
+  disabled: "<yellow>Scoreboard отключен.</yellow>"
+  disabled-in-world: "<red>Scoreboard отключен в этом мире.</red>"
+
+# ============================================================================
+# СИСТЕМА ПОРТАЛОВ
+# ============================================================================
+
+portals:
+  player-only: "<red>Только игроки.</red>"
+  no-permission: "<red>У вас нет прав.</red>"
+  no-portal-permission: "<red>У вас нет прав на использование этого портала.</red>"
+  unknown-subcommand: "<red>Неизвестная подкоманда. Используйте <yellow>/%label% help</yellow></red>"
+
+  pos1-set: "<green>Portal pos1 установлен на <aqua>%location%</aqua></green>"
+  pos2-set: "<green>Portal pos2 установлен на <aqua>%location%</aqua></green>"
+
+  create:
+    usage: "<yellow>Использование: /%label% create <n> <мир> <x> <y> <z> [keepYaw] [permission]</yellow>"
+    world-not-found: "<red>Мир не найден: <yellow>%world%</yellow></red>"
+    invalid-coords: "<red>Недействительные координаты.</red>"
+    failed: "<red>Не удалось: <yellow>%error%</yellow></red>"
+    success: "<green>Портал <aqua>%name%</aqua> → <white>%location%</white> создан</green>"
+
+  remove:
+    usage: "<yellow>Использование: /%label% remove <n></yellow>"
+    success: "<green>Портал <aqua>%name%</aqua> удален.</green>"
+    not-found: "<red>Портал не найден: <yellow>%name%</yellow></red>"
+
+  list:
+    empty: "<gray>Порталы не настроены.</gray>"
+    header: "<gold>Порталы (%count%):</gold>"
+    entry: " <dark_gray>-</dark_gray> <aqua>%name%</aqua> <gray>→ <white>%dest%</white></gray>"
+
+  info:
+    usage: "<yellow>Использование: /%label% info <n></yellow>"
+    not-found: "<red>Портал не найден: <yellow>%name%</yellow></red>"
+    header: "<gold>Информация о Портале: <aqua>%name%</aqua></gold>"
+    world: " <gray>Мир:</gray> <white>%world%</white>"
+    destination: " <gray>Назначение:</gray> <white>%dest%</white>"
+    keep-yaw: " <gray>Сохранить Yaw/Pitch:</gray> <white>%keep%</white>"
+    permission: " <gray>Право:</gray> <white>%perm%</white>"
+
+  reload:
+    success: "<green>Порталы перезагружены. Загружено <white>%count%</white> портал(ов).</green>"
+
+  help:
+    header: "<gold><bold>Помощь по Порталам</bold></gold>"
+    pos1: " <yellow>/%label% pos1</yellow> <gray>- Установить угол 1 портала</gray>"
+    pos2: " <yellow>/%label% pos2</yellow> <gray>- Установить угол 2 портала</gray>"
+    create: " <yellow>/%label% create <n> <мир> <x> <y> <z> [keepYaw] [perm]</yellow>"
+    remove: " <yellow>/%label% remove <n></yellow> <gray>- Удалить портал</gray>"
+    list: " <yellow>/%label% list</yellow> <gray>- Показать все порталы</gray>"
+    info: " <yellow>/%label% info <n></yellow> <gray>- Посмотреть детали портала</gray>"
+    reload: " <yellow>/%label% reload</yellow> <gray>- Перезагрузить portals.yml</gray>"
+
+# ============================================================================
+# СИСТЕМА CUSTOMCRAFT
+# ============================================================================
+
+customcraft:
+  errors:
+    no-permission: "<red>У вас нет прав.</red>"
+    player-only: "<red>Эта подкоманда требует игрока.</red>"
+    unknown-subcommand: "<red>Неизвестная подкоманда.</red> <yellow>Используйте</yellow> /%label% help"
+    usage-craft: "<red>Использование:</red> /%label% craft <n>"
+    usage-delete: "<red>Использование:</red> /%label% delete <n>"
+
+  help:
+    header: "<yellow>OreoEssentials Кастомный Крафт</yellow>"
+    browse: "<yellow>/%label% browse</yellow> <gray>→ открыть браузер рецептов (GUI)</gray>"
+    craft: "<yellow>/%label% craft <n></yellow> <gray>→ открыть GUI конструктора</gray>"
+    list: "<yellow>/%label% list</yellow> <gray>→ показать имена рецептов</gray>"
+    reload: "<yellow>/%label% reload</yellow> <gray>→ перезагрузить recipes.yml и пере-регистрировать</gray>"
+    delete: "<yellow>/%label% delete <n></yellow> <gray>→ удалить рецепт</gray>"
+
+  messages:
+    saved: "<green>Рецепт <yellow>%name%</yellow> был сохранен (<white>%mode%</white>) %perm_note%.</green>"
+    invalid: "<red>Рецепт не найден: <yellow>%name%</yellow>.</red>"
+    deleted: "<green>Рецепт <yellow>%name%</yellow> удален.</green>"
+    reloaded: "<green>Кастомные рецепты перезагружены.</green>"
+    list: "<yellow>Рецепты</yellow> (<white>%count%</white>): <gray>%names%</gray>"
+
+  browse:
+    title: "<#00bcd4><bold>OreoCraft</bold></#00bcd4> <gray>—</gray> <white>Рецепты</white>"
+    hint: "<yellow>Нажмите на рецепт чтобы редактировать</yellow>"
+    icon-lore:
+      0: "<gray>Режим:</gray> <white>%mode%</white>"
+      1: "<gray>Право:</gray> <white>%permission_or_none%</white>"
+      2: "<green>Нажмите чтобы редактировать</green>"
+    prev: "<yellow>Назад</yellow>"
+    next: "<yellow>Вперед</yellow>"
+
+  format:
+    mode:
+      shaped: "С Формой"
+      shapeless: "Без Формы"
+    permission:
+      none: "<gray>Нет</gray>"
+
+# ============================================================================
+# РАЗНЫЕ КОМАНДЫ (OE)
+# ============================================================================
+
+oe:
+  usage: "<yellow>Использование: /%label% server <имясервера></yellow>"
+  connecting: "<green>Подключение к <aqua>%server%</aqua>...</green>"
+  failed: "<red>Не удалось подключиться к %server%. Прокси/канал настроен?</red>"
+
+# ============================================================================
+# ФОРМАТ ВРЕМЕНИ (для отображения длительности)
+# ============================================================================
+
+time:
+  years: "%value%г"
+  months: "%value%мес"
+  weeks: "%value%н"
+  days: "%value%д"
+  hours: "%value%ч"
+  minutes: "%value%м"
+  seconds: "%value%с"
+
+# ============================================================================
+# СИСТЕМА JUMPPADS
+# ============================================================================
+
+jumpads:
+  # Права
+  no-permission: "<red>У вас нет прав.</red>"
+  player-only: "<red>Только игроки.</red>"
+
+  # Помощь
+  list-inline: "<gold>JumpPads:</gold> <gray>%names%</gray>"
+  help:
+    header: "<yellow>Использование:</yellow>"
+    create: "<yellow>  /%label% create <n> [power] [upward] [useLookDir]</yellow>  <gray>(блок под вами)</gray>"
+    remove: "<yellow>  /%label% remove <n></yellow>"
+    list: "<yellow>  /%label% list</yellow>"
+    info: "<yellow>  /%label% info <n></yellow>"
+
+  # Create
+  usage-create: "<red>Использование: /%label% create <n> [power] [upward] [useLookDir]</red>"
+  defaults: "<gray>По умолчанию → power=%power%, upward=%upward%, useLookDir=%look%</gray>"
+  created: "<green>JumpPad '<aqua>%name%</aqua>' создан на <aqua>%x%,%y%,%z%</aqua> (power=%power%, upward=%upward%, look=%look%)</green>"
+  create-failed: "<red>Не удалось создать (недействительное место или имя).</red>"
+
+  # Remove
+  usage-remove: "<red>Использование: /%label% remove <n></red>"
+  removed: "<green>JumpPad '<aqua>%name%</aqua>' удален.</green>"
+  not-found: "<red>JumpPad '<yellow>%name%</yellow>' не найден.</red>"
+
+  # List
+  list: "<gold>JumpPads (%count%):</gold> <gray>%names%</gray>"
+
+  # Info
+  usage-info: "<red>Использование: /%label% info <n></red>"
+  info:
+    name: "<aqua>Имя:</aqua> <white>%name%</white>"
+    location: "<aqua>Мир:</aqua> <white>%world%</white>  <aqua>XYZ:</aqua> <white>%x% %y% %z%</white>"
+    settings: "<aqua>Power:</aqua> <white>%power%</white>  <aqua>Upward:</aqua> <white>%upward%</white>  <aqua>UseLookDir:</aqua> <white>%look%</white>"
+
+  # Неизвестная подкоманда
+  unknown-subcommand: "<red>Неизвестная подкоманда. Попробуйте /%label%</red>"
+
+# ============================================================================
+# СИСТЕМА MODGUI
+# ============================================================================
+
+modgui:
+  # Команда
+  player-only: "<red>Только игроки.</red>"
+  no-permission: "<red>Нет прав: <white>oreo.modgui.open</white></red>"
+
+  # Главное меню
+  main:
+    title: "&8Панель Модерации"
+    player:
+      name: "&eМодерация Игроков"
+      lore:
+        - "&7Управление отдельными игроками"
+        - "&7Просмотр заметок, мут, бан и т.д."
+    world:
+      name: "&aМодерация Миров"
+      lore:
+        - "&7Настройка параметров мира"
+        - "&7Настройки Нижнего мира/Края, PVP и т.д."
+    server:
+      name: "&cМодерация Сервера"
+      lore:
+        - "&7Управление всем сервером"
+        - "&7Чат, инструменты производительности"
+    titles:
+      player: "&8Модерация Игроков"
+      world: "&8Выберите Мир"
+      server: "&8Модерация Сервера"
+
+  # Меню игрока
+  player:
+    title-local: "&8Игрок: %name%"
+    title-network: "&8Игрок: %name% &7(%server%)"
+
+  # Меню действий игрока
+  actions:
+    bridge-unavailable: "<red>Мост кросс-серверной модерации недоступен.</red>"
+    ecsee-title: "&8Сундук Края: %name%"
+    inspect-title: "&8Осмотр: %name%"
+    notes-title: "&8Заметки: %name%"
+    ip-alts-title: "&8IP и Альты: %name%"
+
+  # Заметки игрока
+  notes:
+    prompt: "<yellow>Введите заметку в чат.</yellow> <gray>(Или введите 'cancel' для отмены)</gray>"
+    cancelled: "<red>Заметка отменена.</red>"
+    added: "<green>Заметка добавлена.</green>"
+
+  # Инструменты производительности
+  perf:
+    kill-mobs: "<green>Удалено <yellow>%count%</yellow> монстров из всех миров.</green>"
+    clear-items: "<green>Удалено <yellow>%count%</yellow> выброшенных предметов из всех миров.</green>"
+    clear-tnt: "<green>Удалено <yellow>%count%</yellow> взведенного TNT из всех миров.</green>"
+
+  # Модерация чата
+  chat:
+    cleared: "<green>Чат очищен.</green>"
+    clear-broadcast: "<red>Чат был очищен <yellow>%actor%</yellow>.</red>"
+    muted: "<red>Глобальный чат был замьючен <yellow>%actor%</yellow>.</red>"
+    unmuted: "<green>Глобальный чат размьючен.</green>"
+    slowmode-set: "<yellow>Медленный режим установлен на <gold>%seconds%</gold>с</yellow>"
+    staff-enabled: "<green>Чат персонала включен.</green>"
+    staff-disabled: "<red>Чат персонала отключен.</red>"
+    service-unavailable: "<red>Сервис ModGUI недоступен.</red>"
+
+  # Настройки мира
+  world:
+    elytra-disabled: "<red>Полет на элитрах отключен в этом мире.</red>"
+    trident-disabled: "<red>Трезубцы отключены в этом мире.</red>"
+    void-saved: "<yellow>Вы были спасены из пустоты и телепортированы на спавн.</yellow>"
+
+  # Меню сервера
+  server:
+    difficulty-set: "<yellow>Сложность установлена на <gold>%difficulty%</gold></yellow>"
+    gamemode-set: "<yellow>Режим игры по умолчанию теперь <gold>%gamemode%</gold></yellow>"
+    whitelist-toggled: "<yellow>Белый список теперь %state%</yellow>"
+    spawn-cooldown: "<red>Пожалуйста подождите секунду перед повторным спавном.</red>"
+    spawn-peaceful: "<red>Невозможно заспавнить враждебных мобов на сложности <green>МИРНАЯ</green>.</red>"
+    spawned: "<green>Заспавнено <yellow>%count%</yellow> <gray>%type%</gray>.</green>"
+    tps-title: "&8TPS и Производительность"
+    chat-title: "&8Модерация Чата"
+    perf-title: "&8Инструменты Производительности"
+
+  # Меню действий мира
+  world-actions:
+    time-set: "<yellow>Время установлено на <gold>%time%</gold></yellow>"
+    weather-set: "<yellow>Погода установлена на <gold>%weather%</gold></yellow>"
+    spawn-set: "<green>Спавн мира установлен на <white>%x% %y% %z%</white></green>"
+    border-set: "<yellow>Граница мира установлена на <gold>%size%</gold></yellow>"
+    gamerules-title: "&8Правила Игры: %world%"
+    whitelist-title: "&8Белый Список: %world%"
+    banned-mobs-title: "&8Забаненные Мобы: %world%"
+
+  # Меню забаненных мобов
+  banned-mobs:
+    banned: "<red>%mob%</red> <gray>теперь</gray> <red>ЗАБАНЕН</red> <gray>в</gray> <white>%world%</white>"
+    allowed: "<green>%mob%</green> <gray>теперь</gray> <green>РАЗРЕШЕН</green> <gray>в</gray> <white>%world%</white>"
+
+  # Меню списка миров
+  world-list:
+    world-title: "&8Мир: %world%"
+
+  # Меню белого списка мира
+  world-whitelist:
+    back-title: "&8Мир: %world%"
+
+  # Меню EcSee (просмотр сундука Края)
+  ecsee:
+    service-missing: "<red>Сервис сундука Края отсутствует.</red>"
+    title: "&bРедактирование Сундука Края &e%target%"
+
+# Осмотр игрока (просмотр живой статистики)
+playerinspect:
+  target-offline: "<red>Целевой игрок не в сети.</red>"
+  no-permission-invsee: "<red>У вас нет прав на просмотр инвентарей.</red>"
+  head-name: "&b%player% &7(&e%server%&7)"
+  invsee-name: "&bПросмотр Инвентаря"
+  invsee-lore1: "&7Нажмите чтобы открыть"
+  invsee-lore2: "&7инвентарь %player%"
+  lore:
+    health: "&7Здоровье: &c%current%&7/&c%max%"
+    health-na: "&7Здоровье: &fН/Д (&8удаленно&f)"
+    food: "&7Еда: &e%food%"
+    food-na: "&7Еда: &fН/Д (&8удаленно&f)"
+    gamemode: "&7Режим: &f%gm%"
+    world: "&7Мир/Сервер: &a%world%"
+    location: "&7Местоположение: &f%x% %y% %z%"
+    location-na: "&7Местоположение: &fН/Д (&8удаленно&f)"
+    ping: "&7Пинг: &f%ping%"
+    ping-na: "&7Пинг: &fН/Д (&8удаленно&f)"
+    tps: "&7TPS: &f%tps%"
+    tps-na: "&7TPS: &fН/Д (&8удаленно&f)"
+
+enderchest:
+  storage:
+    opened-cross-server: "<gray>Открытие вашего кросс-серверного сундука Края...</gray>"
+    save-failed: "<red>Не удалось сохранить ваш сундук Края. Пожалуйста свяжитесь с администратором.</red>"
+
+  gui:
+    title: "&5Сундук Края"
+    locked-slot-name: "&cЗаблокированный Слот"
+    locked-slot-lore:
+      - "&7У вас разблокировано &f%slots% &7слот(ов)."
+      - "&7Повысьте свой ранг чтобы разблокировать больше!"
+
+daily:
+  no-permission-toggle: "<red>У вас нет прав на переключение этой функции.</red>"
+  no-permission: "<red>У вас нет прав на использование этого.</red>"
+  players-only: "<red>Эта команда должна быть выполнена в игре.</red>"
+  disabled: "<red>Ежедневные Награды в данный момент отключены.</red>"
+  disabled-hint: "<gray>Используйте <white>/%command% toggle</white> чтобы включить.</gray>"
+  toggled: "<yellow>Ежедневные Награды теперь %state%</yellow>"
+  usage: "<gray>Использование: <white>/%command%</white> или <white>/%command% claim</white> или <white>/%command% top</white></gray>"
+  usage-admin: "<gray>Использование: <white>/%command%</white> или <white>/%command% claim</white> или <white>/%command% top</white> или <white>/%command% toggle</white></gray>"
+
+  top:
+    title: "&b&lЕжедневные &fТоп Серий"
+    row: "&7#&f%rank% &b%player% &8» &aСерия: &f%streak% &8(&7%hours%ч&8)"
+    empty: "&7Пока нет данных."
+
+  # GUI сообщения
+  gui:
+    disabled: "<red>Ежедневные Награды отключены.</red>"
+    toggled: "<yellow>Ежедневные Награды теперь %state%</yellow>"

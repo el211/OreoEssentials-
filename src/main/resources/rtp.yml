@@ -1,0 +1,94 @@
+# ==========================================
+# OreoEssentials - RTP Configuration
+# ==========================================
+
+enabled: true
+
+# ------------------------------------------
+# Global fallbacks
+# ------------------------------------------
+default: 200          # max radius (blocks) if no tier/world override matches
+min-radius: 50        #   minimum distance from world spawn (blocks)
+attempts: 30          # how many tries to find a safe spot
+min-y: 50             # minimum Y to consider (clamped to >= 5 by code)
+max-y: 200            # maximum Y to consider (clamped to world max height)
+
+# ------------------------------------------
+# Tiers (global) - radius overrides by permission
+# Keys are permissions, values are radius
+# ------------------------------------------
+oreo.tier.vip: 500
+oreo.tier.mvp: 1000
+
+# (Optional) tiers for minimum distance from spawn
+# Uncomment if your RtpConfig supports it
+# min-radius-tiers:
+#   oreo.tier.vip: 100
+#   oreo.tier.mvp: 150
+
+# ------------------------------------------
+# Limit to these worlds (omit or [] for all)
+# ------------------------------------------
+allowed-worlds:
+  - world
+  - world_nether
+  - world_the_end
+
+# ------------------------------------------
+# Unsafe blocks: ground blocks that cannot be landed on
+# (matches Material name)
+# ------------------------------------------
+unsafe-blocks:
+  - LAVA
+  - FIRE
+  - CACTUS
+  - MAGMA_BLOCK
+
+# ------------------------------------------
+#  Cross-server RTP (Bungee / Velocity)
+# ------------------------------------------
+cross-server:
+  enabled: true
+
+  # World -> server mapping (proxy server name)
+  world-servers:
+    world: survival1
+    world_nether: survival2
+    world_the_end: survival3
+
+  # Default target world if player is in a non-RTP world
+  default-target-world: world
+
+# ------------------------------------------
+# Per-world overrides (optional)
+# You can override radius + min-radius + tiers per world
+# ------------------------------------------
+worlds:
+  world:
+    default: 300
+    min-radius: 80          #   per-world minimum distance
+    oreo.tier.vip: 700
+    oreo.tier.mvp: 1200
+
+    # (Optional) per-world min-radius tiers if supported
+    # min-radius-tiers:
+    #   oreo.tier.vip: 120
+    #   oreo.tier.mvp: 180
+
+  world_nether:
+    default: 200
+    min-radius: 60
+
+  world_the_end:
+    default: 150
+    min-radius: 40
+
+# ------------------------------------------
+# Cooldowns (seconds)
+# Your config uses rank keys here (paladin/vip/mvp)
+# ------------------------------------------
+cooldown:
+  default: 30
+  paladin: 10
+  vip: 20
+  mvp: 15

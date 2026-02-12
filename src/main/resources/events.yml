@@ -1,0 +1,113 @@
+# OreoEssentials — events.yml
+# Run command lists when specific events fire.
+# Syntax per line:
+#   asConsole! <command>        # run as console (default if no directive)
+#   asPlayer!  <command>        # run as the involved player (if available)
+#   delay! <seconds> <command>  # delay before execution
+#
+# Variables available (context-dependent):
+#   [playerName]        - actor player name (present on most events)
+#   [fromWorld]         - source world (teleport)
+#   [toWorld]           - destination world (teleport/world-change)
+#   [newGameMode]       - new game mode name (gamemode change)
+#   [reason]            - kick reason (kick)
+#   [level]             - new level (level change)
+#   [advancement]       - advancement key (advancement done)
+#   [opponent]          - pvp opponent name (pvpstart/pvpstop)
+#   [victim]            - victim player name (playerKillPlayer)
+
+events:
+
+  # Fires when a player joins the server for the first time ever.
+  firstJoinServer:
+    - "asConsole! tell [playerName] &aWelcome to the server!"
+    - "asConsole! give [playerName] bread 8"
+    - "asConsole! delay! 2 title [playerName] title {\"text\":\"Welcome!\",\"color\":\"green\"}"
+    # - "asConsole! lp user [playerName] parent add newbie"
+
+  # Fires on every join (including first).
+  joinServer:
+    - "asConsole! broadcast &a[playerName] &7joined the server."
+
+  # Fires when a player quits.
+  quitServer:
+    - "asConsole! broadcast &c[playerName] &7left the server."
+
+  # Fires when a player kills another player (also influences death message service).
+  playerKillPlayer:
+    - "asConsole! broadcast &6[playerName] &7defeated &c[victim]"
+    # - "asConsole! eco give [playerName] 25"
+
+  # Fires when a player respawns.
+  playerRespawn:
+    - "asConsole! tell [playerName] &7You respawned. Need a hand?"
+
+  # Fires for any teleport (same-world or cross-world).
+  playerTeleport:
+    - "asConsole! tell [playerName] &7Teleporting from &f[fromWorld] &7to &f[toWorld]"
+
+  # Fires when a player enters a bed (after success).
+  bedEnter:
+    - "asConsole! tell [playerName] &eGood night!"
+
+  # Fires when a player leaves a bed.
+  bedLeave:
+    - "asConsole! tell [playerName] &eRise and shine!"
+
+  # Fires right before a cross-world teleport (pre-change).
+  playerPreWorldChange:
+    - "asConsole! tell [playerName] &7Crossing to &f[toWorld] &7..."
+
+  # Fires after the player has changed worlds.
+  playerWorldChange:
+    - "asConsole! broadcast &e[playerName] &7entered &f[toWorld]"
+
+  # Fires when player game mode changes.
+  playerGameModeChange:
+    - "asConsole! tell [playerName] &7Your gamemode is now &f[newGameMode]"
+
+  # Fires when a player is kicked.
+  playerKick:
+    - "asConsole! broadcast &c[playerName] &7was kicked: &f[reason]"
+
+  # Fires on pre-login when result is KICK_BANNED (works for offline join attempts).
+  playerBan:
+    - "asConsole! broadcast &4[playerName] &7is banned."
+
+  # Fires when player level changes.
+  playerLevelChange:
+    - "asConsole! tell [playerName] &7Level up to &a[level]!"
+
+  # Fires when a player falls into the void (simple Y<0 detector).
+  voidFall:
+    - "asConsole! tell [playerName] &8...abyss gazes back."
+
+  # Elytra start gliding.
+  elytraStartGlide:
+    - "asConsole! tell [playerName] &bWings deployed!"
+
+  # Elytra stop gliding.
+  elytraEndGlide:
+    - "asConsole! tell [playerName] &bWings retracted."
+
+  # Fires when an advancement is completed.
+  advancementDone: []
+
+  # Fires when player swaps items WHILE sneaking.
+  sneakingSwapHandItems:
+    - "asConsole! tell [playerName] &7Sneaky swap!"
+
+  # Fires on swap-hand-items (default keybind: F).
+  swapHandItems:
+    - "asConsole! tell [playerName] &7Swapped hands."
+
+  # Fired when a new PvP pair engages (first hit after a lull).
+  pvpstart:
+    - "asConsole! tell [playerName] &cPvP engaged vs &f[opponent]"
+    # - "asConsole! cmi actionbar [playerName] &cFighting &f[opponent]"
+
+  # Fired ~15s after last hit between the two, if no more hits happen.
+  pvpstop:
+    - "asConsole! tell [playerName] &7PvP disengaged vs &f[opponent]"
+
+# End of file
