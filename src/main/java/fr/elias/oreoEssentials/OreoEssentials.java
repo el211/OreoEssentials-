@@ -735,7 +735,7 @@ public final class OreoEssentials extends JavaPlugin {
                 );
 
                 getServer().getPluginManager().registerEvents(
-                        new fr.elias.oreoEssentials.modules.maintenance.MaintenanceListener(this, maintenanceService),
+                        new fr.elias.oreoEssentials.modules.maintenance.MaintenanceModuleListener(this, maintenanceService),
                         this
                 );
 

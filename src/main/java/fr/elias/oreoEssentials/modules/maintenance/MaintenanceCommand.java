@@ -386,7 +386,6 @@ public class MaintenanceCommand implements CommandExecutor, TabCompleter {
 
     private void handleServerList(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            // Show current settings
             sender.sendMessage(ChatColor.GOLD + "═══ Server List Display ═══");
             sender.sendMessage(ChatColor.YELLOW + "Show as full: " + ChatColor.WHITE +
                     (config.isShowServerAsFull() ? "Yes" : "No"));
