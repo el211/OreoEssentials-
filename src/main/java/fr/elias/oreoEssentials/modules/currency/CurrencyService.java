@@ -83,6 +83,7 @@ public class CurrencyService {
                 .defaultBalance(currency.getDefaultBalance())
                 .tradeable(currency.isTradeable())
                 .crossServer(currency.isCrossServer())
+                .allowNegative(currency.isAllowNegative())
                 .build();
 
         if (currencyCache.containsKey(id)) {
@@ -254,8 +255,16 @@ public class CurrencyService {
         balanceCache.computeIfAbsent(playerId, k -> new ConcurrentHashMap<>())
                 .put(finalCurrencyId, finalAmount);
 
-        return storage.saveBalance(playerId, finalCurrencyId, finalAmount).thenApply(v -> {
+        plugin.getLogger().info("[Currency][DBG] setBalance WRITING: player=" + playerId
+                + " currency=" + finalCurrencyId + " amount=" + finalAmount);
+        return storage.saveBalance(playerId, finalCurrencyId, finalAmount).thenAccept(v -> {
             clearPlaceholderCache(playerId);
+            plugin.getLogger().info("[Currency][DBG] setBalance WRITE OK: player=" + playerId
+                    + " currency=" + finalCurrencyId + " amount=" + finalAmount);
+        }).exceptionally(ex -> {
+            plugin.getLogger().warning("[Currency][DBG] setBalance WRITE FAILED: player=" + playerId
+                    + " currency=" + finalCurrencyId + " amount=" + finalAmount + " error=" + ex.getMessage());
+            ex.printStackTrace();
             return null;
         });
     }
@@ -273,11 +282,19 @@ public class CurrencyService {
 
         return getBalance(playerId, currencyId).thenCompose(balance -> {
             double newBalance = balance + amount;
+            plugin.getLogger().info("[Currency][DBG] deposit: player=" + playerId
+                    + " currency=" + finalCurrencyId + " old=" + balance + " +amount=" + amount + " new=" + newBalance);
             return setBalance(playerId, finalCurrencyId, newBalance)
                     .thenApply(v -> {
                         clearPlaceholderCache(playerId);
+                        plugin.getLogger().info("[Currency][DBG] deposit SAVED: player=" + playerId
+                                + " currency=" + finalCurrencyId + " newBalance=" + newBalance);
                         return true;
                     });
+        }).exceptionally(ex -> {
+            plugin.getLogger().warning("[Currency][DBG] deposit FAILED: player=" + playerId
+                    + " currency=" + finalCurrencyId + " amount=" + amount + " error=" + ex.getMessage());
+            return false;
         });
     }
 
@@ -292,8 +309,13 @@ public class CurrencyService {
         currencyId = currencyId.toLowerCase(Locale.ROOT).trim();
         final String finalCurrencyId = currencyId;
 
+        final String resolvedCurrencyId = currencyId;
         return getBalance(playerId, currencyId).thenCompose(balance -> {
-            if (balance < amount) {
+            Currency currency = getCurrency(resolvedCurrencyId);
+            boolean allowNegative = currency != null && currency.isAllowNegative();
+            if (!allowNegative && balance < amount) {
+                plugin.getLogger().info("[Currency][DBG] withdraw rejected: balance=" + balance
+                        + " amount=" + amount + " allowNegative=false currency=" + resolvedCurrencyId);
                 return CompletableFuture.completedFuture(false);
             }
 
@@ -301,6 +323,8 @@ public class CurrencyService {
             return setBalance(playerId, finalCurrencyId, newBalance)
                     .thenApply(v -> {
                         clearPlaceholderCache(playerId);
+                        plugin.getLogger().info("[Currency][DBG] withdraw OK: player=" + playerId
+                                + " currency=" + finalCurrencyId + " old=" + balance + " new=" + newBalance);
                         return true;
                     });
         });

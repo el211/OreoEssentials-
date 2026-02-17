@@ -24,10 +24,12 @@ import java.util.stream.Collectors;
 public class PlaceholderAPIHook extends PlaceholderExpansion {
     private final OreoEssentials plugin;
     private boolean debug;
+    private final String thisServerName;
 
     public PlaceholderAPIHook(OreoEssentials plugin) {
         this.plugin = plugin;
         this.debug = plugin.getConfig().getBoolean("placeholder-debug", false);
+        this.thisServerName = plugin.getConfigService().serverName();
     }
 
     @Override
@@ -108,6 +110,35 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             if (serverId.isBlank()) return "";
             return resolveServerNick(serverId);
         }
+
+        if (id.equals("crossserver_players_total")) {
+            return String.valueOf(
+                    fr.elias.oreoEssentials.network.NetworkCountReceiver.getNetworkTotal()
+            );
+        }
+
+        if (id.equals("server_players_total")) {
+            int cached = fr.elias.oreoEssentials.network.NetworkCountReceiver
+                    .getServerTotal(thisServerName);
+            return String.valueOf(cached > 0 ? cached : Bukkit.getOnlinePlayers().size());
+        }
+
+        if (id.startsWith("server_players_")) {
+            String targetServer = idRaw.substring("server_players_".length());
+            return String.valueOf(
+                    fr.elias.oreoEssentials.network.NetworkCountReceiver.getServerTotal(targetServer)
+            );
+        }
+
+        if (id.endsWith("_players_total")
+                && !id.equals("crossserver_players_total")
+                && !id.equals("server_players_total")) {
+            String targetServer = idRaw.substring(0, idRaw.length() - "_players_total".length());
+            return String.valueOf(
+                    fr.elias.oreoEssentials.network.NetworkCountReceiver.getServerTotal(targetServer)
+            );
+        }
+
         if (id.equals("world_name") || id.equals("world")) {
             Player p = player.getPlayer();
             if (p == null) return "";
@@ -129,6 +160,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         if (id.equals("network_online")) {
             return String.valueOf(Bukkit.getOnlinePlayers().size());
         }
+
         if (id.equals("kits_enabled")) {
             KitsManager km = kits();
             return (km != null && km.isEnabled()) ? "true" : "false";
@@ -189,8 +221,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             if (id.startsWith("kit_cooldown_formatted_")) {
                 kitId = id.substring("kit_cooldown_formatted_".length());
             } else {
-                String core = id.substring("kit_".length(), id.length() - "_cooldown_formatted".length());
-                kitId = core;
+                kitId = id.substring("kit_".length(), id.length() - "_cooldown_formatted".length());
             }
 
             KitsManager km = kits();
@@ -394,10 +425,8 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         try {
             var c = plugin.getConfig();
             String def = c.getString("server_nicknames.default", serverName);
-
             var sec = c.getConfigurationSection("server_nicknames.map");
             if (sec == null) return def;
-
             for (String key : sec.getKeys(false)) {
                 if (key != null && key.equalsIgnoreCase(serverName)) {
                     return sec.getString(key, def);
@@ -408,14 +437,13 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             return serverName;
         }
     }
+
     private String resolveWorldNick(String worldName) {
         try {
             var c = plugin.getConfig();
             String def = c.getString("world_nicknames.default", worldName);
-
             var sec = c.getConfigurationSection("world_nicknames.map");
             if (sec == null) return def;
-
             for (String key : sec.getKeys(false)) {
                 if (key != null && key.equalsIgnoreCase(worldName)) {
                     return sec.getString(key, def);

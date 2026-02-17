@@ -257,9 +257,18 @@ public class CurrencyCommand implements OreoCommand {
                     sender.sendMessage("§a✔ Gave " + currency.format(amount) + " to §f" + nameOrUuid(args[1], targetUuid));
                     notifyTargetIfOnlineAnywhere(targetUuid,
                             "§a✔ You received " + currency.format(amount) + " from §f" + sender.getName());
+                    plugin.getLogger().info("[Currency] GIVE: " + sender.getName() + " -> " + nameOrUuid(args[1], targetUuid)
+                            + " | " + currency.format(amount) + " | uuid=" + targetUuid);
                 } else {
-                    sender.sendMessage("§c✖ Failed to give currency");
+                    sender.sendMessage("§c✖ Failed to give currency (deposit returned false)");
+                    plugin.getLogger().warning("[Currency] GIVE FAILED: " + sender.getName() + " -> "
+                            + nameOrUuid(args[1], targetUuid) + " | " + currency.format(amount) + " | uuid=" + targetUuid);
                 }
+            }).exceptionally(ex -> {
+                sender.sendMessage("§c✖ Error giving currency: " + ex.getMessage());
+                plugin.getLogger().severe("[Currency] GIVE ERROR: " + ex.getMessage());
+                ex.printStackTrace();
+                return null;
             });
         });
     }
@@ -289,14 +298,28 @@ public class CurrencyCommand implements OreoCommand {
                 return;
             }
 
-            plugin.getCurrencyService().withdraw(targetUuid, currencyId, amount).thenAccept(success -> {
-                if (success) {
-                    sender.sendMessage("§a✔ Took " + currency.format(amount) + " from §f" + nameOrUuid(args[1], targetUuid));
-                    notifyTargetIfOnlineAnywhere(targetUuid,
-                            "§c✖ " + currency.format(amount) + " was taken from you by §f" + sender.getName());
-                } else {
-                    sender.sendMessage("§c✖ Insufficient balance or failed to take currency");
-                }
+            plugin.getCurrencyService().getBalance(targetUuid, currencyId).thenAccept(currentBalance -> {
+                plugin.getLogger().info("[Currency] TAKE attempt: target=" + nameOrUuid(args[1], targetUuid)
+                        + " currency=" + currencyId + " currentBalance=" + currentBalance + " taking=" + amount);
+                plugin.getCurrencyService().withdraw(targetUuid, currencyId, amount).thenAccept(success -> {
+                    if (success) {
+                        sender.sendMessage("§a✔ Took " + currency.format(amount) + " from §f" + nameOrUuid(args[1], targetUuid));
+                        notifyTargetIfOnlineAnywhere(targetUuid,
+                                "§c✖ " + currency.format(amount) + " was taken from you by §f" + sender.getName());
+                        plugin.getLogger().info("[Currency] TAKE OK: " + sender.getName() + " took "
+                                + currency.format(amount) + " from " + nameOrUuid(args[1], targetUuid));
+                    } else {
+                        sender.sendMessage("§c✖ Insufficient balance! §f" + nameOrUuid(args[1], targetUuid)
+                                + " §7has §f" + currency.format(currentBalance) + " §7but you tried to take §f" + currency.format(amount));
+                        plugin.getLogger().info("[Currency] TAKE FAILED (insufficient): balance=" + currentBalance
+                                + " requested=" + amount + " currency=" + currencyId);
+                    }
+                }).exceptionally(ex -> {
+                    sender.sendMessage("§c✖ Error taking currency: " + ex.getMessage());
+                    plugin.getLogger().severe("[Currency] TAKE ERROR: " + ex.getMessage());
+                    ex.printStackTrace();
+                    return null;
+                });
             });
         });
     }
@@ -330,6 +353,13 @@ public class CurrencyCommand implements OreoCommand {
                 sender.sendMessage("§a✔ Set " + nameOrUuid(args[1], targetUuid) + "'s balance to " + currency.format(amount));
                 notifyTargetIfOnlineAnywhere(targetUuid,
                         "§e⚠ Your " + currency.getName() + " balance was set to " + currency.format(amount) + " by §f" + sender.getName());
+                plugin.getLogger().info("[Currency] SET: " + sender.getName() + " set " + nameOrUuid(args[1], targetUuid)
+                        + "'s " + currencyId + " balance to " + amount + " | uuid=" + targetUuid);
+            }).exceptionally(ex -> {
+                sender.sendMessage("§c✖ Error setting balance: " + ex.getMessage());
+                plugin.getLogger().severe("[Currency] SET ERROR: " + ex.getMessage());
+                ex.printStackTrace();
+                return null;
             });
         });
     }

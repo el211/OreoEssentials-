@@ -228,7 +228,7 @@ public final class OreoEssentials extends JavaPlugin {
     private CommandToggleConfig commandToggleConfig;
     private CommandToggleService commandToggleService;
     private AuctionHouseModule auctionHouse;
-
+    private fr.elias.oreoEssentials.network.NetworkCountReceiver networkCountReceiver;
     public CurrencyService getCurrencyService() { return currencyService; }
     public CurrencyConfig getCurrencyConfig() { return currencyConfig; }
     private Map<UUID, BackLocation> pendingBackTeleports = new ConcurrentHashMap<>();
@@ -1387,6 +1387,22 @@ public final class OreoEssentials extends JavaPlugin {
 
                 registerAllPacketsDeterministically(this.packetManager);
 
+                try {
+                    this.networkCountReceiver = new fr.elias.oreoEssentials.network.NetworkCountReceiver(
+                            this,
+                            getConfig().getString("rabbitmq.uri")
+                    );
+                    if (this.networkCountReceiver.start()) {
+                        getLogger().info("[NetworkCountReceiver] Listening for proxy player counts.");
+                    } else {
+                        getLogger().warning("[NetworkCountReceiver] Failed to start — cross-server player count placeholders will return 0.");
+                        this.networkCountReceiver = null;
+                    }
+                } catch (Throwable t) {
+                    getLogger().warning("[NetworkCountReceiver] Error starting: " + t.getMessage());
+                    this.networkCountReceiver = null;
+                }
+
                 if (invSyncEnabled) {
                     try {
                         this.invseeBroker = new InvseeCrossServerBroker(
@@ -1497,6 +1513,7 @@ public final class OreoEssentials extends JavaPlugin {
             } else {
                 getLogger().severe("[RABBIT] Connect failed; continuing without messaging.");
                 this.packetManager = null;
+                this.networkCountReceiver = null;
                 this.invseeBroker = null;
                 this.invseeService = new InvseeService(this, null);
                 getLogger().info("[INVSEE] Local mode (RabbitMQ connection failed)");
@@ -1505,6 +1522,7 @@ public final class OreoEssentials extends JavaPlugin {
         } else {
             getLogger().info("[RABBIT] Disabled.");
             this.packetManager = null;
+            this.networkCountReceiver = null;
             this.invseeBroker = null;
             this.invseeService = new InvseeService(this, null);
             getLogger().info("[INVSEE] Local mode (RabbitMQ disabled)");
@@ -2580,6 +2598,7 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (scoreboardService != null) scoreboardService.stop(); } catch (Exception ignored) {}
         try { if (this.homesMongoClient != null) this.homesMongoClient.close(); } catch (Exception ignored) {}
         this.homesMongoClient = null;
+        try { if (networkCountReceiver != null) networkCountReceiver.stop(); } catch (Exception ignored) {}
         try { if (bossBarService != null) bossBarService.stop(); } catch (Exception ignored) {}
         try { if (playervaultsService != null) playervaultsService.stop(); } catch (Exception ignored) {}
         try { if (aliasService != null) aliasService.shutdown(); } catch (Exception ignored) {}
