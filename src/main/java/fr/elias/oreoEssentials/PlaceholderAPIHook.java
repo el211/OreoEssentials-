@@ -160,7 +160,40 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         if (id.equals("network_online")) {
             return String.valueOf(Bukkit.getOnlinePlayers().size());
         }
+        if (id.equals("tempfly_active")) {
+            fr.elias.oreoEssentials.modules.tempfly.TempFlyService tfs = plugin.getTempFlyService();
+            if (tfs == null) return "false";
+            Player p = player.getPlayer();
+            if (p == null) return "false";
+            return tfs.getTimeRemaining(p) > 0 ? "true" : "false";
+        }
 
+        if (id.equals("tempfly_seconds")) {
+            fr.elias.oreoEssentials.modules.tempfly.TempFlyService tfs = plugin.getTempFlyService();
+            if (tfs == null) return "0";
+            Player p = player.getPlayer();
+            if (p == null) return "0";
+            return String.valueOf(tfs.getTimeRemaining(p));
+        }
+
+        if (id.equals("tempfly_time")) {
+            fr.elias.oreoEssentials.modules.tempfly.TempFlyService tfs = plugin.getTempFlyService();
+            if (tfs == null) return "0s";
+            Player p = player.getPlayer();
+            if (p == null) return "0s";
+            int secs = tfs.getTimeRemaining(p);
+            if (secs <= 0) return "inactive";
+            return formatTempFlyTime(secs);
+        }
+
+        if (id.equals("tempfly_time_or_empty")) {
+            fr.elias.oreoEssentials.modules.tempfly.TempFlyService tfs = plugin.getTempFlyService();
+            if (tfs == null) return "";
+            Player p = player.getPlayer();
+            if (p == null) return "";
+            int secs = tfs.getTimeRemaining(p);
+            return secs > 0 ? formatTempFlyTime(secs) : "";
+        }
         if (id.equals("kits_enabled")) {
             KitsManager km = kits();
             return (km != null && km.isEnabled()) ? "true" : "false";
@@ -556,7 +589,15 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             return null;
         }
     }
-
+    private String formatTempFlyTime(int seconds) {
+        if (seconds < 60) return seconds + "s";
+        if (seconds < 3600) {
+            int m = seconds / 60, s = seconds % 60;
+            return s > 0 ? m + "m " + s + "s" : m + "m";
+        }
+        int h = seconds / 3600, m = (seconds % 3600) / 60;
+        return m > 0 ? h + "h " + m + "m" : h + "h";
+    }
     private Object configService() {
         try {
             Method m = plugin.getClass().getMethod("getConfigService");
