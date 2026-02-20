@@ -1042,6 +1042,8 @@ public final class OreoEssentials extends JavaPlugin {
         }
 
         getServer().getPluginManager().registerEvents(new ConversationListener(this), this);
+        getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.oreobotfeatures.listeners.JoinMessagesListener(this), this);
+        getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.oreobotfeatures.listeners.QuitMessagesListener(this), this);
         new fr.elias.oreoEssentials.tasks.AutoMessageScheduler(this).start();
     }
 
