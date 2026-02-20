@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/ic/ICPos.java
 package fr.elias.oreoEssentials.modules.ic;
 
 import java.util.Objects;
@@ -18,9 +17,9 @@ public final class ICPos {
 
     @Override public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ICPos)) return false;
-        ICPos p = (ICPos) o;
+        if (!(o instanceof ICPos p)) return false;
         return x == p.x && y == p.y && z == p.z && Objects.equals(world, p.world);
     }
+
     @Override public int hashCode() { return Objects.hash(world, x, y, z); }
 }

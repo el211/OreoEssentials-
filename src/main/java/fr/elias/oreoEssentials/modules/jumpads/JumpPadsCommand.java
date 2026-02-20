@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/jumpads/JumpPadsCommand.java
 package fr.elias.oreoEssentials.modules.jumpads;
 
 import fr.elias.oreoEssentials.util.Lang;

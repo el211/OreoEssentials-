@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/jumpads/JumpPadsManager.java
 package fr.elias.oreoEssentials.modules.jumpads;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -21,9 +20,9 @@ public class JumpPadsManager {
         public final String name;
         public final World world;
         public final int x, y, z;   // block coords
-        public double power;        // horizontal multiplier
-        public double upward;       // vertical boost
-        public boolean useLookDir;  // if true, launch in player's look direction
+        public double power;
+        public double upward;
+        public boolean useLookDir;
 
         public JumpPad(String name, World world, int x, int y, int z, double power, double upward, boolean useLookDir) {
             this.name = name;

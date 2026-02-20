@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/mobs/SpawnMobCommand.java
 package fr.elias.oreoEssentials.modules.mobs;
 
 import org.bukkit.Location;

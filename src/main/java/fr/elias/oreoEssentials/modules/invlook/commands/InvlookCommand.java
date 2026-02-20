@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/invlook/InvlookCommand.java
 package fr.elias.oreoEssentials.modules.invlook.commands;
 
 import fr.elias.oreoEssentials.OreoEssentials;

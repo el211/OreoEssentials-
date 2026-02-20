@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/jumpads/JumpPadsListener.java
 package fr.elias.oreoEssentials.modules.jumpads;
 
 import org.bukkit.event.EventHandler;

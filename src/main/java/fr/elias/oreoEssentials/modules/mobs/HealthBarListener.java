@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/mobs/HealthBarListener.java
 package fr.elias.oreoEssentials.modules.mobs;
 
 import fr.elias.oreoEssentials.OreoEssentials;
@@ -154,7 +153,6 @@ public final class HealthBarListener implements Listener {
         removeStand(bottomLine.remove(id));
     }
 
-    /* ---------------- Sweeper / Scanner ---------------- */
 
     private void sweepTick() {
         int created = 0;
@@ -183,7 +181,6 @@ public final class HealthBarListener implements Listener {
         proximitySweep(bottomLine, false);
     }
 
-    /* ---------------- Core ---------------- */
 
     private boolean shouldTrack(LivingEntity le) {
 

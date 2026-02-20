@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/ic/ICManager.java
 package fr.elias.oreoEssentials.modules.ic;
 
 import org.bukkit.Bukkit;
@@ -17,7 +16,6 @@ public final class ICManager {
         this.file = new File(dataFolder, "interactive-commands.yml");
         if (!file.exists()) {
             try {
-                // write a tiny skeleton so users know the shape
                 YamlConfiguration y = new YamlConfiguration();
                 ConfigurationSection ic = y.createSection("ic");
                 ConfigurationSection demo = ic.createSection("healer");
@@ -55,11 +53,7 @@ public final class ICManager {
             if (c == null) continue;
             ICEntry e = new ICEntry(name);
             e.isPublic = c.getBoolean("public", false);
-
-            // commands
             for (String s : c.getStringList("cmds")) e.commands.add(s);
-
-            // blocks
             for (String s : c.getStringList("blocks")) {
                 try {
                     String[] p = s.split(";", 4);
@@ -72,15 +66,12 @@ public final class ICManager {
                     Bukkit.getLogger().warning("[OreoEssentials-IC] Skipping block '" + s + "' for " + name + ": " + ex.getMessage());
                 }
             }
-
-            // entities
             for (String s : c.getStringList("entities")) {
                 try { e.entities.add(UUID.fromString(s)); }
                 catch (Exception ex) {
                     Bukkit.getLogger().warning("[OreoEssentials-IC] Skipping entity UUID '" + s + "' for " + name);
                 }
             }
-
             map.put(name.toLowerCase(Locale.ROOT), e);
             loaded++;
         }
@@ -110,11 +101,13 @@ public final class ICManager {
     }
 
     public ICEntry get(String name) { return map.get(name.toLowerCase(Locale.ROOT)); }
+
     public ICEntry create(String name) {
         ICEntry e = new ICEntry(name);
         map.put(name.toLowerCase(Locale.ROOT), e);
         save();
         return e;
     }
+
     public Collection<ICEntry> all() { return map.values(); }
 }
