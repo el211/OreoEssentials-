@@ -25,6 +25,8 @@ skins:
 logging:
   debug: false
 
+discord:
+  link_backend: "file"   # or "mongodb" for cross-network
 # ==================== STORAGE & DATABASE ====================
 
 # Primary essentials data store (homes/warps/spawn/back)
@@ -161,6 +163,7 @@ jumpads:
 
 # Mob health bars
 mobs:
+  show-healthmobs: true
   healthbar:
     update-interval-ticks: 5
     view-distance: 32.0

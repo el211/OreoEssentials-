@@ -226,7 +226,8 @@ public final class OreoEssentials extends JavaPlugin {
     private PerPlayerTextDisplayService perPlayerTextDisplayService;
     private AuctionHouseModule auctionHouse;
     private fr.elias.oreoEssentials.network.NetworkCountReceiver networkCountReceiver;
-
+    private fr.elias.oreoEssentials.modules.discordbot.DiscordLinkManager discordLinkManager;
+    public fr.elias.oreoEssentials.modules.discordbot.DiscordLinkManager getDiscordLinkManager() { return discordLinkManager; }
     public CurrencyService getCurrencyService() { return currencyService; }
     public CurrencyConfig getCurrencyConfig() { return currencyConfig; }
 
@@ -385,6 +386,7 @@ public final class OreoEssentials extends JavaPlugin {
         instance = this;
 
         initConfig();
+        initStorage();
         initRedis();
         initEconomy();
         initCommandControl();
@@ -405,7 +407,6 @@ public final class OreoEssentials extends JavaPlugin {
         initDiscordIntegration();
         initMobs();
         initClearLag();
-        initStorage();
         initChat();
         initEnderChest();
         initInventorySync();
@@ -916,6 +917,36 @@ public final class OreoEssentials extends JavaPlugin {
         } else {
             this.discordMod = null;
             getLogger().info("[DiscordMod] Disabled by settings.yml.");
+        }
+
+        String linkBackend = getConfig().getString("discord.link_backend", "file").toLowerCase();
+
+        if ("mongodb".equals(linkBackend) && this.homesMongoClient != null) {
+            String dbName = getConfig().getString("storage.mongo.database", "oreo");
+            com.mongodb.client.MongoDatabase linkDb = this.homesMongoClient.getDatabase(dbName);
+            this.discordLinkManager = new fr.elias.oreoEssentials.modules.discordbot.DiscordLinkManager(linkDb, getLogger());
+            getLogger().info("[DiscordLink] Account linking: mongodb backend.");
+        } else {
+            this.discordLinkManager = new fr.elias.oreoEssentials.modules.discordbot.DiscordLinkManager(getDataFolder(), getLogger());
+            if ("mongodb".equals(linkBackend)) {
+                getLogger().warning("[DiscordLink] link_backend=mongodb but MongoDB is not connected; falling back to file.");
+            } else {
+                getLogger().info("[DiscordLink] Account linking: file backend.");
+            }
+        }
+
+        if (getCommand("discord") != null) {
+            var linkCmd = new fr.elias.oreoEssentials.modules.discordbot.DiscordLinkCommand(discordLinkManager);
+            getCommand("discord").setExecutor(linkCmd);
+            getCommand("discord").setTabCompleter(linkCmd);
+        }
+        if (getCommand("oe-discord") != null) {
+            getCommand("oe-discord").setExecutor(
+                    new fr.elias.oreoEssentials.modules.discordbot.DiscordRconExtension(
+                            homeService,
+                            database
+                    )
+            );
         }
     }
 
