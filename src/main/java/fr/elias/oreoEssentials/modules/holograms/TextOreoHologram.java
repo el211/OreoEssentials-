@@ -10,6 +10,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -21,8 +22,12 @@ public final class TextOreoHologram extends OreoHologram {
     private static final NamespacedKey K_NAME    = NamespacedKey.fromString("oreoessentials:name");
     private static final NamespacedKey K_TYPE    = NamespacedKey.fromString("oreoessentials:type");
 
+    /** Manages ICON:Material inline item displays. */
+    private final InlineIconManager iconManager;
+
     public TextOreoHologram(String name, OreoHologramData data) {
         super(name, data);
+        this.iconManager = new InlineIconManager(name);
     }
 
     @Override
@@ -46,7 +51,9 @@ public final class TextOreoHologram extends OreoHologram {
         applyCommon();
         applyVisibility();
 
-        setText(td, HoloText.render(data.lines));
+        // --- ICON: processing ---
+        List<String> renderLines = processIcons(data.lines, loc);
+        setText(td, HoloText.render(renderLines));
         textTweaks(td);
 
         if (isPerPlayerEnabled()) {
@@ -61,6 +68,9 @@ public final class TextOreoHologram extends OreoHologram {
 
     @Override
     public void despawn() {
+        // Despawn inline icons first
+        iconManager.despawnAll(data.location.toLocation());
+
         var svc = getPerPlayerSvc();
         if (svc != null && entityId != null) {
             svc.untrack(entityId);
@@ -119,9 +129,14 @@ public final class TextOreoHologram extends OreoHologram {
         if (isPerPlayerEnabled()) return;
         findEntity().ifPresent(e -> {
             TextDisplay td = (TextDisplay) e;
-            setText(td, HoloText.render(data.lines));
+            List<String> renderLines = processIcons(data.lines, td.getLocation());
+            setText(td, HoloText.render(renderLines));
         });
     }
+
+    /* ================================================================== */
+    /*  Line editing methods                                               */
+    /* ================================================================== */
 
     public void setLine(int line, String text) {
         ensureLines();
@@ -131,27 +146,27 @@ public final class TextOreoHologram extends OreoHologram {
         while (data.lines.size() <= idx) data.lines.add("");
         data.lines.set(idx, text);
 
-        findEntity().ifPresent(e -> setText((TextDisplay) e, HoloText.render(data.lines)));
+        refreshTextAndIcons();
     }
 
     public void addLine(String text) {
         ensureLines();
         data.lines.add(text);
-        findEntity().ifPresent(e -> setText((TextDisplay) e, HoloText.render(data.lines)));
+        refreshTextAndIcons();
     }
 
     public void insertBefore(int line, String text) {
         ensureLines();
         int idx = Math.max(0, Math.min(line - 1, data.lines.size()));
         data.lines.add(idx, text);
-        findEntity().ifPresent(e -> setText((TextDisplay) e, HoloText.render(data.lines)));
+        refreshTextAndIcons();
     }
 
     public void insertAfter(int line, String text) {
         ensureLines();
         int idx = Math.max(0, Math.min(line, data.lines.size()));
         data.lines.add(idx, text);
-        findEntity().ifPresent(e -> setText((TextDisplay) e, HoloText.render(data.lines)));
+        refreshTextAndIcons();
     }
 
     public void removeLine(int line) {
@@ -159,7 +174,7 @@ public final class TextOreoHologram extends OreoHologram {
         int idx = line - 1;
         if (idx < 0 || idx >= data.lines.size()) throw new IllegalArgumentException("Invalid line: " + line);
         data.lines.remove(idx);
-        findEntity().ifPresent(e -> setText((TextDisplay) e, HoloText.render(data.lines)));
+        refreshTextAndIcons();
     }
 
     public void setBackground(String color) {
@@ -180,6 +195,56 @@ public final class TextOreoHologram extends OreoHologram {
     public void setUpdateIntervalTicks(long ticks) {
         data.updateIntervalTicks = Math.max(0, ticks);
     }
+
+    /* ================================================================== */
+    /*  ICON: processing                                                   */
+    /* ================================================================== */
+
+    /**
+     * Processes the raw lines through the {@link InlineIconManager}.
+     * Lines matching {@code ICON:Material} are replaced by a spacer and a
+     * small {@link org.bukkit.entity.ItemDisplay} is spawned at the
+     * corresponding vertical position.
+     *
+     * @param rawLines the original hologram lines (may contain ICON: entries)
+     * @param baseLoc  location of the parent TextDisplay entity
+     * @return cleaned lines ready for rendering on the TextDisplay
+     */
+    private List<String> processIcons(List<String> rawLines, Location baseLoc) {
+        if (!InlineIconManager.hasAnyIcon(rawLines)) {
+            // No icons → despawn any leftover icon entities and return as-is
+            iconManager.despawnAll(baseLoc);
+            return rawLines;
+        }
+
+        int[] brightness = (data.brightnessBlock >= 0 || data.brightnessSky >= 0)
+                ? new int[]{ data.brightnessBlock, data.brightnessSky }
+                : null;
+
+        return iconManager.processAndSpawn(
+                rawLines,
+                baseLoc,
+                data.scale,
+                data.billboard,
+                brightness
+        );
+    }
+
+    /**
+     * Convenience: re-renders text AND re-spawns icons after any line edit.
+     * Ensures icons are always in sync with the current line list.
+     */
+    private void refreshTextAndIcons() {
+        findEntity().ifPresent(e -> {
+            TextDisplay td = (TextDisplay) e;
+            List<String> renderLines = processIcons(data.lines, td.getLocation());
+            setText(td, HoloText.render(renderLines));
+        });
+    }
+
+    /* ================================================================== */
+    /*  Internal helpers (unchanged logic)                                  */
+    /* ================================================================== */
 
     private static void setText(TextDisplay td, Component c) {
         try {

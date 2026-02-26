@@ -1,16 +1,25 @@
-package fr.elias.oreoEssentials.commands.core.playercommands;
+package fr.elias.oreoEssentials.modules.furnace;
 
+import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
+import fr.elias.oreoEssentials.modules.furnace.VirtualFurnaceListener;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 
 import java.util.List;
 
 public class FurnaceCommand implements OreoCommand {
+    private final OreoEssentials plugin;
+
+    public FurnaceCommand(OreoEssentials plugin) {
+        this.plugin = plugin;
+    }
+
     @Override public String name() { return "furnace"; }
     @Override public List<String> aliases() { return List.of(); }
     @Override public String permission() { return "oreo.furnace"; }
@@ -25,6 +34,8 @@ public class FurnaceCommand implements OreoCommand {
 
         Inventory inv = Bukkit.createInventory(p, InventoryType.FURNACE, title);
         p.openInventory(inv);
+
+        VirtualFurnaceListener.startTask(plugin, p, inv);
 
         return true;
     }

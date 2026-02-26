@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials;
 
 import com.google.gson.Gson;
+import fr.elias.oreoEssentials.modules.furnace.FurnaceCommand;
 import fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayService;
 import fr.elias.oreoEssentials.modules.afk.AfkListener;
 import fr.elias.oreoEssentials.modules.afk.rabbit.packets.AfkPoolEnterPacket;
@@ -167,7 +168,6 @@ import fr.elias.oreoEssentials.rabbitmq.handler.RemoteMessagePacketHandler;
 import fr.elias.oreoEssentials.rabbitmq.sender.RabbitMQSender;
 import fr.minuskube.inv.InventoryManager;
 import fr.elias.oreoEssentials.util.ProxyMessenger;
-import fr.elias.oreoEssentials.vault.VaultEconomyProvider;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -1474,7 +1474,7 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new PingCommand())
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.HatCommand())
                 .register(new RealNameCommand())
-                .register(new fr.elias.oreoEssentials.commands.core.playercommands.FurnaceCommand())
+                .register(new FurnaceCommand(this))
                 .register(new NearCommand())
                 .register(new KillCommand())
                 .register(new InvseeCommand())
@@ -1491,6 +1491,8 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new MoveCommand(teleportService))
                 .register(new EcoMigrateCommand(this))
                 .register(new fr.elias.oreoEssentials.modules.currency.commands.CurrencyAdminCommand(this));
+
+                getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.furnace.VirtualFurnaceListener(), this);
 
         if (settingsConfig.sitEnabled()) {
             this.commands.register(new SitCommand());
