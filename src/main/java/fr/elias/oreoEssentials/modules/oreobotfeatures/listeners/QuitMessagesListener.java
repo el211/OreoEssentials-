@@ -46,18 +46,17 @@ public final class QuitMessagesListener implements Listener {
         final String playerPrefixFmt = c.getString(SECTION + ".player_prefix", "");
         final String delimiter       = c.getString(SECTION + ".delimiter", " | ");
 
-        String defaultBody = c.getString(SECTION + ".message", "{name} left the game.");
-        String body = RankedMessageUtil.resolveRankedText(c, SECTION, "message", p, defaultBody);
-
-        final String namePlain = p.getName();
+        final String defaultBody = c.getString(SECTION + ".message", "{name} left the game.");
+        final String namePlain  = p.getName();
         final String playerName = playerNameFmt.replace("{name}", namePlain);
-        body = body.replace("{name}", namePlain);
+
+        String body = RankedMessageUtil.resolveRankedText(c, SECTION, "message", p, defaultBody)
+                .replace("{name}", namePlain);
 
         final String output = lookLikePlayer
                 ? (playerPrefixFmt + " " + playerName + " " + delimiter + " " + body)
                 : body;
 
-        // Resolve per-rank sound
         final ResolvedSound sound = resolveSound(c, SECTION, p);
 
         String legacyMsg = legacy.serialize(mm.deserialize(output));

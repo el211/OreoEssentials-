@@ -13,6 +13,11 @@ public class MessageService {
         lastReply.put(target.getUniqueId(), sender.getUniqueId());
     }
 
+    public void record(UUID sender, UUID target) {
+        lastReply.put(sender, target);
+        lastReply.put(target, sender);
+    }
+
     public UUID getLast(UUID who) { return lastReply.get(who); }
 }
 

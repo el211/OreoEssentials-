@@ -1313,6 +1313,7 @@ public final class OreoEssentials extends JavaPlugin {
         }
 
         this.packetManager.subscribe(fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket.class, new RemoteMessagePacketHandler());
+        this.packetManager.subscribe(fr.elias.oreoEssentials.modules.chat.msg.CrossServerMsgPacket.class, new fr.elias.oreoEssentials.modules.chat.msg.CrossServerMsgHandler(messageService));
         this.packetManager.subscribe(TradeStartPacket.class,   new TradeStartPacketHandler(this));
         this.packetManager.subscribe(PlayerJoinPacket.class,   new PlayerJoinPacketHandler(this));
         this.packetManager.subscribe(PlayerQuitPacket.class,   new PlayerQuitPacketHandler(this));
@@ -1441,8 +1442,8 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new FlyCommand())
                 .register(new HealCommand())
                 .register(new FeedCommand())
-                .register(new MsgCommand(messageService))
-                .register(new ReplyCommand(messageService))
+                .register(new MsgCommand(messageService, this))
+                .register(new ReplyCommand(messageService, this))
                 .register(new BroadcastCommand())
                 .register(new HomesCommand(homeService))
                 .register(new HomesGuiCommand(homeService))
@@ -1907,6 +1908,7 @@ public final class OreoEssentials extends JavaPlugin {
 
     private void registerAllPacketsDeterministically(PacketManager pm) {
         pm.registerPacket(fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket.class, fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket::new);
+        pm.registerPacket(fr.elias.oreoEssentials.modules.chat.msg.CrossServerMsgPacket.class, fr.elias.oreoEssentials.modules.chat.msg.CrossServerMsgPacket::new);
         pm.registerPacket(PlayerJoinPacket.class, PlayerJoinPacket::new);
         pm.registerPacket(PlayerQuitPacket.class, PlayerQuitPacket::new);
         pm.registerPacket(PlayerWarpTeleportRequestPacket.class, PlayerWarpTeleportRequestPacket::new);
@@ -1933,7 +1935,7 @@ public final class OreoEssentials extends JavaPlugin {
         pm.registerPacket(fr.elias.oreoEssentials.modules.currency.rabbitmq.CurrencySyncPacket.class, fr.elias.oreoEssentials.modules.currency.rabbitmq.CurrencySyncPacket::new);
         pm.registerPacket(AfkPoolEnterPacket.class, AfkPoolEnterPacket::new);
         pm.registerPacket(AfkPoolExitPacket.class, AfkPoolExitPacket::new);
-        getLogger().info("[RABBIT] Registered 27 packet types deterministically");
+        getLogger().info("[RABBIT] Registered 28 packet types deterministically");
     }
 
     // -------------------------------------------------------------------------

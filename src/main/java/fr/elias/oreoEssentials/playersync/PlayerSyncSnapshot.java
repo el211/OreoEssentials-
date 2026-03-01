@@ -14,6 +14,8 @@ public final class PlayerSyncSnapshot implements Serializable {
     public double health;
     public int food;
     public float saturation;
+    /** Serialized potion effects; null means none saved (old format or no effects). */
+    public String potionData;
 
     public static String toBase64(PlayerSyncSnapshot s) throws IOException {
         try (var bos = new ByteArrayOutputStream();
@@ -26,6 +28,7 @@ public final class PlayerSyncSnapshot implements Serializable {
             oos.writeDouble(s.health);
             oos.writeInt(s.food);
             oos.writeFloat(s.saturation);
+            oos.writeObject(s.potionData != null ? s.potionData : "");
             oos.flush();
             return Base64.getEncoder().encodeToString(bos.toByteArray());
         }
@@ -44,6 +47,13 @@ public final class PlayerSyncSnapshot implements Serializable {
             s.health      = ois.readDouble();
             s.food        = ois.readInt();
             s.saturation  = ois.readFloat();
+            // potionData was added later; old blobs won't have it
+            try {
+                String pd = (String) ois.readObject();
+                s.potionData = (pd != null && !pd.isEmpty()) ? pd : null;
+            } catch (Exception ignored) {
+                s.potionData = null;
+            }
             return s;
         }
     }

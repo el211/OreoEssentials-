@@ -26,20 +26,28 @@ public final class RankedMessageUtil {
         List<Map<?, ?>> list = c.getMapList(listPath);
         if (list == null || list.isEmpty()) return fallback;
 
+        String catchAll = null;
+
         for (Map<?, ?> map : list) {
             if (map == null) continue;
 
             String perm = getString(map, "permission");
             String text = getString(map, "text");
 
-            if (perm.isEmpty() || text.isEmpty()) continue;
+            if (text.isEmpty()) continue;
+
+            // "*" or empty permission = catch-all fallback (used if nothing else matches)
+            if (perm.isEmpty() || perm.equals("*")) {
+                if (catchAll == null) catchAll = text;
+                continue;
+            }
 
             if (p.hasPermission(perm)) {
                 return text;
             }
         }
 
-        return fallback;
+        return catchAll != null ? catchAll : fallback;
     }
 
     private static String getString(Map<?, ?> map, String key) {

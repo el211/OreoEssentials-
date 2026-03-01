@@ -1,20 +1,28 @@
 package fr.elias.oreoEssentials.modules.chat.msg;
 
+import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
+import fr.elias.oreoEssentials.rabbitmq.PacketChannels;
+import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
+import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.services.MessageService;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class MsgCommand implements OreoCommand {
     private final MessageService messages;
+    private final OreoEssentials plugin;
 
-    public MsgCommand(MessageService messages) {
+    public MsgCommand(MessageService messages, OreoEssentials plugin) {
         this.messages = messages;
+        this.plugin = plugin;
     }
 
     @Override public String name() { return "msg"; }
@@ -25,7 +33,6 @@ public class MsgCommand implements OreoCommand {
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        // Require at least player name and message
         if (args.length < 2) {
             Lang.send(sender, "msg.usage",
                     "<red>Usage: /%label% <player> <message...></red>",
@@ -33,32 +40,93 @@ public class MsgCommand implements OreoCommand {
             return true;
         }
 
-        // Find target player
-        Player target = Bukkit.getPlayerExact(args[0]);
-        if (target == null) {
-            Lang.send(sender, "msg.not-found",
-                    "<red>Player not found.</red>");
+        String targetName = args[0];
+        String msg = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+
+        // Try local first
+        Player target = Bukkit.getPlayerExact(targetName);
+        if (target != null) {
+            sendLocal(sender, target, msg);
             return true;
         }
 
-        // Build message from remaining args
-        String msg = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
+        // Try cross-server via PlayerDirectory
+        if (sender instanceof Player senderPlayer) {
+            tryCrossServer(senderPlayer, targetName, msg);
+        } else {
+            Lang.send(sender, "msg.not-found", "<red>Player not found.</red>");
+        }
+        return true;
+    }
 
-        // Send to target: [MSG] SenderName: message
+    private void sendLocal(CommandSender sender, Player target, String msg) {
         Lang.send(target, "msg.receive",
                 "<gray>[<light_purple>MSG</light_purple>] <aqua>%sender%</aqua>: <white>%message%</white></gray>",
                 Map.of("sender", sender.getName(), "message", msg));
 
-        // Send confirmation to sender: [MSG] -> TargetName: message
         Lang.send(sender, "msg.send",
                 "<gray>[<light_purple>MSG</light_purple>] <white>-></white> <aqua>%target%</aqua>: <white>%message%</white></gray>",
                 Map.of("target", target.getName(), "message", msg));
 
-        // Record conversation for /reply
         if (sender instanceof Player s) {
             messages.record(s, target);
         }
+    }
 
-        return true;
+    private void tryCrossServer(Player sender, String targetName, String msg) {
+        var dir = plugin.getPlayerDirectory();
+        if (dir == null) {
+            Lang.send(sender, "msg.not-found", "<red>Player not found.</red>");
+            return;
+        }
+
+        PacketManager pm = plugin.getPacketManager();
+        if (pm == null || !pm.isInitialized()) {
+            Lang.send(sender, "msg.not-found", "<red>Player not found.</red>");
+            return;
+        }
+
+        // Run directory lookup async to avoid blocking main thread
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                UUID targetUuid = dir.lookupUuidByName(targetName);
+                if (targetUuid == null) {
+                    Bukkit.getScheduler().runTask(plugin, () ->
+                            Lang.send(sender, "msg.not-found", "<red>Player not found.</red>"));
+                    return;
+                }
+
+                String resolvedName = dir.lookupNameByUuid(targetUuid);
+                if (resolvedName == null) resolvedName = targetName;
+                final String finalName = resolvedName;
+
+                String where = dir.getCurrentOrLastServer(targetUuid);
+                if (where == null || where.isBlank()) {
+                    Bukkit.getScheduler().runTask(plugin, () ->
+                            Lang.send(sender, "msg.not-found", "<red>Player not found or offline.</red>"));
+                    return;
+                }
+
+                final UUID finalUuid = targetUuid;
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    try {
+                        pm.sendPacket(PacketChannel.individual(where),
+                                new CrossServerMsgPacket(sender.getUniqueId(), sender.getName(), finalUuid, msg));
+
+                        Lang.send(sender, "msg.send",
+                                "<gray>[<light_purple>MSG</light_purple>] <white>-></white> <aqua>%target%</aqua>: <white>%message%</white></gray>",
+                                Map.of("target", finalName, "message", msg));
+
+                        // Record locally so sender can /reply
+                        messages.record(sender.getUniqueId(), finalUuid);
+                    } catch (Exception e) {
+                        Lang.send(sender, "msg.not-found", "<red>Could not reach player on remote server.</red>");
+                    }
+                });
+            } catch (Exception e) {
+                Bukkit.getScheduler().runTask(plugin, () ->
+                        Lang.send(sender, "msg.not-found", "<red>Player not found.</red>"));
+            }
+        });
     }
 }

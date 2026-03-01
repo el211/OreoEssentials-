@@ -16,7 +16,7 @@ public class TpDenyCommand implements OreoCommand {
 
     @Override public String name() { return "tpdeny"; }
     @Override public List<String> aliases() { return List.of(); }
-    @Override public String permission() { return "oreo.tpa"; }
+    @Override public String permission() { return "oreo.tpdeny"; }
     @Override public String usage() { return ""; }
     @Override public boolean playerOnly() { return true; }
 

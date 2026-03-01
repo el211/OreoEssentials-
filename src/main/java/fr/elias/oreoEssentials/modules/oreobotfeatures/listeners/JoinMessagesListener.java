@@ -47,29 +47,29 @@ public final class JoinMessagesListener implements Listener {
         final String playerNameFmt   = c.getString(SECTION + ".player_name", "{name}");
         final String playerPrefixFmt = c.getString(SECTION + ".player_prefix", "");
         final String delimiter       = c.getString(SECTION + ".delimiter", " | ");
-
-        String defaultBody = c.getString(
+        final String defaultBody     = c.getString(
                 firstJoin ? (SECTION + ".first_join") : (SECTION + ".rejoin_message"),
                 "{name} joined the game."
         );
-
-        String key = firstJoin ? "first_join" : "rejoin_message";
-        String body = RankedMessageUtil.resolveRankedText(c, SECTION, key, p, defaultBody);
-
+        final String key      = firstJoin ? "first_join" : "rejoin_message";
         final String namePlain = p.getName();
         final String playerName = playerNameFmt.replace("{name}", namePlain);
-        body = body.replace("{name}", namePlain);
-
-        final String output = lookLikePlayer
-                ? (playerPrefixFmt + " " + playerName + " " + delimiter + " " + body)
-                : body;
-
-        // Resolve per-rank sound
-        final ResolvedSound sound = resolveSound(c, SECTION, p);
 
         long delayTicks = Math.max(0L, c.getLong(SECTION + ".join_message_delay", 0L) * 20L);
 
+        // Resolve permissions INSIDE the task so they are checked after the player
+        // is fully initialised (permission plugins may attach permissions at MONITOR
+        // priority or asynchronously before this task runs).
         Runnable send = () -> {
+            String body = RankedMessageUtil.resolveRankedText(c, SECTION, key, p, defaultBody)
+                    .replace("{name}", namePlain);
+
+            String output = lookLikePlayer
+                    ? (playerPrefixFmt + " " + playerName + " " + delimiter + " " + body)
+                    : body;
+
+            ResolvedSound sound = resolveSound(c, SECTION, p);
+
             String legacyMsg = legacy.serialize(mm.deserialize(output));
             for (Player pl : Bukkit.getOnlinePlayers()) {
                 pl.sendMessage(legacyMsg);

@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/playercommands/SitCommand.java
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
@@ -101,11 +100,11 @@ public class SitCommand implements OreoCommand {
 
         double yOffset;
         if (Tag.STAIRS.isTagged(blockBelow.getType())) {
-            yOffset = 0.3;
+            yOffset = -0.2;
         } else if (Tag.SLABS.isTagged(blockBelow.getType())) {
-            yOffset = 0.2;
+            yOffset = -0.3;
         } else {
-            yOffset = 0.4;
+            yOffset = -0.1;
         }
 
         Location seatLoc = new Location(

@@ -6,6 +6,12 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public final class PlayerSyncService {
     private final OreoEssentials plugin;
@@ -53,6 +59,12 @@ public final class PlayerSyncService {
             } else {
                 s.food       = p.getFoodLevel();
                 s.saturation = p.getSaturation();
+            }
+
+            if (pr.potions) {
+                s.potionData = serializePotions(p.getActivePotionEffects());
+            } else {
+                s.potionData = null;
             }
 
             storage.save(p.getUniqueId(), s);
@@ -117,11 +129,56 @@ public final class PlayerSyncService {
                     p.setSaturation(Math.max(0f, Math.min(20f, sat)));
                 }
             }
+
+            // Potions
+            if (pr.potions && s.potionData != null && !s.potionData.isEmpty()) {
+                List<PotionEffect> effects = deserializePotions(s.potionData);
+                for (PotionEffect active : p.getActivePotionEffects()) {
+                    p.removePotionEffect(active.getType());
+                }
+                for (PotionEffect effect : effects) {
+                    p.addPotionEffect(effect);
+                }
+            }
         } catch (Throwable t) {
             plugin.getLogger().warning("[SYNC] load/apply failed for " + p.getUniqueId() + ": " + t.getMessage());
         }
     }
 
+    private static String serializePotions(Collection<PotionEffect> effects) {
+        if (effects == null || effects.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (PotionEffect e : effects) {
+            if (sb.length() > 0) sb.append(';');
+            sb.append(e.getType().getName())
+              .append(':').append(e.getDuration())
+              .append(':').append(e.getAmplifier())
+              .append(':').append(e.isAmbient())
+              .append(':').append(e.hasParticles())
+              .append(':').append(e.hasIcon());
+        }
+        return sb.toString();
+    }
+
+    private static List<PotionEffect> deserializePotions(String data) {
+        List<PotionEffect> list = new ArrayList<>();
+        if (data == null || data.isEmpty()) return list;
+        for (String entry : data.split(";")) {
+            try {
+                String[] parts = entry.split(":");
+                if (parts.length < 6) continue;
+                PotionEffectType type = PotionEffectType.getByName(parts[0]);
+                if (type == null) continue;
+                int duration  = Integer.parseInt(parts[1]);
+                int amplifier = Integer.parseInt(parts[2]);
+                boolean ambient   = Boolean.parseBoolean(parts[3]);
+                boolean particles = Boolean.parseBoolean(parts[4]);
+                boolean icon      = Boolean.parseBoolean(parts[5]);
+                list.add(new PotionEffect(type, duration, amplifier, ambient, particles, icon));
+            } catch (Exception ignored) {}
+        }
+        return list;
+    }
 
     public PlayerSyncPrefsStore prefs() { return prefs; }
 }

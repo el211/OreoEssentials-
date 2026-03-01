@@ -36,7 +36,7 @@ public class TpAcceptCommand implements OreoCommand {
 
     @Override
     public String permission() {
-        return "oreo.tpa";
+        return "oreo.tpaccept";
     }
 
     @Override

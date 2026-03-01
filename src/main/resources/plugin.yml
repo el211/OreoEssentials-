@@ -1,5 +1,5 @@
 name: OreoEssentials
-version: "3.8-SNAPSHOT"
+version: "3.9-SNAPSHOT"
 main: fr.elias.oreoEssentials.OreoEssentials
 api-version: "1.21"
 description: "All-in-one essentials plugin with homes/warps/spawn, RTP, economy (Vault), chat tools, portals/jump pads, cross-server EC & player sync."
@@ -133,11 +133,11 @@ commands:
 
   tpaccept:
     description: Accept a teleport request
-    permission: oreo.tpa
+    permission: oreo.tpaccept
 
   tpdeny:
     description: Deny a teleport request
-    permission: oreo.tpa
+    permission: oreo.tpdeny
 
   tp:
     description: Teleport to a player, or teleport a player to another
@@ -708,6 +708,8 @@ permissions:
       oreo.delhome: true
       oreo.homes: true
       oreo.tpa: true
+      oreo.tpaccept: true
+      oreo.tpdeny: true
       oreo.tp: true
       oreo.tphere: true
       oreo.fly: true
@@ -786,6 +788,8 @@ permissions:
   oreo.delhome:             { default: true }
   oreo.homes:               { default: true }
   oreo.tpa:                 { default: true }
+  oreo.tpaccept:            { default: true }
+  oreo.tpdeny:              { default: true }
   oreo.tp:                  { default: op }
   oreo.tphere:              { default: op }
 

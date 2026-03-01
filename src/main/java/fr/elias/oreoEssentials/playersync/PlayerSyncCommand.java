@@ -39,10 +39,11 @@ public final class PlayerSyncCommand implements OreoCommand, Listener {
         Inventory gui = Bukkit.createInventory(p, 9, "§bPlayer Sync");
 
         PlayerSyncPrefs prefs = service.prefs().get(p.getUniqueId());
-        gui.setItem(1, toggleItem(Material.CHEST, "Inventory", prefs.inv));
-        gui.setItem(3, toggleItem(Material.EXPERIENCE_BOTTLE, "XP", prefs.xp));
-        gui.setItem(5, toggleItem(Material.GOLDEN_APPLE, "Health", prefs.health));
-        gui.setItem(7, toggleItem(Material.COOKED_BEEF, "Hunger", prefs.hunger));
+        gui.setItem(0, toggleItem(Material.CHEST, "Inventory", prefs.inv));
+        gui.setItem(2, toggleItem(Material.EXPERIENCE_BOTTLE, "XP", prefs.xp));
+        gui.setItem(4, toggleItem(Material.GOLDEN_APPLE, "Health", prefs.health));
+        gui.setItem(6, toggleItem(Material.COOKED_BEEF, "Hunger", prefs.hunger));
+        gui.setItem(8, toggleItem(Material.GLASS_BOTTLE, "Potions", prefs.potions));
 
         if (!masterEnabled) {
             gui.setItem(4, disabledCenter());
@@ -79,10 +80,11 @@ public final class PlayerSyncCommand implements OreoCommand, Listener {
             int slot = e.getRawSlot();
             PlayerSyncPrefs prefs = service.prefs().get(p.getUniqueId());
             switch (slot) {
-                case 1 -> prefs.inv = !prefs.inv;
-                case 3 -> prefs.xp = !prefs.xp;
-                case 5 -> prefs.health = !prefs.health;
-                case 7 -> prefs.hunger = !prefs.hunger;
+                case 0 -> prefs.inv = !prefs.inv;
+                case 2 -> prefs.xp = !prefs.xp;
+                case 4 -> prefs.health = !prefs.health;
+                case 6 -> prefs.hunger = !prefs.hunger;
+                case 8 -> prefs.potions = !prefs.potions;
                 default -> { return; }
             }
             service.prefs().set(p.getUniqueId(), prefs);
