@@ -123,7 +123,7 @@ public final class SellMenuProvider implements InventoryProvider {
 
         SmartInventory.builder()
                 .id("oreo-sellgui-confirm")
-                .manager(plugin.getInventoryManager())
+                .manager(manager.getInvManager())
                 .size(3, 9)
                 .title(manager.config().confirmTitle())
                 .provider(new SellConfirmProvider(plugin, manager, total, snapshot))

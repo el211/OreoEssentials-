@@ -1,0 +1,439 @@
+shop-id: potions
+title: "&5&lPotions &4& Brews"
+rows: 6
+pages: 2
+
+items:
+
+  potion_healing_1s0:
+    material: POTION
+    name: "&cPotion of Healing"
+    potion-type: HEALING
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  potion_strong_healing_1s1:
+    material: POTION
+    name: "&cStrong Healing Potion"
+    potion-type: STRONG_HEALING
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_regeneration_1s2:
+    material: POTION
+    name: "&dPotion of Regen"
+    potion-type: REGENERATION
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  potion_long_regeneration_1s3:
+    material: POTION
+    name: "&dLong Regen Potion"
+    potion-type: LONG_REGENERATION
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_strong_regeneration_1s4:
+    material: POTION
+    name: "&dStrong Regen Potion"
+    potion-type: STRONG_REGENERATION
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 30000
+    sell-price: 4500.0
+  potion_swiftness_1s5:
+    material: POTION
+    name: "&ePotion of Speed"
+    potion-type: SWIFTNESS
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  potion_long_swiftness_1s6:
+    material: POTION
+    name: "&eLong Speed Potion"
+    potion-type: LONG_SWIFTNESS
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_strong_swiftness_1s7:
+    material: POTION
+    name: "&eStrong Speed Potion"
+    potion-type: STRONG_SWIFTNESS
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_strength_1s8:
+    material: POTION
+    name: "&4Potion of Strength"
+    potion-type: STRENGTH
+    slot: 8
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  potion_long_strength_1s9:
+    material: POTION
+    name: "&4Long Strength Potion"
+    potion-type: LONG_STRENGTH
+    slot: 9
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_strong_strength_1s10:
+    material: POTION
+    name: "&4Strong Strength Potion"
+    potion-type: STRONG_STRENGTH
+    slot: 10
+    page: 1
+    amount: 1
+    buy-price: 30000
+    sell-price: 4500.0
+  potion_leaping_1s11:
+    material: POTION
+    name: "&aPotion of Jumping"
+    potion-type: LEAPING
+    slot: 11
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  potion_long_leaping_1s12:
+    material: POTION
+    name: "&aLong Jump Potion"
+    potion-type: LONG_LEAPING
+    slot: 12
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_strong_leaping_1s13:
+    material: POTION
+    name: "&aStrong Jump Potion"
+    potion-type: STRONG_LEAPING
+    slot: 13
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_water_breathing_1s14:
+    material: POTION
+    name: "&bPotion of Water Breathing"
+    potion-type: WATER_BREATHING
+    slot: 14
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  potion_long_water_breathing_1s15:
+    material: POTION
+    name: "&bLong Water Breathing"
+    potion-type: LONG_WATER_BREATHING
+    slot: 15
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_night_vision_1s16:
+    material: POTION
+    name: "&9Potion of Night Vision"
+    potion-type: NIGHT_VISION
+    slot: 16
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  potion_long_night_vision_1s17:
+    material: POTION
+    name: "&9Long Night Vision"
+    potion-type: LONG_NIGHT_VISION
+    slot: 17
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_fire_resistance_1s18:
+    material: POTION
+    name: "&6Potion of Fire Res."
+    potion-type: FIRE_RESISTANCE
+    slot: 18
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  potion_long_fire_resistance_1s19:
+    material: POTION
+    name: "&6Long Fire Resistance"
+    potion-type: LONG_FIRE_RESISTANCE
+    slot: 19
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_invisibility_1s20:
+    material: POTION
+    name: "&7Potion of Invisibility"
+    potion-type: INVISIBILITY
+    slot: 20
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_long_invisibility_1s21:
+    material: POTION
+    name: "&7Long Invisibility"
+    potion-type: LONG_INVISIBILITY
+    slot: 21
+    page: 1
+    amount: 1
+    buy-price: 30000
+    sell-price: 4500.0
+  potion_slow_falling_1s22:
+    material: POTION
+    name: "&fPotion of Slow Falling"
+    potion-type: SLOW_FALLING
+    slot: 22
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  potion_long_slow_falling_1s23:
+    material: POTION
+    name: "&fLong Slow Falling"
+    potion-type: LONG_SLOW_FALLING
+    slot: 23
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_luck_1s24:
+    material: POTION
+    name: "&aPotion of Luck"
+    potion-type: LUCK
+    slot: 24
+    page: 1
+    amount: 1
+    buy-price: 30000
+    sell-price: 4500.0
+  potion_turtle_master_1s25:
+    material: POTION
+    name: "&2Turtle Master Potion"
+    potion-type: TURTLE_MASTER
+    slot: 25
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_harming_1s26:
+    material: POTION
+    name: "&cPotion of Harming"
+    potion-type: HARMING
+    slot: 26
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  potion_strong_harming_1s27:
+    material: POTION
+    name: "&cStrong Harming Potion"
+    potion-type: STRONG_HARMING
+    slot: 27
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_poison_1s28:
+    material: POTION
+    name: "&2Poison Potion"
+    potion-type: POISON
+    slot: 28
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  potion_strong_poison_1s29:
+    material: POTION
+    name: "&2Strong Poison Potion"
+    potion-type: STRONG_POISON
+    slot: 29
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_long_poison_1s30:
+    material: POTION
+    name: "&2Long Poison Potion"
+    potion-type: LONG_POISON
+    slot: 30
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  potion_slowness_1s31:
+    material: POTION
+    name: "&9Slowness Potion"
+    potion-type: SLOWNESS
+    slot: 31
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 360.0
+  potion_weakness_1s32:
+    material: POTION
+    name: "&7Weakness Potion"
+    potion-type: WEAKNESS
+    slot: 32
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 360.0
+  splash_healing_1s33:
+    material: SPLASH_POTION
+    name: "&6[Splash] &cPotion of Healing"
+    potion-type: HEALING
+    slot: 33
+    page: 1
+    amount: 1
+    buy-price: 6000.0
+    sell-price: 850.0
+  splash_strong_healing_1s34:
+    material: SPLASH_POTION
+    name: "&6[Splash] &cStrong Healing Potion"
+    potion-type: STRONG_HEALING
+    slot: 34
+    page: 1
+    amount: 1
+    buy-price: 14400.0
+    sell-price: 1920.0
+  splash_regeneration_1s35:
+    material: SPLASH_POTION
+    name: "&6[Splash] &dPotion of Regen"
+    potion-type: REGENERATION
+    slot: 35
+    page: 1
+    amount: 1
+    buy-price: 6000.0
+    sell-price: 850.0
+  splash_long_regeneration_1s36:
+    material: SPLASH_POTION
+    name: "&6[Splash] &dLong Regen Potion"
+    potion-type: LONG_REGENERATION
+    slot: 36
+    page: 1
+    amount: 1
+    buy-price: 14400.0
+    sell-price: 1920.0
+  splash_strong_regeneration_1s37:
+    material: SPLASH_POTION
+    name: "&6[Splash] &dStrong Regen Potion"
+    potion-type: STRONG_REGENERATION
+    slot: 37
+    page: 1
+    amount: 1
+    buy-price: 36000.0
+    sell-price: 4500.0
+  splash_swiftness_1s38:
+    material: SPLASH_POTION
+    name: "&6[Splash] &ePotion of Speed"
+    potion-type: SWIFTNESS
+    slot: 38
+    page: 1
+    amount: 1
+    buy-price: 6000.0
+    sell-price: 850.0
+  splash_long_swiftness_1s39:
+    material: SPLASH_POTION
+    name: "&6[Splash] &eLong Speed Potion"
+    potion-type: LONG_SWIFTNESS
+    slot: 39
+    page: 1
+    amount: 1
+    buy-price: 14400.0
+    sell-price: 1920.0
+  splash_strong_swiftness_1s40:
+    material: SPLASH_POTION
+    name: "&6[Splash] &eStrong Speed Potion"
+    potion-type: STRONG_SWIFTNESS
+    slot: 40
+    page: 1
+    amount: 1
+    buy-price: 14400.0
+    sell-price: 1920.0
+  splash_strength_1s41:
+    material: SPLASH_POTION
+    name: "&6[Splash] &4Potion of Strength"
+    potion-type: STRENGTH
+    slot: 41
+    page: 1
+    amount: 1
+    buy-price: 6000.0
+    sell-price: 850.0
+  splash_long_strength_1s42:
+    material: SPLASH_POTION
+    name: "&6[Splash] &4Long Strength Potion"
+    potion-type: LONG_STRENGTH
+    slot: 42
+    page: 1
+    amount: 1
+    buy-price: 14400.0
+    sell-price: 1920.0
+  splash_strong_strength_1s43:
+    material: SPLASH_POTION
+    name: "&6[Splash] &4Strong Strength Potion"
+    potion-type: STRONG_STRENGTH
+    slot: 43
+    page: 1
+    amount: 1
+    buy-price: 36000.0
+    sell-price: 4500.0
+  splash_leaping_1s44:
+    material: SPLASH_POTION
+    name: "&6[Splash] &aPotion of Jumping"
+    potion-type: LEAPING
+    slot: 44
+    page: 1
+    amount: 1
+    buy-price: 6000.0
+    sell-price: 850.0
+  splash_long_leaping_2s0:
+    material: SPLASH_POTION
+    name: "&6[Splash] &aLong Jump Potion"
+    potion-type: LONG_LEAPING
+    slot: 0
+    page: 2
+    amount: 1
+    buy-price: 14400.0
+    sell-price: 1920.0
+  splash_strong_leaping_2s1:
+    material: SPLASH_POTION
+    name: "&6[Splash] &aStrong Jump Potion"
+    potion-type: STRONG_LEAPING
+    slot: 1
+    page: 2
+    amount: 1
+    buy-price: 14400.0
+    sell-price: 1920.0
+  splash_water_breathing_2s2:
+    material: SPLASH_POTION
+    name: "&6[Splash] &bPotion of Water Breathing"
+    potion-type: WATER_BREATHING
+    slot: 2
+    page: 2
+    amount: 1
+    buy-price: 6000.0
+    sell-price: 850.0

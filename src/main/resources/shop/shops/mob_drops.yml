@@ -1,0 +1,375 @@
+shop-id: mob_drops
+title: "&c&lMob Drops"
+rows: 6
+pages: 2
+
+items:
+
+  leather_p1s0:
+    material: LEATHER
+    name: "&6Leather"
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  feather_p1s1:
+    material: FEATHER
+    name: "&fFeather"
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  bone_p1s2:
+    material: BONE
+    name: "&fBone"
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 252.0
+  bone_meal_p1s3:
+    material: BONE_MEAL
+    name: "&fBone Meal"
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  string_p1s4:
+    material: STRING
+    name: "&fString"
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 252.0
+  spider_eye_p1s5:
+    material: SPIDER_EYE
+    name: "&cSpider Eye"
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 120.0
+  slimeball_p1s6:
+    material: SLIMEBALL
+    name: "&aSlimeball"
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 252.0
+  gunpowder_p1s7:
+    material: GUNPOWDER
+    name: "&8Gunpowder"
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 252.0
+  rotten_flesh_p1s8:
+    material: ROTTEN_FLESH
+    name: "&aRotten Flesh"
+    slot: 8
+    page: 1
+    amount: 1
+    buy-price: 80
+    sell-price: 16.0
+  wool_p1s9:
+    material: WOOL
+    name: "&fWool"
+    slot: 9
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  mutton_p1s10:
+    material: MUTTON
+    name: "&fRaw Mutton"
+    slot: 10
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  rabbit_hide_p1s11:
+    material: RABBIT_HIDE
+    name: "&6Rabbit Hide"
+    slot: 11
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  rabbit_foot_p1s12:
+    material: RABBIT_FOOT
+    name: "&6Rabbit's Foot"
+    slot: 12
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 1000.0
+  raw_rabbit_p1s13:
+    material: RAW_RABBIT
+    name: "&6Raw Rabbit"
+    slot: 13
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  raw_chicken_p1s14:
+    material: RAW_CHICKEN
+    name: "&fRaw Chicken"
+    slot: 14
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  egg_p1s15:
+    material: EGG
+    name: "&fEgg"
+    slot: 15
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  ink_sac_p1s16:
+    material: INK_SAC
+    name: "&0Ink Sac"
+    slot: 16
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 252.0
+  glow_ink_sac_p1s17:
+    material: GLOW_INK_SAC
+    name: "&bGlow Ink Sac"
+    slot: 17
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 570.0
+  cod_p1s18:
+    material: COD
+    name: "&fCod"
+    slot: 18
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  salmon_p1s19:
+    material: SALMON
+    name: "&6Salmon"
+    slot: 19
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  tropical_fish_p1s20:
+    material: TROPICAL_FISH
+    name: "&6Tropical Fish"
+    slot: 20
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  pufferfish_p1s21:
+    material: PUFFERFISH
+    name: "&ePufferfish"
+    slot: 21
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  turtle_scute_p1s22:
+    material: TURTLE_SCUTE
+    name: "&aTurtle Scute"
+    slot: 22
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 900.0
+  armadillo_scute_p1s23:
+    material: ARMADILLO_SCUTE
+    name: "&6Armadillo Scute"
+    slot: 23
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 570.0
+  honeycomb_p1s24:
+    material: HONEYCOMB
+    name: "&6Honeycomb"
+    slot: 24
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 252.0
+  phantom_membrane_p1s25:
+    material: PHANTOM_MEMBRANE
+    name: "&5Phantom Membrane"
+    slot: 25
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 1000.0
+  blaze_rod_p1s26:
+    material: BLAZE_ROD
+    name: "&6Blaze Rod"
+    slot: 26
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 1000.0
+  blaze_powder_p1s27:
+    material: BLAZE_POWDER
+    name: "&6Blaze Powder"
+    slot: 27
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 400.0
+  magma_cream_p1s28:
+    material: MAGMA_CREAM
+    name: "&cMagma Cream"
+    slot: 28
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 570.0
+  ghast_tear_p1s29:
+    material: GHAST_TEAR
+    name: "&fGhast Tear"
+    slot: 29
+    page: 1
+    amount: 1
+    buy-price: 18000
+    sell-price: 3420.0
+  ender_pearl_p1s30:
+    material: ENDER_PEARL
+    name: "&5Ender Pearl"
+    slot: 30
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 1000.0
+  shulker_shell_p1s31:
+    material: SHULKER_SHELL
+    name: "&5Shulker Shell"
+    slot: 31
+    page: 1
+    amount: 1
+    buy-price: 18000
+    sell-price: 3420.0
+  wither_skeleton_skull_p1s32:
+    material: WITHER_SKELETON_SKULL
+    name: "&0Wither Skull"
+    slot: 32
+    page: 1
+    amount: 1
+    buy-price: 200000
+    sell-price: 30000.0
+  creeper_head_p1s33:
+    material: CREEPER_HEAD
+    name: "&aCreeper Head"
+    slot: 33
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 8000.0
+  zombie_head_p1s34:
+    material: ZOMBIE_HEAD
+    name: "&2Zombie Head"
+    slot: 34
+    page: 1
+    amount: 1
+    buy-price: 30000
+    sell-price: 4800.0
+  skeleton_skull_p1s35:
+    material: SKELETON_SKULL
+    name: "&fSkeleton Skull"
+    slot: 35
+    page: 1
+    amount: 1
+    buy-price: 30000
+    sell-price: 4800.0
+  piglin_head_p1s36:
+    material: PIGLIN_HEAD
+    name: "&6Piglin Head"
+    slot: 36
+    page: 1
+    amount: 1
+    buy-price: 25000
+    sell-price: 4000.0
+  totem_of_undying_p1s37:
+    material: TOTEM_OF_UNDYING
+    name: "&6&lTotem of Undying"
+    slot: 37
+    page: 1
+    amount: 1
+    buy-price: 500000
+    sell-price: 65000.0
+  heart_of_the_sea_p1s38:
+    material: HEART_OF_THE_SEA
+    name: "&bHeart of the Sea"
+    slot: 38
+    page: 1
+    amount: 1
+    buy-price: 200000
+    sell-price: 26000.0
+  nautilus_shell_p1s39:
+    material: NAUTILUS_SHELL
+    name: "&bNautilus Shell"
+    slot: 39
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2550.0
+  nether_star_p1s40:
+    material: NETHER_STAR
+    name: "&f&lNether Star"
+    slot: 40
+    page: 1
+    amount: 1
+    buy-price: 1000000
+    sell-price: 140000.0
+  dragon_breath_p1s41:
+    material: DRAGON_BREATH
+    name: "&5Dragon Breath"
+    slot: 41
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 7000.0
+  experience_bottle_p1s42:
+    material: EXPERIENCE_BOTTLE
+    name: "&bBottle o' Enchanting"
+    slot: 42
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 900.0
+  fermented_spider_eye_p1s43:
+    material: FERMENTED_SPIDER_EYE
+    name: "&cFermented Spider Eye"
+    slot: 43
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 475.0
+  prismarine_shard_p1s44:
+    material: PRISMARINE_SHARD
+    name: "&3Prismarine Shard"
+    slot: 44
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 252.0
+  prismarine_crystals_p2s0:
+    material: PRISMARINE_CRYSTALS
+    name: "&bPrismarine Crystals"
+    slot: 0
+    page: 2
+    amount: 1
+    buy-price: 1200
+    sell-price: 252.0

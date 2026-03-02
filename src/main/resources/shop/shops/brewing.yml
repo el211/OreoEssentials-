@@ -1,0 +1,175 @@
+shop-id: brewing
+title: "&5&lBrewing &4Ingredients"
+rows: 6
+pages: 1
+
+items:
+
+  blaze_powder_p1s0:
+    material: BLAZE_POWDER
+    name: "&6Blaze Powder"
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 400.0
+  nether_wart_p1s1:
+    material: NETHER_WART
+    name: "&4Nether Wart"
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 500.0
+  ghast_tear_p1s2:
+    material: GHAST_TEAR
+    name: "&fGhast Tear"
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 18000
+    sell-price: 3420.0
+  magma_cream_p1s3:
+    material: MAGMA_CREAM
+    name: "&cMagma Cream"
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 570.0
+  sugar_p1s4:
+    material: SUGAR
+    name: "&fSugar"
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  rabbit_foot_p1s5:
+    material: RABBIT_FOOT
+    name: "&6Rabbit's Foot"
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 1000.0
+  spider_eye_p1s6:
+    material: SPIDER_EYE
+    name: "&cSpider Eye"
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 120.0
+  fermented_spider_eye_p1s7:
+    material: FERMENTED_SPIDER_EYE
+    name: "&cFermented Spider Eye"
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 475.0
+  glistering_melon_slice_p1s8:
+    material: GLISTERING_MELON_SLICE
+    name: "&aGlistering Melon"
+    slot: 8
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 900.0
+  golden_carrot_p1s9:
+    material: GOLDEN_CARROT
+    name: "&6Golden Carrot"
+    slot: 9
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2700.0
+  pufferfish_p1s10:
+    material: PUFFERFISH
+    name: "&ePufferfish"
+    slot: 10
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 570.0
+  turtle_scute_p1s11:
+    material: TURTLE_SCUTE
+    name: "&aTurtle Scute"
+    slot: 11
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 900.0
+  phantom_membrane_p1s12:
+    material: PHANTOM_MEMBRANE
+    name: "&5Phantom Membrane"
+    slot: 12
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 1000.0
+  dragon_breath_p1s13:
+    material: DRAGON_BREATH
+    name: "&5Dragon Breath"
+    slot: 13
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 7000.0
+  glowstone_dust_p1s14:
+    material: GLOWSTONE_DUST
+    name: "&eGlowstone Dust"
+    slot: 14
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 240.0
+  redstone_p1s15:
+    material: REDSTONE
+    name: "&cRedstone"
+    slot: 15
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 440.0
+  gunpowder_p1s16:
+    material: GUNPOWDER
+    name: "&8Gunpowder"
+    slot: 16
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 252.0
+  glass_bottle_p1s17:
+    material: GLASS_BOTTLE
+    name: "&bGlass Bottle"
+    slot: 17
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  brewing_stand_p1s18:
+    material: BREWING_STAND
+    name: "&6Brewing Stand"
+    slot: 18
+    page: 1
+    amount: 1
+    buy-price: 8000
+    sell-price: 1360.0
+  cauldron_p1s19:
+    material: CAULDRON
+    name: "&7Cauldron"
+    slot: 19
+    page: 1
+    amount: 1
+    buy-price: 6000
+    sell-price: 1020.0
+  water_bottle_p1s20:
+    material: WATER_BOTTLE
+    name: "&bWater Bottle"
+    slot: 20
+    page: 1
+    amount: 1
+    buy-price: 100
+    sell-price: 22.0

@@ -46,14 +46,14 @@ public class SellGUI implements InventoryProvider {
                 .provider(new SellGUI(module, item, price, duration, selected))
                 .manager(module.getPlugin().getInvManager())
                 .size(6, 9)
-                .title(c("&6&lSelect Category"))
+                .title(c(module.getConfig().getGui().getString("sell.title", "&6&lSelect Category")))
                 .build();
     }
 
 
     @Override
     public void init(Player player, InventoryContents contents) {
-        contents.fillBorders(ClickableItem.empty(glass(Material.ORANGE_STAINED_GLASS_PANE)));
+        contents.fillBorders(ClickableItem.empty(glass(module.getConfig().guiBorder("sell", Material.ORANGE_STAINED_GLASS_PANE))));
 
         ItemStack preview = itemToSell.clone();
         ItemMeta pm = preview.getItemMeta();
@@ -103,7 +103,10 @@ public class SellGUI implements InventoryProvider {
             }));
         }
 
-        ItemStack confirm = named(Material.GREEN_WOOL, "&a&l✔ CONFIRM LISTING");
+        var cfg = module.getConfig();
+
+        ItemStack confirm = named(cfg.guiMaterial("sell", "confirm", Material.GREEN_WOOL),
+                cfg.guiNameRaw("sell", "confirm", "&a&l✔ CONFIRM LISTING"));
         ItemMeta cm = confirm.getItemMeta();
         cm.setLore(List.of("",
                 c("&7Item: &e" + itemToSell.getType().name()),
@@ -112,7 +115,8 @@ public class SellGUI implements InventoryProvider {
                 c("&7Category: &b" + selectedCategory.getDisplayName()),
                 "", c("&a&lClick to list!"), ""));
         confirm.setItemMeta(cm);
-        contents.set(5, 7, ClickableItem.of(confirm, e -> {
+        int confirmSlot = cfg.guiSlot("sell", "confirm", 52);
+        contents.set(confirmSlot / 9, confirmSlot % 9, ClickableItem.of(confirm, e -> {
             click(player); player.closeInventory();
             if (module.createAuction(player, itemToSell, price, durationHours, selectedCategory)) {
                 player.getInventory().setItemInMainHand(null);
@@ -120,10 +124,11 @@ public class SellGUI implements InventoryProvider {
             }
         }));
 
-        contents.set(5, 1, ClickableItem.of(named(Material.RED_WOOL, "&c&l✗ CANCEL"), e -> {
-            click(player); player.closeInventory();
-            player.sendMessage(c("&cListing cancelled."));
-        }));
+        int cancelSlot = cfg.guiSlot("sell", "cancel", 46);
+        contents.set(cancelSlot / 9, cancelSlot % 9, ClickableItem.of(
+                named(cfg.guiMaterial("sell", "cancel", Material.RED_WOOL),
+                        cfg.guiNameRaw("sell", "cancel", "&c&l✗ CANCEL")),
+                e -> { click(player); player.closeInventory(); player.sendMessage(c("&cListing cancelled.")); }));
     }
 
     @Override public void update(Player player, InventoryContents contents) {}

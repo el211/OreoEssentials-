@@ -1,0 +1,205 @@
+# ─────────────────────────────────────────────────────
+#  OreoEssentials · Shop Module · config.yml
+#  Location: plugins/OreoEssentials/shop/config.yml
+# ─────────────────────────────────────────────────────
+enabled: true
+
+# ── Language ──────────────────────────────────────────
+# Supported: en, fr  (add more in messages.yml)
+language: en
+
+# ── Economy ───────────────────────────────────────────
+economy:
+  currency-symbol: "$"
+
+# ── Anti-Dupe Protection ──────────────────────────────
+anti-dupe:
+  enabled: true
+  transaction-cooldown-ms: 300
+  verify-inventory: true
+  log-suspicious: true
+  max-transactions-per-second: 5
+  lock-during-transaction: true
+
+# ── Main Menu ─────────────────────────────────────────
+main-menu:
+  title: "&8&lOSHOP &r&6&lGUI"
+  rows: 6
+  fill-empty-slots: true
+  fill-material: "BLACK_STAINED_GLASS_PANE"
+  close-slot: 49
+
+# ── Main Menu Category Buttons ────────────────────────
+# slot:   inventory slot 0-53 (avoid 45-53, that's the nav bar)
+# shop:   must match shop-id in shops/*.yml
+main-menu-items:
+
+  building_blocks:
+    slot: 10
+    material: GRASS_BLOCK
+    name: "&a&lBuilding Blocks"
+    lore:
+      - "&7Stone, wood, wool, concrete,"
+      - "&7terracotta, glass and more."
+      - ""
+      - "&eClick to open!"
+    shop: building_blocks
+
+  ores_minerals:
+    slot: 11
+    material: DIAMOND_ORE
+    name: "&b&lOres &8& Minerals"
+    lore:
+      - "&7Coal, iron, gold, diamonds,"
+      - "&7netherite, redstone, lapis..."
+      - ""
+      - "&eClick to open!"
+    shop: ores_minerals
+
+  food:
+    slot: 12
+    material: COOKED_BEEF
+    name: "&6&lFood &e& Consumables"
+    lore:
+      - "&7Raw & cooked food, golden"
+      - "&7apples, soups and more."
+      - ""
+      - "&eClick to open!"
+    shop: food
+
+  tools:
+    slot: 13
+    material: DIAMOND_PICKAXE
+    name: "&7&lTools &f& Utility"
+    lore:
+      - "&7Pickaxes, axes, shovels, hoes,"
+      - "&7buckets, saddles, elytra..."
+      - ""
+      - "&eClick to open!"
+    shop: tools
+
+  weapons_armor:
+    slot: 14
+    material: DIAMOND_SWORD
+    name: "&c&lWeapons &7& Armor"
+    lore:
+      - "&7Swords, bows, crossbows,"
+      - "&7helmets, chestplates..."
+      - ""
+      - "&eClick to open!"
+    shop: weapons_armor
+
+  redstone:
+    slot: 15
+    material: REDSTONE
+    name: "&4&lRedstone &cMechanisms"
+    lore:
+      - "&7Pistons, dispensers, hoppers,"
+      - "&7comparators, observers..."
+      - ""
+      - "&eClick to open!"
+    shop: redstone
+
+  farming_nature:
+    slot: 16
+    material: WHEAT
+    name: "&2&lFarming &a& Nature"
+    lore:
+      - "&7Seeds, saplings, flowers,"
+      - "&7sugarcane, bamboo..."
+      - ""
+      - "&eClick to open!"
+    shop: farming_nature
+
+  mob_drops:
+    slot: 28
+    material: ROTTEN_FLESH
+    name: "&5&lMob Drops"
+    lore:
+      - "&7Leather, blaze rods, ender"
+      - "&7pearls, totems & more."
+      - ""
+      - "&eClick to open!"
+    shop: mob_drops
+
+  nether:
+    slot: 29
+    material: NETHERRACK
+    name: "&4&lNether Items"
+    lore:
+      - "&7Netherrack, quartz, ancient"
+      - "&7debris, netherite & more."
+      - ""
+      - "&eClick to open!"
+    shop: nether
+
+  end_misc:
+    slot: 30
+    material: ENDER_PEARL
+    name: "&5&lEnd &8& Misc"
+    lore:
+      - "&7End stone, elytra, shulker"
+      - "&7boxes, music discs & more."
+      - ""
+      - "&eClick to open!"
+    shop: end_misc
+
+  potions:
+    slot: 31
+    material: POTION
+    name: "&d&lPotions &5& Brews"
+    lore:
+      - "&7Healing, strength, speed,"
+      - "&7splash & lingering potions."
+      - ""
+      - "&eClick to open!"
+    shop: potions
+
+  enchanted_books:
+    slot: 32
+    material: ENCHANTED_BOOK
+    name: "&9&lEnchanted Books"
+    lore:
+      - "&7Mending, Fortune, Sharpness,"
+      - "&7Silk Touch, Protection & more."
+      - ""
+      - "&eClick to open!"
+    shop: enchanted_books
+
+  brewing:
+    slot: 33
+    material: BREWING_STAND
+    name: "&5&lBrewing Ingredients"
+    lore:
+      - "&7Blaze powder, nether wart,"
+      - "&7dragon breath & all brews."
+      - ""
+      - "&eClick to open!"
+    shop: brewing
+
+# ── Amount Selection ──────────────────────────────────
+amount-selection:
+  enabled: true
+
+# ── GUI Navigation ────────────────────────────────────
+gui:
+  previous-page-slot: 45
+  next-page-slot: 53
+  back-button-slot: 49
+
+# ── Logging ───────────────────────────────────────────
+logging:
+  enabled: true
+  log-file: "shop/transactions.log"
+  log-format: "[{date}] {player} {action} x{amount} {item} for {price} ({economy})"
+
+# ── Dynamic Pricing ───────────────────────────────────
+dynamic-pricing:
+  enabled: true
+  demand-scale: 500.0
+  max-buy-multiplier: 3.0
+  min-sell-multiplier: 0.2
+  decay-interval-minutes: 60
+  decay-rate: 0.05
+  save-interval-minutes: 5
+  show-trend-in-lore: true

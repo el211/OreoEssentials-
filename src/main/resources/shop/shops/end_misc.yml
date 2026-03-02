@@ -1,0 +1,407 @@
+shop-id: end_misc
+title: "&5&lEnd &8& Misc"
+rows: 6
+pages: 2
+
+items:
+
+  end_stone_p1s0:
+    material: END_STONE
+    name: "&fEnd Stone"
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 132.0
+  end_stone_bricks_p1s1:
+    material: END_STONE_BRICKS
+    name: "&fEnd Stone Bricks"
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 252.0
+  purpur_block_p1s2:
+    material: PURPUR_BLOCK
+    name: "&dPurpur Block"
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 500.0
+  purpur_pillar_p1s3:
+    material: PURPUR_PILLAR
+    name: "&dPurpur Pillar"
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 2800
+    sell-price: 560.0
+  chorus_plant_p1s4:
+    material: CHORUS_PLANT
+    name: "&dChorus Plant"
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 1000
+    sell-price: 200.0
+  chorus_flower_p1s5:
+    material: CHORUS_FLOWER
+    name: "&dChorus Flower"
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 380.0
+  chorus_fruit_p1s6:
+    material: CHORUS_FRUIT
+    name: "&dChorus Fruit"
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 3500
+    sell-price: 665.0
+  popped_chorus_fruit_p1s7:
+    material: POPPED_CHORUS_FRUIT
+    name: "&dPopped Chorus Fruit"
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 4000
+    sell-price: 760.0
+  end_rod_p1s8:
+    material: END_ROD
+    name: "&fEnd Rod"
+    slot: 8
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 570.0
+  ender_pearl_p1s9:
+    material: ENDER_PEARL
+    name: "&5Ender Pearl"
+    slot: 9
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 950.0
+  ender_eye_p1s10:
+    material: ENDER_EYE
+    name: "&5Eye of Ender"
+    slot: 10
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 2040.0
+  ender_chest_p1s11:
+    material: ENDER_CHEST
+    name: "&5Ender Chest"
+    slot: 11
+    page: 1
+    amount: 1
+    buy-price: 40000
+    sell-price: 6400.0
+  end_crystal_p1s12:
+    material: END_CRYSTAL
+    name: "&dEnd Crystal"
+    slot: 12
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 7500.0
+  shulker_shell_p1s13:
+    material: SHULKER_SHELL
+    name: "&5Shulker Shell"
+    slot: 13
+    page: 1
+    amount: 1
+    buy-price: 18000
+    sell-price: 3420.0
+  dragon_breath_p1s14:
+    material: DRAGON_BREATH
+    name: "&5Dragon Breath"
+    slot: 14
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 7000.0
+  dragon_egg_p1s15:
+    material: DRAGON_EGG
+    name: "&5Dragon Egg"
+    slot: 15
+    page: 1
+    amount: 1
+    buy-price: 500000
+    sell-price: 65000.0
+  elytra_p1s16:
+    material: ELYTRA
+    name: "&5&lElytra"
+    slot: 16
+    page: 1
+    amount: 1
+    buy-price: 800000
+    sell-price: 96000.0
+  shulker_box_p1s17:
+    material: SHULKER_BOX
+    name: "&5Shulker Box"
+    slot: 17
+    page: 1
+    amount: 1
+    buy-price: 60000
+    sell-price: 9000.0
+  white_shulker_box_p1s18:
+    material: WHITE_SHULKER_BOX
+    name: "&fWhite Shulker Box"
+    slot: 18
+    page: 1
+    amount: 1
+    buy-price: 60000
+    sell-price: 9000.0
+  purple_shulker_box_p1s19:
+    material: PURPLE_SHULKER_BOX
+    name: "&5Purple Shulker Box"
+    slot: 19
+    page: 1
+    amount: 1
+    buy-price: 60000
+    sell-price: 9000.0
+  cyan_shulker_box_p1s20:
+    material: CYAN_SHULKER_BOX
+    name: "&3Cyan Shulker Box"
+    slot: 20
+    page: 1
+    amount: 1
+    buy-price: 60000
+    sell-price: 9000.0
+  blue_shulker_box_p1s21:
+    material: BLUE_SHULKER_BOX
+    name: "&9Blue Shulker Box"
+    slot: 21
+    page: 1
+    amount: 1
+    buy-price: 60000
+    sell-price: 9000.0
+  red_shulker_box_p1s22:
+    material: RED_SHULKER_BOX
+    name: "&cRed Shulker Box"
+    slot: 22
+    page: 1
+    amount: 1
+    buy-price: 60000
+    sell-price: 9000.0
+  yellow_shulker_box_p1s23:
+    material: YELLOW_SHULKER_BOX
+    name: "&eYellow Shulker Box"
+    slot: 23
+    page: 1
+    amount: 1
+    buy-price: 60000
+    sell-price: 9000.0
+  green_shulker_box_p1s24:
+    material: GREEN_SHULKER_BOX
+    name: "&aGreen Shulker Box"
+    slot: 24
+    page: 1
+    amount: 1
+    buy-price: 60000
+    sell-price: 9000.0
+  black_shulker_box_p1s25:
+    material: BLACK_SHULKER_BOX
+    name: "&0Black Shulker Box"
+    slot: 25
+    page: 1
+    amount: 1
+    buy-price: 60000
+    sell-price: 9000.0
+  totem_of_undying_p1s26:
+    material: TOTEM_OF_UNDYING
+    name: "&6&lTotem of Undying"
+    slot: 26
+    page: 1
+    amount: 1
+    buy-price: 500000
+    sell-price: 65000.0
+  heart_of_the_sea_p1s27:
+    material: HEART_OF_THE_SEA
+    name: "&bHeart of the Sea"
+    slot: 27
+    page: 1
+    amount: 1
+    buy-price: 200000
+    sell-price: 26000.0
+  nautilus_shell_p1s28:
+    material: NAUTILUS_SHELL
+    name: "&bNautilus Shell"
+    slot: 28
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2550.0
+  conduit_p1s29:
+    material: CONDUIT
+    name: "&bConduit"
+    slot: 29
+    page: 1
+    amount: 1
+    buy-price: 600000
+    sell-price: 72000.0
+  beacon_p1s30:
+    material: BEACON
+    name: "&b&lBeacon"
+    slot: 30
+    page: 1
+    amount: 1
+    buy-price: 1500000
+    sell-price: 180000.0
+  lodestone_p1s31:
+    material: LODESTONE
+    name: "&7Lodestone"
+    slot: 31
+    page: 1
+    amount: 1
+    buy-price: 35000
+    sell-price: 5600.0
+  spyglass_p1s32:
+    material: SPYGLASS
+    name: "&bSpyglass"
+    slot: 32
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  bundle_p1s33:
+    material: BUNDLE
+    name: "&6Bundle"
+    slot: 33
+    page: 1
+    amount: 1
+    buy-price: 10000
+    sell-price: 1700.0
+  goat_horn_p1s34:
+    material: GOAT_HORN
+    name: "&6Goat Horn"
+    slot: 34
+    page: 1
+    amount: 1
+    buy-price: 8000
+    sell-price: 1360.0
+  music_disc_13_p1s35:
+    material: MUSIC_DISC_13
+    name: "&a13 Disc"
+    slot: 35
+    page: 1
+    amount: 1
+    buy-price: 20000
+    sell-price: 3000.0
+  music_disc_cat_p1s36:
+    material: MUSIC_DISC_CAT
+    name: "&aCat Disc"
+    slot: 36
+    page: 1
+    amount: 1
+    buy-price: 20000
+    sell-price: 3000.0
+  music_disc_blocks_p1s37:
+    material: MUSIC_DISC_BLOCKS
+    name: "&aBlocks Disc"
+    slot: 37
+    page: 1
+    amount: 1
+    buy-price: 20000
+    sell-price: 3000.0
+  music_disc_chirp_p1s38:
+    material: MUSIC_DISC_CHIRP
+    name: "&aChirp Disc"
+    slot: 38
+    page: 1
+    amount: 1
+    buy-price: 20000
+    sell-price: 3000.0
+  music_disc_far_p1s39:
+    material: MUSIC_DISC_FAR
+    name: "&aFar Disc"
+    slot: 39
+    page: 1
+    amount: 1
+    buy-price: 20000
+    sell-price: 3000.0
+  music_disc_mall_p1s40:
+    material: MUSIC_DISC_MALL
+    name: "&aMall Disc"
+    slot: 40
+    page: 1
+    amount: 1
+    buy-price: 20000
+    sell-price: 3000.0
+  music_disc_mellohi_p1s41:
+    material: MUSIC_DISC_MELLOHI
+    name: "&aMellohi Disc"
+    slot: 41
+    page: 1
+    amount: 1
+    buy-price: 25000
+    sell-price: 3750.0
+  music_disc_stal_p1s42:
+    material: MUSIC_DISC_STAL
+    name: "&aStal Disc"
+    slot: 42
+    page: 1
+    amount: 1
+    buy-price: 25000
+    sell-price: 3750.0
+  music_disc_strad_p1s43:
+    material: MUSIC_DISC_STRAD
+    name: "&aStrad Disc"
+    slot: 43
+    page: 1
+    amount: 1
+    buy-price: 25000
+    sell-price: 3750.0
+  music_disc_ward_p1s44:
+    material: MUSIC_DISC_WARD
+    name: "&aWard Disc"
+    slot: 44
+    page: 1
+    amount: 1
+    buy-price: 25000
+    sell-price: 3750.0
+  music_disc_11_p2s0:
+    material: MUSIC_DISC_11
+    name: "&a11 Disc"
+    slot: 0
+    page: 2
+    amount: 1
+    buy-price: 30000
+    sell-price: 4500.0
+  music_disc_wait_p2s1:
+    material: MUSIC_DISC_WAIT
+    name: "&aWait Disc"
+    slot: 1
+    page: 2
+    amount: 1
+    buy-price: 30000
+    sell-price: 4500.0
+  music_disc_pigstep_p2s2:
+    material: MUSIC_DISC_PIGSTEP
+    name: "&6Pigstep Disc"
+    slot: 2
+    page: 2
+    amount: 1
+    buy-price: 80000
+    sell-price: 11200.0
+  music_disc_otherside_p2s3:
+    material: MUSIC_DISC_OTHERSIDE
+    name: "&dOtherside Disc"
+    slot: 3
+    page: 2
+    amount: 1
+    buy-price: 80000
+    sell-price: 11200.0
+  disc_fragment_5_p2s4:
+    material: DISC_FRAGMENT_5
+    name: "&dDisc Fragment"
+    slot: 4
+    page: 2
+    amount: 1
+    buy-price: 10000
+    sell-price: 1500.0

@@ -26,6 +26,10 @@ public final class SellGuiManager {
         return config;
     }
 
+    public InventoryManager getInvManager() {
+        return invManager;
+    }
+
     public void reload() {
         config.reload();
     }

@@ -59,6 +59,7 @@ import fr.elias.oreoEssentials.modules.oreobotfeatures.rabbit.packets.PlayerJoin
 import fr.elias.oreoEssentials.modules.oreobotfeatures.rabbit.packets.PlayerQuitPacket;
 import fr.elias.oreoEssentials.modules.sellgui.command.SellGuiCommand;
 import fr.elias.oreoEssentials.modules.sellgui.manager.SellGuiManager;
+import fr.elias.oreoEssentials.modules.shop.ShopModule;
 import fr.elias.oreoEssentials.modules.skin.SkinCommand;
 import fr.elias.oreoEssentials.modules.spawn.SetSpawnCommand;
 import fr.elias.oreoEssentials.modules.spawn.SpawnDirectory;
@@ -195,7 +196,8 @@ public final class OreoEssentials extends JavaPlugin {
     private MongoClient homesMongoClient;
     private fr.elias.oreoEssentials.config.SettingsConfig settingsConfig;
     public fr.elias.oreoEssentials.config.SettingsConfig getSettingsConfig() { return settingsConfig; }
-
+    private ShopModule shopModule;
+    public ShopModule getShopModule() { return shopModule; }
     private PlayerNotesManager notesManager;
     private NotesChatListener notesChat;
     private fr.elias.oreoEssentials.modules.daily.DailyMongoStore dailyStore;
@@ -409,6 +411,7 @@ public final class OreoEssentials extends JavaPlugin {
         initDiscordIntegration();
         initMobs();
         initClearLag();
+        initShop();
         initChat();
         initEnderChest();
         initInventorySync();
@@ -478,6 +481,8 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (packetManager != null) packetManager.close(); } catch (Exception ignored) {}
         try { if (ecoBootstrap != null) ecoBootstrap.disable(); } catch (Exception ignored) {}
         try { if (chatSyncManager != null) chatSyncManager.close(); } catch (Exception ignored) {}
+        try { if (shopModule != null) shopModule.shutdown(); } catch (Exception ignored) {}
+
         try { if (tabListManager != null) tabListManager.stop(); } catch (Exception ignored) {}
         try { if (kitsManager != null) kitsManager.saveData(); } catch (Exception ignored) {}
         try { if (scoreboardService != null) scoreboardService.stop(); } catch (Exception ignored) {}
@@ -597,7 +602,22 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[REDIS] Disabled.");
         }
     }
-
+    private void initShop() {
+        if (!settingsConfig.getRoot().getBoolean("shop.enabled", true)) {
+            getLogger().info("[Shop] Disabled by settings.yml");
+            return;
+        }
+        try {
+            this.shopModule = new ShopModule(this);
+            if (shopModule.isEnabled()) {
+                getLogger().info("[Shop] Module ready.");
+            }
+        } catch (Throwable t) {
+            getLogger().severe("[Shop] Failed to initialise: " + t.getMessage());
+            t.printStackTrace();
+            this.shopModule = null;
+        }
+    }
     private void initEconomy() {
         final String economyType = getConfig().getString("economy.type", "none").toLowerCase();
 

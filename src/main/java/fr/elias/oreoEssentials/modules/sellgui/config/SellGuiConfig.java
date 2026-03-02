@@ -1,6 +1,8 @@
 package fr.elias.oreoEssentials.modules.sellgui.config;
 
 import fr.elias.oreoEssentials.modules.sellgui.SellItemIdResolver;
+import fr.elias.oreoEssentials.modules.shop.ShopModule;
+import fr.elias.oreoEssentials.modules.shop.models.ShopItem;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -102,26 +104,50 @@ public final class SellGuiConfig {
     }
 
 
+    /**
+     * Resolves the sell unit-price for an item.
+     *
+     * Priority order:
+     *  1. Custom-item key (ItemsAdder / Nexo) defined in sellgui.yml
+     *  2. MATERIAL:custom-model-data key defined in sellgui.yml
+     *  3. Plain MATERIAL key defined in sellgui.yml
+     *  4. Best sell-price found across all shop/*.yml files (fallback)
+     *
+     * sellgui.yml always wins over shop prices when explicitly configured.
+     */
     public double getUnitPrice(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) return -1;
 
+        // 1. External custom-item key (IA:namespace:id  or  NEXO:id)
         String externalKey = SellItemIdResolver.resolveKey(item);
         if (externalKey != null) {
             Double ext = prices.get(externalKey.toUpperCase(Locale.ROOT));
             if (ext != null) return ext;
         }
 
-        String matKey = item.getType().name();
+        String matKey = item.getType().name().toUpperCase(Locale.ROOT);
         int cmd = getCustomModelData(item);
 
+        // 2. MATERIAL:custom-model-data key
         if (cmd != -1) {
-            String cmdKey = (matKey + ":" + cmd).toUpperCase(Locale.ROOT);
-            Double p = prices.get(cmdKey);
+            Double p = prices.get(matKey + ":" + cmd);
             if (p != null) return p;
         }
 
-        Double p = prices.get(matKey.toUpperCase(Locale.ROOT));
-        return p == null ? -1 : p;
+        // 3. Plain material key
+        Double p = prices.get(matKey);
+        if (p != null) return p;
+
+        // 4. Fallback: best sell-price from the shop module
+        ShopModule shop = ShopModule.getActive();
+        if (shop != null && shop.isEnabled()) {
+            ShopItem shopItem = shop.getShopManager().findBestSellItem(item);
+            if (shopItem != null && shopItem.canSell()) {
+                return shopItem.getSellPrice();
+            }
+        }
+
+        return -1;
     }
 
 

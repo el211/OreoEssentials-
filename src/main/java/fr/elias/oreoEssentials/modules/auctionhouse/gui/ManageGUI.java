@@ -29,14 +29,14 @@ public class ManageGUI implements InventoryProvider {
                 .provider(new ManageGUI(module))
                 .manager(module.getPlugin().getInvManager())
                 .size(6, 9)
-                .title(c("&6&lYour Listings"))
+                .title(c(module.getConfig().getGui().getString("manage.title", "&6&lYour Listings")))
                 .build();
     }
 
     @Override
     public void init(Player player, InventoryContents contents) {
         Pagination pg = contents.pagination();
-        contents.fillBorders(ClickableItem.empty(glass(Material.GRAY_STAINED_GLASS_PANE)));
+        contents.fillBorders(ClickableItem.empty(glass(module.getConfig().guiBorder("manage", Material.GRAY_STAINED_GLASS_PANE))));
 
         List<Auction> auctions = module.getPlayerActiveListings(player.getUniqueId());
 
@@ -55,22 +55,44 @@ public class ManageGUI implements InventoryProvider {
             pg.addToIterator(it);
         }
 
-        if (!pg.isFirst()) contents.set(5, 3, ClickableItem.of(named(Material.ARROW, "&e&lPrevious"), e -> { click(player); getInventory(module).open(player, pg.previous().getPage()); }));
-        if (!pg.isLast())  contents.set(5, 5, ClickableItem.of(named(Material.ARROW, "&e&lNext"), e -> { click(player); getInventory(module).open(player, pg.next().getPage()); }));
+        var cfg = module.getConfig();
+
+        if (!pg.isFirst()) {
+            int slot = cfg.guiSlot("manage", "prev-page", 48);
+            contents.set(slot / 9, slot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("manage", "prev-page", Material.ARROW),
+                            cfg.guiNameRaw("manage", "prev-page", "&e&lPrevious")),
+                    e -> { click(player); getInventory(module).open(player, pg.previous().getPage()); }));
+        }
+        if (!pg.isLast()) {
+            int slot = cfg.guiSlot("manage", "next-page", 50);
+            contents.set(slot / 9, slot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("manage", "next-page", Material.ARROW),
+                            cfg.guiNameRaw("manage", "next-page", "&e&lNext")),
+                    e -> { click(player); getInventory(module).open(player, pg.next().getPage()); }));
+        }
 
         int expiredCount = module.getPlayerExpired(player.getUniqueId()).size();
-        contents.set(5, 1, ClickableItem.of(named(Material.RED_WOOL, "&c&lExpired (" + expiredCount + ")"), e -> {
-            if (expiredCount > 0) { click(player); ExpiredGUI.getInventory(module).open(player); }
-        }));
+        int expSlot = cfg.guiSlot("manage", "expired", 46);
+        String expName = cfg.guiNameRaw("manage", "expired", "&c&lExpired ({count})")
+                .replace("{count}", String.valueOf(expiredCount));
+        contents.set(expSlot / 9, expSlot % 9, ClickableItem.of(
+                named(cfg.guiMaterial("manage", "expired", Material.RED_WOOL), expName),
+                e -> { if (expiredCount > 0) { click(player); ExpiredGUI.getInventory(module).open(player); } }));
 
         int soldCount = module.getPlayerSold(player.getUniqueId()).size();
-        contents.set(5, 7, ClickableItem.of(named(Material.GREEN_WOOL, "&a&lSold (" + soldCount + ")"), e -> {
-            if (soldCount > 0) { click(player); SoldGUI.getInventory(module).open(player); }
-        }));
+        int soldSlot = cfg.guiSlot("manage", "sold", 52);
+        String soldName = cfg.guiNameRaw("manage", "sold", "&a&lSold ({count})")
+                .replace("{count}", String.valueOf(soldCount));
+        contents.set(soldSlot / 9, soldSlot % 9, ClickableItem.of(
+                named(cfg.guiMaterial("manage", "sold", Material.GREEN_WOOL), soldName),
+                e -> { if (soldCount > 0) { click(player); SoldGUI.getInventory(module).open(player); } }));
 
-        contents.set(5, 4, ClickableItem.of(named(Material.BARRIER, "&c&lBack"), e -> {
-            click(player); BrowseGUI.getInventory(module).open(player);
-        }));
+        int backSlot = cfg.guiSlot("manage", "back", 49);
+        contents.set(backSlot / 9, backSlot % 9, ClickableItem.of(
+                named(cfg.guiMaterial("manage", "back", Material.BARRIER),
+                        cfg.guiNameRaw("manage", "back", "&c&lBack")),
+                e -> { click(player); BrowseGUI.getInventory(module).open(player); }));
 
         ItemStack stats = named(Material.BOOK, "&6&lStatistics");
         ItemMeta sm = stats.getItemMeta();

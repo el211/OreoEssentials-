@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.auctionhouse;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.auctionhouse.models.AuctionCategory;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -38,6 +39,8 @@ public final class AuctionHouseConfig {
 
     private YamlConfiguration categories;
 
+    private YamlConfiguration gui;
+
     private final Set<AuctionCategory> enabledCategories = EnumSet.noneOf(AuctionCategory.class);
 
     public AuctionHouseConfig(OreoEssentials plugin) {
@@ -47,6 +50,7 @@ public final class AuctionHouseConfig {
         saveDefault("config.yml");
         saveDefault("categories.yml");
         saveDefault("messages.yml");
+        saveDefault("gui.yml");
 
         reload();
     }
@@ -55,6 +59,7 @@ public final class AuctionHouseConfig {
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new File(folder, "config.yml"));
         messages   = YamlConfiguration.loadConfiguration(new File(folder, "messages.yml"));
         categories = YamlConfiguration.loadConfiguration(new File(folder, "categories.yml"));
+        gui        = YamlConfiguration.loadConfiguration(new File(folder, "gui.yml"));
 
         enabled            = cfg.getBoolean("enabled", true);
         storageType        = cfg.getString("storage.type", "auto").toLowerCase(Locale.ROOT);
@@ -103,6 +108,43 @@ public final class AuctionHouseConfig {
     public File      folder()                { return folder; }
 
     public YamlConfiguration getCategories() { return categories; }
+
+    public YamlConfiguration getGui() { return gui; }
+
+    /**
+     * Retourne le titre brut (codes & non traduits) d'un menu depuis gui.yml.
+     * Supporte les placeholders {category}, {query} — à remplacer avant d'appeler
+     * ChatColor.translateAlternateColorCodes côté GUI.
+     */
+    public String guiTitleRaw(String guiKey) {
+        return gui.getString(guiKey + ".title", "Auction House");
+    }
+
+    /** Retourne le Material de la bordure d'un menu, ou {@code fallback} si invalide. */
+    public Material guiBorder(String guiKey, Material fallback) {
+        String name = gui.getString(guiKey + ".border", "");
+        try { return Material.valueOf(name.toUpperCase(Locale.ROOT)); } catch (Exception e) { return fallback; }
+    }
+
+    /** Retourne le slot brut (0-53) d'un bouton depuis gui.yml, ou {@code fallback}. */
+    public int guiSlot(String guiKey, String btnKey, int fallback) {
+        return gui.getInt(guiKey + ".buttons." + btnKey + ".slot", fallback);
+    }
+
+    /** Retourne le Material d'un bouton depuis gui.yml, ou {@code fallback} si invalide. */
+    public Material guiMaterial(String guiKey, String btnKey, Material fallback) {
+        String name = gui.getString(guiKey + ".buttons." + btnKey + ".material", "");
+        try { return Material.valueOf(name.toUpperCase(Locale.ROOT)); } catch (Exception e) { return fallback; }
+    }
+
+    /**
+     * Retourne le nom brut (codes & non traduits) d'un bouton depuis gui.yml.
+     * Supporte les placeholders {count}, {page} — à remplacer avant d'appeler
+     * BrowseGUI.named() qui se charge de la traduction des couleurs.
+     */
+    public String guiNameRaw(String guiKey, String btnKey, String fallback) {
+        return gui.getString(guiKey + ".buttons." + btnKey + ".name", fallback);
+    }
 
     public boolean isCategoryEnabled(AuctionCategory cat) {
         return enabledCategories.contains(cat);

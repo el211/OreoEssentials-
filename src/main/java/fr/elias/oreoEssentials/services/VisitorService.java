@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/services/VisitorService.java
 package fr.elias.oreoEssentials.services;
 
 import java.util.Set;

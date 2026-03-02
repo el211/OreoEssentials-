@@ -1,0 +1,176 @@
+# ===================================
+# OreoEssentials - Auction House GUI
+# ===================================
+#
+# Personnalisez l'apparence visuelle de tous les menus /ah.
+#
+# Slots : position brute dans l'inventaire (0-53 pour 6 rangées).
+#   Rangée 0 = slots 0-8   | Rangée 1 = slots 9-17
+#   Rangée 2 = slots 18-26 | Rangée 3 = slots 27-35
+#   Rangée 4 = slots 36-44 | Rangée 5 = slots 45-53
+#
+# Utilisez les codes couleur & (ex: &6&l pour or gras).
+# Supports: {page}, {category}, {query}, {count} selon le bouton.
+
+# ─────────────────────────────────────
+# Menu principal - Parcourir les ventes
+# ─────────────────────────────────────
+browse:
+  title: "&6&lHôtel des Ventes"
+  title-category: "&6&lHôtel des Ventes &8- &e{category}"
+  title-search: "&6&lRecherche: &f{query}"
+  title-search-category: "&6&lRecherche: &f{query} &8- &e{category}"
+  border: GRAY_STAINED_GLASS_PANE
+  buttons:
+    prev-page:
+      slot: 48
+      material: ARROW
+      name: "&e&lPage précédente"
+    next-page:
+      slot: 50
+      material: ARROW
+      name: "&e&lPage suivante"
+    page-indicator:
+      slot: 49
+      material: PAPER
+      name: "&ePage {page}"
+    clear-search:
+      slot: 45
+      material: MAP
+      name: "&f&lEffacer la recherche"
+    categories:
+      slot: 46
+      material: COMPASS
+      name: "&b&lCatégories"
+    back-to-all:
+      slot: 46
+      material: BARRIER
+      name: "&c&lRetour à tout"
+    your-listings:
+      slot: 52
+      material: CHEST
+      name: "&6&lMes annonces"
+    close:
+      slot: 53
+      material: BARRIER
+      name: "&c&lFermer"
+
+# ─────────────────────────────────────
+# Menu des catégories
+# ─────────────────────────────────────
+categories:
+  title: "&b&lCatégories"
+  border: CYAN_STAINED_GLASS_PANE
+  buttons:
+    back:
+      slot: 49
+      material: BARRIER
+      name: "&c&lRetour aux ventes"
+
+# ─────────────────────────────────────
+# Menu de mise en vente
+# ─────────────────────────────────────
+sell:
+  title: "&6&lChoisir une catégorie"
+  border: ORANGE_STAINED_GLASS_PANE
+  buttons:
+    confirm:
+      slot: 52
+      material: GREEN_WOOL
+      name: "&a&l✔ CONFIRMER LA VENTE"
+    cancel:
+      slot: 46
+      material: RED_WOOL
+      name: "&c&l✗ ANNULER"
+
+# ─────────────────────────────────────
+# Menu de gestion des annonces
+# ─────────────────────────────────────
+manage:
+  title: "&6&lMes annonces"
+  border: GRAY_STAINED_GLASS_PANE
+  buttons:
+    prev-page:
+      slot: 48
+      material: ARROW
+      name: "&e&lPrécédent"
+    next-page:
+      slot: 50
+      material: ARROW
+      name: "&e&lSuivant"
+    expired:
+      slot: 46
+      material: RED_WOOL
+      name: "&c&lExpirées ({count})"
+    sold:
+      slot: 52
+      material: GREEN_WOOL
+      name: "&a&lVendues ({count})"
+    back:
+      slot: 49
+      material: BARRIER
+      name: "&c&lRetour"
+
+# ─────────────────────────────────────
+# Menu de confirmation d'achat
+# ─────────────────────────────────────
+confirm:
+  title: "&e&lConfirmer l'achat"
+  border: GRAY_STAINED_GLASS_PANE
+  buttons:
+    confirm:
+      slot: 11
+      material: GREEN_WOOL
+      name: "&a&l✔ CONFIRMER L'ACHAT"
+    cancel:
+      slot: 15
+      material: RED_WOOL
+      name: "&c&l✗ ANNULER"
+    info:
+      slot: 22
+      material: PAPER
+      name: "&e&lInformations sur l'achat"
+
+# ─────────────────────────────────────
+# Menu des articles vendus
+# ─────────────────────────────────────
+sold:
+  title: "&a&lArticles vendus"
+  border: GREEN_STAINED_GLASS_PANE
+  buttons:
+    prev-page:
+      slot: 48
+      material: ARROW
+      name: "&e&lPrécédent"
+    next-page:
+      slot: 50
+      material: ARROW
+      name: "&e&lSuivant"
+    back:
+      slot: 49
+      material: BARRIER
+      name: "&c&lRetour"
+
+# ─────────────────────────────────────
+# Menu des annonces expirées
+# ─────────────────────────────────────
+expired:
+  title: "&c&lAnnonces expirées"
+  border: RED_STAINED_GLASS_PANE
+  buttons:
+    prev-page:
+      slot: 48
+      material: ARROW
+      name: "&e&lPrécédent"
+    next-page:
+      slot: 50
+      material: ARROW
+      name: "&e&lSuivant"
+    back:
+      slot: 49
+      material: BARRIER
+      name: "&c&lRetour"
+    reclaim-all:
+      slot: 46
+      material: CHEST
+      name: "&a&lTout récupérer ({count})"

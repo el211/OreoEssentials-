@@ -20,6 +20,16 @@ commands:
     description: Teleport to spawn
     permission: oreo.spawn
 
+  shop:
+    description: Open the shop menu
+    usage: /shop [<shop>|reload|check|addmodifier|resetmodifier|checkmodifiers]
+    permission: oshopgui.shop
+
+  sell:
+    description: Sell items
+    usage: /sell <hand|handall|all> [quantity]
+    permission: oshopgui.sell.hand
+
   maintenance:
     description: Manage server maintenance mode
     aliases: [ maint ]
@@ -928,7 +938,39 @@ permissions:
   oreo.jail:
     description: Allows using /jail
     default: op
-
+    oshopgui.shop:
+      description: Access the shop
+      default: true
+    oshopgui.reload:
+      description: Reload the shop module
+      default: op
+    oshopgui.check:
+      description: Check item prices
+      default: true
+    oshopgui.others:
+      description: Open a shop for another player
+      default: op
+    oshopgui.sell.hand:
+      description: Sell item in hand
+      default: true
+    oshopgui.sell.hand.all:
+      description: Sell all of the item in hand
+      default: true
+    oshopgui.sell.all:
+      description: Sell entire inventory
+      default: true
+    oshopgui.shop.addmodifier:
+      description: Add a price modifier for a player
+      default: op
+    oshopgui.shop.resetmodifier:
+      description: Reset a price modifier for a player
+      default: op
+    oshopgui.shop.checkmodifiers:
+      description: Check a player's modifiers
+      default: op
+    oshopgui.bypass.cooldown:
+      description: Bypass transaction cooldown
+      default: op
   oreo.jail.silent:
     description: Allows using -s to silently jail
     default: op

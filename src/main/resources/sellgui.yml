@@ -4,6 +4,7 @@ settings:
     confirm_title: "<gradient:#ff7a00:#ffd000>Confirm Sale</gradient>"
 
   buttons:
+    # ── Main sell menu buttons ─────────────────────────────
     sell:
       material: LIME_CONCRETE
       name: "<green><bold>SELL</bold></green>"
@@ -19,6 +20,21 @@ settings:
       name: "<yellow><bold>CLEAR</bold></yellow>"
       lore:
         - "<gray>Return all items to your inventory.</gray>"
+
+    # ── Confirm dialog buttons ─────────────────────────────
+    confirm:
+      material: LIME_CONCRETE
+      name: "<green><bold>CONFIRM</bold></green>"
+      # lore is generated dynamically with the total price
+    cancel:
+      material: RED_CONCRETE
+      name: "<red><bold>CANCEL</bold></red>"
+      lore:
+        - "<gray>Go back to the sell menu.</gray>"
+    info:
+      material: PAPER
+      name: "<gold><bold>Sale Summary</bold></gold>"
+      # lore is generated dynamically with item count and total
 
   messages:
     nothing_sellable: "<red>Nothing sellable in the sell slots.</red>"

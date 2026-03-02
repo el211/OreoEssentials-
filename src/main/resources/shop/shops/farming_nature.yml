@@ -1,0 +1,367 @@
+shop-id: farming_nature
+title: "&a&lFarming &2& Nature"
+rows: 6
+pages: 1
+
+items:
+
+  wheat_seeds_p1s0:
+    material: WHEAT_SEEDS
+    name: "&eWheat Seeds"
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  wheat_p1s1:
+    material: WHEAT
+    name: "&eWheat"
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  beetroot_seeds_p1s2:
+    material: BEETROOT_SEEDS
+    name: "&cBeetroot Seeds"
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  pumpkin_seeds_p1s3:
+    material: PUMPKIN_SEEDS
+    name: "&6Pumpkin Seeds"
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  melon_seeds_p1s4:
+    material: MELON_SEEDS
+    name: "&aWatermelon Seeds"
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  torchflower_seeds_p1s5:
+    material: TORCHFLOWER_SEEDS
+    name: "&6Torchflower Seeds"
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 900.0
+  pitcher_pod_p1s6:
+    material: PITCHER_POD
+    name: "&aPitcher Pod"
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 4000
+    sell-price: 720.0
+  nether_wart_p1s7:
+    material: NETHER_WART
+    name: "&4Nether Wart"
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 500.0
+  sugar_cane_p1s8:
+    material: SUGAR_CANE
+    name: "&asugar cane"
+    slot: 8
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  bamboo_p1s9:
+    material: BAMBOO
+    name: "&aBamboo"
+    slot: 9
+    page: 1
+    amount: 1
+    buy-price: 150
+    sell-price: 33.0
+  cactus_p1s10:
+    material: CACTUS
+    name: "&aCactus"
+    slot: 10
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  kelp_p1s11:
+    material: KELP
+    name: "&aKelp"
+    slot: 11
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  seagrass_p1s12:
+    material: SEAGRASS
+    name: "&aSeagrass"
+    slot: 12
+    page: 1
+    amount: 1
+    buy-price: 100
+    sell-price: 22.0
+  vine_p1s13:
+    material: VINE
+    name: "&aVine"
+    slot: 13
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  lily_pad_p1s14:
+    material: LILY_PAD
+    name: "&aLily Pad"
+    slot: 14
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  oak_sapling_p1s15:
+    material: OAK_SAPLING
+    name: "&6Oak Sapling"
+    slot: 15
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  spruce_sapling_p1s16:
+    material: SPRUCE_SAPLING
+    name: "&6Spruce Sapling"
+    slot: 16
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  birch_sapling_p1s17:
+    material: BIRCH_SAPLING
+    name: "&fBirch Sapling"
+    slot: 17
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  jungle_sapling_p1s18:
+    material: JUNGLE_SAPLING
+    name: "&aJungle Sapling"
+    slot: 18
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  acacia_sapling_p1s19:
+    material: ACACIA_SAPLING
+    name: "&cAcacia Sapling"
+    slot: 19
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  dark_oak_sapling_p1s20:
+    material: DARK_OAK_SAPLING
+    name: "&8Dark Oak Sapling"
+    slot: 20
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  mangrove_propagule_p1s21:
+    material: MANGROVE_PROPAGULE
+    name: "&4Mangrove Propagule"
+    slot: 21
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  cherry_sapling_p1s22:
+    material: CHERRY_SAPLING
+    name: "&dCherry Sapling"
+    slot: 22
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 132.0
+  azalea_p1s23:
+    material: AZALEA
+    name: "&aAzalea"
+    slot: 23
+    page: 1
+    amount: 1
+    buy-price: 800
+    sell-price: 176.0
+  flowering_azalea_p1s24:
+    material: FLOWERING_AZALEA
+    name: "&dFlowering Azalea"
+    slot: 24
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 252.0
+  dandelion_p1s25:
+    material: DANDELION
+    name: "&eYellow Flower"
+    slot: 25
+    page: 1
+    amount: 1
+    buy-price: 100
+    sell-price: 22.0
+  poppy_p1s26:
+    material: POPPY
+    name: "&cPoppy"
+    slot: 26
+    page: 1
+    amount: 1
+    buy-price: 100
+    sell-price: 22.0
+  blue_orchid_p1s27:
+    material: BLUE_ORCHID
+    name: "&bBlue Orchid"
+    slot: 27
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  allium_p1s28:
+    material: ALLIUM
+    name: "&dAllium"
+    slot: 28
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  azure_bluet_p1s29:
+    material: AZURE_BLUET
+    name: "&fAzure Bluet"
+    slot: 29
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  red_tulip_p1s30:
+    material: RED_TULIP
+    name: "&cRed Tulip"
+    slot: 30
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  orange_tulip_p1s31:
+    material: ORANGE_TULIP
+    name: "&6Orange Tulip"
+    slot: 31
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  white_tulip_p1s32:
+    material: WHITE_TULIP
+    name: "&fWhite Tulip"
+    slot: 32
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  pink_tulip_p1s33:
+    material: PINK_TULIP
+    name: "&dPink Tulip"
+    slot: 33
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  oxeye_daisy_p1s34:
+    material: OXEYE_DAISY
+    name: "&fOxeye Daisy"
+    slot: 34
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  cornflower_p1s35:
+    material: CORNFLOWER
+    name: "&9Cornflower"
+    slot: 35
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  lily_of_the_valley_p1s36:
+    material: LILY_OF_THE_VALLEY
+    name: "&fLily of Valley"
+    slot: 36
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  wither_rose_p1s37:
+    material: WITHER_ROSE
+    name: "&0Wither Rose"
+    slot: 37
+    page: 1
+    amount: 1
+    buy-price: 20000
+    sell-price: 3600.0
+  sunflower_p1s38:
+    material: SUNFLOWER
+    name: "&eSunflower"
+    slot: 38
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  lilac_p1s39:
+    material: LILAC
+    name: "&dLilac"
+    slot: 39
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  rose_bush_p1s40:
+    material: ROSE_BUSH
+    name: "&cRose Bush"
+    slot: 40
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  peony_p1s41:
+    material: PEONY
+    name: "&dPeony"
+    slot: 41
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  pink_petals_p1s42:
+    material: PINK_PETALS
+    name: "&dPink Petals"
+    slot: 42
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  spore_blossom_p1s43:
+    material: SPORE_BLOSSOM
+    name: "&dSpore Blossom"
+    slot: 43
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 400.0
+  big_dripleaf_p1s44:
+    material: BIG_DRIPLEAF
+    name: "&aBig Dripleaf"
+    slot: 44
+    page: 1
+    amount: 1
+    buy-price: 1000
+    sell-price: 200.0

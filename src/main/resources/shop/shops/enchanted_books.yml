@@ -1,0 +1,397 @@
+shop-id: enchanted_books
+title: "&b&lEnchanted Books"
+rows: 6
+pages: 1
+
+items:
+
+  ebook_protection_1s0:
+    material: ENCHANTED_BOOK
+    name: "&9Protection IV"
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      protection: 4
+  ebook_blast_protection_1s1:
+    material: ENCHANTED_BOOK
+    name: "&9Blast Protection IV"
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      blast_protection: 4
+  ebook_fire_protection_1s2:
+    material: ENCHANTED_BOOK
+    name: "&cFire Protection IV"
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      fire_protection: 4
+  ebook_projectile_protection_1s3:
+    material: ENCHANTED_BOOK
+    name: "&9Proj. Protection IV"
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      projectile_protection: 4
+  ebook_feather_falling_1s4:
+    material: ENCHANTED_BOOK
+    name: "&eFalling Grace IV"
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      feather_falling: 4
+  ebook_respiration_1s5:
+    material: ENCHANTED_BOOK
+    name: "&bRespiration III"
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      respiration: 3
+  ebook_aqua_affinity_1s6:
+    material: ENCHANTED_BOOK
+    name: "&bAqua Affinity I"
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2100.0
+    enchantments:
+      aqua_affinity: 1
+  ebook_depth_strider_1s7:
+    material: ENCHANTED_BOOK
+    name: "&bDepth Strider III"
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      depth_strider: 3
+  ebook_frost_walker_1s8:
+    material: ENCHANTED_BOOK
+    name: "&bFrost Walker II"
+    slot: 8
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      frost_walker: 2
+  ebook_soul_speed_1s9:
+    material: ENCHANTED_BOOK
+    name: "&fSoul Speed III"
+    slot: 9
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 18000.0
+    enchantments:
+      soul_speed: 3
+  ebook_swift_sneak_1s10:
+    material: ENCHANTED_BOOK
+    name: "&fSwift Sneak III"
+    slot: 10
+    page: 1
+    amount: 1
+    buy-price: 500000
+    sell-price: 50000.0
+    enchantments:
+      swift_sneak: 3
+  ebook_sharpness_1s11:
+    material: ENCHANTED_BOOK
+    name: "&cSharpness V"
+    slot: 11
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 18000.0
+    enchantments:
+      sharpness: 5
+  ebook_smite_1s12:
+    material: ENCHANTED_BOOK
+    name: "&cSmite V"
+    slot: 12
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      smite: 5
+  ebook_bane_of_arthropods_1s13:
+    material: ENCHANTED_BOOK
+    name: "&cBane of Arthropods V"
+    slot: 13
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      bane_of_arthropods: 5
+  ebook_knockback_1s14:
+    material: ENCHANTED_BOOK
+    name: "&6Knockback II"
+    slot: 14
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2100.0
+    enchantments:
+      knockback: 2
+  ebook_fire_aspect_1s15:
+    material: ENCHANTED_BOOK
+    name: "&cFire Aspect II"
+    slot: 15
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      fire_aspect: 2
+  ebook_looting_1s16:
+    material: ENCHANTED_BOOK
+    name: "&6Looting III"
+    slot: 16
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 18000.0
+    enchantments:
+      looting: 3
+  ebook_sweeping_edge_1s17:
+    material: ENCHANTED_BOOK
+    name: "&bSweeping Edge III"
+    slot: 17
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 18000.0
+    enchantments:
+      sweeping_edge: 3
+  ebook_power_1s18:
+    material: ENCHANTED_BOOK
+    name: "&6Power V"
+    slot: 18
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 18000.0
+    enchantments:
+      power: 5
+  ebook_punch_1s19:
+    material: ENCHANTED_BOOK
+    name: "&6Punch II"
+    slot: 19
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2100.0
+    enchantments:
+      punch: 2
+  ebook_flame_1s20:
+    material: ENCHANTED_BOOK
+    name: "&cFlame I"
+    slot: 20
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      flame: 1
+  ebook_infinity_1s21:
+    material: ENCHANTED_BOOK
+    name: "&fInfinity I"
+    slot: 21
+    page: 1
+    amount: 1
+    buy-price: 500000
+    sell-price: 50000.0
+    enchantments:
+      infinity: 1
+  ebook_multishot_1s22:
+    material: ENCHANTED_BOOK
+    name: "&fMultishot I"
+    slot: 22
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 18000.0
+    enchantments:
+      multishot: 1
+  ebook_quick_charge_1s23:
+    material: ENCHANTED_BOOK
+    name: "&eQuick Charge III"
+    slot: 23
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      quick_charge: 3
+  ebook_piercing_1s24:
+    material: ENCHANTED_BOOK
+    name: "&ePiercing IV"
+    slot: 24
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      piercing: 4
+  ebook_loyalty_1s25:
+    material: ENCHANTED_BOOK
+    name: "&bLoyalty III"
+    slot: 25
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      loyalty: 3
+  ebook_impaling_1s26:
+    material: ENCHANTED_BOOK
+    name: "&bImpaling V"
+    slot: 26
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 18000.0
+    enchantments:
+      impaling: 5
+  ebook_riptide_1s27:
+    material: ENCHANTED_BOOK
+    name: "&bRiptide III"
+    slot: 27
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      riptide: 3
+  ebook_channeling_1s28:
+    material: ENCHANTED_BOOK
+    name: "&ChannelingI"
+    slot: 28
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 18000.0
+    enchantments:
+      channeling: 1
+  ebook_efficiency_1s29:
+    material: ENCHANTED_BOOK
+    name: "&eEfficiency V"
+    slot: 29
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 18000.0
+    enchantments:
+      efficiency: 5
+  ebook_silk_touch_1s30:
+    material: ENCHANTED_BOOK
+    name: "&bSilk Touch I"
+    slot: 30
+    page: 1
+    amount: 1
+    buy-price: 500000
+    sell-price: 50000.0
+    enchantments:
+      silk_touch: 1
+  ebook_unbreaking_1s31:
+    material: ENCHANTED_BOOK
+    name: "&7Unbreaking III"
+    slot: 31
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      unbreaking: 3
+  ebook_fortune_1s32:
+    material: ENCHANTED_BOOK
+    name: "&6Fortune III"
+    slot: 32
+    page: 1
+    amount: 1
+    buy-price: 500000
+    sell-price: 50000.0
+    enchantments:
+      fortune: 3
+  ebook_lure_1s33:
+    material: ENCHANTED_BOOK
+    name: "&bLure III"
+    slot: 33
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 6500.0
+    enchantments:
+      lure: 3
+  ebook_luck_of_the_sea_1s34:
+    material: ENCHANTED_BOOK
+    name: "&bLuck of the Sea III"
+    slot: 34
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 18000.0
+    enchantments:
+      luck_of_the_sea: 3
+  ebook_mending_1s35:
+    material: ENCHANTED_BOOK
+    name: "&a&lMending I"
+    slot: 35
+    page: 1
+    amount: 1
+    buy-price: 1200000
+    sell-price: 96000.0
+    enchantments:
+      mending: 1
+  ebook_curse_of_binding_1s36:
+    material: ENCHANTED_BOOK
+    name: "&cCurse of Binding I"
+    slot: 36
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2100.0
+    enchantments:
+      curse_of_binding: 1
+  ebook_curse_of_vanishing_1s37:
+    material: ENCHANTED_BOOK
+    name: "&cCurse of Vanishing I"
+    slot: 37
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2100.0
+    enchantments:
+      curse_of_vanishing: 1
+  ebook_thorns_1s38:
+    material: ENCHANTED_BOOK
+    name: "&5Thorns III"
+    slot: 38
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 18000.0
+    enchantments:
+      thorns: 3

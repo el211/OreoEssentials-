@@ -45,13 +45,21 @@ public class BrowseGUI implements InventoryProvider {
     }
 
     public static SmartInventory getInventory(AuctionHouseModule module, AuctionCategory category, String searchQuery) {
+        var cfg = module.getConfig();
+        var gui = cfg.getGui();
         String title;
         if (searchQuery != null && !searchQuery.isBlank()) {
-            title = c("&6&lSearch: &f" + searchQuery + (category != null ? " &8- &e" + category.getDisplayName() : ""));
+            String pattern = category != null
+                    ? gui.getString("browse.title-search-category", "&6&lSearch: &f{query} &8- &e{category}")
+                    : gui.getString("browse.title-search", "&6&lSearch: &f{query}");
+            title = c(pattern
+                    .replace("{query}", searchQuery)
+                    .replace("{category}", category != null ? category.getDisplayName() : ""));
         } else {
-            title = category == null
-                    ? c("&6&lAuction House")
-                    : c("&6&lAuction House &8- &e" + category.getDisplayName());
+            String pattern = category != null
+                    ? gui.getString("browse.title-category", "&6&lAuction House &8- &e{category}")
+                    : gui.getString("browse.title", "&6&lAuction House");
+            title = c(pattern.replace("{category}", category != null ? category.getDisplayName() : ""));
         }
 
         String id = "oe_ah_browse"
@@ -70,7 +78,7 @@ public class BrowseGUI implements InventoryProvider {
     @Override
     public void init(Player player, InventoryContents contents) {
         Pagination pagination = contents.pagination();
-        contents.fillBorders(ClickableItem.empty(glass(Material.GRAY_STAINED_GLASS_PANE)));
+        contents.fillBorders(ClickableItem.empty(glass(module.getConfig().guiBorder("browse", Material.GRAY_STAINED_GLASS_PANE))));
 
         List<Auction> auctions = category == null
                 ? module.getAllActiveAuctions()
@@ -175,52 +183,66 @@ public class BrowseGUI implements InventoryProvider {
     }
 
     private void nav(Player p, InventoryContents c, Pagination pg) {
+        var cfg = module.getConfig();
         if (!pg.isFirst()) {
-            c.set(5, 3, ClickableItem.of(named(Material.ARROW, "&e&lPrevious Page"), e -> {
-                click(p);
-                getInventory(module, category, searchQuery).open(p, pg.previous().getPage());
-            }));
+            int slot = cfg.guiSlot("browse", "prev-page", 48);
+            c.set(slot / 9, slot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("browse", "prev-page", Material.ARROW),
+                            cfg.guiNameRaw("browse", "prev-page", "&e&lPrevious Page")),
+                    e -> { click(p); getInventory(module, category, searchQuery).open(p, pg.previous().getPage()); }));
         }
 
         if (!pg.isLast()) {
-            c.set(5, 5, ClickableItem.of(named(Material.ARROW, "&e&lNext Page"), e -> {
-                click(p);
-                getInventory(module, category, searchQuery).open(p, pg.next().getPage());
-            }));
+            int slot = cfg.guiSlot("browse", "next-page", 50);
+            c.set(slot / 9, slot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("browse", "next-page", Material.ARROW),
+                            cfg.guiNameRaw("browse", "next-page", "&e&lNext Page")),
+                    e -> { click(p); getInventory(module, category, searchQuery).open(p, pg.next().getPage()); }));
         }
 
-        c.set(5, 4, ClickableItem.empty(named(Material.PAPER, "&ePage " + (pg.getPage() + 1))));
+        int piSlot = cfg.guiSlot("browse", "page-indicator", 49);
+        String piName = cfg.guiNameRaw("browse", "page-indicator", "&ePage {page}")
+                .replace("{page}", String.valueOf(pg.getPage() + 1));
+        c.set(piSlot / 9, piSlot % 9, ClickableItem.empty(
+                named(cfg.guiMaterial("browse", "page-indicator", Material.PAPER), piName)));
     }
 
     private void controls(Player p, InventoryContents c) {
+        var cfg = module.getConfig();
+
         if (searchQuery != null) {
-            c.set(5, 0, ClickableItem.of(named(Material.MAP, "&f&lClear Search"), e -> {
-                click(p);
-                getInventory(module, category, null).open(p);
-            }));
+            int slot = cfg.guiSlot("browse", "clear-search", 45);
+            c.set(slot / 9, slot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("browse", "clear-search", Material.MAP),
+                            cfg.guiNameRaw("browse", "clear-search", "&f&lClear Search")),
+                    e -> { click(p); getInventory(module, category, null).open(p); }));
         }
 
         if (category == null) {
-            c.set(5, 1, ClickableItem.of(named(Material.COMPASS, "&b&lCategories"), e -> {
-                click(p);
-                CategoryGUI.getInventory(module).open(p);
-            }));
+            int slot = cfg.guiSlot("browse", "categories", 46);
+            c.set(slot / 9, slot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("browse", "categories", Material.COMPASS),
+                            cfg.guiNameRaw("browse", "categories", "&b&lCategories")),
+                    e -> { click(p); CategoryGUI.getInventory(module).open(p); }));
         } else {
-            c.set(5, 1, ClickableItem.of(named(Material.BARRIER, "&c&lBack to All"), e -> {
-                click(p);
-                getInventory(module, null, searchQuery).open(p);
-            }));
+            int slot = cfg.guiSlot("browse", "back-to-all", 46);
+            c.set(slot / 9, slot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("browse", "back-to-all", Material.BARRIER),
+                            cfg.guiNameRaw("browse", "back-to-all", "&c&lBack to All")),
+                    e -> { click(p); getInventory(module, null, searchQuery).open(p); }));
         }
 
-        c.set(5, 7, ClickableItem.of(named(Material.CHEST, "&6&lYour Listings"), e -> {
-            click(p);
-            ManageGUI.getInventory(module).open(p);
-        }));
+        int ylSlot = cfg.guiSlot("browse", "your-listings", 52);
+        c.set(ylSlot / 9, ylSlot % 9, ClickableItem.of(
+                named(cfg.guiMaterial("browse", "your-listings", Material.CHEST),
+                        cfg.guiNameRaw("browse", "your-listings", "&6&lYour Listings")),
+                e -> { click(p); ManageGUI.getInventory(module).open(p); }));
 
-        c.set(5, 8, ClickableItem.of(named(Material.BARRIER, "&c&lClose"), e -> {
-            click(p);
-            p.closeInventory();
-        }));
+        int closeSlot = cfg.guiSlot("browse", "close", 53);
+        c.set(closeSlot / 9, closeSlot % 9, ClickableItem.of(
+                named(cfg.guiMaterial("browse", "close", Material.BARRIER),
+                        cfg.guiNameRaw("browse", "close", "&c&lClose")),
+                e -> { click(p); p.closeInventory(); }));
     }
 
     private ItemStack balanceHead(Player p) {

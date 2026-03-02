@@ -33,13 +33,14 @@ public class ConfirmGUI implements InventoryProvider {
                 .provider(new ConfirmGUI(module, auction))
                 .manager(module.getPlugin().getInvManager())
                 .size(3, 9)
-                .title(c("&e&lConfirm Purchase"))
+                .title(c(module.getConfig().getGui().getString("confirm.title", "&e&lConfirm Purchase")))
                 .build();
     }
 
     @Override
     public void init(Player player, InventoryContents contents) {
-        ItemStack pane = glass(Material.GRAY_STAINED_GLASS_PANE);
+        var cfg = module.getConfig();
+        ItemStack pane = glass(cfg.guiBorder("confirm", Material.GRAY_STAINED_GLASS_PANE));
         for (int i = 0; i < 27; i++) contents.set(i / 9, i % 9, ClickableItem.empty(pane));
 
         ItemStack display = auction.getItem().clone();
@@ -52,7 +53,8 @@ public class ConfirmGUI implements InventoryProvider {
         display.setItemMeta(dm);
         contents.set(1, 4, ClickableItem.empty(display));
 
-        contents.set(1, 2, ClickableItem.of(confirmBtn(player), e -> {
+        int confirmSlot = cfg.guiSlot("confirm", "confirm", 11);
+        contents.set(confirmSlot / 9, confirmSlot % 9, ClickableItem.of(confirmBtn(player, cfg), e -> {
             click(player); player.closeInventory();
             if (module.purchaseAuction(player, auction.getId())) {
                 try { player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f); } catch (Throwable ignored) {}
@@ -61,11 +63,15 @@ public class ConfirmGUI implements InventoryProvider {
             }
         }));
 
-        contents.set(1, 6, ClickableItem.of(named(Material.RED_WOOL, "&c&l✗ CANCEL"), e -> {
-            click(player); BrowseGUI.getInventory(module, auction.getCategory()).open(player);
-        }));
+        int cancelSlot = cfg.guiSlot("confirm", "cancel", 15);
+        contents.set(cancelSlot / 9, cancelSlot % 9, ClickableItem.of(
+                named(cfg.guiMaterial("confirm", "cancel", Material.RED_WOOL),
+                        cfg.guiNameRaw("confirm", "cancel", "&c&l✗ CANCEL")),
+                e -> { click(player); BrowseGUI.getInventory(module, auction.getCategory()).open(player); }));
 
-        ItemStack info = named(Material.PAPER, "&e&lPurchase Information");
+        int infoSlot = cfg.guiSlot("confirm", "info", 22);
+        ItemStack info = named(cfg.guiMaterial("confirm", "info", Material.PAPER),
+                cfg.guiNameRaw("confirm", "info", "&e&lPurchase Information"));
         ItemMeta im = info.getItemMeta();
         im.setLore(List.of("",
                 c("&7• Item will be added to your inventory"),
@@ -73,21 +79,23 @@ public class ConfirmGUI implements InventoryProvider {
                 c("&7• Seller will receive payment"),
                 c("&7• Transaction cannot be reversed"), ""));
         info.setItemMeta(im);
-        contents.set(2, 4, ClickableItem.empty(info));
+        contents.set(infoSlot / 9, infoSlot % 9, ClickableItem.empty(info));
     }
 
     @Override
     public void update(Player player, InventoryContents contents) {
-        contents.set(1, 2, ClickableItem.of(confirmBtn(player), e -> {
+        var cfg = module.getConfig();
+        int confirmSlot = cfg.guiSlot("confirm", "confirm", 11);
+        contents.set(confirmSlot / 9, confirmSlot % 9, ClickableItem.of(confirmBtn(player, cfg), e -> {
             click(player); player.closeInventory();
             module.purchaseAuction(player, auction.getId());
         }));
     }
 
-    private ItemStack confirmBtn(Player p) {
-        ItemStack btn = new ItemStack(Material.GREEN_WOOL);
+    private ItemStack confirmBtn(Player p, fr.elias.oreoEssentials.modules.auctionhouse.AuctionHouseConfig cfg) {
+        ItemStack btn = new ItemStack(cfg.guiMaterial("confirm", "confirm", Material.GREEN_WOOL));
         ItemMeta m = btn.getItemMeta();
-        m.setDisplayName(c("&a&l✔ CONFIRM PURCHASE"));
+        m.setDisplayName(c(cfg.guiNameRaw("confirm", "confirm", "&a&l✔ CONFIRM PURCHASE")));
         m.setLore(List.of("",
                 c("&7You will pay: &a" + module.formatMoney(auction.getPrice())),
                 c("&7Your balance: &e" + module.formatMoney(module.getEconomy().getBalance(p))),

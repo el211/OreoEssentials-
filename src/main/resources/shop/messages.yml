@@ -1,0 +1,136 @@
+# ─────────────────────────────────────────────────────
+#  OreoEssentials · Shop Module · messages.yml
+#  Location: plugins/OreoEssentials/shop/messages.yml
+#
+#  Supports all color formats:
+#    · Legacy codes : &a &l &0-9 &a-f
+#    · Hex colors   : &#RRGGBB  or  &x&R&R&G&G&B&B
+#    · MiniMessage  : <green> <bold> <gradient:#from:#to>text</gradient> etc.
+#
+#  Language is set via 'language: en' in shop/config.yml.
+#  Available: en (English), fr (French).
+#  Unknown keys fall back to the 'en' section automatically.
+#
+#  Available placeholders:
+#    {prefix}  {amount}  {item}   {price}  {time}
+#    {player}  {shop}    {material}  {name}
+#    {page}    {total}   {buy}    {sell}   {type}  {value}
+# ─────────────────────────────────────────────────────
+
+en:
+  prefix: "<dark_gray>[<gradient:#FFB347:#FF8C00><bold>OSHOP</bold></gradient><dark_gray>]<reset> "
+
+  # ── Transactions ──────────────────────────────────────
+  buy-success:            "{prefix}<green>Successfully bought <yellow>{amount}x {item}</yellow> for <yellow>{price}</yellow>!"
+  buy-not-enough-money:   "{prefix}<red>Not enough money! You need <yellow>{price}</yellow><red>."
+  buy-inventory-full:     "{prefix}<red>Your inventory is full!"
+  buy-invalid-amount:     "{prefix}<red>Invalid amount specified."
+  sell-success:           "{prefix}<green>Successfully sold <yellow>{amount}x {item}</yellow> for <yellow>{price}</yellow>!"
+  sell-all-success:       "{prefix}<green>Sold <yellow>{amount}</yellow> items for a total of <yellow>{price}</yellow>!"
+  sell-all-nothing:       "{prefix}<red>You have no sellable items in your inventory."
+  sell-no-price:          "{prefix}<red>This item cannot be sold."
+  sell-not-enough:        "{prefix}<red>You don't have enough of this item to sell."
+  sell-hand-empty:        "{prefix}<red>You are not holding any item!"
+  sell-hand-not-sellable: "{prefix}<red>This item cannot be sold in any shop."
+  transaction-cooldown:   "{prefix}<red>Please wait <yellow>{time}ms</yellow><red> before your next transaction."
+
+  # ── GUI Navigation ────────────────────────────────────
+  gui-back-name:     "<gold><bold>← Back to Menu</bold></gold>"
+  gui-back-lore:     "<gray>Return to main shop menu"
+  gui-prev-name:     "<yellow><bold>← Previous Page</bold></yellow>"
+  gui-prev-lore:     "<gray>Go to page {page}"
+  gui-next-name:     "<yellow><bold>Next Page →</bold></yellow>"
+  gui-next-lore:     "<gray>Go to page {page}"
+  gui-page-name:     "<white><bold>Page {page}</bold> <gray>of <white>{total}"
+  gui-page-lore:     "<gray>Use arrows to navigate pages"
+  gui-close-name:    "<red><bold>Close</bold></red>"
+  gui-close-lore:    "<gray>Click to close"
+  shop-lore-buy:     "<green>Left-click <gray>to buy"
+  shop-lore-sell:    "<red>Right-click <gray>to sell"
+  shop-lore-confirm: "<yellow>Click to choose amount"
+  shop-lore-instant: "<gold>Press Q <gray>for instant x1"
+
+  # ── Errors ────────────────────────────────────────────
+  no-permission:    "{prefix}<red>You don't have permission to do this!"
+  shop-not-found:   "{prefix}<red>Shop <yellow>{shop}</yellow><red> not found!"
+  player-not-found: "{prefix}<red>Player <yellow>{player}</yellow><red> not found!"
+
+  # ── Reload ────────────────────────────────────────────
+  reload-success: "{prefix}<green>Configuration reloaded successfully!"
+  reload-fail:    "{prefix}<red>Failed to reload. Check console for errors."
+
+  # ── Item check (/shop check) ──────────────────────────
+  check-item-not-in-shop: "{prefix}<red>This item is not found in any shop."
+  check-item-header:      "{prefix}<gold>=== Item Information ==="
+  check-item-material:    "{prefix}<gray>Material: <yellow>{material}"
+  check-item-name:        "{prefix}<gray>Name: <yellow>{name}"
+  check-item-buy:         "{prefix}<gray>Buy Price: <green>{price}"
+  check-item-sell:        "{prefix}<gray>Sell Price: <red>{price}"
+
+  # ── Price Modifiers ───────────────────────────────────
+  modifier-check-header: "{prefix}<gold>=== Price Modifiers for {player} ==="
+  modifier-global:       "{prefix}<gray>Global: <yellow>{buy}% buy</yellow> / <yellow>{sell}% sell"
+  modifier-shop:         "{prefix}<gray>Shop ({shop}): <yellow>{buy}% buy</yellow> / <yellow>{sell}% sell"
+  modifier-item:         "{prefix}<gray>Item ({shop}/{item}): <yellow>{buy}% buy</yellow> / <yellow>{sell}% sell"
+  modifier-added:        "{prefix}<green>Added <yellow>{type}</yellow> price modifier of <yellow>{value}%</yellow> to <aqua>{player}</aqua>."
+  modifier-reset:        "{prefix}<green>Reset <yellow>{type}</yellow> price modifier for <aqua>{player}</aqua>."
+
+# ─────────────────────────────────────────────────────
+
+fr:
+  prefix: "<dark_gray>[<gradient:#FFB347:#FF8C00><bold>OSHOP</bold></gradient><dark_gray>]<reset> "
+
+  # ── Transactions ──────────────────────────────────────
+  buy-success:            "{prefix}<green>Achat réussi : <yellow>{amount}x {item}</yellow> pour <yellow>{price}</yellow> !"
+  buy-not-enough-money:   "{prefix}<red>Fonds insuffisants ! Il vous faut <yellow>{price}</yellow><red>."
+  buy-inventory-full:     "{prefix}<red>Votre inventaire est plein !"
+  buy-invalid-amount:     "{prefix}<red>Montant invalide."
+  sell-success:           "{prefix}<green>Vente réussie : <yellow>{amount}x {item}</yellow> pour <yellow>{price}</yellow> !"
+  sell-all-success:       "{prefix}<green>Vendu <yellow>{amount}</yellow> objets pour un total de <yellow>{price}</yellow> !"
+  sell-all-nothing:       "{prefix}<red>Vous n'avez aucun objet vendable dans votre inventaire."
+  sell-no-price:          "{prefix}<red>Cet objet ne peut pas être vendu."
+  sell-not-enough:        "{prefix}<red>Vous n'avez pas assez de cet objet."
+  sell-hand-empty:        "{prefix}<red>Vous ne tenez aucun objet en main !"
+  sell-hand-not-sellable: "{prefix}<red>Cet objet ne peut être vendu dans aucune boutique."
+  transaction-cooldown:   "{prefix}<red>Patientez encore <yellow>{time}ms</yellow><red> avant la prochaine transaction."
+
+  # ── GUI Navigation ────────────────────────────────────
+  gui-back-name:     "<gold><bold>← Menu principal</bold></gold>"
+  gui-back-lore:     "<gray>Retour au menu principal"
+  gui-prev-name:     "<yellow><bold>← Page précédente</bold></yellow>"
+  gui-prev-lore:     "<gray>Aller à la page {page}"
+  gui-next-name:     "<yellow><bold>Page suivante →</bold></yellow>"
+  gui-next-lore:     "<gray>Aller à la page {page}"
+  gui-page-name:     "<white><bold>Page {page}</bold> <gray>sur <white>{total}"
+  gui-page-lore:     "<gray>Utilisez les flèches pour naviguer"
+  gui-close-name:    "<red><bold>Fermer</bold></red>"
+  gui-close-lore:    "<gray>Cliquez pour fermer"
+  shop-lore-buy:     "<green>Clic gauche <gray>pour acheter"
+  shop-lore-sell:    "<red>Clic droit <gray>pour vendre"
+  shop-lore-confirm: "<yellow>Cliquez pour choisir la quantité"
+  shop-lore-instant: "<gold>Touche Q <gray>pour x1 instantané"
+
+  # ── Errors ────────────────────────────────────────────
+  no-permission:    "{prefix}<red>Vous n'avez pas la permission !"
+  shop-not-found:   "{prefix}<red>Boutique <yellow>{shop}</yellow><red> introuvable !"
+  player-not-found: "{prefix}<red>Joueur <yellow>{player}</yellow><red> introuvable !"
+
+  # ── Reload ────────────────────────────────────────────
+  reload-success: "{prefix}<green>Configuration rechargée avec succès !"
+  reload-fail:    "{prefix}<red>Échec du rechargement. Consultez la console."
+
+  # ── Item check (/shop check) ──────────────────────────
+  check-item-not-in-shop: "{prefix}<red>Cet objet n'est pas dans une boutique."
+  check-item-header:      "{prefix}<gold>=== Informations sur l'objet ==="
+  check-item-material:    "{prefix}<gray>Matériau : <yellow>{material}"
+  check-item-name:        "{prefix}<gray>Nom : <yellow>{name}"
+  check-item-buy:         "{prefix}<gray>Prix d'achat : <green>{price}"
+  check-item-sell:        "{prefix}<gray>Prix de vente : <red>{price}"
+
+  # ── Price Modifiers ───────────────────────────────────
+  modifier-check-header: "{prefix}<gold>=== Modificateurs de prix pour {player} ==="
+  modifier-global:       "{prefix}<gray>Global : <yellow>{buy}% achat</yellow> / <yellow>{sell}% vente"
+  modifier-shop:         "{prefix}<gray>Boutique ({shop}) : <yellow>{buy}% achat</yellow> / <yellow>{sell}% vente"
+  modifier-item:         "{prefix}<gray>Objet ({shop}/{item}) : <yellow>{buy}% achat</yellow> / <yellow>{sell}% vente"
+  modifier-added:        "{prefix}<green>Modificateur <yellow>{type}</yellow> de <yellow>{value}%</yellow> ajouté pour <aqua>{player}</aqua>."
+  modifier-reset:        "{prefix}<green>Modificateur <yellow>{type}</yellow> réinitialisé pour <aqua>{player}</aqua>."

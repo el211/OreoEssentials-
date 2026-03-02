@@ -1,0 +1,1079 @@
+shop-id: building_blocks
+title: "&6&lBuilding Blocks"
+rows: 6
+pages: 3
+
+items:
+
+  stone_p1s0:
+    material: STONE
+    name: "&7Stone"
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  cobblestone_p1s1:
+    material: COBBLESTONE
+    name: "&7Cobblestone"
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 40
+    sell-price: 8.0
+  granite_p1s2:
+    material: GRANITE
+    name: "&fGranite"
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  polished_granite_p1s3:
+    material: POLISHED_GRANITE
+    name: "&fPolished Granite"
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  diorite_p1s4:
+    material: DIORITE
+    name: "&fDiorite"
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  polished_diorite_p1s5:
+    material: POLISHED_DIORITE
+    name: "&fPolished Diorite"
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  andesite_p1s6:
+    material: ANDESITE
+    name: "&8Andesite"
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  polished_andesite_p1s7:
+    material: POLISHED_ANDESITE
+    name: "&8Polished Andesite"
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  deepslate_p1s8:
+    material: DEEPSLATE
+    name: "&8Deepslate"
+    slot: 8
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  cobbled_deepslate_p1s9:
+    material: COBBLED_DEEPSLATE
+    name: "&8Cobbled Deepslate"
+    slot: 9
+    page: 1
+    amount: 1
+    buy-price: 40
+    sell-price: 8.0
+  polished_deepslate_p1s10:
+    material: POLISHED_DEEPSLATE
+    name: "&8Polished Deepslate"
+    slot: 10
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  chiseled_deepslate_p1s11:
+    material: CHISELED_DEEPSLATE
+    name: "&8Chiseled Deepslate"
+    slot: 11
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  deepslate_bricks_p1s12:
+    material: DEEPSLATE_BRICKS
+    name: "&8Deepslate Bricks"
+    slot: 12
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  deepslate_tiles_p1s13:
+    material: DEEPSLATE_TILES
+    name: "&8Deepslate Tiles"
+    slot: 13
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  tuff_p1s14:
+    material: TUFF
+    name: "&8Tuff"
+    slot: 14
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  calcite_p1s15:
+    material: CALCITE
+    name: "&fCalcite"
+    slot: 15
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  dripstone_block_p1s16:
+    material: DRIPSTONE_BLOCK
+    name: "&6Dripstone Block"
+    slot: 16
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  smooth_stone_p1s17:
+    material: SMOOTH_STONE
+    name: "&7Smooth Stone"
+    slot: 17
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  stone_bricks_p1s18:
+    material: STONE_BRICKS
+    name: "&7Stone Bricks"
+    slot: 18
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  mossy_stone_bricks_p1s19:
+    material: MOSSY_STONE_BRICKS
+    name: "&aMossy Stone Bricks"
+    slot: 19
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  cracked_stone_bricks_p1s20:
+    material: CRACKED_STONE_BRICKS
+    name: "&7Cracked Stone Bricks"
+    slot: 20
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  chiseled_stone_bricks_p1s21:
+    material: CHISELED_STONE_BRICKS
+    name: "&7Chiseled Stone Bricks"
+    slot: 21
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  gravel_p1s22:
+    material: GRAVEL
+    name: "&8Gravel"
+    slot: 22
+    page: 1
+    amount: 1
+    buy-price: 40
+    sell-price: 8.0
+  sand_p1s23:
+    material: SAND
+    name: "&eSand"
+    slot: 23
+    page: 1
+    amount: 1
+    buy-price: 40
+    sell-price: 8.0
+  red_sand_p1s24:
+    material: RED_SAND
+    name: "&cRed Sand"
+    slot: 24
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  clay_p1s25:
+    material: CLAY
+    name: "&9Clay"
+    slot: 25
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  dirt_p1s26:
+    material: DIRT
+    name: "&6Dirt"
+    slot: 26
+    page: 1
+    amount: 1
+    buy-price: 40
+    sell-price: 8.0
+  coarse_dirt_p1s27:
+    material: COARSE_DIRT
+    name: "&6Coarse Dirt"
+    slot: 27
+    page: 1
+    amount: 1
+    buy-price: 40
+    sell-price: 8.0
+  rooted_dirt_p1s28:
+    material: ROOTED_DIRT
+    name: "&6Rooted Dirt"
+    slot: 28
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  podzol_p1s29:
+    material: PODZOL
+    name: "&6Podzol"
+    slot: 29
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  sandstone_p1s30:
+    material: SANDSTONE
+    name: "&eSandstone"
+    slot: 30
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  smooth_sandstone_p1s31:
+    material: SMOOTH_SANDSTONE
+    name: "&eSmooth Sandstone"
+    slot: 31
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  chiseled_sandstone_p1s32:
+    material: CHISELED_SANDSTONE
+    name: "&eChiseled Sandstone"
+    slot: 32
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  cut_sandstone_p1s33:
+    material: CUT_SANDSTONE
+    name: "&eCut Sandstone"
+    slot: 33
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  red_sandstone_p1s34:
+    material: RED_SANDSTONE
+    name: "&cRed Sandstone"
+    slot: 34
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  smooth_red_sandstone_p1s35:
+    material: SMOOTH_RED_SANDSTONE
+    name: "&cSmooth Red Sandstone"
+    slot: 35
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  chiseled_red_sandstone_p1s36:
+    material: CHISELED_RED_SANDSTONE
+    name: "&cChiseled Red Sandstone"
+    slot: 36
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  cut_red_sandstone_p1s37:
+    material: CUT_RED_SANDSTONE
+    name: "&cCut Red Sandstone"
+    slot: 37
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  prismarine_p1s38:
+    material: PRISMARINE
+    name: "&3Prismarine"
+    slot: 38
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  prismarine_bricks_p1s39:
+    material: PRISMARINE_BRICKS
+    name: "&3Prismarine Bricks"
+    slot: 39
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 288.0
+  dark_prismarine_p1s40:
+    material: DARK_PRISMARINE
+    name: "&3Dark Prismarine"
+    slot: 40
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 288.0
+  sea_lantern_p1s41:
+    material: SEA_LANTERN
+    name: "&bSea Lantern"
+    slot: 41
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 288.0
+  bricks_p1s42:
+    material: BRICKS
+    name: "&cBricks"
+    slot: 42
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  nether_bricks_p1s43:
+    material: NETHER_BRICKS
+    name: "&4Nether Bricks"
+    slot: 43
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  mud_bricks_p1s44:
+    material: MUD_BRICKS
+    name: "&6Mud Bricks"
+    slot: 44
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  oak_log_p2s0:
+    material: OAK_LOG
+    name: "&6Oak Log"
+    slot: 0
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  spruce_log_p2s1:
+    material: SPRUCE_LOG
+    name: "&6Spruce Log"
+    slot: 1
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  birch_log_p2s2:
+    material: BIRCH_LOG
+    name: "&fBirch Log"
+    slot: 2
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  jungle_log_p2s3:
+    material: JUNGLE_LOG
+    name: "&aJungle Log"
+    slot: 3
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  acacia_log_p2s4:
+    material: ACACIA_LOG
+    name: "&cAcacia Log"
+    slot: 4
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  dark_oak_log_p2s5:
+    material: DARK_OAK_LOG
+    name: "&8Dark Oak Log"
+    slot: 5
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  mangrove_log_p2s6:
+    material: MANGROVE_LOG
+    name: "&4Mangrove Log"
+    slot: 6
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  cherry_log_p2s7:
+    material: CHERRY_LOG
+    name: "&dCherry Log"
+    slot: 7
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  bamboo_block_p2s8:
+    material: BAMBOO_BLOCK
+    name: "&aBamboo Block"
+    slot: 8
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  oak_planks_p2s9:
+    material: OAK_PLANKS
+    name: "&6Oak Planks"
+    slot: 9
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  spruce_planks_p2s10:
+    material: SPRUCE_PLANKS
+    name: "&6Spruce Planks"
+    slot: 10
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  birch_planks_p2s11:
+    material: BIRCH_PLANKS
+    name: "&fBirch Planks"
+    slot: 11
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  jungle_planks_p2s12:
+    material: JUNGLE_PLANKS
+    name: "&aJungle Planks"
+    slot: 12
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  acacia_planks_p2s13:
+    material: ACACIA_PLANKS
+    name: "&cAcacia Planks"
+    slot: 13
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  dark_oak_planks_p2s14:
+    material: DARK_OAK_PLANKS
+    name: "&8Dark Oak Planks"
+    slot: 14
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  mangrove_planks_p2s15:
+    material: MANGROVE_PLANKS
+    name: "&4Mangrove Planks"
+    slot: 15
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  cherry_planks_p2s16:
+    material: CHERRY_PLANKS
+    name: "&dCherry Planks"
+    slot: 16
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  bamboo_planks_p2s17:
+    material: BAMBOO_PLANKS
+    name: "&aBamboo Planks"
+    slot: 17
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  stripped_oak_log_p2s18:
+    material: STRIPPED_OAK_LOG
+    name: "&6Stripped Oak Log"
+    slot: 18
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  stripped_spruce_log_p2s19:
+    material: STRIPPED_SPRUCE_LOG
+    name: "&6Stripped Spruce Log"
+    slot: 19
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  stripped_birch_log_p2s20:
+    material: STRIPPED_BIRCH_LOG
+    name: "&fStripped Birch Log"
+    slot: 20
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  stripped_jungle_log_p2s21:
+    material: STRIPPED_JUNGLE_LOG
+    name: "&aStripped Jungle Log"
+    slot: 21
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  stripped_acacia_log_p2s22:
+    material: STRIPPED_ACACIA_LOG
+    name: "&cStripped Acacia Log"
+    slot: 22
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  stripped_dark_oak_log_p2s23:
+    material: STRIPPED_DARK_OAK_LOG
+    name: "&8Stripped Dark Oak"
+    slot: 23
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  stripped_mangrove_log_p2s24:
+    material: STRIPPED_MANGROVE_LOG
+    name: "&4Stripped Mangrove"
+    slot: 24
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  stripped_cherry_log_p2s25:
+    material: STRIPPED_CHERRY_LOG
+    name: "&dStripped Cherry Log"
+    slot: 25
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  obsidian_p2s26:
+    material: OBSIDIAN
+    name: "&5Obsidian"
+    slot: 26
+    page: 2
+    amount: 1
+    buy-price: 3500
+    sell-price: 700.0
+  crying_obsidian_p2s27:
+    material: CRYING_OBSIDIAN
+    name: "&5Crying Obsidian"
+    slot: 27
+    page: 2
+    amount: 1
+    buy-price: 5000
+    sell-price: 900.0
+  ice_p2s28:
+    material: ICE
+    name: "&bIce"
+    slot: 28
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  packed_ice_p2s29:
+    material: PACKED_ICE
+    name: "&bPacked Ice"
+    slot: 29
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  blue_ice_p2s30:
+    material: BLUE_ICE
+    name: "&bBlue Ice"
+    slot: 30
+    page: 2
+    amount: 1
+    buy-price: 1200
+    sell-price: 288.0
+  snow_block_p2s31:
+    material: SNOW_BLOCK
+    name: "&fSnow Block"
+    slot: 31
+    page: 2
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  hay_block_p2s32:
+    material: HAY_BLOCK
+    name: "&eHay Block"
+    slot: 32
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  honeycomb_block_p2s33:
+    material: HONEYCOMB_BLOCK
+    name: "&6Honeycomb Block"
+    slot: 33
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  bookshelf_p2s34:
+    material: BOOKSHELF
+    name: "&6Bookshelf"
+    slot: 34
+    page: 2
+    amount: 1
+    buy-price: 1200
+    sell-price: 288.0
+  chiseled_bookshelf_p2s35:
+    material: CHISELED_BOOKSHELF
+    name: "&6Chiseled Bookshelf"
+    slot: 35
+    page: 2
+    amount: 1
+    buy-price: 1200
+    sell-price: 288.0
+  barrel_p2s36:
+    material: BARREL
+    name: "&6Barrel"
+    slot: 36
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  chest_p2s37:
+    material: CHEST
+    name: "&6Chest"
+    slot: 37
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  trapped_chest_p2s38:
+    material: TRAPPED_CHEST
+    name: "&cTrapped Chest"
+    slot: 38
+    page: 2
+    amount: 1
+    buy-price: 1200
+    sell-price: 288.0
+  ender_chest_p2s39:
+    material: ENDER_CHEST
+    name: "&5Ender Chest"
+    slot: 39
+    page: 2
+    amount: 1
+    buy-price: 40000
+    sell-price: 6400.0
+  furnace_p2s40:
+    material: FURNACE
+    name: "&7Furnace"
+    slot: 40
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  blast_furnace_p2s41:
+    material: BLAST_FURNACE
+    name: "&7Blast Furnace"
+    slot: 41
+    page: 2
+    amount: 1
+    buy-price: 1200
+    sell-price: 288.0
+  smoker_p2s42:
+    material: SMOKER
+    name: "&7Smoker"
+    slot: 42
+    page: 2
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  crafting_table_p2s43:
+    material: CRAFTING_TABLE
+    name: "&6Crafting Table"
+    slot: 43
+    page: 2
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  white_wool_p3s0:
+    material: WHITE_WOOL
+    name: "&fWhite Wool"
+    slot: 0
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  orange_wool_p3s1:
+    material: ORANGE_WOOL
+    name: "&6Orange Wool"
+    slot: 1
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  magenta_wool_p3s2:
+    material: MAGENTA_WOOL
+    name: "&dMagenta Wool"
+    slot: 2
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  light_blue_wool_p3s3:
+    material: LIGHT_BLUE_WOOL
+    name: "&bLight Blue Wool"
+    slot: 3
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  yellow_wool_p3s4:
+    material: YELLOW_WOOL
+    name: "&eYellow Wool"
+    slot: 4
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  lime_wool_p3s5:
+    material: LIME_WOOL
+    name: "&aLime Wool"
+    slot: 5
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  pink_wool_p3s6:
+    material: PINK_WOOL
+    name: "&dPink Wool"
+    slot: 6
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  gray_wool_p3s7:
+    material: GRAY_WOOL
+    name: "&8Gray Wool"
+    slot: 7
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  light_gray_wool_p3s8:
+    material: LIGHT_GRAY_WOOL
+    name: "&7Light Gray Wool"
+    slot: 8
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  cyan_wool_p3s9:
+    material: CYAN_WOOL
+    name: "&3Cyan Wool"
+    slot: 9
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  purple_wool_p3s10:
+    material: PURPLE_WOOL
+    name: "&5Purple Wool"
+    slot: 10
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  blue_wool_p3s11:
+    material: BLUE_WOOL
+    name: "&9Blue Wool"
+    slot: 11
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  brown_wool_p3s12:
+    material: BROWN_WOOL
+    name: "&6Brown Wool"
+    slot: 12
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  green_wool_p3s13:
+    material: GREEN_WOOL
+    name: "&2Green Wool"
+    slot: 13
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  red_wool_p3s14:
+    material: RED_WOOL
+    name: "&cRed Wool"
+    slot: 14
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  black_wool_p3s15:
+    material: BLACK_WOOL
+    name: "&0Black Wool"
+    slot: 15
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  white_concrete_p3s16:
+    material: WHITE_CONCRETE
+    name: "&fWhite Concrete"
+    slot: 16
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  orange_concrete_p3s17:
+    material: ORANGE_CONCRETE
+    name: "&6Orange Concrete"
+    slot: 17
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  magenta_concrete_p3s18:
+    material: MAGENTA_CONCRETE
+    name: "&dMagenta Concrete"
+    slot: 18
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  light_blue_concrete_p3s19:
+    material: LIGHT_BLUE_CONCRETE
+    name: "&bLight Blue Concrete"
+    slot: 19
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  yellow_concrete_p3s20:
+    material: YELLOW_CONCRETE
+    name: "&eYellow Concrete"
+    slot: 20
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  lime_concrete_p3s21:
+    material: LIME_CONCRETE
+    name: "&aLime Concrete"
+    slot: 21
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  pink_concrete_p3s22:
+    material: PINK_CONCRETE
+    name: "&dPink Concrete"
+    slot: 22
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  gray_concrete_p3s23:
+    material: GRAY_CONCRETE
+    name: "&8Gray Concrete"
+    slot: 23
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  light_gray_concrete_p3s24:
+    material: LIGHT_GRAY_CONCRETE
+    name: "&7Light Gray Concrete"
+    slot: 24
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  cyan_concrete_p3s25:
+    material: CYAN_CONCRETE
+    name: "&3Cyan Concrete"
+    slot: 25
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  purple_concrete_p3s26:
+    material: PURPLE_CONCRETE
+    name: "&5Purple Concrete"
+    slot: 26
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  blue_concrete_p3s27:
+    material: BLUE_CONCRETE
+    name: "&9Blue Concrete"
+    slot: 27
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  brown_concrete_p3s28:
+    material: BROWN_CONCRETE
+    name: "&6Brown Concrete"
+    slot: 28
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  green_concrete_p3s29:
+    material: GREEN_CONCRETE
+    name: "&2Green Concrete"
+    slot: 29
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  red_concrete_p3s30:
+    material: RED_CONCRETE
+    name: "&cRed Concrete"
+    slot: 30
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  black_concrete_p3s31:
+    material: BLACK_CONCRETE
+    name: "&0Black Concrete"
+    slot: 31
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  terracotta_p3s32:
+    material: TERRACOTTA
+    name: "&6Terracotta"
+    slot: 32
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  white_terracotta_p3s33:
+    material: WHITE_TERRACOTTA
+    name: "&fWhite Terracotta"
+    slot: 33
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  orange_terracotta_p3s34:
+    material: ORANGE_TERRACOTTA
+    name: "&6Orange Terracotta"
+    slot: 34
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  yellow_terracotta_p3s35:
+    material: YELLOW_TERRACOTTA
+    name: "&eYellow Terracotta"
+    slot: 35
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  red_terracotta_p3s36:
+    material: RED_TERRACOTTA
+    name: "&cRed Terracotta"
+    slot: 36
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  brown_terracotta_p3s37:
+    material: BROWN_TERRACOTTA
+    name: "&6Brown Terracotta"
+    slot: 37
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  white_glazed_terracotta_p3s38:
+    material: WHITE_GLAZED_TERRACOTTA
+    name: "&fGlazed Terracotta"
+    slot: 38
+    page: 3
+    amount: 1
+    buy-price: 1200
+    sell-price: 288.0
+  orange_glazed_terracotta_p3s39:
+    material: ORANGE_GLAZED_TERRACOTTA
+    name: "&6Glazed Orange Terracotta"
+    slot: 39
+    page: 3
+    amount: 1
+    buy-price: 1200
+    sell-price: 288.0
+  cyan_glazed_terracotta_p3s40:
+    material: CYAN_GLAZED_TERRACOTTA
+    name: "&3Glazed Cyan Terracotta"
+    slot: 40
+    page: 3
+    amount: 1
+    buy-price: 1200
+    sell-price: 288.0
+  blue_glazed_terracotta_p3s41:
+    material: BLUE_GLAZED_TERRACOTTA
+    name: "&9Glazed Blue Terracotta"
+    slot: 41
+    page: 3
+    amount: 1
+    buy-price: 1200
+    sell-price: 288.0
+  glass_p3s42:
+    material: GLASS
+    name: "&bGlass"
+    slot: 42
+    page: 3
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  tinted_glass_p3s43:
+    material: TINTED_GLASS
+    name: "&8Tinted Glass"
+    slot: 43
+    page: 3
+    amount: 1
+    buy-price: 1200
+    sell-price: 288.0
+  sponge_p3s44:
+    material: SPONGE
+    name: "&eWet Sponge"
+    slot: 44
+    page: 3
+    amount: 1
+    buy-price: 3500
+    sell-price: 770.0

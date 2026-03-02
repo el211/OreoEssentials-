@@ -30,13 +30,13 @@ public class CategoryGUI implements InventoryProvider {
                 .provider(new CategoryGUI(module))
                 .manager(module.getPlugin().getInvManager())
                 .size(6, 9)
-                .title(c("&b&lCategories"))
+                .title(c(module.getConfig().getGui().getString("categories.title", "&b&lCategories")))
                 .build();
     }
 
     @Override
     public void init(Player player, InventoryContents contents) {
-        contents.fillBorders(ClickableItem.empty(glass(Material.CYAN_STAINED_GLASS_PANE)));
+        contents.fillBorders(ClickableItem.empty(glass(module.getConfig().guiBorder("categories", Material.CYAN_STAINED_GLASS_PANE))));
 
         YamlConfiguration cats = module.getConfig().getCategories();
         for (AuctionCategory cat : AuctionCategory.values()) {
@@ -78,10 +78,12 @@ public class CategoryGUI implements InventoryProvider {
             }));
         }
 
-        contents.set(5, 4, ClickableItem.of(named(Material.BARRIER, "&c&lBack to Browse"), e -> {
-            click(player);
-            BrowseGUI.getInventory(module, (AuctionCategory) null, null).open(player);
-        }));
+        var cfg = module.getConfig();
+        int backSlot = cfg.guiSlot("categories", "back", 49);
+        contents.set(backSlot / 9, backSlot % 9, ClickableItem.of(
+                named(cfg.guiMaterial("categories", "back", Material.BARRIER),
+                        cfg.guiNameRaw("categories", "back", "&c&lBack to Browse")),
+                e -> { click(player); BrowseGUI.getInventory(module, (AuctionCategory) null, null).open(player); }));
 
     }
 

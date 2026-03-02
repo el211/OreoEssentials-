@@ -29,16 +29,18 @@ public class ExpiredGUI implements InventoryProvider {
                 .provider(new ExpiredGUI(module))
                 .manager(module.getPlugin().getInvManager())
                 .size(6, 9)
-                .title(c("&c&lExpired Listings"))
+                .title(c(module.getConfig().getGui().getString("expired.title", "&c&lExpired Listings")))
                 .build();
     }
 
     @Override
     public void init(Player player, InventoryContents contents) {
         Pagination pg = contents.pagination();
-        contents.fillBorders(ClickableItem.empty(glass(Material.RED_STAINED_GLASS_PANE)));
+        contents.fillBorders(ClickableItem.empty(glass(module.getConfig().guiBorder("expired", Material.RED_STAINED_GLASS_PANE))));
 
         List<Auction> expired = module.getPlayerExpired(player.getUniqueId());
+
+        var cfg = module.getConfig();
 
         if (expired.isEmpty()) {
             contents.set(2, 4, ClickableItem.empty(named(Material.BARRIER, "&a&lNo Expired Items!")));
@@ -50,8 +52,11 @@ public class ExpiredGUI implements InventoryProvider {
             it.blacklist(1,8).blacklist(2,0).blacklist(2,8).blacklist(3,0).blacklist(3,8).blacklist(4,1);
             pg.addToIterator(it);
 
-            ItemStack reclaimAll = named(Material.CHEST, "&a&lReclaim All (" + expired.size() + ")");
-            contents.set(5, 1, ClickableItem.of(reclaimAll, e -> {
+            int raSlot = cfg.guiSlot("expired", "reclaim-all", 46);
+            String raName = cfg.guiNameRaw("expired", "reclaim-all", "&a&lReclaim All ({count})")
+                    .replace("{count}", String.valueOf(expired.size()));
+            ItemStack reclaimAll = named(cfg.guiMaterial("expired", "reclaim-all", Material.CHEST), raName);
+            contents.set(raSlot / 9, raSlot % 9, ClickableItem.of(reclaimAll, e -> {
                 click(player);
                 int count = 0;
                 for (Auction a : new ArrayList<>(expired)) {
@@ -65,12 +70,26 @@ public class ExpiredGUI implements InventoryProvider {
             }));
         }
 
-        if (!pg.isFirst()) contents.set(5, 3, ClickableItem.of(named(Material.ARROW, "&e&lPrevious"), e -> { click(player); getInventory(module).open(player, pg.previous().getPage()); }));
-        if (!pg.isLast())  contents.set(5, 5, ClickableItem.of(named(Material.ARROW, "&e&lNext"), e -> { click(player); getInventory(module).open(player, pg.next().getPage()); }));
+        if (!pg.isFirst()) {
+            int slot = cfg.guiSlot("expired", "prev-page", 48);
+            contents.set(slot / 9, slot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("expired", "prev-page", Material.ARROW),
+                            cfg.guiNameRaw("expired", "prev-page", "&e&lPrevious")),
+                    e -> { click(player); getInventory(module).open(player, pg.previous().getPage()); }));
+        }
+        if (!pg.isLast()) {
+            int slot = cfg.guiSlot("expired", "next-page", 50);
+            contents.set(slot / 9, slot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("expired", "next-page", Material.ARROW),
+                            cfg.guiNameRaw("expired", "next-page", "&e&lNext")),
+                    e -> { click(player); getInventory(module).open(player, pg.next().getPage()); }));
+        }
 
-        contents.set(5, 4, ClickableItem.of(named(Material.BARRIER, "&c&lBack"), e -> {
-            click(player); ManageGUI.getInventory(module).open(player);
-        }));
+        int backSlot = cfg.guiSlot("expired", "back", 49);
+        contents.set(backSlot / 9, backSlot % 9, ClickableItem.of(
+                named(cfg.guiMaterial("expired", "back", Material.BARRIER),
+                        cfg.guiNameRaw("expired", "back", "&c&lBack")),
+                e -> { click(player); ManageGUI.getInventory(module).open(player); }));
 
         ItemStack info = named(Material.CLOCK, "&c&lExpired Items: " + expired.size());
         contents.set(0, 4, ClickableItem.empty(info));

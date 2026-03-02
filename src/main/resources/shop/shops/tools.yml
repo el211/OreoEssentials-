@@ -1,0 +1,375 @@
+shop-id: tools
+title: "&7&lTools &6& &fUtility"
+rows: 6
+pages: 2
+
+items:
+
+  wooden_pickaxe_p1s0:
+    material: WOODEN_PICKAXE
+    name: "&6Wood Pickaxe"
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 900
+    sell-price: 162.0
+  stone_pickaxe_p1s1:
+    material: STONE_PICKAXE
+    name: "&7Stone Pickaxe"
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 450.0
+  iron_pickaxe_p1s2:
+    material: IRON_PICKAXE
+    name: "&7Iron Pickaxe"
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 2040.0
+  golden_pickaxe_p1s3:
+    material: GOLDEN_PICKAXE
+    name: "&6Gold Pickaxe"
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 8000
+    sell-price: 1280.0
+  diamond_pickaxe_p1s4:
+    material: DIAMOND_PICKAXE
+    name: "&bDiamond Pickaxe"
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 95000
+    sell-price: 15200.0
+  netherite_pickaxe_p1s5:
+    material: NETHERITE_PICKAXE
+    name: "&4Netherite Pickaxe"
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 2000000
+    sell-price: 240000.0
+  wooden_axe_p1s6:
+    material: WOODEN_AXE
+    name: "&6Wood Axe"
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 900
+    sell-price: 162.0
+  stone_axe_p1s7:
+    material: STONE_AXE
+    name: "&7Stone Axe"
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 450.0
+  iron_axe_p1s8:
+    material: IRON_AXE
+    name: "&7Iron Axe"
+    slot: 8
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 2040.0
+  golden_axe_p1s9:
+    material: GOLDEN_AXE
+    name: "&6Gold Axe"
+    slot: 9
+    page: 1
+    amount: 1
+    buy-price: 8000
+    sell-price: 1280.0
+  diamond_axe_p1s10:
+    material: DIAMOND_AXE
+    name: "&bDiamond Axe"
+    slot: 10
+    page: 1
+    amount: 1
+    buy-price: 95000
+    sell-price: 15200.0
+  netherite_axe_p1s11:
+    material: NETHERITE_AXE
+    name: "&4Netherite Axe"
+    slot: 11
+    page: 1
+    amount: 1
+    buy-price: 2000000
+    sell-price: 240000.0
+  wooden_shovel_p1s12:
+    material: WOODEN_SHOVEL
+    name: "&6Wood Shovel"
+    slot: 12
+    page: 1
+    amount: 1
+    buy-price: 900
+    sell-price: 162.0
+  stone_shovel_p1s13:
+    material: STONE_SHOVEL
+    name: "&7Stone Shovel"
+    slot: 13
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 450.0
+  iron_shovel_p1s14:
+    material: IRON_SHOVEL
+    name: "&7Iron Shovel"
+    slot: 14
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 2040.0
+  golden_shovel_p1s15:
+    material: GOLDEN_SHOVEL
+    name: "&6Gold Shovel"
+    slot: 15
+    page: 1
+    amount: 1
+    buy-price: 8000
+    sell-price: 1280.0
+  diamond_shovel_p1s16:
+    material: DIAMOND_SHOVEL
+    name: "&bDiamond Shovel"
+    slot: 16
+    page: 1
+    amount: 1
+    buy-price: 95000
+    sell-price: 15200.0
+  netherite_shovel_p1s17:
+    material: NETHERITE_SHOVEL
+    name: "&4Netherite Shovel"
+    slot: 17
+    page: 1
+    amount: 1
+    buy-price: 2000000
+    sell-price: 240000.0
+  wooden_hoe_p1s18:
+    material: WOODEN_HOE
+    name: "&6Wood Hoe"
+    slot: 18
+    page: 1
+    amount: 1
+    buy-price: 900
+    sell-price: 162.0
+  stone_hoe_p1s19:
+    material: STONE_HOE
+    name: "&7Stone Hoe"
+    slot: 19
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 450.0
+  iron_hoe_p1s20:
+    material: IRON_HOE
+    name: "&7Iron Hoe"
+    slot: 20
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 2040.0
+  golden_hoe_p1s21:
+    material: GOLDEN_HOE
+    name: "&6Gold Hoe"
+    slot: 21
+    page: 1
+    amount: 1
+    buy-price: 8000
+    sell-price: 1280.0
+  diamond_hoe_p1s22:
+    material: DIAMOND_HOE
+    name: "&bDiamond Hoe"
+    slot: 22
+    page: 1
+    amount: 1
+    buy-price: 95000
+    sell-price: 15200.0
+  netherite_hoe_p1s23:
+    material: NETHERITE_HOE
+    name: "&4Netherite Hoe"
+    slot: 23
+    page: 1
+    amount: 1
+    buy-price: 2000000
+    sell-price: 240000.0
+  flint_and_steel_p1s24:
+    material: FLINT_AND_STEEL
+    name: "&7Flint and Steel"
+    slot: 24
+    page: 1
+    amount: 1
+    buy-price: 8000
+    sell-price: 1280.0
+  shears_p1s25:
+    material: SHEARS
+    name: "&7Shears"
+    slot: 25
+    page: 1
+    amount: 1
+    buy-price: 6000
+    sell-price: 1020.0
+  fishing_rod_p1s26:
+    material: FISHING_ROD
+    name: "&6Fishing Rod"
+    slot: 26
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  compass_p1s27:
+    material: COMPASS
+    name: "&7Compass"
+    slot: 27
+    page: 1
+    amount: 1
+    buy-price: 4000
+    sell-price: 680.0
+  recovery_compass_p1s28:
+    material: RECOVERY_COMPASS
+    name: "&cRecovery Compass"
+    slot: 28
+    page: 1
+    amount: 1
+    buy-price: 50000
+    sell-price: 7000.0
+  clock_p1s29:
+    material: CLOCK
+    name: "&6Clock"
+    slot: 29
+    page: 1
+    amount: 1
+    buy-price: 4000
+    sell-price: 680.0
+  spyglass_p1s30:
+    material: SPYGLASS
+    name: "&bSpyglass"
+    slot: 30
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  lead_p1s31:
+    material: LEAD
+    name: "&6Lead"
+    slot: 31
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 360.0
+  name_tag_p1s32:
+    material: NAME_TAG
+    name: "&6Name Tag"
+    slot: 32
+    page: 1
+    amount: 1
+    buy-price: 20000
+    sell-price: 3000.0
+  bucket_p1s33:
+    material: BUCKET
+    name: "&7Bucket"
+    slot: 33
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  water_bucket_p1s34:
+    material: WATER_BUCKET
+    name: "&bWater Bucket"
+    slot: 34
+    page: 1
+    amount: 1
+    buy-price: 6000
+    sell-price: 1020.0
+  lava_bucket_p1s35:
+    material: LAVA_BUCKET
+    name: "&6Lava Bucket"
+    slot: 35
+    page: 1
+    amount: 1
+    buy-price: 8000
+    sell-price: 1280.0
+  powder_snow_bucket_p1s36:
+    material: POWDER_SNOW_BUCKET
+    name: "&fPowder Snow Bucket"
+    slot: 36
+    page: 1
+    amount: 1
+    buy-price: 7000
+    sell-price: 1120.0
+  milk_bucket_p1s37:
+    material: MILK_BUCKET
+    name: "&fMilk Bucket"
+    slot: 37
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  axolotl_bucket_p1s38:
+    material: AXOLOTL_BUCKET
+    name: "&bAxolotl Bucket"
+    slot: 38
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2250.0
+  tadpole_bucket_p1s39:
+    material: TADPOLE_BUCKET
+    name: "&aFrog Bucket"
+    slot: 39
+    page: 1
+    amount: 1
+    buy-price: 10000
+    sell-price: 1500.0
+  saddle_p1s40:
+    material: SADDLE
+    name: "&6Saddle"
+    slot: 40
+    page: 1
+    amount: 1
+    buy-price: 25000
+    sell-price: 3500.0
+  shield_p1s41:
+    material: SHIELD
+    name: "&7Shield"
+    slot: 41
+    page: 1
+    amount: 1
+    buy-price: 18000
+    sell-price: 2880.0
+  elytra_p1s42:
+    material: ELYTRA
+    name: "&5Elytra"
+    slot: 42
+    page: 1
+    amount: 1
+    buy-price: 800000
+    sell-price: 96000.0
+  trident_p1s43:
+    material: TRIDENT
+    name: "&bTrident"
+    slot: 43
+    page: 1
+    amount: 1
+    buy-price: 200000
+    sell-price: 26000.0
+  bow_p1s44:
+    material: BOW
+    name: "&6Bow"
+    slot: 44
+    page: 1
+    amount: 1
+    buy-price: 10000
+    sell-price: 1700.0
+  crossbow_p2s0:
+    material: CROSSBOW
+    name: "&fCrossbow"
+    slot: 0
+    page: 2
+    amount: 1
+    buy-price: 15000
+    sell-price: 2400.0

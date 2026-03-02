@@ -28,14 +28,14 @@ public class SoldGUI implements InventoryProvider {
                 .provider(new SoldGUI(module))
                 .manager(module.getPlugin().getInvManager())
                 .size(6, 9)
-                .title(c("&a&lSold Items"))
+                .title(c(module.getConfig().getGui().getString("sold.title", "&a&lSold Items")))
                 .build();
     }
 
     @Override
     public void init(Player player, InventoryContents contents) {
         Pagination pg = contents.pagination();
-        contents.fillBorders(ClickableItem.empty(glass(Material.GREEN_STAINED_GLASS_PANE)));
+        contents.fillBorders(ClickableItem.empty(glass(module.getConfig().guiBorder("sold", Material.GREEN_STAINED_GLASS_PANE))));
 
         List<Auction> sold = module.getPlayerSold(player.getUniqueId());
 
@@ -50,12 +50,28 @@ public class SoldGUI implements InventoryProvider {
             pg.addToIterator(it);
         }
 
-        if (!pg.isFirst()) contents.set(5, 3, ClickableItem.of(named(Material.ARROW, "&e&lPrevious"), e -> { click(player); getInventory(module).open(player, pg.previous().getPage()); }));
-        if (!pg.isLast())  contents.set(5, 5, ClickableItem.of(named(Material.ARROW, "&e&lNext"), e -> { click(player); getInventory(module).open(player, pg.next().getPage()); }));
+        var cfg = module.getConfig();
 
-        contents.set(5, 4, ClickableItem.of(named(Material.BARRIER, "&c&lBack"), e -> {
-            click(player); ManageGUI.getInventory(module).open(player);
-        }));
+        if (!pg.isFirst()) {
+            int slot = cfg.guiSlot("sold", "prev-page", 48);
+            contents.set(slot / 9, slot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("sold", "prev-page", Material.ARROW),
+                            cfg.guiNameRaw("sold", "prev-page", "&e&lPrevious")),
+                    e -> { click(player); getInventory(module).open(player, pg.previous().getPage()); }));
+        }
+        if (!pg.isLast()) {
+            int slot = cfg.guiSlot("sold", "next-page", 50);
+            contents.set(slot / 9, slot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("sold", "next-page", Material.ARROW),
+                            cfg.guiNameRaw("sold", "next-page", "&e&lNext")),
+                    e -> { click(player); getInventory(module).open(player, pg.next().getPage()); }));
+        }
+
+        int backSlot = cfg.guiSlot("sold", "back", 49);
+        contents.set(backSlot / 9, backSlot % 9, ClickableItem.of(
+                named(cfg.guiMaterial("sold", "back", Material.BARRIER),
+                        cfg.guiNameRaw("sold", "back", "&c&lBack")),
+                e -> { click(player); ManageGUI.getInventory(module).open(player); }));
 
         double total = sold.stream().mapToDouble(Auction::getPrice).sum();
         ItemStack stats = named(Material.EMERALD, "&a&lSales Statistics");

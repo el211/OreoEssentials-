@@ -1,0 +1,351 @@
+shop-id: weapons_armor
+title: "&c&lWeapons &7& &bArmor"
+rows: 6
+pages: 1
+
+items:
+
+  wooden_sword_p1s0:
+    material: WOODEN_SWORD
+    name: "&6Wood Sword"
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 216.0
+  stone_sword_p1s1:
+    material: STONE_SWORD
+    name: "&7Stone Sword"
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 540.0
+  iron_sword_p1s2:
+    material: IRON_SWORD
+    name: "&7Iron Sword"
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2550.0
+  golden_sword_p1s3:
+    material: GOLDEN_SWORD
+    name: "&6Gold Sword"
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 10000
+    sell-price: 1600.0
+  diamond_sword_p1s4:
+    material: DIAMOND_SWORD
+    name: "&bDiamond Sword"
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 120000
+    sell-price: 19200.0
+  netherite_sword_p1s5:
+    material: NETHERITE_SWORD
+    name: "&4Netherite Sword"
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 2500000
+    sell-price: 300000.0
+  bow_p1s6:
+    material: BOW
+    name: "&6Bow"
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 10000
+    sell-price: 1700.0
+  crossbow_p1s7:
+    material: CROSSBOW
+    name: "&fCrossbow"
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2400.0
+  trident_p1s8:
+    material: TRIDENT
+    name: "&bTrident"
+    slot: 8
+    page: 1
+    amount: 1
+    buy-price: 200000
+    sell-price: 26000.0
+  arrow_p1s9:
+    material: ARROW
+    name: "&7Arrow"
+    slot: 9
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  spectral_arrow_p1s10:
+    material: SPECTRAL_ARROW
+    name: "&fSpectral Arrow"
+    slot: 10
+    page: 1
+    amount: 1
+    buy-price: 500
+    sell-price: 100.0
+  tipped_arrow_p1s11:
+    material: TIPPED_ARROW
+    name: "&dTipped Arrow"
+    slot: 11
+    page: 1
+    amount: 1
+    buy-price: 800
+    sell-price: 160.0
+  leather_helmet_p1s12:
+    material: LEATHER_HELMET
+    name: "&6Leather Helmet"
+    slot: 12
+    page: 1
+    amount: 1
+    buy-price: 800
+    sell-price: 144.0
+  chainmail_helmet_p1s13:
+    material: CHAINMAIL_HELMET
+    name: "&7Chain Helmet"
+    slot: 13
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  iron_helmet_p1s14:
+    material: IRON_HELMET
+    name: "&7Iron Helmet"
+    slot: 14
+    page: 1
+    amount: 1
+    buy-price: 18000
+    sell-price: 3060.0
+  golden_helmet_p1s15:
+    material: GOLDEN_HELMET
+    name: "&6Gold Helmet"
+    slot: 15
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  diamond_helmet_p1s16:
+    material: DIAMOND_HELMET
+    name: "&bDiamond Helmet"
+    slot: 16
+    page: 1
+    amount: 1
+    buy-price: 140000
+    sell-price: 22400.0
+  netherite_helmet_p1s17:
+    material: NETHERITE_HELMET
+    name: "&4Netherite Helmet"
+    slot: 17
+    page: 1
+    amount: 1
+    buy-price: 3000000
+    sell-price: 360000.0
+  turtle_helmet_p1s18:
+    material: TURTLE_HELMET
+    name: "&2Turtle Helmet"
+    slot: 18
+    page: 1
+    amount: 1
+    buy-price: 25000
+    sell-price: 4000.0
+  leather_chestplate_p1s19:
+    material: LEATHER_CHESTPLATE
+    name: "&6Leather Chestplate"
+    slot: 19
+    page: 1
+    amount: 1
+    buy-price: 800
+    sell-price: 144.0
+  chainmail_chestplate_p1s20:
+    material: CHAINMAIL_CHESTPLATE
+    name: "&7Chain Chestplate"
+    slot: 20
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  iron_chestplate_p1s21:
+    material: IRON_CHESTPLATE
+    name: "&7Iron Chestplate"
+    slot: 21
+    page: 1
+    amount: 1
+    buy-price: 18000
+    sell-price: 3060.0
+  golden_chestplate_p1s22:
+    material: GOLDEN_CHESTPLATE
+    name: "&6Gold Chestplate"
+    slot: 22
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  diamond_chestplate_p1s23:
+    material: DIAMOND_CHESTPLATE
+    name: "&bDiamond Chestplate"
+    slot: 23
+    page: 1
+    amount: 1
+    buy-price: 140000
+    sell-price: 22400.0
+  netherite_chestplate_p1s24:
+    material: NETHERITE_CHESTPLATE
+    name: "&4Netherite Chestplate"
+    slot: 24
+    page: 1
+    amount: 1
+    buy-price: 3000000
+    sell-price: 360000.0
+  elytra_p1s25:
+    material: ELYTRA
+    name: "&5Elytra"
+    slot: 25
+    page: 1
+    amount: 1
+    buy-price: 800000
+    sell-price: 96000.0
+  leather_leggings_p1s26:
+    material: LEATHER_LEGGINGS
+    name: "&6Leather Leggings"
+    slot: 26
+    page: 1
+    amount: 1
+    buy-price: 800
+    sell-price: 144.0
+  chainmail_leggings_p1s27:
+    material: CHAINMAIL_LEGGINGS
+    name: "&7Chain Leggings"
+    slot: 27
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  iron_leggings_p1s28:
+    material: IRON_LEGGINGS
+    name: "&7Iron Leggings"
+    slot: 28
+    page: 1
+    amount: 1
+    buy-price: 18000
+    sell-price: 3060.0
+  golden_leggings_p1s29:
+    material: GOLDEN_LEGGINGS
+    name: "&6Gold Leggings"
+    slot: 29
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  diamond_leggings_p1s30:
+    material: DIAMOND_LEGGINGS
+    name: "&bDiamond Leggings"
+    slot: 30
+    page: 1
+    amount: 1
+    buy-price: 140000
+    sell-price: 22400.0
+  netherite_leggings_p1s31:
+    material: NETHERITE_LEGGINGS
+    name: "&4Netherite Leggings"
+    slot: 31
+    page: 1
+    amount: 1
+    buy-price: 3000000
+    sell-price: 360000.0
+  leather_boots_p1s32:
+    material: LEATHER_BOOTS
+    name: "&6Leather Boots"
+    slot: 32
+    page: 1
+    amount: 1
+    buy-price: 800
+    sell-price: 144.0
+  chainmail_boots_p1s33:
+    material: CHAINMAIL_BOOTS
+    name: "&7Chain Boots"
+    slot: 33
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 850.0
+  iron_boots_p1s34:
+    material: IRON_BOOTS
+    name: "&7Iron Boots"
+    slot: 34
+    page: 1
+    amount: 1
+    buy-price: 18000
+    sell-price: 3060.0
+  golden_boots_p1s35:
+    material: GOLDEN_BOOTS
+    name: "&6Gold Boots"
+    slot: 35
+    page: 1
+    amount: 1
+    buy-price: 12000
+    sell-price: 1920.0
+  diamond_boots_p1s36:
+    material: DIAMOND_BOOTS
+    name: "&bDiamond Boots"
+    slot: 36
+    page: 1
+    amount: 1
+    buy-price: 140000
+    sell-price: 22400.0
+  netherite_boots_p1s37:
+    material: NETHERITE_BOOTS
+    name: "&4Netherite Boots"
+    slot: 37
+    page: 1
+    amount: 1
+    buy-price: 3000000
+    sell-price: 360000.0
+  leather_horse_armor_p1s38:
+    material: LEATHER_HORSE_ARMOR
+    name: "&6Leather Horse Armor"
+    slot: 38
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 320.0
+  iron_horse_armor_p1s39:
+    material: IRON_HORSE_ARMOR
+    name: "&7Iron Horse Armor"
+    slot: 39
+    page: 1
+    amount: 1
+    buy-price: 20000
+    sell-price: 3000.0
+  golden_horse_armor_p1s40:
+    material: GOLDEN_HORSE_ARMOR
+    name: "&6Gold Horse Armor"
+    slot: 40
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2250.0
+  diamond_horse_armor_p1s41:
+    material: DIAMOND_HORSE_ARMOR
+    name: "&bDiamond Horse Armor"
+    slot: 41
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 21000.0
+  shield_p1s42:
+    material: SHIELD
+    name: "&7Shield"
+    slot: 42
+    page: 1
+    amount: 1
+    buy-price: 18000
+    sell-price: 2880.0

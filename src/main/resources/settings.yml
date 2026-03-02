@@ -24,6 +24,9 @@ features:
     cooldown: false
     cooldown-amount: 5
 
+  shop:
+    enabled: true
+
   currency:
     enabled: true
   economy:

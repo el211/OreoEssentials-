@@ -1,0 +1,367 @@
+shop-id: food
+title: "&a&lFood &6& &eConsumables"
+rows: 6
+pages: 1
+
+items:
+
+  bread_p1s0:
+    material: BREAD
+    name: "&eBread"
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  apple_p1s1:
+    material: APPLE
+    name: "&aApple"
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  golden_apple_p1s2:
+    material: GOLDEN_APPLE
+    name: "&6Golden Apple"
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 40000
+    sell-price: 7200.0
+  enchanted_golden_apple_p1s3:
+    material: ENCHANTED_GOLDEN_APPLE
+    name: "&6&lGod Apple"
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 2500000
+    sell-price: 250000.0
+  cooked_beef_p1s4:
+    material: COOKED_BEEF
+    name: "&6Steak"
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 700
+    sell-price: 154.0
+  beef_p1s5:
+    material: BEEF
+    name: "&cRaw Beef"
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  cooked_porkchop_p1s6:
+    material: COOKED_PORKCHOP
+    name: "&fCooked Porkchop"
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 700
+    sell-price: 154.0
+  porkchop_p1s7:
+    material: PORKCHOP
+    name: "&fRaw Porkchop"
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  cooked_chicken_p1s8:
+    material: COOKED_CHICKEN
+    name: "&fCooked Chicken"
+    slot: 8
+    page: 1
+    amount: 1
+    buy-price: 700
+    sell-price: 154.0
+  chicken_p1s9:
+    material: CHICKEN
+    name: "&fRaw Chicken"
+    slot: 9
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  cooked_mutton_p1s10:
+    material: COOKED_MUTTON
+    name: "&fCooked Mutton"
+    slot: 10
+    page: 1
+    amount: 1
+    buy-price: 700
+    sell-price: 154.0
+  mutton_p1s11:
+    material: MUTTON
+    name: "&fRaw Mutton"
+    slot: 11
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  cooked_rabbit_p1s12:
+    material: COOKED_RABBIT
+    name: "&6Cooked Rabbit"
+    slot: 12
+    page: 1
+    amount: 1
+    buy-price: 700
+    sell-price: 154.0
+  rabbit_p1s13:
+    material: RABBIT
+    name: "&6Raw Rabbit"
+    slot: 13
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  cooked_salmon_p1s14:
+    material: COOKED_SALMON
+    name: "&6Cooked Salmon"
+    slot: 14
+    page: 1
+    amount: 1
+    buy-price: 700
+    sell-price: 154.0
+  salmon_p1s15:
+    material: SALMON
+    name: "&6Raw Salmon"
+    slot: 15
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  cooked_cod_p1s16:
+    material: COOKED_COD
+    name: "&fCooked Cod"
+    slot: 16
+    page: 1
+    amount: 1
+    buy-price: 700
+    sell-price: 154.0
+  cod_p1s17:
+    material: COD
+    name: "&fRaw Cod"
+    slot: 17
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  tropical_fish_p1s18:
+    material: TROPICAL_FISH
+    name: "&6Tropical Fish"
+    slot: 18
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  pufferfish_p1s19:
+    material: PUFFERFISH
+    name: "&ePufferfish"
+    slot: 19
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  carrot_p1s20:
+    material: CARROT
+    name: "&6Carrot"
+    slot: 20
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  golden_carrot_p1s21:
+    material: GOLDEN_CARROT
+    name: "&6Golden Carrot"
+    slot: 21
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2700.0
+  potato_p1s22:
+    material: POTATO
+    name: "&ePotato"
+    slot: 22
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  baked_potato_p1s23:
+    material: BAKED_POTATO
+    name: "&6Baked Potato"
+    slot: 23
+    page: 1
+    amount: 1
+    buy-price: 700
+    sell-price: 154.0
+  poisonous_potato_p1s24:
+    material: POISONOUS_POTATO
+    name: "&2Poisonous Potato"
+    slot: 24
+    page: 1
+    amount: 1
+    buy-price: 150
+    sell-price: 30.0
+  beetroot_p1s25:
+    material: BEETROOT
+    name: "&cBeetroot"
+    slot: 25
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  beetroot_soup_p1s26:
+    material: BEETROOT_SOUP
+    name: "&cBeetroot Soup"
+    slot: 26
+    page: 1
+    amount: 1
+    buy-price: 700
+    sell-price: 154.0
+  mushroom_stew_p1s27:
+    material: MUSHROOM_STEW
+    name: "&6Mushroom Stew"
+    slot: 27
+    page: 1
+    amount: 1
+    buy-price: 700
+    sell-price: 154.0
+  rabbit_stew_p1s28:
+    material: RABBIT_STEW
+    name: "&6Rabbit Stew"
+    slot: 28
+    page: 1
+    amount: 1
+    buy-price: 1800
+    sell-price: 360.0
+  pumpkin_pie_p1s29:
+    material: PUMPKIN_PIE
+    name: "&6Pumpkin Pie"
+    slot: 29
+    page: 1
+    amount: 1
+    buy-price: 1800
+    sell-price: 360.0
+  cookie_p1s30:
+    material: COOKIE
+    name: "&6Cookie"
+    slot: 30
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  cake_p1s31:
+    material: CAKE
+    name: "&fCake"
+    slot: 31
+    page: 1
+    amount: 1
+    buy-price: 1800
+    sell-price: 360.0
+  melon_slice_p1s32:
+    material: MELON_SLICE
+    name: "&aWatermelon"
+    slot: 32
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  sweet_berries_p1s33:
+    material: SWEET_BERRIES
+    name: "&cSweet Berries"
+    slot: 33
+    page: 1
+    amount: 1
+    buy-price: 350
+    sell-price: 77.0
+  glow_berries_p1s34:
+    material: GLOW_BERRIES
+    name: "&6Glow Berries"
+    slot: 34
+    page: 1
+    amount: 1
+    buy-price: 800
+    sell-price: 176.0
+  honey_bottle_p1s35:
+    material: HONEY_BOTTLE
+    name: "&6Honey Bottle"
+    slot: 35
+    page: 1
+    amount: 1
+    buy-price: 1500
+    sell-price: 300.0
+  dried_kelp_p1s36:
+    material: DRIED_KELP
+    name: "&aKelp"
+    slot: 36
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  spider_eye_p1s37:
+    material: SPIDER_EYE
+    name: "&cSpider Eye"
+    slot: 37
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 120.0
+  fermented_spider_eye_p1s38:
+    material: FERMENTED_SPIDER_EYE
+    name: "&cFermented Spider Eye"
+    slot: 38
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 475.0
+  rotten_flesh_p1s39:
+    material: ROTTEN_FLESH
+    name: "&aRotten Flesh"
+    slot: 39
+    page: 1
+    amount: 1
+    buy-price: 80
+    sell-price: 16.0
+  chorus_fruit_p1s40:
+    material: CHORUS_FRUIT
+    name: "&dChorus Fruit"
+    slot: 40
+    page: 1
+    amount: 1
+    buy-price: 3500
+    sell-price: 665.0
+  sugar_p1s41:
+    material: SUGAR
+    name: "&fSugar"
+    slot: 41
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  egg_p1s42:
+    material: EGG
+    name: "&fEgg"
+    slot: 42
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 44.0
+  bowl_p1s43:
+    material: BOWL
+    name: "&6Bowl"
+    slot: 43
+    page: 1
+    amount: 1
+    buy-price: 150
+    sell-price: 33.0
+  milk_bucket_p1s44:
+    material: MILK_BUCKET
+    name: "&fMilk Bucket"
+    slot: 44
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 500.0

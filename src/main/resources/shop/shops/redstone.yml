@@ -1,0 +1,303 @@
+shop-id: redstone
+title: "&c&lRedstone &8& Mechanisms"
+rows: 6
+pages: 1
+
+items:
+
+  redstone_p1s0:
+    material: REDSTONE
+    name: "&cRedstone Dust"
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 440.0
+  redstone_block_p1s1:
+    material: REDSTONE_BLOCK
+    name: "&cRedstone Block"
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 16000
+    sell-price: 3520.0
+  redstone_torch_p1s2:
+    material: REDSTONE_TORCH
+    name: "&cRedstone Torch"
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 800
+    sell-price: 176.0
+  redstone_lamp_p1s3:
+    material: REDSTONE_LAMP
+    name: "&cRedstone Lamp"
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 600.0
+  repeater_p1s4:
+    material: REPEATER
+    name: "&7Repeater"
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 500.0
+  comparator_p1s5:
+    material: COMPARATOR
+    name: "&7Comparator"
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 3500
+    sell-price: 665.0
+  observer_p1s6:
+    material: OBSERVER
+    name: "&8Observer"
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 4000
+    sell-price: 760.0
+  piston_p1s7:
+    material: PISTON
+    name: "&7Piston"
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 570.0
+  sticky_piston_p1s8:
+    material: STICKY_PISTON
+    name: "&aSicky Piston"
+    slot: 8
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 950.0
+  slime_block_p1s9:
+    material: SLIME_BLOCK
+    name: "&aSlime Block"
+    slot: 9
+    page: 1
+    amount: 1
+    buy-price: 8000
+    sell-price: 1440.0
+  honey_block_p1s10:
+    material: HONEY_BLOCK
+    name: "&6Honey Block"
+    slot: 10
+    page: 1
+    amount: 1
+    buy-price: 7000
+    sell-price: 1260.0
+  dispenser_p1s11:
+    material: DISPENSER
+    name: "&7Dispenser"
+    slot: 11
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 900.0
+  dropper_p1s12:
+    material: DROPPER
+    name: "&7Dropper"
+    slot: 12
+    page: 1
+    amount: 1
+    buy-price: 4000
+    sell-price: 720.0
+  hopper_p1s13:
+    material: HOPPER
+    name: "&7Hopper"
+    slot: 13
+    page: 1
+    amount: 1
+    buy-price: 6000
+    sell-price: 1080.0
+  tnt_p1s14:
+    material: TNT
+    name: "&cTNT"
+    slot: 14
+    page: 1
+    amount: 1
+    buy-price: 8000
+    sell-price: 1360.0
+  lever_p1s15:
+    material: LEVER
+    name: "&7Lever"
+    slot: 15
+    page: 1
+    amount: 1
+    buy-price: 500
+    sell-price: 100.0
+  oak_button_p1s16:
+    material: OAK_BUTTON
+    name: "&6Button"
+    slot: 16
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 60.0
+  stone_button_p1s17:
+    material: STONE_BUTTON
+    name: "&7Stone Button"
+    slot: 17
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 80.0
+  oak_pressure_plate_p1s18:
+    material: OAK_PRESSURE_PLATE
+    name: "&6Wood Pressure Plate"
+    slot: 18
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 80.0
+  stone_pressure_plate_p1s19:
+    material: STONE_PRESSURE_PLATE
+    name: "&7Stone Pressure Plate"
+    slot: 19
+    page: 1
+    amount: 1
+    buy-price: 500
+    sell-price: 100.0
+  heavy_weighted_pressure_plate_p1s20:
+    material: HEAVY_WEIGHTED_PRESSURE_PLATE
+    name: "&7Iron Pressure Plate"
+    slot: 20
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 570.0
+  light_weighted_pressure_plate_p1s21:
+    material: LIGHT_WEIGHTED_PRESSURE_PLATE
+    name: "&6Gold Pressure Plate"
+    slot: 21
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 475.0
+  sculk_sensor_p1s22:
+    material: SCULK_SENSOR
+    name: "&5Sculk Sensor"
+    slot: 22
+    page: 1
+    amount: 1
+    buy-price: 15000
+    sell-price: 2550.0
+  calibrated_sculk_sensor_p1s23:
+    material: CALIBRATED_SCULK_SENSOR
+    name: "&5Calibrated Sculk Sensor"
+    slot: 23
+    page: 1
+    amount: 1
+    buy-price: 30000
+    sell-price: 4800.0
+  sculk_shrieker_p1s24:
+    material: SCULK_SHRIEKER
+    name: "&5Sculk Shrieker"
+    slot: 24
+    page: 1
+    amount: 1
+    buy-price: 20000
+    sell-price: 3000.0
+  daylight_detector_p1s25:
+    material: DAYLIGHT_DETECTOR
+    name: "&6Daylight Detector"
+    slot: 25
+    page: 1
+    amount: 1
+    buy-price: 4000
+    sell-price: 720.0
+  tripwire_hook_p1s26:
+    material: TRIPWIRE_HOOK
+    name: "&7Tripwire Hook"
+    slot: 26
+    page: 1
+    amount: 1
+    buy-price: 1000
+    sell-price: 200.0
+  note_block_p1s27:
+    material: NOTE_BLOCK
+    name: "&aNote Block"
+    slot: 27
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 475.0
+  jukebox_p1s28:
+    material: JUKEBOX
+    name: "&6Jukebox"
+    slot: 28
+    page: 1
+    amount: 1
+    buy-price: 8000
+    sell-price: 1360.0
+  target_p1s29:
+    material: TARGET
+    name: "&cTarget Block"
+    slot: 29
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 570.0
+  command_block_p1s30:
+    material: COMMAND_BLOCK
+    name: "&aCommand Block"
+    slot: 30
+    page: 1
+    amount: 1
+    buy-price: 9999999
+    sell-price: 999999.9
+  iron_trapdoor_p1s31:
+    material: IRON_TRAPDOOR
+    name: "&7Iron Trapdoor"
+    slot: 31
+    page: 1
+    amount: 1
+    buy-price: 4000
+    sell-price: 720.0
+  iron_door_p1s32:
+    material: IRON_DOOR
+    name: "&7Iron Door"
+    slot: 32
+    page: 1
+    amount: 1
+    buy-price: 4000
+    sell-price: 720.0
+  oak_trapdoor_p1s33:
+    material: OAK_TRAPDOOR
+    name: "&6Wood Trapdoor"
+    slot: 33
+    page: 1
+    amount: 1
+    buy-price: 800
+    sell-price: 160.0
+  oak_door_p1s34:
+    material: OAK_DOOR
+    name: "&6Wood Door"
+    slot: 34
+    page: 1
+    amount: 1
+    buy-price: 800
+    sell-price: 160.0
+  oak_fence_gate_p1s35:
+    material: OAK_FENCE_GATE
+    name: "&6Fence Gate"
+    slot: 35
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 120.0
+  oak_fence_p1s36:
+    material: OAK_FENCE
+    name: "&6Fence"
+    slot: 36
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 80.0

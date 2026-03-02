@@ -1,0 +1,367 @@
+shop-id: nether
+title: "&4&lNether &cItems"
+rows: 6
+pages: 1
+
+items:
+
+  netherrack_p1s0:
+    material: NETHERRACK
+    name: "&4Netherrack"
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 40
+    sell-price: 8.0
+  soul_sand_p1s1:
+    material: SOUL_SAND
+    name: "&6Soul Sand"
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 800
+    sell-price: 176.0
+  soul_soil_p1s2:
+    material: SOUL_SOIL
+    name: "&6Soul Soil"
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 700
+    sell-price: 154.0
+  basalt_p1s3:
+    material: BASALT
+    name: "&8Basalt"
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  smooth_basalt_p1s4:
+    material: SMOOTH_BASALT
+    name: "&8Smooth Basalt"
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  blackstone_p1s5:
+    material: BLACKSTONE
+    name: "&0Blackstone"
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  polished_blackstone_p1s6:
+    material: POLISHED_BLACKSTONE
+    name: "&0Polished Blackstone"
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  polished_blackstone_bricks_p1s7:
+    material: POLISHED_BLACKSTONE_BRICKS
+    name: "&0Polished Blackstone Bricks"
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  gilded_blackstone_p1s8:
+    material: GILDED_BLACKSTONE
+    name: "&6Gilded Blackstone"
+    slot: 8
+    page: 1
+    amount: 1
+    buy-price: 8500
+    sell-price: 1785.0
+  nether_bricks_p1s9:
+    material: NETHER_BRICKS
+    name: "&4Nether Bricks"
+    slot: 9
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  red_nether_bricks_p1s10:
+    material: RED_NETHER_BRICKS
+    name: "&cRed Nether Bricks"
+    slot: 10
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  cracked_nether_bricks_p1s11:
+    material: CRACKED_NETHER_BRICKS
+    name: "&4Cracked Nether Bricks"
+    slot: 11
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  chiseled_nether_bricks_p1s12:
+    material: CHISELED_NETHER_BRICKS
+    name: "&4Chiseled Nether Bricks"
+    slot: 12
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  nether_wart_block_p1s13:
+    material: NETHER_WART_BLOCK
+    name: "&4Nether Wart Block"
+    slot: 13
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 600.0
+  warped_wart_block_p1s14:
+    material: WARPED_WART_BLOCK
+    name: "&5Warped Wart Block"
+    slot: 14
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 600.0
+  glowstone_p1s15:
+    material: GLOWSTONE
+    name: "&eGlowstone"
+    slot: 15
+    page: 1
+    amount: 1
+    buy-price: 4200
+    sell-price: 840.0
+  glowstone_dust_p1s16:
+    material: GLOWSTONE_DUST
+    name: "&eGlowstone Dust"
+    slot: 16
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 240.0
+  magma_block_p1s17:
+    material: MAGMA_BLOCK
+    name: "&cMagma Block"
+    slot: 17
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 400.0
+  crimson_stem_p1s18:
+    material: CRIMSON_STEM
+    name: "&4Crimson Stem"
+    slot: 18
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  stripped_crimson_stem_p1s19:
+    material: STRIPPED_CRIMSON_STEM
+    name: "&4Stripped Crimson Stem"
+    slot: 19
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  crimson_planks_p1s20:
+    material: CRIMSON_PLANKS
+    name: "&4Crimson Planks"
+    slot: 20
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  crimson_hyphae_p1s21:
+    material: CRIMSON_HYPHAE
+    name: "&4Crimson Hyphae"
+    slot: 21
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  warped_stem_p1s22:
+    material: WARPED_STEM
+    name: "&5Warped Stem"
+    slot: 22
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  stripped_warped_stem_p1s23:
+    material: STRIPPED_WARPED_STEM
+    name: "&5Stripped Warped Stem"
+    slot: 23
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 138.0
+  warped_planks_p1s24:
+    material: WARPED_PLANKS
+    name: "&5Warped Planks"
+    slot: 24
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  warped_hyphae_p1s25:
+    material: WARPED_HYPHAE
+    name: "&5Warped Hyphae"
+    slot: 25
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  nether_quartz_ore_p1s26:
+    material: NETHER_QUARTZ_ORE
+    name: "&fNether Quartz Ore"
+    slot: 26
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 400.0
+  quartz_p1s27:
+    material: QUARTZ
+    name: "&fNether Quartz"
+    slot: 27
+    page: 1
+    amount: 1
+    buy-price: 1500
+    sell-price: 300.0
+  quartz_block_p1s28:
+    material: QUARTZ_BLOCK
+    name: "&fQuartz Block"
+    slot: 28
+    page: 1
+    amount: 1
+    buy-price: 5500
+    sell-price: 1100.0
+  smooth_quartz_p1s29:
+    material: SMOOTH_QUARTZ
+    name: "&fSmooth Quartz"
+    slot: 29
+    page: 1
+    amount: 1
+    buy-price: 6500
+    sell-price: 1300.0
+  nether_gold_ore_p1s30:
+    material: NETHER_GOLD_ORE
+    name: "&6Nether Gold Ore"
+    slot: 30
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 1000.0
+  ancient_debris_p1s31:
+    material: ANCIENT_DEBRIS
+    name: "&4Ancient Debris"
+    slot: 31
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 27000.0
+  netherite_scrap_p1s32:
+    material: NETHERITE_SCRAP
+    name: "&4Netherite Scrap"
+    slot: 32
+    page: 1
+    amount: 1
+    buy-price: 120000
+    sell-price: 21600.0
+  netherite_ingot_p1s33:
+    material: NETHERITE_INGOT
+    name: "&4&lNetherite Ingot"
+    slot: 33
+    page: 1
+    amount: 1
+    buy-price: 600000
+    sell-price: 90000.0
+  nether_wart_p1s34:
+    material: NETHER_WART
+    name: "&4Nether Wart"
+    slot: 34
+    page: 1
+    amount: 1
+    buy-price: 2500
+    sell-price: 500.0
+  blaze_rod_p1s35:
+    material: BLAZE_ROD
+    name: "&6Blaze Rod"
+    slot: 35
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 1000.0
+  blaze_powder_p1s36:
+    material: BLAZE_POWDER
+    name: "&6Blaze Powder"
+    slot: 36
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 400.0
+  magma_cream_p1s37:
+    material: MAGMA_CREAM
+    name: "&cMagma Cream"
+    slot: 37
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 570.0
+  ghast_tear_p1s38:
+    material: GHAST_TEAR
+    name: "&fGhast Tear"
+    slot: 38
+    page: 1
+    amount: 1
+    buy-price: 18000
+    sell-price: 3420.0
+  nether_star_p1s39:
+    material: NETHER_STAR
+    name: "&f&lNether Star"
+    slot: 39
+    page: 1
+    amount: 1
+    buy-price: 1000000
+    sell-price: 140000.0
+  wither_skeleton_skull_p1s40:
+    material: WITHER_SKELETON_SKULL
+    name: "&0Wither Skull"
+    slot: 40
+    page: 1
+    amount: 1
+    buy-price: 200000
+    sell-price: 30000.0
+  bone_p1s41:
+    material: BONE
+    name: "&fBone"
+    slot: 41
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 252.0
+  skull_banner_pattern_p1s42:
+    material: SKULL_BANNER_PATTERN
+    name: "&0Skull Pattern"
+    slot: 42
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 800.0
+  crying_obsidian_p1s43:
+    material: CRYING_OBSIDIAN
+    name: "&5Crying Obsidian"
+    slot: 43
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 900.0
+  respawn_anchor_p1s44:
+    material: RESPAWN_ANCHOR
+    name: "&5Respawn Anchor"
+    slot: 44
+    page: 1
+    amount: 1
+    buy-price: 80000
+    sell-price: 12000.0

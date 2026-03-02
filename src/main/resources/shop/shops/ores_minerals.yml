@@ -1,0 +1,367 @@
+shop-id: ores_minerals
+title: "&e&lOres &8& &f&lMinerals"
+rows: 6
+pages: 1
+
+items:
+
+  coal_p1s0:
+    material: COAL
+    name: "&8Coal"
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 500
+    sell-price: 110.0
+  charcoal_p1s1:
+    material: CHARCOAL
+    name: "&8Charcoal"
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 400
+    sell-price: 88.0
+  coal_block_p1s2:
+    material: COAL_BLOCK
+    name: "&8Coal Block"
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 4000
+    sell-price: 880.0
+  raw_iron_p1s3:
+    material: RAW_IRON
+    name: "&7Raw Iron"
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 264.0
+  iron_ingot_p1s4:
+    material: IRON_INGOT
+    name: "&7Iron Ingot"
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 3500
+    sell-price: 770.0
+  iron_block_p1s5:
+    material: IRON_BLOCK
+    name: "&7Iron Block"
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 28000
+    sell-price: 6160.0
+  raw_copper_p1s6:
+    material: RAW_COPPER
+    name: "&6Raw Copper"
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 600
+    sell-price: 132.0
+  copper_ingot_p1s7:
+    material: COPPER_INGOT
+    name: "&6Copper Ingot"
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 1000
+    sell-price: 220.0
+  copper_block_p1s8:
+    material: COPPER_BLOCK
+    name: "&6Copper Block"
+    slot: 8
+    page: 1
+    amount: 1
+    buy-price: 8000
+    sell-price: 1680.0
+  raw_gold_p1s9:
+    material: RAW_GOLD
+    name: "&6Raw Gold"
+    slot: 9
+    page: 1
+    amount: 1
+    buy-price: 4000
+    sell-price: 880.0
+  gold_ingot_p1s10:
+    material: GOLD_INGOT
+    name: "&6Gold Ingot"
+    slot: 10
+    page: 1
+    amount: 1
+    buy-price: 8500
+    sell-price: 1785.0
+  gold_block_p1s11:
+    material: GOLD_BLOCK
+    name: "&6Gold Block"
+    slot: 11
+    page: 1
+    amount: 1
+    buy-price: 72000
+    sell-price: 15120.0
+  gold_nugget_p1s12:
+    material: GOLD_NUGGET
+    name: "&6Gold Nugget"
+    slot: 12
+    page: 1
+    amount: 1
+    buy-price: 1000
+    sell-price: 200.0
+  iron_nugget_p1s13:
+    material: IRON_NUGGET
+    name: "&7Iron Nugget"
+    slot: 13
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: 40.0
+  redstone_p1s14:
+    material: REDSTONE
+    name: "&cRedstone"
+    slot: 14
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 440.0
+  redstone_block_p1s15:
+    material: REDSTONE_BLOCK
+    name: "&cRedstone Block"
+    slot: 15
+    page: 1
+    amount: 1
+    buy-price: 16000
+    sell-price: 3520.0
+  lapis_lazuli_p1s16:
+    material: LAPIS_LAZULI
+    name: "&9Lapis Lazuli"
+    slot: 16
+    page: 1
+    amount: 1
+    buy-price: 3000
+    sell-price: 600.0
+  lapis_block_p1s17:
+    material: LAPIS_BLOCK
+    name: "&9Lapis Block"
+    slot: 17
+    page: 1
+    amount: 1
+    buy-price: 24000
+    sell-price: 4800.0
+  quartz_p1s18:
+    material: QUARTZ
+    name: "&fNether Quartz"
+    slot: 18
+    page: 1
+    amount: 1
+    buy-price: 1500
+    sell-price: 300.0
+  quartz_block_p1s19:
+    material: QUARTZ_BLOCK
+    name: "&fQuartz Block"
+    slot: 19
+    page: 1
+    amount: 1
+    buy-price: 5500
+    sell-price: 1100.0
+  smooth_quartz_p1s20:
+    material: SMOOTH_QUARTZ
+    name: "&fSmooth Quartz"
+    slot: 20
+    page: 1
+    amount: 1
+    buy-price: 6500
+    sell-price: 1300.0
+  chiseled_quartz_block_p1s21:
+    material: CHISELED_QUARTZ_BLOCK
+    name: "&fChiseled Quartz"
+    slot: 21
+    page: 1
+    amount: 1
+    buy-price: 7000
+    sell-price: 1400.0
+  diamond_p1s22:
+    material: DIAMOND
+    name: "&bDiamond"
+    slot: 22
+    page: 1
+    amount: 1
+    buy-price: 30000
+    sell-price: 6000.0
+  diamond_block_p1s23:
+    material: DIAMOND_BLOCK
+    name: "&bDiamond Block"
+    slot: 23
+    page: 1
+    amount: 1
+    buy-price: 240000
+    sell-price: 48000.0
+  emerald_p1s24:
+    material: EMERALD
+    name: "&aEmerald"
+    slot: 24
+    page: 1
+    amount: 1
+    buy-price: 30000
+    sell-price: 6000.0
+  emerald_block_p1s25:
+    material: EMERALD_BLOCK
+    name: "&aEmerald Block"
+    slot: 25
+    page: 1
+    amount: 1
+    buy-price: 240000
+    sell-price: 48000.0
+  amethyst_shard_p1s26:
+    material: AMETHYST_SHARD
+    name: "&dAmethyst Shard"
+    slot: 26
+    page: 1
+    amount: 1
+    buy-price: 1800
+    sell-price: 378.0
+  amethyst_block_p1s27:
+    material: AMETHYST_BLOCK
+    name: "&dAmethyst Block"
+    slot: 27
+    page: 1
+    amount: 1
+    buy-price: 13000
+    sell-price: 2730.0
+  ancient_debris_p1s28:
+    material: ANCIENT_DEBRIS
+    name: "&4Ancient Debris"
+    slot: 28
+    page: 1
+    amount: 1
+    buy-price: 150000
+    sell-price: 27000.0
+  netherite_scrap_p1s29:
+    material: NETHERITE_SCRAP
+    name: "&4Netherite Scrap"
+    slot: 29
+    page: 1
+    amount: 1
+    buy-price: 120000
+    sell-price: 21600.0
+  netherite_ingot_p1s30:
+    material: NETHERITE_INGOT
+    name: "&4Netherite Ingot"
+    slot: 30
+    page: 1
+    amount: 1
+    buy-price: 600000
+    sell-price: 90000.0
+  netherite_block_p1s31:
+    material: NETHERITE_BLOCK
+    name: "&4Netherite Block"
+    slot: 31
+    page: 1
+    amount: 1
+    buy-price: 4800000
+    sell-price: 672000.0
+  glowstone_dust_p1s32:
+    material: GLOWSTONE_DUST
+    name: "&eGlowstone Dust"
+    slot: 32
+    page: 1
+    amount: 1
+    buy-price: 1200
+    sell-price: 240.0
+  glowstone_p1s33:
+    material: GLOWSTONE
+    name: "&eGlowstone"
+    slot: 33
+    page: 1
+    amount: 1
+    buy-price: 4200
+    sell-price: 840.0
+  flint_p1s34:
+    material: FLINT
+    name: "&7Flint"
+    slot: 34
+    page: 1
+    amount: 1
+    buy-price: 300
+    sell-price: 66.0
+  nether_quartz_ore_p1s35:
+    material: NETHER_QUARTZ_ORE
+    name: "&fNether Quartz Ore"
+    slot: 35
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 400.0
+  gilded_blackstone_p1s36:
+    material: GILDED_BLACKSTONE
+    name: "&6Gilded Blackstone"
+    slot: 36
+    page: 1
+    amount: 1
+    buy-price: 8000
+    sell-price: 1520.0
+  crying_obsidian_p1s37:
+    material: CRYING_OBSIDIAN
+    name: "&5Crying Obsidian"
+    slot: 37
+    page: 1
+    amount: 1
+    buy-price: 5000
+    sell-price: 900.0
+  magma_block_p1s38:
+    material: MAGMA_BLOCK
+    name: "&cMagma Block"
+    slot: 38
+    page: 1
+    amount: 1
+    buy-price: 2000
+    sell-price: 400.0
+  soul_sand_p1s39:
+    material: SOUL_SAND
+    name: "&6Soul Sand"
+    slot: 39
+    page: 1
+    amount: 1
+    buy-price: 800
+    sell-price: 176.0
+  soul_soil_p1s40:
+    material: SOUL_SOIL
+    name: "&6Soul Soil"
+    slot: 40
+    page: 1
+    amount: 1
+    buy-price: 700
+    sell-price: 154.0
+  basalt_p1s41:
+    material: BASALT
+    name: "&8Basalt"
+    slot: 41
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  blackstone_p1s42:
+    material: BLACKSTONE
+    name: "&0Blackstone"
+    slot: 42
+    page: 1
+    amount: 1
+    buy-price: 120
+    sell-price: 26.4
+  polished_blackstone_p1s43:
+    material: POLISHED_BLACKSTONE
+    name: "&0Polished Blackstone"
+    slot: 43
+    page: 1
+    amount: 1
+    buy-price: 250
+    sell-price: 55.0
+  netherrack_p1s44:
+    material: NETHERRACK
+    name: "&4Netherrack"
+    slot: 44
+    page: 1
+    amount: 1
+    buy-price: 40
+    sell-price: 8.0

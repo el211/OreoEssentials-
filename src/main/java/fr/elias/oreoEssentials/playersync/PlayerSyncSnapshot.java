@@ -47,7 +47,6 @@ public final class PlayerSyncSnapshot implements Serializable {
             s.health      = ois.readDouble();
             s.food        = ois.readInt();
             s.saturation  = ois.readFloat();
-            // potionData was added later; old blobs won't have it
             try {
                 String pd = (String) ois.readObject();
                 s.potionData = (pd != null && !pd.isEmpty()) ? pd : null;
