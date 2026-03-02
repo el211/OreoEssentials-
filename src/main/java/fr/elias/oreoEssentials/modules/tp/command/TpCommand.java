@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/commands/core/admins/TpCommand.java
 package fr.elias.oreoEssentials.modules.tp.command;
 
 import fr.elias.oreoEssentials.OreoEssentials;

@@ -86,7 +86,7 @@ public class ZEssentialsHomeImporter {
         if (raw == null || raw.isEmpty()) return null;
 
         try {
-            String[] parts = raw.split(";");
+            String[] parts = raw.split(",");
             if (parts.length < 4) {
                 return null;
             }

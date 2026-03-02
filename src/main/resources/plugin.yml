@@ -243,6 +243,18 @@ commands:
     usage: "/importzhomes"
     permission: oreo.admin.import
 
+  zimport:
+    description: "Import homes, warps & economy from zEssentials into OreoEssentials"
+    aliases: [ zessimport, importzessentials ]
+    usage: "/zimport [homes|warps|economy|all]"
+    permission: oreo.admin.import
+
+  migrateessentials:
+    description: "Import homes, warps & economy from EssentialsX into OreoEssentials"
+    aliases: [ importessentials, esximport ]
+    usage: "/migrateessentials [homes|warps|economy|all]"
+    permission: oreo.admin.import
+
   ban:
     description: Ban a player (optionally temporary)
     permission: oreo.ban

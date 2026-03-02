@@ -93,6 +93,8 @@ import fr.elias.oreoEssentials.modules.currency.storage.MongoCurrencyStorage;
 import fr.elias.oreoEssentials.modules.enderchest.EcCommand;
 import fr.elias.oreoEssentials.modules.enderchest.EcSeeCommand;
 import fr.elias.oreoEssentials.migration.commands.ZEssentialsHomesImportCommand;
+import fr.elias.oreoEssentials.migration.commands.ZImportCommand;
+import fr.elias.oreoEssentials.migration.essentialsx.command.MigrateEssentialsXCommand;
 import fr.elias.oreoEssentials.modules.nametag.PlayerNametagManager;
 import fr.elias.oreoEssentials.modules.playerwarp.*;
 import fr.elias.oreoEssentials.modules.playerwarp.command.PlayerWarpCommand;
@@ -1489,6 +1491,8 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.UuidCommand())
                 .register(new TpCommand(teleportService))
                 .register(new ZEssentialsHomesImportCommand(this, storage, homeDirectory))
+                .register(new ZImportCommand(this, homeDirectory))
+                .register(new MigrateEssentialsXCommand(this, homeDirectory))
                 .register(new MoveCommand(teleportService))
                 .register(new EcoMigrateCommand(this))
                 .register(new fr.elias.oreoEssentials.modules.currency.commands.CurrencyAdminCommand(this));

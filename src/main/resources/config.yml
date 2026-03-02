@@ -457,12 +457,48 @@ messages:
   cheque-created: "You have created a cheque for {amount} USD!"
   cheque-redeemed: "You have redeemed a cheque for {amount} USD!"
 
-# ==================== MIGRATION & COMPATIBILITY ====================
+# ==================== MIGRATION & COMPATIBILITY ( BETA MODE  !!!! THIS IS STILL IN TESTING MODE!!!) ====================
 
 # zEssentials migration
+# Use /zimport [homes|warps|economy|all]  (or the legacy /importzhomes for homes only)
 zessentials-migration:
   enabled: true
   jdbc-url: "jdbc:sqlite:plugins/zEssentials/data.db"
   user: ""
   password: ""
   table-prefix: "zessentials_"
+
+  # Which economy_name to pull from the zessentials_economies table.
+  # Check your zEssentials economy/config.yml — default is "money".
+  economy-name: "money"
+
+  # What to do when a record already exists in OreoEssentials:
+  #   skip      – leave the existing data untouched
+  #   overwrite – replace it with the zEssentials value
+  on-conflict: "skip"
+
+  # Fallback path for warp data (used when the storages SQL table has no warp row).
+  # zEssentials persists ConfigStorage (which holds all warps) to this JSON file.
+  # Relative paths are resolved from the server root directory.
+  warp-json-path: "plugins/zEssentials/config_storage.json"
+
+# EssentialsX migration
+# Set enabled: true, run /migrateessentials, then set back to false.
+# Works with all OreoEssentials storage backends: yaml, json, mongodb.
+essentialsx-migration:
+  enabled: false
+
+  # Path to the EssentialsX plugin folder.
+  # Relative paths are resolved from the server root (where server.jar is).
+  data-path: "plugins/Essentials"
+
+  # Choose which data types to import when running /migrateessentials all
+  import:
+    homes: true
+    warps: true
+    economy: true
+
+  # What to do when an OreoEssentials record already exists for that player/warp:
+  #   skip      – leave the existing OreoEssentials data untouched
+  #   overwrite – replace it with the EssentialsX value
+  on-conflict: "skip"
