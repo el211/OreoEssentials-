@@ -57,9 +57,7 @@ public final class JoinMessagesListener implements Listener {
 
         long delayTicks = Math.max(0L, c.getLong(SECTION + ".join_message_delay", 0L) * 20L);
 
-        // Resolve permissions INSIDE the task so they are checked after the player
-        // is fully initialised (permission plugins may attach permissions at MONITOR
-        // priority or asynchronously before this task runs).
+
         Runnable send = () -> {
             String body = RankedMessageUtil.resolveRankedText(c, SECTION, key, p, defaultBody)
                     .replace("{name}", namePlain);
@@ -67,6 +65,8 @@ public final class JoinMessagesListener implements Listener {
             String output = lookLikePlayer
                     ? (playerPrefixFmt + " " + playerName + " " + delimiter + " " + body)
                     : body;
+
+            output = papi(p, output);
 
             ResolvedSound sound = resolveSound(c, SECTION, p);
 
@@ -84,7 +84,6 @@ public final class JoinMessagesListener implements Listener {
         else Bukkit.getScheduler().runTask(plugin, send);
     }
 
-    // ─── Sound resolution ───
 
     private static ResolvedSound resolveSound(FileConfiguration c, String section, Player p) {
         ConfigurationSection sounds = c.getConfigurationSection(section + ".sounds");
@@ -97,7 +96,6 @@ public final class JoinMessagesListener implements Listener {
         List<?> formats = sounds.getList("formats");
         if (formats != null) {
             ConfigurationSection fmtSec = sounds.getConfigurationSection("formats");
-            // formats is a list of maps, iterate via parent
             var rawList = sounds.getMapList("formats");
             for (var map : rawList) {
                 Object perm = map.get("permission");
@@ -119,7 +117,15 @@ public final class JoinMessagesListener implements Listener {
 
     private record ResolvedSound(String key, float volume, float pitch) {}
 
-
+    private static String papi(Player p, String text) {
+        if (text == null || text.isEmpty()) return text;
+        try {
+            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                return me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, text);
+            }
+        } catch (Throwable ignored) {}
+        return text;
+    }
 
     private boolean shouldDisableBackend(FileConfiguration c, String section) {
         if (!c.getBoolean(section + ".disable_on_backend", false)) return false;

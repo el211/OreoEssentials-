@@ -53,9 +53,11 @@ public final class QuitMessagesListener implements Listener {
         String body = RankedMessageUtil.resolveRankedText(c, SECTION, "message", p, defaultBody)
                 .replace("{name}", namePlain);
 
-        final String output = lookLikePlayer
+        final String outputRaw = lookLikePlayer
                 ? (playerPrefixFmt + " " + playerName + " " + delimiter + " " + body)
                 : body;
+
+        final String output = papi(p, outputRaw);
 
         final ResolvedSound sound = resolveSound(c, SECTION, p);
 
@@ -69,7 +71,6 @@ public final class QuitMessagesListener implements Listener {
         }
     }
 
-    // ─── Sound resolution ───
 
     private static ResolvedSound resolveSound(FileConfiguration c, String section, Player p) {
         ConfigurationSection sounds = c.getConfigurationSection(section + ".sounds");
@@ -99,6 +100,15 @@ public final class QuitMessagesListener implements Listener {
 
     private record ResolvedSound(String key, float volume, float pitch) {}
 
+    private static String papi(Player p, String text) {
+        if (text == null || text.isEmpty()) return text;
+        try {
+            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                return me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, text);
+            }
+        } catch (Throwable ignored) {}
+        return text;
+    }
 
     private boolean shouldDisableBackend(FileConfiguration c, String section) {
         if (!c.getBoolean(section + ".disable_on_backend", false)) return false;

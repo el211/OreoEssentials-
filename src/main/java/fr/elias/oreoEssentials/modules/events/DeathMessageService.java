@@ -1,4 +1,3 @@
-// File: src/main/java/fr/elias/oreoEssentials/events/DeathMessageService.java
 package fr.elias.oreoEssentials.modules.events;
 
 import org.bukkit.Bukkit;
@@ -20,7 +19,7 @@ public final class DeathMessageService {
 
     public DeathMessageService(File dataFolder) {
         this.file = new File(dataFolder, "death-messages.yml");
-        if (!file.exists()) writeSkeleton(); // paste your full config later if you want
+        if (!file.exists()) writeSkeleton();
         reload();
     }
 
@@ -29,7 +28,6 @@ public final class DeathMessageService {
         this.enabled = yml.getBoolean("Enabled", true); // NEW
     }
 
-    /** Persist ONLY the toggle to avoid rewriting user formatting. */
     public void save() {
         if (yml == null) return;
         try {
@@ -40,7 +38,6 @@ public final class DeathMessageService {
         }
     }
 
-    // Toggle API (NEW)
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean v) { this.enabled = v; }
     public boolean toggleEnabled() { this.enabled = !this.enabled; return this.enabled; }
@@ -57,10 +54,9 @@ public final class DeathMessageService {
             EntityDamageEvent.DamageCause cause,
             ItemStack itemUsed,
             String projectileType,
-            String mythicId,            // e.g., "AncientOverlord"
-            String mythicDisplayName    // colored display, may be null
+            String mythicId,
+            String mythicDisplayName
     ) {
-        // Honor master toggle (NEW)
         if (!enabled) return null;
 
         Map<String, String> vars = new HashMap<>();
@@ -72,7 +68,6 @@ public final class DeathMessageService {
         vars.put("[mobMythicId]", mythicId == null ? "" : mythicId);
         vars.put("[mobMythicName]", mythicDisplayName == null ? "" : mythicDisplayName);
 
-        // Source display preference: player > mythic display > mob pretty > "Unknown"
         String sourceDisplay = killer != null ? killer.getDisplayName() :
                 (mythicDisplayName != null && !mythicDisplayName.isEmpty() ? mythicDisplayName :
                         (mobKiller != null ? pretty(mobKiller.name()) : "Unknown"));
@@ -80,19 +75,16 @@ public final class DeathMessageService {
 
         String line = null;
 
-        // 1) Player killer
         if (killer != null) {
             if (itemUsed != null && itemUsed.getType() != null) line = pick(yml.getStringList("Player.Item"));
             if (line == null && projectileType != null)        line = pick(yml.getStringList("Player.Projectile"));
             if (line == null)                                  line = pick(yml.getStringList("Player.General"));
 
-            // Optional named subgroups for special projectiles (Fireball/Firework/Tnt) under Player.*
             if (line == null && projectileType != null) {
                 String cat = "Player." + projectileKey(projectileType);
                 line = pick(yml.getStringList(cat));
             }
         }
-        // 2) Mythic mob killer (highest priority over vanilla mob section)
         else if (mythicId != null && !mythicId.isEmpty()) {
             String base = "Mythic." + mythicId; // exact internal ID
             String li = null;
@@ -100,7 +92,6 @@ public final class DeathMessageService {
             if (li == null) li = pick(yml.getStringList(base + ".General"));
             line = li;
         }
-        // 3) Vanilla mob killer
         else if (mobKiller != null) {
             String base = "Mob." + mobKiller.name().toLowerCase(Locale.ROOT);
             String li = null;
@@ -121,26 +112,33 @@ public final class DeathMessageService {
         }
 
         if (line == null) line = "&2[playerDisplayName] &7died";
+        if (dead != null) line = papi(dead, line);
         for (var e : vars.entrySet()) line = line.replace(e.getKey(), e.getValue());
         return colorize(prefix() + " " + line);
     }
 
-    // Keep your old method but make it delegate to the new one
     public String buildMessage(Player dead, Player killer, EntityType mobKiller, EntityDamageEvent.DamageCause cause, ItemStack itemUsed, String projectileType) {
-        // Honor master toggle (NEW)
         if (!enabled) return null;
         return buildMessage(dead, killer, mobKiller, cause, itemUsed, projectileType, null, null);
     }
 
     private String projectileKey(String raw) {
         if (raw == null) return "";
-        // Normalize to your YAML keys under Player.*
         String k = raw.trim().toLowerCase(Locale.ROOT).replace(' ', '_');
-        // common matches
         if (k.contains("firework")) return "Firework";
         if (k.contains("fireball") || k.contains("small_fireball") || k.contains("dragon_fireball")) return "Fireball";
         if (k.contains("tnt")) return "Tnt";
         return Character.toUpperCase(k.charAt(0)) + k.substring(1); // fallback
+    }
+
+    private static String papi(Player p, String text) {
+        if (text == null || text.isEmpty()) return text;
+        try {
+            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                return me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, text);
+            }
+        } catch (Throwable ignored) {}
+        return text;
     }
 
     private String pick(List<String> list) {
