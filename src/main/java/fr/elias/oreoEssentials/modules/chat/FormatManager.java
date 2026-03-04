@@ -23,10 +23,11 @@ public class FormatManager {
         this.customYmlManager = customYmlManager;
     }
 
+
     public String formatMessage(Player p, String message) {
         final FileConfiguration cfg = customYmlManager.getCustomConfig();
 
-        final boolean useMiniMessage = cfg.getBoolean("chat.use-minimessage", false);
+        final boolean useMiniMessage = cfg.getBoolean("chat.use-minimessage", true);
         final boolean miniMessageTranslateLegacyAmp =
                 cfg.getBoolean("chat.minimessage-translate-legacy-amp", true);
 
@@ -41,55 +42,41 @@ public class FormatManager {
 
         String format = cfg.getString("chat." + group);
         if (format == null) {
-            format = cfg.getString("chat.default", "&7%player_displayname% » &f%chat_message%");
+            format = cfg.getString("chat.default",
+                    "<lp_prefix><white><player_name></white> <dark_gray>»</dark_gray> <white><chat_message></white>");
         }
 
-        if (message == null) message = "";
-        format = format.replace("%chat_message%", message);
 
-        boolean stripNameColors = cfg.getBoolean("chat.strip-name-colors", true);
-        String displayName = p.getDisplayName();
-        String plainName = p.getName();
-        if (stripNameColors) {
-            displayName = stripAll(displayName);
-            plainName = stripAll(plainName);
-        }
+        format = format.replace("%chat_message%", "<chat_message>");
+
+        try {
+            format = PlaceholderAPI.setPlaceholders(p, format);
+            format = cleanFactionPlaceholder(format);
+            format = escapeBrokenTags(format);
+        } catch (Exception ignored) {}
+
 
         if (format.contains("%player_displayname%")) {
-            format = format.replace("%player_displayname%", displayName);
+            format = format.replace("%player_displayname%", "<player_displayname>");
         }
         if (format.contains("%player_name%")) {
-            String nameToUse = format.contains("%player_displayname%") ? plainName : displayName;
-            format = format.replace("%player_name%", nameToUse);
-        }
-
-        // Apply PlaceholderAPI placeholders before formatting
-        try {
-            // Store the format before PAPI to detect what changed
-            String beforePapi = format;
-            format = PlaceholderAPI.setPlaceholders(p, format);
-
-            // Clean up faction placeholder for players without factions
-            // This must happen BEFORE MiniMessage processing
-            format = cleanFactionPlaceholder(format);
-
-            // Extra safety: escape any unmatched tags that might break MiniMessage
-            format = escapeBrokenTags(format);
-
-        } catch (Exception ignored) {
-            // PlaceholderAPI not loaded or error occurred
+            format = format.replace("%player_name%", "<player_name>");
         }
 
         if (useMiniMessage) {
+            if (format.contains("§")) {
+                format = format.replaceAll("§([0-9a-fk-orA-FK-OR])", "&$1");
+            }
             if (miniMessageTranslateLegacyAmp) {
                 format = legacyAmpToMiniMessage(format);
             }
             return format;
         }
 
+        if (message == null) message = "";
+        format = format.replace("<chat_message>", message);
         format = applyGradients(format);
         format = colorize(format);
-
         return format;
     }
 
@@ -273,10 +260,7 @@ public class FormatManager {
     private String cleanFactionPlaceholder(String format) {
         if (format == null) return format;
 
-        // First, extract what the faction placeholder returned by checking between known markers
-        // This helps us target just the faction value, not the entire format
 
-        // Common values returned by FactionsUUID when player has no faction
         String[] noFactionValues = {
                 "Wilderness", "wilderness",
                 "[no-faction]", "no-faction",
@@ -285,26 +269,25 @@ public class FormatManager {
                 "NoFaction", "nofaction",
                 "no faction", "No Faction",
                 "-", "null", "Null", "NULL",
-                "0"  // FactionsUUID returns "0" for players without a faction!
+                "0"
         };
 
         for (String badValue : noFactionValues) {
-            format = format.replace(" • " + badValue, "");  // Remove with separator
-            format = format.replace(badValue + " • ", "");  // Remove with separator after
-            format = format.replace(badValue, "");          // Remove standalone
+            format = format.replace(" • " + badValue, "");
+            format = format.replace(badValue + " • ", "");
+            format = format.replace(badValue, "");
         }
 
-        // Remove any stray MiniMessage/HTML-like tags that might break parsing
-        // This catches things like "</gradient>" or "<reset>" that might come from placeholders
+
         format = format.replaceAll("</gradient>(?![^<]*>)", "");
         format = format.replaceAll("<gradient:[^>]*>(?!.*</gradient>)", "");
 
         // Clean up orphaned separators and extra spaces
-        format = format.replaceAll("\\s+•\\s+•", " • ");   // Remove double separators
-        format = format.replaceAll("\\s+•\\s+\\]", "]");   // Remove " • ]"
-        format = format.replaceAll("\\[\\s+•\\s+", "[");   // Remove "[ • "
-        format = format.replaceAll("\\s{2,}", " ");        // Remove extra spaces
-        format = format.replaceAll("\\[\\s*\\]", "");      // Remove empty brackets
+        format = format.replaceAll("\\s+•\\s+•", " • ");
+        format = format.replaceAll("\\s+•\\s+\\]", "]");
+        format = format.replaceAll("\\[\\s+•\\s+", "[");
+        format = format.replaceAll("\\s{2,}", " ");
+        format = format.replaceAll("\\[\\s*\\]", "");
 
         return format;
     }
@@ -312,21 +295,16 @@ public class FormatManager {
     private String escapeBrokenTags(String format) {
         if (format == null) return format;
 
-        // Count gradient tags to detect unmatched pairs
         int openGradient = countOccurrences(format, "<gradient:");
         int closeGradient = countOccurrences(format, "</gradient>");
 
-        // If unmatched, something went wrong - escape the broken ones
         if (openGradient != closeGradient) {
-            // Log for debugging
             System.out.println("[FormatManager] WARNING: Unmatched gradient tags detected! Open: " + openGradient + ", Close: " + closeGradient);
 
-            // Remove orphaned closing tags that don't have an opening tag
             if (closeGradient > openGradient) {
                 format = format.replaceAll("</gradient>(?![^<]*<gradient:)", "");
             }
 
-            // Remove orphaned opening tags that don't have a closing tag
             if (openGradient > closeGradient) {
                 format = format.replaceAll("<gradient:[^>]*>(?![^<]*</gradient>)", "");
             }

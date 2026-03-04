@@ -2,10 +2,13 @@ package fr.elias.oreoEssentials.modgui.notes;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.Lang;
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 
 import java.util.Map;
 import java.util.UUID;
@@ -30,14 +33,20 @@ public class NotesChatListener implements Listener {
                 Map.of());
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onChat(AsyncPlayerChatEvent e) {
+    /** Returns true if this player is currently being prompted to type a note. */
+    public boolean isWaitingForNote(UUID uuid) {
+        return pending.containsKey(uuid);
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = false)
+    public void onChat(AsyncChatEvent e) {
         UUID staffId = e.getPlayer().getUniqueId();
         if (!pending.containsKey(staffId)) return;
 
         e.setCancelled(true);
         UUID target = pending.remove(staffId);
-        String msg = e.getMessage();
+        String msg = PlainTextComponentSerializer.plainText().serialize(e.message());
 
         if (msg.equalsIgnoreCase("cancel")) {
             Lang.send(e.getPlayer(), "modgui.notes.cancelled",

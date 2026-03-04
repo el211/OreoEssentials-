@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -60,6 +61,16 @@ public class AfkListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChat(AsyncPlayerChatEvent e) {
+        Player p = e.getPlayer();
+        Bukkit.getScheduler().runTask(plugin, () -> onActivity(p));
+    }
+
+    // Paper 1.21+: our chat listeners cancel AsyncPlayerChatEvent at HIGHEST so the
+    // MONITOR+ignoreCancelled=true handler above never fires. Track AFK via AsyncChatEvent
+    // instead (ignoreCancelled=false so it always runs regardless of chat system state).
+    @SuppressWarnings("UnstableApiUsage")
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = false)
+    public void onChatNew(AsyncChatEvent e) {
         Player p = e.getPlayer();
         Bukkit.getScheduler().runTask(plugin, () -> onActivity(p));
     }
