@@ -10,13 +10,16 @@ public final class Shop {
     private final String title;
     private final int    rows;
     private final int    totalPages;
+    /** null = use Vault; non-null = use CurrencyService with this ID */
+    private final String currencyId;
     private final Map<String, ShopItem> items = new LinkedHashMap<>();
 
-    public Shop(String id, String title, int rows, int totalPages) {
+    public Shop(String id, String title, int rows, int totalPages, String currencyId) {
         this.id         = id;
         this.title      = title;
         this.rows       = rows;
         this.totalPages = totalPages;
+        this.currencyId = (currencyId != null && !currencyId.isBlank()) ? currencyId.toLowerCase() : null;
     }
 
 
@@ -52,6 +55,8 @@ public final class Shop {
     public String               getTitle()     { return title; }
     public int                  getRows()      { return rows; }
     public int                  getTotalPages(){ return totalPages; }
+    /** null = Vault economy; non-null = CurrencyService currency ID */
+    public String               getCurrencyId(){ return currencyId; }
     public Map<String, ShopItem> getItems()    { return items; }
     public Collection<ShopItem> getAllItems()  { return items.values(); }
 }

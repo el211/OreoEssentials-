@@ -45,8 +45,6 @@ public final class DailyService {
         LocalDate last = rec.getLastClaimDate();
         if (last == null) return true;
 
-        // Current implementation: both modes behave as calendar-day gating.
-        // (We only store LocalDate (epochDay), not time-of-day.)
         return !today().isEqual(last);
     }
 
@@ -60,7 +58,6 @@ public final class DailyService {
     public int nextDayIndex(int currentStreak) {
         int max = Math.max(1, rewards.maxDay());
         if (cfg.resetWhenStreakCompleted) {
-            // cycle 1..max, then wrap
             int next = currentStreak + 1;
             return ((next - 1) % max) + 1;
         } else {

@@ -40,6 +40,7 @@ public class ChatChannelHandler {
     private final ChatSyncManager syncManager;
     private final ChatItemHandler chatItemHandler;
     private final ChatHoverProvider hoverProvider;
+    private final FormatManager formatManager;
 
     private final boolean defaultDiscordEnabled;
     private final String defaultDiscordWebhookUrl;
@@ -66,6 +67,7 @@ public class ChatChannelHandler {
         this.plugin = plugin;
         this.channelManager = channelManager;
         this.syncManager = syncManager;
+        this.formatManager = formatManager;
         this.defaultDiscordEnabled = defaultDiscordEnabled;
         this.defaultDiscordWebhookUrl = defaultDiscordWebhookUrl == null ? "" : defaultDiscordWebhookUrl.trim();
 
@@ -175,9 +177,7 @@ public class ChatChannelHandler {
     private String normalizePlaceholders(String format) {
         if (format == null) return "<player_name><dark_gray>: </dark_gray><chat_message>";
 
-        if (format.contains("§")) {
-            format = format.replaceAll("§([0-9a-fk-orA-FK-OR])", "&$1");
-        }
+        format = FormatManager.convertLegacyToMiniMessage(format);
 
         boolean hasPlayerName = format.contains("<player_name>")
                 || format.contains("<player_displayname>")
@@ -210,8 +210,9 @@ public class ChatChannelHandler {
 
     private TagResolver buildResolver(Player player, String rawMessage) {
         boolean canColors = player.hasPermission("oreo.chat.colors");
+        String msgForParsing = canColors ? FormatManager.convertLegacyToMiniMessage(rawMessage) : rawMessage;
         TagResolver msgResolver = canColors
-                ? Placeholder.parsed("chat_message", rawMessage)
+                ? Placeholder.parsed("chat_message", msgForParsing)
                 : Placeholder.unparsed("chat_message", rawMessage);
 
         Component lpPrefix = buildLpPrefix(player);

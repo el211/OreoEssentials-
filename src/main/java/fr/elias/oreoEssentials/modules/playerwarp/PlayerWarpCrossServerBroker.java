@@ -4,8 +4,10 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.warps.rabbit.packets.PlayerWarpTeleportRequestPacket;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.elias.oreoEssentials.util.ProxyMessenger;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -99,27 +101,44 @@ public final class PlayerWarpCrossServerBroker implements Listener {
                 + " for player=" + playerId
                 + " warp=" + warpName);
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
             Player p = Bukkit.getPlayer(playerId);
             if (p != null && p.isOnline()) {
                 safeTeleport(p, ownerId, warpName);
             } else {
-                // Store for when player actually joins
                 pending.put(playerId, new PendingWarp(ownerId, warpName));
                 plugin.getLogger().info("[PW/XSRV@" + localServerName + "] Player not online yet, "
                         + "queued pending warp " + warpName);
             }
-        });
+        }, 3L);
     }
 
     private void safeTeleport(Player p, UUID ownerId, String warpName) {
         try {
-            // PlayerWarpService handles all user messages
-            boolean ok = playerWarpService.teleportToPlayerWarp(p, ownerId, warpName);
-            if (!ok) {
-                plugin.getLogger().warning("[PW/XSRV@" + localServerName + "] Failed to teleport "
-                        + p.getName() + " to player warp " + warpName + " (owner=" + ownerId + ")");
+            PlayerWarp warp = playerWarpService.findByOwnerAndName(ownerId, warpName);
+            if (warp == null) {
+                plugin.getLogger().warning("[PW/XSRV@" + localServerName + "] Warp not found: "
+                        + warpName + " owner=" + ownerId);
+                Lang.send(p, "playerwarps.teleport.not-found",
+                        "<red>Warp <yellow>%name%</yellow> was not found.</red>",
+                        Map.of("name", warpName));
+                return;
             }
+            Location loc = warp.getLocation();
+            if (loc == null || loc.getWorld() == null) {
+                plugin.getLogger().warning("[PW/XSRV@" + localServerName + "] Warp world not loaded: "
+                        + warpName);
+                Lang.send(p, "playerwarps.teleport.world-not-loaded",
+                        "<red>Warp world is not loaded.</red>",
+                        Map.of("name", warp.getName()));
+                return;
+            }
+            p.teleport(loc);
+            Lang.send(p, "playerwarps.teleport.local",
+                    "<green>Teleported to warp</green> <yellow>%name%</yellow>.",
+                    Map.of("name", warp.getName()));
+            plugin.getLogger().info("[PW/XSRV@" + localServerName + "] Teleported "
+                    + p.getName() + " to warp " + warpName);
         } catch (Throwable t) {
             plugin.getLogger().warning("[PW/XSRV@" + localServerName + "] Error teleporting "
                     + p.getName() + " to warp " + warpName + ": " + t.getMessage());
@@ -132,8 +151,8 @@ public final class PlayerWarpCrossServerBroker implements Listener {
         PendingWarp pw = pending.remove(uuid);
         if (pw == null) return;
 
-        Bukkit.getScheduler().runTask(plugin, () ->
-                safeTeleport(e.getPlayer(), pw.ownerId(), pw.warpName())
+        Bukkit.getScheduler().runTaskLater(plugin, () ->
+                safeTeleport(e.getPlayer(), pw.ownerId(), pw.warpName()), 3L
         );
     }
 

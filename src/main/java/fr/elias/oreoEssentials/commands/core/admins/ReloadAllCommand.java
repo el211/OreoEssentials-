@@ -89,15 +89,15 @@ public final class ReloadAllCommand implements OreoCommand {
             skip++;
         }
 
-        // 3) Chat (chat-format.yml etc.)
+        // 3) Chat (chat-format.yml + channels, swaps listener if channels toggled)
         try {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "afelius reload all");
+            plugin.reloadChat();
             Lang.send(sender, "admin.reload.chat",
-                    "<green>✔ Reloaded <white>chat-format.yml</white> <gray>(via /afelius reload all)</gray></green>");
+                    "<green>✔ Reloaded <white>chat-format.yml</white> <gray>(channels=" + (plugin.getChannelManager() != null && plugin.getChannelManager().isEnabled()) + ")</gray></green>");
             ok++;
         } catch (Throwable t) {
             Lang.send(sender, "admin.reload.chat-skip",
-                    "<yellow>• Skipped chat-format.yml: <gray>%error%</gray></yellow>",
+                    "<yellow>• Skipped chat: <gray>%error%</gray></yellow>",
                     Map.of("error", t.getMessage()));
             skip++;
         }

@@ -1,0 +1,92 @@
+shop-id: token_shop
+title: "&6&lToken Shop"
+rows: 6
+pages: 1
+
+# Use your custom currency ID here (must match a currency created via /currency create)
+# Set to "vault" or remove this line to use Vault economy instead.
+currency: tokens
+
+items:
+
+  diamond_p1s0:
+    material: DIAMOND
+    name: "&b&lDiamond"
+    lore:
+      - "&7Buy diamonds with your tokens!"
+    slot: 0
+    page: 1
+    amount: 1
+    buy-price: 10
+    sell-price: -1
+
+  emerald_p1s1:
+    material: EMERALD
+    name: "&a&lEmerald"
+    lore:
+      - "&7Trade your tokens for emeralds."
+    slot: 1
+    page: 1
+    amount: 1
+    buy-price: 5
+    sell-price: -1
+
+  netherite_ingot_p1s2:
+    material: NETHERITE_INGOT
+    name: "&8&lNetherite Ingot"
+    lore:
+      - "&7Rare! Costs 50 tokens."
+    slot: 2
+    page: 1
+    amount: 1
+    buy-price: 50
+    sell-price: -1
+
+  golden_apple_p1s3:
+    material: GOLDEN_APPLE
+    name: "&6&lGolden Apple"
+    slot: 3
+    page: 1
+    amount: 1
+    buy-price: 15
+    sell-price: -1
+
+  enchanted_golden_apple_p1s4:
+    material: ENCHANTED_GOLDEN_APPLE
+    name: "&c&lGod Apple"
+    slot: 4
+    page: 1
+    amount: 1
+    buy-price: 200
+    sell-price: -1
+
+  experience_bottle_p1s5:
+    material: EXPERIENCE_BOTTLE
+    name: "&e&lExp Bottle"
+    lore:
+      - "&73 tokens per bottle"
+    slot: 5
+    page: 1
+    amount: 1
+    buy-price: 3
+    sell-price: -1
+
+  elytra_p1s6:
+    material: ELYTRA
+    name: "&7&lElytra"
+    lore:
+      - "&7Premium item - 500 tokens"
+    slot: 6
+    page: 1
+    amount: 1
+    buy-price: 500
+    sell-price: -1
+
+  totem_of_undying_p1s7:
+    material: TOTEM_OF_UNDYING
+    name: "&6&lTotem of Undying"
+    slot: 7
+    page: 1
+    amount: 1
+    buy-price: 100
+    sell-price: -1

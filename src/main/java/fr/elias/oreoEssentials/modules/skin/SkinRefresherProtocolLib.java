@@ -12,10 +12,6 @@ import org.bukkit.entity.Player;
 import java.util.EnumSet;
 import java.util.List;
 
-/**
- * Refreshes player skins using ProtocolLib packets.
- * Tested on Minecraft 1.21.8 with Paper.
- */
 public final class SkinRefresherProtocolLib implements SkinRefresher {
 
     @Override
@@ -34,7 +30,6 @@ public final class SkinRefresherProtocolLib implements SkinRefresher {
 
         try {
             ProtocolManager pm = ProtocolLibrary.getProtocolManager();
-
             WrappedGameProfile profile = WrappedGameProfile.fromPlayer(player);
             SkinDebug.log("Profile textures: " + profile.getProperties());
 
@@ -42,7 +37,23 @@ public final class SkinRefresherProtocolLib implements SkinRefresher {
             removeInfo.getModifier().write(0, List.of(player.getUniqueId()));
 
             PacketContainer addInfo = pm.createPacket(PacketType.Play.Server.PLAYER_INFO);
-            addInfo.getPlayerInfoActions().write(0, EnumSet.of(EnumWrappers.PlayerInfoAction.ADD_PLAYER));
+            try {
+                @SuppressWarnings({"unchecked", "rawtypes"})
+                Class<Enum> actClass = (Class<Enum>) Class.forName(
+                        "net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket$Actions"
+                );
+                @SuppressWarnings({"unchecked", "rawtypes"})
+                EnumSet<?> nmsActions = EnumSet.of(
+                        Enum.valueOf(actClass, "ADD_PLAYER"),
+                        Enum.valueOf(actClass, "UPDATE_LISTED")
+                );
+                addInfo.getModifier().write(0, nmsActions);
+            } catch (Exception e) {
+                SkinDebug.log("NMS actions fallback: " + e.getMessage());
+                addInfo.getPlayerInfoActions().write(0,
+                        java.util.EnumSet.of(EnumWrappers.PlayerInfoAction.ADD_PLAYER,
+                                EnumWrappers.PlayerInfoAction.UPDATE_LISTED));
+            }
 
             PlayerInfoData infoData = new PlayerInfoData(
                     profile.getUUID(),
@@ -57,45 +68,52 @@ public final class SkinRefresherProtocolLib implements SkinRefresher {
             PacketContainer destroyEntity = pm.createPacket(PacketType.Play.Server.ENTITY_DESTROY);
             destroyEntity.getIntLists().write(0, List.of(player.getEntityId()));
 
-            for (Player viewer : Bukkit.getOnlinePlayers()) {
+            OreoEssentials plugin = OreoEssentials.get();
+            List<Player> viewers = List.copyOf(Bukkit.getOnlinePlayers());
+
+            for (Player viewer : viewers) {
                 try {
-                    SkinDebug.log("Sending packets to " + viewer.getName());
-
                     pm.sendServerPacket(viewer, removeInfo);
-
-                    Bukkit.getScheduler().runTaskLater(OreoEssentials.get(), () -> {
-                        try {
-                            pm.sendServerPacket(viewer, addInfo);
-                        } catch (Exception e) {
-                            SkinDebug.log("Error sending add info to " + viewer.getName());
-                        }
-                    }, 2L);
-
-                    if (!viewer.equals(player)) {
-                        Bukkit.getScheduler().runTaskLater(OreoEssentials.get(), () -> {
-                            try {
-                                pm.sendServerPacket(viewer, destroyEntity);
-
-                                viewer.hidePlayer(OreoEssentials.get(), player);
-                                Bukkit.getScheduler().runTaskLater(OreoEssentials.get(), () -> {
-                                    viewer.showPlayer(OreoEssentials.get(), player);
-                                }, 2L);
-                            } catch (Exception e) {
-                                SkinDebug.log("Error destroying entity for " + viewer.getName());
-                            }
-                        }, 4L);
-                    }
-
                 } catch (Exception e) {
-                    SkinDebug.log("Error processing viewer " + viewer.getName() + ": " + e.getMessage());
-                    e.printStackTrace();
+                    SkinDebug.log("Error sending remove to " + viewer.getName());
                 }
             }
 
-            Bukkit.getScheduler().runTaskLater(OreoEssentials.get(), () -> {
-                player.updateInventory();
-                SkinDebug.log("ProtocolLib refresh complete for " + player.getName());
-            }, 8L);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                for (Player viewer : viewers) {
+                    if (!viewer.isOnline()) continue;
+                    try {
+                        pm.sendServerPacket(viewer, addInfo);
+                    } catch (Exception e) {
+                        SkinDebug.log("Error sending add to " + viewer.getName());
+                    }
+                }
+
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    for (Player viewer : viewers) {
+                        if (!viewer.isOnline() || viewer.equals(player)) continue;
+                        try {
+                            pm.sendServerPacket(viewer, destroyEntity);
+                            viewer.hidePlayer(plugin, player);
+                        } catch (Exception e) {
+                            SkinDebug.log("Error hiding for " + viewer.getName());
+                        }
+                    }
+
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        for (Player viewer : viewers) {
+                            if (!viewer.isOnline() || viewer.equals(player)) continue;
+                            try {
+                                viewer.showPlayer(plugin, player);
+                            } catch (Exception e) {
+                                SkinDebug.log("Error showing for " + viewer.getName());
+                            }
+                        }
+                        player.updateInventory();
+                        SkinDebug.log("ProtocolLib refresh complete for " + player.getName());
+                    }, 2L);
+                }, 2L);
+            }, 2L);
 
         } catch (Exception e) {
             SkinDebug.log("ProtocolLib refresh critical error: " + e.getMessage());

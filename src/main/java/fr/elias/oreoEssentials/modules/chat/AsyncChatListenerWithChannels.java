@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.chat;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.modules.auctionhouse.AuctionHouseModule;
 import fr.elias.oreoEssentials.modules.chat.channels.ChatChannel;
 import fr.elias.oreoEssentials.modules.chat.channels.ChatChannelHandler;
 import fr.elias.oreoEssentials.modules.chat.channels.ChatChannelManager;
@@ -50,12 +51,24 @@ public class AsyncChatListenerWithChannels implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onLegacyChat(AsyncPlayerChatEvent event) {
         event.setCancelled(true);
+        event.getRecipients().clear();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onChat(AsyncChatEvent event) {
-
+        event.viewers().clear();
         event.setCancelled(true);
+
+        // AH price input: player is typing price after selecting currency in picker
+        final Player player0 = event.getPlayer();
+        try {
+            AuctionHouseModule ahm = AuctionHouseModule.getInstance();
+            if (ahm != null && ahm.isWaitingForPrice(player0.getUniqueId())) {
+                String raw = PlainTextComponentSerializer.plainText().serialize(event.message());
+                ahm.consumePriceInput(player0, raw);
+                return;
+            }
+        } catch (Throwable ignored) {}
 
         if (!plugin.getSettingsConfig().chatEnabled()) return;
 

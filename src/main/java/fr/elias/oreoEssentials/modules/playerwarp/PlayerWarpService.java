@@ -196,6 +196,73 @@ public class PlayerWarpService {
     }
 
 
+    public PlayerWarp renameWarp(PlayerWarp warp, String newName) {
+        String trimmed = newName.trim().toLowerCase(Locale.ROOT);
+        String newId = buildId(warp.getOwner(), trimmed);
+
+        if (storage.getById(newId) != null) return null;
+
+        storage.delete(warp.getId());
+        if (directory != null) {
+            try { directory.deleteWarp(warp.getId()); } catch (Throwable ignored) {}
+        }
+
+        PlayerWarp renamed = new PlayerWarp(newId, warp.getOwner(), trimmed, warp.getLocation(),
+                warp.isWhitelistEnabled(), new HashSet<>(warp.getWhitelist()));
+        renamed.setDescription(warp.getDescription());
+        renamed.setCategory(warp.getCategory());
+        renamed.setLocked(warp.isLocked());
+        renamed.setCost(warp.getCost());
+        renamed.setIcon(warp.getIcon() != null ? warp.getIcon().clone() : null);
+        renamed.setManagers(new HashSet<>(warp.getManagers()));
+        renamed.setPassword(warp.getPassword());
+
+        storage.save(renamed);
+        if (directory != null) {
+            try {
+                String serverName = OreoEssentials.get().getConfigService().serverName();
+                directory.setWarpServer(newId, serverName);
+            } catch (Throwable t) {
+                OreoEssentials.get().getLogger().warning(
+                        "[PlayerWarps] Failed to setWarpServer after rename id=" + newId);
+            }
+        }
+        return renamed;
+    }
+
+    public PlayerWarp transferOwnership(PlayerWarp warp, UUID newOwnerId) {
+        String newId = buildId(newOwnerId, warp.getName());
+
+        if (storage.getById(newId) != null) return null;
+
+        storage.delete(warp.getId());
+        if (directory != null) {
+            try { directory.deleteWarp(warp.getId()); } catch (Throwable ignored) {}
+        }
+
+        PlayerWarp transferred = new PlayerWarp(newId, newOwnerId, warp.getName(), warp.getLocation(),
+                warp.isWhitelistEnabled(), new HashSet<>(warp.getWhitelist()));
+        transferred.setDescription(warp.getDescription());
+        transferred.setCategory(warp.getCategory());
+        transferred.setLocked(warp.isLocked());
+        transferred.setCost(warp.getCost());
+        transferred.setIcon(warp.getIcon() != null ? warp.getIcon().clone() : null);
+        transferred.setManagers(new HashSet<>(warp.getManagers()));
+        transferred.setPassword(warp.getPassword());
+
+        storage.save(transferred);
+        if (directory != null) {
+            try {
+                String serverName = OreoEssentials.get().getConfigService().serverName();
+                directory.setWarpServer(newId, serverName);
+            } catch (Throwable t) {
+                OreoEssentials.get().getLogger().warning(
+                        "[PlayerWarps] Failed to setWarpServer after transfer id=" + newId);
+            }
+        }
+        return transferred;
+    }
+
     public boolean teleportToPlayerWarp(Player player, UUID ownerId, String warpName) {
         OreoEssentials plugin = OreoEssentials.get();
         String trimmed = warpName.trim();
@@ -337,7 +404,7 @@ public class PlayerWarpService {
                 requestId
         );
 
-        pm.sendPacket(PacketChannels.GLOBAL, pkt);
+        pm.sendPacket(PacketChannels.individual(targetServer), pkt);
         plugin.getProxyMessenger().sendToServer(player, targetServer);
 
         return true;

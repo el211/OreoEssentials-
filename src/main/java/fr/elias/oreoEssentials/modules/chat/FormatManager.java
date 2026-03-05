@@ -64,11 +64,8 @@ public class FormatManager {
         }
 
         if (useMiniMessage) {
-            if (format.contains("§")) {
-                format = format.replaceAll("§([0-9a-fk-orA-FK-OR])", "&$1");
-            }
             if (miniMessageTranslateLegacyAmp) {
-                format = legacyAmpToMiniMessage(format);
+                format = convertLegacyToMiniMessage(format);
             }
             return format;
         }
@@ -227,8 +224,19 @@ public class FormatManager {
         return ChatColor.stripColor(t);
     }
 
-    private String legacyAmpToMiniMessage(String s) {
+    public static String convertLegacyToMiniMessage(String s) {
         if (s == null || s.isEmpty()) return s;
+
+        if (s.contains("§")) {
+            s = s.replaceAll("§([0-9a-fk-orxA-FK-ORX])", "&$1");
+        }
+
+        s = Pattern.compile("(?i)&x&([0-9a-f])&([0-9a-f])&([0-9a-f])&([0-9a-f])&([0-9a-f])&([0-9a-f])")
+                .matcher(s)
+                .replaceAll(mr -> "<#" + mr.group(1) + mr.group(2) + mr.group(3)
+                        + mr.group(4) + mr.group(5) + mr.group(6) + ">");
+
+        s = Pattern.compile("&#([0-9A-Fa-f]{6})").matcher(s).replaceAll("<#$1>");
 
         s = s.replace("&0", "<black>")
                 .replace("&1", "<dark_blue>")
@@ -240,19 +248,18 @@ public class FormatManager {
                 .replace("&7", "<gray>")
                 .replace("&8", "<dark_gray>")
                 .replace("&9", "<blue>")
-                .replace("&a", "<green>")
-                .replace("&b", "<aqua>")
-                .replace("&c", "<red>")
-                .replace("&d", "<light_purple>")
-                .replace("&e", "<yellow>")
-                .replace("&f", "<white>")
-                .replace("&r", "<reset>");
-
-        s = s.replace("&l", "<bold>")
-                .replace("&o", "<italic>")
-                .replace("&n", "<underlined>")
-                .replace("&m", "<strikethrough>")
-                .replace("&k", "<obfuscated>");
+                .replace("&a", "<green>").replace("&A", "<green>")
+                .replace("&b", "<aqua>").replace("&B", "<aqua>")
+                .replace("&c", "<red>").replace("&C", "<red>")
+                .replace("&d", "<light_purple>").replace("&D", "<light_purple>")
+                .replace("&e", "<yellow>").replace("&E", "<yellow>")
+                .replace("&f", "<white>").replace("&F", "<white>")
+                .replace("&r", "<reset>").replace("&R", "<reset>")
+                .replace("&l", "<bold>").replace("&L", "<bold>")
+                .replace("&o", "<italic>").replace("&O", "<italic>")
+                .replace("&n", "<underlined>").replace("&N", "<underlined>")
+                .replace("&m", "<strikethrough>").replace("&M", "<strikethrough>")
+                .replace("&k", "<obfuscated>").replace("&K", "<obfuscated>");
 
         return s;
     }

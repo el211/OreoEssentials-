@@ -345,7 +345,10 @@ public final class TradeService implements Listener {
 
         return new TradeSession(
                 sid, plugin, cfg, aId, aName, bId, bName,
-                (finished) -> log("[TRADE] onFinish sid=" + capturedSid),
+                (finished) -> {
+                    log("[TRADE] onFinish sid=" + capturedSid);
+                    finalizeIfBothReady(capturedSid);
+                },
                 (s, reason) -> {
                     log("[TRADE] onCancel sid=" + capturedSid + " reason=" + reason);
                     cancelSession(capturedSid, reason);
@@ -704,6 +707,12 @@ public final class TradeService implements Listener {
         if (s == null) return;
         playerToSession.entrySet().removeIf(e -> sid.equals(e.getValue()));
         s.closeLocalViewers();
+        try {
+            var broker = plugin.getTradeBroker();
+            if (broker != null && plugin.isMessagingAvailable()) {
+                broker.cancel(sid, reason != null ? reason : "cancelled");
+            }
+        } catch (Throwable ignored) {}
     }
 
     private static ItemStack[] decodeOffer(byte[] bytes) {
@@ -1095,6 +1104,29 @@ public final class TradeService implements Listener {
         } catch (Throwable t) {
             plugin.getLogger().warning("[TRADE] onJoin grant flush failed: " + t.getMessage());
         }
+    }
+
+    public void applyRemoteCancel(UUID sid, String reason) {
+        TradeSession s = sessionsById.get(sid);
+        if (s == null) {
+            playerToSession.entrySet().removeIf(e -> sid.equals(e.getValue()));
+            return;
+        }
+        s.beginClosing();
+        var itemsA = safeCloneArray(s.viewOfferA());
+        var itemsB = safeCloneArray(s.viewOfferB());
+        s.clearOfferA();
+        s.clearOfferB();
+        returnItemsTo(s.getAId(), itemsA);
+        returnItemsTo(s.getBId(), itemsB);
+        if (reason != null && !reason.isBlank()) {
+            notify(s.getAId(), "§c" + reason);
+            notify(s.getBId(), "§c" + reason);
+        }
+        closeLocalMenus(s);
+        s.markCompleted();
+        cleanupSessionSilent(s);
+        log("[TRADE] applyRemoteCancel sid=" + sid + " reason=" + reason);
     }
 
     private void enqueueState(TradeStatePacket p) {

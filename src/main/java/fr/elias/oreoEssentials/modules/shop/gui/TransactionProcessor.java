@@ -1,12 +1,16 @@
 package fr.elias.oreoEssentials.modules.shop.gui;
 
+import fr.elias.oreoEssentials.modules.currency.CurrencyService;
 import fr.elias.oreoEssentials.modules.shop.ShopModule;
+import fr.elias.oreoEssentials.modules.shop.models.Shop;
 import fr.elias.oreoEssentials.modules.shop.models.ShopItem;
 import fr.elias.oreoEssentials.modules.shop.protection.AntiDupeProtection;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.LinkedHashMap;
 
 public final class TransactionProcessor {
 
@@ -31,23 +35,39 @@ public final class TransactionProcessor {
             double price = module.getPriceModifierManager()
                     .getEffectiveBuyPrice(player.getUniqueId(), shopItem) * quantity;
 
-            if (!module.getEconomy().has(player, price)) {
-                send(player, module.getShopConfig().getMessage("buy-not-enough-money")
-                        .replace("{price}", module.getEconomy().format(price)));
-                return false;
-            }
+            String currencyId = getShopCurrencyId(shopItem);
+            CurrencyService cs = (currencyId != null) ? module.getPlugin().getCurrencyService() : null;
 
-            ItemStack proto = shopItem.buildItemStack();
-            if (!antiDupe.verifyHasSpace(player, proto, totalItems)) {
-                send(player, module.getShopConfig().getMessage("buy-inventory-full"));
-                return false;
+            if (cs != null) {
+                double balance = cs.getBalance(player.getUniqueId(), currencyId).join();
+                if (balance < price) {
+                    send(player, module.getShopConfig().getMessage("buy-not-enough-money")
+                            .replace("{price}", cs.formatBalance(currencyId, price)));
+                    return false;
+                }
+                ItemStack proto = shopItem.buildItemStack();
+                if (!antiDupe.verifyHasSpace(player, proto, totalItems)) {
+                    send(player, module.getShopConfig().getMessage("buy-inventory-full"));
+                    return false;
+                }
+                cs.withdraw(player.getUniqueId(), currencyId, price).join();
+            } else {
+                if (!module.getEconomy().has(player, price)) {
+                    send(player, module.getShopConfig().getMessage("buy-not-enough-money")
+                            .replace("{price}", module.getEconomy().format(price)));
+                    return false;
+                }
+                ItemStack proto = shopItem.buildItemStack();
+                if (!antiDupe.verifyHasSpace(player, proto, totalItems)) {
+                    send(player, module.getShopConfig().getMessage("buy-inventory-full"));
+                    return false;
+                }
+                module.getEconomy().withdraw(player, price);
             }
-
-            module.getEconomy().withdraw(player, price);
 
             int remaining = totalItems;
             while (remaining > 0) {
-                int stackAmt = Math.min(remaining, proto.getMaxStackSize());
+                int stackAmt = Math.min(remaining, shopItem.buildItemStack().getMaxStackSize());
                 ItemStack stack = shopItem.buildItemStack();
                 stack.setAmount(stackAmt);
                 player.getInventory().addItem(stack).forEach((idx, leftover) ->
@@ -57,15 +77,17 @@ public final class TransactionProcessor {
 
             module.getDynamicPricingManager().recordBuy(shopItem, totalItems);
 
+            String ecoName       = (cs != null) ? currencyId : module.getEconomy().getEconomyName();
+            String formattedPrice = (cs != null) ? cs.formatBalance(currencyId, price) : module.getEconomy().format(price);
+
             module.getTransactionLogger().logTransaction(
                     player.getName(), "BOUGHT", totalItems,
-                    shopItem.getMaterial().name(), price,
-                    module.getEconomy().getEconomyName());
+                    shopItem.getMaterial().name(), price, ecoName);
 
             send(player, module.getShopConfig().getMessage("buy-success")
                     .replace("{amount}", String.valueOf(totalItems))
                     .replace("{item}",   formatName(shopItem))
-                    .replace("{price}",  module.getEconomy().format(price)));
+                    .replace("{price}",  formattedPrice));
             return true;
 
         } finally {
@@ -104,17 +126,29 @@ public final class TransactionProcessor {
             }
             player.updateInventory();
 
-            module.getEconomy().deposit(player, price);
+            String currencyId = getShopCurrencyId(shopItem);
+            CurrencyService cs = (currencyId != null) ? module.getPlugin().getCurrencyService() : null;
+
+            String ecoName;
+            String formattedPrice;
+            if (cs != null) {
+                cs.deposit(player.getUniqueId(), currencyId, price).join();
+                ecoName       = currencyId;
+                formattedPrice = cs.formatBalance(currencyId, price);
+            } else {
+                module.getEconomy().deposit(player, price);
+                ecoName       = module.getEconomy().getEconomyName();
+                formattedPrice = module.getEconomy().format(price);
+            }
 
             module.getTransactionLogger().logTransaction(
                     player.getName(), "SOLD", totalItems,
-                    shopItem.getMaterial().name(), price,
-                    module.getEconomy().getEconomyName());
+                    shopItem.getMaterial().name(), price, ecoName);
 
             send(player, module.getShopConfig().getMessage("sell-success")
                     .replace("{amount}", String.valueOf(totalItems))
                     .replace("{item}",   formatName(shopItem))
-                    .replace("{price}",  module.getEconomy().format(price)));
+                    .replace("{price}",  formattedPrice));
             return true;
 
         } finally {
@@ -127,9 +161,9 @@ public final class TransactionProcessor {
         if (!antiDupe.beginTransaction(player)) return -1;
 
         try {
-            double totalEarned = 0;
-            int    totalSold   = 0;
-            boolean hadSellable = false;
+            // Map from currencyId (null = vault sentinel "") to total earned
+            LinkedHashMap<String, Double> earningsByCurrency = new LinkedHashMap<>();
+            int totalSold = 0;
 
             for (int i = 0; i < player.getInventory().getSize(); i++) {
                 ItemStack slot = player.getInventory().getItem(i);
@@ -139,32 +173,51 @@ public final class TransactionProcessor {
                 ShopItem shopItem = module.getShopManager().findBestSellItem(slot);
                 if (shopItem == null || !shopItem.canSell()) continue;
 
-                hadSellable = true;
                 double pricePerStack = module.getPriceModifierManager()
                         .getEffectiveSellPrice(player.getUniqueId(), shopItem);
-                double pricePerItem  = pricePerStack / shopItem.getAmount();
+                double earned = (pricePerStack / shopItem.getAmount()) * slot.getAmount();
 
-                totalEarned += pricePerItem * slot.getAmount();
-                totalSold   += slot.getAmount();
+                String cid = getShopCurrencyId(shopItem);
+                String key = (cid != null) ? cid : "";
+                earningsByCurrency.merge(key, earned, Double::sum);
+                totalSold += slot.getAmount();
                 player.getInventory().setItem(i, null);
             }
 
             player.updateInventory();
 
-            if (!hadSellable) {
+            if (earningsByCurrency.isEmpty()) {
                 send(player, module.getShopConfig().getMessage("sell-all-nothing"));
                 return 0;
             }
 
-            module.getEconomy().deposit(player, totalEarned);
+            double totalEarned = 0;
+            CurrencyService cs = module.getPlugin().getCurrencyService();
 
-            module.getTransactionLogger().logTransaction(
-                    player.getName(), "SOLD_ALL", totalSold, "multiple items",
-                    totalEarned, module.getEconomy().getEconomyName());
+            for (var entry : earningsByCurrency.entrySet()) {
+                String key    = entry.getKey();
+                double amount = entry.getValue();
+                totalEarned  += amount;
 
-            send(player, module.getShopConfig().getMessage("sell-all-success")
-                    .replace("{amount}", String.valueOf(totalSold))
-                    .replace("{price}",  module.getEconomy().format(totalEarned)));
+                if (key.isEmpty()) {
+                    // Vault
+                    module.getEconomy().deposit(player, amount);
+                    module.getTransactionLogger().logTransaction(
+                            player.getName(), "SOLD_ALL", totalSold, "multiple items",
+                            amount, module.getEconomy().getEconomyName());
+                    send(player, module.getShopConfig().getMessage("sell-all-success")
+                            .replace("{amount}", String.valueOf(totalSold))
+                            .replace("{price}",  module.getEconomy().format(amount)));
+                } else if (cs != null) {
+                    // Custom currency
+                    cs.deposit(player.getUniqueId(), key, amount).join();
+                    module.getTransactionLogger().logTransaction(
+                            player.getName(), "SOLD_ALL", totalSold, "multiple items", amount, key);
+                    send(player, module.getShopConfig().getMessage("sell-all-success")
+                            .replace("{amount}", String.valueOf(totalSold))
+                            .replace("{price}",  cs.formatBalance(key, amount)));
+                }
+            }
 
             return totalEarned;
 
@@ -173,6 +226,12 @@ public final class TransactionProcessor {
         }
     }
 
+
+    /** Returns the custom currencyId for the shop owning this item, or null for Vault. */
+    private String getShopCurrencyId(ShopItem shopItem) {
+        Shop shop = module.getShopManager().getShop(shopItem.getShopId());
+        return shop != null ? shop.getCurrencyId() : null;
+    }
 
     private void send(Player player, String msg) {
         player.sendMessage(Lang.color(msg));

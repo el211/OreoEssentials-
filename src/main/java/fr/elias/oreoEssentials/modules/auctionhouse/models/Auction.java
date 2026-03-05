@@ -23,6 +23,8 @@ public class Auction {
     private String nexoID;
     private String oraxenID;
     private Integer customModelData;
+    /** null = Vault economy; non-null = CurrencyService currency ID */
+    private String currencyId;
 
     public Auction(UUID seller, String sellerName, ItemStack item, double price,
                    long durationMs, AuctionCategory category) {
@@ -120,4 +122,8 @@ public class Auction {
 
     public Integer getCustomModelData()                { return customModelData; }
     public void    setCustomModelData(Integer cmd)     { this.customModelData = cmd; }
+
+    /** null = Vault; non-null = CurrencyService currency ID */
+    public String  getCurrencyId()                     { return currencyId; }
+    public void    setCurrencyId(String currencyId)    { this.currencyId = (currencyId != null && currencyId.isBlank()) ? null : currencyId; }
 }

@@ -119,17 +119,9 @@ public final class TradeCrossServerBroker {
         if (fromA) {
             s.aReady = packet.isReady();
             s.lastOfferA = (offer != null ? offer : new ItemStack[0]);
-            Player b = Bukkit.getPlayer(s.bId);
-            if (b != null) {
-                b.sendMessage("§7Partner " + (packet.isReady() ? "§ais ready" : "§cis not ready") + "§7.");
-            }
         } else {
             s.bReady = packet.isReady();
             s.lastOfferB = (offer != null ? offer : new ItemStack[0]);
-            Player a = Bukkit.getPlayer(s.aId);
-            if (a != null) {
-                a.sendMessage("§7Partner " + (packet.isReady() ? "§ais ready" : "§cis not ready") + "§7.");
-            }
         }
     }
 
@@ -390,18 +382,12 @@ public final class TradeCrossServerBroker {
     }
 
     public void handleRemoteCancel(TradeCancelPacket packet) {
-        XSession s = sessions.remove(packet.getSessionId());
+        sessions.remove(packet.getSessionId());
         log("[TRADE] handleRemoteCancel sid=" + packet.getSessionId()
-                + " reason=" + packet.getReason()
-                + " hadSession=" + (s != null));
-
-        if (s == null) return;
-
-        Player a = Bukkit.getPlayer(s.aId);
-        Player b = Bukkit.getPlayer(s.bId);
-
-        if (a != null) a.sendMessage("§cTrade cancelled: §7" + packet.getReason());
-        if (b != null) b.sendMessage("§cTrade cancelled: §7" + packet.getReason());
+                + " reason=" + packet.getReason());
+        Bukkit.getScheduler().runTask(plugin, () ->
+                tradeService.applyRemoteCancel(packet.getSessionId(), "Trade cancelled.")
+        );
     }
 
     public void handleRemoteGrant(TradeGrantPacket packet) {

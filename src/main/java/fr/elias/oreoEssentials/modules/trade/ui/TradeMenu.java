@@ -492,13 +492,17 @@ public final class TradeMenu implements InventoryProvider {
 
     private void setItemSafelyA(int slot, ItemStack stack) {
         try {
-            // TODO: plug into your existing painter for side A
+            if (a == null || !a.isOnline()) return;
+            Inventory top = a.getOpenInventory().getTopInventory();
+            if (top != null) top.setItem(slot, stack);
         } catch (Throwable ignored) {}
     }
 
     private void setItemSafelyB(int slot, ItemStack stack) {
         try {
-            // TODO: plug into your existing painter for side B
+            if (b == null || !b.isOnline()) return;
+            Inventory top = b.getOpenInventory().getTopInventory();
+            if (top != null) top.setItem(slot, stack);
         } catch (Throwable ignored) {}
     }
 

@@ -4,6 +4,14 @@
 # ─────────────────────────────────────────────────────
 enabled: true
 
+# ── Shop file deployment ───────────────────────────────
+# false (default): bundled shop YMLs are only created the very first time
+#                  (when the shops/ folder doesn't exist yet).
+#                  Deleting a shop file will NOT restore it on restart.
+# true:            any bundled shop YAML that is missing will be re-created
+#                  on every startup. Useful if you accidentally deleted one.
+auto-deploy-missing-shops: false
+
 # ── Language ──────────────────────────────────────────
 # Supported: en, fr  (add more in messages.yml)
 language: en
@@ -176,6 +184,17 @@ main-menu-items:
       - ""
       - "&eClick to open!"
     shop: brewing
+
+  token_shop:
+    slot: 34
+    material: SUNFLOWER
+    name: "&6&lToken Shop"
+    lore:
+      - "&7Buy exclusive items with"
+      - "&7your custom tokens!"
+      - ""
+      - "&eClick to open!"
+    shop: token_shop
 
 # ── Amount Selection ──────────────────────────────────
 amount-selection:

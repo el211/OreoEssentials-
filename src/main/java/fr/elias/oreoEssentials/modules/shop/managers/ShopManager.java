@@ -28,7 +28,7 @@ public final class ShopManager {
     private static final String[] BUNDLED_SHOPS = {
         "building_blocks", "ores_minerals", "food", "tools", "weapons_armor",
         "redstone", "farming_nature", "mob_drops", "nether", "end_misc",
-        "potions", "enchanted_books", "brewing"
+        "potions", "enchanted_books", "brewing", "token_shop"
     };
 
     public ShopManager(ShopModule module) {
@@ -51,17 +51,34 @@ public final class ShopManager {
 
     private void ensureShopsFolder() {
         File dir = module.getShopConfig().getShopsFolder();
-        if (!dir.exists()) {
+        boolean firstRun = !dir.exists();
+
+        if (firstRun) {
             dir.mkdirs();
-            // First run: deploy all bundled shop YAMLs from the jar
             for (String name : BUNDLED_SHOPS) {
                 try {
                     module.getPlugin().saveResource("shop/shops/" + name + ".yml", false);
-                } catch (IllegalArgumentException ignored) {
-                    // bundled file missing from jar — skip silently
-                }
+                } catch (IllegalArgumentException ignored) {}
             }
             log.info("[Shop] Created shops/ folder and deployed " + BUNDLED_SHOPS.length + " bundled shop(s).");
+            return;
+        }
+
+        // Opt-in: re-deploy any missing bundled shops on every startup
+        if (module.getShopConfig().isAutoDeployMissing()) {
+            int deployed = 0;
+            for (String name : BUNDLED_SHOPS) {
+                File target = new File(dir, name + ".yml");
+                if (!target.exists()) {
+                    try {
+                        module.getPlugin().saveResource("shop/shops/" + name + ".yml", false);
+                        deployed++;
+                    } catch (IllegalArgumentException ignored) {}
+                }
+            }
+            if (deployed > 0) {
+                log.info("[Shop] Auto-deployed " + deployed + " missing bundled shop(s).");
+            }
         }
     }
 
@@ -95,11 +112,12 @@ public final class ShopManager {
     }
 
     private void parseAndRegister(String shopId, ConfigurationSection sec, String src) {
-        String title = sec.getString("title", shopId);
-        int rows     = Math.max(1, sec.getInt("rows", 6));
-        int pages    = Math.max(1, sec.getInt("pages", 1));
+        String title      = sec.getString("title", shopId);
+        int rows          = Math.max(1, sec.getInt("rows", 6));
+        int pages         = Math.max(1, sec.getInt("pages", 1));
+        String currencyId = sec.getString("currency", null); // null = use Vault
 
-        Shop shop = new Shop(shopId, title, rows, pages);
+        Shop shop = new Shop(shopId, title, rows, pages, currencyId);
 
         ConfigurationSection itemsSec = sec.getConfigurationSection("items");
         if (itemsSec != null) {

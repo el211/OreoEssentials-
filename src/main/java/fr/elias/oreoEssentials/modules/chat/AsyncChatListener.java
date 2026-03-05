@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.chat;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.modules.auctionhouse.AuctionHouseModule;
 import fr.elias.oreoEssentials.modgui.ModGuiService;
 import fr.elias.oreoEssentials.modules.chat.chatservices.MuteService;
 import fr.elias.oreoEssentials.util.DiscordWebhook;
@@ -86,6 +87,7 @@ public final class AsyncChatListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onLegacyChat(AsyncPlayerChatEvent event) {
         event.setCancelled(true);
+        event.getRecipients().clear();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
@@ -98,11 +100,22 @@ public final class AsyncChatListener implements Listener {
             return;
         }
 
+        event.viewers().clear();
         event.setCancelled(true);
 
         if (!OreoEssentials.get().getSettingsConfig().chatEnabled()) return;
 
         final Player player = event.getPlayer();
+
+        // AH price input: player is typing price after selecting currency in picker
+        try {
+            AuctionHouseModule ahm = AuctionHouseModule.getInstance();
+            if (ahm != null && ahm.isWaitingForPrice(player.getUniqueId())) {
+                String raw = PlainTextComponentSerializer.plainText().serialize(event.message());
+                ahm.consumePriceInput(player, raw);
+                return;
+            }
+        } catch (Throwable ignored) {}
         final ModGuiService gui = OreoEssentials.get().getModGuiService();
 
         if (gui != null && gui.chatMuted()) {
@@ -152,8 +165,9 @@ public final class AsyncChatListener implements Listener {
             }
 
             boolean canColors = live.hasPermission("oreo.chat.colors");
+            String msgForParsing = canColors ? FormatManager.convertLegacyToMiniMessage(msgForResolver) : msgForResolver;
             TagResolver msgResolver = canColors
-                    ? Placeholder.parsed("chat_message", msgForResolver)
+                    ? Placeholder.parsed("chat_message", msgForParsing)
                     : Placeholder.unparsed("chat_message", msgForResolver);
 
             Component lpPrefixComp = buildLpPrefixComponent(live);

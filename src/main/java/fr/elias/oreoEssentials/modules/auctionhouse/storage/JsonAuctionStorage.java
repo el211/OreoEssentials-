@@ -89,6 +89,7 @@ public final class JsonAuctionStorage implements AuctionStorage {
             if (a.getNexoID()        != null) m.put("nexoID",        a.getNexoID());
             if (a.getOraxenID()      != null) m.put("oraxenID",      a.getOraxenID());
             if (a.getCustomModelData() != null) m.put("customModelData", a.getCustomModelData());
+            if (a.getCurrencyId()    != null) m.put("currencyId",    a.getCurrencyId());
 
             list.add(m);
         }
@@ -123,6 +124,7 @@ public final class JsonAuctionStorage implements AuctionStorage {
                 if (m.containsKey("nexoID"))          a.setNexoID((String) m.get("nexoID"));
                 if (m.containsKey("oraxenID"))        a.setOraxenID((String) m.get("oraxenID"));
                 if (m.containsKey("customModelData")) a.setCustomModelData(((Number) m.get("customModelData")).intValue());
+                if (m.containsKey("currencyId"))      a.setCurrencyId((String) m.get("currencyId"));
 
                 out.add(a);
             } catch (Exception e) {

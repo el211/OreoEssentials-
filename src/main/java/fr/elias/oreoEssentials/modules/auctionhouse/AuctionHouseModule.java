@@ -2,14 +2,17 @@ package fr.elias.oreoEssentials.modules.auctionhouse;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.auctionhouse.gui.BrowseGUI;
+import fr.elias.oreoEssentials.modules.currency.CurrencyService;
 import fr.elias.oreoEssentials.modules.auctionhouse.models.Auction;
 import fr.elias.oreoEssentials.modules.auctionhouse.models.AuctionCategory;
 import fr.elias.oreoEssentials.modules.auctionhouse.models.AuctionStatus;
+import fr.elias.oreoEssentials.modules.auctionhouse.rabbitmq.AuctionSyncPacket;
 import fr.elias.oreoEssentials.modules.auctionhouse.storage.AuctionStorage;
 import fr.elias.oreoEssentials.modules.auctionhouse.storage.AuctionStorage.AuctionSnapshot;
 import fr.elias.oreoEssentials.modules.auctionhouse.storage.JsonAuctionStorage;
 import fr.elias.oreoEssentials.modules.auctionhouse.storage.MongoAuctionStorage;
 import fr.elias.oreoEssentials.modules.auctionhouse.utils.DiscordWebhook;
+import fr.elias.oreoEssentials.modules.auctionhouse.utils.ItemSerializer;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -20,6 +23,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
@@ -34,6 +38,14 @@ public final class AuctionHouseModule {
     private final List<Auction> activeAuctions  = new CopyOnWriteArrayList<>();
     private final List<Auction> expiredAuctions = new CopyOnWriteArrayList<>();
     private final List<Auction> soldAuctions    = new CopyOnWriteArrayList<>();
+
+    /** Players waiting to type a price in chat after selecting a currency. */
+    private final Map<UUID, PendingSell> pendingSells = new ConcurrentHashMap<>();
+
+    public record PendingSell(ItemStack item, String currencyId, long durationHours) {}
+
+    private static AuctionHouseModule instance;
+    public static AuctionHouseModule getInstance() { return instance; }
 
     private int expirationTaskId = -1;
     private int autoSaveTaskId   = -1;
@@ -56,6 +68,8 @@ public final class AuctionHouseModule {
             return;
         }
 
+        instance = this;
+
         setupEconomy();
 
         setupStorage();
@@ -70,6 +84,8 @@ public final class AuctionHouseModule {
     }
 
     public void stop() {
+        instance = null;
+        pendingSells.clear();
         if (expirationTaskId != -1) Bukkit.getScheduler().cancelTask(expirationTaskId);
         if (autoSaveTaskId   != -1) Bukkit.getScheduler().cancelTask(autoSaveTaskId);
         saveAuctions();
@@ -84,9 +100,18 @@ public final class AuctionHouseModule {
         BrowseGUI.getInventory(this).open(p);
     }
 
+    /** Backward-compat overload — defaults to Vault economy. */
     public boolean createAuction(Player seller, ItemStack item, double price,
                                  long durationHours, AuctionCategory category) {
+        return createAuction(seller, item, price, durationHours, category, null);
+    }
+
+    public boolean createAuction(Player seller, ItemStack item, double price,
+                                 long durationHours, AuctionCategory category, String currencyId) {
         if (!enabled()) return false;
+
+        // normalize currencyId
+        if (currencyId != null && currencyId.isBlank()) currencyId = null;
 
         if (price < cfg.minPrice() || price > cfg.maxPrice()) {
             seller.sendMessage(cfg.getMessage("errors.invalid-price",
@@ -101,19 +126,31 @@ public final class AuctionHouseModule {
         }
 
         double fee = (price * cfg.listingFeePercent() / 100.0) + cfg.listingFeeFlat();
-        if (fee > 0 && economy != null) {
-            if (!economy.has(seller, fee)) {
-                seller.sendMessage(cfg.getMessage("errors.not-enough-money"));
-                return false;
+        if (fee > 0) {
+            CurrencyService cs = (currencyId != null) ? plugin.getCurrencyService() : null;
+            if (cs != null) {
+                double balance = cs.getBalance(seller.getUniqueId(), currencyId).join();
+                if (balance < fee) {
+                    seller.sendMessage(cfg.getMessage("errors.not-enough-money"));
+                    return false;
+                }
+                cs.withdraw(seller.getUniqueId(), currencyId, fee).join();
+            } else if (economy != null) {
+                if (!economy.has(seller, fee)) {
+                    seller.sendMessage(cfg.getMessage("errors.not-enough-money"));
+                    return false;
+                }
+                economy.withdrawPlayer(seller, fee);
             }
-            economy.withdrawPlayer(seller, fee);
         }
 
         Auction auction = new Auction(seller.getUniqueId(), seller.getName(), item,
                 price, durationHours * 3_600_000L, category);
+        auction.setCurrencyId(currencyId);
         detectCustomItem(auction, item);
 
         activeAuctions.add(auction);
+        broadcastSync(AuctionSyncPacket.create(serverName(), auction));
         seller.sendMessage(cfg.getMessage("listing.created",
                 Map.of("price", formatMoney(price), "duration", durationHours + "h")));
 
@@ -148,18 +185,29 @@ public final class AuctionHouseModule {
             buyer.sendMessage(cfg.getMessage("errors.auction-expired"));
             return false;
         }
-        if (economy == null) return false;
-
         double price = auction.getPrice();
-        if (!economy.has(buyer, price)) {
-            buyer.sendMessage(cfg.getMessage("errors.not-enough-money"));
-            return false;
-        }
-
-        economy.withdrawPlayer(buyer, price);
+        String auctionCurrencyId = auction.getCurrencyId(); // per-listing currency
+        CurrencyService cs = (auctionCurrencyId != null) ? plugin.getCurrencyService() : null;
         double tax = price * cfg.taxPercent() / 100.0;
         double sellerReceives = price - tax;
-        economy.depositPlayer(Bukkit.getOfflinePlayer(auction.getSeller()), sellerReceives);
+
+        if (cs != null) {
+            double balance = cs.getBalance(buyer.getUniqueId(), auctionCurrencyId).join();
+            if (balance < price) {
+                buyer.sendMessage(cfg.getMessage("errors.not-enough-money"));
+                return false;
+            }
+            cs.withdraw(buyer.getUniqueId(), auctionCurrencyId, price).join();
+            cs.deposit(auction.getSeller(), auctionCurrencyId, sellerReceives).join();
+        } else {
+            if (economy == null) return false;
+            if (!economy.has(buyer, price)) {
+                buyer.sendMessage(cfg.getMessage("errors.not-enough-money"));
+                return false;
+            }
+            economy.withdrawPlayer(buyer, price);
+            economy.depositPlayer(Bukkit.getOfflinePlayer(auction.getSeller()), sellerReceives);
+        }
 
         Map<Integer, ItemStack> overflow = buyer.getInventory().addItem(auction.getItem());
         if (!overflow.isEmpty()) {
@@ -170,6 +218,8 @@ public final class AuctionHouseModule {
         auction.markAsSold(buyer.getUniqueId(), buyer.getName());
         activeAuctions.remove(auction);
         soldAuctions.add(auction);
+        broadcastSync(AuctionSyncPacket.purchase(serverName(), auction.getId(),
+                buyer.getUniqueId(), buyer.getName()));
 
         buyer.sendMessage(cfg.getMessage("purchase.success",
                 Map.of("item", auction.getItem().getType().name(), "price", formatMoney(price))));
@@ -205,6 +255,7 @@ public final class AuctionHouseModule {
 
         auction.markAsCancelled();
         activeAuctions.remove(auction);
+        broadcastSync(AuctionSyncPacket.remove(serverName(), AuctionSyncPacket.Action.CANCEL, auction.getId()));
 
         Map<Integer, ItemStack> overflow = owner.getInventory().addItem(auction.getItem());
         if (!overflow.isEmpty()) {
@@ -275,6 +326,7 @@ public final class AuctionHouseModule {
             a.markAsExpired();
             activeAuctions.remove(a);
             expiredAuctions.add(a);
+            broadcastSync(AuctionSyncPacket.remove(serverName(), AuctionSyncPacket.Action.EXPIRE, a.getId()));
 
             Player p = Bukkit.getPlayer(a.getSeller());
             if (p != null) {
@@ -306,10 +358,147 @@ public final class AuctionHouseModule {
     public AuctionHouseConfig getConfig(){ return cfg; }
     public Economy          getEconomy() { return economy; }
 
+    /** Format using Vault (for balance display etc.) */
     public String formatMoney(double amount) {
         return economy != null ? economy.format(amount) : String.format("$%.2f", amount);
     }
 
+    /** Format using the per-listing currencyId (null = Vault). */
+    public String formatMoney(double amount, String currencyId) {
+        if (currencyId != null) {
+            CurrencyService cs = plugin.getCurrencyService();
+            if (cs != null) return cs.formatBalance(currencyId, amount);
+        }
+        return formatMoney(amount);
+    }
+
+    // ─── Pending sell (currency picker → chat input) ─────────────────────────
+
+    public void addPendingSell(Player player, ItemStack item, String currencyId, long durationHours) {
+        pendingSells.put(player.getUniqueId(),
+                new PendingSell(item.clone(), currencyId, durationHours));
+    }
+
+    public boolean isWaitingForPrice(UUID uuid) {
+        return pendingSells.containsKey(uuid);
+    }
+
+    /**
+     * Called by the chat listener when a player types their price.
+     * Returns true if this player was waiting (so the chat message is consumed).
+     */
+    public boolean consumePriceInput(Player player, String rawMessage) {
+        PendingSell pending = pendingSells.remove(player.getUniqueId());
+        if (pending == null) return false;
+
+        double price;
+        try {
+            price = Double.parseDouble(rawMessage.trim().replace(",", "."));
+        } catch (NumberFormatException e) {
+            pendingSells.put(player.getUniqueId(), pending); // put back — let them retry
+            player.sendMessage(ChatColor.RED + "Invalid price. Type a valid number (e.g. 100 or 1500.50).");
+            return true;
+        }
+        if (price <= 0) {
+            pendingSells.put(player.getUniqueId(), pending);
+            player.sendMessage(ChatColor.RED + "Price must be greater than 0.");
+            return true;
+        }
+
+        final double finalPrice = price;
+        final PendingSell ps = pending;
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            try {
+                fr.elias.oreoEssentials.modules.auctionhouse.gui.SellGUI
+                        .getInventory(this, ps.item(), finalPrice, ps.durationHours(), null, ps.currencyId())
+                        .open(player);
+            } catch (Throwable t) {
+                player.sendMessage(ChatColor.RED + "Failed to open sell menu: " + t.getMessage());
+            }
+        });
+        return true;
+    }
+
+
+    // ─── Cross-server sync ────────────────────────────────────────────────────
+
+    /** Sends a sync packet to all other servers (no-op if RabbitMQ is not available). */
+    private void broadcastSync(AuctionSyncPacket pkt) {
+        try {
+            var pm = plugin.getPacketManager();
+            if (pm != null && pm.isInitialized()) pm.sendPacket(pkt);
+        } catch (Throwable ignored) {}
+    }
+
+    private String serverName() {
+        try { return plugin.getConfigService().serverName(); }
+        catch (Throwable t) { return "unknown"; }
+    }
+
+    /**
+     * Called by the PacketManager subscriber when another server broadcasts
+     * an AuctionSyncPacket. Applies the change to this server's in-memory lists.
+     */
+    public void applyIncomingSync(AuctionSyncPacket pkt) {
+        if (pkt == null || !enabled()) return;
+        // Ignore packets we sent ourselves
+        if (serverName().equals(pkt.getOriginServer())) return;
+
+        switch (pkt.getAction()) {
+            case CREATE   -> syncCreate(pkt);
+            case PURCHASE -> syncPurchase(pkt);
+            case CANCEL   -> syncRemove(pkt.getAuctionId(), AuctionStatus.CANCELLED);
+            case EXPIRE   -> syncExpire(pkt.getAuctionId());
+        }
+    }
+
+    private void syncCreate(AuctionSyncPacket pkt) {
+        if (activeAuctions.stream().anyMatch(a -> a.getId().equals(pkt.getAuctionId()))) return;
+        org.bukkit.inventory.ItemStack item = ItemSerializer.deserialize(pkt.getItemData());
+        if (item == null) return;
+        AuctionCategory cat;
+        try { cat = AuctionCategory.valueOf(pkt.getCategory()); }
+        catch (Exception e) { cat = AuctionCategory.MISC; }
+        Auction a = new Auction(pkt.getAuctionId(), pkt.getSellerUuid(), pkt.getSellerName(),
+                item, pkt.getPrice(), pkt.getListedTime(), pkt.getExpirationTime(),
+                cat, AuctionStatus.ACTIVE, null, null, 0L);
+        a.setCurrencyId(pkt.getCurrencyId());
+        a.setItemsAdderID(pkt.getItemsAdderId());
+        a.setNexoID(pkt.getNexoId());
+        a.setOraxenID(pkt.getOraxenId());
+        activeAuctions.add(a);
+    }
+
+    private void syncPurchase(AuctionSyncPacket pkt) {
+        Auction a = activeAuctions.stream()
+                .filter(x -> x.getId().equals(pkt.getAuctionId()))
+                .findFirst().orElse(null);
+        if (a == null) return;
+        a.markAsSold(pkt.getBuyerUuid(), pkt.getBuyerName());
+        activeAuctions.remove(a);
+        soldAuctions.add(a);
+    }
+
+    private void syncExpire(String auctionId) {
+        Auction a = activeAuctions.stream()
+                .filter(x -> x.getId().equals(auctionId))
+                .findFirst().orElse(null);
+        if (a == null) return;
+        a.markAsExpired();
+        activeAuctions.remove(a);
+        expiredAuctions.add(a);
+    }
+
+    private void syncRemove(String auctionId, AuctionStatus status) {
+        Auction a = activeAuctions.stream()
+                .filter(x -> x.getId().equals(auctionId))
+                .findFirst().orElse(null);
+        if (a == null) return;
+        if (status == AuctionStatus.CANCELLED) a.markAsCancelled();
+        activeAuctions.remove(a);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     private void setupEconomy() {
         try {

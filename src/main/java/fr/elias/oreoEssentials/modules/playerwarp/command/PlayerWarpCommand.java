@@ -456,9 +456,7 @@ public class PlayerWarpCommand implements OreoCommand {
                     return true;
                 }
 
-                Location loc = warp.getLocation();
-                service.deleteWarp(warp);
-                PlayerWarp renamed = service.createWarp(actor, newName, loc);
+                PlayerWarp renamed = service.renameWarp(warp, newName);
                 if (renamed != null) {
                     Lang.send(actor, "pw.rename-success",
                             "<green>Renamed <yellow>%old%</yellow> to <aqua>%name%</aqua>.</green>",
@@ -500,23 +498,23 @@ public class PlayerWarpCommand implements OreoCommand {
                     return true;
                 }
 
-                Player newOwner = Bukkit.getPlayerExact(targetName);
-                if (newOwner == null) {
-                    sender.sendMessage("§cPlayer '" + targetName + "' must be online for setowner (simplified implementation).");
+                OfflinePlayer newOwner = Bukkit.getOfflinePlayer(targetName);
+                if (newOwner.getUniqueId() == null) {
+                    Lang.send(sender, "pw.player-resolve-failed",
+                            "<red>Could not resolve player <yellow>%player%</yellow>.</red>",
+                            Map.of("player", targetName));
                     return true;
                 }
 
-                Location loc = warp.getLocation();
-                service.deleteWarp(warp);
-                PlayerWarp recreated = service.createWarp(newOwner, warp.getName(), loc);
+                PlayerWarp recreated = service.transferOwnership(warp, newOwner.getUniqueId());
                 if (recreated != null) {
                     Lang.send(sender, "pw.setowner-success",
                             "<green>Transferred warp <aqua>%warp%</aqua> to <yellow>%player%</yellow>.</green>",
-                            Map.of("warp", recreated.getName(), "player", newOwner.getName()));
+                            Map.of("warp", recreated.getName(), "player", newOwner.getName() != null ? newOwner.getName() : targetName));
                 } else {
                     Lang.send(sender, "pw.setowner-failed",
                             "<red>Failed to transfer warp <yellow>%warp%</yellow>.</red>",
-                            Map.of("warp", warp.getName(), "player", newOwner.getName()));
+                            Map.of("warp", warp.getName(), "player", targetName));
                 }
                 return true;
             }

@@ -27,23 +27,32 @@ public class SellGUI implements InventoryProvider {
     private final double price;
     private final long durationHours;
     private final AuctionCategory selectedCategory;
+    /** null = Vault; non-null = custom currency ID */
+    private final String currencyId;
 
-    public SellGUI(AuctionHouseModule module, ItemStack item, double price, long durationHours, AuctionCategory selectedCategory) {
+    public SellGUI(AuctionHouseModule module, ItemStack item, double price, long durationHours,
+                   AuctionCategory selectedCategory, String currencyId) {
         this.module = module;
         this.itemToSell = item;
         this.price = price;
         this.durationHours = durationHours;
         this.selectedCategory = (selectedCategory != null ? selectedCategory : AuctionCategory.fromItem(item));
+        this.currencyId = (currencyId != null && currencyId.isBlank()) ? null : currencyId;
     }
 
     public static SmartInventory getInventory(AuctionHouseModule module, ItemStack item, double price, long duration) {
-        return getInventory(module, item, price, duration, null);
+        return getInventory(module, item, price, duration, null, null);
     }
 
     public static SmartInventory getInventory(AuctionHouseModule module, ItemStack item, double price, long duration, AuctionCategory selected) {
+        return getInventory(module, item, price, duration, selected, null);
+    }
+
+    public static SmartInventory getInventory(AuctionHouseModule module, ItemStack item, double price, long duration,
+                                              AuctionCategory selected, String currencyId) {
         return SmartInventory.builder()
                 .id("oe_ah_sell_" + (selected != null ? selected.name() : "auto"))
-                .provider(new SellGUI(module, item, price, duration, selected))
+                .provider(new SellGUI(module, item, price, duration, selected, currencyId))
                 .manager(module.getPlugin().getInvManager())
                 .size(6, 9)
                 .title(c(module.getConfig().getGui().getString("sell.title", "&6&lSelect Category")))
@@ -58,7 +67,7 @@ public class SellGUI implements InventoryProvider {
         ItemStack preview = itemToSell.clone();
         ItemMeta pm = preview.getItemMeta();
         pm.setLore(List.of("",
-                c("&7Price: &a" + module.formatMoney(price)),
+                c("&7Price: &a" + module.formatMoney(price, currencyId)),
                 c("&7Duration: &e" + durationHours + " hours"),
                 c("&7Category: &b" + selectedCategory.getDisplayName()),
                 "", c("&eSelect a category below!")));
@@ -95,7 +104,7 @@ public class SellGUI implements InventoryProvider {
             contents.set(slot / 9, slot % 9, ClickableItem.of(item, e -> {
                 if (module.getConfig().hasCategoryPermission(player, cat)) {
                     click(player);
-                    getInventory(module, itemToSell, price, durationHours, cat).open(player);
+                    getInventory(module, itemToSell, price, durationHours, cat, currencyId).open(player);
 
                 } else {
                     try { player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f); } catch (Throwable ignored) {}
@@ -108,9 +117,11 @@ public class SellGUI implements InventoryProvider {
         ItemStack confirm = named(cfg.guiMaterial("sell", "confirm", Material.GREEN_WOOL),
                 cfg.guiNameRaw("sell", "confirm", "&a&l✔ CONFIRM LISTING"));
         ItemMeta cm = confirm.getItemMeta();
+        String currencyLabel = currencyId != null ? currencyId : (module.getEconomy() != null ? module.getEconomy().getName() : "Vault");
         cm.setLore(List.of("",
                 c("&7Item: &e" + itemToSell.getType().name()),
-                c("&7Price: &a" + module.formatMoney(price)),
+                c("&7Price: &a" + module.formatMoney(price, currencyId)),
+                c("&7Currency: &b" + currencyLabel),
                 c("&7Duration: &e" + durationHours + " hours"),
                 c("&7Category: &b" + selectedCategory.getDisplayName()),
                 "", c("&a&lClick to list!"), ""));
@@ -118,7 +129,7 @@ public class SellGUI implements InventoryProvider {
         int confirmSlot = cfg.guiSlot("sell", "confirm", 52);
         contents.set(confirmSlot / 9, confirmSlot % 9, ClickableItem.of(confirm, e -> {
             click(player); player.closeInventory();
-            if (module.createAuction(player, itemToSell, price, durationHours, selectedCategory)) {
+            if (module.createAuction(player, itemToSell, price, durationHours, selectedCategory, currencyId)) {
                 player.getInventory().setItemInMainHand(null);
                 try { player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, .5f, 1.5f); } catch (Throwable ignored) {}
             }

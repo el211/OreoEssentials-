@@ -158,7 +158,8 @@ public class BrowseGUI implements InventoryProvider {
         List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         lore.add("");
         lore.add(c("&7Seller: &e" + a.getSellerName()));
-        lore.add(c("&7Price: &a" + module.formatMoney(a.getPrice())));
+        lore.add(c("&7Price: &a" + module.formatMoney(a.getPrice(), a.getCurrencyId())));
+        if (a.getCurrencyId() != null) lore.add(c("&7Currency: &b" + a.getCurrencyId()));
         lore.add(c("&7Time Left: &e" + TimeFormatter.format(a.getTimeRemaining())));
         lore.add(c("&7Category: &b" + a.getCategory().getDisplayName()));
         if (a.getItemsAdderID() != null) lore.add(c("&d&lItemsAdder Item"));

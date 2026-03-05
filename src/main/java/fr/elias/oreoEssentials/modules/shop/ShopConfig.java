@@ -140,4 +140,14 @@ public final class ShopConfig {
     public File getShopsFolder() {
         return new File(shopFolder, "shops");
     }
+
+    /**
+     * When true, any bundled shop YAML that is missing from the shops/ folder
+     * will be re-deployed on every server startup.
+     * When false (default), bundled shops are only deployed the very first time
+     * (i.e. when the shops/ folder does not yet exist).
+     */
+    public boolean isAutoDeployMissing() {
+        return config.getBoolean("auto-deploy-missing-shops", false);
+    }
 }

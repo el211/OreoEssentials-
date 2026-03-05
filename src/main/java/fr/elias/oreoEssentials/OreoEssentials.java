@@ -331,6 +331,7 @@ public final class OreoEssentials extends JavaPlugin {
     private CustomConfig chatConfig;
     private FormatManager chatFormatManager;
     private ChatSyncManager chatSyncManager;
+    private org.bukkit.event.Listener activeChatListener;
     private TradeConfig tradeConfig;
     private TradeService tradeService;
     public TradeService getTradeService() { return tradeService; }
@@ -1074,6 +1075,7 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[Chat] Initialized without channels (discord=" + discordEnabled + ")");
         }
         getServer().getPluginManager().registerEvents(chatListener, this);
+        this.activeChatListener = chatListener;
 
         if (channelManager.isEnabled()) {
             var channelsCmd  = new fr.elias.oreoEssentials.modules.chat.channels.commands.OeChannelsCommand(this, channelManager);
@@ -1346,6 +1348,17 @@ public final class OreoEssentials extends JavaPlugin {
         this.packetManager.subscribe(TradeCancelPacket.class,  new TradeCancelPacketHandler(this));
         this.packetManager.subscribe(TradeGrantPacket.class,   new TradeGrantPacketHandler(this));
         this.packetManager.subscribe(TradeClosePacket.class,   new TradeClosePacketHandler(this));
+
+        // ── Auction House sync ────────────────────────────────────────────────
+        if (this.auctionHouse != null && this.auctionHouse.enabled()) {
+            this.packetManager.subscribe(
+                    fr.elias.oreoEssentials.modules.auctionhouse.rabbitmq.AuctionSyncPacket.class,
+                    (channel, pkt) -> {
+                        try { this.auctionHouse.applyIncomingSync(pkt); }
+                        catch (Throwable t) { getLogger().warning("[AH] Failed to handle AuctionSyncPacket: " + t.getMessage()); }
+                    });
+            getLogger().info("[AH] Cross-server sync subscribed.");
+        }
 
         this.packetManager.init();
 
@@ -1959,7 +1972,8 @@ public final class OreoEssentials extends JavaPlugin {
         pm.registerPacket(fr.elias.oreoEssentials.modules.currency.rabbitmq.CurrencySyncPacket.class, fr.elias.oreoEssentials.modules.currency.rabbitmq.CurrencySyncPacket::new);
         pm.registerPacket(AfkPoolEnterPacket.class, AfkPoolEnterPacket::new);
         pm.registerPacket(AfkPoolExitPacket.class, AfkPoolExitPacket::new);
-        getLogger().info("[RABBIT] Registered 28 packet types deterministically");
+        pm.registerPacket(fr.elias.oreoEssentials.modules.auctionhouse.rabbitmq.AuctionSyncPacket.class, fr.elias.oreoEssentials.modules.auctionhouse.rabbitmq.AuctionSyncPacket::new);
+        getLogger().info("[RABBIT] Registered 29 packet types deterministically");
     }
 
     // -------------------------------------------------------------------------
@@ -2163,6 +2177,46 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.modules.mobs.HealthBarListener getHealthBarListener() { return healthBarListener; }
     public FreezeService getFreezeService() { return freezeService; }
     public fr.elias.oreoEssentials.modules.chat.CustomConfig getChatConfig() { return chatConfig; }
+
+    public void reloadChat() {
+        // Unregister old chat listener
+        if (activeChatListener != null) {
+            org.bukkit.event.HandlerList.unregisterAll(activeChatListener);
+            activeChatListener = null;
+        }
+
+        // Reload chat-format.yml + channels (channelManager.reload() calls chatConfig.reloadCustomConfig() internally)
+        channelManager.reload();
+
+        // Re-read discord settings from freshly reloaded config
+        boolean discordEnabled = false;
+        String discordWebhookUrl = "";
+        try {
+            if (getSettingsConfig().chatDiscordBridgeEnabled()) {
+                var chatRoot = chatConfig.getCustomConfig().getConfigurationSection("chat.discord");
+                if (chatRoot != null) {
+                    discordEnabled    = chatRoot.getBoolean("enabled", false);
+                    discordWebhookUrl = chatRoot.getString("webhook_url", "");
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        // Register the correct listener based on new channel state
+        org.bukkit.event.Listener newListener;
+        if (channelManager != null && channelManager.isEnabled()) {
+            newListener = new fr.elias.oreoEssentials.modules.chat.AsyncChatListenerWithChannels(
+                    this, chatFormatManager, chatConfig, chatSyncManager,
+                    discordEnabled, discordWebhookUrl, muteService, channelManager);
+            getLogger().info("[Chat] Reloaded with channel support (channels=true)");
+        } else {
+            newListener = new fr.elias.oreoEssentials.modules.chat.AsyncChatListener(
+                    chatFormatManager, chatConfig, chatSyncManager,
+                    discordEnabled, discordWebhookUrl, muteService);
+            getLogger().info("[Chat] Reloaded without channels (channels=false)");
+        }
+        getServer().getPluginManager().registerEvents(newListener, this);
+        this.activeChatListener = newListener;
+    }
     public WarpDirectory getWarpDirectory() { return warpDirectory; }
     public SpawnDirectory getSpawnDirectory() { return spawnDirectory; }
 
