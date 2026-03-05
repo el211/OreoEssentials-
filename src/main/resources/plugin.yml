@@ -797,6 +797,8 @@ permissions:
       oreo.bossbar.toggle: true
       oreo.chat.channels: true
       oreo.chat.channel: true
+      oreo.orders.use: true
+      oreo.orders.admin: true
 
   # Basics
   oreo.spawn:               { default: true }
@@ -991,6 +993,14 @@ permissions:
 
   oreo.ah.admin:
     description: Access Auction House admin tools
+    default: op
+
+  oreo.orders.use:
+    description: Open the Market Orders GUI (/order)
+    default: true
+
+  oreo.orders.admin:
+    description: Admin access for Market Orders (reload, etc.)
     default: op
 
   oreo.jail.list:

@@ -1,0 +1,71 @@
+# ── Parcourir ─────────────────────────────────────────────────────────────────
+browse:
+  no-orders: "&c&lAucune commande disponible pour le moment."
+
+# ── Créer ─────────────────────────────────────────────────────────────────────
+create:
+  hold-item: "&cVous devez tenir l'objet que vous souhaitez acheter dans votre main principale."
+  enter-qty: "&eCombien d'objets souhaitez-vous acheter ? &7Tapez la quantité dans le chat."
+  invalid-qty: "&cQuantité invalide. Veuillez saisir un nombre entier."
+  invalid-qty-range: "&cLa quantité doit être comprise entre 1 et &e{max}&c."
+  enter-price: "&eQuel est votre prix unitaire ? &7Tapez le prix dans le chat &b({currency})&7."
+  invalid-price: "&cPrix invalide. Veuillez saisir un nombre valide (ex. 10 ou 1,50)."
+  price-too-low: "&cLe prix doit être d'au moins &e{min}&c."
+  success: "&aCommande créée ! Achat de &e{qty} &aobjet(s) à &e{price} &achacun. Escrow réservé."
+
+# ── Erreurs ───────────────────────────────────────────────────────────────────
+errors:
+  invalid-quantity: "&cQuantité invalide."
+  invalid-price: "&cPrix invalide."
+  vault-disabled: "&cL'économie Vault est désactivée dans la configuration du marché."
+  custom-currency-disabled: "&cLes monnaies personnalisées sont désactivées dans la configuration du marché."
+  max-orders-reached: "&cVous avez atteint le nombre maximum de commandes actives."
+  not-enough-money: "&cVous n'avez pas assez d'argent pour passer cette commande."
+  withdraw-failed: "&cÉchec du retrait de l'escrow. Veuillez réessayer."
+  item-serialize-failed: "&cÉchec du traitement de votre objet. Veuillez réessayer."
+
+# ── Remplir ───────────────────────────────────────────────────────────────────
+fill:
+  enter-qty: "&eCombien d'objets (max &f{max}&e) allez-vous livrer ? Tapez la quantité dans le chat."
+  invalid-qty: "&cQuantité invalide. Veuillez saisir un nombre entier."
+  invalid-qty-range: "&cVous pouvez livrer au maximum &e{max} &cobjet(s) pour cette commande."
+  order-gone: "&cCette commande n'existe plus ou a déjà été satisfaite."
+  already-closed: "&cCette commande a déjà été complétée ou annulée."
+  stale-qty: "&cQuantité restante insuffisante. La commande a été partiellement remplie. Actualisez."
+  error: "&cUne erreur inattendue s'est produite. Veuillez réessayer."
+  success: "&aLivré &e{qty} &f{item}&a ! Vous avez reçu &a{paid}&a."
+
+# ── Annuler ───────────────────────────────────────────────────────────────────
+cancel:
+  success: "&aCommande annulée. &e{refund} &aa été remboursé sur votre compte."
+  failed: "&cImpossible d'annuler la commande. Elle est peut-être déjà complétée ou annulée."
+
+# ── Mes Commandes ─────────────────────────────────────────────────────────────
+my-orders:
+  no-orders: "&7Vous n'avez aucune commande active."
+
+# ── Libellés GUI (utilisés dans les lores) ────────────────────────────────────
+gui:
+  label:
+    requested-by: "&7Demandé par : &f{player}"
+    remaining: "&7Restant : &a{remaining} &7/ &f{total}"
+    unit-price: "&7Prix unitaire : &a{price}"
+    currency: "&7Monnaie : &b{currency}"
+    escrow-left: "&7Escrow restant : &a{escrow}"
+    earn-per-item: "&7Vous gagnez par objet : &a{earn}"
+    item: "&7Objet : &f{item}"
+    qty: "&7Quantité : &f{qty}"
+    total-escrow: "&7Escrow total : &e{total}"
+    creation-fee: "&7Frais de création : &c{fee}"
+    you-will-pay: "&7Vous paierez : &c{charge}"
+    deliver: "&7Objet à livrer : &f{item} &ex{qty}"
+    you-receive: "&7Vous recevrez : &a{net}"
+    fill-fee: "&7Frais de remplissage : &c{fee}"
+    refund: "&7Remboursement : &a{refund}"
+    custom-itemsadder: "&d▶ ItemsAdder : {id}"
+    custom-nexo: "&d▶ Nexo : {id}"
+    custom-oraxen: "&d▶ Oraxen : {id}"
+  action:
+    your-order: "&6&lVOTRE COMMANDE — Cliquez pour gérer"
+    fill-order: "&a&lClic gauche &7pour remplir cette commande"
+    cancel-order: "&c&lClic gauche &7pour annuler (rembourse l'escrow)"

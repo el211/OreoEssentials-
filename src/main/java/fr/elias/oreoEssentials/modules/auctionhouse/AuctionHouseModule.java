@@ -44,6 +44,23 @@ public final class AuctionHouseModule {
 
     public record PendingSell(ItemStack item, String currencyId, long durationHours) {}
 
+    // ─── Browse-GUI viewer registry ───────────────────────────────────────────
+    /** Tracks every player who has a BrowseGUI open so we can push live updates. */
+    public record ViewerContext(AuctionCategory category, String searchQuery, int page) {}
+    private final Map<UUID, ViewerContext> browseViewers = new ConcurrentHashMap<>();
+
+    public void registerBrowseViewer(UUID uuid, AuctionCategory cat, String query, int page) {
+        browseViewers.put(uuid, new ViewerContext(cat, query, page));
+    }
+
+    public void unregisterBrowseViewer(UUID uuid) {
+        browseViewers.remove(uuid);
+    }
+
+    public void updateBrowseViewerPage(UUID uuid, int page) {
+        browseViewers.computeIfPresent(uuid, (k, v) -> new ViewerContext(v.category(), v.searchQuery(), page));
+    }
+
     private static AuctionHouseModule instance;
     public static AuctionHouseModule getInstance() { return instance; }
 
@@ -77,6 +94,8 @@ public final class AuctionHouseModule {
         loadAuctions();
 
         startTasks();
+
+        Bukkit.getPluginManager().registerEvents(new AHGuiListener(this), plugin);
 
         plugin.getLogger().info("[AuctionHouse] Reloaded (storage=" +
                 (storage instanceof MongoAuctionStorage ? "mongodb" : "json") + ", " +
@@ -437,7 +456,8 @@ public final class AuctionHouseModule {
 
     /**
      * Called by the PacketManager subscriber when another server broadcasts
-     * an AuctionSyncPacket. Applies the change to this server's in-memory lists.
+     * an AuctionSyncPacket. Applies the change to this server's in-memory lists,
+     * then schedules a main-thread GUI refresh for all open BrowseGUI viewers.
      */
     public void applyIncomingSync(AuctionSyncPacket pkt) {
         if (pkt == null || !enabled()) return;
@@ -449,6 +469,31 @@ public final class AuctionHouseModule {
             case PURCHASE -> syncPurchase(pkt);
             case CANCEL   -> syncRemove(pkt.getAuctionId(), AuctionStatus.CANCELLED);
             case EXPIRE   -> syncExpire(pkt.getAuctionId());
+        }
+
+        // Push the updated listing to every player with BrowseGUI already open.
+        // Must run on the main thread — RabbitMQ callbacks arrive off-thread.
+        if (!browseViewers.isEmpty()) {
+            Bukkit.getScheduler().runTask(plugin, this::refreshAllBrowseViewers);
+        }
+    }
+
+    /**
+     * Main-thread only. Re-opens BrowseGUI on the same page/filter for every
+     * registered viewer, so they see the freshly-mutated activeAuctions list.
+     * Stale entries (player offline / viewer closed GUI) are cleaned up here.
+     */
+    private void refreshAllBrowseViewers() {
+        for (Map.Entry<UUID, ViewerContext> entry : new ArrayList<>(browseViewers.entrySet())) {
+            Player p = Bukkit.getPlayer(entry.getKey());
+            if (p == null || !p.isOnline()) {
+                browseViewers.remove(entry.getKey());
+                continue;
+            }
+            ViewerContext ctx = entry.getValue();
+            // getInventory() builds a fresh SmartInventory that calls init() → re-renders all slots.
+            BrowseGUI.getInventory(this, ctx.category(), ctx.searchQuery())
+                     .open(p, ctx.page());
         }
     }
 

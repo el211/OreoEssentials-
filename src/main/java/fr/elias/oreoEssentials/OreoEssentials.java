@@ -229,6 +229,8 @@ public final class OreoEssentials extends JavaPlugin {
     private CommandToggleService commandToggleService;
     private PerPlayerTextDisplayService perPlayerTextDisplayService;
     private AuctionHouseModule auctionHouse;
+    private fr.elias.oreoEssentials.modules.orders.OrdersModule ordersModule;
+    public fr.elias.oreoEssentials.modules.orders.OrdersModule getOrdersModule() { return ordersModule; }
     private fr.elias.oreoEssentials.network.NetworkCountReceiver networkCountReceiver;
     private fr.elias.oreoEssentials.modules.discordbot.DiscordLinkManager discordLinkManager;
     public fr.elias.oreoEssentials.modules.discordbot.DiscordLinkManager getDiscordLinkManager() { return discordLinkManager; }
@@ -483,6 +485,7 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (ecoBootstrap != null) ecoBootstrap.disable(); } catch (Exception ignored) {}
         try { if (chatSyncManager != null) chatSyncManager.close(); } catch (Exception ignored) {}
         try { if (shopModule != null) shopModule.shutdown(); } catch (Exception ignored) {}
+        try { if (ordersModule != null) ordersModule.stop(); } catch (Exception ignored) {}
 
         try { if (tabListManager != null) tabListManager.stop(); } catch (Exception ignored) {}
         try { if (kitsManager != null) kitsManager.saveData(); } catch (Exception ignored) {}
@@ -839,6 +842,7 @@ public final class OreoEssentials extends JavaPlugin {
         this.auctionHouse = new AuctionHouseModule(this);
         if (auctionHouse.enabled()) {
             if (getCommand("ah")        != null) getCommand("ah").setExecutor(new AuctionHouseCommand(auctionHouse));
+
             if (getCommand("ahs")       != null) getCommand("ahs").setExecutor(new SellCommand(auctionHouse));
             if (getCommand("ahsearch")  != null) getCommand("ahsearch").setExecutor(new SearchCommand(auctionHouse));
             if (getCommand("ahexpired") != null) getCommand("ahexpired").setExecutor(new ExpiredCommand(auctionHouse));
@@ -858,6 +862,17 @@ public final class OreoEssentials extends JavaPlugin {
                 getLogger().info("[CommandToggle] AuctionHouse " + (shouldBeEnabled ? "enabled" : "disabled") + " via toggle.");
             });
             getLogger().info("[CommandToggle] AuctionHouse module callback registered.");
+        }
+
+        // Orders / Market module
+        try {
+            this.ordersModule = new fr.elias.oreoEssentials.modules.orders.OrdersModule(this);
+            if (ordersModule.enabled()) {
+                getLogger().info("[Orders] Market module initialised.");
+            }
+        } catch (Throwable t) {
+            getLogger().warning("[Orders] Failed to initialise: " + t.getMessage());
+            this.ordersModule = null;
         }
     }
 
@@ -1360,6 +1375,11 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[AH] Cross-server sync subscribed.");
         }
 
+        // ── Orders module cross-server sync ───────────────────────────────────
+        if (this.ordersModule != null && this.ordersModule.enabled()) {
+            this.ordersModule.subscribeCrossServerEvents();
+        }
+
         this.packetManager.init();
 
         try { if (this.afkPoolService != null) this.afkPoolService.tryHookCrossServerNow(); }
@@ -1529,6 +1549,11 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new MoveCommand(teleportService))
                 .register(new EcoMigrateCommand(this))
                 .register(new fr.elias.oreoEssentials.modules.currency.commands.CurrencyAdminCommand(this));
+
+        // Orders / Market command
+        if (this.ordersModule != null) {
+            this.commands.register(new fr.elias.oreoEssentials.modules.orders.command.OrderCommand(this.ordersModule));
+        }
 
                 getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.furnace.VirtualFurnaceListener(), this);
 
@@ -1916,9 +1941,7 @@ public final class OreoEssentials extends JavaPlugin {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Library loading
-    // -------------------------------------------------------------------------
+
 
     private void loadExternalLibraries() {
         try {
@@ -1931,6 +1954,7 @@ public final class OreoEssentials extends JavaPlugin {
             libraryManager.loadLibrary(net.byteflux.libby.Library.builder().groupId("redis.clients").artifactId("jedis").version("5.1.0").build());
             libraryManager.loadLibrary(net.byteflux.libby.Library.builder().groupId("org.postgresql").artifactId("postgresql").version("42.7.4").build());
             libraryManager.loadLibrary(net.byteflux.libby.Library.builder().groupId("com.rabbitmq").artifactId("amqp-client").version("5.15.0").build());
+            libraryManager.loadLibrary(net.byteflux.libby.Library.builder().groupId("org.xerial").artifactId("sqlite-jdbc").version("3.46.1.3").build());
             getLogger().info("[LibraryLoader] All dependencies loaded successfully!");
         } catch (Exception e) {
             getLogger().severe("[LibraryLoader] FAILED to load dependencies: " + e.getMessage());
@@ -1939,9 +1963,6 @@ public final class OreoEssentials extends JavaPlugin {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Packet registration
-    // -------------------------------------------------------------------------
 
     private void registerAllPacketsDeterministically(PacketManager pm) {
         pm.registerPacket(fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket.class, fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket::new);
@@ -1973,7 +1994,8 @@ public final class OreoEssentials extends JavaPlugin {
         pm.registerPacket(AfkPoolEnterPacket.class, AfkPoolEnterPacket::new);
         pm.registerPacket(AfkPoolExitPacket.class, AfkPoolExitPacket::new);
         pm.registerPacket(fr.elias.oreoEssentials.modules.auctionhouse.rabbitmq.AuctionSyncPacket.class, fr.elias.oreoEssentials.modules.auctionhouse.rabbitmq.AuctionSyncPacket::new);
-        getLogger().info("[RABBIT] Registered 29 packet types deterministically");
+        pm.registerPacket(fr.elias.oreoEssentials.modules.orders.rabbitmq.OrderSyncPacket.class, fr.elias.oreoEssentials.modules.orders.rabbitmq.OrderSyncPacket::new);
+        getLogger().info("[RABBIT] Registered 30 packet types deterministically");
     }
 
     // -------------------------------------------------------------------------

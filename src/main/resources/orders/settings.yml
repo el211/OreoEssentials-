@@ -1,0 +1,73 @@
+orders:
+  # Enable or disable the entire Orders / Market module.
+  enabled: true
+
+  # Language for all Orders module messages and GUI labels.
+  # Bundled: "en" (English), "fr" (French).
+  # To add your own, create lang_XX.yml in plugins/OreoEssentials/orders/.
+  lang: "en"
+
+  # Set to true to get verbose debug logs in console.
+  debug: false
+
+  # ── Storage ──────────────────────────────────────────────────────────────────
+  storage:
+    # "mongodb" or "sqlite"
+    # MongoDB is required for cross-server mode.
+    type: "sqlite"
+
+    sqlite:
+      # SQLite database file, relative to plugins/OreoEssentials/orders/
+      file: "orders.db"
+
+    mongodb:
+      # Collection name inside the MongoDB database configured in config.yml
+      collection: "oreo_orders"
+
+  # ── Cross-Server ─────────────────────────────────────────────────────────────
+  cross_server:
+    # Enable cross-server order sync via RabbitMQ.
+    # REQUIRES storage.type = "mongodb" to function correctly.
+    # RabbitMQ credentials are read from the core config.yml.
+    enabled: false
+
+    # RabbitMQ exchange name used for order events.
+    exchange: "oreo.orders"
+
+  # ── Limits ───────────────────────────────────────────────────────────────────
+  limits:
+    # Maximum number of ACTIVE orders a single player can have at once.
+    max_active_orders_per_player: 10
+
+    # Maximum quantity that can be requested in a single order.
+    max_quantity_per_order: 100000
+
+    # Minimum unit price allowed when creating an order.
+    min_unit_price: 0.01
+
+  # ── Economy ──────────────────────────────────────────────────────────────────
+  economy:
+    # Allow Vault economy as a payment currency.
+    allow_vault: true
+
+    # Allow OreoEssentials custom currencies.
+    allow_custom_currencies: true
+
+    # Default currency shown first in the picker (use "vault" for Vault or a currency ID).
+    default_currency: "money"
+
+  # ── UI ───────────────────────────────────────────────────────────────────────
+  ui:
+    # Ticks to wait before refreshing open GUIs after a cross-server event.
+    # Debounces rapid events so the GUI doesn't flicker.
+    live_refresh_debounce_ticks: 10
+
+  # ── Fees ─────────────────────────────────────────────────────────────────────
+  fees:
+    enabled: false
+
+    # % of total escrow charged when creating an order (burns money, not returned).
+    create_fee_percent: 0.0
+
+    # % of the payout deducted when filling an order.
+    fill_fee_percent: 0.0

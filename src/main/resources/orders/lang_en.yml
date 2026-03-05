@@ -1,0 +1,71 @@
+# ── Browse ────────────────────────────────────────────────────────────────────
+browse:
+  no-orders: "&c&lNo orders available right now."
+
+# ── Create ────────────────────────────────────────────────────────────────────
+create:
+  hold-item: "&cYou must hold the item you want to buy in your main hand."
+  enter-qty: "&eHow many items do you want to buy? &7Type the amount in chat."
+  invalid-qty: "&cInvalid quantity. Please enter a whole number."
+  invalid-qty-range: "&cQuantity must be between 1 and &e{max}&c."
+  enter-price: "&eWhat is your unit price? &7Type the price in chat &b({currency})&7."
+  invalid-price: "&cInvalid price. Please enter a valid number (e.g. 10 or 1.50)."
+  price-too-low: "&cPrice must be at least &e{min}&c."
+  success: "&aOrder created! Buying &e{qty} &aitem(s) at &e{price} &aeach. Escrow reserved."
+
+# ── Errors ────────────────────────────────────────────────────────────────────
+errors:
+  invalid-quantity: "&cInvalid quantity."
+  invalid-price: "&cInvalid price."
+  vault-disabled: "&cVault economy is disabled in the market config."
+  custom-currency-disabled: "&cCustom currencies are disabled in the market config."
+  max-orders-reached: "&cYou have reached the maximum number of active orders."
+  not-enough-money: "&cYou do not have enough money to place this order."
+  withdraw-failed: "&cFailed to withdraw escrow. Please try again."
+  item-serialize-failed: "&cFailed to process your item. Please try again."
+
+# ── Fill ──────────────────────────────────────────────────────────────────────
+fill:
+  enter-qty: "&eHow many &f{max} &eitems will you deliver? Type the amount in chat."
+  invalid-qty: "&cInvalid quantity. Please enter a whole number."
+  invalid-qty-range: "&cYou can deliver at most &e{max} &citems for this order."
+  order-gone: "&cThis order no longer exists or has been fulfilled."
+  already-closed: "&cThis order has already been completed or cancelled."
+  stale-qty: "&cNot enough remaining quantity. The order was partially filled. Please refresh."
+  error: "&cAn unexpected error occurred. Please try again."
+  success: "&aDelivered &e{qty} &f{item}&a! You received &a{paid}&a."
+
+# ── Cancel ────────────────────────────────────────────────────────────────────
+cancel:
+  success: "&aOrder cancelled. &e{refund} &ahas been refunded to your account."
+  failed: "&cCould not cancel the order. It may already be completed or cancelled."
+
+# ── My Orders ─────────────────────────────────────────────────────────────────
+my-orders:
+  no-orders: "&7You have no active orders."
+
+# ── GUI labels (used in lore) ─────────────────────────────────────────────────
+gui:
+  label:
+    requested-by: "&7Requested by: &f{player}"
+    remaining: "&7Remaining: &a{remaining} &7/ &f{total}"
+    unit-price: "&7Unit price: &a{price}"
+    currency: "&7Currency: &b{currency}"
+    escrow-left: "&7Escrow left: &a{escrow}"
+    earn-per-item: "&7You earn per item: &a{earn}"
+    item: "&7Item: &f{item}"
+    qty: "&7Quantity: &f{qty}"
+    total-escrow: "&7Total escrow: &e{total}"
+    creation-fee: "&7Creation fee: &c{fee}"
+    you-will-pay: "&7You will pay: &c{charge}"
+    deliver: "&7Item to deliver: &f{item} &ex{qty}"
+    you-receive: "&7You will receive: &a{net}"
+    fill-fee: "&7Fill fee: &c{fee}"
+    refund: "&7Refund: &a{refund}"
+    custom-itemsadder: "&d▶ ItemsAdder: {id}"
+    custom-nexo: "&d▶ Nexo: {id}"
+    custom-oraxen: "&d▶ Oraxen: {id}"
+  action:
+    your-order: "&6&lYOUR ORDER — Click to manage"
+    fill-order: "&a&lLeft-click &7to fill this order"
+    cancel-order: "&c&lLeft-click &7to cancel (refunds escrow)"

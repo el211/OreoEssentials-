@@ -70,6 +70,28 @@ public class AsyncChatListenerWithChannels implements Listener {
             }
         } catch (Throwable ignored) {}
 
+        // Orders/Market chat inputs (qty, price, fill-qty)
+        try {
+            fr.elias.oreoEssentials.modules.orders.OrdersModule om =
+                    fr.elias.oreoEssentials.modules.orders.OrdersModule.getInstance();
+            if (om != null) {
+                String raw = PlainTextComponentSerializer.plainText().serialize(event.message());
+                java.util.UUID uid = player0.getUniqueId();
+                if (fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.isWaitingForQty(uid)) {
+                    fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.consumeQtyInput(om, player0, raw);
+                    return;
+                }
+                if (fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.isWaitingForPrice(uid)) {
+                    fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.consumePriceInput(om, player0, raw);
+                    return;
+                }
+                if (fr.elias.oreoEssentials.modules.orders.gui.FillOrderMenu.isWaitingForFillQty(uid)) {
+                    fr.elias.oreoEssentials.modules.orders.gui.FillOrderMenu.consumeFillQtyInput(om, player0, raw);
+                    return;
+                }
+            }
+        } catch (Throwable ignored) {}
+
         if (!plugin.getSettingsConfig().chatEnabled()) return;
 
         final Player player = event.getPlayer();

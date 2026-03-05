@@ -28,7 +28,9 @@ public class BrowseGUI implements InventoryProvider {
         this.category = category;
 
         String q = (searchQuery == null ? null : searchQuery.trim());
+
         this.searchQuery = (q == null || q.isEmpty()) ? null : q.toLowerCase();
+
     }
 
 
@@ -79,6 +81,8 @@ public class BrowseGUI implements InventoryProvider {
     public void init(Player player, InventoryContents contents) {
         Pagination pagination = contents.pagination();
         contents.fillBorders(ClickableItem.empty(glass(module.getConfig().guiBorder("browse", Material.GRAY_STAINED_GLASS_PANE))));
+        // Register this player so applyIncomingSync() can push live updates to them.
+        module.registerBrowseViewer(player.getUniqueId(), category, searchQuery, pagination.getPage());
 
         List<Auction> auctions = category == null
                 ? module.getAllActiveAuctions()
@@ -115,6 +119,8 @@ public class BrowseGUI implements InventoryProvider {
     @Override
     public void update(Player player, InventoryContents contents) {
         contents.set(0, 4, ClickableItem.empty(balanceHead(player)));
+        // Keep the viewer's page cursor current so refreshes land on the right page.
+        module.updateBrowseViewerPage(player.getUniqueId(), contents.pagination().getPage());
     }
 
     private boolean matchesSearch(Auction a, String q) {

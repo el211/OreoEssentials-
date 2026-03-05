@@ -1,0 +1,52 @@
+# ── Browse GUI ────────────────────────────────────────────────────────────────
+browse:
+  title: "&6&lMarket Orders"
+  border: "GRAY_STAINED_GLASS_PANE"
+  buttons:
+    prev-page:
+      slot: 48
+      material: "ARROW"
+      name: "&e&lPrevious Page"
+    next-page:
+      slot: 50
+      material: "ARROW"
+      name: "&e&lNext Page"
+    page-indicator:
+      slot: 49
+      material: "PAPER"
+      name: "&ePage &f{page}"
+    create-order:
+      slot: 45
+      material: "WRITABLE_BOOK"
+      name: "&a&lCreate Order"
+    my-orders:
+      slot: 46
+      material: "CHEST"
+      name: "&6&lMy Orders"
+    close:
+      slot: 53
+      material: "BARRIER"
+      name: "&c&lClose"
+
+# ── Create flow GUIs ──────────────────────────────────────────────────────────
+create:
+  item:
+    title: "&a&lConfirm Item"
+  currency:
+    title: "&b&lSelect Currency"
+  confirm:
+    title: "&a&lConfirm Order"
+
+# ── Fill GUI ──────────────────────────────────────────────────────────────────
+fill:
+  title: "&e&lFill Order"
+  confirm:
+    title: "&e&lConfirm Fill"
+
+# ── My Orders GUI ─────────────────────────────────────────────────────────────
+my-orders:
+  title: "&6&lMy Orders"
+
+# ── Cancel confirm GUI ────────────────────────────────────────────────────────
+cancel-confirm:
+  title: "&c&lCancel Order?"
