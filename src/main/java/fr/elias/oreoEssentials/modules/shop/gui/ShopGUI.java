@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.shop.gui;
 
+import fr.elias.oreoEssentials.modules.currency.CurrencyService;
 import fr.elias.oreoEssentials.modules.shop.ShopModule;
 import fr.elias.oreoEssentials.modules.shop.models.Shop;
 import fr.elias.oreoEssentials.modules.shop.models.ShopItem;
@@ -160,6 +161,15 @@ public final class ShopGUI {
         public void update(Player player, InventoryContents contents) {}
 
 
+        private String formatPrice(double price, String sym) {
+            String cid = shop.getCurrencyId();
+            if (cid != null) {
+                CurrencyService cs = module.getPlugin().getCurrencyService();
+                if (cs != null) return cs.formatBalance(cid, price);
+            }
+            return sym + String.format("%.2f", price);
+        }
+
         private ItemStack addPriceLore(ItemStack item, ShopItem shopItem,
                                        double buyPrice, double sellPrice,
                                        String sym, boolean amountEnabled) {
@@ -174,10 +184,10 @@ public final class ShopGUI {
             lore.add("");
             lore.add(color("&7Amount: &e" + shopItem.getAmount()));
             lore.add(shopItem.canBuy()
-                    ? color("&7Buy:  &a" + sym + String.format("%.2f", buyPrice))
+                    ? color("&7Buy:  &a" + formatPrice(buyPrice, sym))
                     : color("&7Buy:  &cNot available"));
             lore.add(shopItem.canSell()
-                    ? color("&7Sell: &c" + sym + String.format("%.2f", sellPrice))
+                    ? color("&7Sell: &c" + formatPrice(sellPrice, sym))
                     : color("&7Sell: &cNot available"));
 
             String trend = module.getDynamicPricingManager().getTrendLore(shopItem);

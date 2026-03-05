@@ -5,7 +5,7 @@ pages: 1
 
 # Use your custom currency ID here (must match a currency created via /currency create)
 # Set to "vault" or remove this line to use Vault economy instead.
-currency: tokens
+currency: token
 
 items:
 

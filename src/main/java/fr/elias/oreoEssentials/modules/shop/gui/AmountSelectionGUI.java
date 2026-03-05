@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.shop.gui;
 
+import fr.elias.oreoEssentials.modules.currency.CurrencyService;
 import fr.elias.oreoEssentials.modules.shop.ShopModule;
 import fr.elias.oreoEssentials.modules.shop.models.Shop;
 import fr.elias.oreoEssentials.modules.shop.models.ShopItem;
@@ -82,8 +83,17 @@ public final class AmountSelectionGUI {
         }
 
 
+        /** Formats a price using the shop's custom currency or falls back to Vault symbol. */
+        private String fmt(double price) {
+            String cid = shop.getCurrencyId();
+            if (cid != null) {
+                CurrencyService cs = module.getPlugin().getCurrencyService();
+                if (cs != null) return cs.formatBalance(cid, price);
+            }
+            return module.getShopConfig().getCurrencySymbol() + String.format("%.2f", price);
+        }
+
         private void buildButtons(Player player, InventoryContents contents) {
-            final String sym         = module.getShopConfig().getCurrencySymbol();
             final double pricePerUnit = unitPrice(player);
             final double totalPrice   = pricePerUnit * qty[0];
             final boolean isBuy       = mode == Mode.BUY;
@@ -99,7 +109,7 @@ public final class AmountSelectionGUI {
                         Arrays.asList(
                                 "&7Increase by &e" + step,
                                 "&7New total: &e" + newQty + " &7items",
-                                "&7" + (isBuy ? "Cost" : "Earn") + ": &f" + sym + String.format("%.2f", cost),
+                                "&7" + (isBuy ? "Cost" : "Earn") + ": &f" + fmt(cost),
                                 "",
                                 "&eClick to adjust"));
                 contents.set(0, i, ClickableItem.from(btn, e -> qty[0] = Math.max(1, qty[0] + step)));
@@ -108,8 +118,8 @@ public final class AmountSelectionGUI {
             contents.set(1, 4, ClickableItem.empty(shopItem.buildItemStack()));
 
             String totalLabel = isBuy
-                    ? "&7Total cost: &a" + sym + String.format("%.2f", totalPrice)
-                    : "&7Total earn: &2" + sym + String.format("%.2f", totalPrice);
+                    ? "&7Total cost: &a" + fmt(totalPrice)
+                    : "&7Total earn: &2" + fmt(totalPrice);
             ItemStack counter = buildButton(Material.PAPER, Math.min(qty[0], 64),
                     "&f&l" + qty[0] + " &7× " + formatName(),
                     Arrays.asList(
@@ -127,7 +137,7 @@ public final class AmountSelectionGUI {
                         Arrays.asList(
                                 "&7Decrease by &e" + step,
                                 "&7New total: &e" + newQty + " &7items",
-                                "&7" + (isBuy ? "Cost" : "Earn") + ": &f" + sym + String.format("%.2f", cost),
+                                "&7" + (isBuy ? "Cost" : "Earn") + ": &f" + fmt(cost),
                                 qty[0] - step < 1 ? "&8(clamped to 1)" : "",
                                 "",
                                 "&eClick to adjust"));
@@ -145,7 +155,7 @@ public final class AmountSelectionGUI {
                     Arrays.asList(
                             "&7Item:  &f" + formatName(),
                             "&7Qty:   &e" + qty[0],
-                            "&7" + (isBuy ? "Cost" : "Earn") + ":  &f" + sym + String.format("%.2f", totalPrice),
+                            "&7" + (isBuy ? "Cost" : "Earn") + ":  &f" + fmt(totalPrice),
                             "",
                             isBuy ? "&aClick to buy!" : "&2Click to sell!"));
             contents.set(3, 3, ClickableItem.from(confirmItem, e -> {
@@ -169,13 +179,20 @@ public final class AmountSelectionGUI {
                                 "&eClick to auto-fill"));
                 contents.set(3, 7, ClickableItem.from(maxItem, e -> qty[0] = Math.max(1, owned)));
             } else {
-                double balance = module.getEconomy().getBalance(player);
-                int maxAfford  = pricePerUnit > 0 ? (int)(balance / pricePerUnit) : 0;
-                int finalMax   = Math.max(1, maxAfford);
+                // Get balance from the correct economy (custom currency or Vault)
+                String cid = shop.getCurrencyId();
+                double balance;
+                if (cid != null) {
+                    CurrencyService cs = module.getPlugin().getCurrencyService();
+                    balance = cs != null ? cs.getBalance(player.getUniqueId(), cid).join() : 0;
+                } else {
+                    balance = module.getEconomy().getBalance(player);
+                }
+                int maxAfford = pricePerUnit > 0 ? (int)(balance / pricePerUnit) : 0;
+                int finalMax  = Math.max(1, maxAfford);
                 ItemStack maxItem = buildButton(Material.GOLD_INGOT, 1, "&6&lMax Affordable",
                         Arrays.asList(
-                                "&7Balance: &e" + module.getShopConfig().getCurrencySymbol()
-                                        + String.format("%.2f", balance),
+                                "&7Balance: &e" + fmt(balance),
                                 "&7You can afford: &e" + finalMax + " &7items",
                                 "",
                                 "&eClick to auto-fill"));
