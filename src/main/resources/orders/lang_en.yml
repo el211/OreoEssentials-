@@ -23,7 +23,7 @@ errors:
   not-enough-money: "&cYou do not have enough money to place this order."
   withdraw-failed: "&cFailed to withdraw escrow. Please try again."
   item-serialize-failed: "&cFailed to process your item. Please try again."
-
+  save-failed: "&cFailed to create order (database error). Your payment has been refunded."
 # ── Fill ──────────────────────────────────────────────────────────────────────
 fill:
   enter-qty: "&eHow many &f{max} &eitems will you deliver? Type the amount in chat."

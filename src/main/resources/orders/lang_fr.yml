@@ -23,6 +23,7 @@ errors:
   not-enough-money: "&cVous n'avez pas assez d'argent pour passer cette commande."
   withdraw-failed: "&cÉchec du retrait de l'escrow. Veuillez réessayer."
   item-serialize-failed: "&cÉchec du traitement de votre objet. Veuillez réessayer."
+  save-failed: "&cFailed to create order (database error). Your payment has been refunded."
 
 # ── Remplir ───────────────────────────────────────────────────────────────────
 fill:

@@ -1377,7 +1377,13 @@ public final class OreoEssentials extends JavaPlugin {
 
         // ── Orders module cross-server sync ───────────────────────────────────
         if (this.ordersModule != null && this.ordersModule.enabled()) {
-            this.ordersModule.subscribeCrossServerEvents();
+            this.packetManager.subscribe(
+                    fr.elias.oreoEssentials.modules.orders.rabbitmq.OrderSyncPacket.class,
+                    (channel, pkt) -> {
+                        try { this.ordersModule.getEventBus().onReceive(pkt); }
+                        catch (Throwable t) { getLogger().warning("[Orders] Failed to handle OrderSyncPacket: " + t.getMessage()); }
+                    });
+            getLogger().info("[Orders] Cross-server sync subscribed.");
         }
 
         this.packetManager.init();
