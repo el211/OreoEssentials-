@@ -1596,6 +1596,10 @@ public final class OreoEssentials extends JavaPlugin {
         getCommand("flyspeed").setExecutor(fs);
         getCommand("flyspeed").setTabCompleter(fs);
 
+        final var ws = new fr.elias.oreoEssentials.commands.core.admins.WalkSpeedCommand();
+        getCommand("walkspeed").setExecutor(ws);
+        getCommand("walkspeed").setTabCompleter(ws);
+
         final var worldCmd = new fr.elias.oreoEssentials.commands.core.admins.WorldTeleportCommand();
         getCommand("world").setExecutor(worldCmd);
         getCommand("world").setTabCompleter(worldCmd);

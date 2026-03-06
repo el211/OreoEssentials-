@@ -194,7 +194,7 @@ public final class MongoOrderRepository implements OrderRepository {
         return CompletableFuture.completedFuture(null);
     }
 
-    // ── Mapping ───────────────────────────────────────────────────────────────
+
 
     private Document toDoc(Order o) {
         Document doc = new Document("_id", o.getId())

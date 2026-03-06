@@ -564,6 +564,11 @@ commands:
     permission: oreo.flyspeed
     usage: "/flyspeed <1-10|reset>"
     aliases: [fspeed, fs]
+  walkspeed:
+    description: Set your walk speed (1-10) or reset to default.
+    permission: oreo.walkspeed
+    usage: "/walkspeed <1-10|reset>"
+    aliases: [wspeed, ws]
   oetime:
     description: Set time to day/night or a specific hour (1-23).
     permission: oreo.time
@@ -1068,6 +1073,9 @@ permissions:
   oreo.flyspeed:
     default: true
     description: Allow using /flyspeed on yourself
+  oreo.walkspeed:
+    default: true
+    description: Allow using /walkspeed on yourself
   oreo.time:
     default: op
     description: Use /oetime
