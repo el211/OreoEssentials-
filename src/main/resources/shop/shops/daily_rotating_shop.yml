@@ -1,0 +1,121 @@
+# ============================================================
+#  Daily Rotating Shop — Example
+#  8 items configured; only 4 are shown each day.
+#  Selection persists across restarts and rerolls at 00:00.
+# ============================================================
+
+shop-id: daily_shop
+title: "&5&l✦ Daily Shop &8[&d{day}&8]"
+rows: 6
+pages: 1
+# currency: tokens   # uncomment to use a custom currency instead of Vault
+
+# ── Rotation settings ────────────────────────────────────────
+rotating:
+  enabled: true
+  display-count: 4       # how many of the 8 items to show each day
+  reset: daily           # informational label (only daily is implemented)
+  reset-time: "00:00"    # HH:mm — when the new selection is drawn
+  timezone: "Europe/Paris"
+
+# ── Item pool (8 items) ──────────────────────────────────────
+# Each item defines its own slot and page.
+# On any given day, only display-count items will be visible.
+items:
+
+  diamond_sword:
+    material: DIAMOND_SWORD
+    name: "&b&lSharp Diamond Sword"
+    lore:
+      - "&7A finely crafted sword."
+      - "&7Changes daily!"
+    buy-price: 750.0
+    sell-price: 300.0
+    amount: 1
+    slot: 10
+    page: 1
+    enchantments:
+      sharpness: 3
+      unbreaking: 2
+
+  netherite_pickaxe:
+    material: NETHERITE_PICKAXE
+    name: "&4&lNetherite Pickaxe"
+    lore:
+      - "&7Mines anything with ease."
+    buy-price: 1200.0
+    sell-price: 600.0
+    amount: 1
+    slot: 12
+    page: 1
+    enchantments:
+      efficiency: 4
+      unbreaking: 3
+
+  enchanted_golden_apple:
+    material: ENCHANTED_GOLDEN_APPLE
+    name: "&6&l✦ God Apple"
+    lore:
+      - "&7Rare find in the daily shop."
+    buy-price: 2000.0
+    sell-price: -1
+    amount: 1
+    slot: 14
+    page: 1
+
+  elytra:
+    material: ELYTRA
+    name: "&e&lElytra"
+    lore:
+      - "&7Soar through the skies."
+    buy-price: 3500.0
+    sell-price: 1500.0
+    amount: 1
+    slot: 16
+    page: 1
+
+  trident:
+    material: TRIDENT
+    name: "&3&lTrident"
+    lore:
+      - "&7Commands the sea."
+    buy-price: 900.0
+    sell-price: 400.0
+    amount: 1
+    slot: 28
+    page: 1
+    enchantments:
+      loyalty: 3
+
+  totem_of_undying:
+    material: TOTEM_OF_UNDYING
+    name: "&a&lTotem of Undying"
+    lore:
+      - "&7Cheat death once."
+    buy-price: 1800.0
+    sell-price: 800.0
+    amount: 1
+    slot: 30
+    page: 1
+
+  beacon:
+    material: BEACON
+    name: "&f&lBeacon"
+    lore:
+      - "&7Light up your base."
+    buy-price: 5000.0
+    sell-price: -1
+    amount: 1
+    slot: 32
+    page: 1
+
+  nether_star:
+    material: NETHER_STAR
+    name: "&f✦ Nether Star"
+    lore:
+      - "&7The heart of a beacon."
+    buy-price: 2500.0
+    sell-price: 1000.0
+    amount: 1
+    slot: 34
+    page: 1

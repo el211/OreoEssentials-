@@ -14,6 +14,7 @@ import fr.elias.oreoEssentials.modules.shop.logger.TransactionLogger;
 import fr.elias.oreoEssentials.modules.shop.managers.DynamicPricingManager;
 import fr.elias.oreoEssentials.modules.shop.managers.PriceModifierManager;
 import fr.elias.oreoEssentials.modules.shop.managers.ShopManager;
+import fr.elias.oreoEssentials.modules.shop.rotation.ShopRotationManager;
 
 
 public final class ShopModule {
@@ -22,6 +23,7 @@ public final class ShopModule {
 
     private ShopConfig            shopConfig;
     private ShopManager           shopManager;
+    private ShopRotationManager   rotationManager;
     private ShopEconomy           economy;
     private PriceModifierManager  priceModifierManager;
     private DynamicPricingManager dynamicPricingManager;
@@ -65,6 +67,8 @@ public final class ShopModule {
         this.dynamicPricingManager = new DynamicPricingManager(this);
         this.transactionLogger    = new TransactionLogger(this);
         this.shopManager          = new ShopManager(this);
+        this.rotationManager      = new ShopRotationManager(this);
+        this.rotationManager.loadAll(shopManager.getAllShops());
 
         this.mainMenuGUI          = new MainMenuGUI(this);
         this.shopGUI              = new ShopGUI(this);
@@ -124,6 +128,7 @@ public final class ShopModule {
     public ShopConfig getShopConfig()                       { return shopConfig; }
     public ShopEconomy getEconomy()                         { return economy; }
     public ShopManager getShopManager()                     { return shopManager; }
+    public ShopRotationManager getRotationManager()         { return rotationManager; }
     public PriceModifierManager getPriceModifierManager()   { return priceModifierManager; }
     public DynamicPricingManager getDynamicPricingManager() { return dynamicPricingManager; }
     public TransactionLogger getTransactionLogger()         { return transactionLogger; }

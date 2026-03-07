@@ -42,6 +42,29 @@ public final class ShopCommand implements CommandExecutor, TabCompleter {
 
         String sub = args[0].toLowerCase();
 
+        if (sub.equals("reroll")) {
+            if (!sender.hasPermission("oshopgui.reroll")) {
+                send(sender, module.getShopConfig().getMessage("no-permission"));
+                return true;
+            }
+            if (args.length < 2) {
+                sender.sendMessage(color("&cUsage: /shop reroll <shopId>"));
+                return true;
+            }
+            Shop targetShop = module.getShopManager().getShop(args[1]);
+            if (targetShop == null) {
+                send(sender, module.getShopConfig().getMessage("shop-not-found").replace("{shop}", args[1]));
+                return true;
+            }
+            if (!targetShop.isRotating()) {
+                send(sender, color("&cShop &e" + targetShop.getId() + " &cdoes not have rotation enabled."));
+                return true;
+            }
+            module.getRotationManager().forceReroll(targetShop);
+            send(sender, color("&aRotation rerolled for shop &e" + targetShop.getId() + "&a."));
+            return true;
+        }
+
         if (sub.equals("reload")) {
             if (!sender.hasPermission("oshopgui.reload")) {
                 send(sender, module.getShopConfig().getMessage("no-permission"));
@@ -242,7 +265,7 @@ public final class ShopCommand implements CommandExecutor, TabCompleter {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            completions.addAll(List.of("reload", "check", "addmodifier", "resetmodifier", "checkmodifiers"));
+            completions.addAll(List.of("reload", "check", "reroll", "addmodifier", "resetmodifier", "checkmodifiers"));
             completions.addAll(module.getShopManager().getAllShops().keySet());
             Bukkit.getOnlinePlayers().forEach(p -> completions.add(p.getName()));
         } else if (args.length == 2) {
@@ -250,6 +273,11 @@ public final class ShopCommand implements CommandExecutor, TabCompleter {
                 completions.addAll(List.of("global", "shop", "item"));
             } else if (args[0].equalsIgnoreCase("checkmodifiers")) {
                 Bukkit.getOnlinePlayers().forEach(p -> completions.add(p.getName()));
+            } else if (args[0].equalsIgnoreCase("reroll")) {
+                // Only suggest rotating shops
+                module.getShopManager().getAllShops().forEach((id, s) -> {
+                    if (s.isRotating()) completions.add(id);
+                });
             } else {
                 completions.addAll(module.getShopManager().getAllShops().keySet());
             }

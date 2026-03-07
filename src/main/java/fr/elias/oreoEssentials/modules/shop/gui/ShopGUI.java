@@ -18,6 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static fr.elias.oreoEssentials.util.Lang.color;
 
@@ -115,8 +116,17 @@ public final class ShopGUI {
 
             boolean amountEnabled = module.getShopConfig().isAmountSelectionEnabled();
 
+            // For rotating shops, resolve which item IDs are active this period.
+            // Non-rotating shops: activeRotationIds stays null → no filtering applied.
+            Set<String> activeRotationIds = null;
+            if (shop.isRotating()) {
+                activeRotationIds = module.getRotationManager().getActiveItemIds(shop);
+            }
+
             for (ShopItem shopItem : shop.getItemsForPage(page)) {
                 if (shopItem == null) continue;
+                // Skip items not in today's rotation
+                if (activeRotationIds != null && !activeRotationIds.contains(shopItem.getId())) continue;
                 String perm = shopItem.getPermission();
                 if (perm != null && !perm.isEmpty() && !player.hasPermission(perm)) continue;
 

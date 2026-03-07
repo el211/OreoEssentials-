@@ -196,6 +196,17 @@ main-menu-items:
       - "&eClick to open!"
     shop: token_shop
 
+  daily_shop:
+    slot: 19
+    material: CLOCK
+    name: "&5&l✦ Daily Shop"
+    lore:
+      - "&7A rotating selection of"
+      - "&7rare items — changes every day!"
+      - ""
+      - "&eClick to open!"
+    shop: daily_shop
+
 # ── Amount Selection ──────────────────────────────────
 amount-selection:
   enabled: true

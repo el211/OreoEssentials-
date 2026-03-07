@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.shop.managers;
 import fr.elias.oreoEssentials.modules.shop.ShopModule;
 import fr.elias.oreoEssentials.modules.shop.models.Shop;
 import fr.elias.oreoEssentials.modules.shop.models.ShopItem;
+import fr.elias.oreoEssentials.modules.shop.rotation.RotationConfig;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -28,7 +29,7 @@ public final class ShopManager {
     private static final String[] BUNDLED_SHOPS = {
         "building_blocks", "ores_minerals", "food", "tools", "weapons_armor",
         "redstone", "farming_nature", "mob_drops", "nether", "end_misc",
-        "potions", "enchanted_books", "brewing", "token_shop"
+        "potions", "enchanted_books", "brewing", "token_shop", "daily_rotating_shop"
     };
 
     public ShopManager(ShopModule module) {
@@ -119,6 +120,15 @@ public final class ShopManager {
 
         Shop shop = new Shop(shopId, title, rows, pages, currencyId);
 
+        // Parse optional rotation block
+        ConfigurationSection rotSec = sec.getConfigurationSection("rotating");
+        if (rotSec != null && rotSec.getBoolean("enabled", false)) {
+            int    displayCount = Math.max(1, rotSec.getInt("display-count", 1));
+            String resetTime    = rotSec.getString("reset-time", "00:00");
+            String timezone     = rotSec.getString("timezone", "UTC");
+            shop.setRotationConfig(new RotationConfig(displayCount, resetTime, timezone));
+        }
+
         ConfigurationSection itemsSec = sec.getConfigurationSection("items");
         if (itemsSec != null) {
             for (String itemId : itemsSec.getKeys(false)) {
@@ -196,9 +206,7 @@ public final class ShopManager {
                 enchants, potionType, cmd, damage, iaId, nexoId);
     }
 
-    // -------------------------------------------------------------------------
-    // Query
-    // -------------------------------------------------------------------------
+
 
     public Shop              getShop(String id)    { return shops.get(id.toLowerCase()); }
     public Map<String, Shop> getAllShops()          { return Collections.unmodifiableMap(shops); }

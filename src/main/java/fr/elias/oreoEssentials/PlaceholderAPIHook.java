@@ -273,6 +273,21 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             return String.valueOf(secs);
         }
 
+        if (id.equals("playtime_total_minutes")) {
+            long secs = playtimeTotalSeconds(player);
+            return String.valueOf(secs / 60);
+        }
+
+        if (id.equals("playtime_total_hours")) {
+            long secs = playtimeTotalSeconds(player);
+            return String.valueOf(secs / 3600);
+        }
+
+        if (id.equals("playtime_total_days")) {
+            long secs = playtimeTotalSeconds(player);
+            return String.valueOf(secs / 86400);
+        }
+
         if (id.equals("prewards_enabled")) {
             PlaytimeRewardsService svc = prewards();
             return (svc != null && svc.isEnabled()) ? "true" : "false";

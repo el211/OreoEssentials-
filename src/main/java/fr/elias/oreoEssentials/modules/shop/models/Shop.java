@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.shop.models;
 
+import fr.elias.oreoEssentials.modules.shop.rotation.RotationConfig;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
@@ -13,6 +14,9 @@ public final class Shop {
     /** null = use Vault; non-null = use CurrencyService with this ID */
     private final String currencyId;
     private final Map<String, ShopItem> items = new LinkedHashMap<>();
+
+    /** null = not a rotating shop */
+    private RotationConfig rotationConfig;
 
     public Shop(String id, String title, int rows, int totalPages, String currencyId) {
         this.id         = id;
@@ -51,6 +55,10 @@ public final class Shop {
     }
 
 
+    public void setRotationConfig(RotationConfig rotationConfig) {
+        this.rotationConfig = rotationConfig;
+    }
+
     public String               getId()        { return id; }
     public String               getTitle()     { return title; }
     public int                  getRows()      { return rows; }
@@ -59,4 +67,9 @@ public final class Shop {
     public String               getCurrencyId(){ return currencyId; }
     public Map<String, ShopItem> getItems()    { return items; }
     public Collection<ShopItem> getAllItems()  { return items.values(); }
+
+    /** null when rotation is disabled for this shop. */
+    public RotationConfig getRotationConfig() { return rotationConfig; }
+    /** True when this shop has a valid rotating configuration. */
+    public boolean isRotating()               { return rotationConfig != null; }
 }

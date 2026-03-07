@@ -83,6 +83,12 @@ public final class OrderBrowserMenu implements InventoryProvider {
     @Override
     public void update(Player player, InventoryContents contents) {
         module.getGuiManager().updatePage(player.getUniqueId(), contents.pagination().getPage());
+        // In-place re-render when the order list changed (cross-server or local event).
+        // Calling init() here re-populates items directly into the existing InventoryContents
+        // so the inventory never closes/reopens — no flicker for the viewer.
+        if (module.getGuiManager().consumeDirty(player.getUniqueId())) {
+            init(player, contents);
+        }
     }
 
 
