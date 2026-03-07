@@ -522,7 +522,7 @@ commands:
   aliaseditor:
     description: Create/list/edit/remove runtime command aliases
     permission: oreo.alias.manage
-    usage: "/aliaseditor <list|create|remove|edit|toggle|reload> [...]"
+    usage: "/aliaseditor <gui|list|create|set|addline|enable|disable|delete|info|reload|runas|cooldown|addcheck|delcheck|listchecks|setfailmsg|setlogic|permgate|tabs|addtab|deltab|cleartabs> [...]"
     aliases: [ alias, aliases ]
   jail:
     description: Jail/release players

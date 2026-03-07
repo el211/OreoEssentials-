@@ -119,6 +119,7 @@ public final class ShopManager {
         String currencyId = sec.getString("currency", null); // null = use Vault
 
         Shop shop = new Shop(shopId, title, rows, pages, currencyId);
+        shop.setHideBackButton(sec.getBoolean("hide-back-button", false));
 
         // Parse optional rotation block
         ConfigurationSection rotSec = sec.getConfigurationSection("rotating");

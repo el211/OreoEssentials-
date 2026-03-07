@@ -19,7 +19,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!sender.hasPermission("oreo.alias.editor")) {
+        if (!sender.hasPermission("oreo.alias.manage")) {
             sender.sendMessage("§cNo permission.");
             return true;
         }
@@ -313,7 +313,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (!sender.hasPermission("oreo.alias.editor")) return List.of();
+        if (!sender.hasPermission("oreo.alias.manage")) return List.of();
 
         List<String> subs = List.of(
                 "gui","list","create","set","addline","enable","disable","runas","cooldown",

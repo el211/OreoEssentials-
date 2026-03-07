@@ -18,6 +18,8 @@ public final class Shop {
     /** null = not a rotating shop */
     private RotationConfig rotationConfig;
 
+    private boolean hideBackButton = false;
+
     public Shop(String id, String title, int rows, int totalPages, String currencyId) {
         this.id         = id;
         this.title      = title;
@@ -68,8 +70,12 @@ public final class Shop {
     public Map<String, ShopItem> getItems()    { return items; }
     public Collection<ShopItem> getAllItems()  { return items.values(); }
 
+    public void setHideBackButton(boolean hideBackButton) { this.hideBackButton = hideBackButton; }
+
     /** null when rotation is disabled for this shop. */
     public RotationConfig getRotationConfig() { return rotationConfig; }
     /** True when this shop has a valid rotating configuration. */
     public boolean isRotating()               { return rotationConfig != null; }
+    /** True when the back-to-main-menu button should not be shown (e.g. NPC-only shop). */
+    public boolean isHideBackButton()         { return hideBackButton; }
 }

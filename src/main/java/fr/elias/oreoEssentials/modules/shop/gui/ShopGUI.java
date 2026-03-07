@@ -80,11 +80,13 @@ public final class ShopGUI {
             ItemStack navFill = filler(Material.GRAY_STAINED_GLASS_PANE);
             contents.fillRow(navRow, ClickableItem.empty(navFill));
 
-            contents.set(backSlot / 9, backSlot % 9, ClickableItem.from(
-                    simple(Material.ARROW,
-                            module.getShopConfig().getRawMessage("gui-back-name", "&6&l← Back to Menu"),
-                            module.getShopConfig().getRawMessage("gui-back-lore", "&7Return to main shop menu")),
-                    e -> module.getMainMenuGUI().open(player)));
+            if (!shop.isHideBackButton()) {
+                contents.set(backSlot / 9, backSlot % 9, ClickableItem.from(
+                        simple(Material.ARROW,
+                                module.getShopConfig().getRawMessage("gui-back-name", "&6&l← Back to Menu"),
+                                module.getShopConfig().getRawMessage("gui-back-lore", "&7Return to main shop menu")),
+                        e -> module.getMainMenuGUI().open(player)));
+            }
 
             if (page > 1) {
                 String name = module.getShopConfig().getRawMessage("gui-prev-name", "&e&l← Previous Page");

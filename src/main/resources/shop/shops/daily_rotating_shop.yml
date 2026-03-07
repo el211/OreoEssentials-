@@ -9,6 +9,7 @@ title: "&5&l✦ Daily Shop &8[&d{day}&8]"
 rows: 6
 pages: 1
 # currency: tokens   # uncomment to use a custom currency instead of Vault
+hide-back-button: true
 
 # ── Rotation settings ────────────────────────────────────────
 rotating:
