@@ -334,6 +334,8 @@ public final class OreoEssentials extends JavaPlugin {
     private FormatManager chatFormatManager;
     private ChatSyncManager chatSyncManager;
     private org.bukkit.event.Listener activeChatListener;
+    private org.bukkit.event.Listener activeJoinMessagesListener;
+    private org.bukkit.event.Listener activeQuitMessagesListener;
     private TradeConfig tradeConfig;
     private TradeService tradeService;
     public TradeService getTradeService() { return tradeService; }
@@ -1112,8 +1114,18 @@ public final class OreoEssentials extends JavaPlugin {
         }
 
         getServer().getPluginManager().registerEvents(new ConversationListener(this), this);
-        getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.oreobotfeatures.listeners.JoinMessagesListener(this), this);
-        getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.oreobotfeatures.listeners.QuitMessagesListener(this), this);
+
+        if (activeJoinMessagesListener != null) {
+            org.bukkit.event.HandlerList.unregisterAll(activeJoinMessagesListener);
+        }
+        activeJoinMessagesListener = new fr.elias.oreoEssentials.modules.oreobotfeatures.listeners.JoinMessagesListener(this);
+        getServer().getPluginManager().registerEvents(activeJoinMessagesListener, this);
+
+        if (activeQuitMessagesListener != null) {
+            org.bukkit.event.HandlerList.unregisterAll(activeQuitMessagesListener);
+        }
+        activeQuitMessagesListener = new fr.elias.oreoEssentials.modules.oreobotfeatures.listeners.QuitMessagesListener(this);
+        getServer().getPluginManager().registerEvents(activeQuitMessagesListener, this);
         new fr.elias.oreoEssentials.tasks.AutoMessageScheduler(this).start();
     }
 

@@ -77,6 +77,7 @@ public class OeSettingsMenu implements InventoryProvider {
                     player.sendMessage("§aReloading OreoEssentials...");
                     plugin.getServer().getScheduler().runTask(plugin, () -> {
                         plugin.onDisable();
+                        org.bukkit.event.HandlerList.unregisterAll(plugin);
                         plugin.onEnable();
                         player.sendMessage("§aOreoEssentials reloaded successfully!");
                     });
