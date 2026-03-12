@@ -6,7 +6,7 @@
 
     <groupId>fr.elias</groupId>
     <artifactId>OreoEssentials</artifactId>
-    <version>4.0-SNAPSHOT</version>
+    <version>4.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>OreoEssentials</name>
@@ -48,7 +48,6 @@
                                     <pattern>org.bstats</pattern>
                                     <shadedPattern>fr.elias.oreoessentials.libs.bstats</shadedPattern>
                                 </relocation>
-
                             </relocations>
                         </configuration>
                     </execution>

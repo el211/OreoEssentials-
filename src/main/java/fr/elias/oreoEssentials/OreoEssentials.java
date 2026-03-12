@@ -383,6 +383,9 @@ public final class OreoEssentials extends JavaPlugin {
     public Gson getGson() { return gson; }
     public Map<UUID, BackLocation> getPendingBackTeleports() { return pendingBackTeleports; }
 
+    // ─── Web Panel ──────────────────────────────────────────────────────────
+    private fr.elias.oreoEssentials.modules.webpanel.WebPanelSyncService webPanelSyncService;
+
 
 
     @Override
@@ -436,6 +439,7 @@ public final class OreoEssentials extends JavaPlugin {
         initHolograms();
         initSharding();
         initPlaytime();
+        initWebPanel();
         initEvents();
         initNametag();
         initializeBStats();
@@ -475,6 +479,8 @@ public final class OreoEssentials extends JavaPlugin {
         } catch (Throwable t) {
             getLogger().warning("[SHUTDOWN] Error while saving inventories on shutdown: " + t.getMessage());
         }
+
+        try { if (webPanelSyncService != null) webPanelSyncService.stop(); } catch (Exception ignored) {}
 
         org.bukkit.Bukkit.getScheduler().cancelTasks(this);
 
@@ -1591,6 +1597,33 @@ public final class OreoEssentials extends JavaPlugin {
 
         initICModule();
         initMiscCommandsAndTabCompleters(muteCmd, unmuteCmd, nickCmd);
+    }
+
+    private void initWebPanel() {
+        fr.elias.oreoEssentials.modules.webpanel.WebPanelConfig wpConfig =
+                new fr.elias.oreoEssentials.modules.webpanel.WebPanelConfig(this);
+
+        if (!wpConfig.isEnabled()) {
+            getLogger().info("[WebPanel] Disabled (set web-panel.enabled=true and api-key in config.yml to enable).");
+            return;
+        }
+
+        fr.elias.oreoEssentials.modules.webpanel.WebPanelClient client =
+                new fr.elias.oreoEssentials.modules.webpanel.WebPanelClient(wpConfig, getLogger());
+
+        // Register /weblink command
+        if (getCommand("weblink") != null) {
+            getCommand("weblink").setExecutor(
+                    new fr.elias.oreoEssentials.modules.webpanel.WebLinkCommand(wpConfig, client));
+        } else {
+            getLogger().warning("[WebPanel] 'weblink' command not found in plugin.yml — skipping registration.");
+        }
+
+        // Start event-driven player sync (join/quit/block events + periodic)
+        this.webPanelSyncService = new fr.elias.oreoEssentials.modules.webpanel.WebPanelSyncService(this, client);
+        this.webPanelSyncService.start();
+
+        getLogger().info("[WebPanel] Enabled — syncing to " + wpConfig.getUrl());
     }
 
     private void initICModule() {

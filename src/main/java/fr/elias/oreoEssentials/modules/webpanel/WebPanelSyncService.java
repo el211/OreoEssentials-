@@ -12,6 +12,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
@@ -21,6 +25,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Syncs player data to the web panel on join, quit, and periodically.
@@ -30,7 +35,11 @@ public class WebPanelSyncService implements Listener {
 
     private final OreoEssentials plugin;
     private final WebPanelClient client;
+    private WebPanelRabbitPublisher rabbitPublisher;
     private BukkitTask periodicTask;
+    // Debounce: UUID → scheduled task ID, prevents spamming on rapid inventory changes
+    private final Map<UUID, Integer> debounce = new ConcurrentHashMap<>();
+    private static final long DEBOUNCE_TICKS = 20L; // 1 second
 
     public WebPanelSyncService(OreoEssentials plugin, WebPanelClient client) {
         this.plugin = plugin;
@@ -38,6 +47,18 @@ public class WebPanelSyncService implements Listener {
     }
 
     public void start() {
+        // Connect to RabbitMQ if configured (uses the same rabbitmq.uri as cross-server features)
+        WebPanelConfig cfg = new WebPanelConfig(plugin);
+        if (cfg.isAmqpEnabled()) {
+            try {
+                rabbitPublisher = new WebPanelRabbitPublisher(cfg.getAmqpUri(), plugin.getLogger());
+                plugin.getLogger().info("[WebPanel] Using RabbitMQ for live player sync.");
+            } catch (Exception e) {
+                plugin.getLogger().warning("[WebPanel] RabbitMQ connect failed — falling back to HTTP: " + e.getMessage());
+                rabbitPublisher = null;
+            }
+        }
+
         Bukkit.getPluginManager().registerEvents(this, plugin);
         // Sync all online players every 5 minutes
         periodicTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
@@ -52,6 +73,10 @@ public class WebPanelSyncService implements Listener {
             periodicTask.cancel();
             periodicTask = null;
         }
+        if (rabbitPublisher != null) {
+            rabbitPublisher.close();
+            rabbitPublisher = null;
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -62,7 +87,33 @@ public class WebPanelSyncService implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent e) {
+        debounce.remove(e.getPlayer().getUniqueId());
         syncPlayer(e.getPlayer(), false);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBlockBreak(BlockBreakEvent e) { debouncedSync(e.getPlayer()); }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBlockPlace(BlockPlaceEvent e) { debouncedSync(e.getPlayer()); }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPickup(EntityPickupItemEvent e) {
+        if (e.getEntity() instanceof org.bukkit.entity.Player p) debouncedSync(p);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onDrop(PlayerDropItemEvent e) { debouncedSync(e.getPlayer()); }
+
+    /** Cancels any pending sync for this player and schedules a new one after 1 second. */
+    private void debouncedSync(org.bukkit.entity.Player player) {
+        UUID uuid = player.getUniqueId();
+        Integer prev = debounce.remove(uuid);
+        if (prev != null) Bukkit.getScheduler().cancelTask(prev);
+        int taskId = Bukkit.getScheduler().runTaskLater(plugin,
+                () -> { debounce.remove(uuid); syncPlayer(player, true); },
+                DEBOUNCE_TICKS).getTaskId();
+        debounce.put(uuid, taskId);
     }
 
     // ─── Core sync ────────────────────────────────────────────────────────────
@@ -105,8 +156,16 @@ public class WebPanelSyncService implements Listener {
     }
 
     private void sendAsync(UUID uuid, String name, String dataJson) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin,
-                () -> client.syncPlayer(uuid, name, dataJson));
+        if (rabbitPublisher != null) {
+            // AMQP path: publish to RabbitMQ — backend consumes and pushes via WebSocket
+            final WebPanelRabbitPublisher pub = rabbitPublisher;
+            Bukkit.getScheduler().runTaskAsynchronously(plugin,
+                    () -> pub.publish(uuid, name, dataJson));
+        } else {
+            // HTTP fallback: direct REST POST to backend
+            Bukkit.getScheduler().runTaskAsynchronously(plugin,
+                    () -> client.syncPlayer(uuid, name, dataJson));
+        }
     }
 
     // ─── Data helpers ─────────────────────────────────────────────────────────
