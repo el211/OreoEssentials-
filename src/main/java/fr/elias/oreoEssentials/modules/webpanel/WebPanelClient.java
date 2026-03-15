@@ -104,6 +104,31 @@ public class WebPanelClient {
     }
 
     /**
+     * Polls /api/v1/plugin/actions for pending SELL / DELETE actions queued from the web panel.
+     * Actions are drained server-side on each call.
+     *
+     * @return the parsed JSON object, or null on failure.
+     */
+    public JsonObject pollPendingActions() {
+        try {
+            URL endpoint = new URL(config.getUrl() + "/api/v1/plugin/actions");
+            HttpURLConnection conn = (HttpURLConnection) endpoint.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("X-Api-Key", config.getApiKey());
+            conn.setConnectTimeout(5_000);
+            conn.setReadTimeout(5_000);
+            int status = conn.getResponseCode();
+            if (status != 200) return null;
+            String body = new String(conn.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            conn.disconnect();
+            return new Gson().fromJson(body, JsonObject.class);
+        } catch (Exception e) {
+            log.warning("[WebPanel] Failed to poll actions: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Pings the panel to verify the API key works.
      * @return true if the panel responds with HTTP 200.
      */
