@@ -83,28 +83,31 @@ public final class SQLiteOrderRepository implements OrderRepository {
                      items_adder_id, nexo_id, oraxen_id)
                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                     """;
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, o.getId());
-                ps.setString(2, o.getRequesterUuid().toString());
-                ps.setString(3, o.getRequesterName());
-                ps.setString(4, o.getItemData());
-                ps.setString(5, o.getDisplayItemName());
-                ps.setInt(6, o.getTotalQty());
-                ps.setInt(7, o.getRemainingQty());
-                ps.setString(8, o.getCurrencyId());
-                ps.setDouble(9, o.getUnitPrice());
-                ps.setDouble(10, o.getEscrowTotal());
-                ps.setDouble(11, o.getEscrowRemaining());
-                ps.setString(12, o.getStatus().name());
-                ps.setLong(13, o.getCreatedAt());
-                ps.setLong(14, o.getUpdatedAt());
-                ps.setInt(15, o.getRevision());
-                ps.setString(16, o.getItemsAdderId());
-                ps.setString(17, o.getNexoId());
-                ps.setString(18, o.getOraxenId());
-                ps.executeUpdate();
-            } catch (SQLException e) {
-                log.severe("[Orders/SQLite] save() failed: " + e.getMessage());
+            synchronized (this) {
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setString(1, o.getId());
+                    ps.setString(2, o.getRequesterUuid().toString());
+                    ps.setString(3, o.getRequesterName());
+                    ps.setString(4, o.getItemData());
+                    ps.setString(5, o.getDisplayItemName());
+                    ps.setInt(6, o.getTotalQty());
+                    ps.setInt(7, o.getRemainingQty());
+                    ps.setString(8, o.getCurrencyId());
+                    ps.setDouble(9, o.getUnitPrice());
+                    ps.setDouble(10, o.getEscrowTotal());
+                    ps.setDouble(11, o.getEscrowRemaining());
+                    ps.setString(12, o.getStatus().name());
+                    ps.setLong(13, o.getCreatedAt());
+                    ps.setLong(14, o.getUpdatedAt());
+                    ps.setInt(15, o.getRevision());
+                    ps.setString(16, o.getItemsAdderId());
+                    ps.setString(17, o.getNexoId());
+                    ps.setString(18, o.getOraxenId());
+                    ps.executeUpdate();
+                } catch (SQLException e) {
+                    log.severe("[Orders/SQLite] save() failed: " + e.getMessage());
+                    throw new RuntimeException("Failed to save order " + o.getId(), e);
+                }
             }
         });
     }
@@ -112,45 +115,51 @@ public final class SQLiteOrderRepository implements OrderRepository {
     @Override
     public CompletableFuture<List<Order>> loadAll() {
         return CompletableFuture.supplyAsync(() -> {
-            List<Order> list = new ArrayList<>();
-            try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM orders");
-                 ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(fromRs(rs));
-            } catch (SQLException e) {
-                log.severe("[Orders/SQLite] loadAll() failed: " + e.getMessage());
+            synchronized (this) {
+                List<Order> list = new ArrayList<>();
+                try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM orders");
+                     ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) list.add(fromRs(rs));
+                } catch (SQLException e) {
+                    log.severe("[Orders/SQLite] loadAll() failed: " + e.getMessage());
+                }
+                return list;
             }
-            return list;
         });
     }
 
     @Override
     public CompletableFuture<List<Order>> loadActive() {
         return CompletableFuture.supplyAsync(() -> {
-            List<Order> list = new ArrayList<>();
-            try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM orders WHERE status='ACTIVE'");
-                 ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(fromRs(rs));
-            } catch (SQLException e) {
-                log.severe("[Orders/SQLite] loadActive() failed: " + e.getMessage());
+            synchronized (this) {
+                List<Order> list = new ArrayList<>();
+                try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM orders WHERE status='ACTIVE'");
+                     ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) list.add(fromRs(rs));
+                } catch (SQLException e) {
+                    log.severe("[Orders/SQLite] loadActive() failed: " + e.getMessage());
+                }
+                return list;
             }
-            return list;
         });
     }
 
     @Override
     public CompletableFuture<List<Order>> loadByRequester(UUID requesterUuid) {
         return CompletableFuture.supplyAsync(() -> {
-            List<Order> list = new ArrayList<>();
-            try (PreparedStatement ps = conn.prepareStatement(
-                    "SELECT * FROM orders WHERE requester_uuid=?")) {
-                ps.setString(1, requesterUuid.toString());
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) list.add(fromRs(rs));
+            synchronized (this) {
+                List<Order> list = new ArrayList<>();
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "SELECT * FROM orders WHERE requester_uuid=?")) {
+                    ps.setString(1, requesterUuid.toString());
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) list.add(fromRs(rs));
+                    }
+                } catch (SQLException e) {
+                    log.severe("[Orders/SQLite] loadByRequester() failed: " + e.getMessage());
                 }
-            } catch (SQLException e) {
-                log.severe("[Orders/SQLite] loadByRequester() failed: " + e.getMessage());
+                return list;
             }
-            return list;
         });
     }
 
@@ -230,17 +239,19 @@ public final class SQLiteOrderRepository implements OrderRepository {
     @Override
     public CompletableFuture<Boolean> atomicCancel(String orderId, UUID requesterUuid) {
         return CompletableFuture.supplyAsync(() -> {
-            try (PreparedStatement ps = conn.prepareStatement("""
-                    UPDATE orders SET status='CANCELLED', revision=revision+1, updated_at=?
-                    WHERE id=? AND requester_uuid=? AND status='ACTIVE'
-                    """)) {
-                ps.setLong(1, System.currentTimeMillis());
-                ps.setString(2, orderId);
-                ps.setString(3, requesterUuid.toString());
-                return ps.executeUpdate() > 0;
-            } catch (SQLException e) {
-                log.severe("[Orders/SQLite] atomicCancel() failed: " + e.getMessage());
-                return false;
+            synchronized (this) {
+                try (PreparedStatement ps = conn.prepareStatement("""
+                        UPDATE orders SET status='CANCELLED', revision=revision+1, updated_at=?
+                        WHERE id=? AND requester_uuid=? AND status='ACTIVE'
+                        """)) {
+                    ps.setLong(1, System.currentTimeMillis());
+                    ps.setString(2, orderId);
+                    ps.setString(3, requesterUuid.toString());
+                    return ps.executeUpdate() > 0;
+                } catch (SQLException e) {
+                    log.severe("[Orders/SQLite] atomicCancel() failed: " + e.getMessage());
+                    return false;
+                }
             }
         });
     }

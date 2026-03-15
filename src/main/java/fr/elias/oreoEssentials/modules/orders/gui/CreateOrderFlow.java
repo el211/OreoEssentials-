@@ -64,8 +64,12 @@ public final class CreateOrderFlow {
     }
 
     public static boolean consumeQtyInput(OrdersModule module, Player p, String raw) {
+        module.getPlugin().getLogger().info("[Orders] consumeQtyInput called for " + p.getName() + " raw='" + raw + "'");
         PendingQty pq = waitingQty.remove(p.getUniqueId());
-        if (pq == null) return false;
+        if (pq == null) {
+            module.getPlugin().getLogger().warning("[Orders] consumeQtyInput: no pending state for " + p.getName());
+            return false;
+        }
         int qty;
         try { qty = Integer.parseInt(raw.trim()); } catch (NumberFormatException e) {
             waitingQty.put(p.getUniqueId(), pq);
@@ -80,8 +84,18 @@ public final class CreateOrderFlow {
         }
         // Move to step 3 — open currency picker on main thread
         final int finalQty = qty;
-        org.bukkit.Bukkit.getScheduler().runTask(module.getPlugin(), () ->
-                CurrencyPickerMenu.getInventory(module, pq.item(), finalQty).open(p));
+        org.bukkit.Bukkit.getScheduler().runTask(module.getPlugin(), () -> {
+            if (!p.isOnline()) return;
+            try {
+                module.getPlugin().getLogger().info("[Orders] Opening CurrencyPickerMenu for " + p.getName());
+                CurrencyPickerMenu.getInventory(module, pq.item(), finalQty).open(p);
+                module.getPlugin().getLogger().info("[Orders] CurrencyPickerMenu opened for " + p.getName());
+            } catch (Throwable t) {
+                module.getPlugin().getLogger().severe("[Orders] Failed to open CurrencyPickerMenu for " + p.getName() + ": " + t);
+                t.printStackTrace();
+                p.sendMessage(module.getConfig().msg("create.invalid-qty"));
+            }
+        });
         return true;
     }
 
@@ -147,12 +161,15 @@ public final class CreateOrderFlow {
 
             // Show item in center
             ItemStack display = item.clone();
-            ItemMeta meta = display.hasItemMeta() ? display.getItemMeta() : display.getItemMeta();
-            List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+            ItemMeta meta = display.getItemMeta();
+            if (meta == null) meta = org.bukkit.Bukkit.getItemFactory().getItemMeta(display.getType());
+            List<String> lore = (meta != null && meta.hasLore()) ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
             lore.add("");
             lore.add(c("&7This is the item buyers will deliver."));
-            meta.setLore(lore);
-            display.setItemMeta(meta);
+            if (meta != null) {
+                meta.setLore(lore);
+                display.setItemMeta(meta);
+            }
             contents.set(1, 4, ClickableItem.empty(display));
 
             // Confirm

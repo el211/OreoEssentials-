@@ -84,6 +84,52 @@ public final class AsyncChatListener implements Listener {
 
 
     @SuppressWarnings("deprecation")
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = false)
+    public void onLegacyChatInput(AsyncPlayerChatEvent event) {
+        final Player player = event.getPlayer();
+        final String raw = event.getMessage();
+
+        try {
+            AuctionHouseModule ahm = AuctionHouseModule.getInstance();
+            if (ahm != null && ahm.isWaitingForPrice(player.getUniqueId())) {
+                event.setCancelled(true);
+                event.getRecipients().clear();
+                ahm.consumePriceInput(player, raw);
+                return;
+            }
+        } catch (Throwable ignored) {}
+
+        try {
+            fr.elias.oreoEssentials.modules.orders.OrdersModule om =
+                    fr.elias.oreoEssentials.modules.orders.OrdersModule.getInstance();
+            if (om != null) {
+                java.util.UUID uid = player.getUniqueId();
+                if (fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.isWaitingForQty(uid)) {
+                    event.setCancelled(true);
+                    event.getRecipients().clear();
+                    fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.consumeQtyInput(om, player, raw);
+                    return;
+                }
+                if (fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.isWaitingForPrice(uid)) {
+                    event.setCancelled(true);
+                    event.getRecipients().clear();
+                    fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.consumePriceInput(om, player, raw);
+                    return;
+                }
+                if (fr.elias.oreoEssentials.modules.orders.gui.FillOrderMenu.isWaitingForFillQty(uid)) {
+                    event.setCancelled(true);
+                    event.getRecipients().clear();
+                    fr.elias.oreoEssentials.modules.orders.gui.FillOrderMenu.consumeFillQtyInput(om, player, raw);
+                    return;
+                }
+            }
+        } catch (Throwable t) {
+            Bukkit.getLogger().severe("[Orders] Legacy chat input error: " + t);
+            t.printStackTrace();
+        }
+    }
+
+    @SuppressWarnings("deprecation")
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onLegacyChat(AsyncPlayerChatEvent event) {
         event.setCancelled(true);
@@ -137,7 +183,10 @@ public final class AsyncChatListener implements Listener {
                     return;
                 }
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable t) {
+            Bukkit.getLogger().severe("[Orders] Chat input handler error: " + t);
+            t.printStackTrace();
+        }
 
         final ModGuiService gui = OreoEssentials.get().getModGuiService();
 

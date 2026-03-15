@@ -73,19 +73,23 @@ public final class OrdersModule {
         Bukkit.getPluginManager().registerEvents(
                 new OrdersJoinListener(plugin, deliveryRepo), plugin);
 
-        service.loadActive().exceptionally(t -> {
-            plugin.getLogger().warning("[Orders] Failed to load active orders: " + t.getMessage());
-            return null;
-        });
-
-        ready = true;
-        String actualStorage = (repository instanceof MongoOrderRepository) ? "mongodb" : "sqlite";
-        plugin.getLogger().info("[Orders] Module ready (storage=" + actualStorage
-                + ", cross-server=" + cfg.crossServerEnabled() + ").");
-        if (!"mongodb".equals(actualStorage) && "mongodb".equals(cfg.storageType())) {
-            plugin.getLogger().severe("[Orders] *** MISCONFIGURATION: storage=mongodb in config but running on SQLite! "
-                    + "Cross-server order fills WILL fail. Check MongoDB connection. ***");
-        }
+        service.loadActive()
+                .thenRun(() -> {
+                    ready = true;
+                    String actualStorage = (repository instanceof MongoOrderRepository) ? "mongodb" : "sqlite";
+                    plugin.getLogger().info("[Orders] Module ready (storage=" + actualStorage
+                            + ", cross-server=" + cfg.crossServerEnabled() + ").");
+                    if (!"mongodb".equals(actualStorage) && "mongodb".equals(cfg.storageType())) {
+                        plugin.getLogger().severe("[Orders] *** MISCONFIGURATION: storage=mongodb in config but running on SQLite! "
+                                + "Cross-server order fills WILL fail. Check MongoDB connection. ***");
+                    }
+                })
+                .exceptionally(t -> {
+                    plugin.getLogger().warning("[Orders] Failed to load active orders: " + t.getMessage());
+                    // Still mark ready so the module works for new orders, just with empty cache
+                    ready = true;
+                    return null;
+                });
     }
 
     // The MongoClient created by getMongoClient() is owned by this module.
