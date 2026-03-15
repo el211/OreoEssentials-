@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.shop.gui;
 import fr.elias.oreoEssentials.modules.currency.CurrencyService;
 import fr.elias.oreoEssentials.modules.shop.ShopModule;
 import fr.elias.oreoEssentials.modules.shop.models.Shop;
+import fr.elias.oreoEssentials.modules.shop.models.ShopGuiLayout;
 import fr.elias.oreoEssentials.modules.shop.models.ShopItem;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
@@ -73,48 +74,64 @@ public final class ShopGUI {
             final String sym = module.getShopConfig().getCurrencySymbol();
             final int total  = Math.max(1, shop.getTotalPages());
 
-            final int prevSlot = module.getShopConfig().getPreviousPageSlot(); // default 45 → navRow,0
-            final int nextSlot = module.getShopConfig().getNextPageSlot();     // default 53 → navRow,8
-            final int backSlot = module.getShopConfig().getBackButtonSlot();   // default 49 → navRow,4
+            ShopGuiLayout layout = shop.getGuiLayout();
 
-            ItemStack navFill = filler(Material.GRAY_STAINED_GLASS_PANE);
-            contents.fillRow(navRow, ClickableItem.empty(navFill));
+            // ── Filler row ───────────────────────────────────────────────────
+            ShopGuiLayout.Button fillerBtn = layout.getFiller();
+            contents.fillRow(navRow, ClickableItem.empty(
+                    navItem(fillerBtn.getMaterial(), fillerBtn.getName(),
+                            fillerBtn.getLore(), fillerBtn.getModelData())));
 
-            if (!shop.isHideBackButton()) {
-                contents.set(backSlot / 9, backSlot % 9, ClickableItem.from(
-                        simple(Material.ARROW,
-                                module.getShopConfig().getRawMessage("gui-back-name", "&6&l← Back to Menu"),
-                                module.getShopConfig().getRawMessage("gui-back-lore", "&7Return to main shop menu")),
+            // ── Back button ──────────────────────────────────────────────────
+            ShopGuiLayout.Button backBtn = layout.getBack();
+            if (backBtn.isEnabled()) {
+                int slot = backBtn.getSlot();
+                contents.set(slot / 9, slot % 9, ClickableItem.from(
+                        navItem(backBtn.getMaterial(), backBtn.getName(),
+                                backBtn.getLore(), backBtn.getModelData()),
                         e -> module.getMainMenuGUI().open(player)));
             }
 
-            if (page > 1) {
-                String name = module.getShopConfig().getRawMessage("gui-prev-name", "&e&l← Previous Page");
-                String lore = module.getShopConfig().getRawMessage("gui-prev-lore", "&7Go to page {page}")
+            // ── Previous page ────────────────────────────────────────────────
+            ShopGuiLayout.Button prevBtn = layout.getPrevPage();
+            if (prevBtn.isEnabled() && page > 1) {
+                int slot = prevBtn.getSlot();
+                String name = prevBtn.getName();
+                String lore = String.join("\n", prevBtn.getLore())
                         .replace("{page}", String.valueOf(page - 1));
-                contents.set(prevSlot / 9, prevSlot % 9, ClickableItem.from(
-                        simple(Material.ARROW, name, lore),
+                contents.set(slot / 9, slot % 9, ClickableItem.from(
+                        navItem(prevBtn.getMaterial(), name, List.of(lore.split("\n")),
+                                prevBtn.getModelData()),
                         e -> module.getShopGUI().open(player, shop, page - 1)));
             }
 
-            if (page < total) {
-                String name = module.getShopConfig().getRawMessage("gui-next-name", "&e&lNext Page →");
-                String lore = module.getShopConfig().getRawMessage("gui-next-lore", "&7Go to page {page}")
+            // ── Next page ────────────────────────────────────────────────────
+            ShopGuiLayout.Button nextBtn = layout.getNextPage();
+            if (nextBtn.isEnabled() && page < total) {
+                int slot = nextBtn.getSlot();
+                String name = nextBtn.getName();
+                String lore = String.join("\n", nextBtn.getLore())
                         .replace("{page}", String.valueOf(page + 1));
-                contents.set(nextSlot / 9, nextSlot % 9, ClickableItem.from(
-                        simple(Material.ARROW, name, lore),
+                contents.set(slot / 9, slot % 9, ClickableItem.from(
+                        navItem(nextBtn.getMaterial(), name, List.of(lore.split("\n")),
+                                nextBtn.getModelData()),
                         e -> module.getShopGUI().open(player, shop, page + 1)));
             }
 
-            int pgSlot = (backSlot / 9) * 9 + (backSlot % 9) - 1;
-            if (pgSlot < 0) pgSlot = backSlot + 1; // fallback if back is in col 0
-            String pgName = module.getShopConfig()
-                    .getRawMessage("gui-page-name", "&f&lPage {page} &7of &f{total}")
-                    .replace("{page}", String.valueOf(page))
-                    .replace("{total}", String.valueOf(total));
-            String pgLore = module.getShopConfig()
-                    .getRawMessage("gui-page-lore", "&7Use arrows to navigate pages");
-            contents.set(pgSlot / 9, pgSlot % 9, ClickableItem.empty(simple(Material.PAPER, pgName, pgLore)));
+            // ── Page indicator ───────────────────────────────────────────────
+            ShopGuiLayout.Button pgBtn = layout.getPageIndicator();
+            if (pgBtn.isEnabled()) {
+                int slot = pgBtn.getSlot();
+                String name = pgBtn.getName()
+                        .replace("{page}", String.valueOf(page))
+                        .replace("{total}", String.valueOf(total));
+                List<String> lore = pgBtn.getLore().stream()
+                        .map(l -> l.replace("{page}", String.valueOf(page))
+                                   .replace("{total}", String.valueOf(total)))
+                        .toList();
+                contents.set(slot / 9, slot % 9, ClickableItem.empty(
+                        navItem(pgBtn.getMaterial(), name, lore, pgBtn.getModelData())));
+            }
 
             boolean amountEnabled = module.getShopConfig().isAmountSelectionEnabled();
 
@@ -222,25 +239,16 @@ public final class ShopGUI {
         }
 
 
-        private static ItemStack simple(Material mat, String name, String lore) {
+        private static ItemStack navItem(Material mat, String name,
+                                          List<String> lore, int modelData) {
             ItemStack item = new ItemStack(mat);
             ItemMeta  meta = item.getItemMeta();
             if (meta != null) {
                 meta.setDisplayName(color(name));
-                List<String> lines = new ArrayList<>();
-                for (String line : lore.split("\n")) lines.add(color(line));
-                meta.setLore(lines);
-                meta.addItemFlags(org.bukkit.inventory.ItemFlag.values());
-                item.setItemMeta(meta);
-            }
-            return item;
-        }
-
-        private static ItemStack filler(Material mat) {
-            ItemStack item = new ItemStack(mat);
-            ItemMeta  meta = item.getItemMeta();
-            if (meta != null) {
-                meta.setDisplayName(" ");
+                List<String> colored = new ArrayList<>();
+                for (String line : lore) colored.add(color(line));
+                meta.setLore(colored);
+                if (modelData > 0) meta.setCustomModelData(modelData);
                 meta.addItemFlags(org.bukkit.inventory.ItemFlag.values());
                 item.setItemMeta(meta);
             }

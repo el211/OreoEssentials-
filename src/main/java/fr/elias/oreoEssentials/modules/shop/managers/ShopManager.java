@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.shop.managers;
 
 import fr.elias.oreoEssentials.modules.shop.ShopModule;
 import fr.elias.oreoEssentials.modules.shop.models.Shop;
+import fr.elias.oreoEssentials.modules.shop.models.ShopGuiLayout;
 import fr.elias.oreoEssentials.modules.shop.models.ShopItem;
 import fr.elias.oreoEssentials.modules.shop.rotation.RotationConfig;
 import org.bukkit.Material;
@@ -118,8 +119,18 @@ public final class ShopManager {
         int pages         = Math.max(1, sec.getInt("pages", 1));
         String currencyId = sec.getString("currency", null); // null = use Vault
 
+        boolean hideBack = sec.getBoolean("hide-back-button", false);
         Shop shop = new Shop(shopId, title, rows, pages, currencyId);
-        shop.setHideBackButton(sec.getBoolean("hide-back-button", false));
+        shop.setHideBackButton(hideBack);
+
+        // Per-shop GUI layout (optional gui: section)
+        ShopGuiLayout layout = ShopGuiLayout.parse(
+                sec.getConfigurationSection("gui"),
+                module.getShopConfig().getBackButtonSlot(),
+                module.getShopConfig().getPreviousPageSlot(),
+                module.getShopConfig().getNextPageSlot(),
+                hideBack);
+        shop.setGuiLayout(layout);
 
         // Parse optional rotation block
         ConfigurationSection rotSec = sec.getConfigurationSection("rotating");

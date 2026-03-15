@@ -8,6 +8,12 @@
 server:
   name: "survival-1"  # Unique logical name for THIS server
   language: en        # Options: en, fr, es, de, pt
+# ==================== WEB PANEL ====================
+# Set enabled: true and paste the api-key generated when you register your server on the OreoStudios panel.
+# Players can run /weblink in-game to get a one-time login code instead of typing their UUID.
+web-panel:
+  enabled: false
+  api-key: ""    # Paste the key shown on the panel after registering your server
 
 # ==================== FEATURE TOGGLES ====================
 features:
@@ -456,6 +462,7 @@ messages:
   money-paid: "{sender} has paid you {amount} USD!"
   cheque-created: "You have created a cheque for {amount} USD!"
   cheque-redeemed: "You have redeemed a cheque for {amount} USD!"
+
 
 # ==================== MIGRATION & COMPATIBILITY ( BETA MODE  !!!! THIS IS STILL IN TESTING MODE!!!) ====================
 

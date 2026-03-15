@@ -20,6 +20,9 @@ public final class Shop {
 
     private boolean hideBackButton = false;
 
+    /** Per-shop GUI layout — set after construction by ShopManager. */
+    private ShopGuiLayout guiLayout;
+
     public Shop(String id, String title, int rows, int totalPages, String currencyId) {
         this.id         = id;
         this.title      = title;
@@ -71,6 +74,8 @@ public final class Shop {
     public Collection<ShopItem> getAllItems()  { return items.values(); }
 
     public void setHideBackButton(boolean hideBackButton) { this.hideBackButton = hideBackButton; }
+    public void setGuiLayout(ShopGuiLayout guiLayout)    { this.guiLayout = guiLayout; }
+    public ShopGuiLayout getGuiLayout()                  { return guiLayout; }
 
     /** null when rotation is disabled for this shop. */
     public RotationConfig getRotationConfig() { return rotationConfig; }

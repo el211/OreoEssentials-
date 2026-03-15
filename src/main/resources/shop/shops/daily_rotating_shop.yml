@@ -11,6 +11,58 @@ pages: 1
 # currency: tokens   # uncomment to use a custom currency instead of Vault
 hide-back-button: true
 
+# ── GUI layout (navigation bar) ──────────────────────────────
+# Every key below is optional. Remove a section to use the global default.
+# Supports: material, name (&-color codes), lore (list), model-data, slot, enabled.
+# {page} and {total} are placeholders for prev/next/page-indicator.
+gui:
+
+  # The glass pane that fills the entire bottom row
+  filler:
+    material: PURPLE_STAINED_GLASS_PANE
+    name: " "
+    model-data: 0
+
+  # Back-to-main-menu arrow  (ignored if hide-back-button: true)
+  back-button:
+    enabled: false        # already hidden by hide-back-button: true above
+    slot: 49
+    material: ARROW
+    name: "&6&l← Back to Menu"
+    lore:
+      - "&7Return to main shop menu"
+    model-data: 0
+
+  # Previous page arrow
+  prev-page:
+    enabled: true
+    slot: 45
+    material: ARROW
+    name: "&d&l← Previous Page"
+    lore:
+      - "&7Go to page {page}"
+    model-data: 0
+
+  # Next page arrow
+  next-page:
+    enabled: true
+    slot: 53
+    material: ARROW
+    name: "&d&lNext Page →"
+    lore:
+      - "&7Go to page {page}"
+    model-data: 0
+
+  # Page counter display item
+  page-indicator:
+    enabled: true
+    slot: 48
+    material: PAPER
+    name: "&f&lPage {page} &7of &f{total}"
+    lore:
+      - "&7Use the arrows to navigate"
+    model-data: 0
+
 # ── Rotation settings ────────────────────────────────────────
 rotating:
   enabled: true
