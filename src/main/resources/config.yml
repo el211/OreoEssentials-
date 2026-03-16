@@ -13,6 +13,7 @@ server:
 # Players can run /weblink in-game to get a one-time login code instead of typing their UUID.
 web-panel:
   enabled: false
+  url: "https://oreostudios.fr"  # URL of your OreoStudios web panel
   api-key: ""    # Paste the key shown on the panel after registering your server
 
 # ==================== FEATURE TOGGLES ====================
