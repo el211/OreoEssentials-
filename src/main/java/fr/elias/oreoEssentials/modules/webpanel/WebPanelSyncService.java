@@ -59,7 +59,7 @@ public class WebPanelSyncService implements Listener {
     }
 
     public void start() {
-        // Connect to RabbitMQ if configured (uses the same rabbitmq.uri as cross-server features)
+        // Connect to RabbitMQ if configured (uses the same rabbitmq.uri as cross-server features)d
         WebPanelConfig cfg = new WebPanelConfig(plugin);
         if (cfg.isAmqpEnabled()) {
             try {
