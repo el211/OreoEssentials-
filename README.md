@@ -1,5 +1,5 @@
 # 🍪 OreoEssentials
-
+CHECK LICENSE HERE: https://docs.oreostudios.fr/oreoessentials/general-license/general-license-oreoessentials
 <p align="center">
   <img width="500" height="500" alt="OreoEssentials logo" src="https://github.com/user-attachments/assets/dd1bd76b-3602-4019-95c6-36337faa1222" />
 </p>
