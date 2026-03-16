@@ -283,11 +283,19 @@ public final class AsyncChatListener implements Listener {
         }
         Bukkit.getConsoleSender().sendMessage(component);
 
+        // Resolve the plain-text prefix so the Discord bot can display it cleanly
+        // without needing to parse the full Adventure JSON component.
+        String plainPrefix = "";
+        try {
+            Component prefixComp = buildLpPrefixComponent(sender);
+            plainPrefix = PlainTextComponentSerializer.plainText().serialize(prefixComp);
+        } catch (Throwable ignored) {}
+
         String plain = PlainTextComponentSerializer.plainText().serialize(component);
         maybeDiscord(sender.getName(), plain);
 
         String json = GsonComponentSerializer.gson().serialize(component);
-        maybeSync(senderUuid, serverName, sender.getName(), json);
+        maybeSync(senderUuid, serverName, sender.getName(), json, plainPrefix, rawMsg);
     }
 
     // ─── LuckPerms ───────────────────────────────────────────────────────────
@@ -334,9 +342,10 @@ public final class AsyncChatListener implements Listener {
         return out;
     }
 
-    private void maybeSync(UUID uuid, String server, String name, String jsonComponent) {
+    private void maybeSync(UUID uuid, String server, String name, String jsonComponent,
+                           String plainPrefix, String rawMessage) {
         try {
-            if (sync != null) sync.publishMessage(uuid, server, name, jsonComponent);
+            if (sync != null) sync.publishMessage(uuid, server, name, jsonComponent, plainPrefix, rawMessage);
         } catch (Throwable ex) {
             Bukkit.getLogger().severe("[ChatSync] Publish failed: " + ex.getMessage());
         }

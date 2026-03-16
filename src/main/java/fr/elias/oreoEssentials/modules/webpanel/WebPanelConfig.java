@@ -10,7 +10,7 @@ public class WebPanelConfig {
     private final boolean amqpEnabled;
 
     private static final String API_URL   = "http://88.99.150.35:19150";
-    private static final String PANEL_URL = "http://88.99.150.35:19149/panel-dashboard.html";
+    private static final String PANEL_URL = "http://oreostudios.fr/panel-dashboard.html";
 
     public WebPanelConfig(OreoEssentials plugin) {
         this.enabled      = plugin.getConfig().getBoolean("web-panel.enabled", false);

@@ -69,12 +69,30 @@ public class ChatSyncManager {
     }
 
     public void publishMessage(UUID playerId, String serverName, String playerName, String message) {
+        publishMessage(playerId, serverName, playerName, message, "", "");
+    }
+
+    /**
+     * Extended publish that includes the plain-text LuckPerms prefix and the raw chat message
+     * as extra fields so the Discord bot can display them cleanly.
+     *
+     * Payload: {SERVER_ID};;{UUID};;{b64(name)};;{b64(jsonComponent)};;{b64(plainPrefix)};;{b64(rawMessage)}
+     *
+     * The two extra fields are optional — older consumers that split on ";;" with limit 4
+     * will simply ignore them.
+     */
+    public void publishMessage(UUID playerId, String serverName, String playerName,
+                               String message, String plainPrefix, String rawMessage) {
         if (!enabled) return;
 
         try {
-            String payload = SERVER_ID + ";;" + playerId + ";;" + b64(playerName) + ";;" + b64(message);
+            String payload = SERVER_ID + ";;" + playerId
+                    + ";;" + b64(playerName)
+                    + ";;" + b64(message)
+                    + ";;" + b64(nullSafe(plainPrefix))
+                    + ";;" + b64(nullSafe(rawMessage));
             rabbitChannel.basicPublish(EXCHANGE_NAME, "", null, payload.getBytes(StandardCharsets.UTF_8));
-            Bukkit.getLogger().info("[ChatSync] Published message: " + playerName + " -> " + message.substring(0, Math.min(50, message.length())));
+            Bukkit.getLogger().info("[ChatSync] Published message: " + playerName + " -> " + rawMessage.substring(0, Math.min(50, rawMessage.length())));
         } catch (IOException e) {
             Bukkit.getLogger().warning("[ChatSync] Publish failed: " + e.getMessage());
             e.printStackTrace();
