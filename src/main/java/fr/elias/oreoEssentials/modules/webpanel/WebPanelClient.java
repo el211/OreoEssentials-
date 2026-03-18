@@ -236,6 +236,38 @@ public class WebPanelClient {
     }
 
     /**
+     * Pushes a full snapshot of all LuckPerms groups and their permission nodes to the backend.
+     * Called once on startup and after any manual reload so the panel always reflects reality.
+     *
+     * @param groupsJson JSON string: {"groups":[{"groupName":"admin","permissions":{"oreo.vault":true}},...]}
+     * @return true if the panel accepted the payload (HTTP 200).
+     */
+    public boolean syncLuckPermsGroups(String groupsJson) {
+        try {
+            URL endpoint = new URL(config.getUrl() + "/api/v1/plugin/luckperms/sync");
+            HttpURLConnection conn = (HttpURLConnection) endpoint.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("X-Api-Key", config.getApiKey());
+            conn.setConnectTimeout(5_000);
+            conn.setReadTimeout(10_000);
+            conn.setDoOutput(true);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(groupsJson.getBytes(StandardCharsets.UTF_8));
+            }
+
+            int status = conn.getResponseCode();
+            conn.disconnect();
+            if (status != 200) log.warning("[WebPanel] /luckperms/sync returned HTTP " + status);
+            return status == 200;
+        } catch (Exception e) {
+            log.warning("[WebPanel] Failed to sync LuckPerms groups: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Pings the panel to verify the API key works.
      * @return true if the panel responds with HTTP 200.
      */

@@ -68,8 +68,16 @@ public class WebPanelSyncService implements Listener {
                 // Subscribe to action messages (SELL / DELETE) sent from the web panel
                 rabbitPublisher.startActionConsumer(action -> {
                     try {
+                        String type = action.has("type") ? action.get("type").getAsString() : "";
+
+                        // ── LuckPerms group permission update (no playerUuid) ──────────────
+                        if ("luckperms_group_permission_update".equals(type)) {
+                            applyLuckPermsUpdate(action);
+                            return;
+                        }
+
+                        // ── Player-targeted actions ────────────────────────────────────────
                         String uuidStr = action.get("playerUuid").getAsString();
-                        String type    = action.get("type").getAsString();
                         String mat     = action.has("material") ? action.get("material").getAsString() : null;
                         int    amount  = action.has("amount")   ? action.get("amount").getAsInt()   : 0;
 
@@ -105,6 +113,10 @@ public class WebPanelSyncService implements Listener {
                 rabbitPublisher = null;
             }
         }
+
+        // Push the current LuckPerms group state to the backend so the panel starts with fresh data.
+        // Runs async so startup is not delayed. Delayed 5 s to let all plugins finish enabling.
+        Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, this::syncLuckPermsGroupsToBackend, 100L);
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
         // Sync all online players every 30 seconds — catches external changes like /give
@@ -794,6 +806,139 @@ public class WebPanelSyncService implements Listener {
             }
             player.updateInventory();
             Bukkit.getScheduler().runTaskLater(plugin, () -> syncPlayer(player, true), 1L);
+        }
+    }
+
+    // ─── LuckPerms integration ────────────────────────────────────────────────
+
+    /**
+     * Applies a {@code luckperms_group_permission_update} message received from the web panel
+     * via RabbitMQ. Runs entirely on the RabbitMQ consumer thread (async-safe for LP API).
+     *
+     * Expected payload:
+     * <pre>
+     * {
+     *   "type": "luckperms_group_permission_update",
+     *   "group": "vip",
+     *   "changes": [
+     *     { "kind": "boolean", "node": "oreo.vault", "value": true },
+     *     { "kind": "choice",  "baseNode": "oreo.vault.rows.global", "oldValue": "3", "newValue": "5" },
+     *     { "kind": "select",  "baseNode": "oreo.kit.cooldown",      "oldValue": "300s", "newValue": "600s" }
+     *   ]
+     * }
+     * </pre>
+     */
+    private void applyLuckPermsUpdate(JsonObject action) {
+        try {
+            net.luckperms.api.LuckPerms lp;
+            try {
+                lp = net.luckperms.api.LuckPermsProvider.get();
+            } catch (IllegalStateException e) {
+                plugin.getLogger().warning("[WebPanel] LuckPerms not available — cannot apply permission update.");
+                return;
+            }
+
+            String groupName = action.get("group").getAsString();
+            JsonArray changes = action.getAsJsonArray("changes");
+            if (changes == null || changes.size() == 0) return;
+
+            // Ensure the group is loaded
+            net.luckperms.api.model.group.Group group = lp.getGroupManager().getGroup(groupName);
+            if (group == null) {
+                lp.getGroupManager().loadGroup(groupName).get();
+                group = lp.getGroupManager().getGroup(groupName);
+            }
+            if (group == null) {
+                plugin.getLogger().warning("[WebPanel] LuckPerms group not found: " + groupName);
+                return;
+            }
+
+            for (var elem : changes) {
+                JsonObject change = elem.getAsJsonObject();
+                String kind = change.get("kind").getAsString();
+                switch (kind) {
+                    case "boolean" -> {
+                        String node = change.get("node").getAsString();
+                        boolean value = change.has("value") && !change.get("value").isJsonNull()
+                                && change.get("value").getAsBoolean();
+                        if (value) {
+                            group.data().add(net.luckperms.api.node.Node.builder(node).value(true).build());
+                        } else {
+                            group.data().remove(net.luckperms.api.node.Node.builder(node).value(true).build());
+                        }
+                    }
+                    case "choice", "select" -> {
+                        String baseNode = change.get("baseNode").getAsString();
+                        String oldValue = change.has("oldValue") && !change.get("oldValue").isJsonNull()
+                                ? change.get("oldValue").getAsString() : null;
+                        String newValue = change.has("newValue") && !change.get("newValue").isJsonNull()
+                                ? change.get("newValue").getAsString() : null;
+                        if (oldValue != null) {
+                            group.data().remove(net.luckperms.api.node.Node.builder(baseNode + "." + oldValue).value(true).build());
+                        }
+                        if (newValue != null) {
+                            group.data().add(net.luckperms.api.node.Node.builder(baseNode + "." + newValue).value(true).build());
+                        }
+                    }
+                    default -> plugin.getLogger().warning("[WebPanel] Unknown LP change kind: " + kind);
+                }
+            }
+
+            lp.getGroupManager().saveGroup(group).get();
+            plugin.getLogger().info("[WebPanel] Applied " + changes.size() + " LuckPerms change(s) to group '" + groupName + "'");
+
+        } catch (Exception e) {
+            plugin.getLogger().warning("[WebPanel] Failed to apply LuckPerms update: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Reads all groups from LuckPerms and POSTs a full snapshot to the backend.
+     * Runs asynchronously — do not call from the main thread.
+     */
+    private void syncLuckPermsGroupsToBackend() {
+        try {
+            net.luckperms.api.LuckPerms lp;
+            try {
+                lp = net.luckperms.api.LuckPermsProvider.get();
+            } catch (IllegalStateException e) {
+                return; // LuckPerms not installed — silently skip
+            }
+
+            // Load all groups into memory (blocks this async thread until done)
+            lp.getGroupManager().loadAllGroups().get();
+            java.util.Collection<net.luckperms.api.model.group.Group> groups =
+                    lp.getGroupManager().getLoadedGroups();
+
+            StringBuilder sb = new StringBuilder("{\"groups\":[");
+            boolean firstGroup = true;
+            for (net.luckperms.api.model.group.Group group : groups) {
+                if (!firstGroup) sb.append(",");
+                firstGroup = false;
+                sb.append("{\"groupName\":\"")
+                  .append(group.getName().replace("\"", "\\\""))
+                  .append("\",\"permissions\":{");
+
+                boolean firstPerm = true;
+                for (net.luckperms.api.node.Node node : group.data().toCollection()) {
+                    // Only include plain permission nodes (skip group-inheritance, meta, etc.)
+                    if (node.getType() != net.luckperms.api.node.NodeType.PERMISSION) continue;
+                    if (!firstPerm) sb.append(",");
+                    firstPerm = false;
+                    sb.append("\"")
+                      .append(node.getKey().replace("\\", "\\\\").replace("\"", "\\\""))
+                      .append("\":").append(node.getValue());
+                }
+                sb.append("}}");
+            }
+            sb.append("]}");
+
+            boolean ok = client.syncLuckPermsGroups(sb.toString());
+            if (ok) {
+                plugin.getLogger().info("[WebPanel] Synced " + groups.size() + " LuckPerms group(s) to backend.");
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("[WebPanel] LuckPerms group sync failed: " + e.getMessage());
         }
     }
 }
