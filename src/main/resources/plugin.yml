@@ -13,7 +13,7 @@ softdepend:
   - PacketEvents
   - Nexo
 
-loadbefore: [EconomyShopGUI]
+loadbefore: [EconomyShopGUI, VendingMachines]
 
 commands:
   spawn:

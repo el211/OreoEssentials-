@@ -102,27 +102,26 @@ public class AsyncChatListenerWithChannels implements Listener {
     @SuppressWarnings("deprecation")
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onLegacyChat(AsyncPlayerChatEvent event) {
+        if (!plugin.getSettingsConfig().chatEnabled()) return;
         event.setCancelled(true);
         event.getRecipients().clear();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onChat(AsyncChatEvent event) {
-        event.viewers().clear();
-        event.setCancelled(true);
-
-        // AH price input: player is typing price after selecting currency in picker
+        // AH/Orders GUI input handlers — run regardless of chat.enabled so in-game GUIs keep working
         final Player player0 = event.getPlayer();
         try {
             AuctionHouseModule ahm = AuctionHouseModule.getInstance();
             if (ahm != null && ahm.isWaitingForPrice(player0.getUniqueId())) {
+                event.viewers().clear();
+                event.setCancelled(true);
                 String raw = PlainTextComponentSerializer.plainText().serialize(event.message());
                 ahm.consumePriceInput(player0, raw);
                 return;
             }
         } catch (Throwable ignored) {}
 
-        // Orders/Market chat inputs (qty, price, fill-qty)
         try {
             fr.elias.oreoEssentials.modules.orders.OrdersModule om =
                     fr.elias.oreoEssentials.modules.orders.OrdersModule.getInstance();
@@ -130,14 +129,20 @@ public class AsyncChatListenerWithChannels implements Listener {
                 String raw = PlainTextComponentSerializer.plainText().serialize(event.message());
                 java.util.UUID uid = player0.getUniqueId();
                 if (fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.isWaitingForQty(uid)) {
+                    event.viewers().clear();
+                    event.setCancelled(true);
                     fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.consumeQtyInput(om, player0, raw);
                     return;
                 }
                 if (fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.isWaitingForPrice(uid)) {
+                    event.viewers().clear();
+                    event.setCancelled(true);
                     fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.consumePriceInput(om, player0, raw);
                     return;
                 }
                 if (fr.elias.oreoEssentials.modules.orders.gui.FillOrderMenu.isWaitingForFillQty(uid)) {
+                    event.viewers().clear();
+                    event.setCancelled(true);
                     fr.elias.oreoEssentials.modules.orders.gui.FillOrderMenu.consumeFillQtyInput(om, player0, raw);
                     return;
                 }
@@ -147,7 +152,11 @@ public class AsyncChatListenerWithChannels implements Listener {
             t.printStackTrace();
         }
 
+        // Chat module disabled — leave the event alone so CHC (or other chat plugins) can handle it
         if (!plugin.getSettingsConfig().chatEnabled()) return;
+
+        event.viewers().clear();
+        event.setCancelled(true);
 
         final Player player = event.getPlayer();
         final ModGuiService gui = plugin.getModGuiService();

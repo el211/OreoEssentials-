@@ -35,6 +35,7 @@ public class TabListManager {
     private File file;
     private FileConfiguration cfg;
     private BukkitTask task;
+    private BukkitTask nameTask;
 
     private boolean enabled;
     private boolean usePapi;
@@ -213,6 +214,17 @@ public class TabListManager {
             }
             customLayout.start(intervalTicks);
             plugin.getLogger().info("[TAB] Started in CUSTOM layout mode");
+
+            // When player-section is disabled in custom layout, run name-format from this config
+            boolean playerSectionEnabled = cfg.getBoolean("tab.custom-layout.player-section.enabled", true);
+            if (nameEnabled && !playerSectionEnabled) {
+                nameTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        applyNameFormat(p);
+                    }
+                }, 1L, intervalTicks);
+                plugin.getLogger().info("[TAB] Name formatting delegated to name-format section (player-section disabled)");
+            }
         } else {
             // Use classic header/footer mode (your original code)
             startClassicMode();
@@ -282,6 +294,7 @@ public class TabListManager {
                 String nickOrName = safeNickOrName(p);
                 String rendered = patternToUse.replace("%nick_or_name%", nickOrName);
 
+                rendered = color(rendered);
                 rendered = applyInternalPlaceholders(p, rendered);
                 rendered = runPapiIf(papi, p, rendered);
 
@@ -313,10 +326,63 @@ public class TabListManager {
         }, 1L, intervalTicks);
     }
 
+    /** Applies name-format.rank-formats to a single player (used in CUSTOM layout mode). */
+    private void applyNameFormat(Player p) {
+        World world = p.getWorld();
+        WorldOverrides o = worldOverrides.get(world.getName().toLowerCase(Locale.ROOT));
+
+        boolean papi = (o != null && o.usePapi != null)
+                ? (o.usePapi && hasPapi())
+                : (usePapi && hasPapi());
+
+        boolean nEnabled = (o != null && o.name != null && o.name.enabled != null)
+                ? o.name.enabled : nameEnabled;
+        if (!nEnabled) return;
+
+        boolean localUseRank = (o != null && o.name != null && o.name.useRankFormats != null)
+                ? o.name.useRankFormats : useRankFormats;
+        String localRankKey = (o != null && o.name != null && o.name.rankKey != null)
+                ? o.name.rankKey : rankKey;
+        String localPattern = (o != null && o.name != null && o.name.pattern != null)
+                ? o.name.pattern : namePattern;
+        Map<String, String> localRankFormats = (o != null && o.name != null && o.name.rankFormats != null)
+                ? o.name.rankFormats : rankFormats;
+
+        String patternToUse = localPattern;
+        if (localUseRank && !localRankFormats.isEmpty()) {
+            String rk = runPapiIf(papi, p, localRankKey);
+            if (rk == null) rk = "";
+            String byRank = localRankFormats.get(rk.toLowerCase(Locale.ROOT));
+            if (byRank == null) byRank = localRankFormats.get("default");
+            if (byRank != null) patternToUse = byRank;
+        }
+
+        String nickOrName = safeNickOrName(p);
+        String rendered = patternToUse.replace("%nick_or_name%", nickOrName);
+        rendered = color(rendered);
+        rendered = applyInternalPlaceholders(p, rendered);
+        rendered = runPapiIf(papi, p, rendered);
+
+        boolean enforce = (o != null && o.name != null && o.name.enforceMax != null)
+                ? o.name.enforceMax : nameEnforceMax;
+        int maxLen = (o != null && o.name != null && o.name.maxLen != null)
+                ? o.name.maxLen : nameMaxLen;
+        String ov = (o != null && o.name != null && o.name.overflow != null)
+                ? o.name.overflow : (overflowMode == OverflowMode.ELLIPSIS ? "ELLIPSIS" : "TRIM");
+        OverflowMode mode = "ELLIPSIS".equalsIgnoreCase(ov) ? OverflowMode.ELLIPSIS : OverflowMode.TRIM;
+        if (enforce) rendered = fitToMax(rendered, maxLen, mode);
+
+        try { p.setPlayerListName(rendered); } catch (Throwable ignored) {}
+    }
+
     public void stop() {
         if (task != null) {
             task.cancel();
             task = null;
+        }
+        if (nameTask != null) {
+            nameTask.cancel();
+            nameTask = null;
         }
 
         if (customLayout != null) {
@@ -383,8 +449,37 @@ public class TabListManager {
         return a != null ? a : b;
     }
 
+    private static final java.util.regex.Pattern HEX_AMP  = java.util.regex.Pattern.compile("&#([A-Fa-f0-9]{6})");
+    private static final java.util.regex.Pattern HEX_MINI = java.util.regex.Pattern.compile("<#([A-Fa-f0-9]{6})>");
+
+    private static String hexToLegacy(java.util.regex.Matcher m) {
+        StringBuilder sb = new StringBuilder("§x");
+        for (char c : m.group(1).toCharArray()) sb.append('§').append(c);
+        return sb.toString();
+    }
+
     private static String color(String s) {
-        return s == null ? "" : s.replace('&', '§').replace("\\n", "\n");
+        if (s == null) return "";
+        // &#RRGGBB  →  §x§R§R§G§G§B§B
+        java.util.regex.Matcher m1 = HEX_AMP.matcher(s);
+        StringBuffer sb1 = new StringBuffer();
+        while (m1.find()) m1.appendReplacement(sb1, hexToLegacy(m1));
+        m1.appendTail(sb1);
+        s = sb1.toString();
+        // <#RRGGBB>  →  §x§R§R§G§G§B§B  (MiniMessage style used in rank-formats)
+        java.util.regex.Matcher m2 = HEX_MINI.matcher(s);
+        StringBuffer sb2 = new StringBuffer();
+        while (m2.find()) m2.appendReplacement(sb2, hexToLegacy(m2));
+        m2.appendTail(sb2);
+        s = sb2.toString();
+        // Common MiniMessage named tags → legacy codes
+        s = s.replace("<reset>", "§r").replace("<gray>", "§7").replace("<white>", "§f")
+             .replace("<black>", "§0").replace("<dark_blue>", "§1").replace("<dark_green>", "§2")
+             .replace("<dark_aqua>", "§3").replace("<dark_red>", "§4").replace("<dark_purple>", "§5")
+             .replace("<gold>", "§6").replace("<dark_gray>", "§8").replace("<blue>", "§9")
+             .replace("<green>", "§a").replace("<aqua>", "§b").replace("<red>", "§c")
+             .replace("<light_purple>", "§d").replace("<yellow>", "§e");
+        return s.replace('&', '§').replace("\\n", "\n");
     }
 
     private static String safeNickOrName(Player p) {

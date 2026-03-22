@@ -118,6 +118,9 @@ public class CustomTablistLayout {
     }
 
     private void updatePlayerNames(Player viewer, FileConfiguration cfg) {
+        // When player-section is disabled, name formatting is handled by TabListManager's name-format section
+        if (!cfg.getBoolean("tab.custom-layout.player-section.enabled", true)) return;
+
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
 
         players.sort((p1, p2) -> {
@@ -229,7 +232,18 @@ public class CustomTablistLayout {
         return text;
     }
 
+    private static final java.util.regex.Pattern HEX_AMP = java.util.regex.Pattern.compile("&#([A-Fa-f0-9]{6})");
+
     private static String color(String s) {
-        return s == null ? "" : s.replace('&', '§');
+        if (s == null) return "";
+        java.util.regex.Matcher m = HEX_AMP.matcher(s);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            StringBuilder rep = new StringBuilder("§x");
+            for (char c : m.group(1).toCharArray()) rep.append('§').append(c);
+            m.appendReplacement(sb, rep.toString());
+        }
+        m.appendTail(sb);
+        return sb.toString().replace('&', '§');
     }
 }
