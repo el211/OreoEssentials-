@@ -296,7 +296,10 @@ public class PlayerNametagManager implements Listener {
             updateTask.cancel();
         }
 
-        this.config.setDefaults(newConfig.getDefaults());
+        // Copy all values from the new config into this.config
+        for (String key : newConfig.getKeys(true)) {
+            this.config.set(key, newConfig.get(key));
+        }
         loadConfig();
 
         if (enabled) {

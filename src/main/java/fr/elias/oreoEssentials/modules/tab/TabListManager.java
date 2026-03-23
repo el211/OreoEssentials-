@@ -514,10 +514,16 @@ public class TabListManager {
         return s.replace('&', '§').replace("\\n", "\n");
     }
 
+    private static final java.util.regex.Pattern STRIP_COLOR = java.util.regex.Pattern.compile(
+            "(?i)§x(§[0-9A-F]){6}|§[0-9A-FK-ORX]");
+
     private static String safeNickOrName(Player p) {
         try {
             String d = p.getDisplayName();
-            if (d != null && !d.isEmpty()) return d;
+            if (d != null && !d.isEmpty()) {
+                // Strip color codes so the rank-format's own color takes effect
+                return STRIP_COLOR.matcher(d).replaceAll("");
+            }
         } catch (Throwable ignored) {
         }
         return p.getName();
