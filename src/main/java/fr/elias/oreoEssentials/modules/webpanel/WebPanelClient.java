@@ -104,6 +104,40 @@ public class WebPanelClient {
     }
 
     /**
+     * Checks whether the given player UUID is linked to a website account.
+     * Calls GET /api/v1/plugin/players/{uuid}/registered.
+     *
+     * @return true if the player has a linked website account, false otherwise.
+     */
+    public boolean isPlayerRegistered(UUID uuid) {
+        try {
+            URL endpoint = new URL(config.getUrl() + "/api/v1/plugin/players/" + uuid + "/registered");
+            HttpURLConnection conn = (HttpURLConnection) endpoint.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("X-Api-Key", config.getApiKey());
+            conn.setConnectTimeout(5_000);
+            conn.setReadTimeout(5_000);
+
+            int status = conn.getResponseCode();
+            if (status != 200) {
+                conn.disconnect();
+                return false;
+            }
+
+            try (java.io.InputStream is = conn.getInputStream()) {
+                String body = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                conn.disconnect();
+                // Parse {"registered":true/false}
+                JsonObject obj = new Gson().fromJson(body, JsonObject.class);
+                return obj != null && obj.has("registered") && obj.get("registered").getAsBoolean();
+            }
+        } catch (Exception e) {
+            log.warning("[WebPanel] Failed to check registration for " + uuid + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Polls /api/v1/plugin/actions for pending SELL / DELETE actions.
      * Only actions for the given online player UUIDs are returned and marked processed,
      * so actions for offline senders are never silently discarded.
@@ -259,8 +293,8 @@ public class WebPanelClient {
 
             int status = conn.getResponseCode();
             conn.disconnect();
-            if (status != 200) log.warning("[WebPanel] /luckperms/sync returned HTTP " + status);
-            return status == 200;
+            if (status != 204) log.warning("[WebPanel] /luckperms/sync returned HTTP " + status);
+            return status == 204;
         } catch (Exception e) {
             log.warning("[WebPanel] Failed to sync LuckPerms groups: " + e.getMessage());
             return false;

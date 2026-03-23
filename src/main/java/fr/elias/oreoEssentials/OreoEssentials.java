@@ -1623,6 +1623,25 @@ public final class OreoEssentials extends JavaPlugin {
         this.webPanelSyncService = new fr.elias.oreoEssentials.modules.webpanel.WebPanelSyncService(this, client);
         this.webPanelSyncService.start();
 
+        // Register reward (oreopanel/reward.yml)
+        fr.elias.oreoEssentials.modules.webpanel.RegisterRewardConfig rrConfig =
+                new fr.elias.oreoEssentials.modules.webpanel.RegisterRewardConfig(this);
+        fr.elias.oreoEssentials.modules.shop.hooks.ItemsAdderHook rrIaHook =
+                new fr.elias.oreoEssentials.modules.shop.hooks.ItemsAdderHook(this);
+        fr.elias.oreoEssentials.modules.shop.hooks.NexoHook rrNexoHook =
+                new fr.elias.oreoEssentials.modules.shop.hooks.NexoHook(this);
+        fr.elias.oreoEssentials.modules.webpanel.RegisterRewardService rrService =
+                new fr.elias.oreoEssentials.modules.webpanel.RegisterRewardService(
+                        this, rrConfig, client, rrIaHook, rrNexoHook);
+        getServer().getPluginManager().registerEvents(rrService, this);
+        if (getCommand("registerreward") != null) {
+            getCommand("registerreward").setExecutor(
+                    new fr.elias.oreoEssentials.modules.webpanel.RegisterRewardCommand(
+                            this, rrConfig, rrService, rrIaHook, rrNexoHook));
+        } else {
+            getLogger().warning("[WebPanel] 'registerreward' command not found in plugin.yml — skipping registration.");
+        }
+
         getLogger().info("[WebPanel] Enabled — syncing to " + wpConfig.getUrl());
     }
 

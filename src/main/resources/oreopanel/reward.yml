@@ -1,0 +1,95 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  OreoPanel — Register Reward
+#  File: plugins/OreoEssentials/oreopanel/reward.yml
+#
+#  One-time reward given to players who have linked their Minecraft account
+#  to the OreoStudios website via /weblink.
+#
+#  Reward types supported:
+#    • money   — Vault balance deposit
+#    • items   — Vanilla, ItemsAdder, Nexo, or custom-model-data items
+#    • commands — Console commands run with {player} replaced by player name
+# ─────────────────────────────────────────────────────────────────────────────
+
+enabled: true
+
+gui:
+  title: "&6&l✦ Register Reward"
+  rows: 3
+  # Material for the empty background panes
+  fill-material: BLACK_STAINED_GLASS_PANE
+
+# ── Decorative logo item shown in the center of the GUI ──────────────────────
+logo:
+  slot: 13
+  # Vanilla material (used when no itemsadder / nexo key is present)
+  material: NETHER_STAR
+  # ItemsAdder item — uncomment and set your namespaced ID:
+  # itemsadder: "mypack:special_star"
+  # Nexo item — uncomment and set your item ID:
+  # nexo: "my_item"
+  # Custom model data override (works together with 'material'):
+  # custom-model-data: 1234
+  name: "&6&l✦ Website Reward"
+  lore:
+    - "&7You linked your Minecraft account"
+    - "&7to the OreoStudios website!"
+    - ""
+    - "&eClick the button below to claim."
+
+# ── Buttons shown below the logo (slot 22 = bottom-centre of a 3-row GUI) ────
+claim-button:
+  slot: 22
+  material: LIME_STAINED_GLASS_PANE
+  name: "&a&l▶  CLAIM REWARD"
+  lore:
+    - "&7Click to receive all your rewards."
+
+already-claimed:
+  slot: 22
+  material: RED_STAINED_GLASS_PANE
+  name: "&c&l✗  ALREADY CLAIMED"
+  lore:
+    - "&7You have already claimed this reward."
+
+not-registered:
+  slot: 22
+  material: ORANGE_STAINED_GLASS_PANE
+  name: "&6&l!  NOT LINKED"
+  lore:
+    - "&7You haven't linked your account yet."
+    - "&7Use &e/weblink &7to link it."
+
+# ── Chat messages ─────────────────────────────────────────────────────────────
+messages:
+  claimed:        "&6&l✦ &r&aReward claimed! Thank you for registering on the website!"
+  already-claimed: "&cYou have already claimed the register reward."
+  not-registered:  "&cYou must link your account first. Use &e/weblink&c."
+  not-enabled:     "&cThe register reward is currently disabled."
+  no-panel:        "&cThe web panel is not configured on this server."
+
+# ── Rewards ───────────────────────────────────────────────────────────────────
+rewards:
+
+  # Vault money deposit (requires an economy plugin)
+  money:
+    enabled: true
+    amount: 1000.0
+
+  # Item rewards — supports vanilla, ItemsAdder, Nexo, and custom-model-data
+  items:
+    - material: DIAMOND
+      amount: 3
+      name: "&bWelcome Diamond"
+      lore:
+        - "&7A gift for linking your account!"
+      enchanted: false
+      # itemsadder: "mypack:special_diamond"
+      # nexo: "special_diamond"
+      # custom-model-data: 0
+
+  # Console-command rewards — {player} is replaced with the player's name
+  commands:
+    - command: "give {player} golden_apple 5"
+      # Label shown in the join-notification only (no GUI row for commands)
+      display-name: "&e5x Golden Apple"

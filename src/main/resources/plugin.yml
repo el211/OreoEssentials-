@@ -141,6 +141,11 @@ commands:
     usage: /weblink
     permission: oreo.weblink
 
+  registerreward:
+    description: Claim your one-time reward for registering on the OreoStudios website
+    usage: /registerreward
+    permission: oreo.registerreward
+
   tpa:
     description: Request to teleport to a player
     permission: oreo.tpa
