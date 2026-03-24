@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.tab;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.config.SettingsConfig;
 import fr.elias.oreoEssentials.playerdirectory.PlayerDirectory;
+import fr.elias.oreoEssentials.util.MiniMsg;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -43,6 +44,7 @@ public class TabListManager {
     private String footer;
     private int intervalTicks;
     private boolean networkMode;
+    private final Set<String> networkExcludedServers = new HashSet<>();
     private String serverTagPattern;
     private boolean titleEnabled;
     private boolean titleShowOnJoin;
@@ -119,9 +121,16 @@ public class TabListManager {
 
         ConfigurationSection net = cfg.getConfigurationSection("tab.network");
         this.networkMode = net != null && net.getBoolean("all-servers", false);
+        networkExcludedServers.clear();
+        if (net != null) {
+            for (String s : net.getStringList("excluded-servers")) {
+                networkExcludedServers.add(s.toLowerCase(Locale.ROOT));
+            }
+        }
         plugin.getLogger().info("[TAB] Network mode: " + (networkMode
                 ? "NETWORK_ALL (using PlayerDirectory if available)"
-                : "LOCAL_ONLY"));
+                : "LOCAL_ONLY")
+                + (networkExcludedServers.isEmpty() ? "" : ", excluded: " + networkExcludedServers));
 
         ConfigurationSection t = cfg.getConfigurationSection("tab.title");
         titleEnabled = t != null && t.getBoolean("enabled", false);
@@ -453,13 +462,35 @@ public class TabListManager {
 
     private static final java.util.regex.Pattern HEX_AMP       = java.util.regex.Pattern.compile("&#([A-Fa-f0-9]{6})");
     private static final java.util.regex.Pattern HEX_MINI      = java.util.regex.Pattern.compile("<#([A-Fa-f0-9]{6})>");
-    // Matches <gradient:#RRGGBB:#RRGGBB> and extracts the first color
+    // Matches <gradient:#RRGGBB:#RRGGBB> and extracts the first color (fallback for unclosed tags)
     private static final java.util.regex.Pattern GRADIENT_MINI = java.util.regex.Pattern.compile(
             "<gradient:#([A-Fa-f0-9]{6})(?::#[A-Fa-f0-9]{6})*>", java.util.regex.Pattern.CASE_INSENSITIVE);
+    // Matches a complete <gradient:...>TEXT</gradient> or <rainbow>TEXT</rainbow> block for full MiniMessage parsing
+    private static final java.util.regex.Pattern GRADIENT_BLOCK = java.util.regex.Pattern.compile(
+            "<(gradient|rainbow)[^>]*>.*?</(gradient|rainbow)>",
+            java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL);
     // Strips any remaining MiniMessage closing/opening tags we don't handle
     private static final java.util.regex.Pattern MINI_TAG_STRIP = java.util.regex.Pattern.compile(
             "</?(?:gradient|rainbow|transition|font|lang|insertion|click|hover|key|selector|score|nbt|block_nbt|entity_nbt|storage_nbt)[^>]*>",
             java.util.regex.Pattern.CASE_INSENSITIVE);
+
+    /** Converts complete <gradient:...>TEXT</gradient> / <rainbow>TEXT</rainbow> blocks
+     *  to per-character legacy hex codes using Adventure's MiniMessage parser. */
+    private static String resolveGradientBlocks(String s) {
+        java.util.regex.Matcher m = GRADIENT_BLOCK.matcher(s);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            try {
+                String converted = MiniMsg.toLegacy(m.group(0));
+                m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(converted));
+            } catch (Throwable ignored) {
+                // keep original — fallback color() handling will apply single color
+                m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(m.group(0)));
+            }
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
 
     private static String hexToLegacy(java.util.regex.Matcher m) {
         StringBuilder sb = new StringBuilder("§x");
@@ -469,6 +500,8 @@ public class TabListManager {
 
     private static String color(String s) {
         if (s == null) return "";
+        // Full <gradient:...>TEXT</gradient> blocks → per-character legacy hex (proper gradient)
+        s = resolveGradientBlocks(s);
         // &#RRGGBB  →  §x§R§R§G§G§B§B
         java.util.regex.Matcher m1 = HEX_AMP.matcher(s);
         StringBuffer sb1 = new StringBuffer();
@@ -584,6 +617,8 @@ public class TabListManager {
                         if (server == null || server.isEmpty()) {
                             server = plugin.getConfigService().serverName();
                         }
+                        if (!networkExcludedServers.isEmpty()
+                                && networkExcludedServers.contains(server.toLowerCase(Locale.ROOT))) continue;
                         lines.add("§f" + name + " §8(§7" + server + "§8)");
                         count++;
                     }

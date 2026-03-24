@@ -6,6 +6,10 @@ tab:
 
   network:
     all-servers: true
+    # Servers whose players are hidden from the tab list of other servers.
+    # Use the exact server name as registered in your proxy (case-insensitive).
+    excluded-servers:
+      - hub
 
   # ====================================================================
   # 🌊 OREOESSENTIALS BLUE GRADIENT FLOWING WAVES! 🌊
