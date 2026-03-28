@@ -50,7 +50,9 @@ features:
     enabled: true
 
     per-player: true        # enable per-player placeholders/permissions for TEXT holograms
-
+  holograms:
+    text:
+      per-player: true
   playervaults:
     enabled: true
 

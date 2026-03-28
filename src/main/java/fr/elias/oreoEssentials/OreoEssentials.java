@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials;
 import com.google.gson.Gson;
 import fr.elias.oreoEssentials.modules.furnace.FurnaceCommand;
 import fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayService;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.modules.afk.AfkListener;
 import fr.elias.oreoEssentials.modules.afk.rabbit.packets.AfkPoolEnterPacket;
 import fr.elias.oreoEssentials.modules.afk.rabbit.packets.AfkPoolExitPacket;
@@ -1897,7 +1898,7 @@ public final class OreoEssentials extends JavaPlugin {
                 fr.elias.oreoEssentials.modules.holograms.nms.NmsHologramBridge nms = fr.elias.oreoEssentials.modules.holograms.nms.NmsBridgeLoader.loadOrThrow();
                 this.perPlayerTextDisplayService = new fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayService(this, nms);
                 getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayListener(this.perPlayerTextDisplayService), this);
-                getServer().getScheduler().runTaskTimer(this, () -> {
+                OreScheduler.runTimer(this, () -> {
                     try { perPlayerTextDisplayService.tick(); }
                     catch (Throwable t) { getLogger().warning("[PerPlayerTextDisplay] tick failed: " + t.getMessage()); }
                 }, 20L, 10L);
@@ -1925,7 +1926,7 @@ public final class OreoEssentials extends JavaPlugin {
                 if (getCommand("hologram")  != null) { getCommand("hologram").setExecutor(holoCmd);  getCommand("hologram").setTabCompleter(holoCmd);  registered = true; }
                 if (!registered) getLogger().warning("[OreoHolograms] No command entry found. Add ohologram or hologram in plugin.yml.");
 
-                Bukkit.getScheduler().runTaskTimer(this, () -> { try { this.oreoHolograms.tickAll(); } catch (Throwable ignored) {} }, 20L, 20L);
+                OreScheduler.runTimer(this, () -> { try { this.oreoHolograms.tickAll(); } catch (Throwable ignored) {} }, 20L, 20L);
                 getLogger().info("[OreoHolograms] Enabled.");
             } catch (Throwable t) {
                 this.oreoHolograms = null;

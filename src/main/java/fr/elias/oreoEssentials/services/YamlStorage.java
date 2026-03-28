@@ -214,10 +214,8 @@ public class YamlStorage implements StorageApi {
 
     @Override
     public void setLast(UUID uuid, Location loc) {
-        // FIRST: new global system (BackLocation)
         StorageApi.super.setLast(uuid, loc);
 
-        // OLD local system
         YamlConfiguration y = player(uuid);
         var sec = y.getConfigurationSection("lastLocation");
         if (sec == null) sec = y.createSection("lastLocation");
@@ -228,11 +226,9 @@ public class YamlStorage implements StorageApi {
 
     @Override
     public Location getLast(UUID uuid) {
-        // Prefer new global /back system
         Location fromBack = StorageApi.super.getLast(uuid);
         if (fromBack != null) return fromBack;
 
-        // Fallback to old "lastLocation"
         return LocUtil.read(player(uuid).getConfigurationSection("lastLocation"));
     }
 

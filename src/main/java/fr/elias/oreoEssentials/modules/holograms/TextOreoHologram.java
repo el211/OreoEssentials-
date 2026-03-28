@@ -34,7 +34,21 @@ public final class TextOreoHologram extends OreoHologram {
     public void spawnIfMissing() {
         final Location loc = data.location.toLocation();
         if (loc == null || loc.getWorld() == null) return;
-        if (findEntity().isPresent()) return;
+
+        var existingOpt = findEntity();
+        if (existingOpt.isPresent()) {
+            // Entity already in world — register with per-player service if not yet tracked
+            if (isPerPlayerEnabled()) {
+                var svc = getPerPlayerSvc();
+                if (svc != null) {
+                    TextDisplay td = (TextDisplay) existingOpt.get();
+                    double view = (data.visibilityDistance > 0) ? data.visibilityDistance : 64.0;
+                    long refresh = (data.updateIntervalTicks > 0) ? data.updateIntervalTicks : 20L;
+                    svc.track(td, () -> data.lines, view, refresh);
+                }
+            }
+            return;
+        }
 
         if (data.lines == null) data.lines = new ArrayList<>();
         if (data.lines.isEmpty()) {
