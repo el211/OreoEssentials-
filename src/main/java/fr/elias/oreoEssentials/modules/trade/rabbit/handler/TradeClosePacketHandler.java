@@ -4,6 +4,7 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.event.PacketSubscriber;
 import fr.elias.oreoEssentials.modules.trade.rabbit.packet.TradeClosePacket;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 
 public final class TradeClosePacketHandler implements PacketSubscriber<TradeClosePacket> {
@@ -23,7 +24,7 @@ public final class TradeClosePacketHandler implements PacketSubscriber<TradeClos
         if (dbg()) plugin.getLogger().info("[TRADE] RECV TradeClosePacket ch=" + channel +
                 " session=" + packet.getSessionId() + " target=" + packet.getGrantTo());
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             if (plugin.getTradeService() != null) {
                 plugin.getTradeService().handleRemoteClose(packet);
             } else if (dbg()) {

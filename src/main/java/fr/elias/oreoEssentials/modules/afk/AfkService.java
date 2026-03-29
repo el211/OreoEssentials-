@@ -1,5 +1,7 @@
 package fr.elias.oreoEssentials.modules.afk;
 
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -8,7 +10,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.*;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Map;
 import java.util.Set;
@@ -35,7 +36,7 @@ public class AfkService implements Listener {
     private int autoSeconds;
     private int checkIntervalSeconds;
 
-    private BukkitTask autoTask;
+    private OreTask autoTask;
 
     public AfkService(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -209,7 +210,7 @@ public class AfkService implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChat(AsyncPlayerChatEvent e) {
-        Bukkit.getScheduler().runTask(plugin, () -> touch(e.getPlayer()));
+        OreScheduler.run(plugin, () -> touch(e.getPlayer()));
     }
 
 
@@ -234,7 +235,7 @@ public class AfkService implements Listener {
 
         if (!autoEnabled || autoSeconds <= 0) return;
 
-        autoTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        autoTask = OreScheduler.runTimer(plugin, () -> {
             long now = System.currentTimeMillis();
 
             for (Player p : Bukkit.getOnlinePlayers()) {

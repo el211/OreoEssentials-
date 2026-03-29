@@ -26,7 +26,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.scheduler.BukkitTask;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 
 import java.time.Instant;
 import java.util.*;
@@ -42,9 +43,9 @@ public class WebPanelSyncService implements Listener {
     private final OreoEssentials plugin;
     private final WebPanelClient client;
     private WebPanelRabbitPublisher rabbitPublisher;
-    private BukkitTask periodicTask;
-    // Debounce: UUID → scheduled task ID, prevents spamming on rapid inventory changes
-    private final Map<UUID, Integer> debounce = new ConcurrentHashMap<>();
+    private OreTask periodicTask;
+    // Debounce: UUID → scheduled task, prevents spamming on rapid inventory changes
+    private final Map<UUID, OreTask> debounce = new ConcurrentHashMap<>();
     private static final long DEBOUNCE_TICKS = 20L; // 1 second
 
     // Dedup: tracks actions recently delivered via RabbitMQ to prevent the HTTP fallback
@@ -85,7 +86,7 @@ public class WebPanelSyncService implements Listener {
                             // Instant delivery attempt for the recipient (if currently online)
                             String senderName = action.has("senderName") ? action.get("senderName").getAsString() : "Someone";
                             long   deliveryId = action.has("deliveryId") ? action.get("deliveryId").getAsLong()   : -1L;
-                            Bukkit.getScheduler().runTask(plugin, () -> {
+                            OreScheduler.run(plugin, () -> {
                                 Player recipient = Bukkit.getPlayer(UUID.fromString(uuidStr));
                                 if (recipient != null && recipient.isOnline()) {
                                     deliverItem(recipient, mat, amount, senderName, deliveryId);
@@ -93,7 +94,7 @@ public class WebPanelSyncService implements Listener {
                                 // If offline, the onJoin HTTP poll will pick it up next login
                             });
                         } else {
-                            Bukkit.getScheduler().runTask(plugin, () -> {
+                            OreScheduler.run(plugin, () -> {
                                 Player target = Bukkit.getPlayer(UUID.fromString(uuidStr));
                                 if (target != null && target.isOnline()) {
                                     processWebAction(target, type, mat, amount);
@@ -116,25 +117,25 @@ public class WebPanelSyncService implements Listener {
 
         // Push the current LuckPerms group state to the backend so the panel starts with fresh data.
         // Runs async so startup is not delayed. Delayed 5 s to let all plugins finish enabling.
-        Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, this::syncLuckPermsGroupsToBackend, 100L);
+        OreScheduler.runAsyncLater(plugin, this::syncLuckPermsGroupsToBackend, 100L);
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
         // Sync all online players every 30 seconds — catches external changes like /give
-        periodicTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        periodicTask = OreScheduler.runTimer(plugin, () -> {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 syncPlayer(p, true);
             }
         }, 600L, 600L);
 
         // Sync all active market orders every 30 seconds (same period as player sync)
-        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::syncAllOrders, 200L, 600L);
+        OreScheduler.runAsyncTimer(plugin, this::syncAllOrders, 200L, 600L);
 
         // Always poll HTTP for pending actions as a safety net.
         // RabbitMQ is the fast path (instant delivery), but if the player is already
         // online when the action is submitted and AMQP delivery misses for any reason,
         // the periodic poll ensures the action is never silently lost.
         // Double-execution of DELETE is safe (no-op when items already removed).
-        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::pollAndProcessActions, 100L, 100L);
+        OreScheduler.runAsyncTimer(plugin, this::pollAndProcessActions, 100L, 100L);
     }
 
     public void stop() {
@@ -152,9 +153,9 @@ public class WebPanelSyncService implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         Player joined = e.getPlayer();
         // Delay 2 s so economy/homes are fully loaded
-        Bukkit.getScheduler().runTaskLater(plugin, () -> syncPlayer(joined, true), 40L);
+        OreScheduler.runLater(plugin, () -> syncPlayer(joined, true), 40L);
         // Delay 3 s before polling — ensures inventory + economy are fully loaded by all plugins
-        Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+        OreScheduler.runAsyncLater(plugin, () -> {
             // 1. Poll pending actions (SELL / DELETE) for all online players
             // Include the joining player in the UUID set so their queued actions are delivered now.
             java.util.Set<String> onlineUuids = Bukkit.getOnlinePlayers().stream()
@@ -166,7 +167,7 @@ public class WebPanelSyncService implements Listener {
             if (response != null && response.has("actions")) {
                 JsonArray actions = response.getAsJsonArray("actions");
                 if (actions != null && actions.size() > 0) {
-                    Bukkit.getScheduler().runTask(plugin, () -> {
+                    OreScheduler.run(plugin, () -> {
                         for (var elem : actions) {
                             try {
                                 JsonObject action = elem.getAsJsonObject();
@@ -192,7 +193,7 @@ public class WebPanelSyncService implements Listener {
                 JsonArray items = deliveries.getAsJsonArray("deliveries");
                 if (items != null && items.size() > 0) {
                     java.util.List<Long> confirmedIds = new java.util.ArrayList<>();
-                    Bukkit.getScheduler().runTask(plugin, () -> {
+                    OreScheduler.run(plugin, () -> {
                         for (var elem : items) {
                             try {
                                 JsonObject d = elem.getAsJsonObject();
@@ -208,7 +209,7 @@ public class WebPanelSyncService implements Listener {
                             }
                         }
                         if (!confirmedIds.isEmpty()) {
-                            Bukkit.getScheduler().runTaskAsynchronously(plugin,
+                            OreScheduler.runAsync(plugin,
                                     () -> client.confirmDeliveries(confirmedIds));
                         }
                     });
@@ -246,12 +247,12 @@ public class WebPanelSyncService implements Listener {
     /** Cancels any pending sync for this player and schedules a new one after 1 second. */
     private void debouncedSync(org.bukkit.entity.Player player) {
         UUID uuid = player.getUniqueId();
-        Integer prev = debounce.remove(uuid);
-        if (prev != null) Bukkit.getScheduler().cancelTask(prev);
-        int taskId = Bukkit.getScheduler().runTaskLater(plugin,
+        OreTask prev = debounce.remove(uuid);
+        if (prev != null) prev.cancel();
+        OreTask task = OreScheduler.runLater(plugin,
                 () -> { debounce.remove(uuid); syncPlayer(player, true); },
-                DEBOUNCE_TICKS).getTaskId();
-        debounce.put(uuid, taskId);
+                DEBOUNCE_TICKS);
+        debounce.put(uuid, task);
     }
 
     // ─── Core sync ────────────────────────────────────────────────────────────
@@ -411,11 +412,11 @@ public class WebPanelSyncService implements Listener {
         if (rabbitPublisher != null) {
             // AMQP path: publish to RabbitMQ — backend consumes and pushes via WebSocket
             final WebPanelRabbitPublisher pub = rabbitPublisher;
-            Bukkit.getScheduler().runTaskAsynchronously(plugin,
+            OreScheduler.runAsync(plugin,
                     () -> pub.publish(uuid, name, dataJson));
         } else {
             // HTTP fallback: direct REST POST to backend
-            Bukkit.getScheduler().runTaskAsynchronously(plugin,
+            OreScheduler.runAsync(plugin,
                     () -> client.syncPlayer(uuid, name, dataJson));
         }
     }
@@ -575,7 +576,7 @@ public class WebPanelSyncService implements Listener {
         if (actions == null || actions.size() == 0) return;
 
         // Process each action on the Bukkit main thread (required for inventory changes)
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             for (var elem : actions) {
                 try {
                     JsonObject action = elem.getAsJsonObject();
@@ -629,12 +630,12 @@ public class WebPanelSyncService implements Listener {
 
         // Confirm to backend
         if (deliveryId > 0) {
-            Bukkit.getScheduler().runTaskAsynchronously(plugin,
+            OreScheduler.runAsync(plugin,
                     () -> client.confirmDeliveries(java.util.List.of(deliveryId)));
         }
 
         // Re-sync inventory after 1 tick
-        Bukkit.getScheduler().runTaskLater(plugin, () -> syncPlayer(player, true), 1L);
+        OreScheduler.runLaterForEntity(plugin, player, () -> syncPlayer(player, true), 1L);
     }
 
     private void processWebAction(Player player, String type, String materialName, int amount) {
@@ -643,7 +644,7 @@ public class WebPanelSyncService implements Listener {
             fr.elias.oreoEssentials.modules.orders.OrdersModule om = plugin.getOrdersModule();
             if (om != null && om.enabled()) {
                 om.getService().cancelOrder(player, materialName);
-                Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, this::syncAllOrders, 20L);
+                OreScheduler.runAsyncLater(plugin, this::syncAllOrders, 20L);
             }
             return;
         }
@@ -657,7 +658,7 @@ public class WebPanelSyncService implements Listener {
                 om.getService().fillOrder(player, materialName, amount)
                     .thenAccept(result -> {
                         // Back onto the main thread for player messaging
-                        Bukkit.getScheduler().runTask(plugin, () -> {
+                        OreScheduler.runForEntity(plugin, player, () -> {
                             if (result != null && result.isSuccess()) {
                                 player.sendMessage("§a[Web Panel] §fOrder filled! You sold §e"
                                         + result.getFilledQty() + " §fitem(s) and received §a"
@@ -672,7 +673,7 @@ public class WebPanelSyncService implements Listener {
                                         syncPlayer(requester, true);
                                     }
                                 }
-                                Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, this::syncAllOrders, 20L);
+                                OreScheduler.runAsyncLater(plugin, this::syncAllOrders, 20L);
                             } else {
                                 String reason = result != null ? result.getOutcome().name() : "ERROR";
                                 player.sendMessage("§c[Web Panel] §fOrder fill failed: §e"
@@ -681,7 +682,7 @@ public class WebPanelSyncService implements Listener {
                         });
                     })
                     .exceptionally(e -> {
-                        Bukkit.getScheduler().runTask(plugin, () ->
+                        OreScheduler.runForEntity(plugin, player, () ->
                                 player.sendMessage("§c[Web Panel] §fFill order error."));
                         plugin.getLogger().warning("[WebPanel] fillOrder error: " + e.getMessage());
                         return null;
@@ -734,7 +735,7 @@ public class WebPanelSyncService implements Listener {
             }
             player.updateInventory();
             // 1-tick delay ensures NMS commits the slot changes before we read them back
-            Bukkit.getScheduler().runTaskLater(plugin, () -> syncPlayer(player, true), 1L);
+            OreScheduler.runLaterForEntity(plugin, player, () -> syncPlayer(player, true), 1L);
 
         } else if ("SELL".equals(type)) {
             ShopModule shopModule = plugin.getShopModule();
@@ -787,7 +788,7 @@ public class WebPanelSyncService implements Listener {
                     cs != null ? currencyId : shopModule.getEconomy().getEconomyName());
 
             // 1-tick delay ensures NMS commits the slot changes before we read them back
-            Bukkit.getScheduler().runTaskLater(plugin, () -> syncPlayer(player, true), 1L);
+            OreScheduler.runLaterForEntity(plugin, player, () -> syncPlayer(player, true), 1L);
 
         } else if ("ADMIN_DELETE_ITEM".equals(type)) {
             // Admin-initiated removal: same logic as DELETE but invoked for any player
@@ -805,7 +806,7 @@ public class WebPanelSyncService implements Listener {
                 remaining -= take;
             }
             player.updateInventory();
-            Bukkit.getScheduler().runTaskLater(plugin, () -> syncPlayer(player, true), 1L);
+            OreScheduler.runLaterForEntity(plugin, player, () -> syncPlayer(player, true), 1L);
         }
     }
 

@@ -5,6 +5,7 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -72,7 +73,7 @@ public class SkinCommand implements OreoCommand, org.bukkit.command.TabCompleter
 
         self.sendMessage(ChatColor.GRAY + "Fetching skin for " + ChatColor.WHITE + target + ChatColor.GRAY + "...");
 
-        Bukkit.getScheduler().runTaskAsynchronously(OreoEssentials.get(), () -> {
+        OreScheduler.runAsync(OreoEssentials.get(), () -> {
             UUID uuid = MojangSkinFetcher.fetchUuid(target);
             if (uuid == null) {
                 self.sendMessage(ChatColor.RED + "Player '" + target + "' not found.");
@@ -88,7 +89,7 @@ public class SkinCommand implements OreoCommand, org.bukkit.command.TabCompleter
             }
 
             // Step 3: Apply the skin on main thread
-            Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+            OreScheduler.run(OreoEssentials.get(), () -> {
                 applySkin(self, profile, target);
             });
         });
@@ -135,13 +136,13 @@ public class SkinCommand implements OreoCommand, org.bukkit.command.TabCompleter
     private void resetSkin(Player player) {
         player.sendMessage(ChatColor.GRAY + "Restoring your original skin...");
 
-        Bukkit.getScheduler().runTaskAsynchronously(OreoEssentials.get(), () -> {
+        OreScheduler.runAsync(OreoEssentials.get(), () -> {
             try {
                 PlayerProfile original = Bukkit.createProfile(player.getUniqueId(), player.getName());
 
                 PlayerProfile updated = original.update().get(10, java.util.concurrent.TimeUnit.SECONDS);
 
-                Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+                OreScheduler.run(OreoEssentials.get(), () -> {
                     boolean applied = SkinUtil.applyProfile(player, updated);
 
                     if (applied) {
@@ -153,13 +154,13 @@ public class SkinCommand implements OreoCommand, org.bukkit.command.TabCompleter
                 });
 
             } catch (java.util.concurrent.TimeoutException e) {
-                Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+                OreScheduler.run(OreoEssentials.get(), () -> {
                     player.sendMessage(ChatColor.RED + "Failed to reset skin: Request timed out.");
                     player.sendMessage(ChatColor.GRAY + "The Mojang API may be slow. Try again later.");
                     SkinDebug.log("Reset skin timeout for " + player.getName());
                 });
             } catch (Exception e) {
-                Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+                OreScheduler.run(OreoEssentials.get(), () -> {
                     player.sendMessage(ChatColor.RED + "Failed to reset skin: " + e.getMessage());
                     SkinDebug.log("Reset skin error for " + player.getName() + ": " + e);
                     e.printStackTrace();

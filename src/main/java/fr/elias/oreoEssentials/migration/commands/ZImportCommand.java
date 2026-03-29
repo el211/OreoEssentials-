@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.migration.commands;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.migration.ZEssentialsEconomyImporter;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.migration.ZEssentialsHomeImporter;
 import fr.elias.oreoEssentials.migration.ZEssentialsWarpImporter;
 import fr.elias.oreoEssentials.modules.homes.home.HomeDirectory;
@@ -99,7 +100,7 @@ public class ZImportCommand implements OreoCommand {
         final boolean fSkip = skipExisting;
         final String  serverName = plugin.getConfig().getString("server.name", "server-1");
 
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             try (Connection conn = DriverManager.getConnection(url, user.isEmpty() ? null : user,
                                                                     pass.isEmpty() ? null : pass)) {
                 int homesCount = 0, warpsCount = 0, econCount = 0;

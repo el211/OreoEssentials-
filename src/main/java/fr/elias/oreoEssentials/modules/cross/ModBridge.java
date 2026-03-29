@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.cross;
 import com.google.gson.Gson;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.cross.rabbit.packets.CrossModPacket;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.rabbitmq.PacketChannels;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.cross.rabbit.packets.CrossInvPacket;
@@ -209,7 +210,7 @@ public final class ModBridge {
             return;
         }
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             Player p = Bukkit.getPlayer(pkt.getTarget());
             if (p == null || !p.isOnline()) return;
 

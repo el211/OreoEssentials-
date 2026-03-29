@@ -3,6 +3,9 @@
 package fr.elias.oreoEssentials.modules.nametag;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.modules.scoreboard.FoliaScoreboard;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.luckperms.api.LuckPerms;
@@ -18,9 +21,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class PlayerNametagManager implements Listener {
@@ -35,7 +41,10 @@ public class PlayerNametagManager implements Listener {
     private String teamSuffix;
     private int updateInterval;
 
-    private BukkitRunnable updateTask;
+    private OreTask updateTask;
+
+    /** Folia path: NMS PlayerTeam objects (as Object) keyed by team name. All access via reflection. */
+    private final ConcurrentHashMap<String, Object> foliaTeams = new ConcurrentHashMap<>();
 
     public PlayerNametagManager(OreoEssentials plugin, FileConfiguration config) {
         Bukkit.getLogger().info("[Nametag] Initializing SCOREBOARD-INTEGRATED system...");
@@ -49,7 +58,7 @@ public class PlayerNametagManager implements Listener {
             Bukkit.getPluginManager().registerEvents(this, plugin);
             startUpdateTask();
 
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            OreScheduler.runLater(plugin, () -> {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     updateNametag(player);
                 }
@@ -73,18 +82,13 @@ public class PlayerNametagManager implements Listener {
             updateTask.cancel();
         }
 
-        updateTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    try {
-                        updateNametag(player);
-                    } catch (Exception ignored) {}
-                }
+        updateTask = OreScheduler.runTimer(plugin, () -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                try {
+                    updateNametag(player);
+                } catch (Exception ignored) {}
             }
-        };
-
-        updateTask.runTaskTimer(plugin, 20L, updateInterval);
+        }, 20L, updateInterval);
     }
 
 
@@ -94,7 +98,7 @@ public class PlayerNametagManager implements Listener {
 
         Player player = event.getPlayer();
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        OreScheduler.runLater(plugin, () -> {
             if (player.isOnline()) {
                 updateNametag(player);
 
@@ -131,6 +135,8 @@ public class PlayerNametagManager implements Listener {
 
 
     private void updatePlayerForAllViewers(Player target) {
+        // On Folia updateTeamFolia already broadcasts to all viewers in one pass
+        if (OreScheduler.isFolia()) return;
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             if (viewer == target) continue; // Already updated above
 
@@ -145,15 +151,16 @@ public class PlayerNametagManager implements Listener {
 
 
     private void updateTeamOnScoreboard(Player player, Scoreboard scoreboard) {
+        if (OreScheduler.isFolia()) {
+            updateTeamFolia(player);
+            return;
+        }
         if (scoreboard == null) return;
 
         try {
-            String teamName = "nt_" + player.getName().toLowerCase();
-            if (teamName.length() > 16) {
-                teamName = teamName.substring(0, 16);
-            }
+            String teamName = getTeamName(player);
 
-            Team team = scoreboard.getTeam(teamName);
+            org.bukkit.scoreboard.Team team = scoreboard.getTeam(teamName);
             if (team == null) {
                 team = scoreboard.registerNewTeam(teamName);
             }
@@ -178,7 +185,8 @@ public class PlayerNametagManager implements Listener {
             team.setPrefix(prefix);
             team.setSuffix(suffix);
 
-            team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
+            team.setOption(org.bukkit.scoreboard.Team.Option.NAME_TAG_VISIBILITY,
+                    org.bukkit.scoreboard.Team.OptionStatus.ALWAYS);
 
         } catch (Exception e) {
             Bukkit.getLogger().warning("[Nametag] Failed to update team for " + player.getName()
@@ -186,11 +194,104 @@ public class PlayerNametagManager implements Listener {
         }
     }
 
+    /**
+     * Folia path: Bukkit Scoreboard API is fully blocked on Folia.
+     * Build NMS PlayerTeam via reflection and send ClientboundSetPlayerTeamPacket
+     * directly to every viewer's connection.send() — which IS thread-safe in Folia.
+     */
+    private void updateTeamFolia(Player player) {
+        try {
+            String teamName = getTeamName(player);
+
+            String prefix = ChatColor.translateAlternateColorCodes('&',
+                    replacePlaceholders(this.teamPrefix, player));
+            String suffix = ChatColor.translateAlternateColorCodes('&',
+                    replacePlaceholders(this.teamSuffix, player));
+
+            // ── Reflect NMS classes ───────────────────────────────────────────
+            Class<?> cPlayerTeam = Class.forName("net.minecraft.world.scores.PlayerTeam");
+            Class<?> cSb = Class.forName("net.minecraft.world.scores.Scoreboard");
+            Class<?> cVisibility = Class.forName("net.minecraft.world.scores.Team$Visibility");
+            Class<?> cNmsComp = Class.forName("net.minecraft.network.chat.Component");
+            Class<?> cTeamPkt = Class.forName("net.minecraft.network.protocol.game.ClientboundSetPlayerTeamPacket");
+
+            // ── Get / create the PlayerTeam ───────────────────────────────────
+            boolean isNew = !foliaTeams.containsKey(teamName);
+            Object team = foliaTeams.computeIfAbsent(teamName, n -> {
+                try {
+                    Object t = cPlayerTeam.getDeclaredConstructor(cSb, String.class)
+                            .newInstance(FoliaScoreboard.DUMMY_SCOREBOARD, n);
+                    return t;
+                } catch (Throwable ex) { return null; }
+            });
+            if (team == null) return;
+
+            // ── Set prefix / suffix ───────────────────────────────────────────
+            Object nmsPrefix = FoliaScoreboard.toNms(
+                    LegacyComponentSerializer.legacySection().deserialize(prefix));
+            Object nmsSuffix = FoliaScoreboard.toNms(
+                    LegacyComponentSerializer.legacySection().deserialize(suffix));
+
+            Method setPrefix = cPlayerTeam.getDeclaredMethod("setPlayerPrefix", cNmsComp);
+            Method setSuffix = cPlayerTeam.getDeclaredMethod("setPlayerSuffix", cNmsComp);
+            setPrefix.setAccessible(true);
+            setSuffix.setAccessible(true);
+            setPrefix.invoke(team, nmsPrefix);
+            setSuffix.invoke(team, nmsSuffix);
+
+            // ── Set visibility to ALWAYS ──────────────────────────────────────
+            Method setVis = cPlayerTeam.getDeclaredMethod("setNameTagVisibility", cVisibility);
+            setVis.setAccessible(true);
+            Object visAlways = cVisibility.getField("ALWAYS").get(null);
+            setVis.invoke(team, visAlways);
+
+            // ── Add player to the team's player set ───────────────────────────
+            Method getPlayers = cPlayerTeam.getDeclaredMethod("getPlayers");
+            getPlayers.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            Collection<String> players = (Collection<String>) getPlayers.invoke(team);
+            if (!players.contains(player.getName())) {
+                players.add(player.getName());
+                isNew = true;
+            }
+
+            // ── Build and broadcast the packet ────────────────────────────────
+            Method createPkt = cTeamPkt.getDeclaredMethod("createAddOrModifyPacket", cPlayerTeam, boolean.class);
+            createPkt.setAccessible(true);
+            Object packet = createPkt.invoke(null, team, isNew);
+
+            for (Player viewer : Bukkit.getOnlinePlayers()) {
+                try { FoliaScoreboard.sendPacketToPlayer(viewer, packet); } catch (Throwable ignored) {}
+            }
+        } catch (Throwable ignored) {
+            // Nametag is purely cosmetic — never crash on it
+        }
+    }
+
+
+    private static String getTeamName(Player player) {
+        String name = "nt_" + player.getName().toLowerCase();
+        return name.length() > 16 ? name.substring(0, 16) : name;
+    }
 
     private void removePlayerFromAllScoreboards(Player player) {
-        String teamName = "nt_" + player.getName().toLowerCase();
-        if (teamName.length() > 16) {
-            teamName = teamName.substring(0, 16);
+        String teamName = getTeamName(player);
+
+        if (OreScheduler.isFolia()) {
+            Object team = foliaTeams.remove(teamName);
+            if (team != null) {
+                try {
+                    Class<?> cPlayerTeam = Class.forName("net.minecraft.world.scores.PlayerTeam");
+                    Class<?> cTeamPkt = Class.forName("net.minecraft.network.protocol.game.ClientboundSetPlayerTeamPacket");
+                    Method createRemove = cTeamPkt.getDeclaredMethod("createRemovePacket", cPlayerTeam);
+                    createRemove.setAccessible(true);
+                    Object pkt = createRemove.invoke(null, team);
+                    for (Player viewer : Bukkit.getOnlinePlayers()) {
+                        try { FoliaScoreboard.sendPacketToPlayer(viewer, pkt); } catch (Throwable ignored) {}
+                    }
+                } catch (Throwable ignored) {}
+            }
+            return;
         }
 
         for (Player online : Bukkit.getOnlinePlayers()) {
@@ -198,7 +299,7 @@ public class PlayerNametagManager implements Listener {
                 Scoreboard sb = online.getScoreboard();
                 if (sb == null) continue;
 
-                Team team = sb.getTeam(teamName);
+                org.bukkit.scoreboard.Team team = sb.getTeam(teamName);
                 if (team != null) {
                     team.removeEntry(player.getName());
                     if (team.getEntries().isEmpty()) {

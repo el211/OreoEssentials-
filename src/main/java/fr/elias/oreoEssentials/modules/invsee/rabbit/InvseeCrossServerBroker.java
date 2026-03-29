@@ -11,6 +11,7 @@ import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.trade.ItemStacksCodec;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.UUID;
@@ -92,17 +93,17 @@ public final class InvseeCrossServerBroker {
 
     public void handleOpenRequest(InvseeOpenRequestPacket p) {
         if (p == null || service == null) return;
-        Bukkit.getScheduler().runTask(plugin, () -> service.handleRemoteOpen(p));
+        OreScheduler.run(plugin, () -> service.handleRemoteOpen(p));
     }
 
     public void handleEdit(InvseeEditPacket p) {
         if (p == null || service == null) return;
-        Bukkit.getScheduler().runTask(plugin, () -> service.applyRemoteEdit(p));
+        OreScheduler.run(plugin, () -> service.applyRemoteEdit(p));
     }
 
     public void handleState(InvseeStatePacket p) {
         if (p == null || service == null) return;
-        Bukkit.getScheduler().runTask(plugin, () -> service.applyRemoteState(p));
+        OreScheduler.run(plugin, () -> service.applyRemoteState(p));
     }
 
     private boolean pmReady() {

@@ -3,6 +3,8 @@ package fr.elias.oreoEssentials.modules.economy.ecocommands;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.modules.economy.EconomyService;
+import fr.elias.oreoEssentials.util.Async;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -42,8 +44,12 @@ public class BalanceCommand implements OreoCommand {
                 sender.sendMessage(ChatColor.RED + "Usage: /" + label + " <player>");
                 return true;
             }
-            double bal = eco.getBalance(p.getUniqueId());
-            sender.sendMessage(ChatColor.GOLD + "Your balance: " + ChatColor.AQUA + format(bal));
+            final UUID selfId = p.getUniqueId();
+            Async.run(() -> {
+                double bal = eco.getBalance(selfId);
+                OreScheduler.runForEntity(plugin, p,
+                        () -> p.sendMessage(ChatColor.GOLD + "Your balance: " + ChatColor.AQUA + format(bal)));
+            });
             return true;
         }
 
@@ -59,9 +65,14 @@ public class BalanceCommand implements OreoCommand {
             return true;
         }
 
-        double bal = eco.getBalance(op.getUniqueId());
-        sender.sendMessage(ChatColor.GOLD + (op.getName() == null ? targetName : op.getName())
-                + ChatColor.GRAY + "'s balance: " + ChatColor.AQUA + format(bal));
+        final UUID targetId = op.getUniqueId();
+        final String displayName = op.getName() == null ? targetName : op.getName();
+        Async.run(() -> {
+            double bal = eco.getBalance(targetId);
+            OreScheduler.run(plugin, () ->
+                    sender.sendMessage(ChatColor.GOLD + displayName
+                            + ChatColor.GRAY + "'s balance: " + ChatColor.AQUA + format(bal)));
+        });
         return true;
     }
 

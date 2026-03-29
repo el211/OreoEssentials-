@@ -8,6 +8,8 @@ import fr.elias.oreoEssentials.modules.tp.rabbit.packets.TpaRequestPacket;
 import fr.elias.oreoEssentials.modules.tp.rabbit.packets.TpaSummonPacket;
 import fr.elias.oreoEssentials.modules.tp.service.TeleportService;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import fr.elias.oreoEssentials.util.ProxyMessenger;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -75,7 +77,7 @@ public final class TpaCrossServerBroker implements Listener {
         }
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
-        Bukkit.getScheduler().runTaskTimer(plugin, this::purgeExpired, 20L * 30, 20L * 30);
+        OreScheduler.runTimer(plugin, this::purgeExpired, 20L * 30, 20L * 30);
     }
 
     public void sendRequestToServer(Player requester, UUID targetUuid, String destServer) {
@@ -136,7 +138,7 @@ public final class TpaCrossServerBroker implements Listener {
                 + " from=" + p.fromServer + " to=" + localServer
                 + " (target=" + target.getName() + ")");
 
-        Bukkit.getScheduler().runTaskLater(plugin,
+        OreScheduler.runLater(plugin,
                 () -> pendingArrival.remove(p.requesterUuid), 20L * 60);
 
         return true;
@@ -222,48 +224,45 @@ public final class TpaCrossServerBroker implements Listener {
         dbg("Starting cross-server TPA countdown for requester=" + requester.getName()
                 + " destServer=" + destServer + " seconds=" + seconds);
 
-        new org.bukkit.scheduler.BukkitRunnable() {
-            int remain = seconds;
-
-            @Override
-            public void run() {
-                if (!requester.isOnline()) {
-                    dbg("Requester went offline during cross-server countdown; cancel.");
-                    cancel();
-                    return;
-                }
-
-                if (hasBodyMoved(requester, origin)) {
-                    Lang.send(requester, "teleport.countdown.cancelled-moved",
-                            "<red>Teleport cancelled: you moved.</red>");
-                    dbg("Requester moved; cancelling cross-server countdown.");
-                    cancel();
-                    return;
-                }
-
-                if (remain <= 0) {
-                    cancel();
-                    dbg("Cross-server countdown finished; connecting " + requester.getName() + " -> " + destServer);
-                    boolean ok = connectToServer(requester, destServer);
-                    if (ok) {
-                        Lang.send(requester, "tpa.cross.connecting",
-                                "<gray>Connecting you to</gray> <yellow>%server%</yellow><gray>…</gray>",
-                                Map.of("server", destServer));
-                    } else {
-                        plugin.getLogger().warning("[TPA-X] Failed to connect " + requester.getName() + " to " + destServer);
-                    }
-                    return;
-                }
-
-                String title = Lang.msg("teleport.countdown.title", "<yellow>Teleporting…</yellow>", requester);
-                String subtitle = Lang.msgWithDefault("teleport.countdown.subtitle",
-                        "<gray>Teleporting in <white>%seconds%</white>s…</gray>",
-                        Map.of("seconds", String.valueOf(remain)), requester);
-
-                requester.sendTitle(title, subtitle, 0, 20, 0);
-                remain--;
+        final int[] remain = {seconds};
+        final OreTask[] taskHolder = new OreTask[1];
+        taskHolder[0] = OreScheduler.runTimerForEntity(plugin, requester, () -> {
+            if (!requester.isOnline()) {
+                dbg("Requester went offline during cross-server countdown; cancel.");
+                taskHolder[0].cancel();
+                return;
             }
-        }.runTaskTimer(plugin, 0L, 20L);
+
+            if (hasBodyMoved(requester, origin)) {
+                Lang.send(requester, "teleport.countdown.cancelled-moved",
+                        "<red>Teleport cancelled: you moved.</red>");
+                dbg("Requester moved; cancelling cross-server countdown.");
+                taskHolder[0].cancel();
+                return;
+            }
+
+            if (remain[0] <= 0) {
+                taskHolder[0].cancel();
+                dbg("Cross-server countdown finished; connecting " + requester.getName() + " -> " + destServer);
+                boolean ok = connectToServer(requester, destServer);
+                if (ok) {
+                    Lang.send(requester, "tpa.cross.connecting",
+                            "<gray>Connecting you to</gray> <yellow>%server%</yellow><gray>…</gray>",
+                            Map.of("server", destServer));
+                } else {
+                    plugin.getLogger().warning("[TPA-X] Failed to connect " + requester.getName() + " to " + destServer);
+                }
+                return;
+            }
+
+            String title = Lang.msg("teleport.countdown.title", "<yellow>Teleporting…</yellow>", requester);
+            String subtitle = Lang.msgWithDefault("teleport.countdown.subtitle",
+                    "<gray>Teleporting in <white>%seconds%</white>s…</gray>",
+                    Map.of("seconds", String.valueOf(remain[0])), requester);
+
+            requester.sendTitle(title, subtitle, 0, 20, 0);
+            remain[0]--;
+        }, 0L, 20L);
     }
 
     private boolean hasBodyMoved(Player p, Location origin) {
@@ -283,7 +282,7 @@ public final class TpaCrossServerBroker implements Listener {
             return;
         }
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        OreScheduler.runLaterForEntity(plugin, e.getPlayer(), () -> {
             try {
                 Location to = target.getLocation();
                 e.getPlayer().teleport(to);

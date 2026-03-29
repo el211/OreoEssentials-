@@ -1,12 +1,13 @@
 package fr.elias.oreoEssentials.modules.playtime;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,7 @@ public final class PrewardsListeners implements Listener {
     private final OreoEssentials plugin;
     private final PlaytimeRewardsService svc;
 
-    private final Map<UUID, BukkitTask> remindTasks = new HashMap<>();
+    private final Map<UUID, OreTask> remindTasks = new HashMap<>();
 
     public PrewardsListeners(OreoEssentials plugin, PlaytimeRewardsService svc) {
         this.plugin = plugin;
@@ -32,11 +33,12 @@ public final class PrewardsListeners implements Listener {
         final int mins = svc.notifyEveryMinutes;
         if (mins <= 0) return;
 
-        BukkitTask old = remindTasks.remove(p.getUniqueId());
+        OreTask old = remindTasks.remove(p.getUniqueId());
         if (old != null) old.cancel();
 
-        BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(
+        OreTask task = OreScheduler.runTimerForEntity(
                 plugin,
+                p,
                 () -> {
                     if (!p.isOnline()) return;
                     int ready = svc.rewardsReady(p).size();
@@ -55,7 +57,7 @@ public final class PrewardsListeners implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         UUID id = e.getPlayer().getUniqueId();
-        BukkitTask task = remindTasks.remove(id);
+        OreTask task = remindTasks.remove(id);
         if (task != null) task.cancel();
     }
 }

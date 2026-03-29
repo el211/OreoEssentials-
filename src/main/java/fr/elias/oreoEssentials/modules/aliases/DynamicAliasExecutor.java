@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.aliases;
 
+import fr.elias.oreoEssentials.util.OreScheduler;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -195,7 +196,7 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
 
         ExecStep step = plan.get(i);
         if (step instanceof DelayStep ds) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> runStepsRecursive(sender, player, plan, i + 1), ds.delayTicks);
+            OreScheduler.runLater(plugin, () -> runStepsRecursive(sender, player, plan, i + 1), ds.delayTicks);
             return;
         }
 

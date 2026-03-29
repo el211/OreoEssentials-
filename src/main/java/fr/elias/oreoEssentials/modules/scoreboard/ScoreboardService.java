@@ -2,6 +2,8 @@ package fr.elias.oreoEssentials.modules.scoreboard;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -21,6 +23,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import io.papermc.paper.scoreboard.numbers.NumberFormat;
 
+import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -47,9 +50,11 @@ public final class ScoreboardService implements Listener {
     private final OreoEssentials plugin;
     private ScoreboardConfig cfg;
     private AnimatedText titleAnim;
-    private final Set<UUID>          shown   = ConcurrentHashMap.newKeySet();
-    private final Map<UUID, Boolean> toggles = new ConcurrentHashMap<>();
-    private int taskId = -1;
+    private final Set<UUID>          shown       = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, Boolean> toggles     = new ConcurrentHashMap<>();
+    private final Map<UUID, FoliaScoreboard> foliaBoards  = new ConcurrentHashMap<>();
+    private final Map<UUID, Scoreboard>      playerBoards = new ConcurrentHashMap<>();
+    private OreTask taskId = null;
 
     public ScoreboardService(OreoEssentials plugin, ScoreboardConfig cfg) {
         this.plugin    = plugin;
@@ -64,15 +69,18 @@ public final class ScoreboardService implements Listener {
     public void start() {
         if (!cfg.enabled()) return;
 
+        plugin.getLogger().info("[Scoreboard] Starting — Folia=" + OreScheduler.isFolia()
+                + " FoliaScoreboardAvailable=" + fr.elias.oreoEssentials.modules.scoreboard.FoliaScoreboard.AVAILABLE);
+
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        OreScheduler.runLater(plugin, () -> {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 if (shouldShow(p)) show(p);
             }
         }, 5L);
 
-        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
+        taskId = OreScheduler.runTimer(plugin, () -> {
             titleAnim.tick();
 
             for (UUID id : List.copyOf(shown)) {
@@ -82,25 +90,42 @@ public final class ScoreboardService implements Listener {
                     toggles.remove(id);
                     continue;
                 }
-                if (!shouldShow(p)) {
-                    hide(p);
-                    continue;
+                if (OreScheduler.isFolia()) {
+                    // On Folia, player state (world name, PAPI placeholders, etc.) must be
+                    // accessed from the entity's own region thread.  Dispatch per-player work
+                    // there so we never violate Folia's thread-ownership checks.
+                    OreScheduler.runForEntity(plugin, p, () -> {
+                        if (!p.isOnline()) { shown.remove(id); return; }
+                        if (!shouldShow(p)) { hide(p); return; }
+                        refresh(p);
+                    });
+                } else {
+                    if (!shouldShow(p)) {
+                        hide(p);
+                        continue;
+                    }
+                    refresh(p);
                 }
-                refresh(p);
             }
         }, cfg.updateTicks(), cfg.updateTicks());
     }
 
     public void stop() {
-        if (taskId != -1) {
-            Bukkit.getScheduler().cancelTask(taskId);
-            taskId = -1;
+        if (taskId != null) {
+            taskId.cancel();
+            taskId = null;
         }
         for (UUID id : List.copyOf(shown)) {
             Player p = Bukkit.getPlayer(id);
             if (p != null) clearBoard(p);
         }
         shown.clear();
+        playerBoards.clear();
+        // Clean up Folia NMS scoreboards
+        for (FoliaScoreboard fs : foliaBoards.values()) {
+            try { fs.hide(); } catch (Throwable ignored) {}
+        }
+        foliaBoards.clear();
         HandlerList.unregisterAll(this);
     }
 
@@ -146,27 +171,106 @@ public final class ScoreboardService implements Listener {
         toggles.put(id, true);
     }
 
+    // -------------------------------------------------------------------------
+    // Folia NMS-packet path helpers
+    // -------------------------------------------------------------------------
+
+    /** Renders the current title frame as an Adventure Component. */
+    private Component getFoliaTitle(Player p) {
+        return renderToComponent(p, titleAnim.current());
+    }
+
+    /** Renders all config lines as Adventure Components (honoring \\n splits). */
+    private List<Component> getFoliaLines(Player p) {
+        List<String> cfgLines = cfg.lines();
+        List<Component> result = new ArrayList<>();
+        for (String raw : cfgLines) {
+            String rendered = renderToLegacyString(p, raw);
+            if (rendered.contains("\n")) {
+                for (String part : rendered.split("\n")) {
+                    if (!part.trim().isEmpty()) result.add(LEGACY.deserialize(truncateVisible(part, 80)));
+                }
+            } else {
+                result.add(LEGACY.deserialize(truncateVisible(rendered, 80)));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Creates a fresh {@link Scoreboard}.
+     * On Paper this delegates to {@code ScoreboardManager.getNewScoreboard()}.
+     * On Folia that method throws {@code UnsupportedOperationException}
+     * unconditionally (Folia blocks it at the API level regardless of calling
+     * thread).  We work around this by constructing the NMS Scoreboard directly
+     * via reflection — the underlying NMS class is thread-safe to instantiate;
+     * only the Bukkit API wrapper throws.
+     */
+    private static Scoreboard newScoreboard() {
+        if (!OreScheduler.isFolia()) {
+            ScoreboardManager mgr = Bukkit.getScoreboardManager();
+            return (mgr != null) ? mgr.getNewScoreboard() : null;
+        }
+        // Folia path: bypass the API guard via NMS reflection.
+        // Paper remaps plugin classes to Mojang names at load time, so these
+        // class names are stable across 1.20.5+ builds.
+        try {
+            Class<?> nmsClass   = Class.forName("net.minecraft.world.scores.Scoreboard");
+            Class<?> craftClass = Class.forName("org.bukkit.craftbukkit.scoreboard.CraftScoreboard");
+            Object   nmsBoard   = nmsClass.getDeclaredConstructor().newInstance();
+            Constructor<?> ctor = craftClass.getDeclaredConstructor(nmsClass);
+            ctor.setAccessible(true);
+            return (Scoreboard) ctor.newInstance(nmsBoard);
+        } catch (Throwable t) {
+            // Reflection failed (e.g. future Folia changes class structure).
+            // Fall back to main scoreboard so the player at least gets a board.
+            ScoreboardManager mgr = Bukkit.getScoreboardManager();
+            return (mgr != null) ? mgr.getMainScoreboard() : null;
+        }
+    }
+
     public void show(Player p) {
         if (!cfg.enabled()) return;
         if (isShown(p)) return;
 
-        ScoreboardManager mgr = Bukkit.getScoreboardManager();
-        if (mgr == null) return;
+        if (OreScheduler.isFolia()) {
+            FoliaScoreboard fs = foliaBoards.computeIfAbsent(p.getUniqueId(), id -> new FoliaScoreboard(p));
+            try { fs.show(getFoliaTitle(p), getFoliaLines(p)); } catch (Throwable ignored) {}
+            shown.add(p.getUniqueId());
+            return;
+        }
 
-        Scoreboard board = mgr.getNewScoreboard();
-        Objective  obj   = board.registerNewObjective(OBJ_NAME, "dummy");
-        obj.setDisplaySlot(DisplaySlot.SIDEBAR);
-        obj.numberFormat(NumberFormat.blank());
-        safeSetTitle(p, obj);
-        applyLines(p, board, obj);
+        try {
+            Scoreboard board = newScoreboard();
+            if (board == null) {
+                plugin.getLogger().warning("[Scoreboard] newScoreboard() returned null for " + p.getName());
+                return;
+            }
+            Objective  obj   = board.registerNewObjective(OBJ_NAME, "dummy");
+            obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+            obj.numberFormat(NumberFormat.blank());
+            safeSetTitle(p, obj);
+            applyLines(p, board, obj);
 
-        p.setScoreboard(board);
-        shown.add(p.getUniqueId());
+            p.setScoreboard(board);
+            playerBoards.put(p.getUniqueId(), board);
+            shown.add(p.getUniqueId());
+            plugin.getLogger().info("[Scoreboard] Shown for " + p.getName());
+        } catch (Throwable t) {
+            plugin.getLogger().warning("[Scoreboard] show() Paper path failed for " + p.getName() + ": " + t);
+        }
 
-        Bukkit.getScheduler().runTask(plugin, () -> forceNametagUpdate(p));
+        OreScheduler.runForEntity(plugin, p, () -> forceNametagUpdate(p));
     }
 
     public void hide(Player p) {
+        if (OreScheduler.isFolia()) {
+            FoliaScoreboard fs = foliaBoards.remove(p.getUniqueId());
+            if (fs != null) { try { fs.hide(); } catch (Throwable ignored) {} }
+            shown.remove(p.getUniqueId());
+            return;
+        }
+        playerBoards.remove(p.getUniqueId());
         clearBoard(p);
         shown.remove(p.getUniqueId());
     }
@@ -176,22 +280,41 @@ public final class ScoreboardService implements Listener {
     // -------------------------------------------------------------------------
 
     private void clearBoard(Player p) {
+        if (OreScheduler.isFolia()) {
+            FoliaScoreboard fs = foliaBoards.get(p.getUniqueId());
+            if (fs != null) { try { fs.hide(); } catch (Throwable ignored) {} }
+            return;
+        }
         try {
-            ScoreboardManager mgr = Bukkit.getScoreboardManager();
-            if (mgr != null) p.setScoreboard(mgr.getNewScoreboard());
+            Scoreboard blank = newScoreboard();
+            if (blank != null) p.setScoreboard(blank);
         } catch (Throwable ignored) {}
-        Bukkit.getScheduler().runTask(plugin, () -> forceNametagUpdate(p));
+        OreScheduler.runForEntity(plugin, p, () -> forceNametagUpdate(p));
     }
 
     private void refresh(Player p) {
-        Scoreboard board = p.getScoreboard();
-        if (board == null) {
-            ScoreboardManager mgr = Bukkit.getScoreboardManager();
-            if (mgr == null) return;
-            board = mgr.getNewScoreboard();
-            p.setScoreboard(board);
-            forceNametagUpdate(p);
+        if (OreScheduler.isFolia()) {
+            FoliaScoreboard fs = foliaBoards.get(p.getUniqueId());
+            if (fs == null || !fs.isActive()) {
+                shown.remove(p.getUniqueId()); // let show() re-add it
+                show(p);
+            } else {
+                try { fs.show(getFoliaTitle(p), getFoliaLines(p)); } catch (Throwable ignored) {}
+            }
+            return;
         }
+
+        // Re-assert our stored board — other plugins (e.g. ViaVersion) may have called
+        // p.setScoreboard() after us, replacing it. Re-setting ours every tick is cheap
+        // and ensures the sidebar reappears immediately rather than waiting for the
+        // next resync cycle.
+        Scoreboard board = playerBoards.get(p.getUniqueId());
+        if (board == null) {
+            board = newScoreboard();
+            if (board == null) return;
+            playerBoards.put(p.getUniqueId(), board);
+        }
+        p.setScoreboard(board);
 
         Objective obj = board.getObjective(OBJ_NAME);
         if (obj == null) {
@@ -212,7 +335,11 @@ public final class ScoreboardService implements Listener {
             }
         } catch (Throwable ignored) {}
 
-        applyLines(p, board, obj);
+        try {
+            applyLines(p, board, obj);
+        } catch (Throwable t) {
+            plugin.getLogger().warning("[Scoreboard] refresh() applyLines failed for " + p.getName() + ": " + t);
+        }
         forceNametagUpdate(p);
     }
 
@@ -588,16 +715,35 @@ public final class ScoreboardService implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         if (!cfg.enabled()) return;
         Player p = e.getPlayer();
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (shouldShow(p)) show(p);
-            else forceNametagUpdate(p);
-        }, 2L);
+
+        if (OreScheduler.isFolia()) {
+            // On Folia: use entity scheduler so the task runs on the player's region
+            // thread. This ensures PAPI placeholders can access player data safely and
+            // that the scoreboard packets are sent after the client has finished its
+            // login sequence (20 ticks = 1 s delay).
+            OreScheduler.runLaterForEntity(plugin, p, () -> {
+                if (p.isOnline() && shouldShow(p)) show(p);
+                else if (p.isOnline()) forceNametagUpdate(p);
+            }, 20L);
+        } else {
+            // Paper: global scheduler on main thread, 2-tick delay is fine.
+            OreScheduler.runLater(plugin, () -> {
+                if (shouldShow(p)) show(p);
+                else forceNametagUpdate(p);
+            }, 2L);
+        }
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        shown.remove(e.getPlayer().getUniqueId());
-        toggles.remove(e.getPlayer().getUniqueId());
+        UUID id = e.getPlayer().getUniqueId();
+        shown.remove(id);
+        toggles.remove(id);
+        playerBoards.remove(id);
+        // Must remove Folia scoreboard on quit so the next login creates a fresh
+        // instance with the new Player reference (not the stale old one).
+        FoliaScoreboard fs = foliaBoards.remove(id);
+        if (fs != null) { try { fs.hide(); } catch (Throwable ignored) {} }
     }
 
     @EventHandler
@@ -621,8 +767,13 @@ public final class ScoreboardService implements Listener {
     }
 
     private boolean shouldShow(Player p) {
-        if (!isWorldAllowedByLists(p)) return false;
+        if (!isWorldAllowedByLists(p)) {
+            plugin.getLogger().info("[Scoreboard] shouldShow=" + false + " for " + p.getName() + " (world blocked: " + p.getWorld().getName() + ")");
+            return false;
+        }
         Boolean pref = toggles.get(p.getUniqueId());
-        return pref == null ? cfg.defaultEnabled() : pref;
+        boolean result = pref == null ? cfg.defaultEnabled() : pref;
+        if (!result) plugin.getLogger().info("[Scoreboard] shouldShow=false for " + p.getName() + " (pref=" + pref + " defaultEnabled=" + cfg.defaultEnabled() + ")");
+        return result;
     }
 }

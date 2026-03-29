@@ -20,6 +20,8 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -64,8 +66,8 @@ public final class AuctionHouseModule {
     private static AuctionHouseModule instance;
     public static AuctionHouseModule getInstance() { return instance; }
 
-    private int expirationTaskId = -1;
-    private int autoSaveTaskId   = -1;
+    private OreTask expirationTask = OreTask.EMPTY;
+    private OreTask autoSaveTask   = OreTask.EMPTY;
 
     public AuctionHouseModule(OreoEssentials plugin) {
         this.plugin = plugin;
@@ -74,8 +76,8 @@ public final class AuctionHouseModule {
 
 
     public synchronized void reload() {
-        if (expirationTaskId != -1) Bukkit.getScheduler().cancelTask(expirationTaskId);
-        if (autoSaveTaskId   != -1) Bukkit.getScheduler().cancelTask(autoSaveTaskId);
+        expirationTask.cancel();
+        autoSaveTask.cancel();
 
         cfg = new AuctionHouseConfig(plugin);
         if (!cfg.enabled()) {
@@ -105,8 +107,8 @@ public final class AuctionHouseModule {
     public void stop() {
         instance = null;
         pendingSells.clear();
-        if (expirationTaskId != -1) Bukkit.getScheduler().cancelTask(expirationTaskId);
-        if (autoSaveTaskId   != -1) Bukkit.getScheduler().cancelTask(autoSaveTaskId);
+        expirationTask.cancel();
+        autoSaveTask.cancel();
         saveAuctions();
         if (storage != null) try { storage.flush(); } catch (Throwable ignored) {}
     }
@@ -174,7 +176,7 @@ public final class AuctionHouseModule {
                 Map.of("price", formatMoney(price), "duration", durationHours + "h")));
 
         if (cfg.discordEnabled()) {
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () ->
+            OreScheduler.runAsync(plugin, () ->
                     new DiscordWebhook(cfg.discordWebhookUrl())
                             .setBotName(cfg.discordBotName())
                             .setBotAvatarUrl(cfg.discordBotAvatar())
@@ -253,7 +255,7 @@ public final class AuctionHouseModule {
         }
 
         if (cfg.discordEnabled()) {
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () ->
+            OreScheduler.runAsync(plugin, () ->
                     new DiscordWebhook(cfg.discordWebhookUrl())
                             .setBotName(cfg.discordBotName())
                             .setTitle("Item Sold!")
@@ -426,7 +428,7 @@ public final class AuctionHouseModule {
 
         final double finalPrice = price;
         final PendingSell ps = pending;
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             try {
                 fr.elias.oreoEssentials.modules.auctionhouse.gui.SellGUI
                         .getInventory(this, ps.item(), finalPrice, ps.durationHours(), null, ps.currencyId())
@@ -474,7 +476,7 @@ public final class AuctionHouseModule {
         // Push the updated listing to every player with BrowseGUI already open.
         // Must run on the main thread — RabbitMQ callbacks arrive off-thread.
         if (!browseViewers.isEmpty()) {
-            Bukkit.getScheduler().runTask(plugin, this::refreshAllBrowseViewers);
+            OreScheduler.run(plugin, this::refreshAllBrowseViewers);
         }
     }
 
@@ -574,10 +576,10 @@ public final class AuctionHouseModule {
     }
 
     private void startTasks() {
-        expirationTaskId = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin,
-                this::checkExpiredAuctions, 20L * 60, 20L * 60).getTaskId();
-        autoSaveTaskId = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin,
-                this::saveAuctions, 20L * 300, 20L * 300).getTaskId();
+        expirationTask = OreScheduler.runAsyncTimer(plugin,
+                this::checkExpiredAuctions, 20L * 60, 20L * 60);
+        autoSaveTask = OreScheduler.runAsyncTimer(plugin,
+                this::saveAuctions, 20L * 300, 20L * 300);
     }
 
     private com.mongodb.client.MongoClient getMongoClient() {

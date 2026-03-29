@@ -6,6 +6,7 @@ import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.*;
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -24,7 +25,7 @@ public final class SkinRefresherProtocolLib implements SkinRefresher {
         SkinDebug.log("ProtocolLib refresh starting for " + player.getName());
 
         if (!Bukkit.isPrimaryThread()) {
-            Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> refresh(player));
+            OreScheduler.run(OreoEssentials.get(), () -> refresh(player));
             return;
         }
 
@@ -79,7 +80,7 @@ public final class SkinRefresherProtocolLib implements SkinRefresher {
                 }
             }
 
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            OreScheduler.runLater(plugin, () -> {
                 for (Player viewer : viewers) {
                     if (!viewer.isOnline()) continue;
                     try {
@@ -89,7 +90,7 @@ public final class SkinRefresherProtocolLib implements SkinRefresher {
                     }
                 }
 
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                OreScheduler.runLater(plugin, () -> {
                     for (Player viewer : viewers) {
                         if (!viewer.isOnline() || viewer.equals(player)) continue;
                         try {
@@ -100,7 +101,7 @@ public final class SkinRefresherProtocolLib implements SkinRefresher {
                         }
                     }
 
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    OreScheduler.runLater(plugin, () -> {
                         for (Player viewer : viewers) {
                             if (!viewer.isOnline() || viewer.equals(player)) continue;
                             try {

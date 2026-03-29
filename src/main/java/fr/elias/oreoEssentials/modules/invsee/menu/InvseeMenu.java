@@ -9,6 +9,7 @@ import fr.minuskube.inv.content.InventoryProvider;
 import fr.minuskube.inv.content.SlotPos;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -69,7 +70,7 @@ public final class InvseeMenu implements InventoryProvider {
 
         ItemStack[] snap = session.getLastSnapshot();
         if (snap != null) {
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 for (int slot = 0; slot < Math.min(36, snap.length); slot++) {
                     ItemStack want = cloneOrNull(snap[slot]);
                     ItemStack have = top.getItem(slot);

@@ -6,6 +6,7 @@ import fr.elias.oreoEssentials.modules.trade.ui.TradeMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Arrays;
@@ -97,7 +98,7 @@ public final class TradeSession {
         final Player pa = Bukkit.getPlayer(aId);
         final Player pb = Bukkit.getPlayer(bId);
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             try {
                 TradeMenu m = new TradeMenu(plugin, cfg, pa, pb);
                 this.menu = m; // store reference for lock/refresh/close
@@ -112,7 +113,7 @@ public final class TradeSession {
     }
 
     public void closeLocalViewers() {
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             Player a = Bukkit.getPlayer(aId);
             Player b = Bukkit.getPlayer(bId);
             if (a != null) a.closeInventory();
@@ -129,7 +130,7 @@ public final class TradeSession {
     }
     public boolean isClosed() { return closed; }
     public void forceClearAndCloseLocal() {
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             try {
                 if (menu != null) {
                     menu.clearAllOfferSlotsSafely();
@@ -168,7 +169,7 @@ public final class TradeSession {
 
             beginClosing();
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 closeLocalViewers();
                 onFinish.accept(this);
             });
@@ -250,7 +251,7 @@ public final class TradeSession {
         if (uiLocked) return;
         uiLocked = true;
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             try {
                 if (menu != null) {
                     menu.replaceOffersWithPlaceholdersSafely(); // no-op if menu not open

@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.shop.protection;
 
 import fr.elias.oreoEssentials.modules.shop.ShopModule;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -108,7 +109,7 @@ public final class AntiDupeProtection {
         }
 
         if (f >= MAX_FLAGS) {
-            module.getPlugin().getServer().getScheduler().runTask(module.getPlugin(), () -> {
+            OreScheduler.runForEntity(module.getPlugin(), player, () -> {
                 player.kickPlayer(org.bukkit.ChatColor.RED + "[SHOP] Kicked for suspicious activity.");
                 flags.remove(uuid);
             });

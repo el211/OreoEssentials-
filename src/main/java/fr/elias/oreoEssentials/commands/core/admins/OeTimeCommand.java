@@ -1,6 +1,8 @@
 package fr.elias.oreoEssentials.commands.core.admins;
 
 
+import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -64,12 +66,17 @@ public final class OeTimeCommand implements TabExecutor {
             }
         }
 
-        for (World world : targets) {
-            world.setTime(ticks);
-        }
+        final long finalTicks = ticks;
+        final String finalMode = mode;
+        final List<World> finalTargets = targets;
+        OreScheduler.run(OreoEssentials.get(), () -> {
+            for (World world : finalTargets) {
+                world.setTime(finalTicks);
+            }
+        });
 
         String worldLabel = labelForWorlds(targets);
-        sender.sendMessage("§aTime set to §f" + mode + " §7(" + ticks + " ticks) §7in §f" + worldLabel + "§7.");
+        sender.sendMessage("§aTime set to §f" + finalMode + " §7(" + ticks + " ticks) §7in §f" + worldLabel + "§7.");
         return true;
     }
 

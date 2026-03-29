@@ -10,8 +10,8 @@ import org.bukkit.inventory.FurnaceRecipe;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +19,7 @@ import java.util.UUID;
 
 public class VirtualFurnaceListener implements Listener {
 
-    private static final Map<UUID, BukkitTask> tasks = new HashMap<>();
+    private static final Map<UUID, OreTask> tasks = new HashMap<>();
     private static final Map<UUID, Integer> progress = new HashMap<>();
 
     private static final int COOK_TIME = 200;
@@ -29,77 +29,74 @@ public class VirtualFurnaceListener implements Listener {
         stopTask(uuid);
         progress.put(uuid, 0);
 
-        BukkitTask task = new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!player.isOnline()
-                        || player.getOpenInventory().getTopInventory().getType() != InventoryType.FURNACE
-                        || !player.getOpenInventory().getTopInventory().equals(inv)) {
-                    stopTask(uuid);
-                    return;
-                }
-
-                ItemStack ingredient = inv.getItem(0);
-                ItemStack fuel       = inv.getItem(1);
-                ItemStack result     = inv.getItem(2);
-
-                if (ingredient == null || ingredient.getType().isAir()
-                        || fuel == null || fuel.getType().isAir()) {
-                    progress.put(uuid, 0);
-                    updateFurnaceAnimation(player, 0, COOK_TIME, 0, COOK_TIME);
-                    return;
-                }
-
-                ItemStack smeltResult = getSmeltResult(plugin, ingredient);
-                if (smeltResult == null) {
-                    progress.put(uuid, 0);
-                    updateFurnaceAnimation(player, 0, COOK_TIME, 0, COOK_TIME);
-                    return;
-                }
-
-                int currentProgress = progress.getOrDefault(uuid, 0) + 1;
-
-
-                updateFurnaceAnimation(player, currentProgress, COOK_TIME, COOK_TIME, COOK_TIME);
-
-                if (currentProgress >= COOK_TIME) {
-                    if (result == null || result.getType().isAir()) {
-                        inv.setItem(2, smeltResult.clone());
-                    } else if (result.isSimilar(smeltResult)
-                            && result.getAmount() < result.getMaxStackSize()) {
-                        result.setAmount(result.getAmount() + smeltResult.getAmount());
-                        inv.setItem(2, result);
-                    } else {
-
-                        return;
-                    }
-
-                    if (ingredient.getAmount() > 1) {
-                        ingredient.setAmount(ingredient.getAmount() - 1);
-                        inv.setItem(0, ingredient);
-                    } else {
-                        inv.setItem(0, null);
-                    }
-
-                    if (fuel.getAmount() > 1) {
-                        fuel.setAmount(fuel.getAmount() - 1);
-                        inv.setItem(1, fuel);
-                    } else {
-                        inv.setItem(1, null);
-                    }
-
-                    progress.put(uuid, 0);
-
-                    ItemStack newFuel = inv.getItem(1);
-                    if (newFuel == null || newFuel.getType().isAir()) {
-                        updateFurnaceAnimation(player, 0, COOK_TIME, 0, COOK_TIME);
-                    }
-
-                } else {
-                    progress.put(uuid, currentProgress);
-                }
+        OreTask task = OreScheduler.runTimer(plugin, () -> {
+            if (!player.isOnline()
+                    || player.getOpenInventory().getTopInventory().getType() != InventoryType.FURNACE
+                    || !player.getOpenInventory().getTopInventory().equals(inv)) {
+                stopTask(uuid);
+                return;
             }
-        }.runTaskTimer(plugin, 1L, 1L);
+
+            ItemStack ingredient = inv.getItem(0);
+            ItemStack fuel       = inv.getItem(1);
+            ItemStack result     = inv.getItem(2);
+
+            if (ingredient == null || ingredient.getType().isAir()
+                    || fuel == null || fuel.getType().isAir()) {
+                progress.put(uuid, 0);
+                updateFurnaceAnimation(player, 0, COOK_TIME, 0, COOK_TIME);
+                return;
+            }
+
+            ItemStack smeltResult = getSmeltResult(plugin, ingredient);
+            if (smeltResult == null) {
+                progress.put(uuid, 0);
+                updateFurnaceAnimation(player, 0, COOK_TIME, 0, COOK_TIME);
+                return;
+            }
+
+            int currentProgress = progress.getOrDefault(uuid, 0) + 1;
+
+
+            updateFurnaceAnimation(player, currentProgress, COOK_TIME, COOK_TIME, COOK_TIME);
+
+            if (currentProgress >= COOK_TIME) {
+                if (result == null || result.getType().isAir()) {
+                    inv.setItem(2, smeltResult.clone());
+                } else if (result.isSimilar(smeltResult)
+                        && result.getAmount() < result.getMaxStackSize()) {
+                    result.setAmount(result.getAmount() + smeltResult.getAmount());
+                    inv.setItem(2, result);
+                } else {
+
+                    return;
+                }
+
+                if (ingredient.getAmount() > 1) {
+                    ingredient.setAmount(ingredient.getAmount() - 1);
+                    inv.setItem(0, ingredient);
+                } else {
+                    inv.setItem(0, null);
+                }
+
+                if (fuel.getAmount() > 1) {
+                    fuel.setAmount(fuel.getAmount() - 1);
+                    inv.setItem(1, fuel);
+                } else {
+                    inv.setItem(1, null);
+                }
+
+                progress.put(uuid, 0);
+
+                ItemStack newFuel = inv.getItem(1);
+                if (newFuel == null || newFuel.getType().isAir()) {
+                    updateFurnaceAnimation(player, 0, COOK_TIME, 0, COOK_TIME);
+                }
+
+            } else {
+                progress.put(uuid, currentProgress);
+            }
+        }, 1L, 1L);
 
         tasks.put(uuid, task);
     }
@@ -120,7 +117,7 @@ public class VirtualFurnaceListener implements Listener {
     }
 
     public static void stopTask(UUID uuid) {
-        BukkitTask task = tasks.remove(uuid);
+        OreTask task = tasks.remove(uuid);
         if (task != null) task.cancel();
         progress.remove(uuid);
     }

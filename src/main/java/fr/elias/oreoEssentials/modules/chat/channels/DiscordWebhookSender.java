@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.chat.channels;
 
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 
 import java.io.OutputStream;
@@ -26,7 +27,7 @@ public class DiscordWebhookSender {
         }
 
         // Run async to avoid blocking the main thread
-        Bukkit.getScheduler().runTaskAsynchronously(
+        OreScheduler.runAsync(
                 Bukkit.getPluginManager().getPlugin("OreoEssentials"),
                 () -> send(webhookUrl, username, content, playerName)
         );

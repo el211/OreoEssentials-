@@ -1,6 +1,6 @@
 package fr.elias.oreoEssentials.modules.afk;
 
-import org.bukkit.Bukkit;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -62,7 +62,7 @@ public class AfkListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChat(AsyncPlayerChatEvent e) {
         Player p = e.getPlayer();
-        Bukkit.getScheduler().runTask(plugin, () -> onActivity(p));
+        OreScheduler.runForEntity(plugin, p, () -> onActivity(p));
     }
 
     // Paper 1.21+: our chat listeners cancel AsyncPlayerChatEvent at HIGHEST so the
@@ -72,7 +72,7 @@ public class AfkListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = false)
     public void onChatNew(AsyncChatEvent e) {
         Player p = e.getPlayer();
-        Bukkit.getScheduler().runTask(plugin, () -> onActivity(p));
+        OreScheduler.runForEntity(plugin, p, () -> onActivity(p));
     }
 
     private boolean isAfkCommand(String message) {

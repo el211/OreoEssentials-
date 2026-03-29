@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.trade.ui;
 
 import fr.elias.oreoEssentials.modules.trade.TradeSession;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -36,7 +37,7 @@ public final class TradeMenuRegistry {
         if (m == null) return;
 
         try {
-            Bukkit.getScheduler().runTask(m.getPlugin(), m::refreshFromSession);
+            OreScheduler.run(m.getPlugin(), m::refreshFromSession);
         } catch (Throwable ignored) {}
     }
 

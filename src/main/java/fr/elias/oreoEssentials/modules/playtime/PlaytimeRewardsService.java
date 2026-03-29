@@ -1,6 +1,8 @@
 package fr.elias.oreoEssentials.modules.playtime;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Statistic;
@@ -9,7 +11,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,7 +57,7 @@ public final class PlaytimeRewardsService {
     private boolean baselineFromBukkit = false;
     public boolean baselineOnFirstSeen = true;
 
-    private BukkitTask periodicTask;
+    private OreTask periodicTask;
     private PrewardsListeners listener;
 
 
@@ -157,7 +158,7 @@ public final class PlaytimeRewardsService {
 
     private void start() {
         stop();
-        periodicTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        periodicTask = OreScheduler.runTimer(plugin, () -> {
             for (Player p : Bukkit.getOnlinePlayers()) checkPlayer(p, true);
         }, 20L, 20L * 30);
 

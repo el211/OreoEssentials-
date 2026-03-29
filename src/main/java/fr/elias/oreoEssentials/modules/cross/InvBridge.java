@@ -9,6 +9,7 @@ import fr.elias.oreoEssentials.rabbitmq.PacketChannels;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.cross.rabbit.packets.CrossInvPacket;
 import fr.elias.oreoEssentials.services.InventoryService;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -334,7 +335,7 @@ public final class InvBridge {
         return applyRemote(target, Kind.EC, payload, clamp.length, rows);
     }
     public void requestLiveInvAsync(UUID target, Consumer<InventoryService.Snapshot> callback) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             InventoryService.Snapshot result = null;
 
             try {
@@ -351,14 +352,14 @@ public final class InvBridge {
             }
 
             InventoryService.Snapshot finalResult = result;
-            Bukkit.getScheduler().runTask(plugin, () -> callback.accept(finalResult));
+            OreScheduler.run(plugin, () -> callback.accept(finalResult));
         });
     }
 
     public void applyLiveInvAsync(UUID target,
                                   InventoryService.Snapshot snap,
                                   Consumer<Boolean> callback) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             boolean ok = false;
             try {
                 ItemStack[] flat = InvLayouts.toFlat(snap);
@@ -369,7 +370,7 @@ public final class InvBridge {
             }
 
             boolean finalOk = ok;
-            Bukkit.getScheduler().runTask(plugin, () -> callback.accept(finalOk));
+            OreScheduler.run(plugin, () -> callback.accept(finalOk));
         });
     }
 
@@ -550,7 +551,7 @@ public final class InvBridge {
                 + " from=" + req.sourceServer
                 + " on server=" + thisServer);
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             // DEBUG: list all online players on this server
             StringBuilder sb = new StringBuilder();
             sb.append("[INV-DEBUG] onRequest(): online players on server=").append(thisServer).append(" => ");
@@ -685,7 +686,7 @@ public final class InvBridge {
                 + " arrayLen=" + req.arrayLen + " ecRows=" + req.ecRows
                 + " from=" + req.sourceServer + " on server=" + thisServer);
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             Player p = Bukkit.getPlayer(req.target);
             ApplyAck ack = new ApplyAck();
             ack.type = "INV_ACK";

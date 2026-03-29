@@ -11,6 +11,7 @@ import fr.elias.oreoEssentials.modules.warps.rabbit.packets.WarpTeleportRequestP
 import fr.elias.oreoEssentials.modules.homes.home.HomeService;
 import fr.elias.oreoEssentials.modules.spawn.SpawnService;
 import fr.elias.oreoEssentials.modules.warps.WarpService;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -85,7 +86,7 @@ public class TeleportBroker {
     }
 
     private void queueOrRun(UUID id, Runnable action) {
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             Player p = Bukkit.getPlayer(id);
             if (p == null) {
                 pending.put(id, action);
@@ -97,7 +98,14 @@ public class TeleportBroker {
 
     public void onJoin(UUID id) {
         Runnable r = pending.remove(id);
-        if (r != null) Bukkit.getScheduler().runTask(plugin, r);
+        if (r != null) {
+            Player p = Bukkit.getPlayer(id);
+            if (p != null) {
+                OreScheduler.runForEntity(plugin, p, r);
+            } else {
+                OreScheduler.run(plugin, r);
+            }
+        }
     }
 
     private void teleport(UUID id, Location loc, String label) {

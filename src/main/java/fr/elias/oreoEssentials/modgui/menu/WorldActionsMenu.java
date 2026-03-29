@@ -4,10 +4,12 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modgui.ModGuiService;
 import fr.elias.oreoEssentials.modgui.util.ItemBuilder;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
 import fr.minuskube.inv.content.InventoryProvider;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -89,13 +91,14 @@ public class WorldActionsMenu implements InventoryProvider {
                         .name("&aSet World Spawn at your pos")
                         .build(),
                 e -> {
-                    world.setSpawnLocation(p.getLocation());
+                    Location loc = p.getLocation();
+                    OreScheduler.run(plugin, () -> world.setSpawnLocation(loc));
                     Lang.send(p, "modgui.world-actions.spawn-set",
                             "<green>World spawn set at <white>%x% %y% %z%</white></green>",
                             Map.of(
-                                    "x", String.valueOf(p.getLocation().getBlockX()),
-                                    "y", String.valueOf(p.getLocation().getBlockY()),
-                                    "z", String.valueOf(p.getLocation().getBlockZ())
+                                    "x", String.valueOf(loc.getBlockX()),
+                                    "y", String.valueOf(loc.getBlockY()),
+                                    "z", String.valueOf(loc.getBlockZ())
                             ));
                 }
         ));
@@ -199,7 +202,7 @@ public class WorldActionsMenu implements InventoryProvider {
                         .build(),
                 e -> {
                     svc.cfg().setPvpEnabled(world, !enabled);
-                    world.setPVP(!enabled);
+                    OreScheduler.run(plugin, () -> world.setPVP(!enabled));
                     init(p, c);
                 }
         ));
@@ -361,32 +364,36 @@ public class WorldActionsMenu implements InventoryProvider {
     }
 
     private void setTime(long ticks) {
-        world.setTime(ticks);
+        OreScheduler.run(plugin, () -> world.setTime(ticks));
     }
 
     private void setWeather(String mode) {
-        switch (mode) {
-            case "sun" -> {
-                world.setStorm(false);
-                world.setThundering(false);
+        OreScheduler.run(plugin, () -> {
+            switch (mode) {
+                case "sun" -> {
+                    world.setStorm(false);
+                    world.setThundering(false);
+                }
+                case "rain" -> {
+                    world.setStorm(true);
+                    world.setThundering(false);
+                }
+                case "storm" -> {
+                    world.setStorm(true);
+                    world.setThundering(true);
+                }
             }
-            case "rain" -> {
-                world.setStorm(true);
-                world.setThundering(false);
-            }
-            case "storm" -> {
-                world.setStorm(true);
-                world.setThundering(true);
-            }
-        }
+        });
     }
 
     private void setBorder(int size) {
-        var wb = world.getWorldBorder();
-        if (wb.getCenter().getWorld() == null || !wb.getCenter().getWorld().equals(world)) {
-            wb.setCenter(world.getSpawnLocation());
-        }
-        wb.setSize(size);
+        OreScheduler.run(plugin, () -> {
+            var wb = world.getWorldBorder();
+            if (wb.getCenter().getWorld() == null || !wb.getCenter().getWorld().equals(world)) {
+                wb.setCenter(world.getSpawnLocation());
+            }
+            wb.setSize(size);
+        });
     }
 
     private String getNextTheme(String current) {

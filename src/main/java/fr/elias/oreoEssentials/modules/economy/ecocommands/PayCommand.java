@@ -4,7 +4,9 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.modules.economy.EconomyService;
 import fr.elias.oreoEssentials.offline.OfflinePlayerCache;
+import fr.elias.oreoEssentials.util.Async;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -61,67 +63,61 @@ public class PayCommand implements OreoCommand {
             return true;
         }
 
-        double balance = eco.getBalance(from.getUniqueId());
-        if (balance + 1e-9 < amount) {
-            from.sendMessage(Lang.msg("economy.pay.fail-insufficient",
-                    Map.of("amount_formatted", fmt(amount), "currency_symbol", currencySymbol()), from));
-            return true;
-        }
+        final OfflinePlayer finalTarget = target;
+        final double finalAmount = amount;
+        final String rawTargetName = args[0];
 
+        Async.run(() -> {
+            double balance = eco.getBalance(from.getUniqueId());
+            if (balance + 1e-9 < finalAmount) {
+                OreScheduler.runForEntity(plugin, from, () ->
+                        from.sendMessage(Lang.msg("economy.pay.fail-insufficient",
+                                Map.of("amount_formatted", fmt(finalAmount), "currency_symbol", currencySymbol()), from)));
+                return;
+            }
 
-        if (!eco.transfer(from.getUniqueId(), target.getUniqueId(), amount)) {
-            from.sendMessage(Lang.msg("economy.errors.no-economy", from));
-            return true;
-        }
+            if (!eco.transfer(from.getUniqueId(), finalTarget.getUniqueId(), finalAmount)) {
+                OreScheduler.runForEntity(plugin, from, () ->
+                        from.sendMessage(Lang.msg("economy.errors.no-economy", from)));
+                return;
+            }
 
-        String targetName = target.getName() != null ? target.getName() : args[0];
+            String targetName = finalTarget.getName() != null ? finalTarget.getName() : rawTargetName;
 
-        from.sendMessage(Lang.msg("economy.pay.success-sender",
-                Map.of("target", targetName, "amount_formatted", fmt(amount), "currency_symbol", currencySymbol()),
-                from));
+            String senderMsg = Lang.msg("economy.pay.success-sender",
+                    Map.of("target", targetName, "amount_formatted", fmt(finalAmount), "currency_symbol", currencySymbol()), from);
+            OreScheduler.runForEntity(plugin, from, () -> from.sendMessage(senderMsg));
 
+            String receiverMsg = Lang.msg("economy.pay.success-receiver",
+                    Map.of("player", from.getName(), "amount_formatted", fmt(finalAmount), "currency_symbol", currencySymbol()), null);
 
-        String receiverMsg = Lang.msg("economy.pay.success-receiver",
-                Map.of("player", from.getName(), "amount_formatted", fmt(amount), "currency_symbol", currencySymbol()),
-                null
-        );
-
-
-        Player local = Bukkit.getPlayer(target.getUniqueId());
-        if (local != null) {
-            local.sendMessage(receiverMsg);
-        } else {
-
-            try {
-                var pm = plugin.getPacketManager();
-                if (pm != null && pm.isInitialized()) {
-                    pm.sendPacket(
-                            fr.elias.oreoEssentials.rabbitmq.PacketChannels.GLOBAL,
-                            new fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket(
-                                    target.getUniqueId(),
-                                    receiverMsg
-                            )
-                    );
-
-                    if (plugin.getConfig().getBoolean("debug", false)) {
-                        plugin.getLogger().info("[PAY][DBG] GLOBAL remote message queued for " + target.getUniqueId());
+            Player local = Bukkit.getPlayer(finalTarget.getUniqueId());
+            if (local != null) {
+                OreScheduler.runForEntity(plugin, local, () -> local.sendMessage(receiverMsg));
+            } else {
+                try {
+                    var pm = plugin.getPacketManager();
+                    if (pm != null && pm.isInitialized()) {
+                        pm.sendPacket(
+                                fr.elias.oreoEssentials.rabbitmq.PacketChannels.GLOBAL,
+                                new fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket(
+                                        finalTarget.getUniqueId(), receiverMsg));
+                        if (plugin.getConfig().getBoolean("debug", false))
+                            plugin.getLogger().info("[PAY][DBG] GLOBAL remote message queued for " + finalTarget.getUniqueId());
+                    } else {
+                        if (plugin.getConfig().getBoolean("debug", false))
+                            plugin.getLogger().info("[PAY][DBG] Remote message skipped (PacketManager not available).");
                     }
-                } else {
-                    if (plugin.getConfig().getBoolean("debug", false)) {
-                        plugin.getLogger().info("[PAY][DBG] Remote message skipped (PacketManager not available).");
-                    }
-                }
-            } catch (Throwable t) {
-                if (plugin.getConfig().getBoolean("debug", false)) {
-                    plugin.getLogger().warning("[PAY][DBG] Remote message failed: " + t.getMessage());
+                } catch (Throwable t) {
+                    if (plugin.getConfig().getBoolean("debug", false))
+                        plugin.getLogger().warning("[PAY][DBG] Remote message failed: " + t.getMessage());
                 }
             }
-        }
 
-        OfflinePlayerCache cache = plugin.getOfflinePlayerCache();
-        if (cache != null && target.getUniqueId() != null && targetName != null) {
-            cache.add(targetName, target.getUniqueId());
-        }
+            OfflinePlayerCache cache = plugin.getOfflinePlayerCache();
+            if (cache != null && finalTarget.getUniqueId() != null && targetName != null)
+                cache.add(targetName, finalTarget.getUniqueId());
+        });
 
         return true;
     }

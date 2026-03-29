@@ -5,6 +5,7 @@ import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.warps.rabbit.packets.PlayerWarpTeleportRequestPacket;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.util.ProxyMessenger;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -101,7 +102,7 @@ public final class PlayerWarpCrossServerBroker implements Listener {
                 + " for player=" + playerId
                 + " warp=" + warpName);
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        OreScheduler.runLater(plugin, () -> {
             Player p = Bukkit.getPlayer(playerId);
             if (p != null && p.isOnline()) {
                 safeTeleport(p, ownerId, warpName);
@@ -151,7 +152,7 @@ public final class PlayerWarpCrossServerBroker implements Listener {
         PendingWarp pw = pending.remove(uuid);
         if (pw == null) return;
 
-        Bukkit.getScheduler().runTaskLater(plugin, () ->
+        OreScheduler.runLater(plugin, () ->
                 safeTeleport(e.getPlayer(), pw.ownerId(), pw.warpName()), 3L
         );
     }

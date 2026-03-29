@@ -483,7 +483,7 @@ public final class OreoEssentials extends JavaPlugin {
 
         try { if (webPanelSyncService != null) webPanelSyncService.stop(); } catch (Exception ignored) {}
 
-        org.bukkit.Bukkit.getScheduler().cancelTasks(this);
+        OreScheduler.cancelAll(this);
 
         try { if (backBroker != null) { backBroker.shutdown(); getLogger().info("[BackBroker] Shutdown complete."); } } catch (Exception ignored) {}
         try { pendingBackTeleports.clear(); getLogger().info("[BackBroker] Cleared pending teleports."); } catch (Exception ignored) {}
@@ -685,7 +685,7 @@ public final class OreoEssentials extends JavaPlugin {
 
             this.offlinePlayerCache = new OfflinePlayerCache();
             this.database.populateCache(offlinePlayerCache);
-            Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> this.database.populateCache(offlinePlayerCache), 20L * 60, 20L * 300);
+            OreScheduler.runAsyncTimer(this, () -> this.database.populateCache(offlinePlayerCache), 20L * 60, 20L * 300);
 
             var moneyCmd  = new MoneyCommand(this);
             var payCmd    = new PayCommand();
@@ -1484,7 +1484,7 @@ public final class OreoEssentials extends JavaPlugin {
         }
 
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") && currencyService != null) {
-            Bukkit.getScheduler().runTaskLater(this, () -> {
+            OreScheduler.runLater(this, () -> {
                 try {
                     this.currencyPlaceholders = new CurrencyPlaceholderExpansion(this);
                     if (this.currencyPlaceholders.register()) { getLogger().info("✓ PlaceholderAPI currency expansion registered!"); }
@@ -1897,7 +1897,7 @@ public final class OreoEssentials extends JavaPlugin {
                 Class.forName("org.bukkit.entity.Display");
                 fr.elias.oreoEssentials.modules.holograms.nms.NmsHologramBridge nms = fr.elias.oreoEssentials.modules.holograms.nms.NmsBridgeLoader.loadOrThrow();
                 this.perPlayerTextDisplayService = new fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayService(this, nms);
-                getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayListener(this.perPlayerTextDisplayService), this);
+                getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayListener(this.perPlayerTextDisplayService, this), this);
                 OreScheduler.runTimer(this, () -> {
                     try { perPlayerTextDisplayService.tick(); }
                     catch (Throwable t) { getLogger().warning("[PerPlayerTextDisplay] tick failed: " + t.getMessage()); }
@@ -2122,7 +2122,7 @@ public final class OreoEssentials extends JavaPlugin {
         }
         try {
             placeholderHook = new PlaceholderAPIHook(this);
-            Bukkit.getScheduler().runTaskLater(this, () -> {
+            OreScheduler.runLater(this, () -> {
                 try {
                     if (placeholderHook.register()) {
                         getLogger().info("✓ PlaceholderAPI expansion 'oreo' registered successfully!");

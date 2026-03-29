@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modgui.notes;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
@@ -58,7 +59,7 @@ public class NotesChatListener implements Listener {
         String staffName = e.getPlayer().getName();
         Player player = e.getPlayer();
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.runForEntity(plugin, player, () -> {
             manager.addNote(target, staffName, msg);
             Lang.send(player, "modgui.notes.added",
                     "<green>Note added.</green>",

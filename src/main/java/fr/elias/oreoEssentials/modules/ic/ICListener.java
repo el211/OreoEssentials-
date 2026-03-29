@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.ic;
 
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -91,7 +92,7 @@ public final class ICListener implements Listener {
                 else Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCmd);
             };
             if (delay > 0) {
-                Bukkit.getScheduler().runTaskLater(plugin, task, delay * 20L);
+                OreScheduler.runLater(plugin, task, delay * 20L);
             } else {
                 task.run();
             }

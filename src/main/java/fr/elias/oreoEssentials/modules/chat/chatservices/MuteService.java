@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.chat.chatservices;
 
 import com.mongodb.lang.Nullable;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -54,7 +55,7 @@ public class MuteService {
         }
         this.cfg = YamlConfiguration.loadConfiguration(file);
         loadAll();
-        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::cleanupExpired, 20L*60, 20L*60);
+        OreScheduler.runAsyncTimer(plugin, this::cleanupExpired, 20L*60, 20L*60);
     }
 
     public boolean isMuted(UUID uuid) {

@@ -4,6 +4,7 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.shop.hooks.ItemsAdderHook;
 import fr.elias.oreoEssentials.modules.shop.hooks.NexoHook;
 import net.milkbowl.vault.economy.Economy;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -89,9 +90,9 @@ public class RegisterRewardService implements Listener {
      * then invokes {@code callback} on the main thread with the result.
      */
     public void checkRegistered(UUID uuid, Consumer<Boolean> callback) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             boolean registered = client.isPlayerRegistered(uuid);
-            Bukkit.getScheduler().runTask(plugin, () -> callback.accept(registered));
+            OreScheduler.run(plugin, () -> callback.accept(registered));
         });
     }
 
@@ -148,10 +149,10 @@ public class RegisterRewardService implements Listener {
         if (hasClaimed(player.getUniqueId())) return;
 
         // Delay slightly so the player is fully in the world before we send a message
-        Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+        OreScheduler.runAsyncLater(plugin, () -> {
             boolean registered = client.isPlayerRegistered(player.getUniqueId());
             if (!registered) return;
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.runForEntity(plugin, player, () -> {
                 if (player.isOnline()) {
                     player.sendMessage(ChatColor.translateAlternateColorCodes('&',
                             "&6&l✦ &r&6You have an unclaimed website reward! "

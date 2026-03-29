@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.daily;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -106,7 +107,7 @@ public final class DailyFileStore {
 
 
     public void startAutoSave() {
-        plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, this::save, 6000L, 6000L);
+        OreScheduler.runAsyncTimer(plugin, this::save, 6000L, 6000L);
     }
 
 

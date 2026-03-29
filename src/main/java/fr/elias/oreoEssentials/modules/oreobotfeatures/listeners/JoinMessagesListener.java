@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.oreobotfeatures.listeners;
 
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.util.RankedMessageUtil;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -80,8 +81,8 @@ public final class JoinMessagesListener implements Listener {
             }
         };
 
-        if (delayTicks > 0) Bukkit.getScheduler().runTaskLater(plugin, send, delayTicks);
-        else Bukkit.getScheduler().runTask(plugin, send);
+        if (delayTicks > 0) OreScheduler.runLater(plugin, send, delayTicks);
+        else OreScheduler.run(plugin, send);
     }
 
 

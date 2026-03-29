@@ -6,6 +6,8 @@ import fr.elias.ultimateChristmas.UltimateChristmas;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -16,7 +18,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.world.ChunkUnloadEvent;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -62,7 +63,7 @@ public final class HealthBarListener implements Listener {
 
     private final Map<UUID, ArmorStand> topLine    = new HashMap<>();
     private final Map<UUID, ArmorStand> bottomLine = new HashMap<>();
-    private BukkitTask sweeper;
+    private OreTask sweeper;
     private int orphanCleanupCounter = 0;
 
     public HealthBarListener(OreoEssentials plugin, UltimateChristmas xmasPlugin) {
@@ -113,7 +114,7 @@ public final class HealthBarListener implements Listener {
         this.spawnPerTickCap = (hb != null) ? Math.max(1, hb.getInt("spawn-per-tick-cap", 40)) : 40;
 
         if (enabled) {
-            sweeper = Bukkit.getScheduler().runTaskTimer(plugin, this::sweepTick, updateInterval, updateInterval);
+            sweeper = OreScheduler.runTimer(plugin, this::sweepTick, updateInterval, updateInterval);
         }
     }
 
@@ -143,7 +144,7 @@ public final class HealthBarListener implements Listener {
         if (!enabled) return;
         if (!(e.getEntity() instanceof LivingEntity le)) return;
         if (!shouldTrack(le)) return;
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.runForEntity(plugin, le, () -> {
             if (le.isDead() || !le.isValid()) {
                 cleanupMob(le.getUniqueId());
             } else {
@@ -157,7 +158,7 @@ public final class HealthBarListener implements Listener {
         if (!enabled) return;
         if (!(e.getEntity() instanceof LivingEntity le)) return;
         if (!shouldTrack(le)) return;
-        Bukkit.getScheduler().runTask(plugin, () -> update(le));
+        OreScheduler.runForEntity(plugin, le, () -> update(le));
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
@@ -165,7 +166,7 @@ public final class HealthBarListener implements Listener {
         if (!enabled) return;
         UUID id = e.getEntity().getUniqueId();
         cleanupMob(id);
-        Bukkit.getScheduler().runTaskLater(plugin, () -> cleanupMob(id), 1L);
+        OreScheduler.runLater(plugin, () -> cleanupMob(id), 1L);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -174,7 +175,7 @@ public final class HealthBarListener implements Listener {
         if (!(e.getEntity() instanceof LivingEntity)) return;
         UUID id = e.getEntity().getUniqueId();
         if (topLine.containsKey(id) || bottomLine.containsKey(id)) {
-            Bukkit.getScheduler().runTask(plugin, () -> cleanupMob(id));
+            OreScheduler.run(plugin, () -> cleanupMob(id));
         }
     }
 
@@ -197,6 +198,15 @@ public final class HealthBarListener implements Listener {
     }
 
     private void sweepTick() {
+        // On Folia the GlobalRegionScheduler has no region ownership:
+        // getNearbyEntities(), getEntities(), getEntity(uuid), and entity
+        // teleport all require the owning region thread.  Health-bar
+        // creation/updates still happen through onSpawn/onDamage/onRegain
+        // events, so no bars are silently lost – only the proactive sweep
+        // (which shows bars for mobs already in range before a damage event)
+        // is skipped.
+        if (OreScheduler.isFolia()) return;
+
         int created = 0;
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (!p.isValid() || p.isDead()) continue;
@@ -519,7 +529,11 @@ public final class HealthBarListener implements Listener {
     }
 
     private void removeStand(ArmorStand as) {
-        if (as != null && !as.isDead()) {
+        if (as == null || as.isDead()) return;
+        if (OreScheduler.isFolia()) {
+            // ArmorStand removal must run on its owning region thread on Folia.
+            as.getScheduler().run(plugin, ctx -> { try { as.remove(); } catch (Throwable ignored) {} }, null);
+        } else {
             try { as.remove(); } catch (Throwable ignored) {}
         }
     }

@@ -16,7 +16,8 @@ import java.util.concurrent.TimeUnit;
  *
  * Drop-in replacement for all Bukkit.getScheduler() calls.
  */
-public final class OreScheduler {
+public final class
+OreScheduler {
 
     private OreScheduler() {}
 
@@ -103,6 +104,29 @@ public final class OreScheduler {
                                 TimeUnit.MILLISECONDS)
         );
     }
+
+    // -------------------------------------------------------------------------
+    // Cancellation
+    // -------------------------------------------------------------------------
+
+    // -------------------------------------------------------------------------
+    // Folia detection
+    // -------------------------------------------------------------------------
+
+    private static final boolean FOLIA;
+    static {
+        boolean f;
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            f = true;
+        } catch (ClassNotFoundException ignored) {
+            f = false;
+        }
+        FOLIA = f;
+    }
+
+    /** Returns true when running on Folia/Luminol (threaded region scheduler). */
+    public static boolean isFolia() { return FOLIA; }
 
     // -------------------------------------------------------------------------
     // Cancellation

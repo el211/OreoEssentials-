@@ -5,6 +5,7 @@ import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.homes.rabbit.packet.HomeTeleportRequestPacket;
+import fr.elias.oreoEssentials.util.Async;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -13,7 +14,8 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -65,21 +67,24 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         }
 
         if (args.length == 0 || args[0].equalsIgnoreCase("list")) {
-            List<String> names = crossServerNames(player.getUniqueId());
-            if (names.isEmpty()) {
-                Lang.send(player, "home.no-homes",
-                        "<yellow>You have no homes. Use <aqua>%sethome%</aqua> to create one.</yellow>",
-                        Map.of("sethome", "/sethome"));
-                return true;
-            }
-
-            String list = names.stream()
-                    .sorted(String.CASE_INSENSITIVE_ORDER)
-                    .collect(Collectors.joining(", "));
-
-            Lang.send(player, "home.list", "<gray>Your homes:</gray> <aqua>%homes%</aqua>", Map.of("homes", list));
-            Lang.send(player, "home.tip", "<gray>Use <yellow>/%label% <n></yellow> to teleport.</gray>",
-                    Map.of("label", label));
+            final String lbl = label;
+            Async.run(() -> {
+                List<String> names = crossServerNames(player.getUniqueId());
+                OreScheduler.runForEntity(plugin, player, () -> {
+                    if (names.isEmpty()) {
+                        Lang.send(player, "home.no-homes",
+                                "<yellow>You have no homes. Use <aqua>%sethome%</aqua> to create one.</yellow>",
+                                Map.of("sethome", "/sethome"));
+                        return;
+                    }
+                    String list = names.stream()
+                            .sorted(String.CASE_INSENSITIVE_ORDER)
+                            .collect(Collectors.joining(", "));
+                    Lang.send(player, "home.list", "<gray>Your homes:</gray> <aqua>%homes%</aqua>", Map.of("homes", list));
+                    Lang.send(player, "home.tip", "<gray>Use <yellow>/%label% <n></yellow> to teleport.</gray>",
+                            Map.of("label", lbl));
+                });
+            });
             return true;
         }
 
@@ -92,97 +97,87 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         final int seconds = homeSection != null ? homeSection.getInt("cooldown-amount", 0) : 0;
 
         final boolean bypass = player.isOp() || !useCooldown || seconds <= 0;
-
         final String localServer = homes.localServer();
-        final String homeServer = homes.homeServer(player.getUniqueId(), key);
-        final String targetServer = (homeServer == null ? localServer : homeServer);
 
-        if (targetServer.equalsIgnoreCase(localServer)) {
-            if (homes.getHome(player.getUniqueId(), key) == null) {
-                Lang.send(player, "home.not-found", "<red>Home <yellow>%name%</yellow> not found.</red>",
-                        Map.of("name", raw));
-                suggestClosest(player, key);
-                return true;
-            }
-        } else {
-            if (homeServer == null || homeServer.isBlank()) {
-                Lang.send(player, "home.not-found", "<red>Home <yellow>%name%</yellow> not found.</red>",
-                        Map.of("name", raw));
-                suggestClosest(player, key);
-                return true;
-            }
-        }
+        // Fetch DB data async (homeServer + home location), then dispatch back to entity thread.
+        Async.run(() -> {
+            final String homeServer = homes.homeServer(player.getUniqueId(), key);
+            final String targetServer = (homeServer == null ? localServer : homeServer);
+            final Location preloadedLoc = targetServer.equalsIgnoreCase(localServer)
+                    ? homes.getHome(player.getUniqueId(), key)
+                    : null;
 
-        if (targetServer.equalsIgnoreCase(localServer)) {
-            final Runnable action = () -> {
-                Location loc = homes.getHome(player.getUniqueId(), key);
-                if (loc == null) {
-                    Lang.send(player, "home.not-found", "<red>Home <yellow>%name%</yellow> not found.</red>",
-                            Map.of("name", raw));
-                    suggestClosest(player, key);
+            OreScheduler.runForEntity(plugin, player, () -> {
+                // Existence check
+                if (targetServer.equalsIgnoreCase(localServer)) {
+                    if (preloadedLoc == null) {
+                        Lang.send(player, "home.not-found", "<red>Home <yellow>%name%</yellow> not found.</red>",
+                                Map.of("name", raw));
+                        suggestClosest(player, key);
+                        return;
+                    }
+                } else {
+                    if (homeServer == null || homeServer.isBlank()) {
+                        Lang.send(player, "home.not-found", "<red>Home <yellow>%name%</yellow> not found.</red>",
+                                Map.of("name", raw));
+                        suggestClosest(player, key);
+                        return;
+                    }
+                }
+
+                if (targetServer.equalsIgnoreCase(localServer)) {
+                    // Use pre-fetched location — no more DB calls needed.
+                    final Runnable action = () -> {
+                        player.teleport(preloadedLoc);
+                        Lang.send(player, "home.teleported", "<green>Teleported to home <yellow>%name%</yellow>.</green>",
+                                Map.of("name", key));
+                    };
+                    if (bypass) action.run();
+                    else startCountdown(player, seconds, key, action);
                     return;
                 }
-                player.teleport(loc);
-                Lang.send(player, "home.teleported", "<green>Teleported to home <yellow>%name%</yellow>.</green>",
-                        Map.of("name", key));
-            };
 
-            if (bypass) {
-                action.run();
-            } else {
-                startCountdown(player, seconds, key, action);
-            }
-            return true;
-        }
+                final Runnable action = () -> {
+                    var cs = plugin.getCrossServerSettings();
+                    if (!cs.homes()) {
+                        Lang.send(player, "home.cross-disabled", "<red>Cross-server homes are disabled.</red>");
+                        Lang.send(player, "home.cross-disabled-tip",
+                                "<gray>Ask an admin to enable cross-server homes or use <yellow>/server %server%</yellow> then <yellow>/home %name%</yellow>.</gray>",
+                                Map.of("server", targetServer, "name", key));
+                        return;
+                    }
+                    final PacketManager pm = plugin.getPacketManager();
+                    if (pm != null && pm.isInitialized()) {
+                        final String requestId = UUID.randomUUID().toString();
+                        plugin.getLogger().info("[HOME/SEND] from=" + homes.localServer() + " player=" + player.getUniqueId()
+                                + " nameArg='" + key + "' -> targetServer=" + targetServer + " requestId=" + requestId);
+                        HomeTeleportRequestPacket pkt = new HomeTeleportRequestPacket(player.getUniqueId(), key, targetServer, requestId);
+                        pm.sendPacket(PacketChannel.individual(targetServer), pkt);
+                    } else {
+                        Lang.send(player, "home.messaging-disabled", "<red>Cross-server messaging is disabled.</red>");
+                        Lang.send(player, "home.messaging-disabled-tip",
+                                "<gray>Ask an admin to enable messaging or use <yellow>/server %server%</yellow> then <yellow>/home %name%</yellow>.</gray>",
+                                Map.of("server", targetServer, "name", key));
+                        return;
+                    }
+                    boolean switched = sendPlayerToServer(player, targetServer);
+                    if (switched) {
+                        Lang.send(player, "home.sending",
+                                "<gray>Sending you to <yellow>%server%</yellow> for home <aqua>%name%</aqua>...</gray>",
+                                Map.of("server", targetServer, "name", key));
+                    } else {
+                        Lang.send(player, "home.switch-failed",
+                                "<red>Failed to switch to server <yellow>%server%</yellow>.</red>",
+                                Map.of("server", targetServer));
+                        Lang.send(player, "home.switch-failed-tip", "<gray>Try <yellow>/server %server%</yellow> manually.</gray>",
+                                Map.of("server", targetServer));
+                    }
+                };
 
-        final Runnable action = () -> {
-            var cs = plugin.getCrossServerSettings();
-            if (!cs.homes()) {
-                Lang.send(player, "home.cross-disabled", "<red>Cross-server homes are disabled.</red>");
-                Lang.send(player, "home.cross-disabled-tip",
-                        "<gray>Ask an admin to enable cross-server homes or use <yellow>/server %server%</yellow> then <yellow>/home %name%</yellow>.</gray>",
-                        Map.of("server", targetServer, "name", key));
-                return;
-            }
-
-            final PacketManager pm = plugin.getPacketManager();
-
-            if (pm != null && pm.isInitialized()) {
-                final String requestId = UUID.randomUUID().toString();
-                plugin.getLogger().info("[HOME/SEND] from=" + homes.localServer() + " player=" + player.getUniqueId()
-                        + " nameArg='" + key + "' -> targetServer=" + targetServer + " requestId=" + requestId);
-
-                HomeTeleportRequestPacket pkt = new HomeTeleportRequestPacket(player.getUniqueId(), key, targetServer,
-                        requestId);
-                PacketChannel targetChannel = PacketChannel.individual(targetServer);
-                pm.sendPacket(targetChannel, pkt);
-            } else {
-                Lang.send(player, "home.messaging-disabled", "<red>Cross-server messaging is disabled.</red>");
-                Lang.send(player, "home.messaging-disabled-tip",
-                        "<gray>Ask an admin to enable messaging or use <yellow>/server %server%</yellow> then <yellow>/home %name%</yellow>.</gray>",
-                        Map.of("server", targetServer, "name", key));
-                return;
-            }
-
-            boolean switched = sendPlayerToServer(player, targetServer);
-            if (switched) {
-                Lang.send(player, "home.sending",
-                        "<gray>Sending you to <yellow>%server%</yellow> for home <aqua>%name%</aqua>...</gray>",
-                        Map.of("server", targetServer, "name", key));
-            } else {
-                Lang.send(player, "home.switch-failed",
-                        "<red>Failed to switch to server <yellow>%server%</yellow>.</red>",
-                        Map.of("server", targetServer));
-                Lang.send(player, "home.switch-failed-tip", "<gray>Try <yellow>/server %server%</yellow> manually.</gray>",
-                        Map.of("server", targetServer));
-            }
-        };
-
-        if (bypass) {
-            action.run();
-        } else {
-            startCountdown(player, seconds, key, action);
-        }
+                if (bypass) action.run();
+                else startCountdown(player, seconds, key, action);
+            });
+        });
         return true;
     }
 
@@ -252,39 +247,35 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         final OreoEssentials plugin = OreoEssentials.get();
         final Location origin = target.getLocation().clone();
 
-        new BukkitRunnable() {
-            int remaining = seconds;
-
-            @Override
-            public void run() {
-                if (!target.isOnline()) {
-                    cancel();
-                    return;
-                }
-
-                if (hasBodyMoved(target, origin)) {
-                    cancel();
-                    Lang.send(target, "home.cancelled-moved", "<red>Teleport cancelled: you moved.</red>",
-                            Map.of("name", homeName));
-                    return;
-                }
-
-                if (remaining <= 0) {
-                    cancel();
-                    action.run();
-                    return;
-                }
-
-                String title = Lang.msgWithDefault("teleport.countdown.title", "<yellow>Teleporting...</yellow>", target);
-                String subtitle = Lang.msgWithDefault("teleport.countdown.subtitle",
-                        "<gray>In <white>%seconds%</white>s...</gray>", Map.of("seconds", String.valueOf(remaining)),
-                        target);
-
-                target.sendTitle(title, subtitle, 0, 20, 0);
-                remaining--;
+        int[] remaining = {seconds};
+        OreTask[] holder = new OreTask[1];
+        holder[0] = OreScheduler.runTimer(plugin, () -> {
+            if (!target.isOnline()) {
+                if (holder[0] != null) holder[0].cancel();
+                return;
             }
 
-        }.runTaskTimer(plugin, 0L, 20L);
+            if (hasBodyMoved(target, origin)) {
+                if (holder[0] != null) holder[0].cancel();
+                Lang.send(target, "home.cancelled-moved", "<red>Teleport cancelled: you moved.</red>",
+                        Map.of("name", homeName));
+                return;
+            }
+
+            if (remaining[0] <= 0) {
+                if (holder[0] != null) holder[0].cancel();
+                action.run();
+                return;
+            }
+
+            String title = Lang.msgWithDefault("teleport.countdown.title", "<yellow>Teleporting...</yellow>", target);
+            String subtitle = Lang.msgWithDefault("teleport.countdown.subtitle",
+                    "<gray>In <white>%seconds%</white>s...</gray>", Map.of("seconds", String.valueOf(remaining[0])),
+                    target);
+
+            target.sendTitle(title, subtitle, 0, 20, 0);
+            remaining[0]--;
+        }, 0L, 20L);
     }
 
     private boolean hasBodyMoved(Player p, Location origin) {

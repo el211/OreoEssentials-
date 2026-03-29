@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.shards.listeners;
 
 
 import fr.elias.oreoEssentials.modules.shards.redis.ShardHandoffManager;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -42,7 +43,7 @@ public class ShardJoinListener implements Listener {
 
         // This is a shard transfer - restore player state
         // Schedule for next tick to ensure player is fully loaded
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.runForEntity(plugin, player, () -> {
             restorePlayerState(player, snapshot);
         });
     }

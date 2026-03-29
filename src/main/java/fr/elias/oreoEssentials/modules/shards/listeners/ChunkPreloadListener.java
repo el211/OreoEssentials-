@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.shards.listeners;
 
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -80,7 +81,7 @@ public class ChunkPreloadListener implements Listener {
             pendingTeleports.put(playerId, new PendingTeleport(x, 100, z)); // Y=100 temp, will be adjusted
 
             // Pre-load chunks on main thread
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 World world = Bukkit.getWorld("world");
                 if (world != null) {
                     // Load chunk
@@ -101,7 +102,7 @@ public class ChunkPreloadListener implements Listener {
 
         if (teleport != null) {
             // This player just transferred! Teleport them to the correct position
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            OreScheduler.runLaterForEntity(plugin, player, () -> {
                 World world = player.getWorld();
 
                 // Get the correct Y coordinate (highest block)

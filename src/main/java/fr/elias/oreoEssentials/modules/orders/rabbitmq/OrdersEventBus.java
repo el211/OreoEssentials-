@@ -2,10 +2,9 @@ package fr.elias.oreoEssentials.modules.orders.rabbitmq;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.orders.model.Order;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.modules.orders.service.OrderService;
 import fr.elias.oreoEssentials.modules.orders.gui.OrdersGuiManager;
-import org.bukkit.Bukkit;
-
 import java.util.logging.Logger;
 
 /**
@@ -73,7 +72,7 @@ public final class OrdersEventBus {
                 + " from server=" + pkt.getServerId());
 
         // Apply to in-memory service on main thread for GUI consistency
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             if (service != null) {
                 service.applyIncomingEvent(pkt);
             } else {

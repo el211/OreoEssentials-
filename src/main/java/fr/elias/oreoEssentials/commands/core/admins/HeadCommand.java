@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.commands.core.admins;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.modules.skin.MojangSkinFetcher;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -51,11 +52,11 @@ public class HeadCommand implements OreoCommand, org.bukkit.command.TabCompleter
                 "<gray>Fetching head for <white>{target}</white>...</gray>",
                 Map.of("target", target));
 
-        Bukkit.getScheduler().runTaskAsynchronously(OreoEssentials.get(), () -> {
+        OreScheduler.runAsync(OreoEssentials.get(), () -> {
             // Step 1: Get UUID
             UUID uuid = MojangSkinFetcher.fetchUuid(target);
             if (uuid == null) {
-                Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+                OreScheduler.runForEntity(OreoEssentials.get(), self, () -> {
                     Lang.send(self, "admin.head.cannot-resolve",
                             "<red>Player <white>{target}</white> not found.</red>",
                             Map.of("target", target));
@@ -66,7 +67,7 @@ public class HeadCommand implements OreoCommand, org.bukkit.command.TabCompleter
             // Step 2: Fetch profile with textures
             PlayerProfile profile = MojangSkinFetcher.fetchProfileWithTextures(uuid, target);
             if (profile == null) {
-                Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+                OreScheduler.runForEntity(OreoEssentials.get(), self, () -> {
                     Lang.send(self, "admin.head.fetch-failed",
                             "<red>Failed to fetch head for <white>{target}</white>.</red>",
                             Map.of("target", target));
@@ -75,7 +76,7 @@ public class HeadCommand implements OreoCommand, org.bukkit.command.TabCompleter
             }
 
             // Step 3: Give head on main thread
-            Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+            OreScheduler.runForEntity(OreoEssentials.get(), self, () -> {
                 giveHead(self, profile, target);
             });
         });

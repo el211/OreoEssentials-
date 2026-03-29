@@ -4,6 +4,7 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.homes.home.HomeDirectory;
 import fr.elias.oreoEssentials.services.StorageApi;
 import fr.elias.oreoEssentials.migration.ZEssentialsHomeImporter;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.command.CommandSender;
 
 import java.sql.Connection;
@@ -64,7 +65,7 @@ public class ZEssentialsHomesImportCommand implements fr.elias.oreoEssentials.co
         sender.sendMessage("§eStarting zEssentials -> OreoEssentials home migration…");
         sender.sendMessage("§7Database: §f" + url);
 
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             try (Connection conn = DriverManager.getConnection(url, user, pass)) {
 
                 ZEssentialsHomeImporter importer = new ZEssentialsHomeImporter(

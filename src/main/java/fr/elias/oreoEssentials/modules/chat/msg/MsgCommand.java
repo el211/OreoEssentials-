@@ -7,6 +7,7 @@ import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.services.MessageService;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -87,11 +88,11 @@ public class MsgCommand implements OreoCommand {
         }
 
         // Run directory lookup async to avoid blocking main thread
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             try {
                 UUID targetUuid = dir.lookupUuidByName(targetName);
                 if (targetUuid == null) {
-                    Bukkit.getScheduler().runTask(plugin, () ->
+                    OreScheduler.runForEntity(plugin, sender, () ->
                             Lang.send(sender, "msg.not-found", "<red>Player not found.</red>"));
                     return;
                 }
@@ -102,13 +103,13 @@ public class MsgCommand implements OreoCommand {
 
                 String where = dir.getCurrentOrLastServer(targetUuid);
                 if (where == null || where.isBlank()) {
-                    Bukkit.getScheduler().runTask(plugin, () ->
+                    OreScheduler.runForEntity(plugin, sender, () ->
                             Lang.send(sender, "msg.not-found", "<red>Player not found or offline.</red>"));
                     return;
                 }
 
                 final UUID finalUuid = targetUuid;
-                Bukkit.getScheduler().runTask(plugin, () -> {
+                OreScheduler.runForEntity(plugin, sender, () -> {
                     try {
                         pm.sendPacket(PacketChannel.individual(where),
                                 new CrossServerMsgPacket(sender.getUniqueId(), sender.getName(), finalUuid, msg));
@@ -124,7 +125,7 @@ public class MsgCommand implements OreoCommand {
                     }
                 });
             } catch (Exception e) {
-                Bukkit.getScheduler().runTask(plugin, () ->
+                OreScheduler.runForEntity(plugin, sender, () ->
                         Lang.send(sender, "msg.not-found", "<red>Player not found.</red>"));
             }
         });

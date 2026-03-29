@@ -1,10 +1,11 @@
 package fr.elias.oreoEssentials.modules.maintenance;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.UUID;
 
@@ -14,7 +15,7 @@ import java.util.UUID;
 public class MaintenanceService {
     private final OreoEssentials plugin;
     private final MaintenanceConfig config;
-    private BukkitTask timerTask;
+    private OreTask timerTask;
 
     public MaintenanceService(OreoEssentials plugin, MaintenanceConfig config) {
         this.plugin = plugin;
@@ -167,7 +168,7 @@ public class MaintenanceService {
     private void startTimerCheck() {
         stopTimer(); // Stop existing task
 
-        timerTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        timerTask = OreScheduler.runTimer(plugin, () -> {
             if (config.isTimerExpired()) {
                 disable();
                 Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&',
@@ -181,7 +182,7 @@ public class MaintenanceService {
      * Stop the timer task
      */
     private void stopTimer() {
-        if (timerTask != null && !timerTask.isCancelled()) {
+        if (timerTask != null) {
             timerTask.cancel();
             timerTask = null;
         }

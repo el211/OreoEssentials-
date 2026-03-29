@@ -4,6 +4,7 @@ import com.destroystokyo.paper.profile.PlayerProfile;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.modules.skin.MojangSkinFetcher;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.modules.skin.SkinDebug;
 import fr.elias.oreoEssentials.modules.skin.SkinRefresh;
 import fr.elias.oreoEssentials.modules.skin.SkinUtil;
@@ -71,7 +72,7 @@ public class CloneCommand implements OreoCommand, org.bukkit.command.TabComplete
             SkinDebug.p(self, "Target not online. Fetching from Mojang API…");
             self.sendMessage(ChatColor.GRAY + "Fetching profile for " + ChatColor.WHITE + target + ChatColor.GRAY + "...");
 
-            Bukkit.getScheduler().runTaskAsynchronously(OreoEssentials.get(), () -> {
+            OreScheduler.runAsync(OreoEssentials.get(), () -> {
                 // Step 1: Get UUID
                 UUID uuid = MojangSkinFetcher.fetchUuid(target);
                 SkinDebug.p(self, "fetchUuid returned: " + uuid);
@@ -93,7 +94,7 @@ public class CloneCommand implements OreoCommand, org.bukkit.command.TabComplete
                 }
 
                 // Step 3: Apply on main thread
-                Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+                OreScheduler.runForEntity(OreoEssentials.get(), self, () -> {
                     applyClone(self, fetchedProfile, target);
                 });
             });

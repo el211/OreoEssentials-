@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.playersync;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.event.*;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -31,8 +32,9 @@ public final class PlayerSyncListener implements Listener {
         } catch (Exception ex) {
         }
 
-        p.getServer().getScheduler().runTaskLater(
-                p.getServer().getPluginManager().getPlugin("OreoEssentials"),
+        OreScheduler.runLaterForEntity(
+                OreoEssentials.get(),
+                p,
                 () -> service.loadAndApply(p),
                 10L
         );

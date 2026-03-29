@@ -7,13 +7,30 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class HoloText {
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY_AMP = LegacyComponentSerializer.legacyAmpersand();
     private static final LegacyComponentSerializer LEGACY_SEC = LegacyComponentSerializer.legacySection();
+
+    private static final Map<Character, String> AMP_TO_MINI;
+    static {
+        Map<Character, String> m = new HashMap<>();
+        m.put('l', "<bold>"); m.put('o', "<italic>"); m.put('n', "<underlined>");
+        m.put('m', "<strikethrough>"); m.put('k', "<obfuscated>"); m.put('r', "<reset>");
+        m.put('0', "<black>"); m.put('1', "<dark_blue>"); m.put('2', "<dark_green>");
+        m.put('3', "<dark_aqua>"); m.put('4', "<dark_red>"); m.put('5', "<dark_purple>");
+        m.put('6', "<gold>"); m.put('7', "<gray>"); m.put('8', "<dark_gray>");
+        m.put('9', "<blue>"); m.put('a', "<green>"); m.put('b', "<aqua>");
+        m.put('c', "<red>"); m.put('d', "<light_purple>"); m.put('e', "<yellow>");
+        m.put('f', "<white>");
+        AMP_TO_MINI = Collections.unmodifiableMap(m);
+    }
 
     private HoloText() {}
 
@@ -37,9 +54,17 @@ public final class HoloText {
 
             raw = applyPapi(raw, player);
 
-            Component line = looksLikeMiniMessage(raw)
-                    ? safeMiniMessage(raw)
-                    : LEGACY_AMP.deserialize(raw.replace('§', '&'));
+            // Normalise §-codes (from PAPI output, e.g. §6Blood) to & so they
+            // survive both the legacy path and the MiniMessage path.
+            raw = raw.replace('§', '&');
+
+            Component line;
+            if (looksLikeMiniMessage(raw)) {
+                // Convert & codes → MiniMessage tags so they aren't swallowed by MM.deserialize
+                line = safeMiniMessage(convertAmpToMiniMessage(raw));
+            } else {
+                line = LEGACY_AMP.deserialize(raw);
+            }
 
             out = out.append(line);
         }
@@ -60,6 +85,25 @@ public final class HoloText {
 
     public static String applyPapi(String text) {
         return applyPapi(text, null);
+    }
+
+    private static String convertAmpToMiniMessage(String s) {
+        if (s == null || s.indexOf('&') == -1) return s;
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '&' && i + 1 < s.length()) {
+                char code = Character.toLowerCase(s.charAt(i + 1));
+                String mini = AMP_TO_MINI.get(code);
+                if (mini != null) {
+                    sb.append(mini);
+                    i++;
+                    continue;
+                }
+            }
+            sb.append(c);
+        }
+        return sb.toString();
     }
 
     private static boolean looksLikeMiniMessage(String s) {

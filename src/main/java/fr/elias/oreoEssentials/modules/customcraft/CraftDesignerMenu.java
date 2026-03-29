@@ -1,6 +1,9 @@
 package fr.elias.oreoEssentials.modules.customcraft;
 
+import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.Async;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.InventoryListener;
 import fr.minuskube.inv.InventoryManager;
@@ -130,22 +133,26 @@ public final class CraftDesignerMenu implements InventoryProvider {
             Player p = (Player) e.getWhoClicked();
 
             if (e.isRightClick()) {
-                boolean ok = service.delete(recipeName);
-                if (ok) {
-                    Component msg = MM.deserialize(
-                            Lang.get("customcraft.messages.deleted",
-                                            "<green>Deleted recipe <yellow>%name%</yellow>.</green>")
-                                    .replace("%name%", recipeName)
-                    );
-                    p.sendMessage(msg);
-                } else {
-                    Component msg = MM.deserialize(
-                            Lang.get("customcraft.messages.invalid",
-                                    "<red>Invalid recipe.</red>")
-                    );
-                    p.sendMessage(msg);
-                }
-                p.closeInventory();
+                Async.run(() -> {
+                    boolean ok = service.delete(recipeName);
+                    if (ok) {
+                        Component msg = MM.deserialize(
+                                Lang.get("customcraft.messages.deleted",
+                                                "<green>Deleted recipe <yellow>%name%</yellow>.</green>")
+                                        .replace("%name%", recipeName)
+                        );
+                        OreScheduler.runForEntity(OreoEssentials.get(), p, () -> {
+                            p.sendMessage(msg);
+                            p.closeInventory();
+                        });
+                    } else {
+                        Component msg = MM.deserialize(
+                                Lang.get("customcraft.messages.invalid",
+                                        "<red>Invalid recipe.</red>")
+                        );
+                        OreScheduler.runForEntity(OreoEssentials.get(), p, () -> p.sendMessage(msg));
+                    }
+                });
             } else {
                 Component msg = MM.deserialize(
                         Lang.get("customcraft.messages.delete-hint",

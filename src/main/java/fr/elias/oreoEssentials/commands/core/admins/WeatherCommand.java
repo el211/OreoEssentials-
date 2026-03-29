@@ -1,6 +1,8 @@
 package fr.elias.oreoEssentials.commands.core.admins;
 
+import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -83,38 +85,35 @@ public final class WeatherCommand implements TabExecutor {
         int ticks = seconds == null ? 0 : Math.max(1, seconds) * 20;
         int changed = 0;
 
+        final WType finalType = type;
+        final Integer finalSeconds = seconds;
+        final int finalTicks = ticks;
+        final boolean finalLock = lock;
         for (World w : targets) {
-            // Apply weather state
-            switch (type) {
-                case SUN:
-                    w.setStorm(false);
-                    w.setThundering(false);
-                    break;
-                case RAIN:
-                    w.setStorm(true);
-                    w.setThundering(false);
-                    break;
-                case STORM:
-                    w.setStorm(true);
-                    w.setThundering(true);
-                    break;
-            }
-
-            // Duration handling
-            if (seconds != null) {
-                w.setWeatherDuration(ticks);
-                if (type == WType.STORM) {
-                    w.setThunderDuration(ticks);
+            // Dispatch each world mutation to the GlobalRegionScheduler (Folia requires it).
+            OreScheduler.run(OreoEssentials.get(), () -> {
+                switch (finalType) {
+                    case SUN:
+                        w.setStorm(false);
+                        w.setThundering(false);
+                        break;
+                    case RAIN:
+                        w.setStorm(true);
+                        w.setThundering(false);
+                        break;
+                    case STORM:
+                        w.setStorm(true);
+                        w.setThundering(true);
+                        break;
                 }
-            }
-
-            // Lock handling via gamerule
-            if (lock) {
-                try {
-                    w.setGameRuleValue("doWeatherCycle", "false");
-                } catch (Throwable ignored) {}
-            }
-
+                if (finalSeconds != null) {
+                    w.setWeatherDuration(finalTicks);
+                    if (finalType == WType.STORM) w.setThunderDuration(finalTicks);
+                }
+                if (finalLock) {
+                    try { w.setGameRuleValue("doWeatherCycle", "false"); } catch (Throwable ignored) {}
+                }
+            });
             changed++;
         }
 

@@ -6,6 +6,7 @@ import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.services.MessageService;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -72,11 +73,11 @@ public class ReplyCommand implements OreoCommand {
         }
 
         final UUID targetUuid = lastUuid;
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             try {
                 String where = dir.getCurrentOrLastServer(targetUuid);
                 if (where == null || where.isBlank()) {
-                    Bukkit.getScheduler().runTask(plugin, () ->
+                    OreScheduler.runForEntity(plugin, p, () ->
                             Lang.send(p, "reply.offline", "<red>That player is offline.</red>"));
                     return;
                 }
@@ -85,7 +86,7 @@ public class ReplyCommand implements OreoCommand {
                 if (resolvedName == null) resolvedName = targetUuid.toString();
                 final String finalName = resolvedName;
 
-                Bukkit.getScheduler().runTask(plugin, () -> {
+                OreScheduler.runForEntity(plugin, p, () -> {
                     try {
                         pm.sendPacket(PacketChannel.individual(where),
                                 new CrossServerMsgPacket(p.getUniqueId(), p.getName(), targetUuid, msg));
@@ -100,7 +101,7 @@ public class ReplyCommand implements OreoCommand {
                     }
                 });
             } catch (Exception e) {
-                Bukkit.getScheduler().runTask(plugin, () ->
+                OreScheduler.runForEntity(plugin, p, () ->
                         Lang.send(p, "reply.offline", "<red>That player is offline.</red>"));
             }
         });

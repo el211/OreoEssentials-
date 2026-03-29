@@ -6,6 +6,7 @@ import fr.elias.oreoEssentials.modules.back.BackLocation;
 import fr.elias.oreoEssentials.modules.back.service.BackService;
 import fr.elias.oreoEssentials.config.ConfigService;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -35,7 +36,7 @@ public class TeleportService {
         this.back = back;
         this.timeoutSec = config.tpaTimeoutSeconds();
 
-        Bukkit.getScheduler().runTaskTimer(plugin, this::cleanup, 20L * 30, 20L * 30);
+        OreScheduler.runTimer(plugin, this::cleanup, 20L * 30, 20L * 30);
     }
 
     public boolean request(Player from, Player to) {
@@ -96,11 +97,7 @@ public class TeleportService {
         // do TP
         Location dest = target.getLocation();
         if (dest != null) {
-            if (Bukkit.isPrimaryThread()) {
-                from.teleport(dest);
-            } else {
-                Bukkit.getScheduler().runTask(plugin, () -> from.teleport(dest));
-            }
+            OreScheduler.runForEntity(plugin, from, () -> from.teleport(dest));
         }
 
         // messages
@@ -162,10 +159,7 @@ public class TeleportService {
         if (who == null || to == null) return;
         try { if (back != null) back.setLast(who.getUniqueId(), who.getLocation()); } catch (Throwable ignored) {}
 
-        Runnable tp = () -> { try { who.teleport(to); } catch (Throwable ignored) {} };
-
-        if (Bukkit.isPrimaryThread()) tp.run();
-        else Bukkit.getScheduler().runTask(plugin, tp);
+        OreScheduler.runForEntity(plugin, who, () -> { try { who.teleport(to); } catch (Throwable ignored) {} });
     }
 
     public void teleportSilently(Player who, Player target) {

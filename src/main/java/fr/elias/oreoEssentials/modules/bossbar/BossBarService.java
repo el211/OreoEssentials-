@@ -1,6 +1,8 @@
 package fr.elias.oreoEssentials.modules.bossbar;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -31,7 +33,7 @@ public final class BossBarService implements Listener {
     private double progress;
     private long period;
 
-    private int taskId = -1;
+    private OreTask taskId = null;
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
@@ -66,7 +68,7 @@ public final class BossBarService implements Listener {
 
         for (Player p : Bukkit.getOnlinePlayers()) show(p);
 
-        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
+        taskId = OreScheduler.runTimer(plugin, () -> {
             if (!enabled) return;
             for (Player p : Bukkit.getOnlinePlayers()) {
                 BossBar bar = bars.get(p.getUniqueId());
@@ -83,9 +85,9 @@ public final class BossBarService implements Listener {
     }
 
     public void stop() {
-        if (taskId != -1) {
-            Bukkit.getScheduler().cancelTask(taskId);
-            taskId = -1;
+        if (taskId != null) {
+            taskId.cancel();
+            taskId = null;
         }
         for (BossBar bar : bars.values()) {
             try { bar.removeAll(); } catch (Throwable ignored) {}
@@ -104,11 +106,11 @@ public final class BossBarService implements Listener {
         }
 
         // ensure task is running with new period
-        if (taskId != -1) {
-            Bukkit.getScheduler().cancelTask(taskId);
-            taskId = -1;
+        if (taskId != null) {
+            taskId.cancel();
+            taskId = null;
         }
-        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
+        taskId = OreScheduler.runTimer(plugin, () -> {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 BossBar bar = bars.get(p.getUniqueId());
                 if (bar == null) { show(p); continue; }

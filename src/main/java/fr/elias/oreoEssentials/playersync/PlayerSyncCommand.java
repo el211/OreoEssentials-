@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.playersync;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -90,7 +91,7 @@ public final class PlayerSyncCommand implements OreoCommand, Listener {
             service.prefs().set(p.getUniqueId(), prefs);
             p.sendMessage(ChatColor.GRAY + "Updated sync prefs.");
             // re-open to refresh
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.runForEntity(plugin, p, () -> {
                 p.closeInventory();
                 execute(p, "sync", new String[0]);
             });

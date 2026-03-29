@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.skin;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -84,7 +85,7 @@ final class SkinRefresherPE implements SkinRefresher {
             SkinDebug.log("PE v2: sent PlayerInfoRemove to all viewers");
 
             // show again to force re-add using fresh profile entry
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 for (Player v : Bukkit.getOnlinePlayers()) {
                     if (v.equals(player)) continue;
                     v.hidePlayer(plugin, player);
@@ -135,7 +136,7 @@ final class SkinRefresherPE implements SkinRefresher {
             for (Player v : Bukkit.getOnlinePlayers()) send.invoke(pm, v, packet);
             SkinDebug.log("PE v1: sent PlayerInfo REMOVE to all");
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 for (Player v : Bukkit.getOnlinePlayers()) {
                     if (v.equals(player)) continue;
                     v.hidePlayer(plugin, player);

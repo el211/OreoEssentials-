@@ -19,7 +19,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.util.OreTask;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -33,7 +32,7 @@ public final class AutoRebootService implements Listener {
     private String localServer = "";
     private long lastSecondsLeft = Long.MAX_VALUE;
 
-    private BukkitTask tickTask;
+    private OreTask tickTask;
 
     private boolean enabled;
     private Mode mode;
@@ -140,9 +139,9 @@ public final class AutoRebootService implements Listener {
         // hook cross-server receiver (packet) as soon as possible
         tryHookCrossServerNow();
         if (!crossHandlersRegistered) {
-            Bukkit.getScheduler().runTaskLater(plugin, this::tryHookCrossServerNow, 40L);
-            Bukkit.getScheduler().runTaskLater(plugin, this::tryHookCrossServerNow, 100L);
-            Bukkit.getScheduler().runTaskLater(plugin, this::tryHookCrossServerNow, 200L);
+            OreScheduler.runLater(plugin, this::tryHookCrossServerNow, 40L);
+            OreScheduler.runLater(plugin, this::tryHookCrossServerNow, 100L);
+            OreScheduler.runLater(plugin, this::tryHookCrossServerNow, 200L);
         }
         plugin.getLogger().info("[AutoReboot/DEBUG] enabled=" + enabled
                 + " mode=" + mode
@@ -196,7 +195,7 @@ public final class AutoRebootService implements Listener {
             String worldName = pkt.getWorldName();
             String regionName = pkt.getRegionName();
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 Player p = Bukkit.getPlayer(playerId);
 
                 // if player not online yet (server switch), store & apply on join
@@ -223,7 +222,7 @@ public final class AutoRebootService implements Listener {
         PendingSafeTeleport pending = pendingSafeTeleports.remove(p.getUniqueId());
         if (pending == null) return;
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        OreScheduler.runLaterForEntity(plugin, p, () -> {
             if (!p.isOnline()) return;
             teleportPlayerToSafeRegion(p, pending.worldName(), pending.regionName(), pending.message());
         }, 20L);
@@ -232,7 +231,7 @@ public final class AutoRebootService implements Listener {
     private void scheduleTick() {
         lastSecondsLeft = Long.MAX_VALUE;
 
-        tickTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        tickTask = OreScheduler.runTimer(plugin, () -> {
             if (!enabled) return;
             if (nextRebootAt == null) return;
 
@@ -289,7 +288,7 @@ public final class AutoRebootService implements Listener {
         }
 
         int delayTicks = Math.max(1, (action == Action.SAFE_ZONE ? safeDelaySeconds : 1) * 20);
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        OreScheduler.runLater(plugin, () -> {
             if (tryPaperRestart()) return;
             Bukkit.shutdown();
         }, delayTicks);

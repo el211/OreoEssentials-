@@ -61,7 +61,7 @@ public final class FillOrderMenu implements InventoryProvider {
         }
 
         final int finalQty = qty;
-        org.bukkit.Bukkit.getScheduler().runTask(module.getPlugin(), () ->
+        fr.elias.oreoEssentials.util.OreScheduler.run(module.getPlugin(), () ->
                 ConfirmFillMenu.getInventory(module, order, finalQty).open(p));
         return true;
     }
@@ -212,7 +212,7 @@ public final class FillOrderMenu implements InventoryProvider {
                                         };
                                         player.sendMessage(module.getConfig().msg(key));
                                         // Refresh browser on main thread
-                                        org.bukkit.Bukkit.getScheduler().runTask(module.getPlugin(), () ->
+                                        fr.elias.oreoEssentials.util.OreScheduler.run(module.getPlugin(), () ->
                                                 OrderBrowserMenu.getInventory(module).open(player));
                                     }
                                 });

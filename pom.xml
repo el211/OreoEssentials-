@@ -6,7 +6,7 @@
 
     <groupId>fr.elias</groupId>
     <artifactId>OreoEssentials</artifactId>
-    <version>4.1-SNAPSHOT</version>
+    <version>4.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>OreoEssentials</name>
@@ -151,6 +151,7 @@
             <version>0.0.13</version>
         </dependency>
         <dependency>
+
             <groupId>com.fastasyncworldedit</groupId>
             <artifactId>FastAsyncWorldEdit-Core</artifactId>
             <scope>provided</scope>

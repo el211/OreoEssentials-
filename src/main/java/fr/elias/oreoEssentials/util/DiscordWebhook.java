@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.util;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.Plugin;
+import fr.elias.oreoEssentials.util.OreScheduler;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -24,7 +25,7 @@ public class DiscordWebhook {
 
     public void sendAsync(String username, String content) {
         if (!isConfigured()) return;
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> send(username, content));
+        OreScheduler.runAsync(plugin, () -> send(username, content));
     }
 
     public void send(String username, String content) {

@@ -1,12 +1,13 @@
 package fr.elias.oreoEssentials.modules.jail;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import fr.elias.oreoEssentials.util.TimeText;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
@@ -16,7 +17,7 @@ public final class JailService {
 
     private final Map<String, JailModels.Jail> jails = new HashMap<>();
     private final Map<UUID, JailModels.Sentence> active = new HashMap<>();
-    private BukkitTask guardTask;
+    private OreTask guardTask;
 
     private final Set<String> blockedCommands = new HashSet<>(Arrays.asList(
             "spawn", "home", "sethome", "warp", "rtp", "tpa", "tp", "back",
@@ -35,7 +36,7 @@ public final class JailService {
         active.putAll(storage.loadSentences());
 
         if (guardTask != null) guardTask.cancel();
-        guardTask = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
+        guardTask = OreScheduler.runTimer(plugin, this::tick, 20L, 20L);
         plugin.getLogger().info("[Jails] Loaded " + jails.size() + " jails, " + active.size() + " active sentence(s).");
     }
 
@@ -156,7 +157,7 @@ public final class JailService {
         Player p = Bukkit.getPlayer(player);
         if (p != null && p.isOnline()) {
             final Location finalSpawn = spawn;
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.runForEntity(plugin, p, () -> {
                 p.teleport(finalSpawn);
                 p.sendMessage("§cYou have been jailed"
                         + (s.endEpochMs > 0 ? (" for " + TimeText.format(durationMs)) : " permanently")
@@ -295,7 +296,7 @@ public final class JailService {
 
                 if (spawn != null) {
                     final Location finalSpawn = spawn;
-                    Bukkit.getScheduler().runTask(plugin, () -> {
+                    OreScheduler.runForEntity(plugin, p, () -> {
                         p.teleport(finalSpawn);
                         p.sendMessage("§cYou cannot escape from jail!");
                     });
@@ -325,7 +326,7 @@ public final class JailService {
             if (p != null && p.isOnline()) {
                 final Location finalSpawn = spawn;
                 // Delay to ensure world is loaded
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                OreScheduler.runLaterForEntity(plugin, p, () -> {
                     p.teleport(finalSpawn);
 
                     long remaining = s.remainingMs();

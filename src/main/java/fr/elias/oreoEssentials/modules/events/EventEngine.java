@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.events;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.rabbitmq.packet.impl.DeathMessagePacket;
 import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
@@ -74,13 +75,22 @@ public final class EventEngine implements Listener {
             };
 
             if (delay > 0) {
-                Bukkit.getScheduler().runTaskLater(
-                        Bukkit.getPluginManager().getPlugin("OreoEssentials"),
-                        task,
-                        delay * 20L
-                );
+                // player commands need entity context; console commands need global context
+                if (asPlayerF && playerContext != null) {
+                    OreScheduler.runLaterForEntity(OreoEssentials.get(), playerContext, task, delay * 20L);
+                } else {
+                    OreScheduler.runLater(OreoEssentials.get(), task, delay * 20L);
+                }
             } else {
-                task.run();
+                // On Folia, Bukkit.dispatchCommand() requires the global tick thread and
+                // Player.performCommand() requires the entity's region thread.
+                // Running via the appropriate scheduler satisfies both requirements on
+                // Folia while adding only a negligible 1-tick lag on Paper.
+                if (asPlayerF && playerContext != null) {
+                    OreScheduler.runForEntity(OreoEssentials.get(), playerContext, task);
+                } else {
+                    OreScheduler.run(OreoEssentials.get(), task);
+                }
             }
         }
     }
@@ -138,11 +148,9 @@ public final class EventEngine implements Listener {
             run(EventType.playerPreWorldChange, e.getPlayer(),
                     Map.of("[toWorld]", e.getTo().getWorld().getName()));
             // fire post-change one tick later to simulate "after"
-            Bukkit.getScheduler().runTask(
-                    Bukkit.getPluginManager().getPlugin("OreoEssentials"),
+            OreScheduler.run(OreoEssentials.get(),
                     () -> run(EventType.playerWorldChange, e.getPlayer(),
-                            Map.of("[toWorld]", e.getTo().getWorld().getName()))
-            );
+                            Map.of("[toWorld]", e.getTo().getWorld().getName())));
         }
     }
 
@@ -249,24 +257,20 @@ public final class EventEngine implements Listener {
             final String victimName  = victim.getName();
 
             // schedule stop after 15s of no hits between the pair
-            Bukkit.getScheduler().runTaskLater(
-                    Bukkit.getPluginManager().getPlugin("OreoEssentials"),
-                    () -> {
-                        if (Objects.equals(pvpLastOpponent.get(aF), bF)
-                                && Objects.equals(pvpLastOpponent.get(bF), aF)) {
-                            pvpLastOpponent.remove(aF);
-                            pvpLastOpponent.remove(bF);
-                            Player pa = Bukkit.getPlayer(aF), pb = Bukkit.getPlayer(bF);
-                            if (pa != null) {
-                                run(EventType.pvpstop, pa, Map.of("[opponent]", victimName));
-                            }
-                            if (pb != null) {
-                                run(EventType.pvpstop, pb, Map.of("[opponent]", damagerName));
-                            }
-                        }
-                    },
-                    20L * 15
-            );
+            OreScheduler.runLater(OreoEssentials.get(), () -> {
+                if (Objects.equals(pvpLastOpponent.get(aF), bF)
+                        && Objects.equals(pvpLastOpponent.get(bF), aF)) {
+                    pvpLastOpponent.remove(aF);
+                    pvpLastOpponent.remove(bF);
+                    Player pa = Bukkit.getPlayer(aF), pb = Bukkit.getPlayer(bF);
+                    if (pa != null) {
+                        run(EventType.pvpstop, pa, Map.of("[opponent]", victimName));
+                    }
+                    if (pb != null) {
+                        run(EventType.pvpstop, pb, Map.of("[opponent]", damagerName));
+                    }
+                }
+            }, 20L * 15);
         }
     }
 

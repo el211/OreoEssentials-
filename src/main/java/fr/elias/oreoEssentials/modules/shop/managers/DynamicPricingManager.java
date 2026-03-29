@@ -2,9 +2,10 @@ package fr.elias.oreoEssentials.modules.shop.managers;
 
 import fr.elias.oreoEssentials.modules.shop.ShopModule;
 import fr.elias.oreoEssentials.modules.shop.models.ShopItem;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +29,7 @@ public final class DynamicPricingManager {
     private final File dataFile;
 
     private final Map<String, Long> buyCounts = new HashMap<>();
-    private BukkitTask decayTask, saveTask;
+    private OreTask decayTask, saveTask;
 
     private boolean enabled;
     private double  demandScale;
@@ -125,13 +126,12 @@ public final class DynamicPricingManager {
         long decayTicks = decayMinutes * 60L * 20L;
         long saveTicks  = saveMinutes  * 60L * 20L;
 
-        decayTask = module.getPlugin().getServer().getScheduler().runTaskTimer(module.getPlugin(), () -> {
+        decayTask = OreScheduler.runTimer(module.getPlugin(), () -> {
             buyCounts.replaceAll((k, v) -> Math.max(Math.round(v * (1.0 - decayRate)), 0L));
             buyCounts.values().removeIf(v -> v <= 0);
         }, decayTicks, decayTicks);
 
-        saveTask = module.getPlugin().getServer().getScheduler().runTaskTimer(
-                module.getPlugin(), this::save, saveTicks, saveTicks);
+        saveTask = OreScheduler.runTimer(module.getPlugin(), this::save, saveTicks, saveTicks);
     }
 
     private void cancelTasks() {

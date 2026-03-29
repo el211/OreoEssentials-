@@ -5,6 +5,7 @@ import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.modules.economy.EconomyService;
 import fr.elias.oreoEssentials.util.Async;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -234,7 +235,7 @@ public class MoneyCommand implements CommandExecutor, OreoCommand {
     private void sendSync(CommandSender who, String text) {
         if (text == null) return;
         if (Bukkit.isPrimaryThread()) who.sendMessage(text);
-        else Bukkit.getScheduler().runTask(plugin, () -> who.sendMessage(text));
+        else OreScheduler.run(plugin, () -> who.sendMessage(text));
     }
 
     private String fmt(double v) {

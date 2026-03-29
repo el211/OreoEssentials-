@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.tasks;
 
+import fr.elias.oreoEssentials.util.OreScheduler;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -36,7 +37,7 @@ public final class AutoMessageScheduler {
             long seconds = sec.getLong("timer_loop", 60L);
             long periodTicks = Math.max(1L, seconds) * 20L;
 
-            Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            OreScheduler.runTimer(plugin, () -> {
                 String output = lookLikePlayer
                         ? (playerPrefixFmt + " " + playerNameFmt + " " + delimiter + " " + text)
                         : text;

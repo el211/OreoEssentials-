@@ -3,7 +3,9 @@ package fr.elias.oreoEssentials.modules.spawn;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
+import fr.elias.oreoEssentials.util.Async;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -26,22 +28,24 @@ public class SetSpawnCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         Player p = (Player) sender;
+        OreoEssentials plugin = OreoEssentials.get();
+        String local = plugin.getConfigService().serverName();
+        org.bukkit.Location loc = p.getLocation();
 
-        String local = OreoEssentials.get().getConfigService().serverName();
+        Async.run(() -> {
+            spawn.setSpawn(local, loc);
+            SpawnDirectory spawnDir = plugin.getSpawnDirectory();
+            if (spawnDir != null) spawnDir.setSpawnServer(local);
 
-        spawn.setSpawn(local, p.getLocation());
-
-        Lang.send(p, "admin.setspawn.set",
-                "<green>Spawn set.</green>");
-
-        SpawnDirectory spawnDir = OreoEssentials.get().getSpawnDirectory();
-        if (spawnDir != null) {
-            spawnDir.setSpawnServer(local);
-
-            Lang.send(p, "admin.setspawn.cross-server-info",
-                    "<gray>(Cross-server) Spawn owner set to <aqua>%server%</aqua>.</gray>",
-                    Map.of("server", local));
-        }
+            OreScheduler.runForEntity(plugin, p, () -> {
+                Lang.send(p, "admin.setspawn.set", "<green>Spawn set.</green>");
+                if (spawnDir != null) {
+                    Lang.send(p, "admin.setspawn.cross-server-info",
+                            "<gray>(Cross-server) Spawn owner set to <aqua>%server%</aqua>.</gray>",
+                            Map.of("server", local));
+                }
+            });
+        });
 
         return true;
     }

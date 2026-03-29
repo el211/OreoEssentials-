@@ -1,11 +1,11 @@
 package fr.elias.oreoEssentials.modules.webpanel;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -54,27 +54,21 @@ public class WebLinkCommand implements CommandExecutor {
         player.sendMessage("§7Generating link code…");
 
         // HTTP call off the main thread
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                boolean success = client.registerWebLink(code, uuid, name);
+        OreScheduler.runAsync(OreoEssentials.get(), () -> {
+            boolean success = client.registerWebLink(code, uuid, name);
 
-                // Send result back on the main thread
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        if (success) {
-                            player.sendMessage("§6§l✦ OreoStudios Panel §r§6— Link your account");
-                            player.sendMessage("§7Your link code: §e§l" + code);
-                            player.sendMessage("§7Go to §b" + panelUrl + "§7 and enter this code.");
-                            player.sendMessage("§7Code expires in §e5 minutes§7.");
-                        } else {
-                            player.sendMessage("§cCould not reach the panel. Please try again later.");
-                        }
-                    }
-                }.runTask(OreoEssentials.get());
-            }
-        }.runTaskAsynchronously(OreoEssentials.get());
+            // Send result back on the main thread
+            OreScheduler.runForEntity(OreoEssentials.get(), player, () -> {
+                if (success) {
+                    player.sendMessage("§6§l✦ OreoStudios Panel §r§6— Link your account");
+                    player.sendMessage("§7Your link code: §e§l" + code);
+                    player.sendMessage("§7Go to §b" + panelUrl + "§7 and enter this code.");
+                    player.sendMessage("§7Code expires in §e5 minutes§7.");
+                } else {
+                    player.sendMessage("§cCould not reach the panel. Please try again later.");
+                }
+            });
+        });
 
         return true;
     }

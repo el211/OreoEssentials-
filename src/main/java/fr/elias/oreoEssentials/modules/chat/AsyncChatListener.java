@@ -15,6 +15,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.cacheddata.CachedMetaData;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.World;
@@ -213,7 +214,7 @@ public final class AsyncChatListener implements Listener {
         }
         if (gui != null && gui.isStaffChatEnabled(player.getUniqueId())) {
             final String staffMsg = PlainTextComponentSerializer.plainText().serialize(event.message());
-            Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+            OreScheduler.run(OreoEssentials.get(), () -> {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     if (p.hasPermission("oreo.staffchat")) {
                         p.sendMessage("§b[StaffChat] §f" + player.getName() + ": §7" + staffMsg);
@@ -234,7 +235,7 @@ public final class AsyncChatListener implements Listener {
         final String rawMsg = msg;
         final String serverName = Bukkit.getServer().getName();
 
-        Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+        OreScheduler.run(OreoEssentials.get(), () -> {
             Player live = Bukkit.getPlayer(senderUuid);
             if (live == null) return;
 

@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.playtime;
 
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -55,7 +56,7 @@ public final class YamlPlaytimeDataStore implements PlaytimeDataStore {
 
 
     @Override public void saveAsync() {
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             try { cfg.save(file); } catch (IOException e) { plugin.getLogger().warning("Failed to save prewards_data.yml: " + e.getMessage()); }
         });
     }

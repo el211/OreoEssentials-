@@ -5,6 +5,7 @@ import fr.elias.oreoEssentials.modules.spawn.rabbit.packets.SpawnTeleportRequest
 import fr.elias.oreoEssentials.modules.warps.rabbit.packets.WarpTeleportRequestPacket;
 import fr.elias.oreoEssentials.modules.spawn.SpawnService;
 import fr.elias.oreoEssentials.modules.warps.WarpService;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -107,11 +108,11 @@ public final class CrossServerTeleportBroker implements Listener {
                                   String tag,
                                   String warpNameOrNull) {
         // now
-        Bukkit.getScheduler().runTask(plugin, () -> runOnce(playerId, targetSupplier, tag, warpNameOrNull, 0));
+        OreScheduler.run(plugin, () -> runOnce(playerId, targetSupplier, tag, warpNameOrNull, 0));
         // +2 ticks
-        Bukkit.getScheduler().runTaskLater(plugin, () -> runOnce(playerId, targetSupplier, tag, warpNameOrNull, 2), 2L);
+        OreScheduler.runLater(plugin, () -> runOnce(playerId, targetSupplier, tag, warpNameOrNull, 2), 2L);
         // +10 ticks
-        Bukkit.getScheduler().runTaskLater(plugin, () -> runOnce(playerId, targetSupplier, tag, warpNameOrNull, 10), 10L);
+        OreScheduler.runLater(plugin, () -> runOnce(playerId, targetSupplier, tag, warpNameOrNull, 10), 10L);
     }
 
     private void runOnce(UUID id,

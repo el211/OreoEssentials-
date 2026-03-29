@@ -12,6 +12,7 @@ import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
@@ -171,7 +172,7 @@ public final class TradeCrossServerBroker {
 
     public void handleRemoteStart(TradeStartPacket p) {
         if (p == null) return;
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             tradeService.openOrCreateCrossServerSession(p.getSessionId(),
                     p.getRequesterId(), p.getRequesterName(),
                     p.getAcceptorId(), p.getAcceptorName());
@@ -201,7 +202,7 @@ public final class TradeCrossServerBroker {
         if (requesterServer != null && !requesterServer.isBlank() && pm != null && pm.isInitialized()) {
             log("[TRADE] acceptInvite -> START INDIVIDUAL(" + requesterServer + ") sid=" + sid);
             pm.sendPacket(PacketChannels.individual(requesterServer), start);
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            OreScheduler.runLater(plugin, () -> {
                 pm.sendPacket(PacketChannels.individual(requesterServer), start);
             }, 2L);
             sent = true;
@@ -211,7 +212,7 @@ public final class TradeCrossServerBroker {
             if (!Objects.equals(requesterServer, acceptorServer)) {
                 log("[TRADE] acceptInvite -> START INDIVIDUAL(" + acceptorServer + ") sid=" + sid);
                 pm.sendPacket(PacketChannels.individual(acceptorServer), start);
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                OreScheduler.runLater(plugin, () -> {
                     pm.sendPacket(PacketChannels.individual(acceptorServer), start);
                 }, 2L);
             }
@@ -221,7 +222,7 @@ public final class TradeCrossServerBroker {
         if (!sent && pm != null && pm.isInitialized()) {
             log("[TRADE] acceptInvite -> START GLOBAL (fallback) sid=" + sid);
             pm.sendPacket(PacketChannels.GLOBAL, start);
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            OreScheduler.runLater(plugin, () -> {
                 pm.sendPacket(PacketChannels.GLOBAL, start);
             }, 2L);
         }
@@ -385,7 +386,7 @@ public final class TradeCrossServerBroker {
         sessions.remove(packet.getSessionId());
         log("[TRADE] handleRemoteCancel sid=" + packet.getSessionId()
                 + " reason=" + packet.getReason());
-        Bukkit.getScheduler().runTask(plugin, () ->
+        OreScheduler.run(plugin, () ->
                 tradeService.applyRemoteCancel(packet.getSessionId(), "Trade cancelled.")
         );
     }
@@ -393,7 +394,7 @@ public final class TradeCrossServerBroker {
     public void handleRemoteGrant(TradeGrantPacket packet) {
         if (packet == null) return;
         if (!Bukkit.isPrimaryThread()) {
-            Bukkit.getScheduler().runTask(plugin, () -> handleRemoteGrant(packet));
+            OreScheduler.run(plugin, () -> handleRemoteGrant(packet));
             return;
         }
         tradeService.handleRemoteGrant(packet);

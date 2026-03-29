@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.oreobotfeatures.listeners;
 
+import fr.elias.oreoEssentials.util.OreScheduler;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -102,7 +103,7 @@ public final class ConversationListener implements Listener {
                 : body;
 
         String legacyMsg = legacy.serialize(mm.deserialize(output));
-        Bukkit.getScheduler().runTask(plugin, () ->
+        OreScheduler.run(plugin, () ->
                 Bukkit.getOnlinePlayers().forEach(p -> p.sendMessage(legacyMsg)));
     }
 }

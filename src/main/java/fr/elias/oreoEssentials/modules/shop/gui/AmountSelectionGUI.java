@@ -162,7 +162,7 @@ public final class AmountSelectionGUI {
                 int units = Math.max(1, qty[0] / Math.max(1, shopItem.getAmount()));
                 if (isBuy) module.getTransactionProcessor().processBuy(player,  shopItem, units);
                 else       module.getTransactionProcessor().processSell(player, shopItem, units);
-                module.getPlugin().getServer().getScheduler().runTaskLater(module.getPlugin(),
+                fr.elias.oreoEssentials.util.OreScheduler.runLater(module.getPlugin(),
                         () -> module.getShopGUI().open(player, shop, page), 1L);
             }));
 

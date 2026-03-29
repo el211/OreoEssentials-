@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.tp;
 
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -21,9 +22,9 @@ public final class RetryTeleporter {
 
     public void applyWithRetries(UUID playerId, Supplier<Location> targetSupplier, String tag) {
         runOnce(playerId, targetSupplier, tag, 0);
-        Bukkit.getScheduler().runTaskLater(plugin, () ->
+        OreScheduler.runLater(plugin, () ->
                 runOnce(playerId, targetSupplier, tag, 2), 2L);
-        Bukkit.getScheduler().runTaskLater(plugin, () ->
+        OreScheduler.runLater(plugin, () ->
                 runOnce(playerId, targetSupplier, tag, 10), 10L);
     }
 

@@ -4,6 +4,7 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.event.PacketSubscriber;
 import fr.elias.oreoEssentials.rabbitmq.packet.impl.DeathMessagePacket;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 
 public class DeathMessagePacketHandler implements PacketSubscriber<DeathMessagePacket> {
@@ -37,7 +38,7 @@ public class DeathMessagePacketHandler implements PacketSubscriber<DeathMessageP
         plugin.getLogger().fine("[Rabbit] Death @" + channel + " from=" + sourceServer + " -> " + deadPlayerName);
 
         try {
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 Bukkit.broadcastMessage(message);
             });
         } catch (Throwable t) {

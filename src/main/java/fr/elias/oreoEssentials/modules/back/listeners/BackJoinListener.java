@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.back.listeners;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.back.BackLocation;
 import fr.elias.oreoEssentials.modules.back.service.BackService;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -39,7 +40,7 @@ public class BackJoinListener implements Listener {
                 + " joined with pending /back teleport to: "
                 + pending.getWorldName() + " (" + pending.getX() + ", " + pending.getY() + ", " + pending.getZ() + ")");
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        OreScheduler.runLaterForEntity(plugin, player, () -> {
             try {
                 if (!player.isOnline()) {
                     plugin.getLogger().warning("[BackJoinListener] " + player.getName() + " disconnected before pending /back teleport.");

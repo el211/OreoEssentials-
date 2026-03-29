@@ -148,6 +148,19 @@ public final class TextOreoHologram extends OreoHologram {
         });
     }
 
+    /**
+     * Re-renders the hologram text immediately, re-applying PAPI placeholders.
+     * Called after a delayed startup so PAPI expansions are guaranteed to be registered.
+     */
+    public void forceRefresh() {
+        if (isPerPlayerEnabled()) return; // per-player service handles its own refresh
+        findEntity().ifPresent(e -> {
+            TextDisplay td = (TextDisplay) e;
+            List<String> renderLines = processIcons(data.lines, td.getLocation());
+            setText(td, HoloText.render(renderLines));
+        });
+    }
+
     /* ================================================================== */
     /*  Line editing methods                                               */
     /* ================================================================== */

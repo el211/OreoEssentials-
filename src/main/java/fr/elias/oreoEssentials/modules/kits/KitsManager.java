@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.kits;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -275,7 +276,7 @@ public class KitsManager {
                 }
 
                 long runAt = delayTicks;
-                Bukkit.getScheduler().runTaskLater(plugin, () -> runKitCommand(p, line), runAt);
+                OreScheduler.runLater(plugin, () -> runKitCommand(p, line), runAt);
             }
 
             Lang.send(p, "kits.commands-ran",

@@ -4,12 +4,13 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -36,7 +37,7 @@ public class CustomTablistLayout {
 
     private final OreoEssentials plugin;
     private final TabListManager tabManager;
-    private BukkitTask updateTask;
+    private OreTask updateTask;
 
     private int currentFrame = 0;
     private long lastFrameChange = 0;
@@ -48,7 +49,7 @@ public class CustomTablistLayout {
 
     public void start(int intervalTicks) {
         stop();
-        updateTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        updateTask = OreScheduler.runTimer(plugin, () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 try {
                     updateCustomTablist(player);
@@ -130,11 +131,23 @@ public class CustomTablistLayout {
         for (Player target : players) {
             String displayName = formatPlayerName(target, cfg);
             displayName = applyPlaceholders(target, displayName);
-            displayName = color(displayName);
+
+            // Normalise the full pipeline into a Component so MiniMessage tags
+            // (e.g. from LuckPerms PAPI) render correctly in the tab list.
             try {
-                target.setPlayerListName(displayName);
-            } catch (Exception e) {
-                plugin.getLogger().warning("[CustomTab] Failed to set player list name for " + target.getName());
+                String mm = AMP_HEX.matcher(displayName).replaceAll("<#$1>");
+                mm = CLOSING_COLOR_TAG.matcher(mm).replaceAll("<reset>");
+                mm = mm.replace('§', '&');
+                mm = convertAmpToMiniMessage(mm);
+                Component comp = MM.deserialize(mm);
+                target.playerListName(comp);
+            } catch (Throwable e) {
+                // Fallback: legacy string path
+                try {
+                    target.setPlayerListName(color(displayName));
+                } catch (Exception ex) {
+                    plugin.getLogger().warning("[CustomTab] Failed to set player list name for " + target.getName());
+                }
             }
         }
     }
@@ -235,18 +248,23 @@ public class CustomTablistLayout {
         // 2. </gold> etc. → <reset>
         s = CLOSING_COLOR_TAG.matcher(s).replaceAll("<reset>");
 
-        // 3. & codes → MiniMessage equivalents so they work inside <gradient> tags
+        // 3. §-codes (e.g. from %player_displayname% or %simplenick_nickname% PAPI output)
+        //    → & so they survive MM.deserialize when mixed with MiniMessage prefix tags
+        s = s.replace('§', '&');
+
+        // 4. & codes → MiniMessage equivalents so they work inside <gradient> tags
         s = convertAmpToMiniMessage(s);
 
-        // 4. MiniMessage parse — handles <gradient>, <rainbow>, <#RRGGBB>, named tags etc.
+        // 5. MiniMessage parse — handles <gradient>, <rainbow>, <#RRGGBB>, named tags etc.
         if (s.indexOf('<') != -1 && s.indexOf('>') != -1) {
             try {
                 Component comp = MM.deserialize(s);
                 s = LEGACY.serialize(comp);
+                return s;
             } catch (Throwable ignored) {}
         }
 
-        // 5. Fallback & translation for anything PAPI returned that didn't go through MM
+        // 6. Fallback & translation for anything PAPI returned that didn't go through MM
         s = ChatColor.translateAlternateColorCodes('&', s);
 
         return s;

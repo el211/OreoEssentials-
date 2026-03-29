@@ -5,12 +5,14 @@ import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.spawn.rabbit.packets.SpawnTeleportRequestPacket;
+import fr.elias.oreoEssentials.util.Async;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -85,94 +87,75 @@ public class SpawnCommand implements OreoCommand {
     }
     private boolean handleLocalSpawn(OreoEssentials plugin, Player p, java.util.logging.Logger log) {
         String localServer = plugin.getConfigService().serverName();
-        Location spawnLoc = spawn.getSpawn(localServer);
-        if (spawnLoc == null) {
-            Lang.send(p, "spawn.not-set",
-                    "<red>Spawn location is not set.</red>");
-            log.warning("[SpawnCmd] Local spawn not set.");
-            return true;
-        }
-        log.info("[SpawnCmd] Spawn location: world=" + spawnLoc.getWorld().getName()
-                + " x=" + spawnLoc.getX()
-                + " y=" + spawnLoc.getY()
-                + " z=" + spawnLoc.getZ());
+
         ConfigurationSection sec =
                 plugin.getSettingsConfig().getRoot().getConfigurationSection("features.spawn");
         boolean enabled = sec != null && sec.getBoolean("cooldown", false);
         int seconds     = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
-
         boolean bypassCooldown = p.isOp();
 
-        if (bypassCooldown || !enabled || seconds <= 0) {
-            try {
-                p.teleport(spawnLoc);
-                Lang.send(p, "spawn.teleported",
-                        "<green>Teleported to spawn.</green>");
-                log.info("[SpawnCmd] Local teleport success. loc=" + spawnLoc
-                        + (bypassCooldown ? " (bypass cooldown: OP)" : ""));
-            } catch (Exception ex) {
-                log.warning("[SpawnCmd] Local teleport exception: " + ex.getMessage());
-                Lang.send(p, "spawn.teleport-failed",
-                        "<red>Teleport failed: %error%</red>",
-                        Map.of("error", ex.getMessage() == null ? "unknown" : ex.getMessage()));
-            }
-            return true;
-        }
-
-        final Location origin = p.getLocation().clone();
-
-        new BukkitRunnable() {
-            int remain = seconds;
-
-            @Override
-            public void run() {
-                if (!p.isOnline()) {
-                    log.info("[SpawnCmd] Player went offline during spawn countdown; cancel.");
-                    cancel();
+        // Fetch spawn location async, then do the teleport on the entity thread.
+        Async.run(() -> {
+            Location spawnLoc = spawn.getSpawn(localServer);
+            OreScheduler.runForEntity(plugin, p, () -> {
+                if (spawnLoc == null) {
+                    Lang.send(p, "spawn.not-set", "<red>Spawn location is not set.</red>");
+                    log.warning("[SpawnCmd] Local spawn not set.");
                     return;
                 }
+                log.info("[SpawnCmd] Spawn location: world=" + spawnLoc.getWorld().getName()
+                        + " x=" + spawnLoc.getX() + " y=" + spawnLoc.getY() + " z=" + spawnLoc.getZ());
 
-                if (hasBodyMoved(p, origin)) {
-                    cancel();
-                    Lang.send(p, "spawn.cancelled-moved",
-                            "<red>Teleport cancelled: you moved.</red>");
-                    log.info("[SpawnCmd] Player moved during spawn countdown; cancelled.");
-                    return;
-                }
-
-                if (remain <= 0) {
-                    cancel();
+                if (bypassCooldown || !enabled || seconds <= 0) {
                     try {
                         p.teleport(spawnLoc);
-                        Lang.send(p, "spawn.teleported",
-                                "<green>Teleported to spawn.</green>");
-                        log.info("[SpawnCmd] Local teleport success after countdown. loc=" + spawnLoc);
+                        Lang.send(p, "spawn.teleported", "<green>Teleported to spawn.</green>");
+                        log.info("[SpawnCmd] Local teleport success." + (bypassCooldown ? " (OP bypass)" : ""));
                     } catch (Exception ex) {
-                        log.warning("[SpawnCmd] Local teleport exception after countdown: " + ex.getMessage());
-                        Lang.send(p, "spawn.teleport-failed",
-                                "<red>Teleport failed: %error%</red>",
+                        log.warning("[SpawnCmd] Local teleport exception: " + ex.getMessage());
+                        Lang.send(p, "spawn.teleport-failed", "<red>Teleport failed: %error%</red>",
                                 Map.of("error", ex.getMessage() == null ? "unknown" : ex.getMessage()));
                     }
                     return;
                 }
 
-                String title = Lang.msgWithDefault(
-                        "teleport.countdown.title",
-                        "<yellow>Teleporting...</yellow>",
-                        p
-                );
-
-                String subtitle = Lang.msgWithDefault(
-                        "teleport.countdown.subtitle",
-                        "<gray>In <white>%seconds%</white>s...</gray>",
-                        Map.of("seconds", String.valueOf(remain)),
-                        p
-                );
-
-                p.sendTitle(title, subtitle, 0, 20, 0);
-                remain--;
-            }
-        }.runTaskTimer(plugin, 0L, 20L);
+                final Location origin = p.getLocation().clone();
+                int[] remain = {seconds};
+                OreTask[] holder = new OreTask[1];
+                holder[0] = OreScheduler.runTimer(plugin, () -> {
+                    if (!p.isOnline()) {
+                        log.info("[SpawnCmd] Player went offline during spawn countdown; cancel.");
+                        if (holder[0] != null) holder[0].cancel();
+                        return;
+                    }
+                    if (hasBodyMoved(p, origin)) {
+                        if (holder[0] != null) holder[0].cancel();
+                        Lang.send(p, "spawn.cancelled-moved", "<red>Teleport cancelled: you moved.</red>");
+                        log.info("[SpawnCmd] Player moved during spawn countdown; cancelled.");
+                        return;
+                    }
+                    if (remain[0] <= 0) {
+                        if (holder[0] != null) holder[0].cancel();
+                        try {
+                            p.teleport(spawnLoc);
+                            Lang.send(p, "spawn.teleported", "<green>Teleported to spawn.</green>");
+                            log.info("[SpawnCmd] Local teleport success after countdown.");
+                        } catch (Exception ex) {
+                            log.warning("[SpawnCmd] Local teleport exception after countdown: " + ex.getMessage());
+                            Lang.send(p, "spawn.teleport-failed", "<red>Teleport failed: %error%</red>",
+                                    Map.of("error", ex.getMessage() == null ? "unknown" : ex.getMessage()));
+                        }
+                        return;
+                    }
+                    String title = Lang.msgWithDefault("teleport.countdown.title", "<yellow>Teleporting...</yellow>", p);
+                    String subtitle = Lang.msgWithDefault("teleport.countdown.subtitle",
+                            "<gray>In <white>%seconds%</white>s...</gray>",
+                            Map.of("seconds", String.valueOf(remain[0])), p);
+                    p.sendTitle(title, subtitle, 0, 20, 0);
+                    remain[0]--;
+                }, 0L, 20L);
+            });
+        });
 
         return true;
     }
@@ -243,68 +226,65 @@ public class SpawnCommand implements OreoCommand {
                 + " requestId=" + requestId
                 + " cooldown=" + seconds + "s");
 
-        new BukkitRunnable() {
-            int remain = seconds;
-
-            @Override
-            public void run() {
-                if (!p.isOnline()) {
-                    log.info("[SpawnCmd] Player went offline during remote spawn countdown; cancel.");
-                    cancel();
-                    return;
-                }
-
-                if (hasBodyMoved(p, origin)) {
-                    cancel();
-                    Lang.send(p, "spawn.cancelled-moved",
-                            "<red>Teleport cancelled: you moved.</red>");
-                    log.info("[SpawnCmd] Player moved during remote spawn countdown; cancelled.");
-                    return;
-                }
-
-                if (remain <= 0) {
-                    cancel();
-
-                    // Send packet to target server
-                    SpawnTeleportRequestPacket pkt =
-                            new SpawnTeleportRequestPacket(p.getUniqueId(), targetServer, requestId);
-                    PacketChannel ch = PacketChannel.individual(targetServer);
-                    pm.sendPacket(ch, pkt);
-
-                    // Now proxy-switch the player
-                    if (sendPlayerToServer(p, targetServer)) {
-                        Lang.send(p, "spawn.sending",
-                                "<gray>Sending you to <yellow>%server%</yellow> for spawn...</gray>",
-                                Map.of("server", targetServer));
-                        log.info("[SpawnCmd] Proxy switch initiated after countdown. player="
-                                + p.getUniqueId() + " to=" + targetServer);
-                    } else {
-                        Lang.send(p, "spawn.switch-failed",
-                                "<red>Failed to switch to server <yellow>%server%</yellow>.</red>",
-                                Map.of("server", targetServer));
-                        log.warning("[SpawnCmd] Proxy switch failed to " + targetServer
-                                + " (check Velocity/Bungee server name match).");
-                    }
-                    return;
-                }
-
-                String title = Lang.msgWithDefault(
-                        "teleport.countdown.title",
-                        "<yellow>Teleporting...</yellow>",
-                        p
-                );
-
-                String subtitle = Lang.msgWithDefault(
-                        "teleport.countdown.subtitle",
-                        "<gray>In <white>%seconds%</white>s...</gray>",
-                        Map.of("seconds", String.valueOf(remain)),
-                        p
-                );
-
-                p.sendTitle(title, subtitle, 0, 20, 0);
-                remain--;
+        int[] remain = {seconds};
+        OreTask[] taskHolder = new OreTask[1];
+        taskHolder[0] = OreScheduler.runTimer(plugin, () -> {
+            if (!p.isOnline()) {
+                log.info("[SpawnCmd] Player went offline during remote spawn countdown; cancel.");
+                if (taskHolder[0] != null) taskHolder[0].cancel();
+                return;
             }
-        }.runTaskTimer(plugin, 0L, 20L);
+
+            if (hasBodyMoved(p, origin)) {
+                if (taskHolder[0] != null) taskHolder[0].cancel();
+                Lang.send(p, "spawn.cancelled-moved",
+                        "<red>Teleport cancelled: you moved.</red>");
+                log.info("[SpawnCmd] Player moved during remote spawn countdown; cancelled.");
+                return;
+            }
+
+            if (remain[0] <= 0) {
+                if (taskHolder[0] != null) taskHolder[0].cancel();
+
+                // Send packet to target server
+                SpawnTeleportRequestPacket pkt =
+                        new SpawnTeleportRequestPacket(p.getUniqueId(), targetServer, requestId);
+                PacketChannel ch = PacketChannel.individual(targetServer);
+                pm.sendPacket(ch, pkt);
+
+                // Now proxy-switch the player
+                if (sendPlayerToServer(p, targetServer)) {
+                    Lang.send(p, "spawn.sending",
+                            "<gray>Sending you to <yellow>%server%</yellow> for spawn...</gray>",
+                            Map.of("server", targetServer));
+                    log.info("[SpawnCmd] Proxy switch initiated after countdown. player="
+                            + p.getUniqueId() + " to=" + targetServer);
+                } else {
+                    Lang.send(p, "spawn.switch-failed",
+                            "<red>Failed to switch to server <yellow>%server%</yellow>.</red>",
+                            Map.of("server", targetServer));
+                    log.warning("[SpawnCmd] Proxy switch failed to " + targetServer
+                            + " (check Velocity/Bungee server name match).");
+                }
+                return;
+            }
+
+            String title = Lang.msgWithDefault(
+                    "teleport.countdown.title",
+                    "<yellow>Teleporting...</yellow>",
+                    p
+            );
+
+            String subtitle = Lang.msgWithDefault(
+                    "teleport.countdown.subtitle",
+                    "<gray>In <white>%seconds%</white>s...</gray>",
+                    Map.of("seconds", String.valueOf(remain[0])),
+                    p
+            );
+
+            p.sendTitle(title, subtitle, 0, 20, 0);
+            remain[0]--;
+        }, 0L, 20L);
 
         return true;
     }

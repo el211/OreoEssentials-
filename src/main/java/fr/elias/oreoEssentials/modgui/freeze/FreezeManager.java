@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modgui.freeze;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -81,7 +82,7 @@ public class FreezeManager {
     }
 
     private void startTickTask() {
-        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        OreScheduler.runTimer(plugin, () -> {
             long now = System.currentTimeMillis();
 
             for (Iterator<Map.Entry<UUID, FreezeData>> it = frozen.entrySet().iterator(); it.hasNext();) {

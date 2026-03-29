@@ -26,6 +26,7 @@ public class MongoDBManager implements PlayerEconomyDatabase {
     private MongoClient mongoClient;
     private MongoDatabase database;
     private MongoCollection<Document> collection;
+    private volatile boolean connected = false;
 
     private static final double STARTING_BALANCE = 100.0;
     private static final double MIN_BALANCE = 0.0;
@@ -51,17 +52,23 @@ public class MongoDBManager implements PlayerEconomyDatabase {
                     new IndexOptions().unique(true)
             );
 
+            this.connected = true;
             System.out.println("[OreoEssentials]  Connected to MongoDB: " + database);
             return true;
         } catch (Exception e) {
-            System.err.println("[OreoEssentials] ❌ Failed to connect to MongoDB! Check credentials & server.");
-            e.printStackTrace();
+            System.err.println("[OreoEssentials] ❌ MongoDB connection failed — economy features disabled.");
+            System.err.println("[OreoEssentials]    Check your settings.yml (mongodb.uri / database / collection) and make sure the MongoDB server is reachable.");
+            System.err.println("[OreoEssentials]    Cause: " + e.getMessage());
             return false;
         }
     }
 
+    /** Returns true if MongoDB is connected and usable. */
+    public boolean isConnected() { return connected; }
+
     @Override
     public void giveBalance(UUID playerUUID, String name, double amount) {
+        if (!connected) return;
         final String id = playerUUID.toString();
         try {
             collection.updateOne(
@@ -89,6 +96,7 @@ public class MongoDBManager implements PlayerEconomyDatabase {
 
     @Override
     public void setBalance(UUID playerUUID, String name, double amount) {
+        if (!connected) return;
         final String id = playerUUID.toString();
         double clamped = clamp(amount, MIN_BALANCE, MAX_BALANCE, ALLOW_NEGATIVE);
 
@@ -106,6 +114,7 @@ public class MongoDBManager implements PlayerEconomyDatabase {
 
     @Override
     public double getBalance(UUID playerUUID) {
+        if (!connected) return STARTING_BALANCE;
         Double cached = redis.getBalance(playerUUID);
         if (cached != null) return cached;
 
@@ -120,6 +129,7 @@ public class MongoDBManager implements PlayerEconomyDatabase {
 
     @Override
     public double getOrCreateBalance(UUID playerUUID, String name) {
+        if (!connected) return STARTING_BALANCE;
         Double cached = redis.getBalance(playerUUID);
         if (cached != null) return cached;
 
@@ -136,6 +146,7 @@ public class MongoDBManager implements PlayerEconomyDatabase {
 
     @Override
     public void populateCache(OfflinePlayerCache cache) {
+        if (!connected) return;
         for (Document doc : collection.find()) {
             try {
                 String s = doc.getString("playerUUID");
@@ -167,6 +178,7 @@ public class MongoDBManager implements PlayerEconomyDatabase {
 
     @Override
     public List<TopEntry> topBalances(int limit) {
+        if (!connected) return new ArrayList<>();
         List<TopEntry> out = new ArrayList<>();
         int lim = Math.max(1, limit);
 

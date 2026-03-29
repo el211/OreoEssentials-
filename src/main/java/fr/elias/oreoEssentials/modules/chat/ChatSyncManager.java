@@ -6,6 +6,7 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.chat.channels.ChatChannel;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.modules.chat.channels.ChatChannelManager;
 import fr.elias.oreoEssentials.modules.chat.chatservices.MuteService;
 import fr.elias.oreoEssentials.util.Lang;
@@ -260,7 +261,7 @@ public class ChatSyncManager {
             final String fValue = value;
             final String fActor = actor;
 
-            Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+            OreScheduler.run(OreoEssentials.get(), () -> {
                 var plugin = OreoEssentials.get();
                 var svc = plugin.getModGuiService();
                 if (svc == null) return;
@@ -325,14 +326,14 @@ public class ChatSyncManager {
             try {
                 UUID target = UUID.fromString(uuidStr);
                 if ("UNMUTE".equalsIgnoreCase(action)) {
-                    Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+                    OreScheduler.run(OreoEssentials.get(), () -> {
                         if (muteService != null) muteService.unmute(target);
                     });
                 } else if ("MUTE".equalsIgnoreCase(action) && parts.length >= 7) {
                     long until = Long.parseLong(parts[4]);
                     String reason = fromB64(parts[5]);
                     String by = fromB64(parts[6]);
-                    Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+                    OreScheduler.run(OreoEssentials.get(), () -> {
                         if (muteService != null) muteService.mute(target, until, reason, by);
                     });
                 }
@@ -356,7 +357,7 @@ public class ChatSyncManager {
         String channelId = fromB64(parts[3]);
         String messageJsonOrText = fromB64(parts[4]);
 
-        Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+        OreScheduler.run(OreoEssentials.get(), () -> {
             if (channelManager != null && channelManager.isEnabled()) {
                 ChatChannel channel = channelManager.getChannel(channelId);
 
@@ -422,7 +423,7 @@ public class ChatSyncManager {
 
         final UUID finalSenderUuid = senderUuid;
 
-        Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+        OreScheduler.run(OreoEssentials.get(), () -> {
             if (channelManager == null) {
                 return;
             }
@@ -503,7 +504,7 @@ public class ChatSyncManager {
 
         Bukkit.getLogger().info("[ChatSync] Processing legacy chat from other server: " + decodedMessage.substring(0, Math.min(50, decodedMessage.length())));
 
-        Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+        OreScheduler.run(OreoEssentials.get(), () -> {
             if (channelManager != null && channelManager.isEnabled()) {
                 Bukkit.getLogger().info("[ChatSync] Channels enabled, ignoring legacy chat message");
                 return;

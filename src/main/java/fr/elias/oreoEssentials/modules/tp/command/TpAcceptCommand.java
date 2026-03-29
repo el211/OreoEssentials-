@@ -4,9 +4,10 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.modules.tp.service.TeleportService;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.Location;
 
@@ -171,60 +172,56 @@ public class TpAcceptCommand implements OreoCommand {
         D(traceId, "starting TPA accept cooldown: " + seconds + "s");
 
         final Location startLoc = requester.getLocation().clone();
-
-        new BukkitRunnable() {
-            int remain = seconds;
-
-            @Override
-            public void run() {
-                if (!target.isOnline()) {
-                    D(traceId, "target offline during countdown; cancel");
-                    cancel();
-                    return;
-                }
-
-                if (requester == null || !requester.isOnline()) {
-                    D(traceId, "requester offline during countdown; cancel");
-                    cancel();
-                    return;
-                }
-
-                Location now = requester.getLocation();
-                if (!now.getWorld().equals(startLoc.getWorld())
-                        || now.getBlockX() != startLoc.getBlockX()
-                        || now.getBlockY() != startLoc.getBlockY()
-                        || now.getBlockZ() != startLoc.getBlockZ()) {
-
-                    D(traceId, "requester moved during countdown; cancelling TPA");
-                    cancel();
-                    tpa.cancelRequestDueToMovement(target, requester);
-                    return;
-                }
-
-                if (remain <= 0) {
-                    cancel();
-                    D(traceId, "countdown finished, running local accept");
-                    runLocalAccept(target, traceId);
-                    return;
-                }
-
-                String title = Lang.msgWithDefault(
-                        "teleport.countdown.title",
-                        "<yellow>Teleporting...</yellow>",
-                        requester
-                );
-
-                String subtitle = Lang.msgWithDefault(
-                        "teleport.countdown.subtitle",
-                        "<gray>In <white>%seconds%</white>s...</gray>",
-                        Map.of("seconds", String.valueOf(remain)),
-                        requester
-                );
-
-                requester.sendTitle(title, subtitle, 0, 20, 0);
-                remain--;
+        final int[] remain = {seconds};
+        final OreTask[] taskHolder = new OreTask[1];
+        taskHolder[0] = OreScheduler.runTimerForEntity(plugin, requester, () -> {
+            if (!target.isOnline()) {
+                D(traceId, "target offline during countdown; cancel");
+                taskHolder[0].cancel();
+                return;
             }
-        }.runTaskTimer(plugin, 0L, 20L);
+
+            if (!requester.isOnline()) {
+                D(traceId, "requester offline during countdown; cancel");
+                taskHolder[0].cancel();
+                return;
+            }
+
+            Location now = requester.getLocation();
+            if (!now.getWorld().equals(startLoc.getWorld())
+                    || now.getBlockX() != startLoc.getBlockX()
+                    || now.getBlockY() != startLoc.getBlockY()
+                    || now.getBlockZ() != startLoc.getBlockZ()) {
+
+                D(traceId, "requester moved during countdown; cancelling TPA");
+                taskHolder[0].cancel();
+                tpa.cancelRequestDueToMovement(target, requester);
+                return;
+            }
+
+            if (remain[0] <= 0) {
+                taskHolder[0].cancel();
+                D(traceId, "countdown finished, running local accept");
+                runLocalAccept(target, traceId);
+                return;
+            }
+
+            String title = Lang.msgWithDefault(
+                    "teleport.countdown.title",
+                    "<yellow>Teleporting...</yellow>",
+                    requester
+            );
+
+            String subtitle = Lang.msgWithDefault(
+                    "teleport.countdown.subtitle",
+                    "<gray>In <white>%seconds%</white>s...</gray>",
+                    Map.of("seconds", String.valueOf(remain[0])),
+                    requester
+            );
+
+            requester.sendTitle(title, subtitle, 0, 20, 0);
+            remain[0]--;
+        }, 0L, 20L);
     }
 
 

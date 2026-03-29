@@ -7,7 +7,9 @@ import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.homes.rabbit.packet.OtherHomeTeleportRequestPacket;
 import fr.elias.oreoEssentials.modules.homes.home.HomeService;
+import fr.elias.oreoEssentials.util.Async;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -70,30 +72,33 @@ public class OtherHomeCommand implements OreoCommand, org.bukkit.command.TabComp
         if (targetServer == null) targetServer = homes.localServer();
         final String localServer = homes.localServer();
 
-        // 2) If it's local, teleport directly
+        // 2) If it's local, fetch location async then teleport on entity thread
         if (targetServer.equalsIgnoreCase(localServer)) {
-            Location loc = homes.getHome(ownerId, homeName);
-            if (loc == null) {
-                Lang.send(sender, "admin.otherhome.not-found",
-                        "<red>Home not found: <yellow>%home%</yellow></red>",
-                        Map.of("home", args[1]));
-                return true;
-            }
-
-            World w = loc.getWorld();
-            if (w == null) {
-                Lang.send(sender, "admin.otherhome.world-not-loaded",
-                        "<red>World not loaded: <yellow>%world%</yellow></red>",
-                        Map.of("world", loc.getWorld() != null ? loc.getWorld().getName() : "null"));
-                return true;
-            }
-
-            admin.teleport(loc);
-
-            String ownerName = target.getName() != null ? target.getName() : ownerId.toString();
-            Lang.send(sender, "admin.otherhome.teleported",
-                    "<green>Teleported to <aqua>%owner%</aqua>'s home <aqua>%home%</aqua>.</green>",
-                    Map.of("owner", ownerName, "home", homeName));
+            final String finalHomeName = homeName;
+            final String ownerDisplayName = target.getName() != null ? target.getName() : ownerId.toString();
+            final String arg1 = args[1];
+            Async.run(() -> {
+                Location loc = homes.getHome(ownerId, finalHomeName);
+                OreScheduler.runForEntity(plugin, admin, () -> {
+                    if (loc == null) {
+                        Lang.send(sender, "admin.otherhome.not-found",
+                                "<red>Home not found: <yellow>%home%</yellow></red>",
+                                Map.of("home", arg1));
+                        return;
+                    }
+                    World w = loc.getWorld();
+                    if (w == null) {
+                        Lang.send(sender, "admin.otherhome.world-not-loaded",
+                                "<red>World not loaded: <yellow>%world%</yellow></red>",
+                                Map.of("world", "null"));
+                        return;
+                    }
+                    admin.teleport(loc);
+                    Lang.send(sender, "admin.otherhome.teleported",
+                            "<green>Teleported to <aqua>%owner%</aqua>'s home <aqua>%home%</aqua>.</green>",
+                            Map.of("owner", ownerDisplayName, "home", finalHomeName));
+                });
+            });
             return true;
         }
 

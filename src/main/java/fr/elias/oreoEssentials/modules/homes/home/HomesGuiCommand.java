@@ -5,7 +5,9 @@ import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.homes.rabbit.packet.HomeTeleportRequestPacket;
+import fr.elias.oreoEssentials.util.Async;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.minuskube.inv.SmartInventory;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -54,12 +56,27 @@ public class HomesGuiCommand implements OreoCommand {
 
     static boolean crossServerTeleport(HomeService homes, Player p, String homeName) {
         final String key = homeName.toLowerCase();
-        String targetServer = homes.homeServer(p.getUniqueId(), key);
-        String localServer  = homes.localServer();
-        if (targetServer == null) targetServer = localServer;
+        final String localServer = homes.localServer();
+        final var plugin = OreoEssentials.get();
 
+        // Fetch DB data async so we don't block the entity region thread.
+        Async.run(() -> {
+            String resolvedTarget = homes.homeServer(p.getUniqueId(), key);
+            if (resolvedTarget == null) resolvedTarget = localServer;
+            final String targetServer = resolvedTarget;
+            final org.bukkit.Location loc = targetServer.equalsIgnoreCase(localServer)
+                    ? homes.getHome(p.getUniqueId(), key) : null;
+
+            OreScheduler.runForEntity(plugin, p, () ->
+                    crossServerTeleportOnEntityThread(homes, p, homeName, key, localServer, targetServer, loc));
+        });
+        return true; // result is delivered via message, not return value
+    }
+
+    private static boolean crossServerTeleportOnEntityThread(HomeService homes, Player p, String homeName,
+                                                              String key, String localServer, String targetServer,
+                                                              org.bukkit.Location loc) {
         if (targetServer.equalsIgnoreCase(localServer)) {
-            var loc = homes.getHome(p.getUniqueId(), key);
             if (loc == null) {
                 Lang.send(p, "homes.gui.not-found",
                         "<red>Home not found: <yellow>%name%</yellow></red>",

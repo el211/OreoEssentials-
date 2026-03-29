@@ -84,7 +84,7 @@ public final class CreateOrderFlow {
         }
         // Move to step 3 — open currency picker on main thread
         final int finalQty = qty;
-        org.bukkit.Bukkit.getScheduler().runTask(module.getPlugin(), () -> {
+        fr.elias.oreoEssentials.util.OreScheduler.run(module.getPlugin(), () -> {
             if (!p.isOnline()) return;
             try {
                 module.getPlugin().getLogger().info("[Orders] Opening CurrencyPickerMenu for " + p.getName());
@@ -129,7 +129,7 @@ public final class CreateOrderFlow {
             return true;
         }
         final double finalPrice = price;
-        org.bukkit.Bukkit.getScheduler().runTask(module.getPlugin(), () ->
+        fr.elias.oreoEssentials.util.OreScheduler.run(module.getPlugin(), () ->
                 ConfirmOrderMenu.getInventory(module, pp.item(), pp.qty(), pp.currencyId(), finalPrice).open(p));
         return true;
     }
@@ -321,7 +321,7 @@ public final class CreateOrderFlow {
                                         player.sendMessage(module.getConfig().msg("create.success",
                                                 Map.of("qty", String.valueOf(qty),
                                                        "price", module.getCurrency().format(currencyId, unitPrice))));
-                                        org.bukkit.Bukkit.getScheduler().runTask(module.getPlugin(), () ->
+                                        fr.elias.oreoEssentials.util.OreScheduler.run(module.getPlugin(), () ->
                                                 OrderBrowserMenu.getInventory(module).open(player));
                                     } else {
                                         player.sendMessage(module.getConfig().msg(errKey));

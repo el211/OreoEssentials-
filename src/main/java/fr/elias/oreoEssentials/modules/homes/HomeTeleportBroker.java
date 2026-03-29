@@ -6,6 +6,7 @@ import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.homes.rabbit.packet.HomeTeleportRequestPacket;
 import fr.elias.oreoEssentials.modules.homes.rabbit.packet.OtherHomeTeleportRequestPacket;
 import fr.elias.oreoEssentials.modules.homes.home.HomeService;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -158,7 +159,7 @@ public final class HomeTeleportBroker implements Listener {
     }
 
     private void runOnce(UUID subject, int tick) {
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        OreScheduler.runLater(plugin, () -> {
             final Player p = Bukkit.getPlayer(subject);
             if (p == null || !p.isOnline()) {
                 log.info("[HOME/Retry] tick=" + tick + " player offline: " + subject);

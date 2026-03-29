@@ -4,6 +4,7 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.modules.currency.Currency;
 import fr.elias.oreoEssentials.playerdirectory.PlayerDirectory;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -118,7 +119,7 @@ public class CurrencySendCommand implements OreoCommand {
             return true;
         }
 
-        resolveTarget(targetInput).thenAccept(resolved -> Bukkit.getScheduler().runTask(plugin, () -> {
+        resolveTarget(targetInput).thenAccept(resolved -> OreScheduler.run(plugin, () -> {
             if (!from.isOnline()) return;
 
             if (resolved == null || resolved.uuid == null) {
@@ -141,7 +142,7 @@ public class CurrencySendCommand implements OreoCommand {
                     cooldownSeconds
             );
         })).exceptionally(ex -> {
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 if (!from.isOnline()) return;
                 from.sendMessage("§c✖ Failed to resolve player: " + ex.getMessage());
             });
@@ -165,7 +166,7 @@ public class CurrencySendCommand implements OreoCommand {
                 targetUuid,
                 currencyId,
                 amount
-        ).thenAccept(success -> Bukkit.getScheduler().runTask(plugin, () -> {
+        ).thenAccept(success -> OreScheduler.run(plugin, () -> {
             if (!sender.isOnline()) return;
 
             if (!success) {
@@ -188,7 +189,7 @@ public class CurrencySendCommand implements OreoCommand {
             plugin.getLogger().info("[Currency] " + sender.getName() + " sent " +
                     formattedAmount + " to " + targetDisplayName + " (" + targetUuid + ")");
         })).exceptionally(ex -> {
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 if (sender.isOnline()) sender.sendMessage("§c✖ Transfer failed: " + ex.getMessage());
             });
             return null;

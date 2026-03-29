@@ -134,6 +134,21 @@ public final class PerPlayerTextDisplayService {
         }
     }
 
+    /** Immediately sends per-player NMS overrides for all tracked holograms.
+     *  Called on player join (after a short delay) so players never see raw placeholder text.
+     *  Distance check is skipped intentionally — sending an override for an out-of-range
+     *  entity is harmless, and avoids unsafe cross-region entity location access on Folia. */
+    public void forceRefreshForPlayer(Player p) {
+        if (p == null || !p.isOnline()) return;
+        for (Entry e : tracked.values()) {
+            final TextDisplay td = e.entity;
+            if (td == null || td.isDead()) continue;
+            try {
+                controller.show(td, p, safeLines(e.lines));
+            } catch (Throwable ignored) {}
+        }
+    }
+
 
 
     private Collection<TextDisplay> activeTextDisplays() {

@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.rtp;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -34,7 +35,7 @@ public final class RtpCrossServerBridge {
                     + pkt.getRequestId() + " player=" + pkt.getPlayerId()
                     + " world=" + pkt.getWorldName() + " via " + channel);
 
-            Bukkit.getScheduler().runTask(plugin, () -> handleIncoming(pkt));
+            OreScheduler.run(plugin, () -> handleIncoming(pkt));
         });
     }
 
@@ -52,7 +53,7 @@ public final class RtpCrossServerBridge {
 
         Player p = Bukkit.getPlayer(playerId);
         if (p != null && p.isOnline()) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            OreScheduler.runLaterForEntity(plugin, p, () -> {
                 Player pp = Bukkit.getPlayer(playerId);
                 if (pp == null || !pp.isOnline()) return;
 

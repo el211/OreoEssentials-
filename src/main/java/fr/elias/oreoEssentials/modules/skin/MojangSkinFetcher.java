@@ -90,12 +90,12 @@ public final class MojangSkinFetcher {
 
     public static void fetchProfileAsync(UUID uuid, String name,
                                          java.util.function.Consumer<PlayerProfile> callback) {
-        Bukkit.getScheduler().runTaskAsynchronously(
+        fr.elias.oreoEssentials.util.OreScheduler.runAsync(
                 fr.elias.oreoEssentials.OreoEssentials.get(),
                 () -> {
                     PlayerProfile profile = fetchProfileWithTextures(uuid, name);
 
-                    Bukkit.getScheduler().runTask(
+                    fr.elias.oreoEssentials.util.OreScheduler.run(
                             fr.elias.oreoEssentials.OreoEssentials.get(),
                             () -> callback.accept(profile)
                     );

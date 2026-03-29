@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.db.database;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.offline.OfflinePlayerCache;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 
 import java.sql.*;
@@ -107,7 +108,7 @@ public class PostgreSQLManager implements PlayerEconomyDatabase {
 
     @Override
     public void giveBalance(UUID playerUUID, String name, double amount) {
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             double newBalance = getBalance(playerUUID) + amount;
             setBalance(playerUUID, name, newBalance);
             redis.giveBalance(playerUUID, amount);
@@ -116,7 +117,7 @@ public class PostgreSQLManager implements PlayerEconomyDatabase {
 
     @Override
     public void takeBalance(UUID playerUUID, String name, double amount) {
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             double newBalance = Math.max(0, getBalance(playerUUID) - amount);
             setBalance(playerUUID, name, newBalance);
             redis.takeBalance(playerUUID, amount);
@@ -128,7 +129,7 @@ public class PostgreSQLManager implements PlayerEconomyDatabase {
         String query = "INSERT INTO " + TABLE + " (player_uuid, name, balance) VALUES (?, ?, ?) " +
                 "ON CONFLICT (player_uuid) DO UPDATE SET name = EXCLUDED.name, balance = EXCLUDED.balance";
 
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setObject(1, playerUUID);
                 stmt.setString(2, name);
@@ -160,7 +161,7 @@ public class PostgreSQLManager implements PlayerEconomyDatabase {
 
     public void deleteBalance(UUID playerUUID) {
         String query = "DELETE FROM " + TABLE + " WHERE player_uuid = ?";
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setObject(1, playerUUID);
                 stmt.executeUpdate();

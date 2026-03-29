@@ -1,7 +1,8 @@
 name: OreoEssentials
-version: "4.1-SNAPSHOT"
+version: "4.2-SNAPSHOT"
 main: fr.elias.oreoEssentials.OreoEssentials
 api-version: "1.21"
+folia-supported: true
 description: "All-in-one essentials plugin with homes/warps/spawn, RTP, economy (Vault), chat tools, portals/jump pads, cross-server EC & player sync."
 authors: [ "elias" ]
 

@@ -1,6 +1,8 @@
 package fr.elias.oreoEssentials.modules.tempfly;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import net.luckperms.api.LuckPermsProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -20,7 +22,7 @@ public class TempFlyService implements Listener {
     private final OreoEssentials plugin;
     private final TempFlyConfig config;
     private final Map<UUID, TempFlySession> activeSessions = new ConcurrentHashMap<>();
-    private int taskId = -1;
+    private OreTask taskId = null;
 
     public TempFlyService(OreoEssentials plugin, TempFlyConfig config) {
         this.plugin = plugin;
@@ -28,13 +30,13 @@ public class TempFlyService implements Listener {
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
-        this.taskId = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L).getTaskId();
+        this.taskId = OreScheduler.runTimer(plugin, this::tick, 20L, 20L);
     }
 
     public void shutdown() {
-        if (taskId != -1) {
-            Bukkit.getScheduler().cancelTask(taskId);
-            taskId = -1;
+        if (taskId != null) {
+            taskId.cancel();
+            taskId = null;
         }
 
         for (TempFlySession session : activeSessions.values()) {

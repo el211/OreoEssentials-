@@ -3,6 +3,8 @@ package fr.elias.oreoEssentials.modules.rtp;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
@@ -157,51 +159,47 @@ public class RtpCommand implements OreoCommand {
                                           Runnable action) {
 
         final Location origin = target.getLocation().clone();
-
-        new org.bukkit.scheduler.BukkitRunnable() {
-            int remaining = seconds;
-
-            @Override
-            public void run() {
-                if (!target.isOnline()) {
-                    cancel();
-                    return;
-                }
-
-                if (hasMoved(target, origin)) {
-                    cancel();
-                    Lang.send(target, "rtp.cancelled-moved", "<red>Random teleport cancelled: you moved.</red>");
-                    return;
-                }
-
-                if (remaining <= 0) {
-                    cancel();
-                    action.run();
-                    return;
-                }
-
-                String title = Lang.msgWithDefault(
-                        "rtp.warmup.title",
-                        "<yellow>Teleporting in %seconds%s...</yellow>",
-                        Map.of("seconds", String.valueOf(remaining)),
-                        target
-                );
-
-                String subtitle = Lang.msgWithDefault(
-                        "rtp.warmup.subtitle",
-                        "<gray>World: <white>%world%</white> • in <yellow>%seconds%</yellow>s</gray>",
-                        Map.of(
-                                "seconds", String.valueOf(remaining),
-                                "world", worldName
-                        ),
-                        target
-                );
-
-                target.sendTitle(title, subtitle, 0, 20, 0);
-
-                remaining--;
+        final int[] remaining = {seconds};
+        final OreTask[] taskHolder = new OreTask[1];
+        taskHolder[0] = OreScheduler.runTimerForEntity(plugin, target, () -> {
+            if (!target.isOnline()) {
+                taskHolder[0].cancel();
+                return;
             }
-        }.runTaskTimer(plugin, 0L, 20L);
+
+            if (hasMoved(target, origin)) {
+                taskHolder[0].cancel();
+                Lang.send(target, "rtp.cancelled-moved", "<red>Random teleport cancelled: you moved.</red>");
+                return;
+            }
+
+            if (remaining[0] <= 0) {
+                taskHolder[0].cancel();
+                action.run();
+                return;
+            }
+
+            String title = Lang.msgWithDefault(
+                    "rtp.warmup.title",
+                    "<yellow>Teleporting in %seconds%s...</yellow>",
+                    Map.of("seconds", String.valueOf(remaining[0])),
+                    target
+            );
+
+            String subtitle = Lang.msgWithDefault(
+                    "rtp.warmup.subtitle",
+                    "<gray>World: <white>%world%</white> • in <yellow>%seconds%</yellow>s</gray>",
+                    Map.of(
+                            "seconds", String.valueOf(remaining[0]),
+                            "world", worldName
+                    ),
+                    target
+            );
+
+            target.sendTitle(title, subtitle, 0, 20, 0);
+
+            remaining[0]--;
+        }, 0L, 20L);
     }
 
     private static boolean hasMoved(Player p, Location origin) {

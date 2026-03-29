@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.portals;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -287,7 +288,7 @@ public class PortalsManager {
                         lastPortalDenied.put(pid, portal.name);
 
                         // Clear denial cache after 5 seconds
-                        Bukkit.getScheduler().runTaskLater(plugin,
+                        OreScheduler.runLater(plugin,
                                 () -> lastPortalDenied.remove(pid, portal.name),
                                 100L);
                     }
@@ -307,7 +308,7 @@ public class PortalsManager {
                 lastPortalDenied.remove(pid);
 
                 if (teleportAsync) {
-                    Bukkit.getScheduler().runTask(plugin, () -> p.teleport(dest));
+                    OreScheduler.run(plugin, () -> p.teleport(dest));
                 } else {
                     p.teleport(dest);
                 }

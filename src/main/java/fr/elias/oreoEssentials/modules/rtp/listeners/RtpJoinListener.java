@@ -2,7 +2,7 @@ package fr.elias.oreoEssentials.modules.rtp.listeners;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.rtp.RtpCommand;
-import org.bukkit.Bukkit;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,7 +20,7 @@ public class RtpJoinListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        OreScheduler.runLaterForEntity(plugin, p, () -> {
             String worldName = plugin.getRtpPendingService().consume(p.getUniqueId());
             if (worldName == null || worldName.isBlank()) return;
 

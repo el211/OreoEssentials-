@@ -7,6 +7,7 @@ import com.rabbitmq.client.DeliverCallback;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.back.BackLocation;
 import fr.elias.oreoEssentials.modules.back.service.BackService;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -105,7 +106,7 @@ public class BackBroker {
             plugin.getLogger().info("[BackBroker] Sent back packet to " + targetServer);
 
             // Now transfer the player to that server using BungeeCord
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            OreScheduler.runLaterForEntity(plugin, player, () -> {
                 sendPlayerToServer(player, targetServer);
             }, 5L); // 5 tick delay to ensure packet arrives first
 
@@ -140,7 +141,7 @@ public class BackBroker {
                     " to world: " + worldName);
 
             // Schedule the teleport on the main thread when player joins
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 Player player = Bukkit.getPlayer(playerUuid);
 
                 // Player hasn't joined yet - wait for them
@@ -157,7 +158,7 @@ public class BackBroker {
                 }
 
                 // Player is already online - teleport immediately
-                teleportPlayerToBack(player, worldName, x, y, z, yaw, pitch);
+                OreScheduler.runForEntity(plugin, player, () -> teleportPlayerToBack(player, worldName, x, y, z, yaw, pitch));
             });
 
         } catch (Exception e) {

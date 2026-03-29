@@ -1,6 +1,8 @@
 package fr.elias.oreoEssentials.modules.playtime;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -27,7 +29,7 @@ public final class PlaytimeTracker implements Listener {
     private final File file;
     private YamlConfiguration yaml;
 
-    private int autosaveTask = -1;
+    private OreTask autosaveTask = null;
 
     public PlaytimeTracker(OreoEssentials plugin) {
         this.plugin = plugin;
@@ -35,13 +37,13 @@ public final class PlaytimeTracker implements Listener {
         load();
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
-        autosaveTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, this::saveQuiet, 20L * 60, 20L * 60);
+        autosaveTask = OreScheduler.runTimer(plugin, this::saveQuiet, 20L * 60, 20L * 60);
     }
 
     public void shutdown() {
-        if (autosaveTask != -1) {
-            Bukkit.getScheduler().cancelTask(autosaveTask);
-            autosaveTask = -1;
+        if (autosaveTask != null) {
+            autosaveTask.cancel();
+            autosaveTask = null;
         }
         flushOnlineDeltas();
         saveQuiet();

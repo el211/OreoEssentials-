@@ -13,6 +13,7 @@ import fr.elias.oreoEssentials.modules.orders.repository.OrderRepository;
 import fr.elias.oreoEssentials.modules.orders.repository.PendingDeliveryRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
@@ -217,7 +218,7 @@ public final class OrderService {
         // ── Step 2: Take items on main thread BEFORE the DB write ─────────────
         CompletableFuture<FillResult> result = new CompletableFuture<>();
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
 
             if (!hasEnoughItems(filler, template, fillQty)) {
                 log.info("[Orders] fillOrder: " + filler.getName() + " does not have enough items");
@@ -245,7 +246,7 @@ public final class OrderService {
                                     + fillResult.getOutcome() + " for order " + orderId
                                     + " — returning items to " + filler.getName());
 
-                            Bukkit.getScheduler().runTask(plugin, () ->
+                            OreScheduler.run(plugin, () ->
                                     giveOrDrop(filler, buildStack(template, fillQty)));
 
                             if (fillResult.getOutcome() == FillResult.Outcome.NOT_FOUND
@@ -308,7 +309,7 @@ public final class OrderService {
 
         if (creator != null && creator.isOnline()) {
             ItemStack toGive = buildStack(template, fillQty);
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 giveOrDrop(creator, toGive);
                 if (cfg.debug()) {
                     log.info("[Orders] deliverItemsToCreator: gave " + fillQty
@@ -520,7 +521,7 @@ public final class OrderService {
         if (Bukkit.isPrimaryThread()) {
             guiManager.scheduleRefreshAll();
         } else {
-            Bukkit.getScheduler().runTask(plugin, guiManager::scheduleRefreshAll);
+            OreScheduler.run(plugin, guiManager::scheduleRefreshAll);
         }
     }
 

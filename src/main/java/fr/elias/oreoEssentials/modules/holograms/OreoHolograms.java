@@ -44,6 +44,17 @@ public final class OreoHolograms {
         }
 
         if (migrated) save();
+
+        // PAPI expansions may not be registered yet when load() runs during startup.
+        // Schedule a delayed refresh (60 ticks = 3 s) so all expansions are ready
+        // before we bake placeholder text into TextDisplay entities.
+        org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            for (OreoHologram h : holos.values()) {
+                if (h instanceof fr.elias.oreoEssentials.modules.holograms.TextOreoHologram th) {
+                    th.forceRefresh();
+                }
+            }
+        }, 60L);
     }
 
     public void save() {
@@ -128,4 +139,4 @@ public final class OreoHolograms {
         c.itemStackBase64 = d.itemStackBase64;
         return c;
     }
-}  
+}

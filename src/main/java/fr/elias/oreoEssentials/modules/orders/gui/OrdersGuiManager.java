@@ -2,6 +2,8 @@ package fr.elias.oreoEssentials.modules.orders.gui;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.orders.OrdersModule;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -29,11 +31,11 @@ public final class OrdersGuiManager implements Listener {
     /** Players whose browser inventory needs an in-place re-render next update() tick */
     private final Set<UUID> dirtyViewers = ConcurrentHashMap.newKeySet();
 
-    /** Debounce task IDs — cancel previous before scheduling new one */
-    private final Map<UUID, Integer> debounceTaskIds = new ConcurrentHashMap<>();
+    /** Debounce tasks — cancel previous before scheduling new one */
+    private final Map<UUID, OreTask> debounceTasks = new ConcurrentHashMap<>();
 
-    /** Global debounce task ID */
-    private int globalDebounceTaskId = -1;
+    /** Global debounce task */
+    private OreTask globalDebounceTask = OreTask.EMPTY;
 
     public OrdersGuiManager(OreoEssentials plugin, OrdersModule module) {
         this.plugin = plugin;
@@ -52,20 +54,20 @@ public final class OrdersGuiManager implements Listener {
     public void unregisterViewer(UUID uuid) {
         viewers.remove(uuid);
         dirtyViewers.remove(uuid);
-        cancelDebounce(uuid);
+        cancelDebounceTask(uuid);
     }
 
     /**
      * Schedule a debounced in-place refresh for a single player (e.g. after their own action).
      */
     public void scheduleRefreshFor(Player p) {
-        cancelDebounce(p.getUniqueId());
-        int taskId = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        cancelDebounceTask(p.getUniqueId());
+        OreTask task = OreScheduler.runLater(plugin, () -> {
             if (viewers.containsKey(p.getUniqueId()) && p.isOnline()) {
                 dirtyViewers.add(p.getUniqueId());
             }
-        }, module.getConfig().liveRefreshDebounceTicks()).getTaskId();
-        debounceTaskIds.put(p.getUniqueId(), taskId);
+        }, module.getConfig().liveRefreshDebounceTicks());
+        debounceTasks.put(p.getUniqueId(), task);
     }
 
     /**
@@ -74,11 +76,9 @@ public final class OrdersGuiManager implements Listener {
      * dirty so OrderBrowserMenu.update() re-renders them without close/reopen.
      */
     public void scheduleRefreshAll() {
-        if (globalDebounceTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(globalDebounceTaskId);
-        }
-        globalDebounceTaskId = Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            globalDebounceTaskId = -1;
+        globalDebounceTask.cancel();
+        globalDebounceTask = OreScheduler.runLater(plugin, () -> {
+            globalDebounceTask = OreTask.EMPTY;
             // Remove offline players and mark the rest dirty
             viewers.keySet().removeIf(uuid -> {
                 Player p = Bukkit.getPlayer(uuid);
@@ -86,7 +86,7 @@ public final class OrdersGuiManager implements Listener {
                 dirtyViewers.add(uuid);
                 return false;
             });
-        }, module.getConfig().liveRefreshDebounceTicks()).getTaskId();
+        }, module.getConfig().liveRefreshDebounceTicks());
     }
 
     /**
@@ -99,9 +99,9 @@ public final class OrdersGuiManager implements Listener {
 
     // ── Internal ──────────────────────────────────────────────────────────────
 
-    private void cancelDebounce(UUID uuid) {
-        Integer taskId = debounceTaskIds.remove(uuid);
-        if (taskId != null) Bukkit.getScheduler().cancelTask(taskId);
+    private void cancelDebounceTask(UUID uuid) {
+        OreTask task = debounceTasks.remove(uuid);
+        if (task != null) task.cancel();
     }
 
     // ── Listener ──────────────────────────────────────────────────────────────

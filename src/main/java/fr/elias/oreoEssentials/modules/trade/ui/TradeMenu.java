@@ -15,6 +15,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -96,7 +97,7 @@ public final class TradeMenu implements InventoryProvider {
     }
 
     public void openForBoth() {
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             try {
                 if (a != null) {
                     invA.open(a);
@@ -211,7 +212,7 @@ public final class TradeMenu implements InventoryProvider {
         ItemStack[] other = isAViewer ? sess.viewOfferB() : sess.viewOfferA();
         int[] otherSlots = isAViewer ? B_AREA_SLOTS : A_AREA_SLOTS;
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             for (int i = 0; i < otherSlots.length; i++) {
                 int slot = otherSlots[i];
                 ItemStack want = (other != null && i < other.length) ? cloneOrNull(other[i]) : null;
@@ -312,7 +313,7 @@ public final class TradeMenu implements InventoryProvider {
 
                 final int idx = i;
                 final ItemStack itemCopy = cloneOrNull(now);
-                Bukkit.getScheduler().runTask(plugin, () -> {
+                OreScheduler.run(plugin, () -> {
                     boolean viewerIsA = (a != null && viewer.getUniqueId().equals(a.getUniqueId()));
                     Player opp = viewerIsA ? b : a;
 
@@ -385,7 +386,7 @@ public final class TradeMenu implements InventoryProvider {
                 if (sid != null) {
                     TradeSession sess = service.getSession(sid);
                     if (sess != null) {
-                        Bukkit.getScheduler().runTask(plugin, () -> sess.playerToggleConfirm(viewer.getUniqueId()));
+                        OreScheduler.run(plugin, () -> sess.playerToggleConfirm(viewer.getUniqueId()));
                     }
                 }
             } catch (Throwable ignored) {}
@@ -457,7 +458,7 @@ public final class TradeMenu implements InventoryProvider {
             int[] offerSlotsA = getOfferSlotsAOrEmpty();
             int[] offerSlotsB = getOfferSlotsBOrEmpty();
 
-            Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+            OreScheduler.run(OreoEssentials.get(), () -> {
                 try {
                     for (int s : offerSlotsA) setItemSafelyA(s, ph);
                     for (int s : offerSlotsB) setItemSafelyB(s, ph);
@@ -471,7 +472,7 @@ public final class TradeMenu implements InventoryProvider {
             int[] offerSlotsA = getOfferSlotsAOrEmpty();
             int[] offerSlotsB = getOfferSlotsBOrEmpty();
 
-            Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+            OreScheduler.run(OreoEssentials.get(), () -> {
                 try {
                     for (int s : offerSlotsA) setItemSafelyA(s, null);
                     for (int s : offerSlotsB) setItemSafelyB(s, null);

@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.playtime;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -42,9 +43,9 @@ public final class DirectiveRunner {
         };
 
         if (delayTicks > 0) {
-            plugin.getServer().getScheduler().runTaskLater(plugin, task, delayTicks);
+            OreScheduler.runLater(plugin, task, delayTicks);
         } else {
-            plugin.getServer().getScheduler().runTask(plugin, task);
+            OreScheduler.run(plugin, task);
         }
     }
 }

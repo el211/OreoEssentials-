@@ -2,9 +2,9 @@ package fr.elias.oreoEssentials.modules.orders.listener;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.orders.repository.PendingDeliveryRepository;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.modules.orders.model.PendingDelivery;
 import fr.elias.oreoEssentials.modules.orders.service.OrderService;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -36,7 +36,7 @@ public final class OrdersJoinListener implements Listener {
         Player player = event.getPlayer();
 
         // Slight delay so the player is fully loaded before we touch their inventory
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        OreScheduler.runLaterForEntity(plugin, player, () -> {
             if (!player.isOnline()) return;
 
             deliveryRepo.loadForPlayer(player.getUniqueId())
@@ -47,7 +47,7 @@ public final class OrdersJoinListener implements Listener {
                                 + " pending item(s) to " + player.getName());
 
                         // Give items on main thread
-                        Bukkit.getScheduler().runTask(plugin, () -> {
+                        OreScheduler.runForEntity(plugin, player, () -> {
                             for (PendingDelivery delivery : deliveries) {
                                 tryDeliver(player, delivery);
                             }

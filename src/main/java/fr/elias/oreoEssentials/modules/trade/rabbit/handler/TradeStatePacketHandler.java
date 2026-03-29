@@ -4,6 +4,7 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.event.PacketSubscriber;
 import fr.elias.oreoEssentials.modules.trade.rabbit.packet.TradeStatePacket;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 
 public final class TradeStatePacketHandler implements PacketSubscriber<TradeStatePacket> {
@@ -26,7 +27,7 @@ public final class TradeStatePacketHandler implements PacketSubscriber<TradeStat
     @Override
     public void onReceive(PacketChannel channel, TradeStatePacket packet) {
         // Always hop to the main thread for any Bukkit/SmartInvs work
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             if (packet == null) return;
 
             if (dbg()) {

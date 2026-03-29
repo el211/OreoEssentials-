@@ -10,7 +10,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.*;
-import org.bukkit.scheduler.BukkitRunnable;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 
 import java.io.File;
 import java.util.List;
@@ -19,10 +20,10 @@ public class ClearLagManager {
 
     private final OreoEssentials plugin;
     private ClearLagConfig cfg;
-    private BukkitRunnable autoTask;
-    private BukkitRunnable autoKillMobsTask;
-    private BukkitRunnable tpsTask;
-    private BukkitRunnable tpsSampleTask;
+    private OreTask autoTask;
+    private OreTask autoKillMobsTask;
+    private OreTask tpsTask;
+    private OreTask tpsSampleTask;
     private volatile boolean tpsSamplerStarted = false;
     private volatile long lastTickNanos = System.nanoTime();
     private volatile double rollingTps = 20.0;
@@ -70,76 +71,61 @@ public class ClearLagManager {
         if (tpsTask != null) tpsTask.cancel();
 
         if (cfg.auto.enabled) {
-            autoTask = new BukkitRunnable() {
-                int tick = 0;
-
-                @Override
-                public void run() {
-                    tick += 20;
-                    int remaining = (int) (cfg.auto.intervalSec - (tick / 20));
-                    cfg.auto.warnings.forEach(w -> {
-                        if (remaining == w.time()) {
-                            String msg = w.msg().replace("+remaining", String.valueOf(remaining));
-                            broadcast(msg);
-                        }
-                    });
-                    if (remaining <= 0) {
-                        int removed = performRemoval(cfg.auto, true, null);
-                        if (cfg.auto.broadcastRemoval) {
-                            broadcast(cfg.auto.broadcastMsg.replace("+RemoveAmount", String.valueOf(removed)));
-                        }
-                        tick = 0;
+            int[] autoTick = {0};
+            autoTask = OreScheduler.runTimer(plugin, () -> {
+                autoTick[0] += 20;
+                int remaining = (int) (cfg.auto.intervalSec - (autoTick[0] / 20));
+                cfg.auto.warnings.forEach(w -> {
+                    if (remaining == w.time()) {
+                        String msg = w.msg().replace("+remaining", String.valueOf(remaining));
+                        broadcast(msg);
                     }
+                });
+                if (remaining <= 0) {
+                    int removed = performRemoval(cfg.auto, true, null);
+                    if (cfg.auto.broadcastRemoval) {
+                        broadcast(cfg.auto.broadcastMsg.replace("+RemoveAmount", String.valueOf(removed)));
+                    }
+                    autoTick[0] = 0;
                 }
-            };
-            autoTask.runTaskTimer(plugin, 20L, 20L);
+            }, 20L, 20L);
         }
 
         if (cfg.autoKillMobs.enabled()) {
-            autoKillMobsTask = new BukkitRunnable() {
-                int tick = 0;
-
-                @Override
-                public void run() {
-                    tick += 20;
-                    int remaining = (int) (cfg.autoKillMobs.intervalSec() - (tick / 20));
-                    cfg.autoKillMobs.warnings().forEach(w -> {
-                        if (remaining == w.time()) {
-                            String msg = w.msg().replace("+remaining", String.valueOf(remaining));
-                            broadcast(msg);
-                        }
-                    });
-                    if (remaining <= 0) {
-                        int removed = performAutoKillMobs();
-                        if (cfg.autoKillMobs.broadcastRemoval()) {
-                            broadcast(cfg.autoKillMobs.broadcastMsg().replace("+RemoveAmount", String.valueOf(removed)));
-                        }
-                        tick = 0;
+            int[] killTick = {0};
+            autoKillMobsTask = OreScheduler.runTimer(plugin, () -> {
+                killTick[0] += 20;
+                int remaining = (int) (cfg.autoKillMobs.intervalSec() - (killTick[0] / 20));
+                cfg.autoKillMobs.warnings().forEach(w -> {
+                    if (remaining == w.time()) {
+                        String msg = w.msg().replace("+remaining", String.valueOf(remaining));
+                        broadcast(msg);
                     }
+                });
+                if (remaining <= 0) {
+                    int removed = performAutoKillMobs();
+                    if (cfg.autoKillMobs.broadcastRemoval()) {
+                        broadcast(cfg.autoKillMobs.broadcastMsg().replace("+RemoveAmount", String.valueOf(removed)));
+                    }
+                    killTick[0] = 0;
                 }
-            };
-            autoKillMobsTask.runTaskTimer(plugin, 20L, 20L);
+            }, 20L, 20L);
         }
 
         if (cfg.tps.enabled) {
-            tpsTask = new BukkitRunnable() {
-                boolean triggered = false;
-
-                @Override
-                public void run() {
-                    double tps = getServerTPS();
-                    if (!triggered && tps <= cfg.tps.trigger) {
-                        triggered = true;
-                        if (cfg.tps.broadcastEnabled) broadcast(cfg.tps.triggerMsg);
-                        runCommands(cfg.tps.commands);
-                    } else if (triggered && tps >= cfg.tps.recover) {
-                        triggered = false;
-                        if (cfg.tps.broadcastEnabled) broadcast(cfg.tps.recoverMsg);
-                        runCommands(cfg.tps.recoverCommands);
-                    }
+            boolean[] tpsTriggered = {false};
+            tpsTask = OreScheduler.runTimer(plugin, () -> {
+                double tps = getServerTPS();
+                if (!tpsTriggered[0] && tps <= cfg.tps.trigger) {
+                    tpsTriggered[0] = true;
+                    if (cfg.tps.broadcastEnabled) broadcast(cfg.tps.triggerMsg);
+                    runCommands(cfg.tps.commands);
+                } else if (tpsTriggered[0] && tps >= cfg.tps.recover) {
+                    tpsTriggered[0] = false;
+                    if (cfg.tps.broadcastEnabled) broadcast(cfg.tps.recoverMsg);
+                    runCommands(cfg.tps.recoverCommands);
                 }
-            };
-            tpsTask.runTaskTimer(plugin, 20L * cfg.tps.intervalSec, 20L * cfg.tps.intervalSec);
+            }, 20L * cfg.tps.intervalSec, 20L * cfg.tps.intervalSec);
         }
     }
 
@@ -147,20 +133,16 @@ public class ClearLagManager {
         if (tpsSamplerStarted) return;
         tpsSamplerStarted = true;
 
-        tpsSampleTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                long now = System.nanoTime();
-                long dt = now - lastTickNanos;
-                lastTickNanos = now;
+        tpsSampleTask = OreScheduler.runTimer(plugin, () -> {
+            long now = System.nanoTime();
+            long dt = now - lastTickNanos;
+            lastTickNanos = now;
 
-                if (dt <= 0) return;
-                double instTps = 1_000_000_000.0 / dt;
-                if (instTps > 25.0) instTps = 25.0;
-                rollingTps = (rollingTps * 0.9) + (Math.min(20.0, instTps) * 0.1);
-            }
-        };
-        tpsSampleTask.runTaskTimer(plugin, 1L, 1L);
+            if (dt <= 0) return;
+            double instTps = 1_000_000_000.0 / dt;
+            if (instTps > 25.0) instTps = 25.0;
+            rollingTps = (rollingTps * 0.9) + (Math.min(20.0, instTps) * 0.1);
+        }, 1L, 1L);
     }
 
     private void runCommands(List<String> commands) {
@@ -211,7 +193,7 @@ public class ClearLagManager {
                 if (!config.removeNamed() && hasCustomName(le)) continue;
                 if (EntityMatcher.isFilteredMob(le, config.mobFilter())) continue;
 
-                le.remove();
+                removeEntitySafe(le);
                 removed++;
             }
         }
@@ -231,21 +213,30 @@ public class ClearLagManager {
                 if (!allowedByFlags(e, r)) continue;
                 if (EntityMatcher.inAreaFilter(e, cfg.areaFilter)) continue;
                 if (EntityMatcher.matchesTokens(e, r.removeEntities)) {
-                    e.remove();
+                    removeEntitySafe(e);
                     removed++;
                     continue;
                 }
 
                 if (e instanceof Item it) {
                     if (!r.flagItem) continue;
-                    if (r.itemWhitelist.contains(it.getItemStack().getType())) continue;
-                    it.remove();
-                    removed++;
+                    if (OreScheduler.isFolia()) {
+                        // On Folia, getItemStack() must run on the entity's region thread.
+                        // Dispatch the whitelist check + removal there; count is approximate.
+                        it.getScheduler().run(plugin, ctx -> {
+                            if (!r.itemWhitelist.contains(it.getItemStack().getType())) it.remove();
+                        }, null);
+                        removed++;
+                    } else {
+                        if (r.itemWhitelist.contains(it.getItemStack().getType())) continue;
+                        removeEntitySafe(it);
+                        removed++;
+                    }
                     continue;
                 }
 
                 if (isDirectlyRemovableByFlags(e, r)) {
-                    e.remove();
+                    removeEntitySafe(e);
                     removed++;
                 }
             }
@@ -254,6 +245,19 @@ public class ClearLagManager {
             broadcast(r.broadcastMsg.replace("+RemoveAmount", String.valueOf(removed)));
         }
         return removed;
+    }
+
+    /**
+     * Removes an entity safely on both Paper and Folia.
+     * On Folia, entity.remove() must run on the entity's own region thread;
+     * calling it from the global scheduler thread crashes with a thread-check error.
+     */
+    private void removeEntitySafe(Entity entity) {
+        if (OreScheduler.isFolia()) {
+            entity.getScheduler().run(plugin, ctx -> entity.remove(), null);
+        } else {
+            entity.remove();
+        }
     }
 
     private boolean allowedByFlags(Entity e, ClearLagConfig.Removal r) {

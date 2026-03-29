@@ -13,6 +13,7 @@ import fr.minuskube.inv.content.Pagination;
 import fr.minuskube.inv.content.SlotIterator;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -177,7 +178,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
                 );
 
                 if (typed.equalsIgnoreCase("cancel")) {
-                    Bukkit.getScheduler().runTask(plugin, () -> {
+                    OreScheduler.run(plugin, () -> {
                         player.sendMessage(ChatColor.RED + "Password entry cancelled for warp "
                                 + ChatColor.AQUA + warp.getName());
                     });
@@ -185,7 +186,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
                 }
 
                 String finalTyped = typed;
-                Bukkit.getScheduler().runTask(plugin, () -> handlePasswordResult(player, warp, finalTyped));
+                OreScheduler.run(plugin, () -> handlePasswordResult(player, warp, finalTyped));
             }
 
             @EventHandler

@@ -3,14 +3,17 @@ package fr.elias.oreoEssentials.modules.tab;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.config.SettingsConfig;
 import fr.elias.oreoEssentials.playerdirectory.PlayerDirectory;
-import fr.elias.oreoEssentials.util.MiniMsg;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,8 +38,8 @@ public class TabListManager {
 
     private File file;
     private FileConfiguration cfg;
-    private BukkitTask task;
-    private BukkitTask nameTask;
+    private OreTask task;
+    private OreTask nameTask;
 
     private boolean enabled;
     private boolean usePapi;
@@ -227,7 +230,7 @@ public class TabListManager {
             // When player-section is disabled in custom layout, run name-format from this config
             boolean playerSectionEnabled = cfg.getBoolean("tab.custom-layout.player-section.enabled", true);
             if (nameEnabled && !playerSectionEnabled) {
-                nameTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+                nameTask = OreScheduler.runTimer(plugin, () -> {
                     for (Player p : Bukkit.getOnlinePlayers()) {
                         applyNameFormat(p);
                     }
@@ -245,7 +248,7 @@ public class TabListManager {
      * Classic mode: Traditional header/footer with player name formatting
      */
     private void startClassicMode() {
-        task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        task = OreScheduler.runTimer(plugin, () -> {
             for (Player p : Bukkit.getOnlinePlayers()) {
 
                 World world = p.getWorld();
@@ -303,10 +306,10 @@ public class TabListManager {
                 String nickOrName = safeNickOrName(p);
                 String rendered = patternToUse.replace("%nick_or_name%", nickOrName);
 
-                rendered = color(rendered);
+                // Apply PAPI BEFORE color() to avoid mixing §-codes with MiniMessage tags
                 rendered = applyInternalPlaceholders(p, rendered);
                 rendered = runPapiIf(papi, p, rendered);
-                rendered = color(rendered); // re-apply: LuckPerms/PAPI may return hex codes
+                rendered = color(rendered); // single color pass after all substitutions
 
                 boolean enforce = (o != null && o.name != null && o.name.enforceMax != null)
                         ? o.name.enforceMax
@@ -329,8 +332,9 @@ public class TabListManager {
                 }
 
                 try {
-                    p.setPlayerListName(rendered);
-                } catch (Throwable ignored) {
+                    p.playerListName(LEGACY_HEX.deserialize(rendered));
+                } catch (Throwable e) {
+                    try { p.setPlayerListName(rendered); } catch (Throwable ignored) {}
                 }
             }
         }, 1L, intervalTicks);
@@ -369,10 +373,11 @@ public class TabListManager {
 
         String nickOrName = safeNickOrName(p);
         String rendered = patternToUse.replace("%nick_or_name%", nickOrName);
-        rendered = color(rendered);
+        // Apply PAPI BEFORE color() so that MiniMessage tags from PAPI (e.g. %luckperms_prefix%)
+        // are not mixed with §-codes from a premature color() call, which would break MM.deserialize.
         rendered = applyInternalPlaceholders(p, rendered);
         rendered = runPapiIf(papi, p, rendered);
-        rendered = color(rendered); // re-apply: LuckPerms/PAPI may return hex codes
+        rendered = color(rendered); // single color pass after all substitutions
 
         boolean enforce = (o != null && o.name != null && o.name.enforceMax != null)
                 ? o.name.enforceMax : nameEnforceMax;
@@ -383,7 +388,11 @@ public class TabListManager {
         OverflowMode mode = "ELLIPSIS".equalsIgnoreCase(ov) ? OverflowMode.ELLIPSIS : OverflowMode.TRIM;
         if (enforce) rendered = fitToMax(rendered, maxLen, mode);
 
-        try { p.setPlayerListName(rendered); } catch (Throwable ignored) {}
+        try {
+            p.playerListName(LEGACY_HEX.deserialize(rendered));
+        } catch (Throwable e) {
+            try { p.setPlayerListName(rendered); } catch (Throwable ignored) {}
+        }
     }
 
     public void stop() {
@@ -460,91 +469,66 @@ public class TabListManager {
         return a != null ? a : b;
     }
 
-    private static final java.util.regex.Pattern HEX_AMP       = java.util.regex.Pattern.compile("&#([A-Fa-f0-9]{6})");
-    private static final java.util.regex.Pattern HEX_MINI      = java.util.regex.Pattern.compile("<#([A-Fa-f0-9]{6})>");
-    // Matches <gradient:#RRGGBB:#RRGGBB> and extracts the first color (fallback for unclosed tags)
-    private static final java.util.regex.Pattern GRADIENT_MINI = java.util.regex.Pattern.compile(
-            "<gradient:#([A-Fa-f0-9]{6})(?::#[A-Fa-f0-9]{6})*>", java.util.regex.Pattern.CASE_INSENSITIVE);
-    // Matches a complete <gradient:...>TEXT</gradient> or <rainbow>TEXT</rainbow> block for full MiniMessage parsing
-    private static final java.util.regex.Pattern GRADIENT_BLOCK = java.util.regex.Pattern.compile(
-            "<(gradient|rainbow)[^>]*>.*?</(gradient|rainbow)>",
-            java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL);
-    // Strips any remaining MiniMessage closing/opening tags we don't handle
-    private static final java.util.regex.Pattern MINI_TAG_STRIP = java.util.regex.Pattern.compile(
-            "</?(?:gradient|rainbow|transition|font|lang|insertion|click|hover|key|selector|score|nbt|block_nbt|entity_nbt|storage_nbt)[^>]*>",
-            java.util.regex.Pattern.CASE_INSENSITIVE);
+    private static final MiniMessage MM = MiniMessage.miniMessage();
+    private static final LegacyComponentSerializer LEGACY_HEX = LegacyComponentSerializer.builder()
+            .character('§')
+            .hexColors()
+            .useUnusualXRepeatedCharacterHexFormat()
+            .build();
+    private static final java.util.regex.Pattern AMP_HEX = java.util.regex.Pattern.compile("&#([A-Fa-f0-9]{6})");
 
-    /** Converts complete <gradient:...>TEXT</gradient> / <rainbow>TEXT</rainbow> blocks
-     *  to per-character legacy hex codes using Adventure's MiniMessage parser. */
-    private static String resolveGradientBlocks(String s) {
-        java.util.regex.Matcher m = GRADIENT_BLOCK.matcher(s);
-        StringBuffer sb = new StringBuffer();
-        while (m.find()) {
-            try {
-                String converted = MiniMsg.toLegacy(m.group(0));
-                m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(converted));
-            } catch (Throwable ignored) {
-                // keep original — fallback color() handling will apply single color
-                m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(m.group(0)));
-            }
-        }
-        m.appendTail(sb);
-        return sb.toString();
+    private static final java.util.Map<Character, String> AMP_TO_MINI;
+    static {
+        java.util.Map<Character, String> m = new java.util.HashMap<>();
+        m.put('l', "<bold>"); m.put('o', "<italic>"); m.put('n', "<underlined>");
+        m.put('m', "<strikethrough>"); m.put('k', "<obfuscated>"); m.put('r', "<reset>");
+        m.put('0', "<black>"); m.put('1', "<dark_blue>"); m.put('2', "<dark_green>");
+        m.put('3', "<dark_aqua>"); m.put('4', "<dark_red>"); m.put('5', "<dark_purple>");
+        m.put('6', "<gold>"); m.put('7', "<gray>"); m.put('8', "<dark_gray>");
+        m.put('9', "<blue>"); m.put('a', "<green>"); m.put('b', "<aqua>");
+        m.put('c', "<red>"); m.put('d', "<light_purple>"); m.put('e', "<yellow>");
+        m.put('f', "<white>");
+        AMP_TO_MINI = java.util.Collections.unmodifiableMap(m);
     }
 
-    private static String hexToLegacy(java.util.regex.Matcher m) {
-        StringBuilder sb = new StringBuilder("§x");
-        for (char c : m.group(1).toCharArray()) sb.append('§').append(c);
+    private static String convertAmpToMiniMessage(String s) {
+        if (s == null || s.indexOf('&') == -1) return s;
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '&' && i + 1 < s.length()) {
+                char code = Character.toLowerCase(s.charAt(i + 1));
+                String mini = AMP_TO_MINI.get(code);
+                if (mini != null) { sb.append(mini); i++; continue; }
+            }
+            sb.append(c);
+        }
         return sb.toString();
     }
 
     private static String color(String s) {
         if (s == null) return "";
-        // Full <gradient:...>TEXT</gradient> blocks → per-character legacy hex (proper gradient)
-        s = resolveGradientBlocks(s);
-        // &#RRGGBB  →  §x§R§R§G§G§B§B
-        java.util.regex.Matcher m1 = HEX_AMP.matcher(s);
-        StringBuffer sb1 = new StringBuffer();
-        while (m1.find()) m1.appendReplacement(sb1, hexToLegacy(m1));
-        m1.appendTail(sb1);
-        s = sb1.toString();
-        // <#RRGGBB>  →  §x§R§R§G§G§B§B  (MiniMessage style used in rank-formats)
-        java.util.regex.Matcher m2 = HEX_MINI.matcher(s);
-        StringBuffer sb2 = new StringBuffer();
-        while (m2.find()) m2.appendReplacement(sb2, hexToLegacy(m2));
-        m2.appendTail(sb2);
-        s = sb2.toString();
-        // <gradient:#RRGGBB:#RRGGBB> → use first color as legacy
-        java.util.regex.Matcher mg = GRADIENT_MINI.matcher(s);
-        StringBuffer sbg = new StringBuffer();
-        while (mg.find()) {
-            StringBuilder rep = new StringBuilder("§x");
-            for (char c : mg.group(1).toCharArray()) rep.append('§').append(c);
-            mg.appendReplacement(sbg, rep.toString());
+
+        // 1. &#RRGGBB → <#RRGGBB>
+        s = AMP_HEX.matcher(s).replaceAll("<#$1>");
+
+        // 2. §-codes (from PAPI, e.g. %simplenick_nickname% → §9hi) → & codes
+        //    so they survive MM.deserialize when mixed with MiniMessage tags
+        s = s.replace('§', '&');
+
+        // 3. Full MiniMessage parse — converts &-codes to MM tags first so the
+        //    entire string (both PAPI §-output and MiniMessage prefix tags) is handled uniformly
+        if (s.indexOf('<') != -1 && s.indexOf('>') != -1) {
+            try {
+                Component comp = MM.deserialize(convertAmpToMiniMessage(s));
+                s = LEGACY_HEX.serialize(comp);
+                return s.replace("\\n", "\n");
+            } catch (Throwable ignored) {}
         }
-        mg.appendTail(sbg);
-        s = sbg.toString();
-        // Common MiniMessage named tags → legacy codes
-        s = s.replace("<reset>", "§r").replace("<gray>", "§7").replace("<white>", "§f")
-             .replace("<black>", "§0").replace("<dark_blue>", "§1").replace("<dark_green>", "§2")
-             .replace("<dark_aqua>", "§3").replace("<dark_red>", "§4").replace("<dark_purple>", "§5")
-             .replace("<gold>", "§6").replace("<dark_gray>", "§8").replace("<blue>", "§9")
-             .replace("<green>", "§a").replace("<aqua>", "§b").replace("<red>", "§c")
-             .replace("<light_purple>", "§d").replace("<yellow>", "§e")
-             // MiniMessage decoration tags → legacy codes
-             .replace("<bold>", "§l").replace("</bold>", "§r")
-             .replace("<b>", "§l").replace("</b>", "§r")
-             .replace("<italic>", "§o").replace("</italic>", "§r")
-             .replace("<i>", "§o").replace("</i>", "§r")
-             .replace("<underlined>", "§n").replace("</underlined>", "§r")
-             .replace("<u>", "§n").replace("</u>", "§r")
-             .replace("<strikethrough>", "§m").replace("</strikethrough>", "§r")
-             .replace("<st>", "§m").replace("</st>", "§r")
-             .replace("<obfuscated>", "§k").replace("</obfuscated>", "§r")
-             .replace("<obf>", "§k").replace("</obf>", "§r");
-        // Strip remaining unsupported MiniMessage tags (e.g. </gradient>)
-        s = MINI_TAG_STRIP.matcher(s).replaceAll("");
-        return s.replace('&', '§').replace("\\n", "\n");
+
+        // 4. Fallback: translate remaining & codes
+        s = org.bukkit.ChatColor.translateAlternateColorCodes('&', s);
+        return s.replace("\\n", "\n");
     }
 
     private static final java.util.regex.Pattern STRIP_COLOR = java.util.regex.Pattern.compile(

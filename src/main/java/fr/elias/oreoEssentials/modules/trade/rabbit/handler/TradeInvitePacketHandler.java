@@ -5,6 +5,7 @@ import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.event.PacketSubscriber;
 import fr.elias.oreoEssentials.modules.trade.rabbit.packet.TradeInvitePacket;
 import fr.elias.oreoEssentials.modules.trade.service.TradeService;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -26,7 +27,7 @@ public final class TradeInvitePacketHandler implements PacketSubscriber<TradeInv
     @Override
     public void onReceive(PacketChannel channel, TradeInvitePacket p) {
         // Always bounce to main thread for any Bukkit API usage
-        Bukkit.getScheduler().runTask(plugin, () -> handleOnMain(channel, p));
+        OreScheduler.run(plugin, () -> handleOnMain(channel, p));
     }
 
     /* ------------------------------------------------------------------ */
@@ -106,7 +107,7 @@ public final class TradeInvitePacketHandler implements PacketSubscriber<TradeInv
             return;
         }
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        OreScheduler.runLater(plugin, () -> {
             Player target = Bukkit.getPlayer(p.getTargetId());
             if (target != null && target.isOnline()) {
                 if (plugin.getTradeBroker() != null) {

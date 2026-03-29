@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.warps.provider;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.warps.rabbit.WarpDirectory;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.modules.warps.WarpService;
 import fr.elias.oreoEssentials.modules.warps.commands.WarpsAdminCommand;
 import fr.elias.oreoEssentials.modules.warps.gui.WarpConfirmDeleteGui;
@@ -150,7 +151,7 @@ public class WarpAdminActionsProvider implements InventoryProvider, Listener {
         if (msg.equalsIgnoreCase("cancel")) {
             prompts.remove(id);
             p.sendMessage(ChatColor.GRAY + "Operation cancelled.");
-            Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> reopen(p));
+            OreScheduler.runForEntity(OreoEssentials.get(), p, () -> reopen(p));
             return;
         }
 
@@ -165,7 +166,7 @@ public class WarpAdminActionsProvider implements InventoryProvider, Listener {
         final WarpDirectory dir = OreoEssentials.get().getWarpDirectory();
         if (dir == null) {
             p.sendMessage(ChatColor.RED + "WarpDirectory not available; cannot set permission.");
-            Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> reopen(p));
+            OreScheduler.runForEntity(OreoEssentials.get(), p, () -> reopen(p));
             return;
         }
         if (permText.equalsIgnoreCase("none")) {
@@ -175,21 +176,21 @@ public class WarpAdminActionsProvider implements InventoryProvider, Listener {
             dir.setWarpPermission(warp, permText);
             p.sendMessage(ChatColor.GREEN + "Permission set to " + ChatColor.YELLOW + permText + ChatColor.GREEN + ".");
         }
-        Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> reopen(p));
+        OreScheduler.runForEntity(OreoEssentials.get(), p, () -> reopen(p));
     }
 
     private void handleRename(Player p, String oldName, String newNameRaw) {
         String newName = newNameRaw.trim().toLowerCase(Locale.ROOT);
         if (newName.isEmpty()) {
             p.sendMessage(ChatColor.RED + "Name cannot be empty.");
-            Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> reopen(p));
+            OreScheduler.runForEntity(OreoEssentials.get(), p, () -> reopen(p));
             return;
         }
 
         boolean ok = warps.renameWarp(oldName, newName);
         if (!ok) {
             p.sendMessage(ChatColor.RED + "Failed to rename warp.");
-            Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> reopen(p));
+            OreScheduler.runForEntity(OreoEssentials.get(), p, () -> reopen(p));
             return;
         }
 
@@ -206,7 +207,7 @@ public class WarpAdminActionsProvider implements InventoryProvider, Listener {
 
         p.sendMessage(ChatColor.GREEN + "Warp renamed to " + ChatColor.AQUA + newName + ChatColor.GREEN + ".");
         final String openName = newName;
-        Bukkit.getScheduler().runTask(OreoEssentials.get(), () -> {
+        OreScheduler.runForEntity(OreoEssentials.get(), p, () -> {
             SmartInventory.builder()
                     .id("oreo:warps_admin_actions:" + openName)
                     .provider(new WarpAdminActionsProvider(warps, openName))

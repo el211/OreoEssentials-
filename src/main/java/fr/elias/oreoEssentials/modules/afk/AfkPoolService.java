@@ -6,6 +6,7 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.back.BackLocation;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.rabbitmq.PacketChannels;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.afk.rabbit.packets.AfkPoolEnterPacket;
@@ -111,7 +112,7 @@ public class AfkPoolService implements Listener {
             plugin.getLogger().info("[AfkPool] Received AfkPoolEnterPacket target=" + target
                     + " local=" + localServer + " playerId=" + playerId);
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 Player player = Bukkit.getPlayer(playerId);
 
                 if (returnLoc != null) afkReturnLocations.put(playerId, returnLoc);
@@ -140,7 +141,7 @@ public class AfkPoolService implements Listener {
             plugin.getLogger().info("[AfkPool] Received AfkPoolExitPacket target=" + target
                     + " local=" + localServer + " playerId=" + playerId);
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 Player player = Bukkit.getPlayer(playerId);
                 if (player != null && player.isOnline() && returnLoc != null) {
                     setGrace(playerId, 1500);
@@ -177,7 +178,7 @@ public class AfkPoolService implements Listener {
             if (pm == null || !pm.isInitialized()) {
                 plugin.getLogger().warning("[AfkPool] PacketManager not ready, retrying soon. local=" + localServer);
 
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                OreScheduler.runLater(plugin, () -> {
                     if (!player.isOnline()) return;
 
                     PacketManager pm2 = plugin.getPacketManager();
@@ -377,7 +378,7 @@ public class AfkPoolService implements Listener {
 
         BackLocation pendingReturn = pendingReturnTeleports.remove(playerId);
         if (pendingReturn != null) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            OreScheduler.runLaterForEntity(plugin, player, () -> {
                 if (!player.isOnline()) return;
 
                 setGrace(playerId, 1500);
@@ -388,7 +389,7 @@ public class AfkPoolService implements Listener {
         }
 
         if (Boolean.TRUE.equals(pendingPoolTeleports.remove(playerId))) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            OreScheduler.runLaterForEntity(plugin, player, () -> {
                 if (!player.isOnline()) return;
 
                 markInPool(playerId);

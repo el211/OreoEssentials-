@@ -17,6 +17,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
@@ -35,7 +36,6 @@ public final class TradeService implements Listener {
     private final Map<UUID, Deque<TradeStatePacket>> pendingStates = new ConcurrentHashMap<>();
     private final OreoEssentials plugin;
     private final TradeConfig cfg;
-    private int cleanupTaskId = 0;
 
     private static final class Invite {
         final UUID fromId;
@@ -77,13 +77,13 @@ public final class TradeService implements Listener {
         if (dao == null) dao = new InMemoryPendingGrantsDao();
         this.pendingGrantsDao = dao;
 
-        this.cleanupTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(
+        OreScheduler.runTimer(
                 plugin,
                 () -> { try { purgeExpiredInvites(); } catch (Throwable ignored) {} },
                 40L, 40L
         );
 
-        log("[TRADE] TradeService init; cleanupTaskId=" + cleanupTaskId + " tradedebug=" + cfg.debugDeep);
+        log("[TRADE] TradeService init; tradedebug=" + cfg.debugDeep);
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
@@ -313,7 +313,7 @@ public final class TradeService implements Listener {
         }
 
         final TradeSession finalSession = session;
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        OreScheduler.runLater(plugin, () -> {
             try {
                 if (!sessionsById.containsKey(sid)) {
                     log("[TRADE] session removed before GUI open, aborting sid=" + sid);
@@ -496,7 +496,7 @@ public final class TradeService implements Listener {
         s.beginClosing();
         s.lockUiNow();
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             try {
                 var broker = plugin.getTradeBroker();
                 if (broker != null && plugin.isMessagingAvailable()) {
@@ -695,10 +695,7 @@ public final class TradeService implements Listener {
         sessionsById.clear();
         playerToSession.clear();
         try { menuRegistry.closeAll(); } catch (Throwable ignored) {}
-        if (cleanupTaskId != 0) {
-            try { Bukkit.getScheduler().cancelTask(cleanupTaskId); } catch (Throwable ignored) {}
-            cleanupTaskId = 0;
-        }
+        OreScheduler.cancelAll(plugin);
     }
 
     private void cancelSession(UUID sid, String reason) {
@@ -792,7 +789,7 @@ public final class TradeService implements Listener {
         if (p == null) return;
 
         if (!Bukkit.isPrimaryThread()) {
-            Bukkit.getScheduler().runTask(plugin, () -> handleRemoteGrant(p));
+            OreScheduler.run(plugin, () -> handleRemoteGrant(p));
             return;
         }
 
@@ -1067,7 +1064,7 @@ public final class TradeService implements Listener {
         UUID aId = s.getAId();
         UUID bId = s.getBId();
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        OreScheduler.run(plugin, () -> {
             try {
                 Player pt = Bukkit.getPlayer(target);
                 if (pt != null && pt.isOnline()) pt.closeInventory();
@@ -1132,7 +1129,7 @@ public final class TradeService implements Listener {
     private void enqueueState(TradeStatePacket p) {
         pendingStates.computeIfAbsent(p.getSessionId(), k -> new ArrayDeque<>(8)).addLast(p);
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        OreScheduler.runLater(plugin, () -> {
             if (sessionsById.get(p.getSessionId()) == null && pendingStates.containsKey(p.getSessionId())) {
                 try {
                     var broker = plugin.getTradeBroker();

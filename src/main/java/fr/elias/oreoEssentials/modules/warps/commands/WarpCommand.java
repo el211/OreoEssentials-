@@ -7,14 +7,16 @@ import fr.elias.oreoEssentials.modules.warps.WarpService;
 import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.warps.rabbit.packets.WarpTeleportRequestPacket;
+import fr.elias.oreoEssentials.util.Async;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -119,24 +121,8 @@ public class WarpCommand implements OreoCommand {
 
         String ownerServer = (warpDir != null ? warpDir.getWarpServer(warpName) : null);
 
-        if (ownerServer == null || ownerServer.isBlank()) {
-            Location test = warps.getWarp(warpName);
-            if (test == null) {
-                Lang.send(sender, "warp.not-found",
-                        "<red>Warp not found.</red>");
-                return true;
-            }
-            ownerServer = localServer;
-        }
-
-        if (ownerServer.equalsIgnoreCase(localServer)) {
-            Location test = warps.getWarp(warpName);
-            if (test == null) {
-                Lang.send(sender, "warp.not-found",
-                        "<red>Warp not found.</red>");
-                return true;
-            }
-        }
+        // Existence checks and the actual teleport both call warps.getWarp() — do them async.
+        final String resolvedOwnerServer = ownerServer;
 
         FileConfiguration settings = plugin.getSettingsConfig().getRoot();
         ConfigurationSection warpSection = settings.getConfigurationSection("features.warp");
@@ -144,15 +130,42 @@ public class WarpCommand implements OreoCommand {
         int seconds = (warpSection != null ? warpSection.getInt("cooldown-amount", 0) : 0);
 
         boolean actorIsOp = actor != null && actor.isOp();
+        final Player finalTarget = target;
+        final Player finalActor = actor;
 
-        if (actor == null || actorIsOp || !useCooldown || seconds <= 0 || target == null) {
-            performWarp(plugin, warps, sender, actor, target, warpName);
-            return true;
-        }
+        // Fetch warp location async (avoids blocking entity region thread on Folia).
+        Async.run(() -> {
+            String effectiveOwnerServer = resolvedOwnerServer;
+            Location preloadedLoc = null;
 
-        startCountdown(target, seconds, warpName, () ->
-                performWarp(plugin, warps, sender, actor, target, warpName)
-        );
+            if (effectiveOwnerServer == null || effectiveOwnerServer.isBlank()) {
+                preloadedLoc = warps.getWarp(warpName);
+                if (preloadedLoc == null) {
+                    OreScheduler.run(plugin, () -> Lang.send(sender, "warp.not-found", "<red>Warp not found.</red>"));
+                    return;
+                }
+                effectiveOwnerServer = localServer;
+            } else if (effectiveOwnerServer.equalsIgnoreCase(localServer)) {
+                preloadedLoc = warps.getWarp(warpName);
+                if (preloadedLoc == null) {
+                    OreScheduler.run(plugin, () -> Lang.send(sender, "warp.not-found", "<red>Warp not found.</red>"));
+                    return;
+                }
+            }
+
+            final String finalOwnerServer = effectiveOwnerServer;
+            final Location finalLoc = preloadedLoc;
+
+            if (finalTarget == null) return;
+            OreScheduler.runForEntity(plugin, finalTarget, () -> {
+                if (finalActor == null || actorIsOp || !useCooldown || seconds <= 0) {
+                    performWarp(plugin, warps, sender, finalActor, finalTarget, warpName, finalOwnerServer, finalLoc);
+                } else {
+                    startCountdown(finalTarget, seconds, warpName, () ->
+                            performWarp(plugin, warps, sender, finalActor, finalTarget, warpName, finalOwnerServer, finalLoc));
+                }
+            });
+        });
         return true;
     }
 
@@ -161,13 +174,14 @@ public class WarpCommand implements OreoCommand {
                              CommandSender sender,
                              Player actor,
                              Player target,
-                             String warpName) {
+                             String warpName,
+                             String ownerServer,
+                             Location preloadedLoc) {
 
         final var log = plugin.getLogger();
 
-        final String localServer  = plugin.getConfigService().serverName();
-        final WarpDirectory warpDir = plugin.getWarpDirectory();
-        String targetServer = (warpDir != null ? warpDir.getWarpServer(warpName) : localServer);
+        final String localServer = plugin.getConfigService().serverName();
+        String targetServer = ownerServer;
         if (targetServer == null || targetServer.isBlank()) targetServer = localServer;
 
         log.info("[WarpCmd] Sender=" + sender.getName()
@@ -176,11 +190,10 @@ public class WarpCommand implements OreoCommand {
                 + " UUID=" + target.getUniqueId()
                 + " warp=" + warpName
                 + " localServer=" + localServer
-                + " targetServer=" + targetServer
-                + " warpDir=" + (warpDir == null ? "null" : "ok"));
+                + " targetServer=" + targetServer);
 
         if (targetServer.equalsIgnoreCase(localServer)) {
-            Location l = warps.getWarp(warpName);
+            Location l = preloadedLoc;
             if (l == null) {
                 Lang.send(sender, "warp.not-found",
                         "<red>Warp not found.</red>");
@@ -212,8 +225,9 @@ public class WarpCommand implements OreoCommand {
             return;
         }
 
+        final String targetServerFinal = targetServer;
         var cs = plugin.getCrossServerSettings();
-        if (!cs.warps() && !targetServer.equalsIgnoreCase(localServer)) {
+        if (!cs.warps() && !targetServerFinal.equalsIgnoreCase(localServer)) {
             Lang.send(sender, "warp.cross-disabled",
                     "<red>Cross-server warps are disabled by server config.</red>");
             Lang.send(sender, "warp.cross-disabled-tip",
@@ -289,48 +303,45 @@ public class WarpCommand implements OreoCommand {
     private void startCountdown(Player target, int seconds, String warpName, Runnable action) {
         final OreoEssentials plugin = OreoEssentials.get();
         final Location origin = target.getLocation().clone();
+        final int[] remaining = {seconds};
+        final OreTask[] taskHolder = {OreTask.EMPTY};
 
-        new BukkitRunnable() {
-            int remaining = seconds;
-
-            @Override
-            public void run() {
-                if (!target.isOnline()) {
-                    cancel();
-                    return;
-                }
-
-                if (hasBodyMoved(target, origin)) {
-                    cancel();
-                    Lang.send(target, "warp.cancelled-moved",
-                            "<red>Teleport to warp <yellow>%warp%</yellow> cancelled: you moved.</red>",
-                            Map.of("warp", warpName));
-                    return;
-                }
-
-                if (remaining <= 0) {
-                    cancel();
-                    action.run();
-                    return;
-                }
-
-                String title = Lang.msgWithDefault(
-                        "teleport.countdown.title",
-                        "<yellow>Teleporting...</yellow>",
-                        target
-                );
-
-                String subtitle = Lang.msgWithDefault(
-                        "teleport.countdown.subtitle",
-                        "<gray>In <white>%seconds%</white>s...</gray>",
-                        Map.of("seconds", String.valueOf(remaining)),
-                        target
-                );
-
-                target.sendTitle(title, subtitle, 0, 20, 0);
-                remaining--;
+        taskHolder[0] = OreScheduler.runTimerForEntity(plugin, target, () -> {
+            if (!target.isOnline()) {
+                taskHolder[0].cancel();
+                return;
             }
-        }.runTaskTimer(plugin, 0L, 20L);
+
+            if (hasBodyMoved(target, origin)) {
+                taskHolder[0].cancel();
+                Lang.send(target, "warp.cancelled-moved",
+                        "<red>Teleport to warp <yellow>%warp%</yellow> cancelled: you moved.</red>",
+                        Map.of("warp", warpName));
+                return;
+            }
+
+            if (remaining[0] <= 0) {
+                taskHolder[0].cancel();
+                action.run();
+                return;
+            }
+
+            String title = Lang.msgWithDefault(
+                    "teleport.countdown.title",
+                    "<yellow>Teleporting...</yellow>",
+                    target
+            );
+
+            String subtitle = Lang.msgWithDefault(
+                    "teleport.countdown.subtitle",
+                    "<gray>In <white>%seconds%</white>s...</gray>",
+                    Map.of("seconds", String.valueOf(remaining[0])),
+                    target
+            );
+
+            target.sendTitle(title, subtitle, 0, 20, 0);
+            remaining[0]--;
+        }, 0L, 20L);
     }
 
     private boolean hasBodyMoved(Player p, Location origin) {

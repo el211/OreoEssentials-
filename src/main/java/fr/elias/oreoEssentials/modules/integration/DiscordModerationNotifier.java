@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.integration;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.chat.CustomConfig;
 import fr.elias.oreoEssentials.util.DiscordWebhook;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
@@ -144,7 +145,7 @@ public class DiscordModerationNotifier {
 
         if (webhook.isEmpty()) return;
 
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             try {
                 placeholders.putIfAbsent("server", includeServerName ? "**(" + Bukkit.getServer().getName() + ")**" : "");
                 String body = renderTemplate(message, placeholders);

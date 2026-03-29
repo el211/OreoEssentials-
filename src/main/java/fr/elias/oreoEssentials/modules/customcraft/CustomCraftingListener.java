@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.customcraft;
 
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -92,7 +93,7 @@ public final class CustomCraftingListener implements Listener {
         if (action.hasCommands()) {
             for (String cmd : action.getCommands()) {
                 String processed = processPlaceholders(player, cmd, result);
-                Bukkit.getScheduler().runTask(service.getPlugin(), () -> {
+                OreScheduler.run(service.getPlugin(), () -> {
                     try {
                         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), processed);
                     } catch (Exception ex) {

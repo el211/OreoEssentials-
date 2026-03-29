@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.chat;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.auctionhouse.AuctionHouseModule;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.modules.chat.channels.ChatChannel;
 import fr.elias.oreoEssentials.modules.chat.channels.ChatChannelHandler;
 import fr.elias.oreoEssentials.modules.chat.channels.ChatChannelManager;
@@ -182,7 +183,7 @@ public class AsyncChatListenerWithChannels implements Listener {
 
         if (gui != null && gui.isStaffChatEnabled(player.getUniqueId())) {
             final String staffMsg = PlainTextComponentSerializer.plainText().serialize(event.message());
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            OreScheduler.run(plugin, () -> {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     if (p.hasPermission("oreo.staffchat")) {
                         p.sendMessage("§b[StaffChat] §f" + player.getName() + ": §7" + staffMsg);
@@ -198,7 +199,7 @@ public class AsyncChatListenerWithChannels implements Listener {
         if (channelManager != null && channelManager.isEnabled()) {
             final String message = PlainTextComponentSerializer.plainText().serialize(event.message());
             final ChatChannel channel = channelManager.getPlayerChannel(player);
-            Bukkit.getScheduler().runTask(plugin, () ->
+            OreScheduler.run(plugin, () ->
                     channelHandler.sendChannelMessage(player, message, channel));
         }
     }

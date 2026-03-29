@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.migration.essentialsx.command;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.migration.essentialsx.EssentialsXMigrator;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.migration.essentialsx.EssentialsXMigrator.ConflictPolicy;
 import fr.elias.oreoEssentials.migration.essentialsx.EssentialsXMigrator.Result;
 import fr.elias.oreoEssentials.modules.homes.home.HomeDirectory;
@@ -105,7 +106,7 @@ public class MigrateEssentialsXCommand implements OreoCommand {
         final boolean finalDoEconomy = doEconomy;
         final File    finalDataDir   = dataDir;
 
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+        OreScheduler.runAsync(plugin, () -> {
             EssentialsXMigrator migrator = new EssentialsXMigrator(
                     plugin.getStorage(),
                     plugin.getDatabase(),
