@@ -1,21 +1,23 @@
 package fr.elias.oreoEssentials.modules.holograms;
 
 import fr.elias.oreoEssentials.modules.freeze.HoloTags;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.plugin.Plugin;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
 public final class OreoHolograms {
 
     private final Plugin plugin;
     private final OreoHologramsStore store;
     private final Map<String, OreoHologram> holos = new ConcurrentHashMap<>();
     private final HoloTags tags;
+
     public OreoHolograms(Plugin plugin) {
         this.plugin = plugin;
         this.store = new OreoHologramsStore(plugin.getDataFolder());
         this.tags   = new HoloTags(plugin);
-
     }
 
 
@@ -29,7 +31,6 @@ public final class OreoHolograms {
                     d.billboard = OreoHologramBillboard.CENTER;
                     migrated = true;
                 }
-
                 if (d.visibilityDistance <= 0) {
                     d.visibilityDistance = 64.0;
                     migrated = true;
@@ -37,24 +38,33 @@ public final class OreoHolograms {
 
                 OreoHologram h = OreoHologramFactory.fromData(d);
                 holos.put(h.getName().toLowerCase(Locale.ROOT), h);
-                h.spawnIfMissing();
+
+                org.bukkit.Location spawnLoc = d.location.toLocation();
+                if (spawnLoc != null && spawnLoc.getWorld() != null) {
+                    final OreoHologram hf = h;
+                    // Dispatch to the owning region thread (required on Folia for entity ops).
+                    // runAtLocation tasks execute on the first region tick — after ALL plugins
+                    // have enabled — so PAPI is guaranteed ready when the entity is spawned.
+                    // despawn() removes any stale world-file entity; spawnIfMissing() creates
+                    // a fresh one with fully-resolved placeholder text.
+                    OreScheduler.runAtLocation(plugin, spawnLoc, () -> {
+                        try {
+                            plugin.getLogger().info("[OreoHolograms][DBG] runAtLocation task running for holo=" + hf.getName());
+                            hf.despawn();
+                            hf.spawnIfMissing();
+                            plugin.getLogger().info("[OreoHolograms][DBG] spawn complete for holo=" + hf.getName());
+                        } catch (Throwable t) {
+                            plugin.getLogger().warning("[OreoHolograms][DBG] CRASH in spawn task for holo=" + hf.getName() + ": " + t);
+                            t.printStackTrace();
+                        }
+                    });
+                }
             } catch (Throwable t) {
                 plugin.getLogger().warning("[OreoHolograms] Failed to load " + d.name + ": " + t.getMessage());
             }
         }
 
         if (migrated) save();
-
-        // PAPI expansions may not be registered yet when load() runs during startup.
-        // Schedule a delayed refresh (60 ticks = 3 s) so all expansions are ready
-        // before we bake placeholder text into TextDisplay entities.
-        org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            for (OreoHologram h : holos.values()) {
-                if (h instanceof fr.elias.oreoEssentials.modules.holograms.TextOreoHologram th) {
-                    th.forceRefresh();
-                }
-            }
-        }, 60L);
     }
 
     public void save() {
@@ -69,11 +79,18 @@ public final class OreoHolograms {
         }
         holos.clear();
     }
+
     public HoloTags tags() { return tags; }
 
     public void tickAll() {
         for (OreoHologram h : holos.values()) {
-            try { h.tick(); } catch (Throwable ignored) {}
+            if (h.toData().updateIntervalTicks <= 0) continue;
+            org.bukkit.Location loc = h.toData().location.toLocation();
+            if (loc == null || loc.getWorld() == null) continue;
+            final OreoHologram hf = h;
+            OreScheduler.runAtLocation(plugin, loc, () -> {
+                try { hf.tick(); } catch (Throwable ignored) {}
+            });
         }
     }
 

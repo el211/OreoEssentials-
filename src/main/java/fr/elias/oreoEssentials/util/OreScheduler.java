@@ -41,6 +41,23 @@ OreScheduler {
         );
     }
 
+    // -------------------------------------------------------------------------
+    // Sync – location-bound (use for entity spawns / entity access on Folia)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Run a sync task on the region owning the given location.
+     * On standard Paper this resolves to the main thread, on Folia it schedules
+     * on the correct regional thread — required for spawnEntity / getNearbyEntities
+     * and any entity property changes.
+     */
+    public static OreTask runAtLocation(Plugin plugin, org.bukkit.Location location, Runnable task) {
+        return new OreTask(
+                plugin.getServer().getRegionScheduler()
+                        .run(plugin, location, ctx -> task.run())
+        );
+    }
+
     /** Run a repeating sync task (global). */
     public static OreTask runTimer(Plugin plugin, Runnable task, long delayTicks, long periodTicks) {
         return new OreTask(

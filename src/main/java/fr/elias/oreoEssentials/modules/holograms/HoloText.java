@@ -74,6 +74,9 @@ public final class HoloText {
 
     public static String applyPapi(String text, Player player) {
         if (text == null) return "";
+        // Without a real player, PAPI returns empty string for many expansions (e.g. LuckPerms prefix).
+        // Skip processing entirely so the raw placeholder text remains visible as a fallback.
+        if (player == null) return text;
         if (!Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) return text;
 
         try {

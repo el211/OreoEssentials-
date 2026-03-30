@@ -2,6 +2,9 @@ package fr.elias.oreoEssentials.modules.holograms.nms.v1_21_11;
 
 import fr.elias.oreoEssentials.modules.holograms.nms.NmsHologramBridge;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
@@ -12,7 +15,7 @@ import java.util.logging.Logger;
 
 public final class Bridge_v1_21_11 implements NmsHologramBridge {
 
-    private static final Logger LOG = Logger.getLogger("OreoEssentials/NMS");
+    private static final Logger LOG = Bukkit.getLogger();
 
     private static final Object TEXT_ACCESSOR;
     private static final boolean INIT_OK;
@@ -27,7 +30,7 @@ public final class Bridge_v1_21_11 implements NmsHologramBridge {
             accessor = f.get(null);
             ok = true;
         } catch (Throwable t) {
-            LOG.severe("[Bridge_v1_21_11] Static init failed: " + t);
+            Bukkit.getLogger().severe("[OreoHolograms/NMS] Bridge_v1_21_11 static init failed: " + t);
         }
         TEXT_ACCESSOR = accessor;
         INIT_OK = ok;
@@ -40,7 +43,10 @@ public final class Bridge_v1_21_11 implements NmsHologramBridge {
 
     @Override
     public void sendTextDisplayText(Player player, int entityId, Component text) {
-        if (!INIT_OK) return;
+        if (!INIT_OK) {
+            LOG.warning("[OreoHolograms/NMS] sendTextDisplayText skipped — INIT_OK=false");
+            return;
+        }
         try {
             Object nmsComponent = adventureToNms(text);
 
@@ -58,7 +64,7 @@ public final class Bridge_v1_21_11 implements NmsHologramBridge {
 
             sendPacket(player, packet);
         } catch (Throwable t) {
-            LOG.warning("[Bridge_v1_21_11] sendTextDisplayText failed: " + t);
+            LOG.warning("[OreoHolograms/NMS] sendTextDisplayText failed: " + t);
         }
     }
 
@@ -71,7 +77,7 @@ public final class Bridge_v1_21_11 implements NmsHologramBridge {
                     .newInstance(new int[]{entityId});
             sendPacket(player, packet);
         } catch (Throwable t) {
-            LOG.warning("[Bridge_v1_21_11] destroyEntityClientside failed: " + t);
+            LOG.warning("[OreoHolograms/NMS] destroyEntityClientside failed: " + t);
         }
     }
 
@@ -96,15 +102,79 @@ public final class Bridge_v1_21_11 implements NmsHologramBridge {
 
             sendPacket(player, packet);
         } catch (Throwable t) {
-            LOG.warning("[Bridge_v1_21_11] teleportEntityClientside failed: " + t);
+            LOG.warning("[OreoHolograms/NMS] teleportEntityClientside failed: " + t);
         }
     }
 
+    /**
+     * Converts an Adventure Component to an NMS net.minecraft.network.chat.Component.
+     * Tries three approaches in order, logging the first that succeeds.
+     */
     private static Object adventureToNms(Component component) throws Throwable {
-        Class<?> paperAdventure = Class.forName("io.papermc.paper.adventure.PaperAdventure");
-        Method asVanilla = paperAdventure.getDeclaredMethod("asVanilla", Component.class);
-        asVanilla.setAccessible(true);
-        return asVanilla.invoke(null, component);
+        // Approach 1: PaperAdventure.asVanilla(Component) via public method lookup (no setAccessible)
+        try {
+            Class<?> paperAdventure = Class.forName("io.papermc.paper.adventure.PaperAdventure");
+            Method asVanilla = paperAdventure.getMethod("asVanilla", Component.class);
+            return asVanilla.invoke(null, component);
+        } catch (Throwable ignored) {}
+
+        // Approach 2: PaperAdventure.asVanilla via getDeclaredMethod + setAccessible
+        try {
+            Class<?> paperAdventure = Class.forName("io.papermc.paper.adventure.PaperAdventure");
+            Method asVanilla = paperAdventure.getDeclaredMethod("asVanilla", Component.class);
+            asVanilla.setAccessible(true);
+            return asVanilla.invoke(null, component);
+        } catch (Throwable ignored) {}
+
+        // Approach 3: JSON codec roundtrip via ComponentSerialization.CODEC (1.20.4+)
+        try {
+            String json = GsonComponentSerializer.gson().serialize(component);
+
+            Class<?> compSerClass = Class.forName("net.minecraft.network.chat.ComponentSerialization");
+            Field codecField = compSerClass.getDeclaredField("CODEC");
+            codecField.setAccessible(true);
+            Object codec = codecField.get(null);
+
+            Class<?> jsonOpsClass = Class.forName("com.mojang.serialization.JsonOps");
+            Object jsonOps = jsonOpsClass.getDeclaredField("INSTANCE").get(null);
+
+            com.google.gson.JsonElement jsonElement = com.google.gson.JsonParser.parseString(json);
+
+            // Codec.decode(DynamicOps, input) -> DataResult<Pair<A, input>>
+            Method decodeMethod = null;
+            for (Method m : codec.getClass().getMethods()) {
+                if (m.getName().equals("decode") && m.getParameterCount() == 2) {
+                    decodeMethod = m;
+                    break;
+                }
+            }
+            if (decodeMethod == null) throw new NoSuchMethodException("decode not found");
+            Object dataResult = decodeMethod.invoke(codec, jsonOps, jsonElement);
+
+            // DataResult.getOrThrow() or DataResult.result().get()
+            try {
+                Method getOrThrow = dataResult.getClass().getMethod("getOrThrow");
+                Object pair = getOrThrow.invoke(dataResult);
+                return pair.getClass().getMethod("getFirst").invoke(pair);
+            } catch (Throwable t2) {
+                // Older DataResult API: result() -> Optional<Pair>
+                Method result = dataResult.getClass().getMethod("result");
+                Object optional = result.invoke(dataResult);
+                Object pair = ((java.util.Optional<?>) optional).get();
+                return pair.getClass().getMethod("getFirst").invoke(pair);
+            }
+        } catch (Throwable ignored) {}
+
+        // Approach 4: last-resort — literal component using legacy text (loses color codes but shows text)
+        try {
+            String legacy = LegacyComponentSerializer.legacySection().serialize(component);
+            // Strip §-codes since NMS literal doesn't interpret them
+            String plain = legacy.replaceAll("§[0-9a-fk-orA-FK-OR]", "");
+            Class<?> compClass = Class.forName("net.minecraft.network.chat.Component");
+            return compClass.getMethod("literal", String.class).invoke(null, plain);
+        } catch (Throwable t4) {
+            throw new RuntimeException("All adventureToNms approaches failed", t4);
+        }
     }
 
     private static void sendPacket(Player player, Object packet) throws Throwable {

@@ -124,7 +124,7 @@ public final class ItemOreoHologram extends OreoHologram {
     protected void applyTransform() {
         findEntity().ifPresent(e -> {
             var l = data.location.toLocation();
-            if (l != null) e.teleport(l);
+            if (l != null) e.teleportAsync(l); // teleport() is forbidden on Folia
         });
     }
 

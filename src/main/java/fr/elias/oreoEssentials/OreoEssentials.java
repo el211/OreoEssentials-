@@ -229,6 +229,7 @@ public final class OreoEssentials extends JavaPlugin {
     private CommandToggleConfig commandToggleConfig;
     private CommandToggleService commandToggleService;
     private PerPlayerTextDisplayService perPlayerTextDisplayService;
+    private fr.elias.oreoEssentials.modules.holograms.ProtocolLibHoloInterceptor protocolLibHoloInterceptor;
     private AuctionHouseModule auctionHouse;
     private fr.elias.oreoEssentials.modules.orders.OrdersModule ordersModule;
     public fr.elias.oreoEssentials.modules.orders.OrdersModule getOrdersModule() { return ordersModule; }
@@ -242,6 +243,7 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.modules.chat.channels.ChatChannelManager getChannelManager() { return channelManager; }
     public fr.elias.oreoEssentials.modules.tempfly.TempFlyService getTempFlyService() { return tempFlyService; }
     public fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayService getPerPlayerTextDisplayService() { return perPlayerTextDisplayService; }
+    public fr.elias.oreoEssentials.modules.holograms.ProtocolLibHoloInterceptor getProtocolLibHoloInterceptor() { return protocolLibHoloInterceptor; }
     public EconomyBootstrap getEconomy() { return ecoBootstrap; }
     public EconomyBootstrap getEcoBootstrap() { return ecoBootstrap; }
 
@@ -508,6 +510,7 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (jailService != null) jailService.disable(); } catch (Exception ignored) {}
         try { if (oreoHolograms != null) oreoHolograms.unload(); } catch (Exception ignored) {}
         try { if (perPlayerTextDisplayService != null) perPlayerTextDisplayService.clearAll(); } catch (Exception ignored) {}
+        try { if (protocolLibHoloInterceptor != null) protocolLibHoloInterceptor.clearAll(); } catch (Exception ignored) {}
         try { if (dailyStore != null) dailyStore.close(); } catch (Exception ignored) {}
         dailyStore = null;
         try { if (tradeService != null) tradeService.cancelAll(); } catch (Throwable ignored) {}
@@ -1892,16 +1895,49 @@ public final class OreoEssentials extends JavaPlugin {
     }
 
     private void initHolograms() {
-        if (settingsConfig.getRoot().getBoolean("holograms.text.per-player", false)) {
+        // Always initialize the per-player service when holograms are enabled.
+        // Required for auto-detected PAPI placeholders (%...%) regardless of the
+        // holograms.text.per-player config flag (which only gates the legacy opt-in path).
+        if (settingsConfig.oreoHologramsEnabled()) {
             try {
                 Class.forName("org.bukkit.entity.Display");
-                fr.elias.oreoEssentials.modules.holograms.nms.NmsHologramBridge nms = fr.elias.oreoEssentials.modules.holograms.nms.NmsBridgeLoader.loadOrThrow();
-                this.perPlayerTextDisplayService = new fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayService(this, nms);
-                getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayListener(this.perPlayerTextDisplayService, this), this);
+
+                // 1) ProtocolLib interceptor first so the listener can receive it
+                if (getServer().getPluginManager().getPlugin("ProtocolLib") != null) {
+                    try {
+                        this.protocolLibHoloInterceptor =
+                                new fr.elias.oreoEssentials.modules.holograms.ProtocolLibHoloInterceptor(this);
+                    } catch (Throwable t) {
+                        getLogger().warning("[OreoHolograms] ProtocolLib interceptor failed to start: " + t.getMessage());
+                        this.protocolLibHoloInterceptor = null;
+                    }
+                } else {
+                    this.protocolLibHoloInterceptor = null;
+                    getLogger().warning("[OreoHolograms] ProtocolLib not found — PAPI placeholder holograms will show raw text.");
+                }
+
+                // 2) Per-player NMS service
+                fr.elias.oreoEssentials.modules.holograms.nms.NmsHologramBridge nms =
+                        fr.elias.oreoEssentials.modules.holograms.nms.NmsBridgeLoader.loadOrThrow();
+                this.perPlayerTextDisplayService =
+                        new fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayService(this, nms);
+
+                // 3) Listener with both service + interceptor
+                getServer().getPluginManager().registerEvents(
+                        new fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayListener(
+                                this.perPlayerTextDisplayService,
+                                this,
+                                this.protocolLibHoloInterceptor
+                        ),
+                        this
+                );
+
+                // 4) Tick timer
                 OreScheduler.runTimer(this, () -> {
                     try { perPlayerTextDisplayService.tick(); }
                     catch (Throwable t) { getLogger().warning("[PerPlayerTextDisplay] tick failed: " + t.getMessage()); }
                 }, 20L, 10L);
+
                 getLogger().info("[PerPlayerTextDisplay] Enabled.");
             } catch (ClassNotFoundException x) {
                 getLogger().warning("[PerPlayerTextDisplay] Display entities not available. Requires Paper/Folia.");
@@ -1920,13 +1956,63 @@ public final class OreoEssentials extends JavaPlugin {
                 this.oreoHolograms = new fr.elias.oreoEssentials.modules.holograms.OreoHolograms(this);
                 this.oreoHolograms.load();
 
-                fr.elias.oreoEssentials.modules.holograms.OreoHologramCommand holoCmd = new fr.elias.oreoEssentials.modules.holograms.OreoHologramCommand(this.oreoHolograms);
+                fr.elias.oreoEssentials.modules.holograms.OreoHologramCommand holoCmd =
+                        new fr.elias.oreoEssentials.modules.holograms.OreoHologramCommand(this.oreoHolograms);
                 boolean registered = false;
-                if (getCommand("ohologram") != null) { getCommand("ohologram").setExecutor(holoCmd); getCommand("ohologram").setTabCompleter(holoCmd); registered = true; }
-                if (getCommand("hologram")  != null) { getCommand("hologram").setExecutor(holoCmd);  getCommand("hologram").setTabCompleter(holoCmd);  registered = true; }
-                if (!registered) getLogger().warning("[OreoHolograms] No command entry found. Add ohologram or hologram in plugin.yml.");
+                if (getCommand("ohologram") != null) {
+                    getCommand("ohologram").setExecutor(holoCmd);
+                    getCommand("ohologram").setTabCompleter(holoCmd);
+                    registered = true;
+                }
+                if (getCommand("hologram") != null) {
+                    getCommand("hologram").setExecutor(holoCmd);
+                    getCommand("hologram").setTabCompleter(holoCmd);
+                    registered = true;
+                }
+                if (!registered) {
+                    getLogger().warning("[OreoHolograms] No command entry found. Add ohologram or hologram in plugin.yml.");
+                }
 
-                OreScheduler.runTimer(this, () -> { try { this.oreoHolograms.tickAll(); } catch (Throwable ignored) {} }, 20L, 20L);
+                OreScheduler.runTimer(this, () -> {
+                    try {
+                        if (this.oreoHolograms != null) {
+                            this.oreoHolograms.tickAll();
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                }, 20L, 20L);
+
+                /*
+                 * Delayed reload so PlaceholderAPI expansions (LuckPerms, Vault, etc.)
+                 * are fully registered before holograms are rebuilt.
+                 * Without this, placeholder holograms can appear blank after restart.
+                 */
+                OreScheduler.runLater(this, () -> {
+                    try {
+                        if (this.oreoHolograms == null) return;
+
+                        getLogger().info("[OreoHolograms] Running delayed post-start reload...");
+
+                        this.oreoHolograms.unload();
+                        this.oreoHolograms.load();
+
+                        // Refresh online players immediately
+                        if (this.perPlayerTextDisplayService != null) {
+                            for (Player p : Bukkit.getOnlinePlayers()) {
+                                try {
+                                    this.perPlayerTextDisplayService.forceRefreshForPlayer(p);
+                                } catch (Throwable ignored) {
+                                }
+                            }
+                        }
+
+                        getLogger().info("[OreoHolograms] Delayed post-start reload complete.");
+                    } catch (Throwable t) {
+                        getLogger().warning("[OreoHolograms] Delayed reload failed: " + t.getMessage());
+                        t.printStackTrace();
+                    }
+                }, 60L);
+
                 getLogger().info("[OreoHolograms] Enabled.");
             } catch (Throwable t) {
                 this.oreoHolograms = null;

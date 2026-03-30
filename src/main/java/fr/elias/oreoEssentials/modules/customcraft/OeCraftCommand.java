@@ -1,6 +1,9 @@
 package fr.elias.oreoEssentials.modules.customcraft;
 
+import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.Async;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.minuskube.inv.InventoryManager;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
@@ -86,16 +89,20 @@ public final class OeCraftCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             String name = sanitize(args[1]);
-            boolean ok = service.delete(name);
-            if (ok) {
-                send(sender, "customcraft.messages.deleted",
-                        "<green>Deleted recipe <yellow>%name%</yellow>.</green>",
-                        Map.of("name", name));
-            } else {
-                send(sender, "customcraft.messages.invalid",
-                        "<red>Recipe not found: <yellow>%name%</yellow>.</red>",
-                        Map.of("name", name));
-            }
+            Async.run(() -> {
+                boolean ok = service.delete(name);
+                OreScheduler.run(OreoEssentials.get(), () -> {
+                    if (ok) {
+                        send(sender, "customcraft.messages.deleted",
+                                "<green>Deleted recipe <yellow>%name%</yellow>.</green>",
+                                Map.of("name", name));
+                    } else {
+                        send(sender, "customcraft.messages.invalid",
+                                "<red>Recipe not found: <yellow>%name%</yellow>.</red>",
+                                Map.of("name", name));
+                    }
+                });
+            });
             return true;
         }
 

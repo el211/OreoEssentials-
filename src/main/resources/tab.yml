@@ -1,7 +1,7 @@
 tab:
   enabled: true
   use-placeholderapi: true
-  interval-ticks: 20
+  interval-ticks: 2
   layout-mode: CUSTOM
 
   network:
@@ -11,82 +11,416 @@ tab:
     excluded-servers:
       - hub
 
-  # ====================================================================
-  # 🌊 OREOESSENTIALS BLUE GRADIENT FLOWING WAVES! 🌊
-  # Matches the circular wave logo design
-  # ====================================================================
   custom-layout:
     enabled: true
-    change-interval: 8 # Smooth flowing animation!
+    change-interval: 1 # Smooth flowing animation!
 
-    # ====================================================================
-    # 🌊 ANIMATED FLOWING BLUE WAVE HEADER
-    # ====================================================================
     top-section:
       texts:
         - |-
-          &d &d
-          &d &d
-        - |-
-          &d &d
-          &d &d
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+          <gradient:#7D2D9D:#F179B5>Mythical Lunar Abyss</gradient>
+          &f
     player-section:
-      enabled: false
+      enabled: true
       player-format:
-        format: '%player_color%%player_name%%afk_indicator%'
+        format: '%luckperms_prefix%%player_displayname%%afk_indicator%'
         rank-colors:
-          gerant: '&9' # Dark Blue
           admin: '&b' # Aqua
-          moderator: '&3' # Dark Aqua
-          helper: '&e' # Yellow
-          vip: '&b' # Aqua
           default: '&f' # White
         show-afk: true
         afk-format: ' &7AFK'
         show-ping-bars: true
 
-    # ====================================================================
-    # ANIMATED FLOWING BLUE WAVE FOOTER
-    # ====================================================================
-
     bottom-section:
       texts:
         - |-
-          &d &d
-          &#EAE21B☆ &#55ABE5&lN&#56B4E4&lo&#57BDE3&lu&#57C6E2&ls &#58CFE1&ls&#59D8E0&lo&#5AE1DF&lm&#5AEADE&lm&#5BF3DD&le&#5CFCDC&ls &#2CCAF7&l%oe_network_online% &#5CFCDC&lc&#5BF2DD&lo&#5AE8DE&ln&#59DEDF&ln&#59D4E1&le&#58C9E2&lc&#57BFE3&lt&#56B5E4&lé&#55ABE5&ls &#EAE21B☆
-          &d &d
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
         - |-
-          &d &d
-          &#EAE21B☆ &#55ABE5&lN&#56B4E4&lo&#57BDE3&lu&#57C6E2&ls &#58CFE1&ls&#59D8E0&lo&#5AE1DF&lm&#5AEADE&lm&#5BF3DD&le&#5CFCDC&ls &#2CCAF7&l%oe_network_online% &#5CFCDC&lc&#5BF2DD&lo&#5AE8DE&ln&#59DEDF&ln&#59D4E1&le&#58C9E2&lc&#57BFE3&lt&#56B5E4&lé&#55ABE5&ls &#EAE21B☆
-          &d &d
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &dw&5ww.mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5w&dw&5w.mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5ww&dw&5.mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www&d.&5mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.&dm&5ythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.m&dy&5thicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.my&dt&5hicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.myt&dh&5icallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.myth&di&5callunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythi&dc&5allunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythic&da&5llunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythica&dl&5lunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythical&dl&5unarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicall&du&5narabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallu&dn&5arabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallun&da&5rabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicalluna&dr&5abyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunar&da&5byss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunara&db&5yss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarab&dy&5ss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunaraby&ds&5s.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabys&ds&5.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss&d.&5co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.&dc&5o.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.c&do&5.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co&d.&5uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co.&du&5k&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co.u&dk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &dwww.mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &dwww.mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co.u&dk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co.&du&5k&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.co&d.&5uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.c&do&5.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss.&dc&5o.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabyss&d.&5co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarabys&ds&5.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunaraby&ds&5s.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunarab&dy&5ss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+        - |-
+          &f
+          &9◆   &8◆   ◆
+          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
+          &f
+          &7For &9&lnews&r&7, checkout our website!
+          &5www.mythicallunara&db&5yss.co.uk&r
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
     sorting:
       method: RANK
       rank-priority:
-        gerant: 120
-        admin: 110
-        staff: 100
-
-        suzerain: 95
-        doyen: 90
-        legende: 85
-        mecene: 80
-        emerite: 75
-
-        gardien: 70
-        prodige: 65
-        specialiste: 60
-        protecteur: 55
-
-        élu: 50
-        champion: 45
-        heros: 40
-
-        expert: 35
-        maitre: 30
-        initie: 25
-        adepte: 20
-        disciple: 15
-
         default: 10
 
   title:
@@ -100,73 +434,13 @@ tab:
 
   name-format:
     enabled: true
-    use-rank-formats: true
+    use-rank-formats: false
     rank-key: '%luckperms_primary_group%'
-    server-tag: ' &8(&9%server_name%&8)'
-    pattern: '&f%nick_or_name%%oe_server_tag%'
+    server-tag: ' &8(&7&o%server_name%&8)'
+    pattern: '%luckperms_prefix%%simplenick_nickname%%oe_server_tag%'
     rank-formats:
-      default: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#7EACA3>%nick_or_name%
-
-      disciple: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#7EF1A7>%nick_or_name%
-
-      adepte: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#DDC55D>%nick_or_name%
-
-      initie: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#22AEBF>%nick_or_name%
-
-      maitre: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#EC5D29>%nick_or_name%
-
-      expert: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#29EC44>%nick_or_name%
-
-      heros: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#71C5EE>%nick_or_name%
-
-      champion: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#4990F9>%nick_or_name%
-
-      élu: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset> <gray>|
-        <reset>%luckperms_prefix% <#DFE233>%nick_or_name%
-
-      protecteur: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#FF2C6F>%nick_or_name%
-
-      specialiste: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#E84848>%nick_or_name%
-
-      prodige: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#7FF32E>%nick_or_name%
-
-      gardien: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#48E89F>%nick_or_name%
-
-      emerite: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#6469DC>%nick_or_name%
-
-      mecene: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#D73BC7>%nick_or_name%
-
-      legende: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#FFD205>%nick_or_name%
-
-      doyen: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#36FDBA>%nick_or_name%
-
-      suzerain: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#FF0505>%nick_or_name%
-
-      staff: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#FF059D>%nick_or_name%
-
-      admin: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#058FFF>%nick_or_name%
-
-      gerant: <#8FEBDE> %mcmmo_power_level% <gray>• <reset>%eternaltags_tag%<reset>
-        <gray>| <reset>%luckperms_prefix% <#05FFA4>%nick_or_name%
+      default: <#8FEBDE> %mcmmo_power_level% <gray>• <reset> <gray>| <reset>%luckperms_prefix%
+        <#7EACA3>%nick_or_name%
     enforce-max-length: false
     max-length: 64
     overflow: TRIM

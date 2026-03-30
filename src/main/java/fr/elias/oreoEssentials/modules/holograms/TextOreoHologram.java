@@ -37,11 +37,15 @@ public final class TextOreoHologram extends OreoHologram {
 
         var existingOpt = findEntity();
         if (existingOpt.isPresent()) {
-            // Entity already in world — register with per-player service if not yet tracked
-            if (isPerPlayerEnabled()) {
+            // Entity already in world — register with per-player service and interceptor if not yet tracked
+            if (isPerPlayerEnabled() || hasAnyPapiPlaceholder()) {
+                TextDisplay td = (TextDisplay) existingOpt.get();
+                var interceptor = getInterceptor();
+                if (interceptor != null) {
+                    interceptor.track(td.getEntityId(), () -> data.lines);
+                }
                 var svc = getPerPlayerSvc();
                 if (svc != null) {
-                    TextDisplay td = (TextDisplay) existingOpt.get();
                     double view = (data.visibilityDistance > 0) ? data.visibilityDistance : 64.0;
                     long refresh = (data.updateIntervalTicks > 0) ? data.updateIntervalTicks : 20L;
                     svc.track(td, () -> data.lines, view, refresh);
@@ -67,16 +71,36 @@ public final class TextOreoHologram extends OreoHologram {
 
         // --- ICON: processing ---
         List<String> renderLines = processIcons(data.lines, loc);
-        setText(td, HoloText.render(renderLines));
         textTweaks(td);
 
-        if (isPerPlayerEnabled()) {
+        // If any line contains a PAPI placeholder (%...%), register with the per-player
+        // service so each player sees their own resolved values. This is automatic —
+        // no need to set holograms.text.per-player in config. Pure static lines
+        // (no % signs) skip the per-player service to avoid unnecessary NMS overhead.
+        if (isPerPlayerEnabled() || hasAnyPapiPlaceholder()) {
+            // Render raw text as a visible server-side fallback (placeholders unresolved).
+            // The ProtocolLib interceptor replaces this per-player before the client ever sees it.
+            setText(td, HoloText.render(renderLines));
+
+            // ProtocolLib interceptor — intercepts ENTITY_METADATA packets and resolves PAPI per-player.
+            var interceptor = getInterceptor();
+            if (interceptor != null) {
+                interceptor.track(td.getEntityId(), () -> data.lines);
+                org.bukkit.Bukkit.getLogger().info("[OreoHolograms][DBG] registered interceptor for holo=" + name + " entityIntId=" + td.getEntityId());
+            } else {
+                org.bukkit.Bukkit.getLogger().warning("[OreoHolograms][DBG] interceptor is NULL for holo=" + name + " — ProtocolLib missing?");
+            }
+
+            // Legacy per-player NMS service (fallback when ProtocolLib unavailable).
             var svc = getPerPlayerSvc();
             if (svc != null) {
                 double view = (data.visibilityDistance > 0) ? data.visibilityDistance : 64.0;
                 long refresh = (data.updateIntervalTicks > 0) ? data.updateIntervalTicks : 20L;
                 svc.track(td, () -> data.lines, view, refresh);
             }
+        } else {
+            // No placeholders — render once with null player (server-side static text).
+            setText(td, HoloText.render(renderLines));
         }
     }
 
@@ -88,6 +112,14 @@ public final class TextOreoHologram extends OreoHologram {
         var svc = getPerPlayerSvc();
         if (svc != null && entityId != null) {
             svc.untrack(entityId);
+        }
+
+        // Unregister from ProtocolLib interceptor using the entity's int ID
+        if (entityId != null) {
+            findEntity().ifPresent(e -> {
+                var interceptor = getInterceptor();
+                if (interceptor != null) interceptor.untrack(e.getEntityId());
+            });
         }
 
         removeAllTaggedCopies();
@@ -115,6 +147,16 @@ public final class TextOreoHologram extends OreoHologram {
         return null;
     }
 
+    private fr.elias.oreoEssentials.modules.holograms.ProtocolLibHoloInterceptor getInterceptor() {
+        try {
+            var root = org.bukkit.Bukkit.getPluginManager().getPlugin("OreoEssentials");
+            if (root instanceof fr.elias.oreoEssentials.OreoEssentials plug) {
+                return plug.getProtocolLibHoloInterceptor();
+            }
+        } catch (Throwable ignored) {}
+        return null;
+    }
+
     @Override
     public Location currentLocation() {
         return findEntity().map(e -> e.getLocation()).orElseGet(() -> data.location.toLocation());
@@ -124,7 +166,7 @@ public final class TextOreoHologram extends OreoHologram {
     protected void applyTransform() {
         findEntity().ifPresent(e -> {
             Location l = data.location.toLocation();
-            if (l != null) e.teleport(l);
+            if (l != null) e.teleportAsync(l); // teleport() is forbidden on Folia
         });
     }
 
@@ -140,7 +182,8 @@ public final class TextOreoHologram extends OreoHologram {
 
     @Override
     protected void onTimedUpdate() {
-        if (isPerPlayerEnabled()) return;
+        // Per-player service handles its own refresh loop — don't double-render.
+        if (isPerPlayerEnabled() || hasAnyPapiPlaceholder()) return;
         findEntity().ifPresent(e -> {
             TextDisplay td = (TextDisplay) e;
             List<String> renderLines = processIcons(data.lines, td.getLocation());
@@ -149,16 +192,26 @@ public final class TextOreoHologram extends OreoHologram {
     }
 
     /**
-     * Re-renders the hologram text immediately, re-applying PAPI placeholders.
-     * Called after a delayed startup so PAPI expansions are guaranteed to be registered.
+     * Re-renders the hologram text immediately.
+     * For per-player / placeholder holograms the service handles rendering per-player;
+     * for static holograms this re-applies any server-side values.
      */
     public void forceRefresh() {
-        if (isPerPlayerEnabled()) return; // per-player service handles its own refresh
+        if (isPerPlayerEnabled() || hasAnyPapiPlaceholder()) return;
         findEntity().ifPresent(e -> {
             TextDisplay td = (TextDisplay) e;
             List<String> renderLines = processIcons(data.lines, td.getLocation());
             setText(td, HoloText.render(renderLines));
         });
+    }
+
+    /** Returns true if any hologram line contains a PAPI placeholder (has % signs). */
+    private boolean hasAnyPapiPlaceholder() {
+        if (data.lines == null) return false;
+        for (String line : data.lines) {
+            if (line != null && line.contains("%")) return true;
+        }
+        return false;
     }
 
     /* ================================================================== */

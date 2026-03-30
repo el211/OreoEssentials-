@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.holograms.perplayer_nms;
 
+import fr.elias.oreoEssentials.modules.holograms.ProtocolLibHoloInterceptor;
 import fr.elias.oreoEssentials.modules.holograms.nms.NmsHologramBridge;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -18,6 +19,8 @@ public final class PerPlayerTextDisplayService {
 
     public static final class Entry {
         public final TextDisplay entity;
+        /** Cached entity int ID — safe to read from any thread without region access. */
+        public final int entityIntId;
         public final Supplier<List<String>> lines;
         public final double viewDistance;
         public final long refreshEveryTicks;
@@ -27,6 +30,7 @@ public final class PerPlayerTextDisplayService {
                      double viewDistance,
                      long refreshEveryTicks) {
             this.entity           = entity;
+            this.entityIntId      = entity.getEntityId();   // captured on the region thread at track time
             this.lines            = lines;
             this.viewDistance     = Math.max(2.0, viewDistance);
             this.refreshEveryTicks = Math.max(0L, refreshEveryTicks);
@@ -134,18 +138,61 @@ public final class PerPlayerTextDisplayService {
         }
     }
 
-    /** Immediately sends per-player NMS overrides for all tracked holograms.
-     *  Called on player join (after a short delay) so players never see raw placeholder text.
-     *  Distance check is skipped intentionally — sending an override for an out-of-range
-     *  entity is harmless, and avoids unsafe cross-region entity location access on Folia. */
+    /**
+     * Immediately sends per-player NMS overrides for all tracked holograms.
+     * Called on player join (after a short delay) so players never see raw placeholder text.
+     * Distance check is skipped intentionally — sending an override for an out-of-range
+     * entity is harmless, and avoids unsafe cross-region entity location access on Folia.
+     */
     public void forceRefreshForPlayer(Player p) {
         if (p == null || !p.isOnline()) return;
+        int count = 0;
         for (Entry e : tracked.values()) {
             final TextDisplay td = e.entity;
-            if (td == null || td.isDead()) continue;
+            // isDead() is entity-thread access; guard with try/catch for Folia safety
             try {
+                if (td == null || td.isDead()) continue;
                 controller.show(td, p, safeLines(e.lines));
+                count++;
             } catch (Throwable ignored) {}
+        }
+        if (count > 0) {
+            plugin.getLogger().info("[PerPlayerHolo] Sent " + count + " NMS override(s) to " + p.getName());
+        }
+    }
+
+    /**
+     * Pushes per-player text to the given player using ProtocolLib's packet API
+     * instead of NMS reflection.  This is the primary fix for the
+     * "raw placeholder after restart" bug: the NMS bridge can fail silently,
+     * while ProtocolLib's sendServerPacket is version-agnostic and reliable.
+     *
+     * Called from {@link fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayListener}
+     * on player join (5-tick delay), before the NMS path fires at 20 ticks.
+     */
+    public void pushViaInterceptor(Player p, ProtocolLibHoloInterceptor interceptor) {
+        if (p == null || !p.isOnline() || interceptor == null) return;
+        plugin.getLogger().info("[PerPlayerHolo][DBG] pushViaInterceptor called for " + p.getName() + " tracked=" + tracked.size());
+        int count = 0;
+        for (Entry e : tracked.values()) {
+            // Use the cached int ID so we never touch entity state from the global-region
+            // scheduler thread (which would be a threading violation on Folia).
+            final int intId = e.entityIntId;
+            if (intId <= 0) {
+                plugin.getLogger().info("[PerPlayerHolo][DBG] entityIntId invalid (" + intId + "), skipping");
+                continue;
+            }
+            try {
+                plugin.getLogger().info("[PerPlayerHolo][DBG] pushing entity=" + intId + " to " + p.getName());
+                interceptor.pushToPlayer(p, intId, safeLines(e.lines));
+                count++;
+            } catch (Throwable t) {
+                plugin.getLogger().warning("[PerPlayerHolo][DBG] pushToPlayer threw for entity=" + intId + ": " + t);
+            }
+        }
+        plugin.getLogger().info("[PerPlayerHolo][DBG] done, count=" + count);
+        if (count > 0) {
+            plugin.getLogger().info("[PerPlayerHolo] Pushed " + count + " ProtocolLib override(s) to " + p.getName());
         }
     }
 

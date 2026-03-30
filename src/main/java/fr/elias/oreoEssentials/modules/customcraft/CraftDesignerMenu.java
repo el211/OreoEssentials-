@@ -295,30 +295,34 @@ public final class CraftDesignerMenu implements InventoryProvider {
                 permission
         );
 
-        boolean ok = service.saveAndRegister(rec);
-        if (ok) {
-            String mode = shapeless
-                    ? Lang.get("customcraft.format.mode.shapeless", "Shapeless")
-                    : Lang.get("customcraft.format.mode.shaped", "Shaped");
+        Async.run(() -> {
+            boolean ok = service.saveAndRegister(rec);
+            if (ok) {
+                String mode = shapeless
+                        ? Lang.get("customcraft.format.mode.shapeless", "Shapeless")
+                        : Lang.get("customcraft.format.mode.shaped", "Shaped");
 
-            String permNote = (permission == null || permission.isBlank())
-                    ? Lang.get("customcraft.format.permission.note-public", "<gray>(public)</gray>")
-                    : Lang.get("customcraft.format.permission.note-required", "<gold>perm</gold> <yellow>%permission%</yellow>")
-                    .replace("%permission%", permission);
+                String permNote = (permission == null || permission.isBlank())
+                        ? Lang.get("customcraft.format.permission.note-public", "<gray>(public)</gray>")
+                        : Lang.get("customcraft.format.permission.note-required", "<gold>perm</gold> <yellow>%permission%</yellow>")
+                        .replace("%permission%", permission);
 
-            String msg = Lang.get("customcraft.messages.saved",
-                            "<green>Recipe <yellow>%name%</yellow> has been saved (<white>%mode%</white>) %perm_note%.</green>")
-                    .replace("%name%", recipeName)
-                    .replace("%mode%", mode)
-                    .replace("%perm_note%", permNote);
+                String msg = Lang.get("customcraft.messages.saved",
+                                "<green>Recipe <yellow>%name%</yellow> has been saved (<white>%mode%</white>) %perm_note%.</green>")
+                        .replace("%name%", recipeName)
+                        .replace("%mode%", mode)
+                        .replace("%perm_note%", permNote);
 
-            player.sendMessage(MM.deserialize(applyPapi(player, msg)));
-        } else {
-            player.sendMessage(MM.deserialize(
-                    Lang.get("customcraft.messages.invalid",
-                            "<red>Invalid recipe. You need a result item and at least one ingredient.</red>")
-            ));
-        }
+                Component finalMsg = MM.deserialize(applyPapi(player, msg));
+                OreScheduler.runForEntity(OreoEssentials.get(), player, () -> player.sendMessage(finalMsg));
+            } else {
+                Component errMsg = MM.deserialize(
+                        Lang.get("customcraft.messages.invalid",
+                                "<red>Invalid recipe. You need a result item and at least one ingredient.</red>")
+                );
+                OreScheduler.runForEntity(OreoEssentials.get(), player, () -> player.sendMessage(errMsg));
+            }
+        });
     }
 
 
