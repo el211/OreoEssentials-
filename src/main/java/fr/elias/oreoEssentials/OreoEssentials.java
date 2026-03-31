@@ -1599,14 +1599,18 @@ public final class OreoEssentials extends JavaPlugin {
     private void initWebPanel() {
         fr.elias.oreoEssentials.modules.webpanel.WebPanelConfig wpConfig =
                 new fr.elias.oreoEssentials.modules.webpanel.WebPanelConfig(this);
+        fr.elias.oreoEssentials.modules.webpanel.WebPanelClient client =
+                new fr.elias.oreoEssentials.modules.webpanel.WebPanelClient(wpConfig, getLogger());
+
+        if (getCommand("weblink") != null) {
+            getCommand("weblink").setExecutor(
+                    new fr.elias.oreoEssentials.modules.webpanel.WebLinkCommand(wpConfig, client));
+        }
 
         if (!wpConfig.isEnabled()) {
             getLogger().info("[WebPanel] Disabled (set web-panel.enabled=true and api-key in config.yml to enable).");
             return;
         }
-
-        fr.elias.oreoEssentials.modules.webpanel.WebPanelClient client =
-                new fr.elias.oreoEssentials.modules.webpanel.WebPanelClient(wpConfig, getLogger());
 
         // Register /weblink command
         if (getCommand("weblink") != null) {
