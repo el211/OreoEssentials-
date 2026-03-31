@@ -11,6 +11,7 @@ import fr.elias.oreoEssentials.modules.holograms.api.events.HologramShowEvent;
 import fr.elias.oreoEssentials.modules.holograms.api.hologram.Hologram;
 import fr.elias.oreoEssentials.modules.holograms.nms.NmsBridgeLoader;
 import fr.elias.oreoEssentials.modules.holograms.nms.NmsHologramBridge;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.entity.BlockDisplay;
@@ -91,7 +92,11 @@ public final class HologramImpl extends Hologram {
             return;
         }
 
-        display.teleport(location);
+        if (OreScheduler.isFolia()) {
+            display.teleportAsync(location);
+        } else {
+            display.teleport(location);
+        }
 
         if (data instanceof TextHologramData textData && display instanceof TextDisplay textDisplay) {
             textDisplay.text(getShownText(getAnyViewer()));
