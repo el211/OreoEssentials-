@@ -4,6 +4,7 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.rabbitmq.PacketChannels;
 import fr.elias.oreoEssentials.modules.warps.rabbit.packets.PlayerWarpTeleportRequestPacket;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
@@ -366,16 +367,25 @@ public class PlayerWarpService {
                     + " world=" + loc.getWorld().getName()
                     + " xyz=" + formatLocation(loc));
 
-            boolean ok = player.teleport(loc);
-            if (ok) {
-                Lang.send(player, "playerwarps.teleport.local",
-                        "<green>Teleported to warp</green> <yellow>%name%</yellow>.",
-                        Map.of("name", warp.getName()));
-            } else {
-                plugin.getLogger().warning("[OreoEssentials] [PW] Teleport failed for player "
-                        + player.getName() + " to warp id=" + warp.getId());
-            }
-            return ok;
+            OreScheduler.runForEntity(plugin, player, () -> {
+                if (OreScheduler.isFolia()) {
+                    player.teleportAsync(loc).thenRun(() ->
+                            Lang.send(player, "playerwarps.teleport.local",
+                                    "<green>Teleported to warp</green> <yellow>%name%</yellow>.",
+                                    Map.of("name", warp.getName())));
+                } else {
+                    boolean ok = player.teleport(loc);
+                    if (ok) {
+                        Lang.send(player, "playerwarps.teleport.local",
+                                "<green>Teleported to warp</green> <yellow>%name%</yellow>.",
+                                Map.of("name", warp.getName()));
+                    } else {
+                        plugin.getLogger().warning("[OreoEssentials] [PW] Teleport failed for player "
+                                + player.getName() + " to warp id=" + warp.getId());
+                    }
+                }
+            });
+            return true;
         }
 
         plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] Using cross-server teleport. from="

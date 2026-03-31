@@ -269,6 +269,21 @@ public class RtpCommand implements OreoCommand {
             return false;
         }
 
+        if (OreScheduler.isFolia()) {
+            p.teleportAsync(dest).thenRun(() -> Lang.send(
+                    p,
+                    "rtp.teleported",
+                    "<green>Teleported to <white>%x%</white>, <white>%y%</white>, <white>%z%</white> in <aqua>%world%</aqua>!</green>",
+                    Map.of(
+                            "x", String.valueOf(dest.getBlockX()),
+                            "y", String.valueOf(dest.getBlockY()),
+                            "z", String.valueOf(dest.getBlockZ()),
+                            "world", world.getName()
+                    )
+            ));
+            return true;
+        }
+
         boolean ok = p.teleport(dest);
         if (ok) {
             Lang.send(

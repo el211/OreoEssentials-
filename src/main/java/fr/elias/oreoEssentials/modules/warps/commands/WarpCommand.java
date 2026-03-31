@@ -202,19 +202,36 @@ public class WarpCommand implements OreoCommand {
             }
 
             try {
-                target.teleport(l);
-                Lang.send(target, "warp.teleported",
-                        "<green>Teleported to warp <aqua>%warp%</aqua>.</green>",
-                        Map.of("warp", warpName));
+                if (OreScheduler.isFolia()) {
+                    target.teleportAsync(l).thenRun(() -> {
+                        Lang.send(target, "warp.teleported",
+                                "<green>Teleported to warp <aqua>%warp%</aqua>.</green>",
+                                Map.of("warp", warpName));
 
-                if (!sender.equals(target)) {
-                    Lang.send(sender, "warp.teleported-other",
-                            "<green>Teleported <yellow>%player%</yellow> to warp <aqua>%warp%</aqua>.</green>",
-                            Map.of("player", target.getName(), "warp", warpName));
+                        if (!sender.equals(target)) {
+                            Lang.send(sender, "warp.teleported-other",
+                                    "<green>Teleported <yellow>%player%</yellow> to warp <aqua>%warp%</aqua>.</green>",
+                                    Map.of("player", target.getName(), "warp", warpName));
+                        }
+
+                        log.info("[WarpCmd] Local teleport success. target=" + target.getName()
+                                + " warp=" + warpName + " loc=" + l);
+                    });
+                } else {
+                    target.teleport(l);
+                    Lang.send(target, "warp.teleported",
+                            "<green>Teleported to warp <aqua>%warp%</aqua>.</green>",
+                            Map.of("warp", warpName));
+
+                    if (!sender.equals(target)) {
+                        Lang.send(sender, "warp.teleported-other",
+                                "<green>Teleported <yellow>%player%</yellow> to warp <aqua>%warp%</aqua>.</green>",
+                                Map.of("player", target.getName(), "warp", warpName));
+                    }
+
+                    log.info("[WarpCmd] Local teleport success. target=" + target.getName()
+                            + " warp=" + warpName + " loc=" + l);
                 }
-
-                log.info("[WarpCmd] Local teleport success. target=" + target.getName()
-                        + " warp=" + warpName + " loc=" + l);
             } catch (Exception ex) {
                 String err = (ex.getMessage() == null ? "unknown" : ex.getMessage());
                 Lang.send(sender, "warp.teleport-failed",

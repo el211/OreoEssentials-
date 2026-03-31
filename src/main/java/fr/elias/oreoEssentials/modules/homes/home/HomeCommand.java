@@ -128,9 +128,15 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 if (targetServer.equalsIgnoreCase(localServer)) {
                     // Use pre-fetched location — no more DB calls needed.
                     final Runnable action = () -> {
-                        player.teleport(preloadedLoc);
-                        Lang.send(player, "home.teleported", "<green>Teleported to home <yellow>%name%</yellow>.</green>",
-                                Map.of("name", key));
+                        if (OreScheduler.isFolia()) {
+                            player.teleportAsync(preloadedLoc).thenRun(() ->
+                                    Lang.send(player, "home.teleported", "<green>Teleported to home <yellow>%name%</yellow>.</green>",
+                                            Map.of("name", key)));
+                        } else {
+                            player.teleport(preloadedLoc);
+                            Lang.send(player, "home.teleported", "<green>Teleported to home <yellow>%name%</yellow>.</green>",
+                                    Map.of("name", key));
+                        }
                     };
                     if (bypass) action.run();
                     else startCountdown(player, seconds, key, action);
@@ -249,7 +255,7 @@ public class HomeCommand implements OreoCommand, TabCompleter {
 
         int[] remaining = {seconds};
         OreTask[] holder = new OreTask[1];
-        holder[0] = OreScheduler.runTimer(plugin, () -> {
+        holder[0] = OreScheduler.runTimerForEntity(plugin, target, () -> {
             if (!target.isOnline()) {
                 if (holder[0] != null) holder[0].cancel();
                 return;

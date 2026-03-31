@@ -16,7 +16,7 @@ web-panel:
   url: "https://oreostudios.fr"  # URL of your OreoStudios web panel
   api-key: ""    # Paste the key shown on the panel after registering your server
 
-# ==================== FEATURE TOGGLES ====================
+# ==================== FEATURE TOGGLES =====================
 features:
   tpa:
     debug: false

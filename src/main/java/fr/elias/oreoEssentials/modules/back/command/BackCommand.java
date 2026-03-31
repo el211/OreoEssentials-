@@ -5,6 +5,7 @@ import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.modules.back.BackLocation;
 import fr.elias.oreoEssentials.modules.back.service.BackService;
 import fr.elias.oreoEssentials.modules.tp.service.TeleportService;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -54,10 +55,9 @@ public class BackCommand implements OreoCommand {
         Player p = (Player) sender;
         UUID uuid = p.getUniqueId();
 
-        // Get the last back location
         BackLocation last = backService.getLastRaw(uuid);
         if (last == null) {
-            p.sendMessage("§cNo last location recorded.");
+            p.sendMessage("\u00A7cNo last location recorded.");
             return true;
         }
 
@@ -66,23 +66,27 @@ public class BackCommand implements OreoCommand {
         if (last.getServer().equalsIgnoreCase(localServer)) {
             Location loc = last.toLocalLocation();
             if (loc == null) {
-                p.sendMessage("§cLast location world is not available.");
+                p.sendMessage("\u00A7cLast location world is not available.");
                 return true;
             }
-            p.teleport(loc);
-            p.sendMessage("§aTeleported back.");
+            OreScheduler.runForEntity(plugin, p, () -> {
+                if (OreScheduler.isFolia()) {
+                    p.teleportAsync(loc).thenRun(() -> p.sendMessage("\u00A7aTeleported back."));
+                } else {
+                    p.teleport(loc);
+                    p.sendMessage("\u00A7aTeleported back.");
+                }
+            });
             return true;
         }
 
         var broker = plugin.getBackBroker();
         if (broker == null) {
-            p.sendMessage("§cBack cross-server system is not available.");
+            p.sendMessage("\u00A7cBack cross-server system is not available.");
             return true;
         }
 
-        p.sendMessage("§aTeleporting back to §e" + last.getServer() + "§a...");
-
-        // Now request the cross-server back (this will kick player to other server)
+        p.sendMessage("\u00A7aTeleporting back to \u00A7e" + last.getServer() + "\u00A7a...");
         broker.requestCrossServerBack(p, last);
 
         return true;

@@ -1,7 +1,9 @@
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
+import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Tag;
@@ -116,26 +118,29 @@ public class SitCommand implements OreoCommand {
                 0f
         );
 
-        cleanupExistingSeats(blockBelow, seatLoc);
+        final Block finalBlockBelow = blockBelow;
+        OreScheduler.runAtLocation(OreoEssentials.get(), seatLoc, () -> {
+            cleanupExistingSeats(finalBlockBelow, seatLoc);
 
-        ArmorStand seat = blockBelow.getWorld().spawn(seatLoc, ArmorStand.class, as -> {
-            as.setInvisible(true);
-            as.setMarker(true);         // no hitbox
-            as.setGravity(false);
-            as.setSmall(true);
-            as.setPersistent(false);
-            as.setInvulnerable(true);
-            as.setSilent(true);
-            as.setCollidable(false);
-            as.setBasePlate(false);
-            as.addScoreboardTag(SEAT_TAG);
+            ArmorStand seat = finalBlockBelow.getWorld().spawn(seatLoc, ArmorStand.class, as -> {
+                as.setInvisible(true);
+                as.setMarker(true);
+                as.setGravity(false);
+                as.setSmall(true);
+                as.setPersistent(false);
+                as.setInvulnerable(true);
+                as.setSilent(true);
+                as.setCollidable(false);
+                as.setBasePlate(false);
+                as.addScoreboardTag(SEAT_TAG);
+            });
+
+            seat.addPassenger(p);
+
+            Lang.send(p, "sit.sat",
+                    "<green>You sat down on <yellow>%block%</yellow>.</green>",
+                    Map.of("block", finalBlockBelow.getType().name().toLowerCase()));
         });
-
-        seat.addPassenger(p);
-
-        Lang.send(p, "sit.sat",
-                "<green>You sat down on <yellow>%block%</yellow>.</green>",
-                Map.of("block", blockBelow.getType().name().toLowerCase()));
 
         return true;
     }

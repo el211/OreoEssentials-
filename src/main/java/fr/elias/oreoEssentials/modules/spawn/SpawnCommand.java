@@ -108,9 +108,16 @@ public class SpawnCommand implements OreoCommand {
 
                 if (bypassCooldown || !enabled || seconds <= 0) {
                     try {
-                        p.teleport(spawnLoc);
-                        Lang.send(p, "spawn.teleported", "<green>Teleported to spawn.</green>");
-                        log.info("[SpawnCmd] Local teleport success." + (bypassCooldown ? " (OP bypass)" : ""));
+                        if (OreScheduler.isFolia()) {
+                            p.teleportAsync(spawnLoc).thenRun(() -> {
+                                Lang.send(p, "spawn.teleported", "<green>Teleported to spawn.</green>");
+                                log.info("[SpawnCmd] Local teleport success." + (bypassCooldown ? " (OP bypass)" : ""));
+                            });
+                        } else {
+                            p.teleport(spawnLoc);
+                            Lang.send(p, "spawn.teleported", "<green>Teleported to spawn.</green>");
+                            log.info("[SpawnCmd] Local teleport success." + (bypassCooldown ? " (OP bypass)" : ""));
+                        }
                     } catch (Exception ex) {
                         log.warning("[SpawnCmd] Local teleport exception: " + ex.getMessage());
                         Lang.send(p, "spawn.teleport-failed", "<red>Teleport failed: %error%</red>",
@@ -122,7 +129,7 @@ public class SpawnCommand implements OreoCommand {
                 final Location origin = p.getLocation().clone();
                 int[] remain = {seconds};
                 OreTask[] holder = new OreTask[1];
-                holder[0] = OreScheduler.runTimer(plugin, () -> {
+                holder[0] = OreScheduler.runTimerForEntity(plugin, p, () -> {
                     if (!p.isOnline()) {
                         log.info("[SpawnCmd] Player went offline during spawn countdown; cancel.");
                         if (holder[0] != null) holder[0].cancel();
@@ -137,9 +144,16 @@ public class SpawnCommand implements OreoCommand {
                     if (remain[0] <= 0) {
                         if (holder[0] != null) holder[0].cancel();
                         try {
-                            p.teleport(spawnLoc);
-                            Lang.send(p, "spawn.teleported", "<green>Teleported to spawn.</green>");
-                            log.info("[SpawnCmd] Local teleport success after countdown.");
+                            if (OreScheduler.isFolia()) {
+                                p.teleportAsync(spawnLoc).thenRun(() -> {
+                                    Lang.send(p, "spawn.teleported", "<green>Teleported to spawn.</green>");
+                                    log.info("[SpawnCmd] Local teleport success after countdown.");
+                                });
+                            } else {
+                                p.teleport(spawnLoc);
+                                Lang.send(p, "spawn.teleported", "<green>Teleported to spawn.</green>");
+                                log.info("[SpawnCmd] Local teleport success after countdown.");
+                            }
                         } catch (Exception ex) {
                             log.warning("[SpawnCmd] Local teleport exception after countdown: " + ex.getMessage());
                             Lang.send(p, "spawn.teleport-failed", "<red>Teleport failed: %error%</red>",
@@ -228,7 +242,7 @@ public class SpawnCommand implements OreoCommand {
 
         int[] remain = {seconds};
         OreTask[] taskHolder = new OreTask[1];
-        taskHolder[0] = OreScheduler.runTimer(plugin, () -> {
+        taskHolder[0] = OreScheduler.runTimerForEntity(plugin, p, () -> {
             if (!p.isOnline()) {
                 log.info("[SpawnCmd] Player went offline during remote spawn countdown; cancel.");
                 if (taskHolder[0] != null) taskHolder[0].cancel();
