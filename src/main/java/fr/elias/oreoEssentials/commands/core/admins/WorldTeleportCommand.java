@@ -1,6 +1,8 @@
 package fr.elias.oreoEssentials.commands.core.admins;
 
+import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -93,28 +95,32 @@ public final class WorldTeleportCommand implements TabExecutor {
 
         Location loc = safeSpawn(dest);
 
-        boolean ok = target.teleport(loc);
-        if (!ok) {
-            Lang.send(sender, "admin.world.teleport-failed",
-                    "<red>Teleport failed.</red>");
-            return true;
-        }
-
-        if (!silent) {
-            if (sender != target) {
-                Lang.send(target, "admin.world.target-notified",
-                        "<green>You were teleported to <white>%world%</white> by <white>%staff%</white></green>",
-                        Map.of("world", dest.getName(), "staff", sender.getName()));
+        final Player finalTarget = target;
+        final World finalDest = dest;
+        final Location finalLoc = loc;
+        OreScheduler.runForEntity(OreoEssentials.get(), target, () -> {
+            if (OreScheduler.isFolia()) {
+                finalTarget.teleportAsync(finalLoc);
             } else {
-                Lang.send(target, "admin.world.teleported-self",
-                        "<green>Teleported to <white>%world%</white></green>",
-                        Map.of("world", dest.getName()));
+                finalTarget.teleport(finalLoc);
             }
-        }
 
-        Lang.send(sender, "admin.world.teleported-other",
-                "<green>Teleported <white>%player%</white> to <white>%world%</white></green>",
-                Map.of("player", target.getName(), "world", dest.getName()));
+            if (!silent) {
+                if (sender != finalTarget) {
+                    Lang.send(finalTarget, "admin.world.target-notified",
+                            "<green>You were teleported to <white>%world%</white> by <white>%staff%</white></green>",
+                            Map.of("world", finalDest.getName(), "staff", sender.getName()));
+                } else {
+                    Lang.send(finalTarget, "admin.world.teleported-self",
+                            "<green>Teleported to <white>%world%</white></green>",
+                            Map.of("world", finalDest.getName()));
+                }
+            }
+
+            Lang.send(sender, "admin.world.teleported-other",
+                    "<green>Teleported <white>%player%</white> to <white>%world%</white></green>",
+                    Map.of("player", finalTarget.getName(), "world", finalDest.getName()));
+        });
 
         return true;
     }

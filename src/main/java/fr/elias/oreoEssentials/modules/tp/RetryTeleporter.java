@@ -22,10 +22,18 @@ public final class RetryTeleporter {
 
     public void applyWithRetries(UUID playerId, Supplier<Location> targetSupplier, String tag) {
         runOnce(playerId, targetSupplier, tag, 0);
-        OreScheduler.runLater(plugin, () ->
-                runOnce(playerId, targetSupplier, tag, 2), 2L);
-        OreScheduler.runLater(plugin, () ->
-                runOnce(playerId, targetSupplier, tag, 10), 10L);
+        Player p = Bukkit.getPlayer(playerId);
+        if (p != null && p.isOnline()) {
+            OreScheduler.runLaterForEntity(plugin, p, () ->
+                    runOnce(playerId, targetSupplier, tag, 2), 2L);
+            OreScheduler.runLaterForEntity(plugin, p, () ->
+                    runOnce(playerId, targetSupplier, tag, 10), 10L);
+        } else {
+            OreScheduler.runLater(plugin, () ->
+                    runOnce(playerId, targetSupplier, tag, 2), 2L);
+            OreScheduler.runLater(plugin, () ->
+                    runOnce(playerId, targetSupplier, tag, 10), 10L);
+        }
     }
 
     private void runOnce(UUID id, Supplier<Location> targetSupplier, String tag, int tick) {
@@ -38,9 +46,15 @@ public final class RetryTeleporter {
             return;
         }
 
-        boolean teleported = p.teleport(loc);
-        log.info("[" + tag + "/Retry] tick=" + tick + " teleported=" + teleported
-                + " player=" + p.getName() + " to " + shortLoc(loc));
+        if (OreScheduler.isFolia()) {
+            p.teleportAsync(loc).whenComplete((ok, error) ->
+                    log.info("[" + tag + "/Retry] tick=" + tick + " teleported=" + (error == null && Boolean.TRUE.equals(ok))
+                            + " player=" + p.getName() + " to " + shortLoc(loc)));
+        } else {
+            boolean teleported = p.teleport(loc);
+            log.info("[" + tag + "/Retry] tick=" + tick + " teleported=" + teleported
+                    + " player=" + p.getName() + " to " + shortLoc(loc));
+        }
     }
 
     private static String shortLoc(Location l) {

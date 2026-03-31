@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.tp.command;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -47,17 +48,25 @@ public class TphereCommand implements OreoCommand, org.bukkit.command.TabComplet
             return true;
         }
 
-        target.teleport(self.getLocation());
+        final Player finalTarget = target;
+        final Player finalSelf = self;
+        OreScheduler.runForEntity(plugin, target, () -> {
+            if (OreScheduler.isFolia()) {
+                finalTarget.teleportAsync(finalSelf.getLocation());
+            } else {
+                finalTarget.teleport(finalSelf.getLocation());
+            }
 
-        Lang.send(self, "admin.tphere.brought",
-                "<green>Brought <aqua>%target%</aqua> to you.</green>",
-                Map.of("target", target.getName()));
+            Lang.send(finalSelf, "admin.tphere.brought",
+                    "<green>Brought <aqua>%target%</aqua> to you.</green>",
+                    Map.of("target", finalTarget.getName()));
 
-        if (!target.equals(self)) {
-            Lang.send(target, "admin.tphere.notice",
-                    "<yellow>You were teleported to <aqua>%player%</aqua>.</yellow>",
-                    Map.of("player", self.getName()));
-        }
+            if (!finalTarget.equals(finalSelf)) {
+                Lang.send(finalTarget, "admin.tphere.notice",
+                        "<yellow>You were teleported to <aqua>%player%</aqua>.</yellow>",
+                        Map.of("player", finalSelf.getName()));
+            }
+        });
 
         return true;
     }
