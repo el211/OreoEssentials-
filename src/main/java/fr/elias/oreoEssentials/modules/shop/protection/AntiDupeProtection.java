@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.shop.protection;
 
 import fr.elias.oreoEssentials.modules.shop.ShopModule;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -42,9 +43,9 @@ public final class AntiDupeProtection {
             Long last = lastTransaction.get(uuid);
             if (last != null && System.currentTimeMillis() - last < cooldown) {
                 long remaining = cooldown - (System.currentTimeMillis() - last);
-                player.sendMessage(fr.elias.oreoEssentials.util.Lang.color(
+                Lang.sendRaw(player,
                         module.getShopConfig().getMessage("transaction-cooldown")
-                                .replace("{time}", String.valueOf(remaining))));
+                                .replace("{time}", String.valueOf(remaining)));
                 return false;
             }
 
