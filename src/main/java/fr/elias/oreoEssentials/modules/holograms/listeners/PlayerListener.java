@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.holograms.listeners;
 
 import fr.elias.oreoEssentials.modules.holograms.OHolograms;
 import fr.elias.oreoEssentials.modules.holograms.api.hologram.Hologram;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -39,7 +40,7 @@ public final class PlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(@NotNull final PlayerQuitEvent event) {
-        OHolograms.get().getHologramThread().submit(() -> {
+        OreScheduler.runForEntity(plugin.getPlugin(), event.getPlayer(), () -> {
             for (final var hologram : this.plugin.getHologramsManager().getHolograms()) {
                 hologram.forceHideHologram(event.getPlayer());
             }
@@ -48,7 +49,7 @@ public final class PlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(@NotNull final PlayerJoinEvent event) {
-        OHolograms.get().getHologramThread().submit(() -> {
+        OreScheduler.runForEntity(plugin.getPlugin(), event.getPlayer(), () -> {
             for (final var hologram : this.plugin.getHologramsManager().getHolograms()) {
                 hologram.forceHideHologram(event.getPlayer());
                 hologram.forceUpdateShownStateFor(event.getPlayer());
@@ -58,7 +59,7 @@ public final class PlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onTeleport(@NotNull final PlayerTeleportEvent event) {
-        OHolograms.get().getHologramThread().submit(() -> {
+        OreScheduler.runForEntity(plugin.getPlugin(), event.getPlayer(), () -> {
             for (final Hologram hologram : this.plugin.getHologramsManager().getHolograms()) {
                 hologram.forceUpdateShownStateFor(event.getPlayer());
             }
@@ -67,7 +68,7 @@ public final class PlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onWorldChange(@NotNull final PlayerChangedWorldEvent event) {
-        OHolograms.get().getHologramThread().submit(() -> {
+        OreScheduler.runForEntity(plugin.getPlugin(), event.getPlayer(), () -> {
             for (final Hologram hologram : this.plugin.getHologramsManager().getHolograms()) {
                 hologram.forceUpdateShownStateFor(event.getPlayer());
             }
@@ -93,7 +94,7 @@ public final class PlayerListener implements Listener {
                 // Removing player from the map, as they're no longer needed here.
                 loadingResourcePacks.remove(playerUniqueId);
                 // Refreshing holograms as to make sure custom textures are loaded.
-                OHolograms.get().getHologramThread().submit(() -> {
+                OreScheduler.runForEntity(plugin.getPlugin(), event.getPlayer(), () -> {
                     for (final Hologram hologram : this.plugin.getHologramsManager().getHolograms()) {
                         hologram.refreshHologram(event.getPlayer());
                     }

@@ -9,6 +9,7 @@ import fr.elias.oreoEssentials.modules.holograms.api.data.TextHologramData;
 import fr.elias.oreoEssentials.modules.holograms.api.events.HologramsLoadedEvent;
 import fr.elias.oreoEssentials.modules.holograms.api.events.HologramsUnloadedEvent;
 import fr.elias.oreoEssentials.modules.holograms.api.hologram.Hologram;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import de.oliver.fancynpcs.api.FancyNpcsPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -119,7 +120,7 @@ public final class HologramManagerImpl implements HologramManager {
                     for (UUID viewer : hologram.getViewers()) {
                         Player player = Bukkit.getPlayer(viewer);
                         if (player != null) {
-                            OHolograms.get().getHologramThread().submit(() -> hologram.forceHideHologram(player));
+                            OreScheduler.runForEntity(plugin.getPlugin(), player, () -> hologram.forceHideHologram(player));
                         }
                     }
 
@@ -137,9 +138,7 @@ public final class HologramManagerImpl implements HologramManager {
      * @return The created hologram.
      */
     public @NotNull Hologram create(@NotNull final HologramData data) {
-        Hologram hologram = this.adapter.apply(data);
-        hologram.createHologram();
-        return hologram;
+        return this.adapter.apply(data);
     }
 
     public void saveHolograms() {
@@ -162,7 +161,7 @@ public final class HologramManagerImpl implements HologramManager {
         }
         this.isLoaded = true;
 
-        OHolograms.get().getHologramThread().submit(() -> {
+        OreScheduler.run(plugin.getPlugin(), () -> {
             Bukkit.getPluginManager().callEvent(new HologramsLoadedEvent(ImmutableList.copyOf(allLoaded)));
             for (Hologram hologram : allLoaded) {
                 if (hologram.getData().getLinkedNpcName() != null) {
@@ -185,7 +184,7 @@ public final class HologramManagerImpl implements HologramManager {
 
         this.isLoaded = true;
 
-        OHolograms.get().getHologramThread().submit(() -> {
+        OreScheduler.run(plugin.getPlugin(), () -> {
             Bukkit.getPluginManager().callEvent(new HologramsLoadedEvent(ImmutableList.copyOf(loaded)));
             for (Hologram hologram : loaded) {
                 if (hologram.getData().getLinkedNpcName() != null) {
@@ -205,19 +204,17 @@ public final class HologramManagerImpl implements HologramManager {
      */
     void initializeTasks() {
         ScheduledExecutorService hologramThread = this.plugin.getHologramThread();
-        hologramThread.submit(() -> {
-            this.loadHolograms();
+        OreScheduler.run(plugin.getPlugin(), this::loadHolograms);
 
-            hologramThread.scheduleAtFixedRate(() -> {
-                Bukkit.getScheduler().runTask(plugin.getPlugin(), () -> {
+        hologramThread.scheduleAtFixedRate(() -> {
+            for (final Player player : Bukkit.getOnlinePlayers()) {
+                OreScheduler.runForEntity(plugin.getPlugin(), player, () -> {
                     for (final Hologram hologram : this.plugin.getHologramsManager().getHolograms()) {
-                        for (final Player player : Bukkit.getOnlinePlayers()) {
-                            hologram.forceUpdateShownStateFor(player);
-                        }
+                        hologram.forceUpdateShownStateFor(player);
                     }
                 });
-            }, 0, this.plugin.getHologramConfiguration().getUpdateVisibilityInterval() * 50L, TimeUnit.MILLISECONDS);
-        });
+            }
+        }, 0, this.plugin.getHologramConfiguration().getUpdateVisibilityInterval() * 50L, TimeUnit.MILLISECONDS);
 
         final var updateTimes = CacheBuilder.newBuilder()
                 .expireAfterAccess(Duration.ofMinutes(5))
@@ -226,45 +223,53 @@ public final class HologramManagerImpl implements HologramManager {
         hologramThread.scheduleAtFixedRate(() -> {
             final var time = System.currentTimeMillis();
 
-            Bukkit.getScheduler().runTask(plugin.getPlugin(), () -> {
-                for (final var hologram : this.getHolograms()) {
-                    HologramData data = hologram.getData();
-                    if (data.hasChanges()) {
+            for (final var hologram : this.getHolograms()) {
+                HologramData data = hologram.getData();
+                if (data.hasChanges()) {
+                    OreScheduler.runAtLocation(plugin.getPlugin(), data.getLocation(), () -> {
                         hologram.forceUpdate();
-                        hologram.refreshForViewersInWorld();
-                        data.setHasChanges(false);
-
-                        if (data instanceof TextHologramData) {
-                            updateTimes.put(hologram.getData().getName(), time);
+                        for (UUID viewer : hologram.getViewers()) {
+                            Player player = Bukkit.getPlayer(viewer);
+                            if (player != null && player.getWorld().equals(data.getLocation().getWorld())) {
+                                OreScheduler.runForEntity(plugin.getPlugin(), player, () -> hologram.refreshHologram(player));
+                            }
                         }
+                        data.setHasChanges(false);
+                    });
+
+                    if (data instanceof TextHologramData) {
+                        updateTimes.put(hologram.getData().getName(), time);
                     }
                 }
-            });
+            }
         }, 50, 1000, TimeUnit.MILLISECONDS);
 
         hologramThread.scheduleWithFixedDelay(() -> {
             final var time = System.currentTimeMillis();
 
-            Bukkit.getScheduler().runTask(plugin.getPlugin(), () -> {
-                for (final var hologram : this.getHolograms()) {
-                    if (hologram.getData() instanceof TextHologramData textData) {
-                        final var interval = textData.getTextUpdateInterval();
-                        if (interval < 1) {
-                            continue;
-                        }
+            for (final var hologram : this.getHolograms()) {
+                if (hologram.getData() instanceof TextHologramData textData) {
+                    final var interval = textData.getTextUpdateInterval();
+                    if (interval < 1) {
+                        continue;
+                    }
 
-                        final var lastUpdate = updateTimes.asMap().get(textData.getName());
-                        if (lastUpdate != null && time < (lastUpdate + interval)) {
-                            continue;
-                        }
+                    final var lastUpdate = updateTimes.asMap().get(textData.getName());
+                    if (lastUpdate != null && time < (lastUpdate + interval)) {
+                        continue;
+                    }
 
-                        if (lastUpdate == null || time > (lastUpdate + interval)) {
-                            hologram.refreshForViewersInWorld();
-                            updateTimes.put(textData.getName(), time);
+                    if (lastUpdate == null || time > (lastUpdate + interval)) {
+                        for (UUID viewer : hologram.getViewers()) {
+                            Player player = Bukkit.getPlayer(viewer);
+                            if (player != null && player.getWorld().equals(textData.getLocation().getWorld())) {
+                                OreScheduler.runForEntity(plugin.getPlugin(), player, () -> hologram.refreshHologram(player));
+                            }
                         }
+                        updateTimes.put(textData.getName(), time);
                     }
                 }
-            });
+            }
         }, 50, 50, TimeUnit.MILLISECONDS);
     }
 
@@ -287,12 +292,12 @@ public final class HologramManagerImpl implements HologramManager {
                 for (UUID viewer : hologram.getViewers()) {
                     Player player = Bukkit.getPlayer(viewer);
                     if (player != null) {
-                        hologram.forceHideHologram(player);
+                        OreScheduler.runForEntity(plugin.getPlugin(), player, () -> hologram.forceHideHologram(player));
                     }
                 }
             }
 
-            Bukkit.getPluginManager().callEvent(new HologramsUnloadedEvent(ImmutableList.copyOf(unloaded)));
+            OreScheduler.run(plugin.getPlugin(), () -> Bukkit.getPluginManager().callEvent(new HologramsUnloadedEvent(ImmutableList.copyOf(unloaded))));
         });
     }
 
@@ -308,10 +313,10 @@ public final class HologramManagerImpl implements HologramManager {
 
             for (final Hologram hologram : h) {
                 this.holograms.remove(hologram.getName());
-                online.forEach(hologram::forceHideHologram);
+                online.forEach(player -> OreScheduler.runForEntity(plugin.getPlugin(), player, () -> hologram.forceHideHologram(player)));
             }
 
-            Bukkit.getPluginManager().callEvent(new HologramsUnloadedEvent(ImmutableList.copyOf(h)));
+            OreScheduler.run(plugin.getPlugin(), () -> Bukkit.getPluginManager().callEvent(new HologramsUnloadedEvent(ImmutableList.copyOf(h))));
         });
     }
 

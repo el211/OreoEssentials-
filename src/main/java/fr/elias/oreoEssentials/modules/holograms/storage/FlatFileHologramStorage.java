@@ -8,6 +8,7 @@ import fr.elias.oreoEssentials.modules.holograms.api.data.ItemHologramData;
 import fr.elias.oreoEssentials.modules.holograms.api.data.TextHologramData;
 import fr.elias.oreoEssentials.modules.holograms.api.hologram.Hologram;
 import fr.elias.oreoEssentials.modules.holograms.api.hologram.HologramType;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -171,6 +172,11 @@ public class FlatFileHologramStorage implements HologramStorage {
                 }
 
                 Hologram hologram = OHolograms.get().getHologramManager().create(displayData);
+                if (OreScheduler.isFolia()) {
+                    OreScheduler.runAtLocation(OHolograms.get().getPlugin(), displayData.getLocation(), hologram::createHologram);
+                } else {
+                    hologram.createHologram();
+                }
                 holograms.add(hologram);
             }
 

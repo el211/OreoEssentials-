@@ -5,6 +5,7 @@ import fr.elias.oreoEssentials.modules.holograms.api.OHologramsPlugin;
 import fr.elias.oreoEssentials.modules.holograms.api.events.HologramDeleteEvent;
 import fr.elias.oreoEssentials.modules.holograms.api.hologram.Hologram;
 import fr.elias.oreoEssentials.modules.holograms.commands.Subcommand;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import de.oliver.fancylib.MessageHelper;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +33,7 @@ public class RemoveCMD implements Subcommand {
             return false;
         }
 
-        OHologramsPlugin.get().getHologramThread().submit(() -> {
+        OreScheduler.run(OHolograms.get().getPlugin(), () -> {
             OHolograms.get().getHologramsManager().removeHologram(hologram);
             MessageHelper.success(player, "Removed the hologram");
         });

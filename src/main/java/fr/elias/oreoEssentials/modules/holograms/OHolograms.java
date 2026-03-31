@@ -12,7 +12,6 @@ import de.oliver.fancylib.FancyLib;
 import de.oliver.fancylib.Metrics;
 import de.oliver.fancylib.VersionConfig;
 import de.oliver.fancylib.serverSoftware.ServerSoftware;
-import de.oliver.fancylib.versionFetcher.MasterVersionFetcher;
 import de.oliver.fancylib.versionFetcher.VersionFetcher;
 import de.oliver.fancysitula.api.IFancySitula;
 import de.oliver.fancysitula.api.utils.ServerVersion;
@@ -66,10 +65,11 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 public final class OHolograms implements OHologramsPlugin {
 
     private static @Nullable OHolograms INSTANCE;
+    private static final String EMBEDDED_DOWNLOAD_URL = "embedded-in-oreoessentials";
 
     private final JavaPlugin plugin;
     private final ExtendedFancyLogger fancyLogger;
-    private final VersionFetcher versionFetcher = new MasterVersionFetcher("OHolograms");
+    private final VersionFetcher versionFetcher;
     private final VersionConfig versionConfig;
     private final ScheduledExecutorService hologramThread = Executors.newSingleThreadScheduledExecutor(
             new ThreadFactoryBuilder().setNameFormat("OHolograms-Holograms").build()
@@ -92,6 +92,7 @@ public final class OHolograms implements OHologramsPlugin {
     public OHolograms(@NotNull JavaPlugin plugin) {
         INSTANCE = this;
         this.plugin = plugin;
+        this.versionFetcher = new EmbeddedVersionFetcher(plugin.getDescription().getVersion());
         this.versionConfig = new VersionConfig(plugin, versionFetcher);
         this.config = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "config.yml"));
         OHologramsPlugin.EnabledChecker.setPlugin(this);
@@ -449,6 +450,24 @@ public final class OHolograms implements OHologramsPlugin {
             config.save(new File(getDataFolder(), "config.yml"));
         } catch (Exception e) {
             plugin.getLogger().warning("[OHolograms] Failed to save embedded config: " + e.getMessage());
+        }
+    }
+
+    private static final class EmbeddedVersionFetcher implements VersionFetcher {
+        private final ComparableVersion currentVersion;
+
+        private EmbeddedVersionFetcher(@NotNull String currentVersion) {
+            this.currentVersion = new ComparableVersion(currentVersion);
+        }
+
+        @Override
+        public ComparableVersion fetchNewestVersion() {
+            return currentVersion;
+        }
+
+        @Override
+        public String getDownloadUrl() {
+            return EMBEDDED_DOWNLOAD_URL;
         }
     }
 }

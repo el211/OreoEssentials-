@@ -7,6 +7,7 @@ import fr.elias.oreoEssentials.modules.holograms.storage.converter.ConverterTarg
 import fr.elias.oreoEssentials.modules.holograms.storage.converter.FHConversionRegistry;
 import fr.elias.oreoEssentials.modules.holograms.storage.converter.HologramConversionSession;
 import fr.elias.oreoEssentials.modules.holograms.util.Constants;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import de.oliver.fancylib.MessageHelper;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -76,6 +77,11 @@ public final class OHologramsCMD extends Command {
 
                             for (final HologramData data : holograms) {
                                 final Hologram hologram = this.plugin.getHologramsManager().create(data);
+                                if (OreScheduler.isFolia()) {
+                                    OreScheduler.runAtLocation(plugin.getPlugin(), data.getLocation(), hologram::createHologram);
+                                } else {
+                                    hologram.createHologram();
+                                }
                                 this.plugin.getHologramsManager().addHologram(hologram);
                             }
 
