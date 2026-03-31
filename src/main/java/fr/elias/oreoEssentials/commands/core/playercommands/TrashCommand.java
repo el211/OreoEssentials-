@@ -1,6 +1,8 @@
 package fr.elias.oreoEssentials.commands.core.playercommands;
 
+import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -19,9 +21,11 @@ public class TrashCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
-        Inventory inv = Bukkit.createInventory(p, 27, "§8Trash");
-        p.openInventory(inv);
-        p.sendMessage(ChatColor.GRAY + "This inventory will not be saved.");
+        OreScheduler.runForEntity(OreoEssentials.get(), p, () -> {
+            Inventory inv = Bukkit.createInventory(p, 27, "\u00A78Trash");
+            p.openInventory(inv);
+            p.sendMessage(ChatColor.GRAY + "This inventory will not be saved.");
+        });
         return true;
     }
 }

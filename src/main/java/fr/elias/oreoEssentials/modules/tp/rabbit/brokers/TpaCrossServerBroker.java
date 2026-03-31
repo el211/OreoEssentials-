@@ -285,7 +285,11 @@ public final class TpaCrossServerBroker implements Listener {
         OreScheduler.runLaterForEntity(plugin, e.getPlayer(), () -> {
             try {
                 Location to = target.getLocation();
-                e.getPlayer().teleport(to);
+                if (OreScheduler.isFolia()) {
+                    e.getPlayer().teleportAsync(to);
+                } else {
+                    e.getPlayer().teleport(to);
+                }
                 dbg("Arrival: snapped " + e.getPlayer().getName() + " -> " + target.getName());
             } catch (Throwable t) {
                 plugin.getLogger().warning("[TPA-X] Arrival teleport failed: " + t.getMessage());
