@@ -2,7 +2,6 @@ package fr.elias.oreoEssentials;
 
 import com.google.gson.Gson;
 import fr.elias.oreoEssentials.modules.furnace.FurnaceCommand;
-import fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayService;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.modules.afk.AfkListener;
 import fr.elias.oreoEssentials.modules.afk.rabbit.packets.AfkPoolEnterPacket;
@@ -228,8 +227,6 @@ public final class OreoEssentials extends JavaPlugin {
     private CurrencyConfig currencyConfig;
     private CommandToggleConfig commandToggleConfig;
     private CommandToggleService commandToggleService;
-    private PerPlayerTextDisplayService perPlayerTextDisplayService;
-    private fr.elias.oreoEssentials.modules.holograms.ProtocolLibHoloInterceptor protocolLibHoloInterceptor;
     private AuctionHouseModule auctionHouse;
     private fr.elias.oreoEssentials.modules.orders.OrdersModule ordersModule;
     public fr.elias.oreoEssentials.modules.orders.OrdersModule getOrdersModule() { return ordersModule; }
@@ -242,8 +239,6 @@ public final class OreoEssentials extends JavaPlugin {
     private Map<UUID, BackLocation> pendingBackTeleports = new ConcurrentHashMap<>();
     public fr.elias.oreoEssentials.modules.chat.channels.ChatChannelManager getChannelManager() { return channelManager; }
     public fr.elias.oreoEssentials.modules.tempfly.TempFlyService getTempFlyService() { return tempFlyService; }
-    public fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayService getPerPlayerTextDisplayService() { return perPlayerTextDisplayService; }
-    public fr.elias.oreoEssentials.modules.holograms.ProtocolLibHoloInterceptor getProtocolLibHoloInterceptor() { return protocolLibHoloInterceptor; }
     public EconomyBootstrap getEconomy() { return ecoBootstrap; }
     public EconomyBootstrap getEcoBootstrap() { return ecoBootstrap; }
 
@@ -376,7 +371,7 @@ public final class OreoEssentials extends JavaPlugin {
     private CustomCraftingService customCraftingService;
     public CustomCraftingService getCustomCraftingService() { return customCraftingService; }
 
-    public fr.elias.oreoEssentials.modules.holograms.OreoHolograms oreoHolograms;
+    private fr.elias.oreoEssentials.modules.holograms.OHolograms embeddedOHolograms;
     private CurrencyPlaceholderExpansion currencyPlaceholders;
     private fr.elias.oreoEssentials.modules.playtime.PlaytimeTracker playtimeTracker;
     private PlayerNametagManager nametagManager;
@@ -386,7 +381,7 @@ public final class OreoEssentials extends JavaPlugin {
     public Gson getGson() { return gson; }
     public Map<UUID, BackLocation> getPendingBackTeleports() { return pendingBackTeleports; }
 
-    // ─── Web Panel ──────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Web Panel Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     private fr.elias.oreoEssentials.modules.webpanel.WebPanelSyncService webPanelSyncService;
 
 
@@ -455,7 +450,7 @@ public final class OreoEssentials extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        getLogger().info("[SHUTDOWN] OreoEssentials disabling…");
+        getLogger().info("[SHUTDOWN] OreoEssentials disablingÃ¢â‚¬Â¦");
 
         try { if (maintenanceService != null) maintenanceService.shutdown(); } catch (Exception ignored) {}
 
@@ -508,9 +503,7 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (playervaultsService != null) playervaultsService.stop(); } catch (Exception ignored) {}
         try { if (aliasService != null) aliasService.shutdown(); } catch (Exception ignored) {}
         try { if (jailService != null) jailService.disable(); } catch (Exception ignored) {}
-        try { if (oreoHolograms != null) oreoHolograms.unload(); } catch (Exception ignored) {}
-        try { if (perPlayerTextDisplayService != null) perPlayerTextDisplayService.clearAll(); } catch (Exception ignored) {}
-        try { if (protocolLibHoloInterceptor != null) protocolLibHoloInterceptor.clearAll(); } catch (Exception ignored) {}
+        try { if (embeddedOHolograms != null) embeddedOHolograms.shutdown(); } catch (Exception ignored) {}
         try { if (dailyStore != null) dailyStore.close(); } catch (Exception ignored) {}
         dailyStore = null;
         try { if (tradeService != null) tradeService.cancelAll(); } catch (Throwable ignored) {}
@@ -829,12 +822,12 @@ public final class OreoEssentials extends JavaPlugin {
             }
 
             if (maintenanceService.isEnabled()) {
-                getLogger().warning("╔════════════════════════════════════════════════════════════╗");
-                getLogger().warning("║                    ⚠ MAINTENANCE ACTIVE ⚠                  ║");
+                getLogger().warning("Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢â€”");
+                getLogger().warning("Ã¢â€¢â€˜                    Ã¢Å¡Â  MAINTENANCE ACTIVE Ã¢Å¡Â                   Ã¢â€¢â€˜");
                 if (maintenanceConfig.isUseTimer() && maintenanceConfig.getRemainingTime() > 0) {
-                    getLogger().warning(String.format("║  Time remaining: %-41s ║", maintenanceService.getFormattedTimeRemaining()));
+                    getLogger().warning(String.format("Ã¢â€¢â€˜  Time remaining: %-41s Ã¢â€¢â€˜", maintenanceService.getFormattedTimeRemaining()));
                 }
-                getLogger().warning("╚════════════════════════════════════════════════════════════╝");
+                getLogger().warning("Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â");
             } else {
                 getLogger().info("[Maintenance] System initialized (currently disabled)");
             }
@@ -1046,7 +1039,7 @@ public final class OreoEssentials extends JavaPlugin {
                     var olagg = new fr.elias.oreoEssentials.modules.clearlag.ClearLagCommands(clearLag);
                     olaggCmd.setExecutor(olagg);
                     olaggCmd.setTabCompleter(olagg);
-                    getLogger().info("[OreoLag] Enabled — /olagg active.");
+                    getLogger().info("[OreoLag] Enabled Ã¢â‚¬â€ /olagg active.");
                 } else {
                     getLogger().warning("[OreoLag] Command 'olagg' not found in plugin.yml.");
                 }
@@ -1386,7 +1379,7 @@ public final class OreoEssentials extends JavaPlugin {
         this.packetManager.subscribe(TradeGrantPacket.class,   new TradeGrantPacketHandler(this));
         this.packetManager.subscribe(TradeClosePacket.class,   new TradeClosePacketHandler(this));
 
-        // ── Auction House sync ────────────────────────────────────────────────
+        // Ã¢â€â‚¬Ã¢â€â‚¬ Auction House sync Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         if (this.auctionHouse != null && this.auctionHouse.enabled()) {
             this.packetManager.subscribe(
                     fr.elias.oreoEssentials.modules.auctionhouse.rabbitmq.AuctionSyncPacket.class,
@@ -1397,7 +1390,7 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[AH] Cross-server sync subscribed.");
         }
 
-        // ── Orders module cross-server sync ───────────────────────────────────
+        // Ã¢â€â‚¬Ã¢â€â‚¬ Orders module cross-server sync Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         if (this.ordersModule != null && this.ordersModule.enabled()) {
             this.packetManager.subscribe(
                     fr.elias.oreoEssentials.modules.orders.rabbitmq.OrderSyncPacket.class,
@@ -1490,8 +1483,8 @@ public final class OreoEssentials extends JavaPlugin {
             OreScheduler.runLater(this, () -> {
                 try {
                     this.currencyPlaceholders = new CurrencyPlaceholderExpansion(this);
-                    if (this.currencyPlaceholders.register()) { getLogger().info("✓ PlaceholderAPI currency expansion registered!"); }
-                    else { getLogger().warning("✗ Failed to register PlaceholderAPI currency expansion!"); }
+                    if (this.currencyPlaceholders.register()) { getLogger().info("Ã¢Å“â€œ PlaceholderAPI currency expansion registered!"); }
+                    else { getLogger().warning("Ã¢Å“â€” Failed to register PlaceholderAPI currency expansion!"); }
                 } catch (Throwable t) { getLogger().warning("[Currency] PlaceholderAPI expansion failed: " + t.getMessage()); }
             }, 60L);
         }
@@ -1620,7 +1613,7 @@ public final class OreoEssentials extends JavaPlugin {
             getCommand("weblink").setExecutor(
                     new fr.elias.oreoEssentials.modules.webpanel.WebLinkCommand(wpConfig, client));
         } else {
-            getLogger().warning("[WebPanel] 'weblink' command not found in plugin.yml — skipping registration.");
+            getLogger().warning("[WebPanel] 'weblink' command not found in plugin.yml Ã¢â‚¬â€ skipping registration.");
         }
 
         // Start event-driven player sync (join/quit/block events + periodic)
@@ -1643,10 +1636,10 @@ public final class OreoEssentials extends JavaPlugin {
                     new fr.elias.oreoEssentials.modules.webpanel.RegisterRewardCommand(
                             this, rrConfig, rrService, rrIaHook, rrNexoHook));
         } else {
-            getLogger().warning("[WebPanel] 'registerreward' command not found in plugin.yml — skipping registration.");
+            getLogger().warning("[WebPanel] 'registerreward' command not found in plugin.yml Ã¢â‚¬â€ skipping registration.");
         }
 
-        getLogger().info("[WebPanel] Enabled — syncing to " + wpConfig.getUrl());
+        getLogger().info("[WebPanel] Enabled Ã¢â‚¬â€ syncing to " + wpConfig.getUrl());
     }
 
     private void initICModule() {
@@ -1895,137 +1888,31 @@ public final class OreoEssentials extends JavaPlugin {
     }
 
     private void initHolograms() {
-        // Always initialize the per-player service when holograms are enabled.
-        // Required for auto-detected PAPI placeholders (%...%) regardless of the
-        // holograms.text.per-player config flag (which only gates the legacy opt-in path).
         if (settingsConfig.oreoHologramsEnabled()) {
             try {
-                Class.forName("org.bukkit.entity.Display");
-
-                // 1) ProtocolLib interceptor first so the listener can receive it
-                if (getServer().getPluginManager().getPlugin("ProtocolLib") != null) {
-                    try {
-                        this.protocolLibHoloInterceptor =
-                                new fr.elias.oreoEssentials.modules.holograms.ProtocolLibHoloInterceptor(this);
-                    } catch (Throwable t) {
-                        getLogger().warning("[OreoHolograms] ProtocolLib interceptor failed to start: " + t.getMessage());
-                        this.protocolLibHoloInterceptor = null;
-                    }
-                } else {
-                    this.protocolLibHoloInterceptor = null;
-                    getLogger().warning("[OreoHolograms] ProtocolLib not found — PAPI placeholder holograms will show raw text.");
-                }
-
-                // 2) Per-player NMS service
-                fr.elias.oreoEssentials.modules.holograms.nms.NmsHologramBridge nms =
-                        fr.elias.oreoEssentials.modules.holograms.nms.NmsBridgeLoader.loadOrThrow();
-                this.perPlayerTextDisplayService =
-                        new fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayService(this, nms);
-
-                // 3) Listener with both service + interceptor
-                getServer().getPluginManager().registerEvents(
-                        new fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayListener(
-                                this.perPlayerTextDisplayService,
-                                this,
-                                this.protocolLibHoloInterceptor
-                        ),
-                        this
-                );
-
-                // 4) Tick timer
-                OreScheduler.runTimer(this, () -> {
-                    try { perPlayerTextDisplayService.tick(); }
-                    catch (Throwable t) { getLogger().warning("[PerPlayerTextDisplay] tick failed: " + t.getMessage()); }
-                }, 20L, 10L);
-
-                getLogger().info("[PerPlayerTextDisplay] Enabled.");
-            } catch (ClassNotFoundException x) {
-                getLogger().warning("[PerPlayerTextDisplay] Display entities not available. Requires Paper/Folia.");
-            } catch (Throwable t) {
-                getLogger().warning("[PerPlayerTextDisplay] Failed to initialize: " + t.getMessage());
-            }
-        }
-
-        if (settingsConfig.oreoHologramsEnabled()) {
-            try {
-                try { Class.forName("org.bukkit.entity.Display"); }
-                catch (ClassNotFoundException x) {
-                    getLogger().warning("[OreoHolograms] Display entities not available. Requires Paper/Folia.");
+                try {
+                    Class.forName("org.bukkit.entity.Display");
+                } catch (ClassNotFoundException x) {
+                    getLogger().warning("[OHolograms] Display entities not available. Requires Paper/Folia.");
                     throw x;
                 }
-                this.oreoHolograms = new fr.elias.oreoEssentials.modules.holograms.OreoHolograms(this);
-                this.oreoHolograms.load();
 
-                fr.elias.oreoEssentials.modules.holograms.OreoHologramCommand holoCmd =
-                        new fr.elias.oreoEssentials.modules.holograms.OreoHologramCommand(this.oreoHolograms);
-                boolean registered = false;
-                if (getCommand("ohologram") != null) {
-                    getCommand("ohologram").setExecutor(holoCmd);
-                    getCommand("ohologram").setTabCompleter(holoCmd);
-                    registered = true;
-                }
-                if (getCommand("hologram") != null) {
-                    getCommand("hologram").setExecutor(holoCmd);
-                    getCommand("hologram").setTabCompleter(holoCmd);
-                    registered = true;
-                }
-                if (!registered) {
-                    getLogger().warning("[OreoHolograms] No command entry found. Add ohologram or hologram in plugin.yml.");
-                }
+                unregisterCommandHard("ohologram");
+                unregisterCommandHard("hologram");
 
-                OreScheduler.runTimer(this, () -> {
-                    try {
-                        if (this.oreoHolograms != null) {
-                            this.oreoHolograms.tickAll();
-                        }
-                    } catch (Throwable ignored) {
-                    }
-                }, 20L, 20L);
-
-                /*
-                 * Delayed reload so PlaceholderAPI expansions (LuckPerms, Vault, etc.)
-                 * are fully registered before holograms are rebuilt.
-                 * Without this, placeholder holograms can appear blank after restart.
-                 */
-                OreScheduler.runLater(this, () -> {
-                    try {
-                        if (this.oreoHolograms == null) return;
-
-                        getLogger().info("[OreoHolograms] Running delayed post-start reload...");
-
-                        this.oreoHolograms.unload();
-                        this.oreoHolograms.load();
-
-                        // Refresh online players immediately
-                        if (this.perPlayerTextDisplayService != null) {
-                            for (Player p : Bukkit.getOnlinePlayers()) {
-                                try {
-                                    this.perPlayerTextDisplayService.forceRefreshForPlayer(p);
-                                } catch (Throwable ignored) {
-                                }
-                            }
-                        }
-
-                        getLogger().info("[OreoHolograms] Delayed post-start reload complete.");
-                    } catch (Throwable t) {
-                        getLogger().warning("[OreoHolograms] Delayed reload failed: " + t.getMessage());
-                        t.printStackTrace();
-                    }
-                }, 60L);
-
-                getLogger().info("[OreoHolograms] Enabled.");
+                this.embeddedOHolograms = fr.elias.oreoEssentials.modules.holograms.OHolograms.bootstrap(this);
+                getLogger().info("[OHolograms] Embedded OHolograms enabled.");
             } catch (Throwable t) {
-                this.oreoHolograms = null;
-                getLogger().warning("[OreoHolograms] Failed to initialize: " + t.getMessage());
+                this.embeddedOHolograms = null;
+                getLogger().warning("[OHolograms] Failed to initialize: " + t.getMessage());
             }
         } else {
             unregisterCommandHard("ohologram");
             unregisterCommandHard("hologram");
-            this.oreoHolograms = null;
-            getLogger().info("[OreoHolograms] Disabled by settings.yml.");
+            this.embeddedOHolograms = null;
+            getLogger().info("[OHolograms] Disabled by settings.yml.");
         }
     }
-
     private void initSharding() {
         if (settingsConfig.worldShardingEnabled()) {
             try {
@@ -2211,16 +2098,16 @@ public final class OreoEssentials extends JavaPlugin {
             OreScheduler.runLater(this, () -> {
                 try {
                     if (placeholderHook.register()) {
-                        getLogger().info("✓ PlaceholderAPI expansion 'oreo' registered successfully!");
+                        getLogger().info("Ã¢Å“â€œ PlaceholderAPI expansion 'oreo' registered successfully!");
                         if (getConfig().getBoolean("placeholder-debug", false)) {
                             Player testPlayer = Bukkit.getOnlinePlayers().stream().findFirst().orElse(null);
                             if (testPlayer != null) getLogger().info("[PAPI TEST] %oreo_network_online% = " + placeholderHook.onRequest(testPlayer, "network_online"));
                         }
                     } else {
-                        getLogger().severe("✗ Failed to register PlaceholderAPI expansion!");
+                        getLogger().severe("Ã¢Å“â€” Failed to register PlaceholderAPI expansion!");
                     }
                 } catch (Exception e) {
-                    getLogger().severe("✗ Error during PlaceholderAPI registration: " + e.getMessage());
+                    getLogger().severe("Ã¢Å“â€” Error during PlaceholderAPI registration: " + e.getMessage());
                     e.printStackTrace();
                 }
             }, 60L);
@@ -2236,27 +2123,27 @@ public final class OreoEssentials extends JavaPlugin {
 
     private void showStartupBanner() {
         String version = getDescription().getVersion();
-        getLogger().info("╔════════════════════════════════════════════════════════════╗");
-        getLogger().info("║               STARTING OREOESSENTIALS PREMIUM              ║");
-        getLogger().info("║        Version: " + String.format("%-30s", version) + " ║");
-        getLogger().info("║              Loading all features and modules...           ║");
-        getLogger().info("╚════════════════════════════════════════════════════════════╝");
+        getLogger().info("Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢â€”");
+        getLogger().info("Ã¢â€¢â€˜               STARTING OREOESSENTIALS PREMIUM              Ã¢â€¢â€˜");
+        getLogger().info("Ã¢â€¢â€˜        Version: " + String.format("%-30s", version) + " Ã¢â€¢â€˜");
+        getLogger().info("Ã¢â€¢â€˜              Loading all features and modules...           Ã¢â€¢â€˜");
+        getLogger().info("Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â");
     }
 
     private void showCompletionBanner() {
-        getLogger().info("╔════════════════════════════════════════════════════════════╗");
-        getLogger().info("║              ✓ OREOESSENTIALS READY ✓                     ║");
-        getLogger().info("║  Players online: " + String.format("%-42d", Bukkit.getOnlinePlayers().size()) + " ║");
-        getLogger().info("╚════════════════════════════════════════════════════════════╝");
+        getLogger().info("Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢â€”");
+        getLogger().info("Ã¢â€¢â€˜              Ã¢Å“â€œ OREOESSENTIALS READY Ã¢Å“â€œ                     Ã¢â€¢â€˜");
+        getLogger().info("Ã¢â€¢â€˜  Players online: " + String.format("%-42d", Bukkit.getOnlinePlayers().size()) + " Ã¢â€¢â€˜");
+        getLogger().info("Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â");
     }
 
     private void checkProtocolLib() {
         boolean hasProtocolLib = Bukkit.getPluginManager().getPlugin("ProtocolLib") != null;
         boolean tabEnabled = settingsConfig.tabEnabled();
         if (tabEnabled && !hasProtocolLib) {
-            getLogger().warning("[ProtocolLib] NOT INSTALLED — custom tab-list will NOT work. Download: https://www.spigotmc.org/resources/1997/");
+            getLogger().warning("[ProtocolLib] NOT INSTALLED Ã¢â‚¬â€ custom tab-list will NOT work. Download: https://www.spigotmc.org/resources/1997/");
         } else if (tabEnabled) {
-            getLogger().info("[ProtocolLib] Detected — custom tab-list available.");
+            getLogger().info("[ProtocolLib] Detected Ã¢â‚¬â€ custom tab-list available.");
         }
     }
 
@@ -2428,7 +2315,6 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.modules.shards.OreoShardsModule getShardsModule() { return shardsModule; }
     public Economy getVaultEconomy() { return vaultEconomy; }
     public CurrencyPlaceholderExpansion getCurrencyPlaceholders() { return currencyPlaceholders; }
-    public fr.elias.oreoEssentials.modules.holograms.perplayer_nms.PerPlayerTextDisplayService getPerPlayerTextDisplayService_full() { return perPlayerTextDisplayService; }
 
     public String getServerNameSafe() {
         try {
@@ -2448,3 +2334,4 @@ public final class OreoEssentials extends JavaPlugin {
         }
     }
 }
+

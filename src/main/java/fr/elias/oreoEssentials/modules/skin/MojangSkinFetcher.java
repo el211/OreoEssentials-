@@ -45,7 +45,7 @@ public final class MojangSkinFetcher {
             }
             reader.close();
 
-            JsonObject json = JsonParser.parseString(response.toString()).getAsJsonObject();
+            JsonObject json = new JsonParser().parse(response.toString()).getAsJsonObject();
             String id = json.get("id").getAsString();
 
             String formatted = id.replaceFirst(

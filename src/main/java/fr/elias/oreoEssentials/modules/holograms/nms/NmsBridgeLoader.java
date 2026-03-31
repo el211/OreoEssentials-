@@ -6,8 +6,8 @@ import java.util.List;
 
 public final class NmsBridgeLoader {
 
-    private NmsBridgeLoader() {}
-
+    private NmsBridgeLoader() {
+    }
 
     private static final List<String> FALLBACK_VERSIONS = List.of(
             "v1_21_11",
@@ -28,37 +28,29 @@ public final class NmsBridgeLoader {
         String ver = craftBukkitVersion();
 
         NmsHologramBridge exact = tryLoad(ver);
-        if (exact != null) return exact;
+        if (exact != null) {
+            return exact;
+        }
 
         for (String fallback : FALLBACK_VERSIONS) {
             NmsHologramBridge bridge = tryLoad(fallback);
             if (bridge != null) {
-                Bukkit.getLogger().warning(
-                        "[OreoHolograms] No exact NMS bridge for " + ver
-                                + " — using compatible fallback: " + fallback
-                );
+                Bukkit.getLogger().warning("[OHolograms] No exact NMS bridge for " + ver + " using fallback " + fallback);
                 return bridge;
             }
         }
 
-        throw new IllegalStateException(
-                "No NMS bridge for " + ver + " and no compatible fallback found. "
-                        + "Expected class: fr.elias.oreoEssentials.modules.holograms.nms."
-                        + ver + ".Bridge_" + ver
-        );
+        throw new IllegalStateException("No NMS bridge for " + ver);
     }
-
 
     private static NmsHologramBridge tryLoad(String ver) {
         String cls = "fr.elias.oreoEssentials.modules.holograms.nms." + ver + ".Bridge_" + ver;
         try {
-            return (NmsHologramBridge) Class.forName(cls)
-                    .getDeclaredConstructor()
-                    .newInstance();
+            return (NmsHologramBridge) Class.forName(cls).getDeclaredConstructor().newInstance();
         } catch (ClassNotFoundException ignored) {
             return null;
         } catch (Throwable t) {
-            Bukkit.getLogger().warning("[OreoHolograms] Bridge " + cls + " failed to load: " + t);
+            Bukkit.getLogger().warning("[OHolograms] Failed to load " + cls + ": " + t.getMessage());
             return null;
         }
     }

@@ -645,15 +645,19 @@ commands:
     usage: "/playtime [player]"
 
   ohologram:
-    description: Manage Oreo holograms
-    permission: OreoHolograms.admin
+    description: Manage OHolograms
+    permission: oholograms.admin
     usage: "/ohologram help"
 
+  oholograms:
+    description: Manage OHolograms
+    permission: oholograms.admin
+    usage: "/oholograms help"
+
   hologram:
-    description: (Legacy alias) Manage Oreo holograms
-    permission: OreoHolograms.admin
+    description: (Legacy alias) Manage OHolograms
+    permission: oholograms.admin
     usage: "/hologram help"
-    aliases: [ ohologram ]
   homesgui:
     description: Open the Homes GUI
     usage: /homesgui
@@ -705,9 +709,9 @@ commands:
     usage: "/ahadmin"
     permission: oreo.ah.admin
 
-  # ═══════════════════════════════════════════════════════════════
+  # 
   # CHAT CHANNELS SYSTEM COMMANDS
-  # ═══════════════════════════════════════════════════════════════
+  # 
   channelannounce:
     description: Send an announcement to a specific channel
     usage: /<command> <channel> <message>
@@ -726,9 +730,9 @@ commands:
     aliases: [channel, setchannel]
     permission: oreo.chat.channel
 
-  # ═══════════════════════════════════════════════════════════════
+  # 
   # END CHAT CHANNELS COMMANDS
-  # ═══════════════════════════════════════════════════════════════
+  # 
 
 permissions:
   oreo.*:
@@ -1155,7 +1159,7 @@ permissions:
   # oreo.prewards.daily1:   { default: true }
   oreo.prewards.*:             { default: op }
 
-  OreoHolograms.admin:
+  oholograms.admin:
     default: op
 
   oreo.vault.menu:
@@ -1165,9 +1169,9 @@ permissions:
     description: Allows opening the Homes GUI
     default: true
 
-  # ═══════════════════════════════════════════════════════════════
+  # 
   # CHAT CHANNELS SYSTEM PERMISSIONS
-  # ═══════════════════════════════════════════════════════════════
+  # 
 
   # Base channel permissions
   oreo.chat.channels:
@@ -1249,6 +1253,6 @@ permissions:
     description: Bypass all channel restrictions
     default: op
 
-  # ═══════════════════════════════════════════════════════════════
+  # 
   # END CHAT CHANNELS PERMISSIONS
-  # ═══════════════════════════════════════════════════════════════
+  # 
