@@ -2,7 +2,7 @@ package fr.elias.oreoEssentials.modules.shop.commands;
 
 import fr.elias.oreoEssentials.modules.shop.ShopModule;
 import fr.elias.oreoEssentials.modules.shop.models.ShopItem;
-import org.bukkit.ChatColor;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -31,7 +31,7 @@ public final class SellCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            player.sendMessage(color("&6Usage: /sell <hand|handall|all> [quantity]"));
+            send(player, "&6Usage: /sell <hand|handall|all> [quantity]");
             return true;
         }
 
@@ -89,7 +89,7 @@ public final class SellCommand implements CommandExecutor, TabCompleter {
                 module.getTransactionProcessor().processSellAll(player, null);
             }
 
-            default -> player.sendMessage(color("&6Usage: /sell <hand|handall|all> [quantity]"));
+            default -> send(player, "&6Usage: /sell <hand|handall|all> [quantity]");
         }
         return true;
     }
@@ -102,10 +102,6 @@ public final class SellCommand implements CommandExecutor, TabCompleter {
 
 
     private void send(Player player, String msg) {
-        player.sendMessage(color(msg));
-    }
-
-    private static String color(String s) {
-        return ChatColor.translateAlternateColorCodes('&', s);
+        Lang.sendRaw(player, msg);
     }
 }

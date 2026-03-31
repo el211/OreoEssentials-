@@ -234,7 +234,7 @@ public final class TransactionProcessor {
     }
 
     private void send(Player player, String msg) {
-        player.sendMessage(Lang.color(msg));
+        Lang.sendRaw(player, msg);
     }
 
     private String formatName(ShopItem item) {

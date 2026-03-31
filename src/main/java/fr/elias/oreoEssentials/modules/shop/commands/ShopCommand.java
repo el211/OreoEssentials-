@@ -4,8 +4,8 @@ import fr.elias.oreoEssentials.modules.shop.ShopModule;
 import fr.elias.oreoEssentials.modules.shop.models.PriceModifier;
 import fr.elias.oreoEssentials.modules.shop.models.Shop;
 import fr.elias.oreoEssentials.modules.shop.models.ShopItem;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -48,7 +48,7 @@ public final class ShopCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             if (args.length < 2) {
-                sender.sendMessage(color("&cUsage: /shop reroll <shopId>"));
+                send(sender, "&cUsage: /shop reroll <shopId>");
                 return true;
             }
             Shop targetShop = module.getShopManager().getShop(args[1]);
@@ -57,11 +57,11 @@ public final class ShopCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             if (!targetShop.isRotating()) {
-                send(sender, color("&cShop &e" + targetShop.getId() + " &cdoes not have rotation enabled."));
+                send(sender, "&cShop &e" + targetShop.getId() + " &cdoes not have rotation enabled.");
                 return true;
             }
             module.getRotationManager().forceReroll(targetShop);
-            send(sender, color("&aRotation rerolled for shop &e" + targetShop.getId() + "&a."));
+            send(sender, "&aRotation rerolled for shop &e" + targetShop.getId() + "&a.");
             return true;
         }
 
@@ -189,7 +189,7 @@ public final class ShopCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             module.getShopGUI().open(target, shop, 1);
-            sender.sendMessage(color("&aOpened shop &e" + shop.getId() + "&a for &e" + target.getName()));
+            send(sender, "&aOpened shop &e" + shop.getId() + "&a for &e" + target.getName());
             return true;
         }
 
@@ -291,14 +291,11 @@ public final class ShopCommand implements CommandExecutor, TabCompleter {
     // -------------------------------------------------------------------------
 
     private void send(CommandSender sender, String msg) {
-        sender.sendMessage(color(msg));
+        Lang.sendRaw(sender, msg);
     }
 
     private void sendNotFound(CommandSender sender, String name) {
         send(sender, module.getShopConfig().getMessage("player-not-found").replace("{player}", name));
     }
 
-    private static String color(String s) {
-        return ChatColor.translateAlternateColorCodes('&', s);
-    }
 }

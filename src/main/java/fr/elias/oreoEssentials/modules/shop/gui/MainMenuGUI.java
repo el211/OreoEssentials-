@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.shop.gui;
 
 import fr.elias.oreoEssentials.modules.shop.ShopModule;
 import fr.elias.oreoEssentials.modules.shop.models.Shop;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
@@ -75,12 +76,12 @@ public final class MainMenuGUI implements InventoryProvider {
                     if (shopId == null) return;
                     Shop shop = module.getShopManager().getShop(shopId);
                     if (shop == null) {
-                        player.sendMessage(color(module.getShopConfig().getMessage("shop-not-found")
-                                .replace("{shop}", shopId)));
+                        Lang.sendRaw(player, module.getShopConfig().getMessage("shop-not-found")
+                                .replace("{shop}", shopId));
                         return;
                     }
                     if (!player.hasPermission("oshopgui.shop")) {
-                        player.sendMessage(color(module.getShopConfig().getMessage("no-permission")));
+                        Lang.sendRaw(player, module.getShopConfig().getMessage("no-permission"));
                         return;
                     }
                     module.getShopGUI().open(player, shop, 1);
