@@ -26,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 
+import java.util.Collection;
 import java.util.UUID;
 
 public final class HologramImpl extends Hologram {
@@ -51,13 +52,14 @@ public final class HologramImpl extends Hologram {
 
     @Override
     protected void create() {
-        final Location location = data.getLocation();
+        final Location location = normalizedDisplayLocation();
         if (location.getWorld() == null || !location.isWorldLoaded()) {
             return;
         }
 
         Display display = getDisplayEntity();
         if (display == null) {
+            removeStaleDisplays(location);
             display = switch (data.getType()) {
                 case TEXT -> (Display) location.getWorld().spawnEntity(location, EntityType.TEXT_DISPLAY);
                 case ITEM -> (Display) location.getWorld().spawnEntity(location, EntityType.ITEM_DISPLAY);
@@ -66,6 +68,10 @@ public final class HologramImpl extends Hologram {
             entityUuid = display.getUniqueId();
             entityId = display.getEntityId();
         }
+
+        display.setPersistent(false);
+        display.addScoreboardTag("oe_hologram");
+        display.addScoreboardTag("oe_hologram:" + data.getName().toLowerCase());
 
         update();
     }
@@ -87,7 +93,7 @@ public final class HologramImpl extends Hologram {
             return;
         }
 
-        final Location location = data.getLocation();
+        final Location location = normalizedDisplayLocation();
         if (location.getWorld() == null || !location.isWorldLoaded()) {
             return;
         }
@@ -99,7 +105,7 @@ public final class HologramImpl extends Hologram {
         }
 
         if (data instanceof TextHologramData textData && display instanceof TextDisplay textDisplay) {
-            textDisplay.text(getShownText(getAnyViewer()));
+            textDisplay.text(getShownText(null));
 
             final Color background = textData.getBackground();
             if (background == null) {
@@ -145,11 +151,15 @@ public final class HologramImpl extends Hologram {
             return false;
         }
 
-        if (getDisplayEntity() == null) {
+        Display display = getDisplayEntity();
+        if (display == null) {
             create();
+            display = getDisplayEntity();
+        } else {
+            update();
         }
 
-        final Entity entity = resolveEntity();
+        final Entity entity = display;
         if (entity == null) {
             return false;
         }
@@ -188,9 +198,11 @@ public final class HologramImpl extends Hologram {
         }
 
         if (display instanceof TextDisplay textDisplay) {
-            textDisplay.text(getShownText(player));
-            if (TEXT_BRIDGE != null) {
-                TEXT_BRIDGE.sendTextDisplayText(player, entityId, getShownText(player));
+            final var baseText = getShownText(null);
+            final var playerText = getShownText(player);
+            textDisplay.text(baseText);
+            if (TEXT_BRIDGE != null && playerText != null && !playerText.equals(baseText)) {
+                TEXT_BRIDGE.sendTextDisplayText(player, entityId, playerText);
             }
         }
 
@@ -206,14 +218,36 @@ public final class HologramImpl extends Hologram {
         return org.bukkit.Bukkit.getEntity(entityUuid);
     }
 
-    private @Nullable Player getAnyViewer() {
-        for (UUID viewer : viewers) {
-            Player player = org.bukkit.Bukkit.getPlayer(viewer);
-            if (player != null) {
-                return player;
-            }
+    private @NotNull Location normalizedDisplayLocation() {
+        Location location = data.getLocation().clone();
+        location.setYaw(0.0f);
+        location.setPitch(0.0f);
+        return location;
+    }
+
+    private void removeStaleDisplays(@NotNull Location location) {
+        if (location.getWorld() == null) {
+            return;
         }
-        return null;
+
+        Collection<Entity> nearby = location.getWorld().getNearbyEntities(location, 0.2, 0.2, 0.2);
+        for (Entity entity : nearby) {
+            if (!(entity instanceof Display display)) {
+                continue;
+            }
+            if (entity.getType() != expectedEntityType()) {
+                continue;
+            }
+            entity.remove();
+        }
+    }
+
+    private @NotNull EntityType expectedEntityType() {
+        return switch (data.getType()) {
+            case TEXT -> EntityType.TEXT_DISPLAY;
+            case ITEM -> EntityType.ITEM_DISPLAY;
+            case BLOCK -> EntityType.BLOCK_DISPLAY;
+        };
     }
 
     private static @Nullable NmsHologramBridge loadTextBridge() {

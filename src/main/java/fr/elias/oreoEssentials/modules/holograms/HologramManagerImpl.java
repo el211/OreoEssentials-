@@ -124,6 +124,8 @@ public final class HologramManagerImpl implements HologramManager {
                         }
                     }
 
+                    OreScheduler.runAtLocation(plugin.getPlugin(), hologram.getData().getLocation(), hologram::deleteHologram);
+
                     OHolograms.get().getHologramThread().submit(() -> plugin.getHologramStorage().delete(hologram));
                 }
         );
@@ -295,6 +297,8 @@ public final class HologramManagerImpl implements HologramManager {
                         OreScheduler.runForEntity(plugin.getPlugin(), player, () -> hologram.forceHideHologram(player));
                     }
                 }
+
+                OreScheduler.runAtLocation(plugin.getPlugin(), hologram.getData().getLocation(), hologram::deleteHologram);
             }
 
             OreScheduler.run(plugin.getPlugin(), () -> Bukkit.getPluginManager().callEvent(new HologramsUnloadedEvent(ImmutableList.copyOf(unloaded))));
@@ -314,6 +318,7 @@ public final class HologramManagerImpl implements HologramManager {
             for (final Hologram hologram : h) {
                 this.holograms.remove(hologram.getName());
                 online.forEach(player -> OreScheduler.runForEntity(plugin.getPlugin(), player, () -> hologram.forceHideHologram(player)));
+                OreScheduler.runAtLocation(plugin.getPlugin(), hologram.getData().getLocation(), hologram::deleteHologram);
             }
 
             OreScheduler.run(plugin.getPlugin(), () -> Bukkit.getPluginManager().callEvent(new HologramsUnloadedEvent(ImmutableList.copyOf(h))));
