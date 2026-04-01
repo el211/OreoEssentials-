@@ -181,22 +181,34 @@ public final class AmountSelectionGUI {
             } else {
                 // Get balance from the correct economy (custom currency or Vault)
                 String cid = shop.getCurrencyId();
-                double balance;
                 if (cid != null) {
-                    CurrencyService cs = module.getPlugin().getCurrencyService();
-                    balance = cs != null ? cs.getBalance(player.getUniqueId(), cid).join() : 0;
+                    ItemStack maxItem = buildButton(Material.GOLD_INGOT, 1, "&6&lMax Affordable",
+                            Arrays.asList(
+                                    "&7Balance: &eLoading...",
+                                    "&7Click to calculate your max affordable amount",
+                                    "",
+                                    "&eClick to auto-fill"));
+                    contents.set(3, 7, ClickableItem.from(maxItem, e -> {
+                        CurrencyService cs = module.getPlugin().getCurrencyService();
+                        if (cs == null) return;
+                        cs.getBalance(player.getUniqueId(), cid).thenAccept(balance ->
+                                fr.elias.oreoEssentials.util.OreScheduler.runForEntity(module.getPlugin(), player, () -> {
+                                    int maxAfford = pricePerUnit > 0 ? (int) (balance / pricePerUnit) : 0;
+                                    qty[0] = Math.max(1, maxAfford);
+                                }));
+                    }));
                 } else {
-                    balance = module.getEconomy().getBalance(player);
+                    double balance = module.getEconomy().getBalance(player);
+                    int maxAfford = pricePerUnit > 0 ? (int)(balance / pricePerUnit) : 0;
+                    int finalMax  = Math.max(1, maxAfford);
+                    ItemStack maxItem = buildButton(Material.GOLD_INGOT, 1, "&6&lMax Affordable",
+                            Arrays.asList(
+                                    "&7Balance: &e" + fmt(balance),
+                                    "&7You can afford: &e" + finalMax + " &7items",
+                                    "",
+                                    "&eClick to auto-fill"));
+                    contents.set(3, 7, ClickableItem.from(maxItem, e -> qty[0] = finalMax));
                 }
-                int maxAfford = pricePerUnit > 0 ? (int)(balance / pricePerUnit) : 0;
-                int finalMax  = Math.max(1, maxAfford);
-                ItemStack maxItem = buildButton(Material.GOLD_INGOT, 1, "&6&lMax Affordable",
-                        Arrays.asList(
-                                "&7Balance: &e" + fmt(balance),
-                                "&7You can afford: &e" + finalMax + " &7items",
-                                "",
-                                "&eClick to auto-fill"));
-                contents.set(3, 7, ClickableItem.from(maxItem, e -> qty[0] = finalMax));
             }
         }
 

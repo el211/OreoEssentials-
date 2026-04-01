@@ -166,42 +166,52 @@ public final class HomeTeleportBroker implements Listener {
                 return;
             }
 
-            final String expectHome = lastRequestedHome.get(subject);
-            final String reqId      = lastRequestId.get(subject);
-            final UUID owner        = lastRequestedOwner.getOrDefault(subject, subject); // self for /home
+            OreScheduler.runForEntity(plugin, p, () -> {
+                final String expectHome = lastRequestedHome.get(subject);
+                final String reqId = lastRequestId.get(subject);
+                final UUID owner = lastRequestedOwner.getOrDefault(subject, subject);
 
-            if (expectHome == null || reqId == null) {
-                log.info("[HOME/Retry] tick=" + tick + " no-intent for " + subject);
-                return;
-            }
+                if (expectHome == null || reqId == null) {
+                    log.info("[HOME/Retry] tick=" + tick + " no-intent for " + subject);
+                    return;
+                }
 
-            final Location loc = homes.getHome(owner, expectHome);
-            if (loc == null) {
-                log.warning("[HOME/Retry] tick=" + tick + " home not found here. subject=" + subject
-                        + " owner=" + owner + " home=" + expectHome + " requestId=" + reqId);
-                // stop trying for this intent
-                pending.remove(subject);
-                lastRequestedHome.remove(subject);
-                lastRequestedOwner.remove(subject);
-                lastRequestId.remove(subject);
-                return;
-            }
+                final Location loc = homes.getHome(owner, expectHome);
+                if (loc == null) {
+                    log.warning("[HOME/Retry] tick=" + tick + " home not found here. subject=" + subject
+                            + " owner=" + owner + " home=" + expectHome + " requestId=" + reqId);
+                    pending.remove(subject);
+                    lastRequestedHome.remove(subject);
+                    lastRequestedOwner.remove(subject);
+                    lastRequestId.remove(subject);
+                    return;
+                }
 
-            final boolean ok = p.teleport(loc);
-            log.info("[HOME/Retry] tick=" + tick
-                    + " teleported=" + ok
-                    + " subject=" + p.getName()
-                    + " -> " + expectHome + " (owner=" + owner + ")"
-                    + " requestId=" + reqId
-                    + " " + shortLoc(loc));
+                if (OreScheduler.isFolia()) {
+                    p.teleportAsync(loc).thenRun(() ->
+                            log.info("[HOME/Retry] tick=" + tick
+                                    + " teleported=true"
+                                    + " subject=" + p.getName()
+                                    + " -> " + expectHome + " (owner=" + owner + ")"
+                                    + " requestId=" + reqId
+                                    + " " + shortLoc(loc)));
+                } else {
+                    final boolean ok = p.teleport(loc);
+                    log.info("[HOME/Retry] tick=" + tick
+                            + " teleported=" + ok
+                            + " subject=" + p.getName()
+                            + " -> " + expectHome + " (owner=" + owner + ")"
+                            + " requestId=" + reqId
+                            + " " + shortLoc(loc));
+                }
 
-            if (tick == 20) {
-                // final attempt done; clear flags
-                pending.remove(subject);
-                lastRequestedHome.remove(subject);
-                lastRequestedOwner.remove(subject);
-                lastRequestId.remove(subject);
-            }
+                if (tick == 20) {
+                    pending.remove(subject);
+                    lastRequestedHome.remove(subject);
+                    lastRequestedOwner.remove(subject);
+                    lastRequestId.remove(subject);
+                }
+            });
         }, tick);
     }
 

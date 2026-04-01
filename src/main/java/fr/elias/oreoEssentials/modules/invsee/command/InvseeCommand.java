@@ -4,6 +4,7 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.modules.invsee.InvseeService;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -116,7 +117,7 @@ public class InvseeCommand implements OreoCommand, TabCompleter {
 
         gui.setItem(40, offhand);
 
-        viewer.openInventory(gui);
+        OreScheduler.runForEntity(plugin, viewer, () -> viewer.openInventory(gui));
 
         InvseeListener listener = new InvseeListener(viewer, target, gui);
         Bukkit.getPluginManager().registerEvents(listener, plugin);

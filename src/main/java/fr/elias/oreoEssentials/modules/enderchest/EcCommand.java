@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.enderchest;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -27,7 +28,8 @@ public class EcCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
 
-        p.openInventory(ecService.createVirtualEc(p));
+        OreScheduler.runForEntity(fr.elias.oreoEssentials.OreoEssentials.get(), p,
+                () -> p.openInventory(ecService.createVirtualEc(p)));
 
         Lang.send(p, "enderchest.opened",
                 "<light_purple>Ender Chest opened.</light_purple>");

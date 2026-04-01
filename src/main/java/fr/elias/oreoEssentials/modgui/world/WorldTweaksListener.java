@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modgui.world;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modgui.cfg.ModGuiConfig;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -29,8 +30,10 @@ import java.util.Map;
 public class WorldTweaksListener implements Listener {
 
     private final ModGuiConfig cfg;
+    private final OreoEssentials plugin;
 
     public WorldTweaksListener(OreoEssentials plugin) {
+        this.plugin = plugin;
         this.cfg = plugin.getModGuiService().cfg();
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
@@ -102,10 +105,16 @@ public class WorldTweaksListener implements Listener {
 
             e.setCancelled(true);
             Location spawn = w.getSpawnLocation();
-            player.teleport(spawn);
-            Lang.send(player, "modgui.world.void-saved",
-                    "<yellow>You were saved from the void and teleported to spawn.</yellow>",
-                    Map.of());
+            OreScheduler.runForEntity(plugin, player, () -> {
+                if (OreScheduler.isFolia()) {
+                    player.teleportAsync(spawn);
+                } else {
+                    player.teleport(spawn);
+                }
+                Lang.send(player, "modgui.world.void-saved",
+                        "<yellow>You were saved from the void and teleported to spawn.</yellow>",
+                        Map.of());
+            });
         }
     }
 

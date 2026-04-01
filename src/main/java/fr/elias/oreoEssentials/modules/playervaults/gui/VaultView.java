@@ -4,6 +4,7 @@ package fr.elias.oreoEssentials.modules.playervaults.gui;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.playervaults.PlayerVaultsConfig;
 import fr.elias.oreoEssentials.modules.playervaults.PlayerVaultsService;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -96,6 +97,6 @@ public final class VaultView {
         };
 
         Bukkit.getPluginManager().registerEvents(listener, plugin);
-        player.openInventory(inv);
+        OreScheduler.runForEntity(plugin, player, () -> player.openInventory(inv));
     }
 }

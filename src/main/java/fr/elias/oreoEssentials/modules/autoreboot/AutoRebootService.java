@@ -339,10 +339,16 @@ public final class AutoRebootService implements Listener {
 
             for (Player p : Bukkit.getOnlinePlayers()) {
                 if (!p.isOnline()) continue;
-                p.teleport(loc);
-                if (!msg.isEmpty()) {
-                    Lang.send(p, "auto-reboot.safe-zone", msg, Map.of());
-                }
+                OreScheduler.runForEntity(plugin, p, () -> {
+                    if (OreScheduler.isFolia()) {
+                        p.teleportAsync(loc);
+                    } else {
+                        p.teleport(loc);
+                    }
+                    if (!msg.isEmpty()) {
+                        Lang.send(p, "auto-reboot.safe-zone", msg, Map.of());
+                    }
+                });
             }
 
             plugin.getLogger().info("[AutoReboot] SAFE_ZONE: teleported players to region " + safeWorld + "/" + safeRegion);
@@ -362,11 +368,16 @@ public final class AutoRebootService implements Listener {
             return;
         }
 
-        p.teleport(loc);
-
-        if (msg != null && !msg.isBlank()) {
-            Lang.send(p, "auto-reboot.safe-zone", msg, Map.of());
-        }
+        OreScheduler.runForEntity(plugin, p, () -> {
+            if (OreScheduler.isFolia()) {
+                p.teleportAsync(loc);
+            } else {
+                p.teleport(loc);
+            }
+            if (msg != null && !msg.isBlank()) {
+                Lang.send(p, "auto-reboot.safe-zone", msg, Map.of());
+            }
+        });
     }
 
     private void kickEveryone() {

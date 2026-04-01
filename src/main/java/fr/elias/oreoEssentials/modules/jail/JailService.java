@@ -158,7 +158,11 @@ public final class JailService {
         if (p != null && p.isOnline()) {
             final Location finalSpawn = spawn;
             OreScheduler.runForEntity(plugin, p, () -> {
-                p.teleport(finalSpawn);
+                if (OreScheduler.isFolia()) {
+                    p.teleportAsync(finalSpawn);
+                } else {
+                    p.teleport(finalSpawn);
+                }
                 p.sendMessage("§cYou have been jailed"
                         + (s.endEpochMs > 0 ? (" for " + TimeText.format(durationMs)) : " permanently")
                         + (s.reason.isBlank() ? "" : " §7Reason: §f" + s.reason));
@@ -297,7 +301,11 @@ public final class JailService {
                 if (spawn != null) {
                     final Location finalSpawn = spawn;
                     OreScheduler.runForEntity(plugin, p, () -> {
-                        p.teleport(finalSpawn);
+                        if (OreScheduler.isFolia()) {
+                            p.teleportAsync(finalSpawn);
+                        } else {
+                            p.teleport(finalSpawn);
+                        }
                         p.sendMessage("§cYou cannot escape from jail!");
                     });
                 }
@@ -327,7 +335,11 @@ public final class JailService {
                 final Location finalSpawn = spawn;
                 // Delay to ensure world is loaded
                 OreScheduler.runLaterForEntity(plugin, p, () -> {
-                    p.teleport(finalSpawn);
+                    if (OreScheduler.isFolia()) {
+                        p.teleportAsync(finalSpawn);
+                    } else {
+                        p.teleport(finalSpawn);
+                    }
 
                     long remaining = s.remainingMs();
                     if (remaining > 0) {

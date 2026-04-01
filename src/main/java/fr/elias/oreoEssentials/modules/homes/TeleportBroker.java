@@ -1,16 +1,15 @@
-// File: src/main/java/fr/elias/oreoEssentials/homes/TeleportBroker.java
 package fr.elias.oreoEssentials.modules.homes;
 
 import fr.elias.oreoEssentials.OreoEssentials;
-import fr.elias.oreoEssentials.rabbitmq.PacketChannels;
-import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
+import fr.elias.oreoEssentials.modules.homes.home.HomeService;
 import fr.elias.oreoEssentials.modules.homes.rabbit.packet.HomeTeleportRequestPacket;
 import fr.elias.oreoEssentials.modules.homes.rabbit.packet.OtherHomeTeleportRequestPacket;
-import fr.elias.oreoEssentials.modules.spawn.rabbit.packets.SpawnTeleportRequestPacket;
-import fr.elias.oreoEssentials.modules.warps.rabbit.packets.WarpTeleportRequestPacket;
-import fr.elias.oreoEssentials.modules.homes.home.HomeService;
 import fr.elias.oreoEssentials.modules.spawn.SpawnService;
+import fr.elias.oreoEssentials.modules.spawn.rabbit.packets.SpawnTeleportRequestPacket;
 import fr.elias.oreoEssentials.modules.warps.WarpService;
+import fr.elias.oreoEssentials.modules.warps.rabbit.packets.WarpTeleportRequestPacket;
+import fr.elias.oreoEssentials.rabbitmq.PacketChannels;
+import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -25,13 +24,11 @@ public class TeleportBroker {
     private final OreoEssentials plugin;
     private final String local;
 
-    private final HomeService  homes;
-    private final WarpService  warps;
+    private final HomeService homes;
+    private final WarpService warps;
     private final SpawnService spawns;
 
     private final PacketManager pm;
-
-    // pending teleports if player hasn’t joined yet
     private final Map<UUID, Runnable> pending = new ConcurrentHashMap<>();
 
     public TeleportBroker(OreoEssentials plugin,
@@ -40,13 +37,12 @@ public class TeleportBroker {
                           SpawnService spawns,
                           PacketManager pm) {
         this.plugin = plugin;
-        this.homes  = homes;
-        this.warps  = warps;
+        this.homes = homes;
+        this.warps = warps;
         this.spawns = spawns;
-        this.pm     = pm;
-        this.local  = homes != null ? homes.localServer() : Bukkit.getServer().getName();
+        this.pm = pm;
+        this.local = homes != null ? homes.localServer() : Bukkit.getServer().getName();
 
-        // ===== SUBSCRIBE: existing packets =====
         pm.subscribe(HomeTeleportRequestPacket.class, (ch, pkt) -> {
             if (!local.equalsIgnoreCase(pkt.getTargetServer())) return;
             queueOrRun(pkt.getPlayerId(), () -> {
@@ -71,15 +67,14 @@ public class TeleportBroker {
             });
         });
 
-        // ===== SUBSCRIBE: NEW other-home packet =====
         pm.subscribe(OtherHomeTeleportRequestPacket.class, (ch, pkt) -> {
             if (!local.equalsIgnoreCase(pkt.getTargetServer())) return;
             UUID subject = pkt.getSubjectId();
-            UUID owner   = pkt.getOwnerId();
-            String home  = pkt.getHomeName();
+            UUID owner = pkt.getOwnerId();
+            String home = pkt.getHomeName();
 
             queueOrRun(subject, () -> {
-                Location loc = homes.getHome(owner, home); // NOTE: owner here!
+                Location loc = homes.getHome(owner, home);
                 teleport(subject, loc, "home " + home + " (owner=" + owner + ")");
             });
         });
@@ -112,16 +107,20 @@ public class TeleportBroker {
         Player p = Bukkit.getPlayer(id);
         if (p == null) return;
         if (loc == null) {
-            p.sendMessage("§cTarget " + label + " not found on this server.");
+            p.sendMessage("\u00A7cTarget " + label + " not found on this server.");
             return;
         }
-        p.teleport(loc);
-        p.sendMessage("§aTeleported to §b" + label + "§a.");
+        OreScheduler.runForEntity(plugin, p, () -> {
+            if (OreScheduler.isFolia()) {
+                p.teleportAsync(loc).thenRun(() ->
+                        p.sendMessage("\u00A7aTeleported to \u00A7b" + label + "\u00A7a."));
+            } else {
+                p.teleport(loc);
+                p.sendMessage("\u00A7aTeleported to \u00A7b" + label + "\u00A7a.");
+            }
+        });
     }
 
-    /* ===================== PUBLISH HELPERS ===================== */
-
-    /** Existing helper you might already have for self /home (optional) */
     public boolean requestTeleportSelfHome(UUID playerId, String homeName, String targetServer) {
         try {
             pm.sendPacket(PacketChannels.individual(targetServer),
@@ -133,7 +132,6 @@ public class TeleportBroker {
         }
     }
 
-    /**  admin wants to go to someone else’s home */
     public boolean requestTeleportOtherHome(UUID subjectAdmin, UUID owner, String homeName) {
         String target = resolveHomeServer(owner, homeName);
         if (target == null || target.isBlank()) return false;
@@ -147,11 +145,8 @@ public class TeleportBroker {
         }
     }
 
-    /** Resolve which server holds the owner’s home. Tries direct API, then reflection, then locality. */
     private String resolveHomeServer(UUID owner, String homeName) {
-        // 1) If HomeService exposes a direct method (preferred)
         try {
-            // e.g., String getHomeServer(UUID, String)
             Method m = homes.getClass().getMethod("getHomeServer", UUID.class, String.class);
             Object r = m.invoke(homes, owner, homeName);
             if (r instanceof String s && !s.isBlank()) return s;
@@ -160,7 +155,6 @@ public class TeleportBroker {
             plugin.getLogger().fine("[TeleportBroker] getHomeServer reflect failed: " + t.getMessage());
         }
 
-        // 2) Some builds expose a descriptor with getServer()
         try {
             Method m = homes.getClass().getMethod("getHomeDescriptor", UUID.class, String.class);
             Object desc = m.invoke(homes, owner, homeName);
@@ -174,9 +168,7 @@ public class TeleportBroker {
             plugin.getLogger().fine("[TeleportBroker] getHomeDescriptor reflect failed: " + t.getMessage());
         }
 
-        // 3) If the home exists locally, it's this server
         if (homes.getHome(owner, homeName) != null) return local;
-
         return null;
     }
 }

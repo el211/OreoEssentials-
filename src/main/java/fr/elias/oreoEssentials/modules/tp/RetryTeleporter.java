@@ -47,9 +47,10 @@ public final class RetryTeleporter {
         }
 
         if (OreScheduler.isFolia()) {
-            p.teleportAsync(loc).whenComplete((ok, error) ->
-                    log.info("[" + tag + "/Retry] tick=" + tick + " teleported=" + (error == null && Boolean.TRUE.equals(ok))
-                            + " player=" + p.getName() + " to " + shortLoc(loc)));
+            OreScheduler.runForEntity(plugin, p, () ->
+                    p.teleportAsync(loc).whenComplete((ok, error) ->
+                            log.info("[" + tag + "/Retry] tick=" + tick + " teleported=" + (error == null && Boolean.TRUE.equals(ok))
+                                    + " player=" + p.getName() + " to " + shortLoc(loc))));
         } else {
             boolean teleported = p.teleport(loc);
             log.info("[" + tag + "/Retry] tick=" + tick + " teleported=" + teleported

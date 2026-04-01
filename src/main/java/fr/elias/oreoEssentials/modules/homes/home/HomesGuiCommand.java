@@ -83,10 +83,17 @@ public class HomesGuiCommand implements OreoCommand {
                         Map.of("name", homeName));
                 return false;
             }
-            p.teleport(loc);
-            Lang.send(p, "homes.gui.teleported",
-                    "<green>Teleported to <aqua>%name%</aqua>.</green>",
-                    Map.of("name", homeName));
+            if (OreScheduler.isFolia()) {
+                p.teleportAsync(loc).thenRun(() ->
+                        Lang.send(p, "homes.gui.teleported",
+                                "<green>Teleported to <aqua>%name%</aqua>.</green>",
+                                Map.of("name", homeName)));
+            } else {
+                p.teleport(loc);
+                Lang.send(p, "homes.gui.teleported",
+                        "<green>Teleported to <aqua>%name%</aqua>.</green>",
+                        Map.of("name", homeName));
+            }
             return true;
         }
 

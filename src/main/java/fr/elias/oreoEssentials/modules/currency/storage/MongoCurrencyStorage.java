@@ -137,9 +137,11 @@ public class MongoCurrencyStorage implements CurrencyStorage {
                 return doc.getDouble("balance");
             }
 
-            // Return default balance from currency
-            Currency currency = loadCurrency(currencyId).join();
-            return currency != null ? currency.getDefaultBalance() : 0.0;
+            Document currencyDoc = currenciesCollection.find(Filters.eq("_id", currencyId)).first();
+            if (currencyDoc == null) return 0.0;
+
+            Double defaultBalance = currencyDoc.getDouble("defaultBalance");
+            return defaultBalance != null ? defaultBalance : 0.0;
         });
     }
 

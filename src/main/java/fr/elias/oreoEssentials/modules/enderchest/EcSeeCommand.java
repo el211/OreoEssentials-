@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.enderchest;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -95,7 +96,7 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
 
         Inventory gui = Bukkit.createInventory(null, guiSize, guiTitle);
         gui.setContents(contents);
-        viewer.openInventory(gui);
+        OreScheduler.runForEntity(plugin, viewer, () -> viewer.openInventory(gui));
 
         UUID viewerId = viewer.getUniqueId();
         final int finalTargetRows = targetRows;

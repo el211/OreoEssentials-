@@ -97,7 +97,13 @@ public class TeleportService {
         // do TP
         Location dest = target.getLocation();
         if (dest != null) {
-            OreScheduler.runForEntity(plugin, from, () -> from.teleport(dest));
+            OreScheduler.runForEntity(plugin, from, () -> {
+                if (OreScheduler.isFolia()) {
+                    from.teleportAsync(dest);
+                } else {
+                    from.teleport(dest);
+                }
+            });
         }
 
         // messages
@@ -159,7 +165,15 @@ public class TeleportService {
         if (who == null || to == null) return;
         try { if (back != null) back.setLast(who.getUniqueId(), who.getLocation()); } catch (Throwable ignored) {}
 
-        OreScheduler.runForEntity(plugin, who, () -> { try { who.teleport(to); } catch (Throwable ignored) {} });
+        OreScheduler.runForEntity(plugin, who, () -> {
+            try {
+                if (OreScheduler.isFolia()) {
+                    who.teleportAsync(to);
+                } else {
+                    who.teleport(to);
+                }
+            } catch (Throwable ignored) {}
+        });
     }
 
     public void teleportSilently(Player who, Player target) {

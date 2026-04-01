@@ -50,7 +50,7 @@ public final class PlayerSyncCommand implements OreoCommand, Listener {
             gui.setItem(4, disabledCenter());
         }
 
-        p.openInventory(gui);
+        OreScheduler.runForEntity(plugin, p, () -> p.openInventory(gui));
         return true;
     }
 

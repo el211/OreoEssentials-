@@ -150,12 +150,23 @@ public final class AuctionHouseModule {
         if (fee > 0) {
             CurrencyService cs = (currencyId != null) ? plugin.getCurrencyService() : null;
             if (cs != null) {
-                double balance = cs.getBalance(seller.getUniqueId(), currencyId).join();
-                if (balance < fee) {
-                    seller.sendMessage(cfg.getMessage("errors.not-enough-money"));
-                    return false;
-                }
-                cs.withdraw(seller.getUniqueId(), currencyId, fee).join();
+                final String finalCurrencyId = currencyId;
+                final long finalDurationHours = durationHours;
+                cs.getBalance(seller.getUniqueId(), finalCurrencyId).thenAccept(balance ->
+                        OreScheduler.runForEntity(plugin, seller, () -> {
+                            if (!seller.isOnline()) return;
+                            if (balance < fee) {
+                                seller.sendMessage(cfg.getMessage("errors.not-enough-money"));
+                                playSound(seller, Sound.ENTITY_VILLAGER_NO);
+                                return;
+                            }
+                            cs.withdraw(seller.getUniqueId(), finalCurrencyId, fee).thenAccept(unused ->
+                                    OreScheduler.runForEntity(plugin, seller, () -> {
+                                        if (!seller.isOnline()) return;
+                                        finalizeAuctionCreate(seller, item, price, finalDurationHours, category, finalCurrencyId);
+                                    }));
+                        }));
+                return true;
             } else if (economy != null) {
                 if (!economy.has(seller, fee)) {
                     seller.sendMessage(cfg.getMessage("errors.not-enough-money"));
@@ -165,28 +176,7 @@ public final class AuctionHouseModule {
             }
         }
 
-        Auction auction = new Auction(seller.getUniqueId(), seller.getName(), item,
-                price, durationHours * 3_600_000L, category);
-        auction.setCurrencyId(currencyId);
-        detectCustomItem(auction, item);
-
-        activeAuctions.add(auction);
-        broadcastSync(AuctionSyncPacket.create(serverName(), auction));
-        seller.sendMessage(cfg.getMessage("listing.created",
-                Map.of("price", formatMoney(price), "duration", durationHours + "h")));
-
-        if (cfg.discordEnabled()) {
-            OreScheduler.runAsync(plugin, () ->
-                    new DiscordWebhook(cfg.discordWebhookUrl())
-                            .setBotName(cfg.discordBotName())
-                            .setBotAvatarUrl(cfg.discordBotAvatar())
-                            .setTitle("New Listing")
-                            .setDescription("**" + seller.getName() + "** listed **" +
-                                    item.getType().name() + " x" + item.getAmount() +
-                                    "** for **" + formatMoney(price) + "**")
-                            .setColor(0x00FF00)
-                            .execute());
-        }
+        finalizeAuctionCreate(seller, item, price, durationHours, category, currencyId);
         return true;
     }
 
@@ -213,13 +203,22 @@ public final class AuctionHouseModule {
         double sellerReceives = price - tax;
 
         if (cs != null) {
-            double balance = cs.getBalance(buyer.getUniqueId(), auctionCurrencyId).join();
-            if (balance < price) {
-                buyer.sendMessage(cfg.getMessage("errors.not-enough-money"));
-                return false;
-            }
-            cs.withdraw(buyer.getUniqueId(), auctionCurrencyId, price).join();
-            cs.deposit(auction.getSeller(), auctionCurrencyId, sellerReceives).join();
+            cs.getBalance(buyer.getUniqueId(), auctionCurrencyId).thenAccept(balance ->
+                    OreScheduler.runForEntity(plugin, buyer, () -> {
+                        if (!buyer.isOnline()) return;
+                        if (balance < price) {
+                            buyer.sendMessage(cfg.getMessage("errors.not-enough-money"));
+                            playSound(buyer, Sound.ENTITY_VILLAGER_NO);
+                            return;
+                        }
+                        cs.withdraw(buyer.getUniqueId(), auctionCurrencyId, price).thenAccept(unused ->
+                                cs.deposit(auction.getSeller(), auctionCurrencyId, sellerReceives).thenAccept(unused2 ->
+                                        OreScheduler.runForEntity(plugin, buyer, () -> {
+                                            if (!buyer.isOnline()) return;
+                                            finalizeAuctionPurchase(buyer, auction, price, sellerReceives, auctionCurrencyId);
+                                        })));
+                    }));
+            return true;
         } else {
             if (economy == null) return false;
             if (!economy.has(buyer, price)) {
@@ -230,6 +229,40 @@ public final class AuctionHouseModule {
             economy.depositPlayer(Bukkit.getOfflinePlayer(auction.getSeller()), sellerReceives);
         }
 
+        finalizeAuctionPurchase(buyer, auction, price, sellerReceives, auctionCurrencyId);
+        return true;
+    }
+
+    private void finalizeAuctionCreate(Player seller, ItemStack item, double price,
+                                       long durationHours, AuctionCategory category, String currencyId) {
+        Auction auction = new Auction(seller.getUniqueId(), seller.getName(), item,
+                price, durationHours * 3_600_000L, category);
+        auction.setCurrencyId(currencyId);
+        detectCustomItem(auction, item);
+
+        activeAuctions.add(auction);
+        broadcastSync(AuctionSyncPacket.create(serverName(), auction));
+        seller.sendMessage(cfg.getMessage("listing.created",
+                Map.of("price", formatMoney(price, currencyId), "duration", durationHours + "h")));
+        seller.getInventory().setItemInMainHand(null);
+        playSound(seller, Sound.ENTITY_PLAYER_LEVELUP);
+
+        if (cfg.discordEnabled()) {
+            OreScheduler.runAsync(plugin, () ->
+                    new DiscordWebhook(cfg.discordWebhookUrl())
+                            .setBotName(cfg.discordBotName())
+                            .setBotAvatarUrl(cfg.discordBotAvatar())
+                            .setTitle("New Listing")
+                            .setDescription("**" + seller.getName() + "** listed **" +
+                                    item.getType().name() + " x" + item.getAmount() +
+                                    "** for **" + formatMoney(price, currencyId) + "**")
+                            .setColor(0x00FF00)
+                            .execute());
+        }
+    }
+
+    private void finalizeAuctionPurchase(Player buyer, Auction auction, double price,
+                                         double sellerReceives, String auctionCurrencyId) {
         Map<Integer, ItemStack> overflow = buyer.getInventory().addItem(auction.getItem());
         if (!overflow.isEmpty()) {
             overflow.values().forEach(i ->
@@ -243,13 +276,14 @@ public final class AuctionHouseModule {
                 buyer.getUniqueId(), buyer.getName()));
 
         buyer.sendMessage(cfg.getMessage("purchase.success",
-                Map.of("item", auction.getItem().getType().name(), "price", formatMoney(price))));
+                Map.of("item", auction.getItem().getType().name(), "price", formatMoney(price, auctionCurrencyId))));
+        playSound(buyer, Sound.BLOCK_NOTE_BLOCK_PLING);
 
         Player sellerOnline = Bukkit.getPlayer(auction.getSeller());
         if (sellerOnline != null) {
             sellerOnline.sendMessage(cfg.getMessage("listing.sold",
                     Map.of("item", auction.getItem().getType().name(),
-                            "price", formatMoney(sellerReceives),
+                            "price", formatMoney(sellerReceives, auctionCurrencyId),
                             "buyer", buyer.getName())));
             playSound(sellerOnline, Sound.ENTITY_PLAYER_LEVELUP);
         }
@@ -261,11 +295,10 @@ public final class AuctionHouseModule {
                             .setTitle("Item Sold!")
                             .setDescription("**" + buyer.getName() + "** purchased **" +
                                     auction.getItem().getType().name() + "** from **" +
-                                    auction.getSellerName() + "** for **" + formatMoney(price) + "**")
+                                    auction.getSellerName() + "** for **" + formatMoney(price, auctionCurrencyId) + "**")
                             .setColor(0xFFD700)
                             .execute());
         }
-        return true;
     }
 
     public boolean cancelAuction(Player owner, String auctionId) {

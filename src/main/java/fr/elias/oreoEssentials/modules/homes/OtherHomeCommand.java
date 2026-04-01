@@ -93,10 +93,17 @@ public class OtherHomeCommand implements OreoCommand, org.bukkit.command.TabComp
                                 Map.of("world", "null"));
                         return;
                     }
-                    admin.teleport(loc);
-                    Lang.send(sender, "admin.otherhome.teleported",
-                            "<green>Teleported to <aqua>%owner%</aqua>'s home <aqua>%home%</aqua>.</green>",
-                            Map.of("owner", ownerDisplayName, "home", finalHomeName));
+                    if (OreScheduler.isFolia()) {
+                        admin.teleportAsync(loc).thenRun(() ->
+                                Lang.send(sender, "admin.otherhome.teleported",
+                                        "<green>Teleported to <aqua>%owner%</aqua>'s home <aqua>%home%</aqua>.</green>",
+                                        Map.of("owner", ownerDisplayName, "home", finalHomeName)));
+                    } else {
+                        admin.teleport(loc);
+                        Lang.send(sender, "admin.otherhome.teleported",
+                                "<green>Teleported to <aqua>%owner%</aqua>'s home <aqua>%home%</aqua>.</green>",
+                                Map.of("owner", ownerDisplayName, "home", finalHomeName));
+                    }
                 });
             });
             return true;

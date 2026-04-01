@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.listeners;
 
 import fr.elias.oreoEssentials.services.GodService;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,7 +31,12 @@ public class GodListener implements Listener {
         }
         DamageCause c = e.getCause();
         if (c == DamageCause.VOID) {
-            p.teleport(p.getLocation().add(0, 2, 0));
+            var dest = p.getLocation().add(0, 2, 0);
+            if (OreScheduler.isFolia()) {
+                p.teleportAsync(dest);
+            } else {
+                p.teleport(dest);
+            }
         }
     }
 

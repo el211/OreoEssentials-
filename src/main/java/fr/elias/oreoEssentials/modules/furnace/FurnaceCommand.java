@@ -4,6 +4,7 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.modules.furnace.VirtualFurnaceListener;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -33,7 +34,7 @@ public class FurnaceCommand implements OreoCommand {
         String title = Lang.msgLegacy("furnace.title", "<dark_gray>Furnace</dark_gray>", p);
 
         Inventory inv = Bukkit.createInventory(p, InventoryType.FURNACE, title);
-        p.openInventory(inv);
+        OreScheduler.runForEntity(plugin, p, () -> p.openInventory(inv));
 
         VirtualFurnaceListener.startTask(plugin, p, inv);
 

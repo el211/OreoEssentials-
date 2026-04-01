@@ -15,7 +15,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.util.UUID;
 
-
 public class BackJoinListener implements Listener {
 
     private final OreoEssentials plugin;
@@ -49,7 +48,7 @@ public class BackJoinListener implements Listener {
 
                 World world = Bukkit.getWorld(pending.getWorldName());
                 if (world == null) {
-                    player.sendMessage("§cCouldn't teleport back - world not found: §e" + pending.getWorldName());
+                    player.sendMessage("\u00A7cCouldn't teleport back - world not found: \u00A7e" + pending.getWorldName());
                     plugin.getLogger().warning("[BackJoinListener] World not found for pending /back: " + pending.getWorldName());
                     return;
                 }
@@ -63,22 +62,30 @@ public class BackJoinListener implements Listener {
                         pending.getPitch()
                 );
 
-                boolean ok = player.teleport(location);
-                if (ok) {
-                    player.sendMessage("§aTeleported back!");
-                    plugin.getLogger().info("[BackJoinListener] Teleported " + player.getName()
-                            + " to pending /back location in world: " + pending.getWorldName());
+                if (OreScheduler.isFolia()) {
+                    player.teleportAsync(location).thenRun(() -> {
+                        player.sendMessage("\u00A7aTeleported back!");
+                        plugin.getLogger().info("[BackJoinListener] Teleported " + player.getName()
+                                + " to pending /back location in world: " + pending.getWorldName());
+                    });
                 } else {
-                    player.sendMessage("§cCouldn't teleport back - teleport failed.");
-                    plugin.getLogger().warning("[BackJoinListener] Teleport returned false for " + player.getName()
-                            + " to world: " + pending.getWorldName());
+                    boolean ok = player.teleport(location);
+                    if (ok) {
+                        player.sendMessage("\u00A7aTeleported back!");
+                        plugin.getLogger().info("[BackJoinListener] Teleported " + player.getName()
+                                + " to pending /back location in world: " + pending.getWorldName());
+                    } else {
+                        player.sendMessage("\u00A7cCouldn't teleport back - teleport failed.");
+                        plugin.getLogger().warning("[BackJoinListener] Teleport returned false for " + player.getName()
+                                + " to world: " + pending.getWorldName());
+                    }
                 }
 
             } catch (Throwable t) {
                 plugin.getLogger().severe("[BackJoinListener] Error while executing pending /back teleport for " + player.getName());
                 t.printStackTrace();
                 try {
-                    player.sendMessage("§cCouldn't teleport back - an error occurred.");
+                    player.sendMessage("\u00A7cCouldn't teleport back - an error occurred.");
                 } catch (Throwable ignored) {
                 }
             } finally {

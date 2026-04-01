@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.deathback;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -32,15 +33,29 @@ public class DeathBackCommand implements OreoCommand {
             return true;
         }
 
-        boolean ok = p.teleport(loc);
-        if (ok) {
-            Lang.send(p, "deathback.success",
-                    "<green>Teleported to your last death.</green>");
-
-        } else {
-            Lang.send(p, "deathback.failed",
-                    "<red>Teleport failed.</red>");
-        }
+        OreScheduler.runForEntity(fr.elias.oreoEssentials.OreoEssentials.get(), p, () -> {
+            if (OreScheduler.isFolia()) {
+                p.teleportAsync(loc).whenComplete((ok, error) ->
+                        OreScheduler.runForEntity(fr.elias.oreoEssentials.OreoEssentials.get(), p, () -> {
+                            if (error == null && Boolean.TRUE.equals(ok)) {
+                                Lang.send(p, "deathback.success",
+                                        "<green>Teleported to your last death.</green>");
+                            } else {
+                                Lang.send(p, "deathback.failed",
+                                        "<red>Teleport failed.</red>");
+                            }
+                        }));
+            } else {
+                boolean ok = p.teleport(loc);
+                if (ok) {
+                    Lang.send(p, "deathback.success",
+                            "<green>Teleported to your last death.</green>");
+                } else {
+                    Lang.send(p, "deathback.failed",
+                            "<red>Teleport failed.</red>");
+                }
+            }
+        });
 
         return true;
     }

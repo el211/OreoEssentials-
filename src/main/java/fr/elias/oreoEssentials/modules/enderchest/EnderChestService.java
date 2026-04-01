@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.enderchest;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -33,7 +34,7 @@ public class EnderChestService {
     }
 
     public void open(Player p) {
-        p.openInventory(createVirtualEc(p));
+        OreScheduler.runForEntity(plugin, p, () -> p.openInventory(createVirtualEc(p)));
     }
 
 

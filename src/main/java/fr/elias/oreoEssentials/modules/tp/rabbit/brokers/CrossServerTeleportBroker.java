@@ -146,10 +146,11 @@ public final class CrossServerTeleportBroker implements Listener {
         }
 
         if (OreScheduler.isFolia()) {
-            p.teleportAsync(loc).whenComplete((ok, error) ->
-                    log.info("[" + tag + "/Retry] tick=" + tick + " teleported=" + (error == null && Boolean.TRUE.equals(ok))
-                            + " player=" + p.getName() + " -> " + shortLoc(loc)
-                            + (warpNameOrNull != null ? " (warp='" + warpNameOrNull + "')" : "")));
+            OreScheduler.runForEntity(plugin, p, () ->
+                    p.teleportAsync(loc).whenComplete((ok, error) ->
+                            log.info("[" + tag + "/Retry] tick=" + tick + " teleported=" + (error == null && Boolean.TRUE.equals(ok))
+                                    + " player=" + p.getName() + " -> " + shortLoc(loc)
+                                    + (warpNameOrNull != null ? " (warp='" + warpNameOrNull + "')" : ""))));
         } else {
             boolean ok = p.teleport(loc);
             log.info("[" + tag + "/Retry] tick=" + tick + " teleported=" + ok

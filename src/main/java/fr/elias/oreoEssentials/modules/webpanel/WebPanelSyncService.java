@@ -778,18 +778,21 @@ public class WebPanelSyncService implements Listener {
             CurrencyService cs = (currencyId != null) ? plugin.getCurrencyService() : null;
 
             if (cs != null) {
-                cs.deposit(player.getUniqueId(), currencyId, total).join();
+                cs.deposit(player.getUniqueId(), currencyId, total)
+                        .thenRun(() -> OreScheduler.runForEntity(plugin, player,
+                                () -> OreScheduler.runLaterForEntity(plugin, player, () -> syncPlayer(player, true), 1L)))
+                        .exceptionally(ex -> {
+                            plugin.getLogger().warning("[WebPanel] Failed custom-currency SELL payout: " + ex.getMessage());
+                            return null;
+                        });
             } else {
                 shopModule.getEconomy().deposit(player, total);
+                OreScheduler.runLaterForEntity(plugin, player, () -> syncPlayer(player, true), 1L);
             }
 
             shopModule.getTransactionLogger().logTransaction(
                     player.getName(), "SOLD", toSell, mat.name(), total,
                     cs != null ? currencyId : shopModule.getEconomy().getEconomyName());
-
-            // 1-tick delay ensures NMS commits the slot changes before we read them back
-            OreScheduler.runLaterForEntity(plugin, player, () -> syncPlayer(player, true), 1L);
-
         } else if ("ADMIN_DELETE_ITEM".equals(type)) {
             // Admin-initiated removal: same logic as DELETE but invoked for any player
             int remaining = amount;

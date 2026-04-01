@@ -8,6 +8,7 @@ import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.homes.rabbit.packet.HomeTeleportRequestPacket;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
@@ -61,10 +62,19 @@ public class HomesCommand implements OreoCommand {
                     }
                     return true;
                 }
-                p.teleport(loc);
-                Lang.send(p, "homes.teleported",
-                        "<green>Teleported to home <aqua>%name%</aqua>.</green>",
-                        Map.of("name", raw));
+                OreScheduler.runForEntity(OreoEssentials.get(), p, () -> {
+                    if (OreScheduler.isFolia()) {
+                        p.teleportAsync(loc).thenRun(() ->
+                                Lang.send(p, "homes.teleported",
+                                        "<green>Teleported to home <aqua>%name%</aqua>.</green>",
+                                        Map.of("name", raw)));
+                    } else {
+                        p.teleport(loc);
+                        Lang.send(p, "homes.teleported",
+                                "<green>Teleported to home <aqua>%name%</aqua>.</green>",
+                                Map.of("name", raw));
+                    }
+                });
                 return true;
             }
 

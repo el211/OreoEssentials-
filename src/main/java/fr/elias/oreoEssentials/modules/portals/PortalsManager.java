@@ -307,8 +307,14 @@ public class PortalsManager {
 
                 lastPortalDenied.remove(pid);
 
-                if (teleportAsync) {
-                    OreScheduler.run(plugin, () -> p.teleport(dest));
+                if (teleportAsync || OreScheduler.isFolia()) {
+                    OreScheduler.runForEntity(plugin, p, () -> {
+                        if (OreScheduler.isFolia()) {
+                            p.teleportAsync(dest);
+                        } else {
+                            p.teleport(dest);
+                        }
+                    });
                 } else {
                     p.teleport(dest);
                 }

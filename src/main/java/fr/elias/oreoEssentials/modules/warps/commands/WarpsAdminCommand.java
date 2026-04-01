@@ -10,6 +10,7 @@ import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.warps.rabbit.packets.WarpTeleportRequestPacket;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.minuskube.inv.SmartInventory;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -78,10 +79,19 @@ public class WarpsAdminCommand implements OreoCommand {
                 return false;
             }
 
-            p.teleport(l);
-            Lang.send(p, "warp.admin.teleported",
-                    "<green>Teleported to warp <aqua>%warp%</aqua>.</green>",
-                    Map.of("warp", warpName));
+            OreScheduler.runForEntity(plugin, p, () -> {
+                if (OreScheduler.isFolia()) {
+                    p.teleportAsync(l).thenRun(() ->
+                            Lang.send(p, "warp.admin.teleported",
+                                    "<green>Teleported to warp <aqua>%warp%</aqua>.</green>",
+                                    Map.of("warp", warpName)));
+                } else {
+                    p.teleport(l);
+                    Lang.send(p, "warp.admin.teleported",
+                            "<green>Teleported to warp <aqua>%warp%</aqua>.</green>",
+                            Map.of("warp", warpName));
+                }
+            });
             return true;
         }
 

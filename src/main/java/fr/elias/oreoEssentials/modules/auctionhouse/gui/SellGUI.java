@@ -129,10 +129,7 @@ public class SellGUI implements InventoryProvider {
         int confirmSlot = cfg.guiSlot("sell", "confirm", 52);
         contents.set(confirmSlot / 9, confirmSlot % 9, ClickableItem.of(confirm, e -> {
             click(player); player.closeInventory();
-            if (module.createAuction(player, itemToSell, price, durationHours, selectedCategory, currencyId)) {
-                player.getInventory().setItemInMainHand(null);
-                try { player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, .5f, 1.5f); } catch (Throwable ignored) {}
-            }
+            module.createAuction(player, itemToSell, price, durationHours, selectedCategory, currencyId);
         }));
 
         int cancelSlot = cfg.guiSlot("sell", "cancel", 46);

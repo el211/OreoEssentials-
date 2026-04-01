@@ -288,10 +288,15 @@ public class AfkPoolService implements Listener {
         }
 
         setGrace(player.getUniqueId(), 1500);
-        player.teleport(poolLocation);
-
-        Lang.send(player, "afk.pool.entered",
-                "<gray>You've been moved to the AFK pool. Move to return to your original location.</gray>");
+        OreScheduler.runForEntity(plugin, player, () -> {
+            if (OreScheduler.isFolia()) {
+                player.teleportAsync(poolLocation);
+            } else {
+                player.teleport(poolLocation);
+            }
+            Lang.send(player, "afk.pool.entered",
+                    "<gray>You've been moved to the AFK pool. Move to return to your original location.</gray>");
+        });
     }
 
     private void returnFromAfkPool(Player player, BackLocation returnLoc) {
@@ -303,10 +308,15 @@ public class AfkPoolService implements Listener {
         }
 
         setGrace(player.getUniqueId(), 1500);
-        player.teleport(loc);
-
-        Lang.send(player, "afk.pool.exited",
-                "<green>You've been returned to your original location.</green>");
+        OreScheduler.runForEntity(plugin, player, () -> {
+            if (OreScheduler.isFolia()) {
+                player.teleportAsync(loc);
+            } else {
+                player.teleport(loc);
+            }
+            Lang.send(player, "afk.pool.exited",
+                    "<green>You've been returned to your original location.</green>");
+        });
     }
 
     private Location getAfkPoolLocation() {

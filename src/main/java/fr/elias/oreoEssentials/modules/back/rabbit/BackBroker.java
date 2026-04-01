@@ -20,9 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.logging.Level;
 
-/**
- * Handles cross-server /back teleportation using RabbitMQ
- */
 public class BackBroker {
 
     private final OreoEssentials plugin;
@@ -37,31 +34,23 @@ public class BackBroker {
         this.rabbitConnection = rabbitConnection;
     }
 
-    /**
-     * Initialize the broker - declares exchange and sets up listener
-     */
     public void start() {
         try {
             channel = rabbitConnection.createChannel();
-
-            // Declare fanout exchange for back requests
             channel.exchangeDeclare(exchangeName, "topic", true);
 
-            // Create queue for this server
             String serverName = plugin.getConfigService().serverName();
             String queueName = "back_" + serverName;
 
             channel.queueDeclare(queueName, false, false, true, null);
             channel.queueBind(queueName, exchangeName, serverName);
 
-            // Set up consumer to receive back requests
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
                 handleIncomingBackRequest(message);
             };
 
             channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
-
             plugin.getLogger().info("[BackBroker] Started successfully on server: " + serverName);
 
         } catch (IOException e) {
@@ -69,19 +58,12 @@ public class BackBroker {
         }
     }
 
-    /**
-     * Request a cross-server back teleport
-     *
-     * @param player The player requesting /back
-     * @param backLocation The location to teleport to (on another server)
-     */
     public void requestCrossServerBack(Player player, BackLocation backLocation) {
         String targetServer = backLocation.getServer();
 
         plugin.getLogger().info("[BackBroker] Requesting cross-server back for " +
                 player.getName() + " to server: " + targetServer);
 
-        // Build the packet
         JsonObject packet = new JsonObject();
         packet.addProperty("type", "BACK_REQUEST");
         packet.addProperty("player_uuid", player.getUniqueId().toString());
@@ -95,34 +77,20 @@ public class BackBroker {
         packet.addProperty("pitch", backLocation.getPitch());
 
         try {
-            // Publish to target server's routing key
-            channel.basicPublish(
-                    exchangeName,
-                    targetServer, // routing key = target server name
-                    null,
-                    packet.toString().getBytes(StandardCharsets.UTF_8)
-            );
-
+            channel.basicPublish(exchangeName, targetServer, null, packet.toString().getBytes(StandardCharsets.UTF_8));
             plugin.getLogger().info("[BackBroker] Sent back packet to " + targetServer);
 
-            // Now transfer the player to that server using BungeeCord
-            OreScheduler.runLaterForEntity(plugin, player, () -> {
-                sendPlayerToServer(player, targetServer);
-            }, 5L); // 5 tick delay to ensure packet arrives first
+            OreScheduler.runLaterForEntity(plugin, player, () -> sendPlayerToServer(player, targetServer), 5L);
 
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "[BackBroker] Failed to send back request", e);
-            player.sendMessage("§cFailed to send cross-server back request.");
+            player.sendMessage("\u00A7cFailed to send cross-server back request.");
         }
     }
 
-    /**
-     * Handle incoming back request from RabbitMQ
-     */
     private void handleIncomingBackRequest(String message) {
         try {
             JsonObject json = plugin.getGson().fromJson(message, JsonObject.class);
-
             if (!json.has("type") || !json.get("type").getAsString().equals("BACK_REQUEST")) {
                 return;
             }
@@ -136,19 +104,13 @@ public class BackBroker {
             float pitch = json.get("pitch").getAsFloat();
 
             UUID playerUuid = UUID.fromString(playerUuidStr);
-
             plugin.getLogger().info("[BackBroker] Received back request for player: " + playerUuidStr +
                     " to world: " + worldName);
 
-            // Schedule the teleport on the main thread when player joins
             OreScheduler.run(plugin, () -> {
                 Player player = Bukkit.getPlayer(playerUuid);
-
-                // Player hasn't joined yet - wait for them
                 if (player == null || !player.isOnline()) {
                     plugin.getLogger().info("[BackBroker] Player not online yet, will teleport on join");
-
-                    // Store a pending teleport
                     BackLocation pending = new BackLocation(
                             plugin.getConfigService().serverName(),
                             worldName, x, y, z, yaw, pitch
@@ -157,8 +119,8 @@ public class BackBroker {
                     return;
                 }
 
-                // Player is already online - teleport immediately
-                OreScheduler.runForEntity(plugin, player, () -> teleportPlayerToBack(player, worldName, x, y, z, yaw, pitch));
+                OreScheduler.runForEntity(plugin, player, () ->
+                        teleportPlayerToBack(player, worldName, x, y, z, yaw, pitch));
             });
 
         } catch (Exception e) {
@@ -166,40 +128,38 @@ public class BackBroker {
         }
     }
 
-    /**
-     * Teleport a player to their back location
-     */
     private void teleportPlayerToBack(Player player, String worldName,
                                       double x, double y, double z,
                                       float yaw, float pitch) {
         World world = Bukkit.getWorld(worldName);
-
         if (world == null) {
-            player.sendMessage("§cWorld '" + worldName + "' is not loaded on this server.");
+            player.sendMessage("\u00A7cWorld '" + worldName + "' is not loaded on this server.");
             plugin.getLogger().warning("[BackBroker] World not found: " + worldName);
             return;
         }
 
         Location location = new Location(world, x, y, z, yaw, pitch);
 
-        player.teleport(location);
-        player.sendMessage("§aTeleported back!");
-
-        plugin.getLogger().info("[BackBroker] Teleported " + player.getName() +
-                " to back location in world: " + worldName);
+        if (OreScheduler.isFolia()) {
+            player.teleportAsync(location).thenRun(() -> {
+                player.sendMessage("\u00A7aTeleported back!");
+                plugin.getLogger().info("[BackBroker] Teleported " + player.getName() +
+                        " to back location in world: " + worldName);
+            });
+        } else {
+            player.teleport(location);
+            player.sendMessage("\u00A7aTeleported back!");
+            plugin.getLogger().info("[BackBroker] Teleported " + player.getName() +
+                    " to back location in world: " + worldName);
+        }
     }
 
-    /**
-     * Send player to another BungeeCord server
-     */
     private void sendPlayerToServer(Player player, String serverName) {
         try {
             ByteArrayOutputStream b = new ByteArrayOutputStream();
             DataOutputStream out = new DataOutputStream(b);
-
             out.writeUTF("Connect");
             out.writeUTF(serverName);
-
             player.sendPluginMessage(plugin, "BungeeCord", b.toByteArray());
 
             plugin.getLogger().info("[BackBroker] Sent " + player.getName() +
@@ -207,13 +167,10 @@ public class BackBroker {
 
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "[BackBroker] Failed to send player to server", e);
-            player.sendMessage("§cFailed to transfer to server: " + serverName);
+            player.sendMessage("\u00A7cFailed to transfer to server: " + serverName);
         }
     }
 
-    /**
-     * Shutdown the broker
-     */
     public void shutdown() {
         try {
             if (channel != null && channel.isOpen()) {

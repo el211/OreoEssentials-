@@ -56,11 +56,7 @@ public class ConfirmGUI implements InventoryProvider {
         int confirmSlot = cfg.guiSlot("confirm", "confirm", 11);
         contents.set(confirmSlot / 9, confirmSlot % 9, ClickableItem.of(confirmBtn(player, cfg), e -> {
             click(player); player.closeInventory();
-            if (module.purchaseAuction(player, auction.getId())) {
-                try { player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f); } catch (Throwable ignored) {}
-            } else {
-                try { player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f); } catch (Throwable ignored) {}
-            }
+            module.purchaseAuction(player, auction.getId());
         }));
 
         int cancelSlot = cfg.guiSlot("confirm", "cancel", 15);

@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.anvil;
 
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -24,7 +25,7 @@ public class AnvilCommand implements OreoCommand {
         String title = Lang.msgLegacy("anvil.title", "<dark_gray>Anvil</dark_gray>", p);
 
         Inventory anvil = Bukkit.createInventory(p, InventoryType.ANVIL, title);
-        p.openInventory(anvil);
+        OreScheduler.runForEntity(fr.elias.oreoEssentials.OreoEssentials.get(), p, () -> p.openInventory(anvil));
         return true;
     }
 }
