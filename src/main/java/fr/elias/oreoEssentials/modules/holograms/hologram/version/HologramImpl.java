@@ -45,6 +45,7 @@ public final class HologramImpl extends Hologram {
     }
 
     @Override
+    @SuppressWarnings("removal")
     public @Nullable Display getDisplayEntity() {
         Entity entity = resolveEntity();
         return entity instanceof Display display ? display : null;
@@ -178,6 +179,7 @@ public final class HologramImpl extends Hologram {
 
         final Entity entity = resolveEntity();
         if (entity == null) {
+            viewers.remove(player.getUniqueId());
             return false;
         }
 
@@ -192,8 +194,12 @@ public final class HologramImpl extends Hologram {
             return;
         }
 
-        final Display display = getDisplayEntity();
+        Display display = getDisplayEntity();
         if (display == null) {
+            viewers.remove(player.getUniqueId());
+            if (shouldShowTo(player)) {
+                show(player);
+            }
             return;
         }
 
@@ -209,6 +215,15 @@ public final class HologramImpl extends Hologram {
         if (!player.canSee(display)) {
             player.showEntity(OHolograms.get().getPlugin(), display);
         }
+    }
+
+    @Override
+    public void forceUpdateShownStateFor(@NotNull Player player) {
+        if (isViewer(player) && resolveEntity() == null) {
+            viewers.remove(player.getUniqueId());
+        }
+
+        super.forceUpdateShownStateFor(player);
     }
 
     private @Nullable Entity resolveEntity() {
@@ -258,3 +273,7 @@ public final class HologramImpl extends Hologram {
         }
     }
 }
+
+
+
+

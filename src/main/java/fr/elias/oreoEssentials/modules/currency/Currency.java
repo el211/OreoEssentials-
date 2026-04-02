@@ -14,7 +14,7 @@ public class Currency {
     private final double defaultBalance;
     private final boolean tradeable;
     private final boolean crossServer;
-    private final boolean allowNegative; // ← NEW FIELD
+    private final boolean allowNegative;
 
     private Currency(Builder builder) {
         this.id = builder.id;
