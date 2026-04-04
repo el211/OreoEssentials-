@@ -361,7 +361,20 @@ public abstract class Hologram {
             return MiniMessage.miniMessage().deserialize(text);
         }
 
-        return ModernChatColorHandler.translate(text, player);
+        Player parserPlayer = player;
+        if (parserPlayer == null) {
+            parserPlayer = viewers.stream()
+                    .map(Bukkit::getPlayer)
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        try {
+            return ModernChatColorHandler.translate(text, parserPlayer);
+        } catch (RuntimeException ex) {
+            return MiniMessage.miniMessage().deserialize(text);
+        }
     }
 
     @Override
@@ -377,3 +390,6 @@ public abstract class Hologram {
         return Objects.hash(this.getData());
     }
 }
+
+
+

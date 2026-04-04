@@ -88,6 +88,7 @@ public final class OHolograms implements OHologramsPlugin {
     private @Nullable HologramManagerImpl hologramsManager;
     private FileConfiguration config;
     private boolean enabled;
+    private boolean versionMetadataAvailable;
 
     public OHolograms(@NotNull JavaPlugin plugin) {
         INSTANCE = this;
@@ -120,7 +121,11 @@ public final class OHolograms implements OHologramsPlugin {
     public static @NotNull OHolograms bootstrap(@NotNull JavaPlugin plugin) {
         OHolograms instance = new OHolograms(plugin);
         instance.onLoad();
-        instance.onEnable();
+        try {
+            instance.onEnable();
+        } catch (Throwable t) {
+            instance.getFancyLogger().warn("Embedded startup encountered a non-fatal error after core initialization: " + t.getMessage());
+        }
         return instance;
     }
 
@@ -160,8 +165,10 @@ public final class OHolograms implements OHologramsPlugin {
             return;
         }
 
+        fancyLogger.info("Enable stage: reload-config");
         getHologramConfiguration().reload(this);
 
+        fancyLogger.info("Enable stage: fancylib");
         new FancyLib(plugin);
 
         if (!ServerSoftware.isPaper()) {
@@ -174,6 +181,7 @@ public final class OHolograms implements OHologramsPlugin {
                     """);
         }
 
+        fancyLogger.info("Enable stage: log-level");
         LogLevel logLevel;
         try {
             logLevel = LogLevel.valueOf(getHologramConfiguration().getLogLevel());
@@ -183,19 +191,42 @@ public final class OHolograms implements OHologramsPlugin {
         fancyLogger.setCurrentLevel(logLevel);
         IFancySitula.LOGGER.setCurrentLevel(logLevel);
 
-        FHFeatureFlags.load();
-        reloadCommands();
-        registerListeners();
+        fancyLogger.info("Enable stage: feature-flags");
+        try {
+            FHFeatureFlags.load();
+        } catch (Throwable t) {
+            fancyLogger.warn("Failed to load feature flags, continuing with defaults: " + t.getMessage());
+        }
 
-        versionConfig.load();
-        if (getHologramConfiguration().areVersionNotificationsEnabled()) {
+        fancyLogger.info("Enable stage: commands");
+        reloadCommands();
+        fancyLogger.info("Enable stage: listeners");
+        registerListeners();
+        fancyLogger.info("Enable stage: init-tasks");
+        getHologramsManager().initializeTasks();
+
+        fancyLogger.info("Enable stage: version-config");
+        versionMetadataAvailable = false;
+        try {
+            versionConfig.load();
+            versionMetadataAvailable = true;
+        } catch (Throwable t) {
+            fancyLogger.warn("Failed to load version config, continuing without it: " + t.getMessage());
+        }
+        if (versionMetadataAvailable && getHologramConfiguration().areVersionNotificationsEnabled()) {
+            fancyLogger.info("Enable stage: version-check");
             checkForNewerVersion();
         }
 
-        registerMetrics();
-        getHologramsManager().initializeTasks();
+        fancyLogger.info("Enable stage: metrics");
+        try {
+            registerMetrics();
+        } catch (Throwable t) {
+            fancyLogger.warn("Failed to initialize metrics, continuing startup: " + t.getMessage());
+        }
 
         if (getHologramConfiguration().isAutosaveEnabled()) {
+            fancyLogger.info("Enable stage: autosave");
             getHologramThread().scheduleAtFixedRate(() -> {
                 if (hologramsManager != null) {
                     hologramsManager.saveHolograms();
@@ -203,6 +234,7 @@ public final class OHolograms implements OHologramsPlugin {
             }, getHologramConfiguration().getAutosaveInterval(), getHologramConfiguration().getAutosaveInterval() * 60L, TimeUnit.SECONDS);
         }
 
+        fancyLogger.info("Enable stage: converters");
         FHConversionRegistry.registerBuiltInConverters();
         fancyLogger.info("Successfully enabled OHolograms version %s".formatted(plugin.getDescription().getVersion()));
     }
@@ -213,6 +245,17 @@ public final class OHolograms implements OHologramsPlugin {
         }
         hologramThread.shutdown();
         fileStorageExecutor.shutdown();
+        try {
+            if (!hologramThread.awaitTermination(5, TimeUnit.SECONDS)) {
+                fancyLogger.warn("Timed out while waiting for hologram tasks to finish during shutdown.");
+            }
+            if (!fileStorageExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                fancyLogger.warn("Timed out while waiting for hologram storage writes to finish during shutdown.");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fancyLogger.warn("Interrupted while waiting for hologram shutdown tasks to finish.");
+        }
         INSTANCE = null;
         OHologramsPlugin.EnabledChecker.setPlugin(null);
         enabled = false;
@@ -370,6 +413,10 @@ public final class OHolograms implements OHologramsPlugin {
     }
 
     private void registerMetrics() {
+        if (!versionMetadataAvailable) {
+            return;
+        }
+
         Metrics metrics = new Metrics(plugin, 17990);
         metrics.addCustomChart(new Metrics.SingleLineChart("total_holograms", () -> hologramsManager.getHolograms().size()));
         metrics.addCustomChart(new Metrics.SimplePie("update_notifications", () -> configuration.areVersionNotificationsEnabled() ? "Yes" : "No"));
@@ -417,6 +464,9 @@ public final class OHolograms implements OHologramsPlugin {
     }
 
     private boolean isDevelopmentBuild() {
+        if (!versionMetadataAvailable) {
+            return false;
+        }
         String build = versionConfig.getBuild();
         return build != null && !build.equalsIgnoreCase("release");
     }

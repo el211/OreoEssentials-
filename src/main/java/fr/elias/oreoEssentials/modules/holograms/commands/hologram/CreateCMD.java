@@ -73,6 +73,10 @@ public class CreateCMD implements Subcommand {
 
         OHolograms.get().getHologramsManager().addHologram(holo);
 
+        if (OHolograms.get().getHologramConfiguration().isSaveOnChangedEnabled()) {
+            OHolograms.get().getHologramStorage().save(holo);
+        }
+
         MessageHelper.success(player, "Created the hologram");
         return true;
     }

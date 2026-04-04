@@ -1907,8 +1907,14 @@ public final class OreoEssentials extends JavaPlugin {
                 this.embeddedOHolograms = fr.elias.oreoEssentials.modules.holograms.OHolograms.bootstrap(this);
                 getLogger().info("[OHolograms] Embedded OHolograms enabled.");
             } catch (Throwable t) {
-                this.embeddedOHolograms = null;
-                getLogger().warning("[OHolograms] Failed to initialize: " + t.getMessage());
+                if (fr.elias.oreoEssentials.modules.holograms.OHolograms.canGet()) {
+                    this.embeddedOHolograms = fr.elias.oreoEssentials.modules.holograms.OHolograms.get();
+                    getLogger().warning("[OHolograms] Non-fatal startup error after partial initialization: " + t.getMessage());
+                    getLogger().info("[OHolograms] Embedded OHolograms kept active despite startup warning.");
+                } else {
+                    this.embeddedOHolograms = null;
+                    getLogger().warning("[OHolograms] Failed to initialize: " + t.getMessage());
+                }
             }
         } else {
             unregisterCommandHard("ohologram");

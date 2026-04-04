@@ -27,7 +27,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class FlatFileHologramStorage implements HologramStorage {
 
     private static final ReadWriteLock lock = new ReentrantReadWriteLock();
-    private static final File HOLOGRAMS_CONFIG_FILE = new File("plugins/OHolograms/holograms.yml");
+    private static final File LEGACY_HOLOGRAMS_CONFIG_FILE = new File("plugins/OHolograms/holograms.yml");
 
     @Override
     public void saveBatch(Collection<Hologram> holograms, boolean override) {
@@ -36,7 +36,7 @@ public class FlatFileHologramStorage implements HologramStorage {
         boolean success = false;
         YamlConfiguration config = null;
         try {
-            config = YamlConfiguration.loadConfiguration(HOLOGRAMS_CONFIG_FILE);
+            config = YamlConfiguration.loadConfiguration(getWritableHologramsConfigFile());
 
             if (override) {
                 config.set("holograms", null);
@@ -64,7 +64,7 @@ public class FlatFileHologramStorage implements HologramStorage {
         boolean success = false;
         YamlConfiguration config = null;
         try {
-            config = YamlConfiguration.loadConfiguration(HOLOGRAMS_CONFIG_FILE);
+            config = YamlConfiguration.loadConfiguration(getWritableHologramsConfigFile());
             writeHologram(config, hologram);
 
             success = true;
@@ -85,7 +85,7 @@ public class FlatFileHologramStorage implements HologramStorage {
         boolean success = false;
         YamlConfiguration config = null;
         try {
-            config = YamlConfiguration.loadConfiguration(HOLOGRAMS_CONFIG_FILE);
+            config = YamlConfiguration.loadConfiguration(getWritableHologramsConfigFile());
             config.set("holograms." + hologram.getData().getName(), null);
 
             success = true;
@@ -101,14 +101,16 @@ public class FlatFileHologramStorage implements HologramStorage {
 
     @Override
     public Collection<Hologram> loadAll() {
-        List<Hologram> holograms = readHolograms(FlatFileHologramStorage.HOLOGRAMS_CONFIG_FILE, null);
+        File configFile = resolveHologramsConfigFile();
+        List<Hologram> holograms = readHolograms(configFile, null);
         OHolograms.get().getFancyLogger().debug("Loaded " + holograms.size() + " holograms from file");
         return holograms;
     }
 
     @Override
     public Collection<Hologram> loadAll(String world) {
-        List<Hologram> holograms = readHolograms(FlatFileHologramStorage.HOLOGRAMS_CONFIG_FILE, world);
+        File configFile = resolveHologramsConfigFile();
+        List<Hologram> holograms = readHolograms(configFile, world);
         OHolograms.get().getFancyLogger().debug("Loaded " + holograms.size() + " holograms from file (world=" + world + ")");
         return holograms;
     }
@@ -172,12 +174,17 @@ public class FlatFileHologramStorage implements HologramStorage {
                 }
 
                 Hologram hologram = OHolograms.get().getHologramManager().create(displayData);
-                if (OreScheduler.isFolia()) {
-                    OreScheduler.runAtLocation(OHolograms.get().getPlugin(), displayData.getLocation(), hologram::createHologram);
-                } else {
-                    hologram.createHologram();
-                }
                 holograms.add(hologram);
+
+                try {
+                    if (OreScheduler.isFolia()) {
+                        OreScheduler.runAtLocation(OHolograms.get().getPlugin(), displayData.getLocation(), hologram::createHologram);
+                    } else {
+                        hologram.createHologram();
+                    }
+                } catch (Throwable t) {
+                    OHolograms.get().getFancyLogger().warn("Failed to create hologram '" + name + "' during load, it will retry later: " + t.getMessage());
+                }
             }
 
             OHolograms.get().getFancyLogger().debug("Loaded " + holograms.size() + " holograms from file");
@@ -185,6 +192,50 @@ public class FlatFileHologramStorage implements HologramStorage {
         } finally {
             lock.readLock().unlock();
         }
+    }
+
+    private File getPrimaryHologramsConfigFile() {
+        return new File(OHolograms.get().getDataFolder(), "holograms.yml");
+    }
+
+    private File resolveHologramsConfigFile() {
+        File primary = getPrimaryHologramsConfigFile();
+        if (hasLoadableHolograms(primary)) {
+            return primary;
+        }
+        if (hasLoadableHolograms(LEGACY_HOLOGRAMS_CONFIG_FILE)) {
+            return LEGACY_HOLOGRAMS_CONFIG_FILE;
+        }
+        return primary;
+    }
+
+    private File getWritableHologramsConfigFile() {
+        File primary = getPrimaryHologramsConfigFile();
+        if (primary.isFile() || !LEGACY_HOLOGRAMS_CONFIG_FILE.isFile()) {
+            return primary;
+        }
+        if (hasLoadableHolograms(LEGACY_HOLOGRAMS_CONFIG_FILE)) {
+            return LEGACY_HOLOGRAMS_CONFIG_FILE;
+        }
+        return primary;
+    }
+
+    private boolean hasLoadableHolograms(@NotNull File configFile) {
+        if (!configFile.isFile()) {
+            return false;
+        }
+
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+        if (!config.isConfigurationSection("holograms")) {
+            return false;
+        }
+
+        if (config.getInt("version", 1) != 2) {
+            return false;
+        }
+
+        ConfigurationSection holograms = config.getConfigurationSection("holograms");
+        return holograms != null && !holograms.getKeys(false).isEmpty();
     }
 
     private void writeHologram(YamlConfiguration config, Hologram hologram) {
@@ -213,7 +264,12 @@ public class FlatFileHologramStorage implements HologramStorage {
         OHolograms.get().getFileStorageExecutor().execute(() -> {
             lock.writeLock().lock();
             try {
-                config.save(HOLOGRAMS_CONFIG_FILE);
+                File configFile = getPrimaryHologramsConfigFile();
+                File parent = configFile.getParentFile();
+                if (parent != null && !parent.exists()) {
+                    parent.mkdirs();
+                }
+                config.save(configFile);
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
@@ -228,3 +284,7 @@ public class FlatFileHologramStorage implements HologramStorage {
         });
     }
 }
+
+
+
+
