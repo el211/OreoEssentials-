@@ -5,7 +5,6 @@ import fr.elias.oreoEssentials.util.RankedMessageUtil;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
 import org.bukkit.SoundCategory;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -23,21 +22,27 @@ public final class JoinMessagesListener implements Listener {
     private static final String SECTION = "Join_messages";
 
     private final Plugin plugin;
+    private FileConfiguration chatMessagingCfg;
     private final MiniMessage mm = MiniMessage.miniMessage();
     private final LegacyComponentSerializer legacy = LegacyComponentSerializer.builder()
             .hexColors()
             .useUnusualXRepeatedCharacterHexFormat()
             .build();
 
-    public JoinMessagesListener(Plugin plugin) {
+    public JoinMessagesListener(Plugin plugin, FileConfiguration chatMessagingCfg) {
         this.plugin = plugin;
+        this.chatMessagingCfg = chatMessagingCfg;
+    }
+
+    public void setChatMessagingCfg(FileConfiguration cfg) {
+        this.chatMessagingCfg = cfg;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onJoin(PlayerJoinEvent e) {
         e.setJoinMessage(null);
 
-        FileConfiguration c = plugin.getConfig();
+        FileConfiguration c = chatMessagingCfg;
         if (!c.getBoolean(SECTION + ".enable", false)) return;
         if (shouldDisableBackend(c, SECTION)) return;
 
@@ -94,19 +99,15 @@ public final class JoinMessagesListener implements Listener {
         float defPitch  = (float) sounds.getDouble("pitch", 1.0);
         String defSound = sounds.getString("default", null);
 
-        List<?> formats = sounds.getList("formats");
-        if (formats != null) {
-            ConfigurationSection fmtSec = sounds.getConfigurationSection("formats");
-            var rawList = sounds.getMapList("formats");
-            for (var map : rawList) {
-                Object perm = map.get("permission");
-                Object snd  = map.get("sound");
-                if (perm == null || snd == null) continue;
-                if (p.hasPermission(perm.toString())) {
-                    float vol = map.containsKey("volume") ? ((Number) map.get("volume")).floatValue() : defVolume;
-                    float pit = map.containsKey("pitch")  ? ((Number) map.get("pitch")).floatValue()  : defPitch;
-                    return new ResolvedSound(snd.toString(), vol, pit);
-                }
+        var rawList = sounds.getMapList("formats");
+        for (var map : rawList) {
+            Object perm = map.get("permission");
+            Object snd  = map.get("sound");
+            if (perm == null || snd == null) continue;
+            if (p.hasPermission(perm.toString())) {
+                float vol = map.containsKey("volume") ? ((Number) map.get("volume")).floatValue() : defVolume;
+                float pit = map.containsKey("pitch")  ? ((Number) map.get("pitch")).floatValue()  : defPitch;
+                return new ResolvedSound(snd.toString(), vol, pit);
             }
         }
 
@@ -131,7 +132,7 @@ public final class JoinMessagesListener implements Listener {
     private boolean shouldDisableBackend(FileConfiguration c, String section) {
         if (!c.getBoolean(section + ".disable_on_backend", false)) return false;
 
-        String serverName = c.getString("server.name", "unknown");
+        String serverName = plugin.getConfig().getString("server.name", "unknown");
         List<String> list = c.getStringList(section + ".backend_server_names");
         String mode = c.getString(section + ".use_backend_list_as", "blacklist");
 

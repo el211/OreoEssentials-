@@ -1,0 +1,41 @@
+# ==================== Player Vaults Configuration ====================
+
+playervaults:
+  # Player vaults storage
+  storage: auto  # Options: auto | yaml | mongodb
+  # "auto" uses mongodb when essentials.storage=mongodb
+  collection: "oreo_playervaults"
+
+  # Slots configuration (not rows!)
+  slots-cap: 54  # Maximum 1-54 slots
+  default-slots: 9  # Fallback if no permissions match
+
+  deny-message: "&cYou don't have permission to access vault &f#%id%&c."
+
+  sounds:
+    open: UI_BUTTON_CLICK
+    deny: ENTITY_VILLAGER_NO
+
+  vault-title: "&8Vault &f#<id> &7(<rows>x9)"
+
+  menu:
+    title: "&8Player Vaults"
+    item-unlocked-name: "&aVault &f#<id>"
+    item-locked-name: "&cVault &f#<id> &7(locked)"
+    item-unlocked-lore: "&7Click to open"
+    item-locked-lore: "&7You don't have access"
+
+  # Vault permissions by rank
+  vaults-per-rank:
+    global:
+      default: 1  # Number of vault IDs accessible
+      vip: 4
+      mvp: 5
+      admin: 6
+
+    per-vault:
+      "1":
+        default: 2  # Slots in vault #1
+        vip: 5
+      "2":
+        vip: 6  # Slots in vault #2

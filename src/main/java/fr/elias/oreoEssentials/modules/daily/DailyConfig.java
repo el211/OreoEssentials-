@@ -51,8 +51,11 @@ public final class DailyConfig {
     }
 
     public void load() {
-        file = new File(plugin.getDataFolder(), "dailyrewards.yml");
-        if (!file.exists()) plugin.saveResource("dailyrewards.yml", false);
+        file = new File(plugin.getDataFolder(), "dailyrewards/dailyrewards.yml");
+        if (!file.exists()) {
+            file.getParentFile().mkdirs();
+            plugin.saveResource("dailyrewards/dailyrewards.yml", false);
+        }
         cfg = YamlConfiguration.loadConfiguration(file);
 
         mongo.enabled    = cfg.getBoolean("Storage.Mongo.Enabled", true);

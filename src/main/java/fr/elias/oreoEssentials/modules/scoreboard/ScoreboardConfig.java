@@ -2,7 +2,9 @@ package fr.elias.oreoEssentials.modules.scoreboard;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.File;
 import java.util.*;
 
 
@@ -55,7 +57,9 @@ public final class ScoreboardConfig {
     }
 
     public static ScoreboardConfig load(OreoEssentials plugin) {
-        ConfigurationSection root = plugin.getConfig().getConfigurationSection("scoreboard");
+        File file = new File(plugin.getDataFolder(), "scoreboard-tab/scoreboard.yml");
+        if (!file.exists()) plugin.saveResource("scoreboard-tab/scoreboard.yml", false);
+        ConfigurationSection root = YamlConfiguration.loadConfiguration(file).getConfigurationSection("scoreboard");
 
         // You already control the "enabled" toggle via SettingsConfig, so always respect that:
         boolean enabled = plugin.getSettingsConfig().scoreboardEnabled();

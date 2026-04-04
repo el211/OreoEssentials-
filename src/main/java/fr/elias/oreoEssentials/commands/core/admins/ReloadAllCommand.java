@@ -294,7 +294,40 @@ public final class ReloadAllCommand implements OreoCommand {
                     "<red>✘ Failed reloading playervaults: <gray>%error%</gray></red>",
                     Map.of("error", t.getMessage()));
         }
-        // 13) Nametags
+        // 13) PlayerWarps config
+        try {
+            plugin.reloadPlayerWarpsConfig();
+            Lang.send(sender, "admin.reload.playerwarps",
+                    "<green>✔ Reloaded <white>playerwarps/config.yml</white></green>");
+            ok++;
+        } catch (Throwable t) {
+            Lang.send(sender, "admin.reload.playerwarps-fail",
+                    "<red>✘ Failed reloading playerwarps config: <gray>%error%</gray></red>",
+                    Map.of("error", t.getMessage()));
+        }
+
+        // 14) Daily Rewards config
+        try {
+            var dc = plugin.getDailyConfig();
+            var rc = plugin.getDailyRewardsConfig();
+            if (dc != null && rc != null) {
+                dc.load();
+                rc.load();
+                Lang.send(sender, "admin.reload.dailyrewards",
+                        "<green>✔ Reloaded <white>dailyrewards/dailyrewards.yml</white></green>");
+                ok++;
+            } else {
+                Lang.send(sender, "admin.reload.dailyrewards-skip",
+                        "<yellow>• Skipped dailyrewards (service unavailable)</yellow>");
+                skip++;
+            }
+        } catch (Throwable t) {
+            Lang.send(sender, "admin.reload.dailyrewards-fail",
+                    "<red>✘ Failed reloading dailyrewards: <gray>%error%</gray></red>",
+                    Map.of("error", t.getMessage()));
+        }
+
+        // 15) Nametags (custom-nameplates)
         try {
             var nametagMgr = plugin.getNametagManager();
             if (nametagMgr != null) {

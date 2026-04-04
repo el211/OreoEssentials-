@@ -46,8 +46,11 @@ public final class RewardsConfig {
         days.clear();
         maxDay = 0;
 
-        File f = new File(plugin.getDataFolder(), "dailyrewards.yml");
-        if (!f.exists()) plugin.saveResource("dailyrewards.yml", false);
+        File f = new File(plugin.getDataFolder(), "dailyrewards/dailyrewards.yml");
+        if (!f.exists()) {
+            f.getParentFile().mkdirs();
+            plugin.saveResource("dailyrewards/dailyrewards.yml", false);
+        }
 
         YamlConfiguration y = YamlConfiguration.loadConfiguration(f);
         ConfigurationSection root = y.getConfigurationSection("Rewards");

@@ -23,7 +23,7 @@ public final class CraftActionsConfig {
 
     public CraftActionsConfig(Plugin plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "craft-actions.yml");
+        this.file = new File(plugin.getDataFolder(), "server/craft-actions.yml");
         if (!file.exists()) {
             createDefault();
         }

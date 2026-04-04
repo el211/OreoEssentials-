@@ -21,21 +21,27 @@ public final class QuitMessagesListener implements Listener {
     private static final String SECTION = "Quit_messages";
 
     private final Plugin plugin;
+    private FileConfiguration chatMessagingCfg;
     private final MiniMessage mm = MiniMessage.miniMessage();
     private final LegacyComponentSerializer legacy = LegacyComponentSerializer.builder()
             .hexColors()
             .useUnusualXRepeatedCharacterHexFormat()
             .build();
 
-    public QuitMessagesListener(Plugin plugin) {
+    public QuitMessagesListener(Plugin plugin, FileConfiguration chatMessagingCfg) {
         this.plugin = plugin;
+        this.chatMessagingCfg = chatMessagingCfg;
+    }
+
+    public void setChatMessagingCfg(FileConfiguration cfg) {
+        this.chatMessagingCfg = cfg;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onQuit(PlayerQuitEvent e) {
         e.setQuitMessage(null);
 
-        FileConfiguration c = plugin.getConfig();
+        FileConfiguration c = chatMessagingCfg;
         if (!c.getBoolean(SECTION + ".enable", false)) return;
         if (shouldDisableBackend(c, SECTION)) return;
 
@@ -113,7 +119,7 @@ public final class QuitMessagesListener implements Listener {
     private boolean shouldDisableBackend(FileConfiguration c, String section) {
         if (!c.getBoolean(section + ".disable_on_backend", false)) return false;
 
-        String serverName = c.getString("server.name", "unknown");
+        String serverName = plugin.getConfig().getString("server.name", "unknown");
         List<String> list = c.getStringList(section + ".backend_server_names");
         String mode = c.getString(section + ".use_backend_list_as", "blacklist");
 

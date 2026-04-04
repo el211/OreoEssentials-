@@ -3,7 +3,9 @@ package fr.elias.oreoEssentials.modules.playervaults;
 import fr.elias.oreoEssentials.OreoEssentials;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.File;
 import java.util.*;
 
 
@@ -38,8 +40,14 @@ public final class PlayerVaultsConfig {
     private final Map<Integer, Map<String, Integer>> slotsPerVault;
 
     public PlayerVaultsConfig(OreoEssentials plugin) {
-        ConfigurationSection cs = plugin.getConfig().getConfigurationSection("playervaults");
-        if (cs == null) cs = plugin.getConfig().createSection("playervaults");
+        File file = new File(plugin.getDataFolder(), "playervaults/config.yml");
+        if (!file.exists()) {
+            file.getParentFile().mkdirs();
+            plugin.saveResource("playervaults/config.yml", false);
+        }
+        org.bukkit.configuration.file.FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        ConfigurationSection cs = yaml.getConfigurationSection("playervaults");
+        if (cs == null) cs = yaml.createSection("playervaults");
 
         enabled = plugin.getSettings().playerVaultsEnabled();
         storage    = cs.getString("storage", "auto");

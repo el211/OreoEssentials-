@@ -11,14 +11,18 @@ import org.bukkit.plugin.Plugin;
 
 public final class AutoMessageScheduler {
     private final Plugin plugin;
+    private final FileConfiguration chatMessagingCfg;
     private final MiniMessage mm = MiniMessage.miniMessage();
     private final LegacyComponentSerializer legacy = LegacyComponentSerializer.builder()
             .hexColors().useUnusualXRepeatedCharacterHexFormat().build();
 
-    public AutoMessageScheduler(Plugin plugin) { this.plugin = plugin; }
+    public AutoMessageScheduler(Plugin plugin, FileConfiguration chatMessagingCfg) {
+        this.plugin = plugin;
+        this.chatMessagingCfg = chatMessagingCfg;
+    }
 
     public void start() {
-        FileConfiguration c = plugin.getConfig();
+        FileConfiguration c = chatMessagingCfg;
         if (!c.getBoolean("Automatic_message.enable", false)) return;
 
         boolean lookLikePlayer = c.getBoolean("Automatic_message.look_like_player", false);

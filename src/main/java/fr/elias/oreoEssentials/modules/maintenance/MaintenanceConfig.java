@@ -39,10 +39,11 @@ public class MaintenanceConfig {
     }
 
     private void loadConfig() {
-        configFile = new File(plugin.getDataFolder(), "maintenance.yml");
+        configFile = new File(plugin.getDataFolder(), "server/maintenance.yml");
 
         if (!configFile.exists()) {
-            plugin.saveResource("maintenance.yml", false);
+            configFile.getParentFile().mkdirs();
+            plugin.saveResource("server/maintenance.yml", false);
         }
 
         config = YamlConfiguration.loadConfiguration(configFile);

@@ -260,7 +260,6 @@ public final class ScoreboardService implements Listener {
             plugin.getLogger().warning("[Scoreboard] show() Paper path failed for " + p.getName() + ": " + t);
         }
 
-        OreScheduler.runForEntity(plugin, p, () -> forceNametagUpdate(p));
     }
 
     public void hide(Player p) {
@@ -289,7 +288,6 @@ public final class ScoreboardService implements Listener {
             Scoreboard blank = newScoreboard();
             if (blank != null) p.setScoreboard(blank);
         } catch (Throwable ignored) {}
-        OreScheduler.runForEntity(plugin, p, () -> forceNametagUpdate(p));
     }
 
     private void refresh(Player p) {
@@ -340,7 +338,6 @@ public final class ScoreboardService implements Listener {
         } catch (Throwable t) {
             plugin.getLogger().warning("[Scoreboard] refresh() applyLines failed for " + p.getName() + ": " + t);
         }
-        forceNametagUpdate(p);
     }
 
     /**

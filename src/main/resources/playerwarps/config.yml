@@ -1,0 +1,11 @@
+# ==================== Player Warps Configuration ====================
+# Controls how many warps each player / rank can create.
+# The plugin checks permissions in order and uses the highest value.
+
+limit:
+  default: 3     # Default max warps for all players
+
+  # Add per-rank overrides using the rank name as key:
+  # vip: 5
+  # mvp: 10
+  # admin: 50

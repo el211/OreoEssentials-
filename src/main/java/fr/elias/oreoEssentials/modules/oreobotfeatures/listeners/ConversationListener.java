@@ -18,17 +18,23 @@ import java.util.Locale;
 
 public final class ConversationListener implements Listener {
     private final Plugin plugin;
+    private FileConfiguration chatMessagingCfg;
     private final MiniMessage mm = MiniMessage.miniMessage();
     private final LegacyComponentSerializer legacy = LegacyComponentSerializer.builder()
             .hexColors().useUnusualXRepeatedCharacterHexFormat().build();
 
-    public ConversationListener(Plugin plugin) {
+    public ConversationListener(Plugin plugin, FileConfiguration chatMessagingCfg) {
         this.plugin = plugin;
+        this.chatMessagingCfg = chatMessagingCfg;
+    }
+
+    public void setChatMessagingCfg(FileConfiguration cfg) {
+        this.chatMessagingCfg = cfg;
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onChat(AsyncPlayerChatEvent e) {
-        FileConfiguration c = plugin.getConfig();
+        FileConfiguration c = chatMessagingCfg;
         ConfigurationSection root = c.getConfigurationSection("conversations");
         if (root == null) return;
 

@@ -312,6 +312,9 @@ public final class OreoEssentials extends JavaPlugin {
     private fr.elias.oreoEssentials.modules.events.EventConfig eventConfig;
     private fr.elias.oreoEssentials.modules.events.DeathMessageService deathMessages;
 
+    private fr.elias.oreoEssentials.modules.daily.DailyConfig dailyConfig;
+    private fr.elias.oreoEssentials.modules.daily.RewardsConfig dailyRewardsConfig;
+
     private fr.elias.oreoEssentials.modules.playtime.PlaytimeRewardsService playtimeRewards;
     public fr.elias.oreoEssentials.modules.playtime.PlaytimeRewardsService getPlaytimeRewards() { return playtimeRewards; }
 
@@ -334,6 +337,9 @@ public final class OreoEssentials extends JavaPlugin {
     private org.bukkit.event.Listener activeChatListener;
     private org.bukkit.event.Listener activeJoinMessagesListener;
     private org.bukkit.event.Listener activeQuitMessagesListener;
+    private org.bukkit.configuration.file.FileConfiguration joinQuitCfg;
+    private org.bukkit.configuration.file.FileConfiguration playerWarpsConfig;
+    private fr.elias.oreoEssentials.modules.oreobotfeatures.listeners.ConversationListener activeConversationListener;
     private TradeConfig tradeConfig;
     private TradeService tradeService;
     public TradeService getTradeService() { return tradeService; }
@@ -375,6 +381,11 @@ public final class OreoEssentials extends JavaPlugin {
     private CurrencyPlaceholderExpansion currencyPlaceholders;
     private fr.elias.oreoEssentials.modules.playtime.PlaytimeTracker playtimeTracker;
     private PlayerNametagManager nametagManager;
+    private fr.elias.oreoEssentials.modules.nametag.ChatBubbleService chatBubbleService;
+    private fr.elias.oreoEssentials.modules.nametag.ActionBarService actionBarService;
+    private fr.elias.oreoEssentials.modules.nametag.MultiBossBarService multiBossBarService;
+    private fr.elias.oreoEssentials.modules.nametag.CustomNameplatesConfig customNameplatesConfig;
+    private fr.elias.oreoEssentials.modules.nametag.NametageToggleStore nametagToggleStore;
 
     private Gson gson = new Gson();
     public BackBroker getBackBroker() { return backBroker; }
@@ -523,6 +534,9 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().warning("Error unregistering PlaceholderAPI: " + e.getMessage());
         }
         try { if (nametagManager != null) nametagManager.shutdown(); } catch (Exception ignored) {}
+        try { if (chatBubbleService != null) chatBubbleService.shutdown(); } catch (Exception ignored) {}
+        try { if (actionBarService != null) actionBarService.shutdown(); } catch (Exception ignored) {}
+        try { if (multiBossBarService != null) multiBossBarService.shutdown(); } catch (Exception ignored) {}
         healthBarListener = null;
 
         getLogger().info("OreoEssentials disabled.");
@@ -541,6 +555,9 @@ public final class OreoEssentials extends JavaPlugin {
         }
 
         fr.elias.oreoEssentials.config.LegacySettingsMigrator.migrate(this);
+        fr.elias.oreoEssentials.migration.ScoreboardTabMigrator.migrate(this);
+        fr.elias.oreoEssentials.migration.ChatMessagingMigrator.migrate(this);
+        fr.elias.oreoEssentials.migration.FeatureConfigMigrator.migrate(this);
         reloadConfig();
 
         this.settingsConfig = new fr.elias.oreoEssentials.config.SettingsConfig(this);
@@ -701,8 +718,8 @@ public final class OreoEssentials extends JavaPlugin {
 
     private void initCommandControl() {
         try {
-            java.io.File f = new java.io.File(getDataFolder(), "command-control.yml");
-            if (!f.exists()) saveResource("command-control.yml", false);
+            java.io.File f = new java.io.File(getDataFolder(), "commandsmodule/command-control.yml");
+            if (!f.exists()) { f.getParentFile().mkdirs(); saveResource("commandsmodule/command-control.yml", false); }
             var yml = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(f);
             var commandControl = new fr.elias.oreoEssentials.modules.commandcontrol.CommandControlService();
             commandControl.load(yml);
@@ -720,8 +737,8 @@ public final class OreoEssentials extends JavaPlugin {
         }
 
         try {
-            java.io.File f = new java.io.File(getDataFolder(), "clearlag.yml");
-            if (!f.exists()) saveResource("clearlag.yml", false);
+            java.io.File f = new java.io.File(getDataFolder(), "server/clearlag.yml");
+            if (!f.exists()) { f.getParentFile().mkdirs(); saveResource("server/clearlag.yml", false); }
         } catch (Throwable ignored) {}
     }
 
@@ -801,8 +818,8 @@ public final class OreoEssentials extends JavaPlugin {
             return;
         }
         try {
-            File maintenanceFile = new File(getDataFolder(), "maintenance.yml");
-            if (!maintenanceFile.exists()) saveResource("maintenance.yml", false);
+            File maintenanceFile = new File(getDataFolder(), "server/maintenance.yml");
+            if (!maintenanceFile.exists()) { maintenanceFile.getParentFile().mkdirs(); saveResource("server/maintenance.yml", false); }
 
             this.maintenanceConfig  = new fr.elias.oreoEssentials.modules.maintenance.MaintenanceConfig(this);
             this.maintenanceService = new fr.elias.oreoEssentials.modules.maintenance.MaintenanceService(this, maintenanceConfig);
@@ -937,15 +954,15 @@ public final class OreoEssentials extends JavaPlugin {
     }
 
     private void initDaily() {
-        var dailyCfg = new fr.elias.oreoEssentials.modules.daily.DailyConfig(this);
-        dailyCfg.load();
-        fr.elias.oreoEssentials.modules.daily.DailyStorage dailyStorage = fr.elias.oreoEssentials.modules.daily.DailyStorage.create(this, dailyCfg);
-        var dailyRewardsCfg = new fr.elias.oreoEssentials.modules.daily.RewardsConfig(this);
-        dailyRewardsCfg.load();
-        var dailySvc = new fr.elias.oreoEssentials.modules.daily.DailyService(this, dailyCfg, dailyStorage, dailyRewardsCfg);
-        var dailyCmd = new fr.elias.oreoEssentials.modules.daily.DailyCommand(this, dailyCfg, dailySvc, dailyRewardsCfg);
+        this.dailyConfig = new fr.elias.oreoEssentials.modules.daily.DailyConfig(this);
+        this.dailyConfig.load();
+        fr.elias.oreoEssentials.modules.daily.DailyStorage dailyStorage = fr.elias.oreoEssentials.modules.daily.DailyStorage.create(this, dailyConfig);
+        this.dailyRewardsConfig = new fr.elias.oreoEssentials.modules.daily.RewardsConfig(this);
+        this.dailyRewardsConfig.load();
+        var dailySvc = new fr.elias.oreoEssentials.modules.daily.DailyService(this, dailyConfig, dailyStorage, dailyRewardsConfig);
+        var dailyCmd = new fr.elias.oreoEssentials.modules.daily.DailyCommand(this, dailyConfig, dailySvc, dailyRewardsConfig);
         if (getCommand("daily") != null) { getCommand("daily").setExecutor(dailyCmd); getCommand("daily").setTabCompleter(dailyCmd); }
-        getLogger().info("[Daily] Rewards system initialized with " + (dailyCfg.mongo.enabled ? "MongoDB" : "file-based") + " storage.");
+        getLogger().info("[Daily] Rewards system initialized with " + (dailyConfig.mongo.enabled ? "MongoDB" : "file-based") + " storage.");
     }
 
     private void initMuteSystem() {
@@ -1055,7 +1072,7 @@ public final class OreoEssentials extends JavaPlugin {
     }
 
     private void initChat() {
-        this.chatConfig       = new fr.elias.oreoEssentials.modules.chat.CustomConfig(this, "chat-format.yml");
+        this.chatConfig       = new fr.elias.oreoEssentials.modules.chat.CustomConfig(this, "chat-messaging/chat-format.yml");
         this.chatFormatManager = new fr.elias.oreoEssentials.modules.chat.FormatManager(chatConfig);
 
         boolean discordEnabled = false;
@@ -1116,23 +1133,43 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[Channels] Disabled by config.");
         }
 
-        getServer().getPluginManager().registerEvents(new ConversationListener(this), this);
+        this.joinQuitCfg = loadJoinQuitConfig();
+
+        if (activeConversationListener != null) {
+            org.bukkit.event.HandlerList.unregisterAll(activeConversationListener);
+        }
+        activeConversationListener = new ConversationListener(this, joinQuitCfg);
+        getServer().getPluginManager().registerEvents(activeConversationListener, this);
 
         if (activeJoinMessagesListener != null) {
             org.bukkit.event.HandlerList.unregisterAll(activeJoinMessagesListener);
         }
-        activeJoinMessagesListener = new fr.elias.oreoEssentials.modules.oreobotfeatures.listeners.JoinMessagesListener(this);
+        activeJoinMessagesListener = new fr.elias.oreoEssentials.modules.oreobotfeatures.listeners.JoinMessagesListener(this, joinQuitCfg);
         getServer().getPluginManager().registerEvents(activeJoinMessagesListener, this);
 
         if (activeQuitMessagesListener != null) {
             org.bukkit.event.HandlerList.unregisterAll(activeQuitMessagesListener);
         }
-        activeQuitMessagesListener = new fr.elias.oreoEssentials.modules.oreobotfeatures.listeners.QuitMessagesListener(this);
+        activeQuitMessagesListener = new fr.elias.oreoEssentials.modules.oreobotfeatures.listeners.QuitMessagesListener(this, joinQuitCfg);
         getServer().getPluginManager().registerEvents(activeQuitMessagesListener, this);
-        new fr.elias.oreoEssentials.tasks.AutoMessageScheduler(this).start();
+        new fr.elias.oreoEssentials.tasks.AutoMessageScheduler(this, joinQuitCfg).start();
+    }
+
+    private org.bukkit.configuration.file.FileConfiguration loadJoinQuitConfig() {
+        java.io.File f = new java.io.File(getDataFolder(), "chat-messaging/join-quit-messages.yml");
+        if (!f.exists()) saveResource("chat-messaging/join-quit-messages.yml", false);
+        return org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(f);
     }
 
     private void initStorage() {
+        // Load playerwarps dedicated config
+        java.io.File pwCfgFile = new java.io.File(getDataFolder(), "playerwarps/config.yml");
+        if (!pwCfgFile.exists()) {
+            pwCfgFile.getParentFile().mkdirs();
+            saveResource("playerwarps/config.yml", false);
+        }
+        this.playerWarpsConfig = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(pwCfgFile);
+
         final String essentialsStorage = getConfig().getString("essentials.storage", "yaml").toLowerCase();
         var pwRoot    = settingsConfig.getRoot().getConfigurationSection("playerwarps");
         boolean pwEnabled = (pwRoot == null) || pwRoot.getBoolean("enabled", true);
@@ -1972,9 +2009,14 @@ public final class OreoEssentials extends JavaPlugin {
     }
 
     private void initNametag() {
-        if (settingsConfig.getRoot().getBoolean("nametag.enabled", true)) {
+        this.customNameplatesConfig = new fr.elias.oreoEssentials.modules.nametag.CustomNameplatesConfig(this);
+        this.nametagToggleStore = new fr.elias.oreoEssentials.modules.nametag.NametageToggleStore(this);
+        org.bukkit.configuration.file.FileConfiguration npCfg = customNameplatesConfig.raw();
+
+        if (npCfg.getBoolean("nametag.enabled", true)) {
             try {
-                this.nametagManager = new PlayerNametagManager(this, getSettingsConfig().raw());
+                this.nametagManager = new PlayerNametagManager(this, npCfg);
+                this.nametagManager.setToggleStore(nametagToggleStore);
                 getLogger().info("[Nametag] Custom nametags initialized");
             } catch (Exception e) {
                 getLogger().severe("[Nametag] Failed to initialize: " + e.getMessage());
@@ -1983,8 +2025,50 @@ public final class OreoEssentials extends JavaPlugin {
             }
         } else {
             this.nametagManager = null;
-            getLogger().info("[Nametag] Disabled by settings.yml");
+            getLogger().info("[Nametag] Disabled in custom-nameplates/config.yml");
         }
+
+        try {
+            this.chatBubbleService = new fr.elias.oreoEssentials.modules.nametag.ChatBubbleService(this, npCfg);
+        } catch (Exception e) {
+            getLogger().severe("[ChatBubble] Failed to initialize: " + e.getMessage());
+            this.chatBubbleService = null;
+        }
+
+        try {
+            this.actionBarService = new fr.elias.oreoEssentials.modules.nametag.ActionBarService(this, npCfg);
+        } catch (Exception e) {
+            getLogger().severe("[ActionBar] Failed to initialize: " + e.getMessage());
+            this.actionBarService = null;
+        }
+
+        try {
+            this.multiBossBarService = new fr.elias.oreoEssentials.modules.nametag.MultiBossBarService(this, npCfg);
+        } catch (Exception e) {
+            getLogger().severe("[MultiBossBar] Failed to initialize: " + e.getMessage());
+            this.multiBossBarService = null;
+        }
+
+        // Register commands
+        commands.register(new fr.elias.oreoEssentials.modules.nametag.commands.NametageCommand(this, nametagToggleStore));
+        commands.register(new fr.elias.oreoEssentials.modules.nametag.commands.CustomNameplatesCommand(this));
+    }
+
+    /** Reloads all custom-nameplates services from disk. Called by /cnp reload. */
+    public void reloadCustomNameplates() {
+        customNameplatesConfig.reload();
+        org.bukkit.configuration.file.FileConfiguration npCfg = customNameplatesConfig.raw();
+
+        if (nametagManager != null) {
+            nametagManager.reload(npCfg);
+        } else if (npCfg.getBoolean("nametag.enabled", true)) {
+            nametagManager = new PlayerNametagManager(this, npCfg);
+            nametagManager.setToggleStore(nametagToggleStore);
+        }
+
+        if (chatBubbleService != null) chatBubbleService.reload(npCfg);
+        if (actionBarService != null) actionBarService.reload(npCfg);
+        if (multiBossBarService != null) multiBossBarService.reload(npCfg);
     }
 
     private void applyCommandToggles() {
@@ -2257,6 +2341,14 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.modules.mobs.HealthBarListener getHealthBarListener() { return healthBarListener; }
     public FreezeService getFreezeService() { return freezeService; }
     public fr.elias.oreoEssentials.modules.chat.CustomConfig getChatConfig() { return chatConfig; }
+    public org.bukkit.configuration.file.FileConfiguration getPlayerWarpsConfig() { return playerWarpsConfig; }
+    public void reloadPlayerWarpsConfig() {
+        java.io.File f = new java.io.File(getDataFolder(), "playerwarps/config.yml");
+        if (!f.exists()) saveResource("playerwarps/config.yml", false);
+        this.playerWarpsConfig = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(f);
+    }
+    public fr.elias.oreoEssentials.modules.daily.DailyConfig getDailyConfig() { return dailyConfig; }
+    public fr.elias.oreoEssentials.modules.daily.RewardsConfig getDailyRewardsConfig() { return dailyRewardsConfig; }
 
     public void reloadChat() {
         // Unregister old chat listener
@@ -2296,6 +2388,18 @@ public final class OreoEssentials extends JavaPlugin {
         }
         getServer().getPluginManager().registerEvents(newListener, this);
         this.activeChatListener = newListener;
+
+        // Reload join/quit/automessage/conversation config
+        this.joinQuitCfg = loadJoinQuitConfig();
+        if (activeJoinMessagesListener instanceof fr.elias.oreoEssentials.modules.oreobotfeatures.listeners.JoinMessagesListener jml) {
+            jml.setChatMessagingCfg(joinQuitCfg);
+        }
+        if (activeQuitMessagesListener instanceof fr.elias.oreoEssentials.modules.oreobotfeatures.listeners.QuitMessagesListener qml) {
+            qml.setChatMessagingCfg(joinQuitCfg);
+        }
+        if (activeConversationListener != null) {
+            activeConversationListener.setChatMessagingCfg(joinQuitCfg);
+        }
     }
     public WarpDirectory getWarpDirectory() { return warpDirectory; }
     public SpawnDirectory getSpawnDirectory() { return spawnDirectory; }

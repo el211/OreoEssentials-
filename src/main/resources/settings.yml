@@ -7,7 +7,7 @@ features:
     enabled: false
 
   bossbar:
-    enabled: true
+    enabled: false  # Replaced by MultiBossBarService in custom-nameplates/config.yml
 
   chat:
     enabled: true
@@ -189,9 +189,6 @@ holograms:
     per-player: true        # enable per-player placeholders/permissions for TEXT holograms
 
 
-nametag:
-  enabled: true
-  update-interval-ticks: 100
-  team-prefix: "&6[%luckperms_primary_group%] &f"
-  team-suffix: " &c❤%player_health%"
+# Nametag, chat bubbles and action bar are configured in:
+# plugins/OreoEssentials/custom-nameplates/config.yml
 

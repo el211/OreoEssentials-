@@ -19,9 +19,10 @@ public class ModGuiConfig {
 
     public void load() {
         try {
-            file = new File(plugin.getDataFolder(), "modgui.yml");
+            file = new File(plugin.getDataFolder(), "server/modgui.yml");
             if (!file.exists()) {
-                plugin.saveResource("modgui.yml", false);
+                file.getParentFile().mkdirs();
+                plugin.saveResource("server/modgui.yml", false);
             }
             cfg = YamlConfiguration.loadConfiguration(file);
         } catch (Throwable t) {

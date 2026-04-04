@@ -18,13 +18,14 @@ public class CommandToggleConfig {
 
     public CommandToggleConfig(JavaPlugin plugin) {
         this.plugin = plugin;
-        this.configFile = new File(plugin.getDataFolder(), "commands-toggle.yml");
+        this.configFile = new File(plugin.getDataFolder(), "commandsmodule/commands-toggle.yml");
         load();
     }
 
     public void load() {
         if (!configFile.exists()) {
-            plugin.saveResource("commands-toggle.yml", false);
+            configFile.getParentFile().mkdirs();
+            plugin.saveResource("commandsmodule/commands-toggle.yml", false);
         }
 
         this.config = YamlConfiguration.loadConfiguration(configFile);

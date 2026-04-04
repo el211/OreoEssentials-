@@ -77,8 +77,11 @@ public final class PlaytimeRewardsService {
     }
 
     public void loadConfig() {
-        configFile = new File(plugin.getDataFolder(), "playtime_rewards.yml");
-        if (!configFile.exists()) plugin.saveResource("playtime_rewards.yml", false);
+        configFile = new File(plugin.getDataFolder(), "playtime-rewards/playtime_rewards.yml");
+        if (!configFile.exists()) {
+            configFile.getParentFile().mkdirs();
+            plugin.saveResource("playtime-rewards/playtime_rewards.yml", false);
+        }
         cfg = YamlConfiguration.loadConfiguration(configFile);
 
         enabled              = cfg.getBoolean("settings.enable", true);
@@ -200,7 +203,7 @@ public final class PlaytimeRewardsService {
         try {
             if (cfg == null) return;
             cfg.set("settings.enable", enabled);
-            if (configFile == null) configFile = new File(plugin.getDataFolder(), "playtime_rewards.yml");
+            if (configFile == null) configFile = new File(plugin.getDataFolder(), "playtime-rewards/playtime_rewards.yml");
             cfg.save(configFile);
         } catch (IOException e) {
             plugin.getLogger().warning("[Prewards] Failed to save toggle: " + e.getMessage());

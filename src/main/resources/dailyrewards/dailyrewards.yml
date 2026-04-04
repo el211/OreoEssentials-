@@ -1,7 +1,7 @@
 # ===================== Daily Rewards (Mongo) =====================
 Storage:
   Mongo:
-    Enabled: true
+    Enabled: false
     Uri: "mongodb://name:pass@00.00.000.00:25580/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.5.3"
     Database: "oreo"
     Collection: "oreo_"

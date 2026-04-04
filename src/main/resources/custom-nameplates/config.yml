@@ -1,0 +1,153 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  OreoEssentials — Custom Nameplates
+#  Folder: plugins/OreoEssentials/custom-nameplates/config.yml
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  NAMETAGS
+#  Custom text layers displayed above players' heads using TextDisplay entities.
+#  Supports MiniMessage, PlaceholderAPI, per-player conditions and multiple lines.
+# ══════════════════════════════════════════════════════════════════════════════
+nametag:
+  enabled: true
+  update-interval-ticks: 100     # How often text & conditions refresh (in ticks)
+  position-interval-ticks: 1    # How often entities follow the player (in ticks)
+  show-to-self: true             # Whether players see their own nametag
+  view-range: 48.0               # Max distance (blocks) at which nametags are visible
+
+  # Each key under layers is one text line above the head.
+  # Layers are stacked; higher y-offset = higher above the head.
+  layers:
+    name:
+      text: "<white>%player_name%</white>"
+      y-offset: 2.1
+      shadow: false
+      see-through: false
+      background: transparent    # transparent | default | #AARRGGBB hex
+      alignment: CENTER          # CENTER | LEFT | RIGHT
+      line-width: 200
+      # Conditions on the tagged player. ALL must pass for this layer to appear.
+      owner-conditions: []
+      # Conditions on the viewer. ALL must pass for this viewer to see the layer.
+      viewer-conditions: []
+
+    rank:
+      text: "%luckperms_prefix%"
+      y-offset: 2.5
+      shadow: false
+      see-through: false
+      background: transparent
+      alignment: CENTER
+      line-width: 200
+      owner-conditions: []
+      viewer-conditions: []
+
+  # ── Condition format ───────────────────────────────────────────────────────
+  # Each condition is a map with:
+  #   type:  PERMISSION | GAMEMODE | WORLD | PAPI_EQUALS | PAPI_CONTAINS |
+  #          PAPI_GREATER | PAPI_LESS
+  #   value: the value to check against
+  #   placeholder: (only for PAPI_* types) e.g. "%player_gamemode%"
+  #   negate: false  (optional, inverts the condition)
+  #
+  # Example — only show rank layer to players with oreo.staff.view permission:
+  #   viewer-conditions:
+  #     - type: PERMISSION
+  #       value: oreo.staff.view
+  #
+  # Example — only show a layer when owner is in survival mode:
+  #   owner-conditions:
+  #     - type: GAMEMODE
+  #       value: SURVIVAL
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  CHAT BUBBLES
+#  Displays chat messages as floating TextDisplay bubbles above the sender.
+# ══════════════════════════════════════════════════════════════════════════════
+chat-bubbles:
+  enabled: true
+
+  y-offset: 2.6              # Height above player's feet
+  view-range: 32.0           # Max distance (blocks) viewers can see the bubble
+  stay-duration: 80          # Ticks the bubble stays fully visible
+  appear-duration: 5         # Ticks to fade in  (opacity 0 → max)
+  disappear-duration: 10     # Ticks to fade out (opacity max → 0)
+  max-lines: 3               # Max lines before truncating the message
+  line-width: 160            # Pixel width for word-wrap
+  shadow: false
+  see-through: false
+  background: transparent    # transparent | default | #AARRGGBB
+  text-prefix: ""            # MiniMessage text prepended to every bubble
+  text-suffix: ""            # MiniMessage text appended to every bubble
+
+  # Conditions on the sender — player must meet ALL of these to show a bubble
+  sender-conditions: []
+  # Conditions on the viewer — viewer must meet ALL of these to see any bubble
+  viewer-conditions: []
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  ACTION BAR
+#  Priority-based action bar text with rotating carousel support.
+#  The highest-priority entry whose conditions pass is displayed.
+# ══════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════
+#  BOSS BARS
+#  Multiple boss bars shown per-player based on conditions, with carousel text.
+#  Each bar is independently configured and can target specific player groups.
+# ══════════════════════════════════════════════════════════════════════════════
+bossbars:
+  enabled: true
+  refresh-interval-ticks: 40      # How often conditions + text are re-evaluated
+
+  bars:
+    # ── Bar format ────────────────────────────────────────────────────────────
+    # texts:                  Single text or list for carousel rotation
+    # carousel-interval-ticks: Ticks between rotations (ignored for single text)
+    # color:                  BLUE | GREEN | PINK | PURPLE | RED | WHITE | YELLOW
+    # style:                  SOLID | SEGMENTED_6 | SEGMENTED_10 | SEGMENTED_12 | SEGMENTED_20
+    # progress:               0.0 – 1.0
+    # conditions:             Same format as nametag conditions
+    # ─────────────────────────────────────────────────────────────────────────
+    welcome:
+      texts:
+        - "<gradient:#ff6b6b:#ffd93d>Welcome to the server!</gradient>"
+        - "<gray>Type /help for a list of commands"
+      carousel-interval-ticks: 100
+      color: PURPLE
+      style: SOLID
+      progress: 1.0
+      conditions: []
+
+    staff-bar:
+      texts:
+        - "<red>⚑ Staff Mode Active"
+      carousel-interval-ticks: 60
+      color: RED
+      style: SEGMENTED_10
+      progress: 1.0
+      conditions:
+        - type: PERMISSION
+          value: oreo.staff
+          negate: false
+
+actionbar:
+  enabled: true
+  refresh-interval-ticks: 20    # How often the action bar is re-evaluated & sent
+
+  entries:
+    # ── Entry format ──────────────────────────────────────────────────────────
+    # priority:               Higher number = evaluated first
+    # texts:                  List of MiniMessage texts that rotate (carousel)
+    #                         Use a single-item list for a static message
+    # carousel-interval-ticks: Ticks between carousel rotations
+    # conditions:             List of conditions (same format as nametag)
+    # ─────────────────────────────────────────────────────────────────────────
+    info:
+      priority: 10
+      texts:
+        - "<gray>❤ <red>%player_health%</red>  ✦ <gold>%player_level%</gold>"
+        - "<gray>⚡ <yellow>%player_ping%ms</yellow>"
+      carousel-interval-ticks: 60
+      conditions: []

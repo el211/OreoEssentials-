@@ -46,13 +46,13 @@ public final class AliasService {
 
     public AliasService(JavaPlugin plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "aliases.yml");
+        this.file = new File(plugin.getDataFolder(), "commandsmodule/aliases.yml");
     }
 
-    /** Loads aliases from aliases.yml (creates the file from resources if missing). */
+    /** Loads aliases from commandsmodule/aliases.yml (creates the file from resources if missing). */
     public void load() {
         if (!file.exists()) {
-            try { plugin.saveResource("aliases.yml", false); } catch (Throwable ignored) {}
+            try { file.getParentFile().mkdirs(); plugin.saveResource("commandsmodule/aliases.yml", false); } catch (Throwable ignored) {}
         }
 
         YamlConfiguration loaded;

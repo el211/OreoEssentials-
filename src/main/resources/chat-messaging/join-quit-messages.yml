@@ -1,0 +1,130 @@
+# ==================== JOIN MESSAGES ====================
+Join_messages:
+  enable: true
+  disable_on_backend: true
+  use_backend_list_as: "blacklist"
+  backend_server_names:
+    - "faction_world"
+    - "faction_nether"
+
+  look_like_player: true
+  player_name: "<gradient:#9BE8FF:#00D4FF>Oreobot</gradient>"
+  player_prefix: "<gradient:#00D4FF:#1E90FF>[</gradient>"
+  delimiter: " | "
+  join_message_delay: 0
+
+  # Default messages (fallback)
+  first_join: "<gradient:#00D4FF:#1E90FF>Welcome</gradient> <gradient:#1E90FF:#9BE8FF>{name}</gradient> <gradient:#9BE8FF:#00D4FF>to the server for the first time!</gradient>"
+  rejoin_message: "<gradient:#1E90FF:#9BE8FF>{name}</gradient> <gradient:#9BE8FF:#00D4FF>has joined the game.</gradient>"
+
+  # Per-rank overrides (optional)
+  formats:
+    first_join:
+      - permission: "oreo.rank.vip"
+        text: "<gradient:#FFD700:#FFA500>[VIP]</gradient> <white>{name}</white> <gray>joined for the first time!</gray>"
+      - permission: "oreo.rank.default"
+        text: "<gray>[Player]</gray> <white>{name}</white> <gray>joined for the first time!</gray>"
+
+    rejoin_message:
+      - permission: "oreo.rank.vip"
+        text: "<gradient:#FFD700:#FFA500>[VIP]</gradient> <white>{name}</white> <gray>is back!</gray>"
+      - permission: "oreo.rank.default"
+        text: "<gray>[Player]</gray> <white>{name}</white> <gray>joined.</gray>"
+
+  sounds:
+    default: "minecraft:entity.player.levelup"
+    volume: 1.0
+    pitch: 1.0
+    formats:
+      - permission: "oreo.rank.vip"
+        sound: "minecraft:ui.toast.challenge_complete"
+        volume: 1.0
+        pitch: 1.2
+      - permission: "oreo.rank.default"
+        sound: "minecraft:entity.experience_orb.pickup"
+        volume: 1.0
+        pitch: 1.0
+
+# ==================== QUIT MESSAGES ====================
+Quit_messages:
+  enable: true
+  disable_on_backend: true
+  use_backend_list_as: "blacklist"
+  backend_server_names:
+    - "faction_world"
+    - "faction_nether"
+
+  look_like_player: true
+  player_name: "<gradient:#9BE8FF:#00D4FF>Oreobot</gradient>"
+  player_prefix: "<gradient:#00D4FF:#1E90FF>[</gradient>"
+  delimiter: " | "
+
+  # Default message
+  message: "<gradient:#1E90FF:#9BE8FF>{name}</gradient> <gradient:#9BE8FF:#00D4FF>has left the game.</gradient>"
+
+  # Per-rank overrides
+  formats:
+    message:
+      - permission: "oreo.rank.vip"
+        text: "<gradient:#FFD700:#FFA500>[VIP]</gradient> <white>{name}</white> <gray>left the game.</gray>"
+      - permission: "oreo.rank.default"
+        text: "<gray>[Player]</gray> <white>{name}</white> <gray>left the game.</gray>"
+
+  sounds:
+    default: "minecraft:entity.enderman.teleport"
+    volume: 1.0
+    pitch: 0.8
+    formats:
+      - permission: "oreo.rank.vip"
+        sound: "minecraft:block.note_block.pling"
+        volume: 1.0
+        pitch: 1.0
+      - permission: "oreo.rank.default"
+        sound: "minecraft:block.note_block.bass"
+        volume: 1.0
+        pitch: 0.8
+
+# ==================== AUTOMATIC MESSAGES (Oreobot) ====================
+Automatic_message:
+  enable: true
+  look_like_player: true
+  player_name: "<gradient:#9BE8FF:#00D4FF>Oreobot</gradient>"
+  player_prefix: "<gradient:#00D4FF:#1E90FF>[</gradient>"
+  delimiter: " | "
+
+  messages:
+    message1:
+      text: "<gradient:#00D4FF:#1E90FF>Don't forget to check our</gradient> <gradient:#1E90FF:#9BE8FF>website</gradient> <gradient:#9BE8FF:#00D4FF>for updates!</gradient>"
+      timer_loop: 50
+
+    message2:
+      text: "<gradient:#00D4FF:#1E90FF>Type</gradient> <gradient:#1E90FF:#9BE8FF>/help</gradient> <gradient:#9BE8FF:#00D4FF>for a list of commands!</gradient>"
+      timer_loop: 60
+
+# ==================== CHAT BOT (Oreobot conversations) ====================
+conversations:
+  enabled: true
+
+  oreobot:
+    custom_call_name: "oreobot"
+
+    self_mention_reply: "<gradient:#00D4FF:#1E90FF>Hello</gradient>, <gradient:#1E90FF:#9BE8FF>{name}</gradient><gradient:#9BE8FF:#00D4FF>! How can I assist you today?</gradient>"
+
+    player_name: "<gradient:#9BE8FF:#00D4FF>OREOBOT</gradient>"
+    player_prefix: "<gradient:#00D4FF:#1E90FF>[</gradient>"
+    delimiter: " | "
+
+    questions:
+      question1:
+        keyword: "help"
+        key_phrase: "i need help"
+        replies:
+          - "<gradient:#00D4FF:#1E90FF>Sure</gradient>, <gradient:#1E90FF:#9BE8FF>{name}</gradient><gradient:#9BE8FF:#00D4FF> — what do you need help with?</gradient>"
+          - "<gradient:#1E90FF:#00D4FF>Feel free to</gradient> <gradient:#9BE8FF:#00D4FF>ask any questions!</gradient>"
+
+      question2:
+        keyword: "commands"
+        key_phrase: "what are the commands"
+        replies:
+          - "<gradient:#00D4FF:#1E90FF>You can type</gradient> <gradient:#1E90FF:#9BE8FF>/help</gradient> <gradient:#9BE8FF:#00D4FF>to see all available commands.</gradient>"
+          - "<gradient:#1E90FF:#00D4FF>Check the</gradient> <gradient:#9BE8FF:#00D4FF>website for a detailed command list.</gradient>"

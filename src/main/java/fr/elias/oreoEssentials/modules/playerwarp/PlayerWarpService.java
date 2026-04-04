@@ -147,7 +147,7 @@ public class PlayerWarpService {
     public int getLimit(Player player) {
         OreoEssentials plugin = OreoEssentials.get();
         ConfigurationSection sec =
-                plugin.getConfig().getConfigurationSection("playerwarps.limit");
+                plugin.getPlayerWarpsConfig().getConfigurationSection("limit");
 
         if (sec == null) {
             return 3;

@@ -18,7 +18,7 @@ public final class DeathMessageService {
     private volatile boolean enabled = true;
 
     public DeathMessageService(File dataFolder) {
-        this.file = new File(dataFolder, "death-messages.yml");
+        this.file = new File(dataFolder, "chat-messaging/death-messages.yml");
         if (!file.exists()) writeSkeleton();
         reload();
     }
