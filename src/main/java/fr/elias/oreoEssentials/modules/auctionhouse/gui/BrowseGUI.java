@@ -95,8 +95,13 @@ public class BrowseGUI implements InventoryProvider {
         }
 
         if (auctions.isEmpty()) {
-            contents.set(2, 4, ClickableItem.empty(named(Material.BARRIER,
-                    searchQuery != null ? "&c&lNo results" : "&c&lNo Auctions Available")));
+            var cfg = module.getConfig();
+            String btnKey = searchQuery != null ? "no-results" : "no-auctions";
+            String defName = searchQuery != null ? "&c&lNo Results" : "&c&lNo Auctions Available";
+            int slot = cfg.guiSlot("browse", btnKey, 22);
+            contents.set(slot / 9, slot % 9, ClickableItem.empty(
+                    named(cfg.guiMaterial("browse", btnKey, Material.BARRIER),
+                            cfg.guiNameRaw("browse", btnKey, defName))));
         } else {
             ClickableItem[] items = auctions.stream()
                     .map(a -> auctionItem(player, a))

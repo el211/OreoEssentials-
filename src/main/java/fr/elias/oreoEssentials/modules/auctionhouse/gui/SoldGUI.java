@@ -40,7 +40,11 @@ public class SoldGUI implements InventoryProvider {
         List<Auction> sold = module.getPlayerSold(player.getUniqueId());
 
         if (sold.isEmpty()) {
-            contents.set(2, 4, ClickableItem.empty(named(Material.BARRIER, "&e&lNo Sold Items Yet")));
+            var cfg = module.getConfig();
+            int slot = cfg.guiSlot("sold", "no-sold", 22);
+            contents.set(slot / 9, slot % 9, ClickableItem.empty(
+                    named(cfg.guiMaterial("sold", "no-sold", Material.BARRIER),
+                            cfg.guiNameRaw("sold", "no-sold", "&e&lNo Sold Items Yet"))));
         } else {
             ClickableItem[] items = sold.stream().map(this::soldItem).toArray(ClickableItem[]::new);
             pg.setItems(items);

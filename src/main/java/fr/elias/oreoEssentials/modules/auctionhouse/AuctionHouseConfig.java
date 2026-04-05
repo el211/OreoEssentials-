@@ -146,6 +146,15 @@ public final class AuctionHouseConfig {
         return gui.getString(guiKey + ".buttons." + btnKey + ".name", fallback);
     }
 
+    /** Returns the lore list of a button from gui.yml, translating & color codes. Returns {@code fallback} if not set. */
+    public List<String> guiLoreRaw(String guiKey, String btnKey, List<String> fallback) {
+        List<String> raw = gui.getStringList(guiKey + ".buttons." + btnKey + ".lore");
+        if (raw.isEmpty()) return fallback;
+        return raw.stream()
+                .map(line -> ChatColor.translateAlternateColorCodes('&', line))
+                .toList();
+    }
+
     public boolean isCategoryEnabled(AuctionCategory cat) {
         return enabledCategories.contains(cat);
     }

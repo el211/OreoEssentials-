@@ -41,11 +41,15 @@ public class ManageGUI implements InventoryProvider {
         List<Auction> auctions = module.getPlayerActiveListings(player.getUniqueId());
 
         if (auctions.isEmpty()) {
-            ItemStack none = named(Material.BARRIER, "&c&lNo Active Listings");
+            var cfg = module.getConfig();
+            int slot = cfg.guiSlot("manage", "no-listings", 22);
+            ItemStack none = named(cfg.guiMaterial("manage", "no-listings", Material.BARRIER),
+                    cfg.guiNameRaw("manage", "no-listings", "&c&lNo Active Listings"));
             ItemMeta m = none.getItemMeta();
-            m.setLore(List.of(c("&7Use &e/ahs <price> &7to list an item!")));
+            m.setLore(cfg.guiLoreRaw("manage", "no-listings",
+                    List.of(c("&7Use &e/ahs <price> &7to list an item!"))));
             none.setItemMeta(m);
-            contents.set(2, 4, ClickableItem.empty(none));
+            contents.set(slot / 9, slot % 9, ClickableItem.empty(none));
         } else {
             ClickableItem[] items = auctions.stream().map(a -> listingItem(player, a)).toArray(ClickableItem[]::new);
             pg.setItems(items);

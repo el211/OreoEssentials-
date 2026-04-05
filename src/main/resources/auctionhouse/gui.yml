@@ -54,6 +54,14 @@ browse:
       slot: 53
       material: BARRIER
       name: "&c&lFermer"
+    no-auctions:
+      slot: 22
+      material: BARRIER
+      name: "&c&lNo Auctions Available"
+    no-results:
+      slot: 22
+      material: BARRIER
+      name: "&c&lNo Results"
 
 # ─────────────────────────────────────
 # Menu des catégories
@@ -110,6 +118,12 @@ manage:
       slot: 49
       material: BARRIER
       name: "&c&lRetour"
+    no-listings:
+      slot: 22
+      material: BARRIER
+      name: "&c&lNo Active Listings"
+      lore:
+        - "&7Use &e/ahs <price> &7to list an item!"
 
 # ─────────────────────────────────────
 # Menu de confirmation d'achat
@@ -150,6 +164,10 @@ sold:
       slot: 49
       material: BARRIER
       name: "&c&lRetour"
+    no-sold:
+      slot: 22
+      material: BARRIER
+      name: "&e&lNo Sold Items Yet"
 
 # ─────────────────────────────────────
 # Menu des annonces expirées
@@ -174,3 +192,7 @@ expired:
       slot: 46
       material: CHEST
       name: "&a&lTout récupérer ({count})"
+    no-expired:
+      slot: 22
+      material: BARRIER
+      name: "&a&lNo Expired Items!"

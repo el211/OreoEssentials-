@@ -43,7 +43,10 @@ public class ExpiredGUI implements InventoryProvider {
         var cfg = module.getConfig();
 
         if (expired.isEmpty()) {
-            contents.set(2, 4, ClickableItem.empty(named(Material.BARRIER, "&a&lNo Expired Items!")));
+            int slot = cfg.guiSlot("expired", "no-expired", 22);
+            contents.set(slot / 9, slot % 9, ClickableItem.empty(
+                    named(cfg.guiMaterial("expired", "no-expired", Material.BARRIER),
+                            cfg.guiNameRaw("expired", "no-expired", "&a&lNo Expired Items!"))));
         } else {
             ClickableItem[] items = expired.stream().map(a -> expiredItem(player, a)).toArray(ClickableItem[]::new);
             pg.setItems(items);

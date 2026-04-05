@@ -86,6 +86,37 @@ chat-bubbles:
   # Conditions on the viewer — viewer must meet ALL of these to see any bubble
   viewer-conditions: []
 
+  # ── Background icon ──────────────────────────────────────────────────────────
+  # Spawns a separate TextDisplay behind the text bubble containing a custom
+  # font glyph — typically an ItemsAdder or Nexo icon used as a background panel.
+  #
+  # HOW TO USE WITH ITEMSADDER:
+  #   Use the MiniMessage <font:> tag with the namespace and the unicode character
+  #   of your custom item/image. You can find the unicode char in ItemsAdder's
+  #   resource pack font files.
+  #   Example: text: '<font:default>\uE001</font>'
+  #
+  # HOW TO USE WITH NEXO:
+  #   Example: text: '<font:nexo:your_namespace>\uE001</font>'
+  #
+  # POSITIONING:
+  #   offset-x  — horizontal shift in blocks (0 = centered on player)
+  #   offset-y  — additional vertical offset on top of the bubble's y-offset
+  #               (positive = higher, negative = lower)
+  #
+  # SIZING:
+  #   scale     — multiplier for the background entity (1.0 = no scaling)
+  #               Use values > 1.0 to make the icon larger, < 1.0 to shrink it
+  #
+  # The background entity is spawned first (lower entity ID) so it renders
+  # behind the text bubble. It fades in/out in sync with the text.
+  background-icon:
+    enabled: false
+    text: ''            # MiniMessage string — put your <font:...>glyph</font> here
+    scale: 1.0          # Entity scale multiplier
+    offset-x: 0.0       # Horizontal position offset (blocks)
+    offset-y: 0.0       # Extra vertical offset relative to y-offset above
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  ACTION BAR

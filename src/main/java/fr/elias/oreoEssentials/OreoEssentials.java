@@ -2052,6 +2052,7 @@ public final class OreoEssentials extends JavaPlugin {
         // Register commands
         commands.register(new fr.elias.oreoEssentials.modules.nametag.commands.NametageCommand(this, nametagToggleStore));
         commands.register(new fr.elias.oreoEssentials.modules.nametag.commands.CustomNameplatesCommand(this));
+        commands.register(new fr.elias.oreoEssentials.modules.nametag.commands.BubbleColorCommand(this));
     }
 
     /** Reloads all custom-nameplates services from disk. Called by /cnp reload. */
@@ -2423,6 +2424,7 @@ public final class OreoEssentials extends JavaPlugin {
     public java.util.Map<java.util.UUID, Long> getRtpCooldownCache() { return rtpCooldownCache; }
     public fr.elias.oreoEssentials.modules.playtime.PlaytimeTracker getPlaytimeTracker() { return this.playtimeTracker; }
     public PlayerNametagManager getNametagManager() { return nametagManager; }
+    public fr.elias.oreoEssentials.modules.nametag.ChatBubbleService getChatBubbleService() { return chatBubbleService; }
     public SettingsConfig getSettings() { return settings; }
     public RtpPendingService getRtpPendingService() { return rtpPendingService; }
     public fr.elias.oreoEssentials.modules.rtp.RtpCrossServerBridge getRtpBridge() { return rtpBridge; }

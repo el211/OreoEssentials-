@@ -20,6 +20,7 @@ import org.bukkit.event.Listener;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.util.Transformation;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,7 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *  - Per-sender and per-viewer conditions
  *  - Max line count with word-wrap
  *  - MiniMessage formatting prefix/suffix
- *  - Channel blacklist / whitelist (uses message source channel tag if available)
+ *  - Per-player custom color command (/bubblecolor)
+ *  - Optional background-icon overlay (ItemsAdder/Nexo glyph as separate TextDisplay)
  *  - Folia-compatible
  */
 public final class ChatBubbleService implements Listener {
@@ -55,9 +57,20 @@ public final class ChatBubbleService implements Listener {
     private List<NametageCondition> senderConditions;
     private List<NametageCondition> viewerConditions;
 
+    // ── Background icon config ────────────────────────────────────────────────
+    private boolean bgIconEnabled;
+    private String bgIconText;
+    private float bgIconScale;
+    private double bgIconOffsetX;
+    private double bgIconOffsetY;
+
     // ── State ─────────────────────────────────────────────────────────────────
-    /** owner UUID → active bubble entity UUID (only one bubble per player at a time) */
+    /** owner UUID → main bubble entity UUID */
     private final ConcurrentHashMap<UUID, UUID> activeBubbles = new ConcurrentHashMap<>();
+    /** owner UUID → background icon entity UUID */
+    private final ConcurrentHashMap<UUID, UUID> activeBgIcons = new ConcurrentHashMap<>();
+    /** owner UUID → MiniMessage color tag chosen by the player (e.g. "<red>") */
+    private final ConcurrentHashMap<UUID, String> playerBubbleColors = new ConcurrentHashMap<>();
 
     private final OreoEssentials plugin;
     private static final MiniMessage MM = MiniMessage.miniMessage();
@@ -112,6 +125,22 @@ public final class ChatBubbleService implements Listener {
 
         this.senderConditions = NametageCondition.parseList(s, "sender-conditions");
         this.viewerConditions = NametageCondition.parseList(s, "viewer-conditions");
+
+        // ── Background icon ───────────────────────────────────────────────────
+        ConfigurationSection bgSec = s.getConfigurationSection("background-icon");
+        if (bgSec != null) {
+            this.bgIconEnabled = bgSec.getBoolean("enabled", false);
+            this.bgIconText = bgSec.getString("text", "");
+            this.bgIconScale = (float) bgSec.getDouble("scale", 1.0);
+            this.bgIconOffsetX = bgSec.getDouble("offset-x", 0.0);
+            this.bgIconOffsetY = bgSec.getDouble("offset-y", 0.0);
+        } else {
+            this.bgIconEnabled = false;
+            this.bgIconText = "";
+            this.bgIconScale = 1.0f;
+            this.bgIconOffsetX = 0.0;
+            this.bgIconOffsetY = 0.0;
+        }
     }
 
     // ── Event handler ─────────────────────────────────────────────────────────
@@ -150,14 +179,17 @@ public final class ChatBubbleService implements Listener {
     // ── Bubble lifecycle ──────────────────────────────────────────────────────
 
     private void spawnBubble(Player sender, String rawMessage) {
-        // Remove any existing bubble first
         removeBubble(sender.getUniqueId());
 
-        // Truncate lines if needed
         String displayText = truncateToMaxLines(rawMessage);
 
-        // Build the component
-        String full = textPrefix + displayText + textSuffix;
+        // Apply per-player color if set, sandwiched between server-wide prefix/suffix
+        String playerColor = playerBubbleColors.get(sender.getUniqueId());
+        String coloredMsg = (playerColor != null && !playerColor.isEmpty())
+                ? (playerColor + displayText + "<reset>")
+                : displayText;
+        String full = textPrefix + coloredMsg + textSuffix;
+
         Component parsed;
         try { parsed = MM.deserialize(full); }
         catch (Exception e) { parsed = Component.text(full); }
@@ -168,33 +200,53 @@ public final class ChatBubbleService implements Listener {
         OreScheduler.runAtLocation(plugin, spawnLoc, () -> {
             if (!sender.isOnline()) return;
 
-            TextDisplay display = (TextDisplay) spawnLoc.getWorld().spawnEntity(spawnLoc, EntityType.TEXT_DISPLAY);
-            configureBubbleEntity(display, text);
+            // ── Background icon (spawned first = lower entity ID = renders behind text) ──
+            if (bgIconEnabled && !bgIconText.isEmpty()) {
+                Location bgLoc = sender.getLocation().add(bgIconOffsetX, yOffset + bgIconOffsetY, 0);
+                TextDisplay bgDisplay = (TextDisplay) bgLoc.getWorld()
+                        .spawnEntity(bgLoc, EntityType.TEXT_DISPLAY);
+                configureBgIcon(bgDisplay);
 
-            // Hide from everyone initially; selectively show based on conditions
-            for (Player viewer : Bukkit.getOnlinePlayers()) {
-                viewer.hideEntity(plugin, display);
+                for (Player viewer : Bukkit.getOnlinePlayers()) viewer.hideEntity(plugin, bgDisplay);
+                activeBgIcons.put(sender.getUniqueId(), bgDisplay.getUniqueId());
+                updateEntityVisibility(sender, bgDisplay);
+                startPositionTracker(sender, bgDisplay, bgIconOffsetX, yOffset + bgIconOffsetY);
+                animateAppear(bgDisplay, null);
             }
 
+            // ── Main text bubble ──────────────────────────────────────────────
+            TextDisplay display = (TextDisplay) spawnLoc.getWorld()
+                    .spawnEntity(spawnLoc, EntityType.TEXT_DISPLAY);
+            configureBubbleEntity(display, text);
+
+            for (Player viewer : Bukkit.getOnlinePlayers()) viewer.hideEntity(plugin, display);
             activeBubbles.put(sender.getUniqueId(), display.getUniqueId());
+            updateEntityVisibility(sender, display);
 
-            // Show to eligible viewers
-            updateBubbleVisibility(sender, display);
-
-            // Start appear animation (opacity 0 → 127)
             animateAppear(display, () -> {
-                // After appear, schedule disappear after stay duration
                 OreScheduler.runLater(plugin, () -> {
-                    if (!display.isValid()) return;
-                    animateDisappear(display, () -> {
-                        display.remove();
-                        activeBubbles.remove(sender.getUniqueId(), display.getUniqueId());
-                    });
+                    // Disappear main bubble
+                    if (display.isValid()) {
+                        animateDisappear(display, () -> {
+                            display.remove();
+                            activeBubbles.remove(sender.getUniqueId(), display.getUniqueId());
+                        });
+                    }
+                    // Disappear bg icon in sync
+                    UUID bgUuid = activeBgIcons.get(sender.getUniqueId());
+                    if (bgUuid != null) {
+                        org.bukkit.entity.Entity bgEnt = Bukkit.getEntity(bgUuid);
+                        if (bgEnt instanceof TextDisplay bgDisp && bgDisp.isValid()) {
+                            animateDisappear(bgDisp, () -> {
+                                bgDisp.remove();
+                                activeBgIcons.remove(sender.getUniqueId(), bgUuid);
+                            });
+                        }
+                    }
                 }, stayTicks);
             });
 
-            // Keep bubble positioned above sender while alive
-            startPositionTracker(sender, display);
+            startPositionTracker(sender, display, 0, yOffset);
         });
     }
 
@@ -209,7 +261,7 @@ public final class ChatBubbleService implements Listener {
         display.setSeeThrough(seeThrough);
         display.setAlignment(TextDisplay.TextAlignment.CENTER);
         display.setLineWidth(lineWidth);
-        display.setTextOpacity((byte) 0); // start transparent for fade-in
+        display.setTextOpacity((byte) 0);
 
         if (defaultBackground) {
             display.setDefaultBackground(true);
@@ -222,7 +274,37 @@ public final class ChatBubbleService implements Listener {
         display.setViewRange((float) Math.min(viewRange, 1.0));
     }
 
-    private void updateBubbleVisibility(Player sender, TextDisplay display) {
+    private void configureBgIcon(TextDisplay display) {
+        display.setPersistent(false);
+        display.setGravity(false);
+        display.setInvulnerable(true);
+        display.addScoreboardTag("oe_bubble_bg");
+
+        Component bg;
+        try { bg = MM.deserialize(bgIconText); }
+        catch (Exception e) { bg = Component.text(bgIconText); }
+        display.text(bg);
+
+        display.setShadowed(false);
+        display.setSeeThrough(false);
+        display.setAlignment(TextDisplay.TextAlignment.CENTER);
+        display.setDefaultBackground(false);
+        display.setBackgroundColor(Color.fromARGB(0));
+        display.setTextOpacity((byte) 0);
+
+        // Apply scale via Transformation
+        if (bgIconScale != 1.0f) {
+            Transformation t = display.getTransformation();
+            t.getScale().set(bgIconScale, bgIconScale, bgIconScale);
+            display.setTransformation(t);
+        }
+
+        double viewRange = Math.sqrt(viewRangeSquared) / 64.0;
+        display.setViewRange((float) Math.min(viewRange, 1.0));
+    }
+
+    /** Shows or hides a TextDisplay to each online player based on viewer conditions. */
+    private void updateEntityVisibility(Player sender, TextDisplay display) {
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             boolean shouldShow = canViewerSee(sender, viewer);
             if (shouldShow) {
@@ -239,8 +321,11 @@ public final class ChatBubbleService implements Listener {
         return NametageCondition.evaluateAll(viewerConditions, viewer);
     }
 
-    private void startPositionTracker(Player sender, TextDisplay display) {
-        // Update position every 2 ticks while bubble is alive
+    /**
+     * Keeps a TextDisplay entity positioned relative to its owner.
+     * xOffset / yOffsetTotal are in world units added to the player's location.
+     */
+    private void startPositionTracker(Player sender, TextDisplay display, double xOffset, double yOffsetTotal) {
         OreTask[] taskRef = {null};
         taskRef[0] = OreScheduler.runTimerForEntity(plugin, display, () -> {
             if (!display.isValid() || !sender.isOnline()) {
@@ -248,7 +333,7 @@ public final class ChatBubbleService implements Listener {
                 display.remove();
                 return;
             }
-            Location target = sender.getLocation().add(0, yOffset, 0);
+            Location target = sender.getLocation().add(xOffset, yOffsetTotal, 0);
             display.teleport(target);
         }, 2L, 2L);
     }
@@ -257,20 +342,17 @@ public final class ChatBubbleService implements Listener {
 
     /** Fades opacity from 0 to 127 over appearTicks ticks, then calls callback. */
     private void animateAppear(TextDisplay display, Runnable onDone) {
-        int steps = Math.max(1, appearTicks);
-        animateOpacity(display, 0, 127, steps, onDone);
+        animateOpacity(display, 0, 127, Math.max(1, appearTicks), onDone);
     }
 
     /** Fades opacity from 127 to 0 over disappearTicks ticks, then calls callback. */
     private void animateDisappear(TextDisplay display, Runnable onDone) {
-        int steps = Math.max(1, disappearTicks);
-        animateOpacity(display, 127, 0, steps, onDone);
+        animateOpacity(display, 127, 0, Math.max(1, disappearTicks), onDone);
     }
 
     private void animateOpacity(TextDisplay display, int from, int to, int totalTicks, Runnable onDone) {
         if (!display.isValid()) { if (onDone != null) onDone.run(); return; }
 
-        // Split into steps, one step per tick
         int[] step = {0};
         OreTask[] taskRef = {null};
         taskRef[0] = OreScheduler.runTimerForEntity(plugin, display, () -> {
@@ -293,21 +375,24 @@ public final class ChatBubbleService implements Listener {
 
     private void removeBubble(UUID ownerUuid) {
         UUID entityUuid = activeBubbles.remove(ownerUuid);
-        if (entityUuid == null) return;
-        org.bukkit.entity.Entity entity = Bukkit.getEntity(entityUuid);
-        if (entity != null) {
-            OreScheduler.runForEntity(plugin, entity, entity::remove);
+        if (entityUuid != null) {
+            org.bukkit.entity.Entity entity = Bukkit.getEntity(entityUuid);
+            if (entity != null) OreScheduler.runForEntity(plugin, entity, entity::remove);
+        }
+        UUID bgUuid = activeBgIcons.remove(ownerUuid);
+        if (bgUuid != null) {
+            org.bukkit.entity.Entity entity = Bukkit.getEntity(bgUuid);
+            if (entity != null) OreScheduler.runForEntity(plugin, entity, entity::remove);
         }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private String truncateToMaxLines(String message) {
-        // Rough word-wrap: split into words and build lines
         String[] words = message.split(" ");
         List<String> lines = new ArrayList<>();
         StringBuilder current = new StringBuilder();
-        int charsPerLine = Math.max(10, lineWidth / 6); // rough pixel-to-char estimate
+        int charsPerLine = Math.max(10, lineWidth / 6);
 
         for (String word : words) {
             if (current.length() + word.length() + 1 > charsPerLine && current.length() > 0) {
@@ -328,19 +413,33 @@ public final class ChatBubbleService implements Listener {
 
     public boolean isEnabled() { return enabled; }
 
+    /** Sets a custom MiniMessage color tag for a player's bubbles (e.g. {@code "<red>"}). */
+    public void setPlayerColor(UUID uuid, String colorTag) {
+        playerBubbleColors.put(uuid, colorTag);
+    }
+
+    /** Removes the player's custom bubble color, reverting to the server default. */
+    public void clearPlayerColor(UUID uuid) {
+        playerBubbleColors.remove(uuid);
+    }
+
+    /** Returns the player's current bubble color tag, or {@code null} if using default. */
+    public String getPlayerColor(UUID uuid) {
+        return playerBubbleColors.get(uuid);
+    }
+
     public void reload(FileConfiguration config) {
-        // Pop all active bubbles then re-read config
         for (UUID ownerUuid : new HashSet<>(activeBubbles.keySet())) removeBubble(ownerUuid);
         activeBubbles.clear();
+        activeBgIcons.clear();
         loadConfig(config);
         plugin.getLogger().info("[ChatBubble] Reloaded.");
     }
 
     public void shutdown() {
-        for (UUID ownerUuid : new HashSet<>(activeBubbles.keySet())) {
-            removeBubble(ownerUuid);
-        }
+        for (UUID ownerUuid : new HashSet<>(activeBubbles.keySet())) removeBubble(ownerUuid);
         activeBubbles.clear();
+        activeBgIcons.clear();
         plugin.getLogger().info("[ChatBubble] Shutdown complete.");
     }
 }
