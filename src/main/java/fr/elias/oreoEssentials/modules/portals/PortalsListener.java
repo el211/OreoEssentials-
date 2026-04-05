@@ -10,9 +10,11 @@ import org.bukkit.event.player.PlayerQuitEvent;
 public class PortalsListener implements Listener {
 
     private final PortalsManager manager;
+    private final PortalWandListener wandListener;
 
-    public PortalsListener(PortalsManager manager) {
-        this.manager = manager;
+    public PortalsListener(PortalsManager manager, PortalWandListener wandListener) {
+        this.manager      = manager;
+        this.wandListener = wandListener;
     }
 
 
@@ -32,10 +34,10 @@ public class PortalsListener implements Listener {
     }
 
     /**
-     * Clean up cooldowns when player quits to prevent memory leaks.
+     * Clean up cooldowns and wand mode when player quits.
      */
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-
+        wandListener.disableWandMode(e.getPlayer());
     }
 }

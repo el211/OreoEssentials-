@@ -1,0 +1,49 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  OreoEssentials — Portals
+#  plugins/OreoEssentials/portals/config.yml
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Name of THIS server as registered in your proxy (Velocity/BungeeCord).
+# Used for cross-server portals. Leave empty if running a single-server setup.
+server-name: ""
+
+# ── Cooldown ──────────────────────────────────────────────────────────────────
+# How long (milliseconds) before a player can use the same portal again.
+cooldown-ms: 1000
+
+# ── Volume limit ──────────────────────────────────────────────────────────────
+# Max bounding-box volume (in blocks) a portal region can occupy.
+max-portal-volume: 100000
+
+# ── Yaw/Pitch ─────────────────────────────────────────────────────────────────
+# If true, portals can individually opt to preserve the player's look direction.
+allow-keep-yaw-pitch: true
+
+# ── Teleportation ─────────────────────────────────────────────────────────────
+# Use async teleportation (required for Folia; optional on Paper).
+teleport-async: false
+
+# ── Default effects (used when a portal has no per-portal overrides) ──────────
+default-sound: "ENTITY_ENDERMAN_TELEPORT"
+
+default-particles:
+  type: "PORTAL"
+  count: 20
+
+# ── Ambient particles ─────────────────────────────────────────────────────────
+# Particles that continuously float inside every portal region.
+# Per-portal overrides are set in portals.yml.
+ambient-particles:
+  enabled: false
+  type: "PORTAL"
+  count: 3
+  interval-ticks: 10     # How often to spawn ambient particles (per portal)
+
+# ── Wand tool ─────────────────────────────────────────────────────────────────
+# The item given by /portal wand — left-click sets pos1, right-click sets pos2.
+wand:
+  material: BLAZE_ROD
+  name: "&6&lPortal Wand"
+  lore:
+    - "&7Left-click a block &e→ &7set &aPOS1"
+    - "&7Right-click a block &e→ &7set &cPOS2"

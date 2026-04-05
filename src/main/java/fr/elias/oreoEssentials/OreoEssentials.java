@@ -1835,9 +1835,26 @@ public final class OreoEssentials extends JavaPlugin {
 
     private void initPortals() {
         this.portals = new fr.elias.oreoEssentials.modules.portals.PortalsManager(this);
-        getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.portals.PortalsListener(this.portals), this);
+
+        var wandListener = new fr.elias.oreoEssentials.modules.portals.PortalWandListener(
+                this.portals, this.portals.getConfig());
+        getServer().getPluginManager().registerEvents(wandListener, this);
+        getServer().getPluginManager().registerEvents(
+                new fr.elias.oreoEssentials.modules.portals.PortalsListener(this.portals, wandListener), this);
+
+        // Register BungeeCord outgoing channel for cross-server connects
+        getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+
+        // Wire up cross-server support if RabbitMQ is available
+        if (packetManager != null && packetManager.isInitialized()) {
+            this.portals.initCrossServer(packetManager);
+            getLogger().info("[Portals] Cross-server support enabled.");
+        } else {
+            getLogger().info("[Portals] RabbitMQ unavailable — cross-server portals disabled.");
+        }
+
         if (getCommand("portal") != null) {
-            var portalCmd = new fr.elias.oreoEssentials.modules.portals.PortalsCommand(this.portals);
+            var portalCmd = new fr.elias.oreoEssentials.modules.portals.PortalsCommand(this.portals, wandListener);
             getCommand("portal").setExecutor(portalCmd);
             getCommand("portal").setTabCompleter(portalCmd);
         }
@@ -2138,7 +2155,8 @@ public final class OreoEssentials extends JavaPlugin {
         pm.registerPacket(AfkPoolExitPacket.class, AfkPoolExitPacket::new);
         pm.registerPacket(fr.elias.oreoEssentials.modules.auctionhouse.rabbitmq.AuctionSyncPacket.class, fr.elias.oreoEssentials.modules.auctionhouse.rabbitmq.AuctionSyncPacket::new);
         pm.registerPacket(fr.elias.oreoEssentials.modules.orders.rabbitmq.OrderSyncPacket.class, fr.elias.oreoEssentials.modules.orders.rabbitmq.OrderSyncPacket::new);
-        getLogger().info("[RABBIT] Registered 30 packet types deterministically");
+        pm.registerPacket(fr.elias.oreoEssentials.modules.portals.rabbit.PortalTeleportPacket.class, fr.elias.oreoEssentials.modules.portals.rabbit.PortalTeleportPacket::new);
+        getLogger().info("[RABBIT] Registered 31 packet types deterministically");
     }
 
     // -------------------------------------------------------------------------

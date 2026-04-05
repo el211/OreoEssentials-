@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.portals;
 
+import fr.elias.oreoEssentials.modules.portals.gui.PortalListGUI;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -16,9 +17,11 @@ import java.util.stream.Collectors;
 public class PortalsCommand implements CommandExecutor, TabCompleter {
 
     private final PortalsManager manager;
+    private final PortalWandListener wandListener;
 
-    public PortalsCommand(PortalsManager manager) {
-        this.manager = manager;
+    public PortalsCommand(PortalsManager manager, PortalWandListener wandListener) {
+        this.manager      = manager;
+        this.wandListener = wandListener;
     }
 
     @Override
@@ -30,6 +33,30 @@ public class PortalsCommand implements CommandExecutor, TabCompleter {
 
         String sub = a[0].toLowerCase(Locale.ROOT);
         switch (sub) {
+            case "wand" -> {
+                if (!(sender instanceof Player p)) {
+                    Lang.send(sender, "portals.player-only", "<red>Players only.</red>");
+                    return true;
+                }
+                if (!sender.hasPermission("oreo.portals.create")) {
+                    Lang.send(sender, "portals.no-permission", "<red>You don't have permission.</red>");
+                    return true;
+                }
+                wandListener.enableWandMode(p);
+                return true;
+            }
+            case "gui" -> {
+                if (!(sender instanceof Player p)) {
+                    Lang.send(sender, "portals.player-only", "<red>Players only.</red>");
+                    return true;
+                }
+                if (!sender.hasPermission("oreo.portals.gui")) {
+                    Lang.send(sender, "portals.no-permission", "<red>You don't have permission.</red>");
+                    return true;
+                }
+                PortalListGUI.getInventory(manager).open(p);
+                return true;
+            }
             case "pos1" -> {
                 if (!(sender instanceof Player p)) {
                     Lang.send(sender, "portals.player-only",
@@ -77,7 +104,7 @@ public class PortalsCommand implements CommandExecutor, TabCompleter {
                 }
                 if (a.length < 6) {
                     Lang.send(sender, "portals.create.usage",
-                            "<yellow>Usage: /%label% create <name> <world> <x> <y> <z> [keepYaw] [permission]</yellow>",
+                            "<yellow>Usage: /%label% create <name> <world> <x> <y> <z> [keepYaw] [server] [permission]</yellow>",
                             Map.of("label", label));
                     return true;
                 }
@@ -102,12 +129,13 @@ public class PortalsCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
-                boolean keepYaw = a.length >= 7 && (a[6].equalsIgnoreCase("true") || a[6].equalsIgnoreCase("yes"));
-                String permission = a.length >= 8 ? a[7] : null;
+                boolean keepYaw   = a.length >= 7 && (a[6].equalsIgnoreCase("true") || a[6].equalsIgnoreCase("yes"));
+                String  destServer = a.length >= 8 && !a[7].equalsIgnoreCase("none") ? a[7] : null;
+                String  permission = a.length >= 9 ? a[8] : null;
 
                 Location dest = new Location(w, x, y, z, p.getLocation().getYaw(), p.getLocation().getPitch());
 
-                String error = manager.create(name, p, dest, keepYaw, permission);
+                String error = manager.create(name, p, dest, destServer, keepYaw, permission);
                 if (error != null) {
                     Lang.send(sender, "portals.create.failed",
                             "<red>Failed: <yellow>%error%</yellow></red>",
@@ -235,14 +263,20 @@ public class PortalsCommand implements CommandExecutor, TabCompleter {
     private void sendHelp(CommandSender sender, String label) {
         Lang.send(sender, "portals.help.header",
                 "<gold><bold>Portals Help</bold></gold>");
+        Lang.send(sender, "portals.help.wand",
+                " <yellow>/%label% wand</yellow> <gray>- Get the portal selection wand</gray>",
+                Map.of("label", label));
+        Lang.send(sender, "portals.help.gui",
+                " <yellow>/%label% gui</yellow> <gray>- Open the portals GUI editor</gray>",
+                Map.of("label", label));
         Lang.send(sender, "portals.help.pos1",
-                " <yellow>/%label% pos1</yellow> <gray>- Set portal corner 1</gray>",
+                " <yellow>/%label% pos1</yellow> <gray>- Set portal corner 1 at your location</gray>",
                 Map.of("label", label));
         Lang.send(sender, "portals.help.pos2",
-                " <yellow>/%label% pos2</yellow> <gray>- Set portal corner 2</gray>",
+                " <yellow>/%label% pos2</yellow> <gray>- Set portal corner 2 at your location</gray>",
                 Map.of("label", label));
         Lang.send(sender, "portals.help.create",
-                " <yellow>/%label% create <name> <world> <x> <y> <z> [keepYaw] [perm]</yellow>",
+                " <yellow>/%label% create <name> <world> <x> <y> <z> [keepYaw] [server] [perm]</yellow>",
                 Map.of("label", label));
         Lang.send(sender, "portals.help.remove",
                 " <yellow>/%label% remove <name></yellow> <gray>- Delete a portal</gray>",
@@ -277,10 +311,12 @@ public class PortalsCommand implements CommandExecutor, TabCompleter {
         if (a.length == 1) {
             List<String> subs = new ArrayList<>();
             if (sender.hasPermission("oreo.portals.create")) {
+                subs.add("wand");
                 subs.add("pos1");
                 subs.add("pos2");
                 subs.add("create");
             }
+            if (sender.hasPermission("oreo.portals.gui")) subs.add("gui");
             if (sender.hasPermission("oreo.portals.remove")) subs.add("remove");
             if (sender.hasPermission("oreo.portals.list")) subs.add("list");
             if (sender.hasPermission("oreo.portals.info")) subs.add("info");
