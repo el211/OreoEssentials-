@@ -17,7 +17,7 @@ import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 
@@ -116,14 +116,19 @@ public final class ChatBubbleService implements Listener {
 
     // ── Event handler ─────────────────────────────────────────────────────────
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onChat(AsyncPlayerChatEvent event) {
+    // ignoreCancelled = false because the OreoEssentials chat channel system cancels
+    // every AsyncChatEvent at HIGHEST priority to reformat it — we still want bubbles.
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = false)
+    public void onChat(AsyncChatEvent event) {
         if (!enabled) return;
         Player sender = event.getPlayer();
 
-        if (!NametageCondition.evaluateAll(senderConditions, sender)) return;
+        // Skip GUI input (AH price, order qty, etc.) — those messages start with digits or
+        // are cancelled without being displayed. Simple heuristic: skip command-like input.
+        String rawMessage = PlainTextComponentSerializer.plainText().serialize(event.message());
+        if (rawMessage.startsWith("/")) return;
 
-        String rawMessage = event.getMessage();
+        if (!NametageCondition.evaluateAll(senderConditions, sender)) return;
 
         // Schedule on the player's entity thread (we're async here)
         OreScheduler.runForEntity(plugin, sender, () -> {

@@ -28,7 +28,8 @@
 # MESSAGES:
 # ---------
 # - Messages support MiniMessage format
-# - Examples: <green>text</green>, <gold>text</gold>, <#FF5555>hex color</#FF5555>
+# - Use single quotes around message values to avoid YAML conflicts with < > characters
+# - Examples: '<green>text</green>', '<gold>text</gold>', '<#FF5555>hex color</#FF5555>'
 #
 # ════════════════════════════════════════════════════════════════════════════
 
@@ -43,13 +44,13 @@ actions:
     commands:
       - "eco give %player% 50"
       - "broadcast &e%player% &acrafted a &bDiamond Pickaxe&a!"
-    message: "<green>âœ" You earned <gold>$50</gold> for crafting this pickaxe!</green>"
+    message: '<green>✔ You earned <gold>$50</gold> for crafting this pickaxe!</green>'
 
   # Diamond Sword - Give strength effect
   DIAMOND_SWORD:
     commands:
       - "effect give %player% minecraft:strength 60 1"
-    message: "<aqua>âš"ï¸ You feel powerful wielding this sword!</aqua>"
+    message: '<aqua>⚔ You feel powerful wielding this sword!</aqua>'
 
   # Golden Apple - Heal and give achievement points
   GOLDEN_APPLE:
@@ -58,14 +59,14 @@ actions:
       - "eco give %player% 100"
       - "broadcast &6%player% &ecrafted a &6&lGolden Apple&e!"
     message: |
-      <gradient:gold:yellow>âœ¨ You crafted a Golden Apple!</gradient>
-      <green>+$100</green> <gray>|</gray> <red>â™¥ Full Health</red>
+      <gradient:gold:yellow>✨ You crafted a Golden Apple!</gradient>
+      <green>+$100</green> <gray>|</gray> <red>♥ Full Health</red>
 
   # Enchanting Table - Give XP levels
   ENCHANTING_TABLE:
     commands:
       - "xp add %player% 10 levels"
-    message: "<light_purple>âœ¨ +10 XP Levels for crafting an enchanting table!</light_purple>"
+    message: '<light_purple>✨ +10 XP Levels for crafting an enchanting table!</light_purple>'
 
   # Beacon - Rare craft reward
   BEACON:
@@ -79,7 +80,7 @@ actions:
 
   # TNT - Warning message
   TNT:
-    message: "<red>⚠ï¸ Be careful with that TNT!</red>"
+    message: '<red>⚠ Be careful with that TNT!</red>'
 
   # ═══════════════════════════════════════════════════════════════════════════
   # CUSTOM RECIPES EXAMPLES
@@ -102,7 +103,7 @@ actions:
     commands:
       - "eco give %player% 250"
       - "effect give %player% minecraft:resistance 300 1"
-    message: "<blue>ğŸ›¡ï¸ Custom Armor crafted! +Resistance II (5min)</blue>"
+    message: '<blue>🛡 Custom Armor crafted! +Resistance II (5min)</blue>'
 
   # Example special tool (if you have a recipe named 'mega_pickaxe')
   mega_pickaxe:
@@ -110,7 +111,7 @@ actions:
       - "eco give %player% 300"
       - "effect give %player% minecraft:haste 600 2"
     message: |
-      <aqua>â›ï¸ Mega Pickaxe crafted!</aqua>
+      <aqua>⛏ Mega Pickaxe crafted!</aqua>
       <yellow>+Haste III (10min)</yellow>
       <green>+$300</green>
 
@@ -119,14 +120,14 @@ actions:
     commands:
       - "effect give %player% minecraft:speed 120 2"
       - "effect give %player% minecraft:jump_boost 120 1"
-    message: "<gold>⚡ Energy Drink crafted! +Speed III & Jump Boost</gold>"
+    message: '<gold>⚡ Energy Drink crafted! +Speed III & Jump Boost</gold>'
 
   # Example quest item (if you have a recipe named 'quest_token')
   quest_token:
     commands:
       - "give %player% diamond 1"
       - "playsound minecraft:entity.player.levelup master %player% ~ ~ ~ 1.0 1.0"
-    message: "<light_purple>🎯 Quest Token crafted! You received a Diamond!</light_purple>"
+    message: '<light_purple>🎯 Quest Token crafted! You received a Diamond!</light_purple>'
 
   # ═══════════════════════════════════════════════════════════════════════════
   # ADVANCED EXAMPLES
@@ -137,17 +138,13 @@ actions:
     commands:
       - "eco give %player% 200"
       - "broadcast &5%player% &dcrafted a &4Netherite Ingot&d!"
-      # If you have PlaceholderAPI, you can use its placeholders too:
-      # - "tellraw @a {\"text\":\"Player in world %player_world%\",\"color\":\"yellow\"}"
-    message: "<dark_purple>💎 Netherite Ingot crafted! +$200</dark_purple>"
+    message: '<dark_purple>💎 Netherite Ingot crafted! +$200</dark_purple>'
 
   # Conditional commands (using other plugin features)
   ENDER_CHEST:
     commands:
       - "eco give %player% 150"
-      # Example with permission check (requires vault/permissions plugin)
-      # - "pex user %player% add special.enderchest.bonus"
-    message: "<gradient:dark_purple:purple>🎒 Ender Chest crafted! +$150</gradient>"
+    message: '<gradient:dark_purple:purple>🎒 Ender Chest crafted! +$150</gradient>'
 
 # ═══════════════════════════════════════════════════════════════════════════
 # NOTES:
@@ -160,5 +157,6 @@ actions:
 # 5. You can disable commands by using an empty list: commands: []
 # 6. Material names are case-insensitive (DIAMOND_SWORD = diamond_sword)
 # 7. Custom recipe names must match exactly (case-sensitive)
+# 8. Always use single quotes for message values to avoid YAML conflicts
 #
 # ═══════════════════════════════════════════════════════════════════════════

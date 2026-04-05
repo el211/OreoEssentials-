@@ -41,7 +41,6 @@ public class PlayerNametagManager implements Listener {
     private FileConfiguration config;
 
     private boolean enabled;
-    private boolean debugMode;
     private int updateIntervalTicks;   // text / condition refresh
     private int positionIntervalTicks; // how often entities teleport to follow the player
     private boolean showToSelf;
@@ -155,13 +154,8 @@ public class PlayerNametagManager implements Listener {
 
     // ── Config loading ────────────────────────────────────────────────────────
 
-    private void debug(String msg) {
-        if (debugMode) plugin.getLogger().info("[Nametag|DEBUG] " + msg);
-    }
-
     private void loadConfig() {
         this.enabled = config.getBoolean("nametag.enabled", true);
-        this.debugMode = config.getBoolean("nametag.debug", false);
         this.updateIntervalTicks = Math.max(1, config.getInt("nametag.update-interval-ticks", 40));
         this.positionIntervalTicks = Math.max(1, config.getInt("nametag.position-interval-ticks", 2));
         this.showToSelf = config.getBoolean("nametag.show-to-self", false);
@@ -221,12 +215,8 @@ public class PlayerNametagManager implements Listener {
 
         // If a spawn callback is already queued for this player, skip — the queued
         // callback will run shortly and spawning twice creates orphaned entities.
-        if (!pendingSpawn.add(owner.getUniqueId())) {
-            debug("spawnNametag: " + owner.getName() + " — spawn already pending, skipping duplicate");
-            return;
-        }
+        if (!pendingSpawn.add(owner.getUniqueId())) return;
 
-        debug("spawnNametag: " + owner.getName() + " — removing old nametag first");
         // Remove any existing nametag first
         removeNametag(owner.getUniqueId());
 
@@ -236,10 +226,7 @@ public class PlayerNametagManager implements Listener {
         OreScheduler.runAtLocation(plugin, base, () -> {
             pendingSpawn.remove(owner.getUniqueId());
 
-            if (!owner.isOnline()) {
-                debug("spawnNametag: " + owner.getName() + " went offline before entity spawn, aborting");
-                return;
-            }
+            if (!owner.isOnline()) return;
 
             List<UUID> entityIds = new ArrayList<>();
 
@@ -250,9 +237,6 @@ public class PlayerNametagManager implements Listener {
                         .spawnEntity(spawnLoc, EntityType.TEXT_DISPLAY);
                 configureEntity(display, layer, owner);
                 entityIds.add(display.getUniqueId());
-                debug("spawnNametag: spawned layer " + li + " for " + owner.getName()
-                        + " entityId=" + display.getUniqueId()
-                        + " at y+" + layer.yOffset);
             }
 
             ownerToEntities.put(owner.getUniqueId(),
@@ -267,11 +251,8 @@ public class PlayerNametagManager implements Listener {
                 boolean eligible = shouldViewerSee(owner, viewer);
                 if (eligible) {
                     currentViewers.add(viewer.getUniqueId());
-                    debug("spawnNametag: " + viewer.getName() + " will see " + owner.getName() + " (already visible)");
                     // Entity is already visible — no showEntity call needed.
                 } else {
-                    debug("spawnNametag: hiding from " + viewer.getName()
-                            + " (shouldSee=false) owner=" + owner.getName());
                     for (UUID id : entityIds) {
                         org.bukkit.entity.Entity e = Bukkit.getEntity(id);
                         if (e != null) viewer.hideEntity(plugin, e);
@@ -322,19 +303,13 @@ public class PlayerNametagManager implements Listener {
         List<UUID> entityUuids = ownerToEntities.remove(ownerUuid);
         ownerToViewers.remove(ownerUuid);
 
-        if (entityUuids == null) {
-            debug("removeNametag: no entities found for " + ownerUuid + " (already removed or never spawned)");
-            return;
-        }
+        if (entityUuids == null) return;
 
-        debug("removeNametag: removing " + entityUuids.size() + " entity/entities for " + ownerUuid);
         for (UUID entityUuid : entityUuids) {
             lastTextCache.remove(entityUuid);
             org.bukkit.entity.Entity entity = Bukkit.getEntity(entityUuid);
             if (entity != null) {
                 OreScheduler.runForEntity(plugin, entity, entity::remove);
-            } else {
-                debug("removeNametag: entity " + entityUuid + " was already gone (null) for owner " + ownerUuid);
             }
         }
     }
@@ -380,20 +355,13 @@ public class PlayerNametagManager implements Listener {
     /** Updates text content for one player's nametag. Only sends a packet when text actually changed. */
     private void updateTextFor(Player owner) {
         List<UUID> entityUuids = ownerToEntities.get(owner.getUniqueId());
-        if (entityUuids == null) {
-            debug("updateTextFor: no entities for " + owner.getName() + " — nametag not yet spawned?");
-            return;
-        }
+        if (entityUuids == null) return;
 
         for (int i = 0; i < entityUuids.size() && i < layers.size(); i++) {
             NametageLayerConfig layer = layers.get(i);
             UUID entityUuid = entityUuids.get(i);
             org.bukkit.entity.Entity entity = Bukkit.getEntity(entityUuid);
-            if (entity == null) {
-                debug("updateTextFor: entity " + entityUuid + " (layer " + i + ") for " + owner.getName()
-                        + " is null — entity was deleted externally or chunk unloaded");
-                continue;
-            }
+            if (entity == null) continue;
             if (!(entity instanceof TextDisplay display)) continue;
 
             Component text = renderText(layer.text, owner, null);
@@ -401,14 +369,8 @@ public class PlayerNametagManager implements Listener {
             // Skip the entity metadata packet if the rendered text hasn't changed —
             // sending it even with identical content causes a brief client-side flicker.
             Component prev = lastTextCache.put(entityUuid, text);
-            if (text.equals(prev)) {
-                // Uncomment below only for very verbose debugging:
-                // debug("updateTextFor: text unchanged for " + owner.getName() + " layer " + i + ", skipping packet");
-                continue;
-            }
+            if (text.equals(prev)) continue;
 
-            debug("updateTextFor: text CHANGED for " + owner.getName() + " layer " + i
-                    + " — sending metadata packet");
             OreScheduler.runForEntity(plugin, display, () -> display.text(text));
         }
     }
@@ -427,13 +389,9 @@ public class PlayerNametagManager implements Listener {
             boolean shouldShow = shouldViewerSee(owner, viewer);
 
             if (shouldShow && !currentViewers.contains(viewer.getUniqueId())) {
-                debug("updateViewers: SHOWING " + owner.getName() + "'s tag to " + viewer.getName());
                 showNametag(entityUuids, viewer);
                 currentViewers.add(viewer.getUniqueId());
             } else if (!shouldShow && currentViewers.contains(viewer.getUniqueId())) {
-                String reason = whyShouldNotSee(owner, viewer);
-                debug("updateViewers: HIDING " + owner.getName() + "'s tag from " + viewer.getName()
-                        + " — reason: " + reason);
                 hideNametag(entityUuids, viewer);
                 currentViewers.remove(viewer.getUniqueId());
             }
@@ -441,21 +399,6 @@ public class PlayerNametagManager implements Listener {
 
         // Clean up viewers who left
         currentViewers.removeIf(viewerUuid -> Bukkit.getPlayer(viewerUuid) == null);
-    }
-
-    /** Returns a human-readable reason why this viewer should not see the owner's nametag. */
-    private String whyShouldNotSee(Player owner, Player viewer) {
-        if (!owner.isOnline()) return "owner offline";
-        if (!showToSelf && viewer.getUniqueId().equals(owner.getUniqueId())) return "showToSelf=false";
-        if (toggleStore != null && toggleStore.isToggledOff(owner.getUniqueId())) return "owner toggled off";
-        if (!owner.getWorld().equals(viewer.getWorld())) return "different worlds (" + owner.getWorld().getName() + " vs " + viewer.getWorld().getName() + ")";
-        double distSq = owner.getLocation().distanceSquared(viewer.getLocation());
-        if (distSq > viewRangeSquared) return "out of range (dist=" + String.format("%.1f", Math.sqrt(distSq)) + ", max=" + String.format("%.1f", Math.sqrt(viewRangeSquared)) + ")";
-        for (NametageLayerConfig layer : layers) {
-            if (!NametageCondition.evaluateAll(layer.ownerConditions, owner)) return "owner condition failed";
-            if (!NametageCondition.evaluateAll(layer.viewerConditions, viewer)) return "viewer condition failed";
-        }
-        return "unknown";
     }
 
     private boolean shouldViewerSee(Player owner, Player viewer) {
@@ -487,8 +430,6 @@ public class PlayerNametagManager implements Listener {
             org.bukkit.entity.Entity entity = Bukkit.getEntity(entityUuid);
             if (entity != null) {
                 OreScheduler.runForEntity(plugin, viewer, () -> viewer.showEntity(plugin, entity));
-            } else {
-                debug("showNametag: entity " + entityUuid + " is null, cannot show to " + viewer.getName());
             }
         }
     }
@@ -498,8 +439,6 @@ public class PlayerNametagManager implements Listener {
             org.bukkit.entity.Entity entity = Bukkit.getEntity(entityUuid);
             if (entity != null) {
                 OreScheduler.runForEntity(plugin, viewer, () -> viewer.hideEntity(plugin, entity));
-            } else {
-                debug("hideNametag: entity " + entityUuid + " is null, cannot hide from " + viewer.getName());
             }
         }
     }
@@ -533,13 +472,9 @@ public class PlayerNametagManager implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         if (!enabled) return;
         Player joining = event.getPlayer();
-        debug("onJoin: " + joining.getName() + " — scheduling nametag spawn in 20t");
 
         OreScheduler.runLater(plugin, () -> {
-            if (!joining.isOnline()) {
-                debug("onJoin: " + joining.getName() + " went offline before spawn tick, skipping");
-                return;
-            }
+            if (!joining.isOnline()) return;
 
             // Spawn this player's own nametag
             spawnNametag(joining);
@@ -563,7 +498,6 @@ public class PlayerNametagManager implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         if (!enabled) return;
         UUID uuid = event.getPlayer().getUniqueId();
-        debug("onQuit: " + event.getPlayer().getName() + " — removing nametag");
 
         // Remove this player's nametag entities
         removeNametag(uuid);
@@ -578,13 +512,10 @@ public class PlayerNametagManager implements Listener {
     public void onWorldChange(PlayerChangedWorldEvent event) {
         if (!enabled) return;
         Player player = event.getPlayer();
-        debug("onWorldChange: " + player.getName() + " moved to " + player.getWorld().getName()
-                + " — scheduling re-spawn in 5t");
 
         // Despawn and re-spawn in the new world
         OreScheduler.runLater(plugin, () -> {
             if (player.isOnline()) spawnNametag(player);
-            else debug("onWorldChange: " + player.getName() + " offline before re-spawn");
         }, 5L);
     }
 
@@ -598,8 +529,6 @@ public class PlayerNametagManager implements Listener {
         // For same-world long-distance teleports, just re-evaluate visibility
         if (!event.getFrom().getWorld().equals(event.getTo().getWorld())) return;
 
-        debug("onTeleport: " + player.getName() + " teleported within " + player.getWorld().getName()
-                + " — re-evaluating visibility in 5t");
         OreScheduler.runLater(plugin, () -> {
             if (player.isOnline()) updateViewersFor(player);
         }, 5L);
