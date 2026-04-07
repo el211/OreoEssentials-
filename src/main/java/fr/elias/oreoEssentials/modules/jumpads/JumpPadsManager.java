@@ -90,13 +90,14 @@ public class JumpPadsManager {
         this.defaultUseLookDir = c.getBoolean("jumpads.default_useLookDir", true);
 
         // Data file
-        this.file = new File(plugin.getDataFolder(), "jumpads.yml");
+        File serverFolder = new File(plugin.getDataFolder(), "server");
+        if (!serverFolder.exists()) serverFolder.mkdirs();
+        this.file = new File(serverFolder, "jumpads.yml");
         if (!file.exists()) {
             try {
-                plugin.getDataFolder().mkdirs();
                 file.createNewFile();
             } catch (IOException e) {
-                plugin.getLogger().severe("Failed to create jumpads.yml: " + e.getMessage());
+                plugin.getLogger().severe("Failed to create server/jumpads.yml: " + e.getMessage());
             }
         }
         this.cfg = YamlConfiguration.loadConfiguration(file);

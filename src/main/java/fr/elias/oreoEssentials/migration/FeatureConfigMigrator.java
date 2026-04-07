@@ -39,6 +39,8 @@ public final class FeatureConfigMigrator {
         migrateCommandsModule(plugin);
         migrateServerModule(plugin);
         migrateShards(plugin);
+        migrateTempFly(plugin);
+        migrateJumpAds(plugin);
         migrateAfk(plugin);
         migrateEvents(plugin);
         migrateCurrencyConfig(plugin);
@@ -160,6 +162,68 @@ public final class FeatureConfigMigrator {
         moveFile(plugin, folder, "craft-actions.yml",  "server/craft-actions.yml");
         moveFile(plugin, folder, "modgui.yml",         "server/modgui.yml");
         moveFile(plugin, folder, "maintenance.yml",    "server/maintenance.yml");
+    }
+
+    // ── TempFly ───────────────────────────────────────────────────────────────
+
+    /**
+     * Moves tempfly.yml from the plugin root into server/.
+     *
+     *  server/tempfly.yml:
+     *   - If already exists  → skip (already migrated)
+     *   - Else if old tempfly.yml exists at plugin root → move it, preserving all config
+     *   - Else               → TempFlyConfig.createDefault() will generate it on first load
+     */
+    private static void migrateTempFly(OreoEssentials plugin) {
+        File folder = new File(plugin.getDataFolder(), "server");
+        if (!folder.exists()) folder.mkdirs();
+
+        File dest = new File(folder, "tempfly.yml");
+        if (dest.exists()) return;
+
+        File old = new File(plugin.getDataFolder(), "tempfly.yml");
+        if (old.exists()) {
+            try {
+                Files.copy(old.toPath(), dest.toPath());
+                old.delete();
+                plugin.getLogger().info("[Migration] tempfly.yml moved to server/tempfly.yml");
+            } catch (IOException e) {
+                plugin.getLogger().warning("[Migration] Could not migrate tempfly.yml: " + e.getMessage());
+            }
+        } else if (plugin.getResource("server/tempfly.yml") != null) {
+            plugin.saveResource("server/tempfly.yml", false);
+            plugin.getLogger().info("[Migration] Created default server/tempfly.yml");
+        }
+    }
+
+    // ── JumpAds ───────────────────────────────────────────────────────────────
+
+    /**
+     * Moves jumpads.yml from the plugin root into server/.
+     *
+     *  server/jumpads.yml:
+     *   - If already exists  → skip (already migrated)
+     *   - Else if old jumpads.yml exists at plugin root → move it, preserving all jump pad data
+     *   - Else               → JumpPadsManager will create an empty file on first load
+     */
+    private static void migrateJumpAds(OreoEssentials plugin) {
+        File folder = new File(plugin.getDataFolder(), "server");
+        if (!folder.exists()) folder.mkdirs();
+
+        File dest = new File(folder, "jumpads.yml");
+        if (dest.exists()) return;
+
+        File old = new File(plugin.getDataFolder(), "jumpads.yml");
+        if (old.exists()) {
+            try {
+                Files.copy(old.toPath(), dest.toPath());
+                old.delete();
+                plugin.getLogger().info("[Migration] jumpads.yml moved to server/jumpads.yml");
+            } catch (IOException e) {
+                plugin.getLogger().warning("[Migration] Could not migrate jumpads.yml: " + e.getMessage());
+            }
+        }
+        // If neither exists, JumpPadsManager creates an empty file on first load.
     }
 
     // ── Shards ────────────────────────────────────────────────────────────────

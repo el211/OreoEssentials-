@@ -19,7 +19,9 @@ public class TempFlyConfig {
     private final Map<String, Integer> luckPermsGroups = new HashMap<>();
 
     public TempFlyConfig(File dataFolder) {
-        this.configFile = new File(dataFolder, "tempfly.yml");
+        File serverFolder = new File(dataFolder, "server");
+        if (!serverFolder.exists()) serverFolder.mkdirs();
+        this.configFile = new File(serverFolder, "tempfly.yml");
         load();
     }
 
