@@ -23,6 +23,8 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import io.papermc.paper.scoreboard.numbers.NumberFormat;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,11 +57,13 @@ public final class ScoreboardService implements Listener {
     private final Map<UUID, FoliaScoreboard> foliaBoards  = new ConcurrentHashMap<>();
     private final Map<UUID, Scoreboard>      playerBoards = new ConcurrentHashMap<>();
     private OreTask taskId = null;
+    private final File toggleFile;
 
     public ScoreboardService(OreoEssentials plugin, ScoreboardConfig cfg) {
-        this.plugin    = plugin;
-        this.cfg       = cfg;
-        this.titleAnim = new AnimatedText(cfg.titleFrames(), cfg.titleFrameTicks());
+        this.plugin      = plugin;
+        this.cfg         = cfg;
+        this.titleAnim   = new AnimatedText(cfg.titleFrames(), cfg.titleFrameTicks());
+        this.toggleFile  = new File(new File(plugin.getDataFolder(), "players"), "sb-toggles.yml");
     }
 
     // -------------------------------------------------------------------------
@@ -68,6 +72,8 @@ public final class ScoreboardService implements Listener {
 
     public void start() {
         if (!cfg.enabled()) return;
+
+        loadPersistedToggles();
 
         plugin.getLogger().info("[Scoreboard] Starting — Folia=" + OreScheduler.isFolia()
                 + " FoliaScoreboardAvailable=" + fr.elias.oreoEssentials.modules.scoreboard.FoliaScoreboard.AVAILABLE);
@@ -87,7 +93,6 @@ public final class ScoreboardService implements Listener {
                 Player p = Bukkit.getPlayer(id);
                 if (p == null) {
                     shown.remove(id);
-                    toggles.remove(id);
                     continue;
                 }
                 if (OreScheduler.isFolia()) {
@@ -158,8 +163,9 @@ public final class ScoreboardService implements Listener {
     public void toggle(Player p) {
         UUID id = p.getUniqueId();
         if (isShown(p)) {
+            toggles.put(id, false); // set BEFORE hide so shouldShow() is consistent
             hide(p);
-            toggles.put(id, false);
+            saveToggle(id, false);
             return;
         }
         if (!isWorldAllowedByLists(p)) {
@@ -167,8 +173,9 @@ public final class ScoreboardService implements Listener {
                     "<red>Scoreboard is disabled in this world.</red>");
             return;
         }
+        toggles.put(id, true); // set BEFORE show so shouldShow() is consistent
         show(p);
-        toggles.put(id, true);
+        saveToggle(id, true);
     }
 
     // -------------------------------------------------------------------------
@@ -705,6 +712,43 @@ public final class ScoreboardService implements Listener {
     }
 
     // -------------------------------------------------------------------------
+    // Toggle persistence
+    // -------------------------------------------------------------------------
+
+    /** Loads all saved toggle preferences from disk into the in-memory map. Called once at startup. */
+    private void loadPersistedToggles() {
+        if (!toggleFile.exists()) return;
+        try {
+            org.bukkit.configuration.file.YamlConfiguration y =
+                    org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(toggleFile);
+            for (String key : y.getKeys(false)) {
+                try { toggles.put(UUID.fromString(key), y.getBoolean(key)); }
+                catch (IllegalArgumentException ignored) {}
+            }
+            plugin.getLogger().info("[Scoreboard] Loaded " + toggles.size() + " saved toggle preference(s).");
+        } catch (Exception e) {
+            plugin.getLogger().warning("[Scoreboard] Could not load sb-toggles.yml: " + e.getMessage());
+        }
+    }
+
+    /** Persists a single player's toggle preference to disk asynchronously. */
+    private void saveToggle(UUID id, boolean value) {
+        OreScheduler.runAsync(plugin, () -> {
+            try {
+                File dir = toggleFile.getParentFile();
+                if (!dir.exists()) dir.mkdirs();
+                org.bukkit.configuration.file.YamlConfiguration y = toggleFile.exists()
+                        ? org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(toggleFile)
+                        : new org.bukkit.configuration.file.YamlConfiguration();
+                y.set(id.toString(), value);
+                y.save(toggleFile);
+            } catch (IOException e) {
+                plugin.getLogger().warning("[Scoreboard] Could not save toggle for " + id + ": " + e.getMessage());
+            }
+        });
+    }
+
+    // -------------------------------------------------------------------------
     // Events
     // -------------------------------------------------------------------------
 
@@ -735,12 +779,12 @@ public final class ScoreboardService implements Listener {
     public void onQuit(PlayerQuitEvent e) {
         UUID id = e.getPlayer().getUniqueId();
         shown.remove(id);
-        toggles.remove(id);
         playerBoards.remove(id);
         // Must remove Folia scoreboard on quit so the next login creates a fresh
         // instance with the new Player reference (not the stale old one).
         FoliaScoreboard fs = foliaBoards.remove(id);
         if (fs != null) { try { fs.hide(); } catch (Throwable ignored) {} }
+        // toggles intentionally kept in memory — preference is re-applied on next login
     }
 
     @EventHandler

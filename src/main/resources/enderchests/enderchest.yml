@@ -1,0 +1,24 @@
+# OreoEssentials — Ender Chest configuration
+# Each row = 9 slots. Max is 54 (6 rows).
+# The highest matching value always wins if a player qualifies for multiple entries.
+
+# ── Permission-based slots ────────────────────────────────────────────────────
+# Keys here map to the permission node "oreo.tier.<key>".
+# You must add those permissions to your LuckPerms groups manually.
+#   e.g. "vip: 45"  →  requires "oreo.tier.vip" on the vip group in LuckPerms.
+permission-slots:
+  enabled: true
+  default: 27
+  vip: 45
+  mvp: 54
+
+# ── LuckPerms group-based slots ───────────────────────────────────────────────
+# Write your actual LuckPerms group names here.
+# No permissions to create or assign — the plugin checks group membership
+# directly via the LuckPerms API. Inherited groups are included.
+rank-slots:
+  enabled: false
+  default: 27
+  vip: 45
+  staff: 54
+  # mvp: 54
