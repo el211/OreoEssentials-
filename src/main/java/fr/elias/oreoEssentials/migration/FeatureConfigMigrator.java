@@ -38,7 +38,12 @@ public final class FeatureConfigMigrator {
         migratePlaytimeRewards(plugin);
         migrateCommandsModule(plugin);
         migrateServerModule(plugin);
+        migrateShards(plugin);
         migrateAfk(plugin);
+        migrateEvents(plugin);
+        migrateCurrencyConfig(plugin);
+        migrateEnderChest(plugin);
+        migrateTrade(plugin);
     }
 
     // ── Player Warps ──────────────────────────────────────────────────────────
@@ -155,6 +160,40 @@ public final class FeatureConfigMigrator {
         moveFile(plugin, folder, "craft-actions.yml",  "server/craft-actions.yml");
         moveFile(plugin, folder, "modgui.yml",         "server/modgui.yml");
         moveFile(plugin, folder, "maintenance.yml",    "server/maintenance.yml");
+    }
+
+    // ── Shards ────────────────────────────────────────────────────────────────
+
+    /**
+     * Moves shards.yml from the plugin root into server/.
+     *
+     *  server/shards.yml:
+     *   - If already exists  → skip (already migrated)
+     *   - Else if old shards.yml exists at plugin root → move it, preserving all config
+     *   - Else               → extract default from jar
+     */
+    private static void migrateShards(OreoEssentials plugin) {
+        File folder = new File(plugin.getDataFolder(), "server");
+        if (!folder.exists()) folder.mkdirs();
+
+        File dest = new File(folder, "shards.yml");
+        if (dest.exists()) return;
+
+        File old = new File(plugin.getDataFolder(), "shards.yml");
+        if (old.exists()) {
+            try {
+                Files.copy(old.toPath(), dest.toPath());
+                old.delete();
+                plugin.getLogger().info("[Migration] shards.yml moved to server/shards.yml");
+            } catch (IOException e) {
+                plugin.getLogger().warning("[Migration] Could not migrate shards.yml: " + e.getMessage());
+            }
+        } else {
+            if (plugin.getResource("server/shards.yml") != null) {
+                plugin.saveResource("server/shards.yml", false);
+                plugin.getLogger().info("[Migration] Created default server/shards.yml");
+            }
+        }
     }
 
     // ── Commands Module ───────────────────────────────────────────────────────
@@ -305,6 +344,154 @@ public final class FeatureConfigMigrator {
         }
 
         plugin.getLogger().info("[Migration] AFK config migrated to afk/config.yml");
+    }
+
+    // ── Trade ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Moves trade.yml from the plugin root into trades/.
+     *
+     *  trades/trade.yml:
+     *   - If already exists  → skip (already migrated)
+     *   - Else if old trade.yml exists at plugin root → move it, preserving all config
+     *   - Else               → extract default from jar
+     */
+    private static void migrateTrade(OreoEssentials plugin) {
+        File folder = new File(plugin.getDataFolder(), "trades");
+        if (!folder.exists()) folder.mkdirs();
+
+        File dest = new File(folder, "trade.yml");
+        if (dest.exists()) return;
+
+        File old = new File(plugin.getDataFolder(), "trade.yml");
+        if (old.exists()) {
+            try {
+                Files.copy(old.toPath(), dest.toPath());
+                old.delete();
+                plugin.getLogger().info("[Migration] trade.yml moved to trades/trade.yml");
+            } catch (IOException e) {
+                plugin.getLogger().warning("[Migration] Could not migrate trade.yml: " + e.getMessage());
+            }
+        } else {
+            plugin.saveResource("trades/trade.yml", false);
+            plugin.getLogger().info("[Migration] Created default trades/trade.yml");
+        }
+    }
+
+    // ── Ender Chest ───────────────────────────────────────────────────────────
+
+    /**
+     * Moves enderchest.yml from the plugin root into enderchests/.
+     * If the old file had content it is ported into the new sectioned format:
+     *   - flat keys (default, vip, mvp …)  → permission-slots  (enabled: true)
+     *   - rank-slots section (if present)  → rank-slots        (enabled: false)
+     * If no old file exists the bundled default is extracted.
+     */
+    private static void migrateEnderChest(OreoEssentials plugin) {
+        File folder = new File(plugin.getDataFolder(), "enderchests");
+        if (!folder.exists()) folder.mkdirs();
+
+        File dest = new File(folder, "enderchest.yml");
+        if (dest.exists()) return;
+
+        File old = new File(plugin.getDataFolder(), "enderchest.yml");
+        if (old.exists()) {
+            YamlConfiguration oldCfg = YamlConfiguration.loadConfiguration(old);
+            YamlConfiguration newCfg = new YamlConfiguration();
+
+            // ── permission-slots (from old flat keys) ──────────────────────
+            newCfg.set("permission-slots.enabled", true);
+            int oldDefault = oldCfg.getInt("default", 27);
+            newCfg.set("permission-slots.default", oldDefault);
+            for (String k : oldCfg.getKeys(false)) {
+                if ("default".equalsIgnoreCase(k) || "rank-slots".equalsIgnoreCase(k)) continue;
+                if (oldCfg.isInt(k)) newCfg.set("permission-slots." + k, oldCfg.getInt(k));
+            }
+
+            // ── rank-slots (from old rank-slots section, if present) ────────
+            newCfg.set("rank-slots.enabled", false);
+            org.bukkit.configuration.ConfigurationSection oldRankSlots =
+                    oldCfg.getConfigurationSection("rank-slots");
+            if (oldRankSlots != null) {
+                for (String k : oldRankSlots.getKeys(false)) {
+                    if (oldRankSlots.isInt(k)) newCfg.set("rank-slots." + k, oldRankSlots.getInt(k));
+                }
+            } else {
+                // Populate rank-slots with the same values so it's ready to use
+                newCfg.set("rank-slots.default", oldDefault);
+            }
+
+            try {
+                newCfg.save(dest);
+                old.delete();
+                plugin.getLogger().info("[Migration] enderchest.yml ported to enderchests/enderchest.yml");
+            } catch (IOException e) {
+                plugin.getLogger().warning("[Migration] Could not save enderchests/enderchest.yml: " + e.getMessage());
+            }
+        } else {
+            plugin.saveResource("enderchests/enderchest.yml", false);
+            plugin.getLogger().info("[Migration] Created default enderchests/enderchest.yml");
+        }
+    }
+
+    // ── Custom Currencies ─────────────────────────────────────────────────────
+
+    /**
+     * Moves currency-config.yml from the plugin root into custom-currencies/.
+     *
+     *  custom-currencies/currency-config.yml:
+     *   - If already exists  → skip (already migrated)
+     *   - Else if old currency-config.yml exists at plugin root → move it, preserving all config
+     *   - Else               → CurrencyConfig will generate its own default on first load
+     */
+    private static void migrateCurrencyConfig(OreoEssentials plugin) {
+        File folder = new File(plugin.getDataFolder(), "custom-currencies");
+        if (!folder.exists()) folder.mkdirs();
+
+        File dest = new File(folder, "currency-config.yml");
+        if (dest.exists()) return;
+
+        File old = new File(plugin.getDataFolder(), "currency-config.yml");
+        if (old.exists()) {
+            try {
+                Files.copy(old.toPath(), dest.toPath());
+                old.delete();
+                plugin.getLogger().info("[Migration] currency-config.yml moved to custom-currencies/currency-config.yml");
+            } catch (IOException e) {
+                plugin.getLogger().warning("[Migration] Could not migrate currency-config.yml: " + e.getMessage());
+            }
+        }
+        // If neither exists, CurrencyConfig.saveDefault() will generate the file on first load.
+    }
+
+    // ── Events Module ─────────────────────────────────────────────────────────
+
+    /**
+     * Moves events.yml from the plugin root into the chat-messaging sub-folder.
+     *
+     *  chat-messaging/events.yml:
+     *   - If already exists  → skip (already migrated)
+     *   - Else if old events.yml exists at plugin root → move it, preserving all config
+     *   - Else               → EventConfig will generate its own default on first load
+     */
+    private static void migrateEvents(OreoEssentials plugin) {
+        File folder = new File(plugin.getDataFolder(), "chat-messaging");
+        if (!folder.exists()) folder.mkdirs();
+
+        File dest = new File(folder, "events.yml");
+        if (dest.exists()) return;
+
+        File old = new File(plugin.getDataFolder(), "events.yml");
+        if (old.exists()) {
+            try {
+                Files.copy(old.toPath(), dest.toPath());
+                old.delete();
+                plugin.getLogger().info("[Migration] events.yml moved to chat-messaging/events.yml");
+            } catch (IOException e) {
+                plugin.getLogger().warning("[Migration] Could not migrate events.yml: " + e.getMessage());
+            }
+        }
+        // If neither exists, EventConfig.saveDefault() will generate the file on first load.
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

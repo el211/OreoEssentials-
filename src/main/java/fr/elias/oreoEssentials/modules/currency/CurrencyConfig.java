@@ -20,7 +20,9 @@ public class CurrencyConfig {
 
     public CurrencyConfig(Plugin plugin) {
         this.plugin = plugin;
-        this.configFile = new File(plugin.getDataFolder(), "currency-config.yml");
+        File folder = new File(plugin.getDataFolder(), "custom-currencies");
+        if (!folder.exists()) folder.mkdirs();
+        this.configFile = new File(folder, "currency-config.yml");
         load();
     }
 
@@ -61,9 +63,9 @@ public class CurrencyConfig {
             defaultConfig.set("messages.top-footer", "<gradient:gold:yellow>═══════════════════════════════</gradient>");
 
             defaultConfig.save(configFile);
-            plugin.getLogger().info("[Currency] Created currency-config.yml with MiniMessage support");
+            plugin.getLogger().info("[Currency] Created custom-currencies/currency-config.yml with MiniMessage support");
         } catch (IOException e) {
-            plugin.getLogger().severe("[Currency] Failed to create currency-config.yml: " + e.getMessage());
+            plugin.getLogger().severe("[Currency] Failed to create custom-currencies/currency-config.yml: " + e.getMessage());
         }
     }
 
@@ -75,7 +77,7 @@ public class CurrencyConfig {
         try {
             config.save(configFile);
         } catch (IOException e) {
-            plugin.getLogger().severe("[Currency] Failed to save currency-config.yml: " + e.getMessage());
+            plugin.getLogger().severe("[Currency] Failed to save custom-currencies/currency-config.yml: " + e.getMessage());
         }
     }
 

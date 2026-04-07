@@ -41,12 +41,13 @@ public final class TradeConfig {
 
     public TradeConfig(JavaPlugin plugin) {
         this.plugin = plugin;
-        plugin.saveResource("trade.yml", false);
+        java.io.File tradesFolder = new java.io.File(plugin.getDataFolder(), "trades");
+        if (!tradesFolder.exists()) tradesFolder.mkdirs();
+        java.io.File tradeFile = new java.io.File(tradesFolder, "trade.yml");
+        if (!tradeFile.exists()) plugin.saveResource("trades/trade.yml", false);
         FileConfiguration c = plugin.getConfig(); // main config
         org.bukkit.configuration.file.YamlConfiguration trade =
-                org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(
-                        new java.io.File(plugin.getDataFolder(), "trade.yml")
-                );
+                org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(tradeFile);
 
         this.guiTitle   = trade.getString("title", "&8Player Trade");
         this.rows       = Math.max(3, Math.min(6, trade.getInt("rows", 6)));

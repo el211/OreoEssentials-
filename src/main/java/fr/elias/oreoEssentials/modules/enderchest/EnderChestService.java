@@ -14,6 +14,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class EnderChestService {
@@ -104,15 +105,47 @@ public class EnderChestService {
 
 
     public int resolveSlots(Player p) {
-        int slots = config.getDefaultSlots();
-        Map<String, Integer> ranks = config.getRankSlots();
-        for (var e : ranks.entrySet()) {
-            String node = ("oreo.tier." + e.getKey()).toLowerCase(Locale.ROOT);
-            if (p.hasPermission(node)) {
-                slots = Math.max(slots, e.getValue());
+        int slots = 9; // absolute minimum fallback
+
+        // Permission-based (oreo.tier.<key>)
+        if (config.isPermissionSlotsEnabled()) {
+            slots = Math.max(slots, config.getDefaultSlots());
+            for (var e : config.getRankSlots().entrySet()) {
+                String node = ("oreo.tier." + e.getKey()).toLowerCase(Locale.ROOT);
+                if (p.hasPermission(node)) slots = Math.max(slots, e.getValue());
             }
         }
+
+        // LuckPerms group-based (no permission nodes needed)
+        if (config.isRankSlotsEnabled()) {
+            slots = Math.max(slots, config.getRankSlotsDefault());
+            Map<String, Integer> groupSlots = config.getRankGroupSlots();
+            if (!groupSlots.isEmpty()) {
+                for (String group : getLuckPermsGroups(p)) {
+                    Integer v = groupSlots.get(group);
+                    if (v != null) slots = Math.max(slots, v);
+                }
+            }
+        }
+
         return Math.max(1, Math.min(slots, MAX_SIZE));
+    }
+
+    private Set<String> getLuckPermsGroups(Player player) {
+        try {
+            var reg = Bukkit.getServicesManager().getRegistration(net.luckperms.api.LuckPerms.class);
+            if (reg == null) return Collections.emptySet();
+            net.luckperms.api.model.user.User user = reg.getProvider()
+                    .getPlayerAdapter(Player.class).getUser(player);
+            Set<String> groups = user.getNodes(net.luckperms.api.node.NodeType.INHERITANCE)
+                    .stream()
+                    .map(n -> n.getGroupName().toLowerCase(Locale.ROOT))
+                    .collect(Collectors.toCollection(HashSet::new));
+            groups.add(user.getPrimaryGroup().toLowerCase(Locale.ROOT));
+            return groups;
+        } catch (Throwable ignored) {
+            return Collections.emptySet();
+        }
     }
 
 

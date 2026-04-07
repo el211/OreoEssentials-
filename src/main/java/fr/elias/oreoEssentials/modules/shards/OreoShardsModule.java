@@ -26,14 +26,16 @@ public class OreoShardsModule {
     public void enable() {
         plugin.getLogger().info("[Sharding] Starting initialization...");
 
-        File configFile = new File(plugin.getDataFolder(), "shards.yml");
+        File serverFolder = new File(plugin.getDataFolder(), "server");
+        if (!serverFolder.exists()) serverFolder.mkdirs();
+        File configFile = new File(serverFolder, "shards.yml");
 
         if (!configFile.exists()) {
             try {
-                plugin.saveResource("shards.yml", false);
-                plugin.getLogger().info("[Sharding] Created shards.yml from resources");
+                plugin.saveResource("server/shards.yml", false);
+                plugin.getLogger().info("[Sharding] Created server/shards.yml from resources");
             } catch (Exception e) {
-                plugin.getLogger().info("[Sharding] Creating default shards.yml...");
+                plugin.getLogger().info("[Sharding] Creating default server/shards.yml...");
                 createDefaultConfig(configFile);
             }
         }
@@ -57,7 +59,7 @@ public class OreoShardsModule {
 
         if (!handoffManager.testConnection()) {
             plugin.getLogger().severe("[Sharding] Failed to connect to Redis!");
-            plugin.getLogger().severe("[Sharding] Check your Redis configuration in shards.yml");
+            plugin.getLogger().severe("[Sharding] Check your Redis configuration in server/shards.yml");
             plugin.getLogger().info("[Sharding] Command /shard will still work for configuration");
 
             registerShardCommand();
