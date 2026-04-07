@@ -129,8 +129,6 @@ public class SettingsConfig {
 
     public boolean sitEnabled() { return isEnabled("sit"); }
 
-    public boolean afkPoolEnabled() { return isEnabled("afk-pool"); }
-
     public boolean getBoolean(String path, boolean def) {
         return cfg.getBoolean(path, def);
     }

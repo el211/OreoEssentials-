@@ -796,7 +796,7 @@ public final class OreoEssentials extends JavaPlugin {
         this.afkService = new AfkService(this);
         getServer().getPluginManager().registerEvents(new AfkListener(this, afkService), this);
 
-        if (settingsConfig.afkPoolEnabled()) {
+        if (afkService.getAfkConfig().poolEnabled()) {
             try {
                 this.afkPoolService = new AfkPoolService(this, afkService);
                 afkService.setPoolService(afkPoolService);
@@ -806,7 +806,7 @@ public final class OreoEssentials extends JavaPlugin {
                 this.afkPoolService = null;
             }
         } else {
-            getLogger().info("[AfkPool] Disabled by settings.yml");
+            getLogger().info("[AfkPool] Disabled by afk/config.yml");
             this.afkPoolService = null;
         }
     }
@@ -1443,6 +1443,9 @@ public final class OreoEssentials extends JavaPlugin {
         try { if (this.afkPoolService != null) this.afkPoolService.tryHookCrossServerNow(); }
         catch (Throwable t) { getLogger().warning("[AfkPool] Failed to hook cross-server handlers: " + t.getMessage()); }
 
+        try { if (this.afkService != null) this.afkService.tryHookCrossServerNow(); }
+        catch (Throwable t) { getLogger().warning("[AfkService] Failed to hook cross-server handlers: " + t.getMessage()); }
+
         try { getLogger().info("[RABBIT] Packet registry checksum=" + this.packetManager.registryChecksum()); }
         catch (Throwable ignored) {}
 
@@ -1660,6 +1663,7 @@ public final class OreoEssentials extends JavaPlugin {
         // Start event-driven player sync (join/quit/block events + periodic)
         this.webPanelSyncService = new fr.elias.oreoEssentials.modules.webpanel.WebPanelSyncService(this, client);
         this.webPanelSyncService.start();
+        if (this.afkService != null) this.afkService.setWebPanelSync(this.webPanelSyncService);
 
         // Register reward (oreopanel/reward.yml)
         fr.elias.oreoEssentials.modules.webpanel.RegisterRewardConfig rrConfig =
@@ -2153,10 +2157,11 @@ public final class OreoEssentials extends JavaPlugin {
         pm.registerPacket(fr.elias.oreoEssentials.modules.currency.rabbitmq.CurrencySyncPacket.class, fr.elias.oreoEssentials.modules.currency.rabbitmq.CurrencySyncPacket::new);
         pm.registerPacket(AfkPoolEnterPacket.class, AfkPoolEnterPacket::new);
         pm.registerPacket(AfkPoolExitPacket.class, AfkPoolExitPacket::new);
+        pm.registerPacket(fr.elias.oreoEssentials.modules.afk.rabbit.packets.AfkStatusPacket.class, fr.elias.oreoEssentials.modules.afk.rabbit.packets.AfkStatusPacket::new);
         pm.registerPacket(fr.elias.oreoEssentials.modules.auctionhouse.rabbitmq.AuctionSyncPacket.class, fr.elias.oreoEssentials.modules.auctionhouse.rabbitmq.AuctionSyncPacket::new);
         pm.registerPacket(fr.elias.oreoEssentials.modules.orders.rabbitmq.OrderSyncPacket.class, fr.elias.oreoEssentials.modules.orders.rabbitmq.OrderSyncPacket::new);
         pm.registerPacket(fr.elias.oreoEssentials.modules.portals.rabbit.PortalTeleportPacket.class, fr.elias.oreoEssentials.modules.portals.rabbit.PortalTeleportPacket::new);
-        getLogger().info("[RABBIT] Registered 31 packet types deterministically");
+        getLogger().info("[RABBIT] Registered 32 packet types deterministically");
     }
 
     // -------------------------------------------------------------------------

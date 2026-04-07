@@ -96,6 +96,41 @@ public class WebPanelRabbitPublisher {
         }
     }
 
+    /**
+     * Publishes an AFK status change to the web panel backend.
+     * The backend stores this in-memory and exposes it via GET /api/v1/servers/{id}/afk.
+     *
+     * @param entering  true = player just went AFK, false = player returned
+     */
+    public void publishAfkStatus(UUID uuid, String playerName, String serverName,
+                                  String world, double x, double y, double z,
+                                  long afkSinceMs, boolean entering) {
+        try (Channel channel = connection.createChannel()) {
+            channel.queueDeclare(SYNC_QUEUE, true, false, false, null);
+
+            JsonObject payload = new JsonObject();
+            payload.addProperty("type",        "afk_status");
+            payload.addProperty("playerUuid",  uuid.toString());
+            payload.addProperty("playerName",  playerName);
+            payload.addProperty("serverName",  serverName);
+            payload.addProperty("world",       world);
+            payload.addProperty("x",           x);
+            payload.addProperty("y",           y);
+            payload.addProperty("z",           z);
+            payload.addProperty("afkSinceMs",  afkSinceMs);
+            payload.addProperty("entering",    entering);
+
+            channel.basicPublish(
+                    "",
+                    SYNC_QUEUE,
+                    MessageProperties.PERSISTENT_TEXT_PLAIN,
+                    payload.toString().getBytes(StandardCharsets.UTF_8)
+            );
+        } catch (Exception e) {
+            logger.warning("[WebPanel-AMQP] AFK publish failed: " + e.getMessage());
+        }
+    }
+
     /** Call on plugin disable. */
     public void close() {
         try { if (actionConsumerChannel != null && actionConsumerChannel.isOpen()) actionConsumerChannel.close(); } catch (Exception ignored) {}

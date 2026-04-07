@@ -125,19 +125,7 @@ playersync:
   health: true
   hunger: true
 
-# AFK system
-afk:
-  auto:
-    enabled: true
-    seconds: 300  # Player becomes AFK after 5 minutes
-    check-interval-seconds: 5
-
-afk-pool:
-  enabled: true
-  region-name: "afk_pool"
-  world-name: "world"
-  server: "hub"
-  cross-server: true
+# AFK system → configured in plugins/OreoEssentials/afk/config.yml
 
 # Jail system
 Jail:

@@ -158,7 +158,10 @@ public class WebPanelClient {
             conn.setConnectTimeout(5_000);
             conn.setReadTimeout(5_000);
             int status = conn.getResponseCode();
-            if (status != 200) return null;
+            if (status != 200) {
+                log.warning("[WebPanel] Poll actions returned HTTP " + status);
+                return null;
+            }
             String body = new String(conn.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
             conn.disconnect();
             return new Gson().fromJson(body, JsonObject.class);
@@ -297,6 +300,88 @@ public class WebPanelClient {
             return status == 204;
         } catch (Exception e) {
             log.warning("[WebPanel] Failed to sync LuckPerms groups: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * REST fallback: pushes an AFK enter/exit event to the backend.
+     * Used when RabbitMQ is not available.
+     */
+    public boolean pushAfkStatus(UUID uuid, String playerName, String serverName,
+                                  String world, double x, double y, double z,
+                                  long afkSinceMs, boolean entering) {
+        try {
+            URL endpoint = new URL(config.getUrl() + "/api/v1/plugin/afk/status");
+            HttpURLConnection conn = (HttpURLConnection) endpoint.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("X-Api-Key", config.getApiKey());
+            conn.setConnectTimeout(5_000);
+            conn.setReadTimeout(5_000);
+            conn.setDoOutput(true);
+
+            JsonObject payload = new JsonObject();
+            payload.addProperty("playerUuid",  uuid.toString());
+            payload.addProperty("playerName",  playerName);
+            payload.addProperty("serverName",  serverName);
+            payload.addProperty("world",       world);
+            payload.addProperty("x",           x);
+            payload.addProperty("y",           y);
+            payload.addProperty("z",           z);
+            payload.addProperty("afkSinceMs",  afkSinceMs);
+            payload.addProperty("entering",    entering);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(new Gson().toJson(payload).getBytes(StandardCharsets.UTF_8));
+            }
+
+            int status = conn.getResponseCode();
+            conn.disconnect();
+            return status == 200;
+        } catch (Exception e) {
+            log.warning("[WebPanel] Failed to push AFK status: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Sends the list of currently online player UUIDs so the backend can mark
+     * everyone else as offline. Fixes stale "online" flags after crashes or
+     * failed quit syncs.
+     *
+     * @param onlineUuids UUIDs of all players currently online on this server
+     * @return true if the backend accepted the heartbeat (HTTP 200).
+     */
+    public boolean pushHeartbeat(java.util.Collection<String> onlineUuids) {
+        try {
+            URL endpoint = new URL(config.getUrl() + "/api/v1/plugin/heartbeat");
+            HttpURLConnection conn = (HttpURLConnection) endpoint.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("X-Api-Key", config.getApiKey());
+            conn.setConnectTimeout(5_000);
+            conn.setReadTimeout(5_000);
+            conn.setDoOutput(true);
+
+            StringBuilder sb = new StringBuilder("{\"onlineUuids\":[");
+            boolean first = true;
+            for (String uuid : onlineUuids) {
+                if (!first) sb.append(',');
+                sb.append('"').append(uuid).append('"');
+                first = false;
+            }
+            sb.append("]}");
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(sb.toString().getBytes(StandardCharsets.UTF_8));
+            }
+
+            int status = conn.getResponseCode();
+            conn.disconnect();
+            return status == 200;
+        } catch (Exception e) {
+            log.warning("[WebPanel] Failed to push heartbeat: " + e.getMessage());
             return false;
         }
     }

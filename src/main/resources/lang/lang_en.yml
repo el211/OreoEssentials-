@@ -734,6 +734,8 @@ reply:
 afk:
   now-afk: "<yellow>You are now AFK.</yellow>"
   no-longer-afk: "<green>You are no longer AFK.</green>"
+  back-message: "<green>You were AFK for <white>%time%</white>.</green>"
+  actionbar: "<gray>AFK for <white>%time%</white></gray>"
 
 # Anvil
 anvil:

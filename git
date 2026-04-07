@@ -1,0 +1,385 @@
+# OreoEssentials `config.yml`
+
+`config.yml` is the core bootstrap file for OreoEssentials. It is mainly responsible for:
+
+- server identity and language
+- web panel linking
+- debug and logging toggles
+- core storage and economy backends
+- optional Redis and RabbitMQ connectivity
+- cross-server behavior defaults
+- a few core gameplay systems that still live in this file
+- migration settings
+
+File path:
+
+```text
+plugins/OreoEssentials/config.yml
+```
+
+## What Is In `config.yml`
+
+The current file contains these top-level sections:
+
+- `server`
+- `web-panel`
+- `features`
+- `debug`
+- `placeholder-debug`
+- `tradedebug`
+- `skins`
+- `logging`
+- `discord`
+- `essentials`
+- `storage`
+- `economy`
+- `redis`
+- `network`
+- `rabbitmq`
+- `homes`
+- `tpa`
+- `invsee`
+- `playersync`
+- `afk`
+- `afk-pool`
+- `Jail`
+- `portals`
+- `jumpads`
+- `mobs`
+- `world_nicknames`
+- `playervaults`
+- `bossbar`
+- `scoreboard`
+- `Join_messages`
+- `Quit_messages`
+- `Automatic_message`
+- `conversations`
+- `messages`
+- `zessentials-migration`
+- `essentialsx-migration`
+
+## What Was Moved To Other Files
+
+These are not part of `config.yml` and should be documented separately:
+
+- `chat-format.yml`: chat formatting and channel behavior
+- `death-messages.yml`: death message formats
+- `aliases.yml`: runtime aliases
+- `command-control.yml`: command restrictions and rules
+- `commands-toggle.yml`: toggleable commands
+- `interactive-commands.yml`: click or interaction-based command bindings
+- `currency-config.yml`: custom currencies
+- `trade.yml`: trade module behavior
+- `tempfly.yml`: temporary flight settings
+- `kits.yml`: kits and kit GUI
+- `enderchest.yml`: ender chest limits and behavior
+- `playerwarps.yml`: player warp settings
+- `dailyrewards.yml`: daily reward system
+- `playtime_rewards.yml`: playtime rewards
+- `events.yml`: event command hooks
+- `clearlag.yml`: ClearLag module
+- `maintenance.yml`: maintenance mode details
+- `craft-actions.yml`: craft-triggered commands
+- `custom-nameplates/config.yml`: nametags, chat bubbles, action bars and related visuals
+- `tab.yml`: tab list settings
+- `discord-integration.yml`: Discord moderation integration
+- `shards.yml`: Redis-backed shard system
+- `oreopanel/reward.yml`: website registration reward
+- `shop/`, `auctionhouse/`, `orders/`: market module configs
+
+## Quick Start
+
+### Single Server
+
+```yaml
+essentials:
+  storage: "yaml"
+
+economy:
+  type: "json"
+
+network:
+  cross-server: false
+
+rabbitmq:
+  enabled: false
+
+redis:
+  enabled: false
+```
+
+Use `yaml` or `json` if you do not need shared data across servers.
+
+### Multi-Server Network
+
+```yaml
+server:
+  name: "survival-1"
+
+essentials:
+  storage: "mongodb"
+
+network:
+  cross-server: true
+
+economy:
+  type: "mongodb"
+
+rabbitmq:
+  enabled: true
+```
+
+For a real network:
+
+- every server must have a unique `server.name`
+- all servers must share the same MongoDB data if you expect shared essentials or economy state
+- RabbitMQ is recommended when you want live cross-server coordination
+
+## Section Reference
+
+### `server`
+
+```yaml
+server:
+  name: "survival-1"
+  language: en
+```
+
+- `name`: unique logical server ID
+- `language`: language pack selector
+
+This name is important for cross-server routing and ownership tracking.
+
+### `web-panel`
+
+```yaml
+web-panel:
+  enabled: false
+  url: "https://oreostudios.fr"
+  api-key: ""
+```
+
+Controls the OreoStudios web panel link flow used by commands like `/weblink`.
+
+### Debug and runtime diagnostics
+
+```yaml
+features:
+  tpa:
+    debug: false
+    debug-echo-to-player: false
+
+debug: false
+placeholder-debug: false
+tradedebug: true
+
+skins:
+  debug: false
+
+logging:
+  debug: false
+
+discord:
+  link_backend: "file"
+```
+
+This block is easy to miss, but it is part of the current file.
+
+- `features.tpa.debug`: debug output for teleport request flow
+- `placeholder-debug`: placeholder troubleshooting
+- `tradedebug`: trade system diagnostics
+- `skins.debug`: skin module diagnostics
+- `logging.debug`: general debug logging
+- `discord.link_backend`: current account link backend, `file` or `mongodb`
+
+### `essentials` and `storage`
+
+```yaml
+essentials:
+  storage: "yaml"
+
+storage:
+  mongo:
+    uri: "mongodb://localhost:27017"
+    database: "oreo"
+    collectionPrefix: "oreo_"
+```
+
+`essentials.storage` controls the main backend for homes, warps, spawn and back-style data.
+
+Supported values documented in the current file:
+
+- `yaml`
+- `json`
+- `mongodb`
+
+Mongo collections are prefixed with `storage.mongo.collectionPrefix`.
+
+### `economy`
+
+```yaml
+economy:
+  type: "json"
+  starting-balance: 100.0
+  max-balance: 1000000000
+  min-balance: 0.0
+  allow-negative: false
+  baltop-size: 10
+```
+
+Supported backends in the current file:
+
+- `none`
+- `json`
+- `mongodb`
+- `postgresql`
+
+Extra backend blocks:
+
+- `economy.mongodb`
+- `economy.postgresql`
+
+Use `mongodb` or `postgresql` if balances must be shared across servers.
+
+### `redis`
+
+```yaml
+redis:
+  enabled: false
+  host: "localhost"
+  port: 6379
+  password: ""
+  cache-expiry: 600
+```
+
+This is optional. It is a cache or support layer, not the main essentials database.
+
+### `network` and `rabbitmq`
+
+```yaml
+network:
+  cross-server: true
+  transport: "plugin_message"
+
+rabbitmq:
+  enabled: false
+  uri: "amqps://user:pass@host/vhost"
+```
+
+- `network.cross-server`: enables network-aware behavior
+- `network.transport`: proxy handoff transport
+- `rabbitmq.enabled`: live messaging layer for cross-server coordination
+
+RabbitMQ does not replace shared storage. MongoDB and RabbitMQ solve different problems.
+
+### Core gameplay sections still in `config.yml`
+
+These sections are still present in the current file and should remain documented here:
+
+- `homes`
+- `tpa`
+- `invsee`
+- `playersync`
+- `afk`
+- `afk-pool`
+- `Jail`
+- `portals`
+- `jumpads`
+- `mobs`
+- `world_nicknames`
+- `playervaults`
+- `bossbar`
+- `scoreboard`
+- `Join_messages`
+- `Quit_messages`
+- `Automatic_message`
+- `conversations`
+- `messages`
+
+Important examples:
+
+#### `homes`
+
+```yaml
+homes:
+  maxPerPlayer: 5
+  permissionBased: true
+```
+
+#### `playersync`
+
+```yaml
+playersync:
+  inventory: true
+  xp: true
+  health: true
+  hunger: true
+```
+
+#### `afk-pool`
+
+```yaml
+afk-pool:
+  enabled: true
+  region-name: "afk_pool"
+  world-name: "world"
+  server: "hub"
+  cross-server: true
+```
+
+#### `playervaults`
+
+```yaml
+playervaults:
+  storage: auto
+  collection: "oreo_playervaults"
+  slots-cap: 54
+  default-slots: 9
+```
+
+#### `bossbar` and `scoreboard`
+
+Both are still defined in the current `config.yml`. They were not removed from this file in the current snapshot.
+
+#### Join or quit messaging and conversations
+
+The current `config.yml` still contains:
+
+- `Join_messages`
+- `Quit_messages`
+- `Automatic_message`
+- `conversations`
+- `messages`
+
+If those systems are moved later, this page should be updated again, but in the current repository snapshot they still belong here.
+
+### Migration blocks
+
+The current file also includes migration settings for:
+
+- `zessentials-migration`
+- `essentialsx-migration`
+
+These are easy to overlook and were missing from the older GitBook page.
+
+## Common Mistakes
+
+### Homes not shared across servers
+
+- `essentials.storage` is still set to `yaml` or `json`
+- Mongo settings do not match across servers
+- two servers share the same `server.name`
+
+### Economy not shared
+
+- `economy.type` is set to `json`
+- each server is using a different external database
+
+### Cross-server flow feels incomplete
+
+- `network.cross-server` is off
+- RabbitMQ is disabled where live coordination is expected
+
+### Wrong file being edited
+
+Do not put settings for other modules into `config.yml` if they now live in their own files such as `currency-config.yml`, `trade.yml`, `kits.yml`, `playerwarps.yml`, `discord-integration.yml` or `shards.yml`.

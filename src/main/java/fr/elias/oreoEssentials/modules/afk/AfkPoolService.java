@@ -69,12 +69,12 @@ public class AfkPoolService implements Listener {
     }
 
     private void loadConfig() {
-        var config = plugin.getConfig();
-        this.enabled = config.getBoolean("afk-pool.enabled", false);
-        this.afkPoolRegionName = config.getString("afk-pool.region-name", "afk_pool");
-        this.afkPoolWorldName = config.getString("afk-pool.world-name", "world");
-        this.afkPoolServer = config.getString("afk-pool.server", localServer);
-        this.crossServerEnabled = config.getBoolean("afk-pool.cross-server", false);
+        AfkConfig afkCfg = afkService.getAfkConfig();
+        this.enabled            = afkCfg.poolEnabled();
+        this.afkPoolRegionName  = afkCfg.poolRegionName();
+        this.afkPoolWorldName   = afkCfg.poolWorldName();
+        this.afkPoolServer      = afkCfg.poolServer(localServer);
+        this.crossServerEnabled = afkCfg.poolCrossServer();
     }
 
     public void tryHookCrossServerNow() {

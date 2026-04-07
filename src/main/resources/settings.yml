@@ -3,9 +3,6 @@ features:
   world-sharding:
     enabled: false  # Set to true when ready to use
 
-  afk-pool:
-    enabled: false
-
   bossbar:
     enabled: false  # Replaced by MultiBossBarService in custom-nameplates/config.yml
 
@@ -187,8 +184,6 @@ maintenance:
 holograms:
   text:
     per-player: true        # enable per-player placeholders/permissions for TEXT holograms
-
-
 # Nametag, chat bubbles and action bar are configured in:
 # plugins/OreoEssentials/custom-nameplates/config.yml
 

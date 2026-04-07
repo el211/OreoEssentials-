@@ -86,24 +86,26 @@ public class WebPanelSyncService implements Listener {
                             // Instant delivery attempt for the recipient (if currently online)
                             String senderName = action.has("senderName") ? action.get("senderName").getAsString() : "Someone";
                             long   deliveryId = action.has("deliveryId") ? action.get("deliveryId").getAsLong()   : -1L;
-                            OreScheduler.run(plugin, () -> {
-                                Player recipient = Bukkit.getPlayer(UUID.fromString(uuidStr));
-                                if (recipient != null && recipient.isOnline()) {
-                                    deliverItem(recipient, mat, amount, senderName, deliveryId);
-                                }
-                                // If offline, the onJoin HTTP poll will pick it up next login
-                            });
+                            Player recipient = Bukkit.getPlayer(UUID.fromString(uuidStr));
+                            if (recipient != null && recipient.isOnline()) {
+                                OreScheduler.runForEntity(plugin, recipient, () ->
+                                        deliverItem(recipient, mat, amount, senderName, deliveryId));
+                            }
+                            // If offline, the onJoin HTTP poll will pick it up next login
                         } else {
-                            OreScheduler.run(plugin, () -> {
-                                Player target = Bukkit.getPlayer(UUID.fromString(uuidStr));
-                                if (target != null && target.isOnline()) {
-                                    processWebAction(target, type, mat, amount);
-                                    // Mark executed so the HTTP fallback poll doesn't double-execute
-                                    markExecuted(uuidStr, type, mat, amount);
-                                }
-                                // If offline: don't mark executed — the DB entry stays unprocessed
-                                // and will be delivered by the periodic poll once the player comes online.
-                            });
+                            Player target = Bukkit.getPlayer(UUID.fromString(uuidStr));
+                            if (target != null && target.isOnline()) {
+                                // Must run on the entity's region thread (Folia-safe) for inventory ops
+                                OreScheduler.runForEntity(plugin, target, () -> {
+                                    boolean executed = processWebAction(target, type, mat, amount);
+                                    // Only mark executed if the action actually ran successfully.
+                                    // If it failed (e.g. unknown material), leave the DB record so
+                                    // the HTTP poll can log and drain it separately.
+                                    if (executed) markExecuted(uuidStr, type, mat, amount);
+                                });
+                            }
+                            // If offline: don't mark executed — the DB entry stays unprocessed
+                            // and will be delivered by the periodic poll once the player comes online.
                         }
                     } catch (Exception e) {
                         plugin.getLogger().warning("[WebPanel] Bad action message: " + e.getMessage());
@@ -122,9 +124,16 @@ public class WebPanelSyncService implements Listener {
         Bukkit.getPluginManager().registerEvents(this, plugin);
         // Sync all online players every 30 seconds — catches external changes like /give
         periodicTask = OreScheduler.runTimer(plugin, () -> {
-            for (Player p : Bukkit.getOnlinePlayers()) {
+            java.util.List<Player> online = new java.util.ArrayList<>(Bukkit.getOnlinePlayers());
+            for (Player p : online) {
                 syncPlayer(p, true);
             }
+            // Push heartbeat so the backend can mark anyone NOT in this list as offline.
+            // Fixes stale flags from server crashes or failed quit syncs.
+            java.util.List<String> onlineUuids = online.stream()
+                    .map(p -> p.getUniqueId().toString())
+                    .collect(java.util.stream.Collectors.toList());
+            OreScheduler.runAsync(plugin, () -> client.pushHeartbeat(onlineUuids));
         }, 600L, 600L);
 
         // Sync all active market orders every 30 seconds (same period as player sync)
@@ -136,6 +145,24 @@ public class WebPanelSyncService implements Listener {
         // the periodic poll ensures the action is never silently lost.
         // Double-execution of DELETE is safe (no-op when items already removed).
         OreScheduler.runAsyncTimer(plugin, this::pollAndProcessActions, 100L, 100L);
+    }
+
+    /**
+     * Publishes an AFK enter/exit event to the web panel backend.
+     * Uses RabbitMQ if available, otherwise falls back to the REST endpoint.
+     * Safe to call from any thread.
+     */
+    public void publishAfkStatus(UUID uuid, String playerName, String serverName,
+                                  String world, double x, double y, double z,
+                                  long afkSinceMs, boolean entering) {
+        final WebPanelRabbitPublisher pub = rabbitPublisher;
+        if (pub != null) {
+            OreScheduler.runAsync(plugin, () ->
+                    pub.publishAfkStatus(uuid, playerName, serverName, world, x, y, z, afkSinceMs, entering));
+        } else {
+            OreScheduler.runAsync(plugin, () ->
+                    client.pushAfkStatus(uuid, playerName, serverName, world, x, y, z, afkSinceMs, entering));
+        }
     }
 
     public void stop() {
@@ -638,7 +665,7 @@ public class WebPanelSyncService implements Listener {
         OreScheduler.runLaterForEntity(plugin, player, () -> syncPlayer(player, true), 1L);
     }
 
-    private void processWebAction(Player player, String type, String materialName, int amount) {
+    private boolean processWebAction(Player player, String type, String materialName, int amount) {
         // CANCEL_ORDER uses materialName as order ID (not a Material enum) — handle before Material.valueOf
         if ("CANCEL_ORDER".equals(type)) {
             fr.elias.oreoEssentials.modules.orders.OrdersModule om = plugin.getOrdersModule();
@@ -646,7 +673,7 @@ public class WebPanelSyncService implements Listener {
                 om.getService().cancelOrder(player, materialName);
                 OreScheduler.runAsyncLater(plugin, this::syncAllOrders, 20L);
             }
-            return;
+            return true;
         }
 
         // FILL_ORDER: materialName = orderId, amount = qty to fill
@@ -688,14 +715,14 @@ public class WebPanelSyncService implements Listener {
                         return null;
                     });
             }
-            return;
+            return true;
         }
 
         // KICK uses materialName as the kick message
         if ("KICK".equals(type)) {
             String message = materialName != null ? materialName.replace("_", " ") : "Kicked by server admin via web panel";
             player.kickPlayer("§c" + message);
-            return;
+            return true;
         }
 
         // BAN uses materialName as reason, amount as duration in seconds
@@ -708,7 +735,7 @@ public class WebPanelSyncService implements Listener {
             Bukkit.getBanList(org.bukkit.BanList.Type.NAME).addBan(
                     player.getName(), reason, expiry, "Web Panel");
             player.kickPlayer("§cYou have been banned.\n§fReason: §e" + reason);
-            return;
+            return true;
         }
 
         Material mat;
@@ -716,10 +743,14 @@ public class WebPanelSyncService implements Listener {
             mat = Material.valueOf(materialName);
         } catch (IllegalArgumentException e) {
             plugin.getLogger().warning("[WebPanel] Unknown material in web action: " + materialName);
-            return;
+            return false;
         }
 
         if ("DELETE".equals(type)) {
+            int totalBefore = 0;
+            for (ItemStack s : player.getInventory().getContents()) {
+                if (s != null && s.getType() == mat) totalBefore += s.getAmount();
+            }
             int remaining = amount;
             ItemStack[] contents = player.getInventory().getContents();
             for (int i = 0; i < contents.length && remaining > 0; i++) {
@@ -734,15 +765,16 @@ public class WebPanelSyncService implements Listener {
                 remaining -= take;
             }
             player.updateInventory();
+
             // 1-tick delay ensures NMS commits the slot changes before we read them back
             OreScheduler.runLaterForEntity(plugin, player, () -> syncPlayer(player, true), 1L);
 
         } else if ("SELL".equals(type)) {
             ShopModule shopModule = plugin.getShopModule();
-            if (shopModule == null || !shopModule.isEnabled()) return;
+            if (shopModule == null || !shopModule.isEnabled()) return false;
 
             ShopItem shopItem = shopModule.getShopManager().findBestSellItem(new ItemStack(mat, 1));
-            if (shopItem == null || !shopItem.canSell()) return;
+            if (shopItem == null || !shopItem.canSell()) return false;
 
             // Count how many of this material the player actually has (by type only, ignoring meta)
             int available = 0;
@@ -750,7 +782,7 @@ public class WebPanelSyncService implements Listener {
                 if (slot != null && slot.getType() == mat) available += slot.getAmount();
             }
             int toSell = Math.min(amount, available);
-            if (toSell <= 0) return;
+            if (toSell <= 0) return false;
 
             // Remove items from inventory by material type (use setItem to properly persist)
             int remaining = toSell;
@@ -811,6 +843,7 @@ public class WebPanelSyncService implements Listener {
             player.updateInventory();
             OreScheduler.runLaterForEntity(plugin, player, () -> syncPlayer(player, true), 1L);
         }
+        return true;
     }
 
     // ─── LuckPerms integration ────────────────────────────────────────────────

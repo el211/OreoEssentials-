@@ -1,0 +1,78 @@
+# ==============================
+# OreoEssentials - AFK Module
+# ==============================
+config-version: 1
+
+# ------------------------------------
+# Auto-AFK
+# ------------------------------------
+# Automatically set players AFK after a period of inactivity.
+auto:
+  enabled: false
+  seconds: 300                # Default seconds before going AFK
+  check-interval-seconds: 5  # How often (in seconds) inactivity is checked
+
+  # Permission tiers — checked in order, first match wins.
+  # Players with a matching permission use that tier's timeout instead of the default.
+  # Useful for letting farmers or VIPs take longer to be flagged AFK.
+  permission-tiers:
+    - permission: oreo.afk.tier.farm
+      seconds: 600
+    - permission: oreo.afk.tier.vip
+      seconds: 450
+
+# ------------------------------------
+# Action Bar
+# ------------------------------------
+# While a player is AFK, show a live timer in their action bar every second.
+# The display text is in lang/lang_en.yml → afk.actionbar  (%time% = duration)
+actionbar:
+  enabled: true
+
+# ------------------------------------
+# Return Message
+# ------------------------------------
+# Private message sent to the player when they return from AFK.
+# Shows how long they were away. Text in lang_en.yml → afk.back-message  (%time% = duration)
+back-message:
+  enabled: true
+
+# ------------------------------------
+# Custom Messages Per Permission
+# ------------------------------------
+# Override the default AFK messages for specific permission groups.
+# Checked in order — first matching permission wins.
+# Uses MiniMessage format. Omit a key to fall back to the default lang message.
+custom-messages:
+  - permission: oreo.afk.vip
+    now-afk: "<gold>[VIP] You are now AFK.</gold>"
+    no-longer-afk: "<gold>[VIP] Welcome back!</gold>"
+    back: "<gold>[VIP] You were AFK for <white>%time%</white>.</gold>"
+# Additional example:
+# - permission: oreo.afk.admin
+#   now-afk: "<red>[Admin] Gone AFK.</red>"
+#   no-longer-afk: "<red>[Admin] Back.</red>"
+#   back: "<red>[Admin] You were AFK for %time%.</red>"
+
+# ------------------------------------
+# Web UI : Independent from the panel , OreoPanel already has an afk system , this is an extra in case you didnt not configure the panel
+# ------------------------------------
+# Embedded HTTP server — shows all currently AFK players on a dashboard.
+# If RabbitMQ is configured, cross-server AFK data is also displayed.
+# Visit http://<server-ip>:<port>/ in any browser.
+# JSON API available at /api/afk
+web:
+  enabled: false
+  port: 8765
+
+# ------------------------------------
+# AFK Pool
+# ------------------------------------
+# Teleport AFK players into a dedicated safe WorldGuard region.
+# They are returned to their original location when they move again.
+pool:
+  enabled: false
+  region-name: "afk_pool"    # WorldGuard region name
+  world-name: "world"        # World the region is in
+  server: ""                 # If non-empty and cross-server: true, teleport to this server's pool
+  cross-server: false        # Enable cross-server pool teleportation via RabbitMQ

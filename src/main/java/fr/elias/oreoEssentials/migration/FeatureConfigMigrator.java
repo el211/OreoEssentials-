@@ -38,6 +38,7 @@ public final class FeatureConfigMigrator {
         migratePlaytimeRewards(plugin);
         migrateCommandsModule(plugin);
         migrateServerModule(plugin);
+        migrateAfk(plugin);
     }
 
     // ── Player Warps ──────────────────────────────────────────────────────────
@@ -188,6 +189,122 @@ public final class FeatureConfigMigrator {
                 plugin.getLogger().info("[Migration] Created default commandsmodule/" + oldName);
             }
         }
+    }
+
+    // ── AFK Module ────────────────────────────────────────────────────────────
+
+    /**
+     * Moves all AFK-related settings out of config.yml / settings.yml and into
+     * the dedicated afk/config.yml file.
+     *
+     * Keys migrated from config.yml:
+     *   afk.auto.*            → auto.*
+     *   afk-pool.*            → pool.*
+     *
+     * Keys migrated from settings.yml:
+     *   features.afk-pool.enabled  → pool.enabled  (if not already in config.yml)
+     *   afk.*                      → top-level keys (new feature fields)
+     *
+     * After migration both source sections are nulled and their files re-saved.
+     */
+    private static void migrateAfk(OreoEssentials plugin) {
+        File folder = new File(plugin.getDataFolder(), "afk");
+        if (!folder.exists()) folder.mkdirs();
+
+        File dest = new File(folder, "config.yml");
+        if (dest.exists()) return; // already migrated
+
+        // Extract the bundled default first so we have a complete base to overlay onto
+        plugin.saveResource("afk/config.yml", false);
+        YamlConfiguration newCfg = YamlConfiguration.loadConfiguration(dest);
+
+        boolean mainChanged     = false;
+        boolean settingsChanged = false;
+
+        // ── Migrate from config.yml (plugin.getConfig()) ─────────────────────
+        FileConfiguration mainCfg = plugin.getConfig();
+
+        // auto.*
+        if (mainCfg.contains("afk.auto.enabled"))
+            newCfg.set("auto.enabled", mainCfg.getBoolean("afk.auto.enabled"));
+        if (mainCfg.contains("afk.auto.seconds"))
+            newCfg.set("auto.seconds", mainCfg.getInt("afk.auto.seconds"));
+        if (mainCfg.contains("afk.auto.check-interval-seconds"))
+            newCfg.set("auto.check-interval-seconds", mainCfg.getInt("afk.auto.check-interval-seconds"));
+
+        // pool.*
+        if (mainCfg.contains("afk-pool.enabled"))
+            newCfg.set("pool.enabled", mainCfg.getBoolean("afk-pool.enabled"));
+        if (mainCfg.contains("afk-pool.region-name"))
+            newCfg.set("pool.region-name", mainCfg.getString("afk-pool.region-name"));
+        if (mainCfg.contains("afk-pool.world-name"))
+            newCfg.set("pool.world-name", mainCfg.getString("afk-pool.world-name"));
+        if (mainCfg.contains("afk-pool.server"))
+            newCfg.set("pool.server", mainCfg.getString("afk-pool.server"));
+        if (mainCfg.contains("afk-pool.cross-server"))
+            newCfg.set("pool.cross-server", mainCfg.getBoolean("afk-pool.cross-server"));
+
+        // Remove from config.yml
+        if (mainCfg.contains("afk") || mainCfg.contains("afk-pool")) {
+            mainCfg.set("afk", null);
+            mainCfg.set("afk-pool", null);
+            mainChanged = true;
+        }
+
+        // ── Migrate from settings.yml ─────────────────────────────────────────
+        File settingsFile = new File(plugin.getDataFolder(), "settings.yml");
+        if (settingsFile.exists()) {
+            YamlConfiguration settingsCfg = YamlConfiguration.loadConfiguration(settingsFile);
+
+            // features.afk-pool.enabled → pool.enabled (only if not already set from config.yml)
+            if (!mainCfg.contains("afk-pool.enabled") && settingsCfg.contains("features.afk-pool.enabled")) {
+                newCfg.set("pool.enabled", settingsCfg.getBoolean("features.afk-pool.enabled"));
+            }
+
+            // New keys (added in the previous feature release — may be present in settings.yml)
+            if (settingsCfg.contains("afk.auto.permission-tiers"))
+                newCfg.set("auto.permission-tiers", settingsCfg.getList("afk.auto.permission-tiers"));
+            if (settingsCfg.contains("afk.actionbar.enabled"))
+                newCfg.set("actionbar.enabled", settingsCfg.getBoolean("afk.actionbar.enabled"));
+            if (settingsCfg.contains("afk.back-message.enabled"))
+                newCfg.set("back-message.enabled", settingsCfg.getBoolean("afk.back-message.enabled"));
+            if (settingsCfg.contains("afk.custom-messages"))
+                newCfg.set("custom-messages", settingsCfg.getList("afk.custom-messages"));
+            if (settingsCfg.contains("afk.web.enabled"))
+                newCfg.set("web.enabled", settingsCfg.getBoolean("afk.web.enabled"));
+            if (settingsCfg.contains("afk.web.port"))
+                newCfg.set("web.port", settingsCfg.getInt("afk.web.port"));
+
+            // Remove migrated sections from settings.yml
+            if (settingsCfg.contains("features.afk-pool") || settingsCfg.contains("afk")) {
+                settingsCfg.set("features.afk-pool", null);
+                settingsCfg.set("afk", null);
+                settingsChanged = true;
+            }
+
+            if (settingsChanged) {
+                try {
+                    settingsCfg.save(settingsFile);
+                } catch (IOException e) {
+                    plugin.getLogger().warning("[Migration] Could not clean up settings.yml after AFK migration: " + e.getMessage());
+                }
+            }
+        }
+
+        // Save updated afk/config.yml
+        try {
+            newCfg.save(dest);
+        } catch (IOException e) {
+            plugin.getLogger().warning("[Migration] Could not save afk/config.yml: " + e.getMessage());
+            return;
+        }
+
+        // Save updated config.yml (removes old afk.* and afk-pool.* sections)
+        if (mainChanged) {
+            plugin.saveConfig();
+        }
+
+        plugin.getLogger().info("[Migration] AFK config migrated to afk/config.yml");
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
