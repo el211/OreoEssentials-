@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
@@ -19,6 +20,8 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,9 +47,11 @@ public class PlayerNametagManager implements Listener {
     private int updateIntervalTicks;   // text / condition refresh
     private int positionIntervalTicks; // how often entities teleport to follow the player
     private boolean showToSelf;
+    private float entityViewRange;     // TextDisplay render distance in blocks
     private double viewRangeSquared;   // view range in blocks² to avoid sqrt
 
     private List<NametageLayerConfig> layers = new ArrayList<>();
+    private static final String VANILLA_HIDE_TEAM = "oe_nt_hidden";
 
     // ── State ─────────────────────────────────────────────────────────────────
     /** owner UUID → list of TextDisplay entity UUIDs, one per layer */
@@ -144,6 +149,7 @@ public class PlayerNametagManager implements Listener {
             // Show nametags for players already online on reload
             OreScheduler.runLater(plugin, () -> {
                 for (Player p : Bukkit.getOnlinePlayers()) spawnNametag(p);
+                refreshVanillaNameHiding();
             }, 20L);
 
             plugin.getLogger().info("[Nametag] TextDisplay nametags enabled (" + layers.size() + " layer(s)).");
@@ -160,6 +166,7 @@ public class PlayerNametagManager implements Listener {
         this.positionIntervalTicks = Math.max(1, config.getInt("nametag.position-interval-ticks", 2));
         this.showToSelf = config.getBoolean("nametag.show-to-self", false);
         double viewRange = config.getDouble("nametag.view-range", 48.0);
+        this.entityViewRange = (float) Math.max(1.0, viewRange);
         this.viewRangeSquared = viewRange * viewRange;
 
         layers.clear();
@@ -266,6 +273,7 @@ public class PlayerNametagManager implements Listener {
         display.setPersistent(false);
         display.setGravity(false);
         display.setInvulnerable(true);
+        display.setBillboard(Display.Billboard.CENTER);
         display.addScoreboardTag("oe_nametag");
         display.addScoreboardTag("oe_nametag:" + owner.getName().toLowerCase());
 
@@ -294,8 +302,7 @@ public class PlayerNametagManager implements Listener {
         }
 
         // View range — TextDisplay has its own render distance
-        double viewRange = Math.sqrt(viewRangeSquared) / 64.0; // normalize to entity's range scale
-        display.setViewRange((float) Math.min(viewRange, 1.0));
+        display.setViewRange(entityViewRange);
     }
 
     private void removeNametag(UUID ownerUuid) {
@@ -345,6 +352,7 @@ public class PlayerNametagManager implements Listener {
 
     /** Refreshes text content and visibility for all nametags. */
     private void updateAllNametags() {
+        refreshVanillaNameHiding();
         for (Player owner : Bukkit.getOnlinePlayers()) {
             if (!ownerToEntities.containsKey(owner.getUniqueId())) continue;
             updateTextFor(owner);
@@ -443,6 +451,62 @@ public class PlayerNametagManager implements Listener {
         }
     }
 
+    /**
+     * Hide the vanilla player name on the viewer scoreboard so the custom TextDisplay
+     * is the only label rendered. This is a best-effort no-op on scoreboards that
+     * do not support team mutations.
+     */
+    private void refreshVanillaNameHiding() {
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            applyVanillaNameHiding(viewer);
+        }
+    }
+
+    private void applyVanillaNameHiding(Player viewer) {
+        Scoreboard board = viewer.getScoreboard();
+        if (board == null) return;
+
+        final Team team;
+        try {
+            Team existing = board.getTeam(VANILLA_HIDE_TEAM);
+            team = existing != null ? existing : board.registerNewTeam(VANILLA_HIDE_TEAM);
+        } catch (Throwable ignored) {
+            return;
+        }
+
+        try {
+            team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
+        } catch (Throwable ignored) {
+            return;
+        }
+
+        Set<String> onlineNames = new HashSet<>();
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            onlineNames.add(online.getName());
+            if (!team.hasEntry(online.getName())) {
+                team.addEntry(online.getName());
+            }
+        }
+
+        for (String entry : new HashSet<>(team.getEntries())) {
+            if (!onlineNames.contains(entry)) {
+                team.removeEntry(entry);
+            }
+        }
+    }
+
+    private void restoreVanillaNames() {
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            Scoreboard board = viewer.getScoreboard();
+            if (board == null) continue;
+
+            try {
+                Team team = board.getTeam(VANILLA_HIDE_TEAM);
+                if (team != null) team.unregister();
+            } catch (Throwable ignored) {}
+        }
+    }
+
     /** Teleports all nametag entities to follow their owners. */
     private void updateAllPositions() {
         for (Player owner : Bukkit.getOnlinePlayers()) {
@@ -491,6 +555,8 @@ public class PlayerNametagManager implements Listener {
                                   .add(joining.getUniqueId());
                 }
             }
+
+            refreshVanillaNameHiding();
         }, 20L);
     }
 
@@ -506,6 +572,8 @@ public class PlayerNametagManager implements Listener {
         for (Set<UUID> viewers : ownerToViewers.values()) {
             viewers.remove(uuid);
         }
+
+        refreshVanillaNameHiding();
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -575,9 +643,11 @@ public class PlayerNametagManager implements Listener {
             startTasks();
             OreScheduler.runLater(plugin, () -> {
                 for (Player p : Bukkit.getOnlinePlayers()) spawnNametag(p);
+                refreshVanillaNameHiding();
             }, 10L);
             plugin.getLogger().info("[Nametag] Reload complete (" + layers.size() + " layer(s)).");
         } else {
+            restoreVanillaNames();
             plugin.getLogger().info("[Nametag] Disabled after reload.");
         }
     }
@@ -589,6 +659,7 @@ public class PlayerNametagManager implements Listener {
         for (UUID uuid : new HashSet<>(ownerToEntities.keySet())) removeNametag(uuid);
         ownerToEntities.clear();
         ownerToViewers.clear();
+        restoreVanillaNames();
 
         plugin.getLogger().info("[Nametag] Shutdown complete.");
     }
