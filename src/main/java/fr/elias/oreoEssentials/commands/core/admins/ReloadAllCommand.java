@@ -331,7 +331,7 @@ public final class ReloadAllCommand implements OreoCommand {
         try {
             var nametagMgr = plugin.getNametagManager();
             if (nametagMgr != null) {
-                nametagMgr.reload(plugin.getSettingsConfig().raw());  // ← FIXED
+                plugin.reloadCustomNameplates();
                 Lang.send(sender, "admin.reload.nametags",
                         "<green>✔ Reloaded <white>nametags</white> <gray>(config + live refresh)</gray></green>");
                 ok++;
