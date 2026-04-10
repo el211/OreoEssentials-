@@ -108,17 +108,20 @@ public class AsyncChatListenerWithChannels implements Listener {
         event.getRecipients().clear();
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
-    public void onChat(AsyncChatEvent event) {
-        // AH/Orders GUI input handlers — run regardless of chat.enabled so in-game GUIs keep working
-        final Player player0 = event.getPlayer();
+    /**
+     * Handles AH/Orders chat input at LOW priority with ignoreCancelled=false so it always fires,
+     * even when OreoFactions has already cancelled the event (e.g. player is in faction chat mode).
+     */
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = false)
+    public void onChatInput(AsyncChatEvent event) {
+        final Player player = event.getPlayer();
         try {
             AuctionHouseModule ahm = AuctionHouseModule.getInstance();
-            if (ahm != null && ahm.isWaitingForPrice(player0.getUniqueId())) {
+            if (ahm != null && ahm.isWaitingForPrice(player.getUniqueId())) {
                 event.viewers().clear();
                 event.setCancelled(true);
                 String raw = PlainTextComponentSerializer.plainText().serialize(event.message());
-                ahm.consumePriceInput(player0, raw);
+                ahm.consumePriceInput(player, raw);
                 return;
             }
         } catch (Throwable ignored) {}
@@ -128,23 +131,23 @@ public class AsyncChatListenerWithChannels implements Listener {
                     fr.elias.oreoEssentials.modules.orders.OrdersModule.getInstance();
             if (om != null) {
                 String raw = PlainTextComponentSerializer.plainText().serialize(event.message());
-                java.util.UUID uid = player0.getUniqueId();
+                java.util.UUID uid = player.getUniqueId();
                 if (fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.isWaitingForQty(uid)) {
                     event.viewers().clear();
                     event.setCancelled(true);
-                    fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.consumeQtyInput(om, player0, raw);
+                    fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.consumeQtyInput(om, player, raw);
                     return;
                 }
                 if (fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.isWaitingForPrice(uid)) {
                     event.viewers().clear();
                     event.setCancelled(true);
-                    fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.consumePriceInput(om, player0, raw);
+                    fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.consumePriceInput(om, player, raw);
                     return;
                 }
                 if (fr.elias.oreoEssentials.modules.orders.gui.FillOrderMenu.isWaitingForFillQty(uid)) {
                     event.viewers().clear();
                     event.setCancelled(true);
-                    fr.elias.oreoEssentials.modules.orders.gui.FillOrderMenu.consumeFillQtyInput(om, player0, raw);
+                    fr.elias.oreoEssentials.modules.orders.gui.FillOrderMenu.consumeFillQtyInput(om, player, raw);
                     return;
                 }
             }
@@ -152,9 +155,18 @@ public class AsyncChatListenerWithChannels implements Listener {
             Bukkit.getLogger().severe("[Orders] Chat input handler error: " + t);
             t.printStackTrace();
         }
+    }
 
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onChat(AsyncChatEvent event) {
         // Chat module disabled — leave the event alone so CHC (or other chat plugins) can handle it
         if (!plugin.getSettingsConfig().chatEnabled()) return;
+
+        // OreoFactions signals it handled a faction channel by cancelling the event AND clearing
+        // viewers. If both are true, skip — faction chat already delivered the message.
+        // If cancelled but viewers are still present, this is Paper's compat pre-cancel from
+        // AsyncPlayerChatEvent being cancelled — we still own global chat in that case.
+        if (event.isCancelled() && event.viewers().isEmpty()) return;
 
         event.viewers().clear();
         event.setCancelled(true);

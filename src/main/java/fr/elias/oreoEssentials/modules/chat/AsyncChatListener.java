@@ -138,19 +138,18 @@ public final class AsyncChatListener implements Listener {
         event.getRecipients().clear();
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
-    public void onChat(AsyncChatEvent event) {
+    /**
+     * Handles AH/Orders chat input at LOW priority with ignoreCancelled=false so it always fires,
+     * even when OreoFactions has already cancelled the event (e.g. player is in faction chat mode).
+     */
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = false)
+    public void onChatInput(AsyncChatEvent event) {
         try {
             var chMgr = OreoEssentials.get().getChannelManager();
-            if (chMgr != null && chMgr.isEnabled()) return;
-        } catch (Throwable t) {
-            Bukkit.getLogger().severe("[Chat] AsyncChatListener: failed to check ChannelManager — aborting. " + t.getMessage());
-            return;
-        }
+            if (chMgr != null && chMgr.isEnabled()) return; // handled by AsyncChatListenerWithChannels
+        } catch (Throwable ignored) {}
 
         final Player player = event.getPlayer();
-
-        // AH/Orders GUI input handlers — run regardless of chat.enabled so in-game GUIs keep working
         try {
             AuctionHouseModule ahm = AuctionHouseModule.getInstance();
             if (ahm != null && ahm.isWaitingForPrice(player.getUniqueId())) {
@@ -191,13 +190,30 @@ public final class AsyncChatListener implements Listener {
             Bukkit.getLogger().severe("[Orders] Chat input handler error: " + t);
             t.printStackTrace();
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onChat(AsyncChatEvent event) {
+        try {
+            var chMgr = OreoEssentials.get().getChannelManager();
+            if (chMgr != null && chMgr.isEnabled()) return;
+        } catch (Throwable t) {
+            Bukkit.getLogger().severe("[Chat] AsyncChatListener: failed to check ChannelManager — aborting. " + t.getMessage());
+            return;
+        }
 
         // Chat module disabled — leave the event alone so CHC (or other chat plugins) can handle it
         if (!OreoEssentials.get().getSettingsConfig().chatEnabled()) return;
 
+        // Modern Factions signals a handled private channel by cancelling the Paper event
+        // and clearing all viewers. If the event is cancelled but viewers still exist,
+        // this is Paper's legacy-chat bridge pre-cancel and global chat should still run.
+        if (event.isCancelled() && event.viewers().isEmpty()) return;
+
         event.viewers().clear();
         event.setCancelled(true);
 
+        final Player player = event.getPlayer();
         final ModGuiService gui = OreoEssentials.get().getModGuiService();
 
         if (gui != null && gui.chatMuted()) {
