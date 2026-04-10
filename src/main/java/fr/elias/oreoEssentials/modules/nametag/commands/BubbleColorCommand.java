@@ -9,6 +9,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * /bubblecolor <color|reset>
@@ -36,9 +38,16 @@ public final class BubbleColorCommand implements OreoCommand {
             "aqua", "dark_aqua",
             "blue", "dark_blue",
             "light_purple", "dark_purple",
+            "bold:red",
+            "bold:gold",
             "gradient:red:gold",
             "gradient:aqua:light_purple",
             "gradient:green:aqua"
+    );
+    private static final Map<String, String> STYLE_ALIASES = Map.of(
+            "underline", "underlined",
+            "strike", "strikethrough",
+            "magic", "obfuscated"
     );
 
     private final OreoEssentials plugin;
@@ -71,7 +80,7 @@ public final class BubbleColorCommand implements OreoCommand {
             return true;
         }
 
-        String input = String.join(":", args).toLowerCase();
+        String input = String.join(":", args).trim().toLowerCase(Locale.ROOT);
 
         // ── Reset ─────────────────────────────────────────────────────────────
         if (input.equals("reset") || input.equals("clear") || input.equals("off")) {
@@ -86,12 +95,7 @@ public final class BubbleColorCommand implements OreoCommand {
         //   "<red>"            → <red>  (pass through)
         //   "gradient:red:gold"→ <gradient:red:gold>
         //   "#FF5500"          → <#FF5500>
-        String colorTag;
-        if (input.startsWith("<") && input.endsWith(">")) {
-            colorTag = input;
-        } else {
-            colorTag = "<" + input + ">";
-        }
+        String colorTag = buildColorTag(input);
 
         // Validate: deserialize a test string; if the tag is unknown MiniMessage just
         // ignores it, so we check that the rendered component is actually styled.
@@ -116,7 +120,7 @@ public final class BubbleColorCommand implements OreoCommand {
     @Override
     public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
         if (args.length == 1) {
-            String partial = args[0].toLowerCase();
+            String partial = args[0].toLowerCase(Locale.ROOT);
             return PRESETS.stream()
                     .filter(s -> s.startsWith(partial))
                     .toList();
@@ -128,11 +132,52 @@ public final class BubbleColorCommand implements OreoCommand {
         String current = svc.getPlayerColor(p.getUniqueId());
         p.sendMessage(MM.deserialize("<gold>/bubblecolor <color></gold> <gray>— Set your bubble text color"));
         p.sendMessage(MM.deserialize("<gold>/bubblecolor reset</gold> <gray>— Reset to server default"));
-        p.sendMessage(MM.deserialize("<gray>Examples: <white>red, #FF5500, gradient:red:gold"));
+        p.sendMessage(MM.deserialize("<gray>Examples: <white>red, bold:red, #FF5500, gradient:red:gold"));
         if (current != null) {
             p.sendMessage(MM.deserialize("<gray>Current color: " + current + "this text<reset>"));
         } else {
             p.sendMessage(MM.deserialize("<gray>Current color: <white>server default"));
         }
+    }
+
+    private String buildColorTag(String input) {
+        if (input.startsWith("<") && input.endsWith(">")) {
+            return input;
+        }
+
+        if (!input.contains(":")) {
+            return "<" + normalizeToken(input) + ">";
+        }
+
+        String[] parts = input.split(":");
+        StringBuilder out = new StringBuilder();
+
+        for (int i = 0; i < parts.length; i++) {
+            String part = normalizeToken(parts[i]);
+            if (part.isBlank()) {
+                continue;
+            }
+
+            if (part.equals("gradient") || part.equals("transition")) {
+                StringBuilder complex = new StringBuilder(part);
+                for (int j = i + 1; j < parts.length; j++) {
+                    String next = normalizeToken(parts[j]);
+                    if (!next.isBlank()) {
+                        complex.append(':').append(next);
+                    }
+                }
+                out.append('<').append(complex).append('>');
+                break;
+            }
+
+            out.append('<').append(part).append('>');
+        }
+
+        return out.toString();
+    }
+
+    private String normalizeToken(String token) {
+        String normalized = token.trim().toLowerCase(Locale.ROOT);
+        return STYLE_ALIASES.getOrDefault(normalized, normalized);
     }
 }
