@@ -1,0 +1,457 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Panel — OreoStudios</title>
+  <link rel="icon" type="image/png" href="/logo.png" sizes="256x256"/>
+  <link rel="stylesheet" href="/styles.css"/>
+  <style>
+    body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+    .auth-wrap{width:100%;max-width:480px;position:relative;z-index:2}
+    .auth-logo{text-align:center;margin-bottom:24px}
+    .auth-logo img{width:72px;height:72px;filter:drop-shadow(0 0 18px #4fa6f244);margin:0 auto 10px}
+    .auth-logo h1{font-size:1.6rem;margin:0}
+
+    /* mode tabs */
+    .mode-tabs{display:flex;background:rgba(255,255,255,.04);border:1px solid #ffffff12;border-radius:14px;padding:4px;margin-bottom:22px;gap:4px}
+    .mode-tab{flex:1;padding:10px;border-radius:10px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:.95rem;font-weight:500;transition:all .2s ease}
+    .mode-tab.active{background:var(--grad);color:#fff;font-weight:700}
+
+    /* form box */
+    .auth-box{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.14)),radial-gradient(120% 140% at 15% 10%,rgba(79,166,242,.14),transparent 55%),linear-gradient(180deg,#0b1033,#070a22);border:1px solid #ffffff14;border-radius:18px;padding:32px;box-shadow:0 18px 60px #00000055}
+
+    /* role tabs (player / owner) */
+    .role-tabs{display:flex;gap:4px;background:rgba(255,255,255,.03);border:1px solid #ffffff10;border-radius:10px;padding:3px;margin-bottom:20px}
+    .role-tab{flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:.88rem;font-weight:500;transition:all .2s ease}
+    .role-tab.active{background:rgba(79,166,242,.2);border:1px solid rgba(79,166,242,.3);color:#4fa6f2;font-weight:700}
+
+    /* form fields */
+    .fg{margin-bottom:16px}
+    .fg label{display:block;margin-bottom:7px;font-size:.9rem;font-weight:500}
+    .fg input, .fg select, .fg textarea{
+      width:100%;padding:11px 14px;
+      background:rgba(255,255,255,.05);border:1px solid #ffffff1a;border-radius:10px;
+      color:var(--fg);font-size:.95rem;transition:all .2s ease;font-family:inherit;
+    }
+    .fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:#4fa6f2;background:rgba(255,255,255,.08)}
+    .fg input::placeholder,.fg textarea::placeholder{color:var(--muted)}
+    .fg select option{background:#0b1033}
+    .fg textarea{resize:vertical;min-height:80px}
+    .fg .hint{font-size:.8rem;color:var(--muted);margin-top:5px}
+
+    .submit-btn{
+      width:100%;padding:13px;background:var(--grad);border:none;border-radius:12px;
+      color:#fff;font-size:1rem;font-weight:700;cursor:pointer;
+      transition:transform .2s ease,box-shadow .2s ease;
+    }
+    .submit-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px #2260d855}
+    .submit-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+    .alert{padding:11px 14px;border-radius:10px;margin-bottom:16px;font-size:.9rem;display:none}
+    .alert.show{display:block}
+    .alert.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444}
+    .alert.success{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:#4ade80}
+
+    .switch-link{text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #ffffff10;color:var(--muted);font-size:.88rem}
+    .switch-link a{color:#4fa6f2;cursor:pointer}
+    .mode-section{display:none}
+    .mode-section.active{display:block}
+
+    /* OTP step */
+    .otp-wrap{text-align:center}
+    .otp-wrap h2{font-size:1.25rem;font-weight:700;margin:0 0 6px}
+    .otp-wrap p{font-size:.9rem;color:var(--muted);margin:0 0 24px;line-height:1.5}
+    .otp-inputs{display:flex;justify-content:center;gap:10px;margin-bottom:24px}
+    .otp-inputs input{
+      width:48px;height:58px;text-align:center;font-size:22px;font-weight:700;
+      background:rgba(255,255,255,.05);border:1px solid #ffffff1a;border-radius:12px;
+      color:var(--fg);caret-color:#4fa6f2;transition:border-color .2s;
+    }
+    .otp-inputs input:focus{outline:none;border-color:#4fa6f2;background:rgba(255,255,255,.09)}
+    .otp-timer{font-size:.82rem;color:var(--muted);margin-bottom:16px}
+    .otp-timer span{color:#4fa6f2;font-weight:600}
+    .back-link{font-size:.85rem;color:var(--muted);cursor:pointer;margin-top:12px;display:inline-block}
+    .back-link:hover{color:#4fa6f2}
+
+    .db-mode-note{background:rgba(79,166,242,.08);border:1px solid rgba(79,166,242,.2);border-radius:10px;padding:12px 14px;font-size:.85rem;color:var(--muted);margin-bottom:16px}
+  </style>
+</head>
+<body>
+<canvas id="starfield" aria-hidden="true"></canvas>
+
+<div class="auth-wrap">
+  <div class="auth-logo">
+    <img src="/logo.png" alt="OreoStudios"/>
+    <h1>OreoStudios <span class="gradient-text">Panel</span></h1>
+  </div>
+
+  <!-- Login / Register top tabs -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="setMode('login')">Login</button>
+    <button class="mode-tab" onclick="setMode('register')">Register</button>
+  </div>
+
+  <div class="auth-box">
+    <div id="alertBox" class="alert"></div>
+
+    <!-- ── LOGIN ── -->
+    <div id="loginSection" class="mode-section active">
+      <form id="loginForm">
+        <div class="fg">
+          <label for="loginId">Email or Username</label>
+          <input type="text" id="loginId" placeholder="your@email.com" autocomplete="username" required/>
+        </div>
+        <div class="fg">
+          <label for="loginPw">Password</label>
+          <input type="password" id="loginPw" placeholder="••••••••" autocomplete="current-password" required/>
+        </div>
+        <button type="submit" class="submit-btn" id="loginBtn">Login to Panel</button>
+      </form>
+      <div class="switch-link">No account? <a onclick="setMode('register')">Register here</a></div>
+    </div>
+
+    <!-- ── REGISTER ── -->
+    <div id="registerSection" class="mode-section">
+
+      <!-- Player / Owner role selector -->
+      <div class="role-tabs">
+        <button class="role-tab active" onclick="setRole('player')">🎮 Player Account</button>
+        <button class="role-tab" onclick="setRole('owner')">🛠️ Server Owner</button>
+      </div>
+
+      <!-- Player register -->
+      <form id="playerRegForm" class="role-section">
+        <div class="fg">
+          <label for="pUsername">Username</label>
+          <input type="text" id="pUsername" placeholder="CoolPlayer42" required/>
+        </div>
+        <div class="fg">
+          <label for="pEmail">Email</label>
+          <input type="email" id="pEmail" placeholder="you@example.com" required/>
+        </div>
+        <div class="fg">
+          <label for="pPassword">Password</label>
+          <input type="password" id="pPassword" placeholder="Min. 8 characters" required/>
+        </div>
+        <div class="fg">
+          <label for="pUuid">Minecraft UUID <span class="muted small">(optional — can link later)</span></label>
+          <input type="text" id="pUuid" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+          <div class="hint">Find your UUID at <a href="https://namemc.com" target="_blank" style="color:#4fa6f2">namemc.com</a></div>
+        </div>
+        <div class="fg">
+          <label for="pMcName">Minecraft Username <span class="muted small">(optional)</span></label>
+          <input type="text" id="pMcName" placeholder="CoolPlayer"/>
+        </div>
+        <button type="submit" class="submit-btn">Create Player Account</button>
+      </form>
+
+      <!-- Owner register -->
+      <form id="ownerRegForm" class="role-section" style="display:none">
+        <div class="db-mode-note">
+          🛠️ As a server owner you can register your Minecraft server and configure how the panel fetches player data — either via direct MongoDB connection or the OreoEssentials plugin API sync.
+        </div>
+        <div class="fg">
+          <label for="oUsername">Username</label>
+          <input type="text" id="oUsername" placeholder="MyServerAdmin" required/>
+        </div>
+        <div class="fg">
+          <label for="oEmail">Email</label>
+          <input type="email" id="oEmail" placeholder="admin@myserver.com" required/>
+        </div>
+        <div class="fg">
+          <label for="oPassword">Password</label>
+          <input type="password" id="oPassword" placeholder="Min. 8 characters" required/>
+        </div>
+        <button type="submit" class="submit-btn">Create Owner Account</button>
+      </form>
+
+      <div class="switch-link">Already have an account? <a onclick="setMode('login')">Login</a></div>
+    </div>
+
+    <!-- ── OTP VERIFICATION ── -->
+    <div id="otpSection" class="mode-section">
+      <div class="otp-wrap">
+        <h2>Check your email</h2>
+        <p id="otpMsg">We sent a 6-digit code to your email.<br/>Enter it below to continue.</p>
+        <div class="otp-inputs">
+          <input type="text" inputmode="numeric" maxlength="1" class="otp-digit" id="otp0" autocomplete="one-time-code"/>
+          <input type="text" inputmode="numeric" maxlength="1" class="otp-digit" id="otp1"/>
+          <input type="text" inputmode="numeric" maxlength="1" class="otp-digit" id="otp2"/>
+          <input type="text" inputmode="numeric" maxlength="1" class="otp-digit" id="otp3"/>
+          <input type="text" inputmode="numeric" maxlength="1" class="otp-digit" id="otp4"/>
+          <input type="text" inputmode="numeric" maxlength="1" class="otp-digit" id="otp5"/>
+        </div>
+        <div class="otp-timer">Code expires in <span id="otpCountdown">5:00</span></div>
+        <button class="submit-btn" id="otpBtn" onclick="submitOtp()">Verify Code</button>
+        <div><a class="back-link" onclick="cancelOtp()">← Back</a></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const API = window.PANEL_API || 'http://88.99.150.35:19150';
+
+  // ─── OTP state ──────────────────────────────────────────────────────────
+  let _pendingToken   = null;
+  let _pendingRole    = null;   // for redirect after OTP
+  let _pendingIsOwner = false;  // for redirect after register
+  let _otpTimer       = null;
+
+  // ─── Mode / Role switching ───────────────────────────────────────────────
+  function setMode(mode) {
+    document.querySelectorAll('.mode-tab').forEach((t, i) => t.classList.toggle('active', (mode === 'login') === (i === 0)));
+    document.getElementById('loginSection').classList.toggle('active', mode === 'login');
+    document.getElementById('registerSection').classList.toggle('active', mode === 'register');
+    document.getElementById('otpSection').classList.remove('active');
+    document.querySelectorAll('.mode-tab').forEach(t => t.style.display = '');
+    clearAlert();
+  }
+
+  function setRole(role) {
+    document.querySelectorAll('.role-tab').forEach((t, i) => t.classList.toggle('active', (role === 'player') === (i === 0)));
+    document.getElementById('playerRegForm').style.display = role === 'player' ? 'block' : 'none';
+    document.getElementById('ownerRegForm').style.display = role === 'owner' ? 'block' : 'none';
+  }
+
+  if (new URLSearchParams(location.search).get('mode') === 'owner') {
+    setMode('register'); setRole('owner');
+  }
+
+  // ─── Alerts ─────────────────────────────────────────────────────────────
+  function showAlert(msg, type = 'error') {
+    const b = document.getElementById('alertBox');
+    b.textContent = msg; b.className = 'alert show ' + type;
+  }
+  function clearAlert() {
+    const b = document.getElementById('alertBox');
+    b.className = 'alert'; b.textContent = '';
+  }
+
+  // ─── Auth helpers ────────────────────────────────────────────────────────
+  function saveAuth(data) {
+    localStorage.setItem('oe_access',  data.accessToken);
+    localStorage.setItem('oe_refresh', data.refreshToken);
+    localStorage.setItem('oe_role',    data.role);
+    localStorage.setItem('oe_user', JSON.stringify({ id: data.userId, username: data.username }));
+  }
+
+  function redirectAfterLogin(role) {
+    location.href = (role === 'OWNER' || role === 'ADMIN') ? '/panel-owner.html' : '/panel-dashboard.html';
+  }
+
+  // ─── OTP step ────────────────────────────────────────────────────────────
+  function showOtpStep(pendingToken, message, role, isOwnerRegister) {
+    _pendingToken   = pendingToken;
+    _pendingRole    = role;
+    _pendingIsOwner = isOwnerRegister;
+
+    document.getElementById('otpMsg').textContent = message;
+    document.querySelectorAll('.mode-tab').forEach(t => t.style.display = 'none');
+    document.getElementById('loginSection').classList.remove('active');
+    document.getElementById('registerSection').classList.remove('active');
+    document.getElementById('otpSection').classList.add('active');
+
+    // Clear inputs and focus first
+    document.querySelectorAll('.otp-digit').forEach(i => i.value = '');
+    document.getElementById('otp0').focus();
+
+    clearAlert();
+    startOtpTimer(300);
+  }
+
+  function cancelOtp() {
+    clearInterval(_otpTimer);
+    _pendingToken = null;
+    document.querySelectorAll('.mode-tab').forEach(t => t.style.display = '');
+    document.getElementById('otpSection').classList.remove('active');
+    document.getElementById('loginSection').classList.add('active');
+    document.querySelectorAll('.mode-tab')[0].classList.add('active');
+    document.querySelectorAll('.mode-tab')[1].classList.remove('active');
+    clearAlert();
+  }
+
+  function startOtpTimer(seconds) {
+    clearInterval(_otpTimer);
+    const el = document.getElementById('otpCountdown');
+    let remaining = seconds;
+    const tick = () => {
+      const m = Math.floor(remaining / 60);
+      const s = remaining % 60;
+      el.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+      if (remaining <= 0) {
+        clearInterval(_otpTimer);
+        el.textContent = 'expired';
+        showAlert('OTP has expired. Please go back and try again.');
+      }
+      remaining--;
+    };
+    tick();
+    _otpTimer = setInterval(tick, 1000);
+  }
+
+  async function submitOtp() {
+    const otp = Array.from(document.querySelectorAll('.otp-digit')).map(i => i.value).join('');
+    if (otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+      showAlert('Please enter all 6 digits.'); return;
+    }
+    clearAlert();
+    const btn = document.getElementById('otpBtn');
+    btn.disabled = true; btn.textContent = 'Verifying…';
+    try {
+      const res  = await fetch(`${API}/api/v1/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pendingToken: _pendingToken, otp })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        clearInterval(_otpTimer);
+        saveAuth(data);
+        showAlert('Verified! Redirecting…', 'success');
+        setTimeout(() => redirectAfterLogin(data.role), 900);
+      } else {
+        showAlert(data.detail || data.message || 'Incorrect code — try again.');
+      }
+    } catch { showAlert('Cannot reach panel server.'); }
+    finally { btn.disabled = false; btn.textContent = 'Verify Code'; }
+  }
+
+  // Auto-advance OTP digits on input
+  document.querySelectorAll('.otp-digit').forEach((input, idx, all) => {
+    input.addEventListener('input', e => {
+      const val = e.target.value.replace(/\D/g, '');
+      e.target.value = val.slice(-1);
+      if (val && idx < all.length - 1) all[idx + 1].focus();
+      if (document.querySelectorAll('.otp-digit:not([value=""])').length === 0
+          && Array.from(all).every(i => i.value)) submitOtp();
+    });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !input.value && idx > 0) all[idx - 1].focus();
+    });
+    input.addEventListener('paste', e => {
+      e.preventDefault();
+      const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+      all.forEach((i, n) => { i.value = pasted[n] || ''; });
+      if (pasted.length === 6) submitOtp();
+    });
+  });
+
+  // ─── Login ───────────────────────────────────────────────────────────────
+  document.getElementById('loginForm').addEventListener('submit', async e => {
+    e.preventDefault(); clearAlert();
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.textContent = 'Sending code…';
+    try {
+      const res  = await fetch(`${API}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          emailOrUsername: document.getElementById('loginId').value,
+          password:        document.getElementById('loginPw').value
+        })
+      });
+      const data = await res.json();
+      if (res.ok) showOtpStep(data.pendingToken, data.message, null, false);
+      else showAlert(data.detail || data.message || 'Invalid credentials');
+    } catch { showAlert('Cannot reach panel server. Check that it is running.'); }
+    finally { btn.disabled = false; btn.textContent = 'Login to Panel'; }
+  });
+
+  // ─── Player register ─────────────────────────────────────────────────────
+  document.getElementById('playerRegForm').addEventListener('submit', async e => {
+    e.preventDefault(); clearAlert();
+    const btn = e.target.querySelector('.submit-btn');
+    btn.disabled = true; btn.textContent = 'Creating account…';
+    const uuid = document.getElementById('pUuid').value.trim();
+    const body = {
+      username: document.getElementById('pUsername').value,
+      email:    document.getElementById('pEmail').value,
+      password: document.getElementById('pPassword').value,
+      minecraftUsername: document.getElementById('pMcName').value || null
+    };
+    if (uuid) body.minecraftUuid = uuid;
+    try {
+      const res  = await fetch(`${API}/api/v1/auth/register/player`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (res.ok) showOtpStep(data.pendingToken, data.message, 'PLAYER', false);
+      else {
+        const errs = data.errors ? Object.entries(data.errors).map(([k,v]) => `${k}: ${v}`).join(' • ') : (data.detail || 'Registration failed');
+        showAlert(errs);
+      }
+    } catch { showAlert('Cannot reach panel server.'); }
+    finally { btn.disabled = false; btn.textContent = 'Create Player Account'; }
+  });
+
+  // ─── Owner register ──────────────────────────────────────────────────────
+  document.getElementById('ownerRegForm').addEventListener('submit', async e => {
+    e.preventDefault(); clearAlert();
+    const btn = e.target.querySelector('.submit-btn');
+    btn.disabled = true; btn.textContent = 'Creating account…';
+    try {
+      const res  = await fetch(`${API}/api/v1/auth/register/owner`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: document.getElementById('oUsername').value,
+          email:    document.getElementById('oEmail').value,
+          password: document.getElementById('oPassword').value
+        })
+      });
+      const data = await res.json();
+      if (res.ok) showOtpStep(data.pendingToken, data.message, 'OWNER', false);
+      else {
+        const errs = data.errors ? Object.entries(data.errors).map(([k,v]) => `${k}: ${v}`).join(' • ') : (data.detail || 'Registration failed');
+        showAlert(errs);
+      }
+    } catch { showAlert('Cannot reach panel server.'); }
+    finally { btn.disabled = false; btn.textContent = 'Create Owner Account'; }
+  });
+
+  // ─── Already logged in? ──────────────────────────────────────────────────
+  const existingToken = localStorage.getItem('oe_access');
+  const existingRole  = localStorage.getItem('oe_role');
+  if (existingToken && existingRole) redirectAfterLogin(existingRole);
+
+  // ─── Starfield ───────────────────────────────────────────────────────────
+  (() => {
+    const canvas = document.getElementById('starfield');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let w, h, stars = [], raf, running = true;
+    const rand = (a,b) => a + Math.random()*(b-a);
+    const resize = () => {
+      w = innerWidth; h = innerHeight;
+      canvas.width = w; canvas.height = h;
+      stars = Array.from({length:160}, () => ({
+        x:rand(0,w), y:rand(0,h), r:rand(.5,1.5), a:rand(.2,.8),
+        phase:rand(0,Math.PI*2), spd:rand(.004,.02), dx:rand(-1,1)*.5, dy:rand(-1,1)*.5
+      }));
+    };
+    const draw = () => {
+      if(!running) return;
+      raf = requestAnimationFrame(draw);
+      ctx.clearRect(0,0,w,h);
+      stars.forEach(s => {
+        s.phase += s.spd;
+        const a = s.a*(.6 + Math.sin(s.phase)*.4);
+        s.x += s.dx; s.y += s.dy;
+        if(s.x<-10) s.x=w+10; if(s.x>w+10) s.x=-10;
+        if(s.y<-10) s.y=h+10; if(s.y>h+10) s.y=-10;
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
+        ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+      });
+    };
+    addEventListener('resize', resize);
+    document.addEventListener('visibilitychange', () => { running=!document.hidden; if(running) draw(); else cancelAnimationFrame(raf); });
+    resize(); draw();
+  })();
+</script>
+</body>
+</html>

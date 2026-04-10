@@ -1,0 +1,19 @@
+# Production overrides — all secrets must come from environment variables or a vault.
+# Never commit real credentials here.
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+server:
+  error:
+    include-message: never
+    include-binding-errors: never
+
+logging:
+  level:
+    fr.elias.oreoessentialsweb: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN

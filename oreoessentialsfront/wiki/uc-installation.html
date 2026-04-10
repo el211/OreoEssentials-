@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>UltimateChristmas — Installation & Setup | OreoStudios Wiki</title>
+<meta name="description" content="Install and configure UltimateChristmas: requirements, configs, reload."/>
+<link rel="icon" type="image/png" href="/logo.png" sizes="256x256"/>
+<link rel="stylesheet" href="/styles.css"/><link rel="stylesheet" href="/wiki/_docs.css"/>
+<link rel="canonical" href="https://oreostudio.store/wiki/uc-installation.html"/>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+  {"@type":"ListItem","position":1,"name":"Home","item":"https://oreostudio.store/"},
+  {"@type":"ListItem","position":2,"name":"Wiki","item":"https://oreostudio.store/wiki/index.html"},
+  {"@type":"ListItem","position":3,"name":"UltimateChristmas — Installation"}
+]}
+</script>
+</head>
+<body class="with-sidebar">
+<header class="nav">
+  <a class="brand" href="/" aria-label="OreoStudios Home">
+    <img class="logo" src="/logo.png" alt=""><span class="brand-text">Oreo<span class="accent">Studios</span></span>
+  </a>
+  <nav>
+    <a href="/index.html#services">Services</a>
+    <a href="/backend.html">Backend</a>
+    <a href="/oreoessentials.html">OreoEssentials</a>
+    <a href="/hosting.html">Hosting</a>
+    <a href="/wiki/index.html" aria-current="page">Wiki</a>
+    <a href="/index.html#contact" class="btn">Contact</a>
+  </nav>
+  <button id="menu" aria-label="Open menu">☰</button>
+</header>
+
+<main class="docs">
+  <aside class="docs-sidebar">
+    <div class="docs-brand"><img src="/logo.png" alt=""><div>Oreo<span class="accent">Studios</span> Wiki</div></div>
+    <nav class="docs-tree">
+      <div class="docs-section">UltimateChristmas</div>
+      <a href="/wiki/uc-installation.html" aria-current="page">🎄 Installation & Setup</a>
+      <a href="/wiki/uc-commands.html">📘 Commands & Permissions</a>
+      <a href="/wiki/uc-shards.html">💎 Shards Economy</a>
+      <a href="/wiki/uc-shardshop.html">🛍️ ShardShop</a>
+      <a href="/wiki/uc-snowball.html">❄️ Snowball Event</a>
+      <a href="/wiki/uc-advent.html">🗓️ Advent Calendar</a>
+      <a href="/wiki/uc-santa.html">🎅 Santa Event</a>
+    </nav>
+  </aside>
+
+  <section class="docs-content">
+    <h1>🎄 Installation & Setup</h1>
+    <h2 class="gradient-text">Requirements</h2>
+    <ul>
+      <li>Minecraft <strong>1.20+</strong></li>
+      <li>Paper / Purpur</li>
+      <li>Vault (economy)</li>
+      <li>LuckPerms</li>
+      <li>LibsDisguises (mandatory)</li>
+      <li>ItemsAdder (optional, custom icons)</li>
+      <li>MythicMobs support (optional)</li>
+      <li>OreoEssentials support (optional)</li>
+    </ul>
+
+    <h2 class="gradient-text">Installation</h2>
+    <ol>
+      <li>Drop <code>UltimateChristmas.jar</code> into <code>/plugins/</code>.</li>
+      <li>Restart the server.</li>
+      <li>Edit configuration files:
+        <ul>
+          <li><code>config.yml</code></li>
+          <li><code>daily_gifts.yml</code></li>
+          <li><code>santa.yml</code></li>
+          <li><code>shardshop.yml</code></li>
+        </ul>
+      </li>
+      <li>Run <code>/ultimatechristmas reload</code> to apply changes.</li>
+    </ol>
+
+    <div class="prevnext">
+      <span></span>
+      <a href="/wiki/uc-commands.html">Next: Commands & Permissions →</a>
+    </div>
+  </section>
+</main>
+
+<footer class="footer"><p>© <span id="y"></span> OreoStudios — Docs.</p></footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>

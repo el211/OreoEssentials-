@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Integration Snippets — OreoStudios</title>
+  <meta name="description" content="Ready-to-use HTML and JS snippets for embedding OreoStudios tools into your Minecraft server website."/>
+  <link rel="icon" type="image/png" href="/logo.png" sizes="256x256"/>
+  <link rel="stylesheet" href="/styles.css"/>
+  <style>
+    .page-hero {
+      text-align: center;
+      padding: 80px 22px 40px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .snippets-wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 22px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .snippet-block {
+      background: linear-gradient(180deg, rgba(79,166,242,.07), rgba(0,0,0,.18)),
+                  linear-gradient(180deg, rgba(13,22,66,.8), rgba(6,9,31,.9));
+      border: 1px solid rgba(79,166,242,.2);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: border-color .25s ease, box-shadow .25s ease;
+    }
+
+    .snippet-block:hover {
+      border-color: rgba(79,166,242,.4);
+      box-shadow: 0 12px 40px rgba(45,75,168,.3);
+    }
+
+    .snippet-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 22px 24px 16px;
+      border-bottom: 1px solid rgba(79,166,242,.12);
+    }
+
+    .snippet-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(79,166,242,.2), rgba(45,75,168,.3));
+      border: 1px solid rgba(79,166,242,.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .snippet-header-text h3 {
+      margin: 0 0 4px;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .snippet-header-text p {
+      margin: 0;
+      font-size: .88rem;
+      color: var(--muted);
+    }
+
+    .snippet-body {
+      padding: 20px 24px 24px;
+    }
+
+    .code-wrap {
+      position: relative;
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px 20px;
+      background: rgba(6,9,31,.7);
+      border: 1px solid rgba(79,166,242,.15);
+      border-radius: 12px;
+      overflow-x: auto;
+      font-size: .82rem;
+      line-height: 1.65;
+      color: #c9d8ff;
+      font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(79,166,242,.3);
+      background: rgba(13,22,66,.9);
+      color: var(--fg);
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .copy-btn:hover {
+      background: rgba(79,166,242,.2);
+      border-color: rgba(79,166,242,.5);
+      transform: translateY(-1px);
+    }
+
+    .copy-btn.copied {
+      border-color: rgba(74,222,128,.4);
+      color: #4ade80;
+    }
+
+    .tag-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: rgba(79,166,242,.1);
+      border: 1px solid rgba(79,166,242,.2);
+      color: #4fa6f2;
+    }
+
+    .tag.green {
+      background: rgba(74,222,128,.1);
+      border-color: rgba(74,222,128,.2);
+      color: #4ade80;
+    }
+
+    .section-label {
+      font-size: .78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      margin: 8px 0 20px;
+    }
+
+    .highlight-attr { color: #79c0ff; }
+    .highlight-tag  { color: #ff7b72; }
+    .highlight-str  { color: #a8d8a0; }
+    .highlight-kw   { color: #ff9580; }
+    .highlight-fn   { color: #d2a8ff; }
+
+    @media (max-width: 600px) {
+      .snippet-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      pre {
+        font-size: .76rem;
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+<canvas id="starfield" aria-hidden="true"></canvas>
+
+<header class="nav" id="site-nav">
+  <a class="brand" href="/" aria-label="OreoStudios Home">
+    <img class="logo" src="/logo.png" alt="OreoStudios logo">
+    <span class="brand-text">Oreo<span class="accent">Studios</span></span>
+  </a>
+  <nav aria-label="Primary">
+    <a href="/#services">Services</a>
+    <a href="/online-tools.html" style="color:#4fa6f2">Tools</a>
+    <a href="/backend.html">Backend</a>
+    <a href="/hosting.html">Hosting</a>
+    <a href="/about-us.html">About</a>
+    <a href="/wiki/index.html">Wiki</a>
+    <a href="/panel-login.html" class="btn">Panel</a>
+    <a href="/#contact" class="btn">Contact</a>
+  </nav>
+  <button id="menu" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+  <div class="menu-overlay" hidden></div>
+</header>
+
+<main>
+  <div class="page-hero reveal">
+    <h1>Integration <span class="gradient-text">Snippets</span></h1>
+    <p class="muted" style="font-size:1.05rem;max-width:640px;margin:12px auto 0">
+      Drop-in HTML and JavaScript snippets for embedding OreoStudios tools into your own Minecraft server website.
+    </p>
+  </div>
+
+  <div class="snippets-wrap">
+
+    <div class="snippet-block reveal">
+      <div class="snippet-header">
+        <div class="snippet-icon">🧭</div>
+        <div class="snippet-header-text">
+          <h3>Navigation Link</h3>
+          <p>Add a Tools link to your site's primary nav bar.</p>
+        </div>
+      </div>
+      <div class="snippet-body">
+        <p class="section-label">HTML</p>
+        <div class="code-wrap">
+          <pre><code>&lt;<span class="highlight-tag">nav</span> <span class="highlight-attr">aria-label</span>=<span class="highlight-str">"Primary"</span>&gt;
+  &lt;<span class="highlight-tag">a</span> <span class="highlight-attr">href</span>=<span class="highlight-str">"#services"</span>&gt;Services&lt;/<span class="highlight-tag">a</span>&gt;
+  &lt;<span class="highlight-tag">a</span> <span class="highlight-attr">href</span>=<span class="highlight-str">"/ogui-builder.html"</span>&gt;OGUI Builder&lt;/<span class="highlight-tag">a</span>&gt;
+  &lt;<span class="highlight-tag">a</span> <span class="highlight-attr">href</span>=<span class="highlight-str">"#contact"</span> <span class="highlight-attr">class</span>=<span class="highlight-str">"btn"</span>&gt;Contact&lt;/<span class="highlight-tag">a</span>&gt;
+&lt;/<span class="highlight-tag">nav</span>&gt;</code></pre>
+          <button class="copy-btn" type="button" aria-label="Copy navigation snippet">Copy</button>
+        </div>
+        <div class="tag-row">
+          <span class="tag">HTML</span>
+          <span class="tag green">Drop-in</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="snippet-block reveal">
+      <div class="snippet-header">
+        <div class="snippet-icon">🎨</div>
+        <div class="snippet-header-text">
+          <h3>OGUI Builder Card</h3>
+          <p>Feature card to promote the visual GUI builder on any page.</p>
+        </div>
+      </div>
+      <div class="snippet-body">
+        <p class="section-label">HTML</p>
+        <div class="code-wrap">
+          <pre><code>&lt;<span class="highlight-tag">article</span> <span class="highlight-attr">class</span>=<span class="highlight-str">"card"</span>&gt;
+  &lt;<span class="highlight-tag">h3</span>&gt;OGUI Builder&lt;/<span class="highlight-tag">h3</span>&gt;
+  &lt;<span class="highlight-tag">p</span>&gt;Visual GUI config generator — no coding required.
+     Create custom GUIs with all 16 condition types.&lt;/<span class="highlight-tag">p</span>&gt;
+  &lt;<span class="highlight-tag">ul</span>&gt;
+    &lt;<span class="highlight-tag">li</span>&gt;Drag-free visual editor&lt;/<span class="highlight-tag">li</span>&gt;
+    &lt;<span class="highlight-tag">li</span>&gt;Live YAML preview&lt;/<span class="highlight-tag">li</span>&gt;
+    &lt;<span class="highlight-tag">li</span>&gt;Export ready-to-use configs&lt;/<span class="highlight-tag">li</span>&gt;
+  &lt;/<span class="highlight-tag">ul</span>&gt;
+  &lt;<span class="highlight-tag">a</span> <span class="highlight-attr">href</span>=<span class="highlight-str">"/ogui-builder.html"</span> <span class="highlight-attr">class</span>=<span class="highlight-str">"btn btn-primary"</span>&gt;
+    Launch Builder →
+  &lt;/<span class="highlight-tag">a</span>&gt;
+&lt;/<span class="highlight-tag">article</span>&gt;</code></pre>
+          <button class="copy-btn" type="button" aria-label="Copy OGUI Builder card snippet">Copy</button>
+        </div>
+        <div class="tag-row">
+          <span class="tag">HTML</span>
+          <span class="tag green">Card</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="snippet-block reveal">
+      <div class="snippet-header">
+        <div class="snippet-icon">🔗</div>
+        <div class="snippet-header-text">
+          <h3>Footer Links</h3>
+          <p>Footer reference links for the tools and wiki pages.</p>
+        </div>
+      </div>
+      <div class="snippet-body">
+        <p class="section-label">HTML</p>
+        <div class="code-wrap">
+          <pre><code>&lt;<span class="highlight-tag">footer</span>&gt;
+  &lt;<span class="highlight-tag">p</span>&gt;© &lt;<span class="highlight-tag">span</span> <span class="highlight-attr">id</span>=<span class="highlight-str">"y"</span>&gt;&lt;/<span class="highlight-tag">span</span>&gt; OreoStudios — All rights reserved.&lt;/<span class="highlight-tag">p</span>&gt;
+  &lt;<span class="highlight-tag">p</span>&gt;
+    &lt;<span class="highlight-tag">a</span> <span class="highlight-attr">href</span>=<span class="highlight-str">"/ogui-builder.html"</span>&gt;OGUI Builder&lt;/<span class="highlight-tag">a</span>&gt; •
+    &lt;<span class="highlight-tag">a</span> <span class="highlight-attr">href</span>=<span class="highlight-str">"/wiki/index.html"</span>&gt;Wiki&lt;/<span class="highlight-tag">a</span>&gt; •
+    &lt;<span class="highlight-tag">a</span> <span class="highlight-attr">href</span>=<span class="highlight-str">"#contact"</span>&gt;Contact&lt;/<span class="highlight-tag">a</span>&gt;
+  &lt;/<span class="highlight-tag">p</span>&gt;
+&lt;/<span class="highlight-tag">footer</span>&gt;</code></pre>
+          <button class="copy-btn" type="button" aria-label="Copy footer snippet">Copy</button>
+        </div>
+        <div class="tag-row">
+          <span class="tag">HTML</span>
+          <span class="tag green">Footer</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="snippet-block reveal">
+      <div class="snippet-header">
+        <div class="snippet-icon">⚡</div>
+        <div class="snippet-header-text">
+          <h3>YAML Export Hook</h3>
+          <p>JavaScript handler for wiring OGUI Builder's export action with analytics.</p>
+        </div>
+      </div>
+      <div class="snippet-body">
+        <p class="section-label">JavaScript</p>
+        <div class="code-wrap">
+          <pre><code><span class="highlight-kw">function</span> <span class="highlight-fn">exportYAML</span>() {
+  <span class="highlight-kw">const</span> yaml = <span class="highlight-kw">this</span>.generateYAML();
+
+  <span class="highlight-kw">if</span> (window.gtag) {
+    gtag(<span class="highlight-str">'event'</span>, <span class="highlight-str">'export_yaml'</span>, {
+      event_category: <span class="highlight-str">'ogui_builder'</span>,
+      event_label:    <span class="highlight-str">'yaml_export'</span>
+    });
+  }
+
+  <span class="highlight-kw">const</span> blob = <span class="highlight-kw">new</span> Blob([yaml], { type: <span class="highlight-str">'text/yaml'</span> });
+  <span class="highlight-kw">const</span> url  = URL.createObjectURL(blob);
+  <span class="highlight-kw">const</span> a   = document.createElement(<span class="highlight-str">'a'</span>);
+  a.href     = url;
+  a.download = <span class="highlight-str">'gui-config.yml'</span>;
+  a.click();
+  URL.revokeObjectURL(url);
+}</code></pre>
+          <button class="copy-btn" type="button" aria-label="Copy YAML export snippet">Copy</button>
+        </div>
+        <div class="tag-row">
+          <span class="tag">JavaScript</span>
+          <span class="tag">Analytics</span>
+          <span class="tag green">Export</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <p>© <span id="y"></span> OreoStudios — All rights reserved.</p>
+  <p class="muted small">Made with ❤️ by the OreoStudios team.</p>
+</footer>
+
+<script src="/app.js"></script>
+<script>
+  (() => {
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pre = btn.closest('.code-wrap').querySelector('pre');
+        const text = pre ? pre.innerText : '';
+        navigator.clipboard.writeText(text).then(() => {
+          btn.textContent = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = 'Copy';
+            btn.classList.remove('copied');
+          }, 2000);
+        });
+      });
+    });
+
+    const canvas = document.getElementById('starfield');
+    if (!canvas || window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+    const ctx = canvas.getContext('2d', { alpha: true });
+    let w, h, stars = [], raf, running = true;
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const resize = () => {
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      w = innerWidth; h = innerHeight;
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+      ctx.scale(dpr, dpr);
+      stars = Array.from({ length: 130 }, () => ({
+        x: rand(0, w), y: rand(0, h), r: rand(.5, 1.5),
+        a: rand(.25, .85), phase: rand(0, Math.PI * 2),
+        speed: rand(.005, .025), dx: rand(-1, 1) * .6, dy: rand(-1, 1) * .6
+      }));
+    };
+    const draw = () => {
+      if (!running) return;
+      raf = requestAnimationFrame(draw);
+      ctx.clearRect(0, 0, w, h);
+      stars.forEach(s => {
+        s.phase += s.speed;
+        const a = s.a * (.65 + Math.sin(s.phase) * .35);
+        s.x += s.dx; s.y += s.dy;
+        if (s.x < -20) s.x = w + 20; if (s.x > w + 20) s.x = -20;
+        if (s.y < -20) s.y = h + 20; if (s.y > h + 20) s.y = -20;
+        const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 5);
+        g.addColorStop(0, `rgba(255,255,255,${a * .5})`);
+        g.addColorStop(1, 'rgba(79,166,242,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+      });
+    };
+    addEventListener('resize', resize);
+    document.addEventListener('visibilitychange', () => {
+      running = !document.hidden;
+      if (running) draw();
+      else cancelAnimationFrame(raf);
+    });
+    resize(); draw();
+  })();
+</script>
+</body>
+</html>

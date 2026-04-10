@@ -1,0 +1,1134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>OGUI Enhanced Wiki</title>
+  <meta name="title" content="OGUI Enhanced Wiki" />
+  <meta name="description" content="Complete documentation for OGUI Enhanced — custom GUIs, conditions, commands, and integrations for your Minecraft server." />
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://oreostudios.fr/ogui-wiki.html" />
+
+  <!-- Open Graph (Discord/Facebook) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="OGUI Enhanced Wiki" />
+  <meta property="og:title" content="OGUI Enhanced Wiki" />
+  <meta property="og:description" content="Complete documentation for OGUI Enhanced — custom GUIs, conditions, commands, and integrations for your Minecraft server." />
+  <meta property="og:url" content="https://oreostudios.fr/ogui-wiki.html" />
+  <!-- Tip: add ?v=2 when you update the image to bust Discord cache -->
+  <meta property="og:image" content="https://oreostudios.fr/logo.png?v=2" />
+  <meta property="og:image:secure_url" content="https://oreostudios.fr/logo.png?v=2" />
+  <meta property="og:image:type" content="image/png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="OGUI Enhanced Wiki" />
+  <meta name="twitter:description" content="Complete documentation for OGUI Enhanced — custom GUIs, conditions, commands, and integrations for your Minecraft server." />
+  <meta name="twitter:image" content="https://oreostudios.fr/logo.png?v=2" />
+
+  <!-- Favicon / Styles -->
+  <link rel="icon" type="image/png" href="/logo.png" sizes="256x256" />
+  <link rel="stylesheet" href="/styles.css" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Wiki layout ─────────────────────────────────────────── */
+    .wiki-wrap {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 90px 22px 80px;
+      gap: 40px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .wiki-wrap { grid-template-columns: 1fr; padding-top: calc(56px + 24px); }
+      .wiki-sidebar { display: none; }
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────── */
+    .wiki-sidebar {
+      position: sticky;
+      top: 80px;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.18)),
+                  linear-gradient(180deg, #0b1033, #070a22);
+      border: 1px solid #ffffff14;
+      border-radius: 16px;
+      padding: 22px 16px;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+    }
+
+    .wiki-sidebar h3 {
+      font-size: 11px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 10px 6px;
+    }
+
+    .sidebar-nav { list-style: none; padding: 0; margin: 0 0 20px; }
+    .sidebar-nav li a {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      color: var(--muted);
+      transition: all .18s;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-nav li a:hover,
+    .sidebar-nav li a.active {
+      color: var(--fg);
+      background: rgba(79,166,242,.10);
+      border-left-color: var(--b3);
+      padding-left: 14px;
+    }
+
+    .sidebar-sub { list-style: none; padding: 0 0 0 14px; margin: 4px 0 0; }
+    .sidebar-sub li a {
+      display: block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      color: #7a8fc0;
+      transition: all .18s;
+    }
+    .sidebar-sub li a:hover { color: var(--b3); }
+
+    /* ── Main content ────────────────────────────────────────── */
+    .wiki-content { min-width: 0; }
+
+    /* Hero banner */
+    .wiki-hero {
+      background: linear-gradient(160deg, rgba(79,166,242,.12), rgba(34,96,216,.08)),
+                  linear-gradient(180deg, #0b1033, #070a22);
+      border: 1px solid #ffffff14;
+      border-radius: 20px;
+      padding: 40px 36px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .wiki-hero::before {
+      content: "";
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(79,166,242,.15), transparent 70%);
+      pointer-events: none;
+    }
+    .wiki-hero .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(79,166,242,.12);
+      border: 1px solid rgba(79,166,242,.3);
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--b3);
+      margin-bottom: 16px;
+    }
+    .wiki-hero h1 {
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      margin: 0 0 10px;
+      background: linear-gradient(135deg, var(--b1) 0%, var(--b2) 45%, var(--b3) 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .wiki-hero p {
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0;
+      font-size: 15px;
+    }
+
+    /* Section anchor targets */
+    .wiki-section {
+      margin-bottom: 56px;
+      scroll-margin-top: 90px;
+    }
+
+    .wiki-section h2 {
+      font-size: 1.45rem;
+      margin: 0 0 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #ffffff12;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .wiki-section h2 .icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      background: linear-gradient(135deg, rgba(34,96,216,.25), rgba(79,166,242,.15));
+      border: 1px solid rgba(79,166,242,.2);
+      flex-shrink: 0;
+    }
+
+    .wiki-section h3 {
+      font-size: 1.05rem;
+      margin: 28px 0 12px;
+      color: var(--b3);
+    }
+
+    .wiki-section p { color: var(--muted); line-height: 1.75; margin: 0 0 14px; }
+    .wiki-section ul { color: var(--muted); line-height: 1.8; margin: 0 0 14px 1.2rem; }
+    .wiki-section li { margin-bottom: 4px; }
+    .wiki-section strong { color: var(--fg); }
+
+    /* Code blocks */
+    .code-block {
+      position: relative;
+      background: #06081e;
+      border: 1px solid #ffffff12;
+      border-radius: 12px;
+      margin: 14px 0 20px;
+      overflow: hidden;
+    }
+    .code-block-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      background: rgba(255,255,255,.04);
+      border-bottom: 1px solid #ffffff0e;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .code-block-header .lang-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+    .code-block-header .lang-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--b3);
+    }
+    .copy-btn {
+      background: rgba(79,166,242,.1);
+      border: 1px solid rgba(79,166,242,.2);
+      color: var(--b3);
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all .18s;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .copy-btn:hover { background: rgba(79,166,242,.2); }
+    .code-block pre {
+      margin: 0;
+      padding: 18px 20px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      color: #c8d6f8;
+    }
+    .code-block pre .comment { color: #4a5680; }
+    .code-block pre .key { color: #79a6f2; }
+    .code-block pre .val { color: #79f2a6; }
+    .code-block pre .str { color: #f2c679; }
+    .code-block pre .cmd { color: #f279c8; }
+
+    /* Inline code */
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .85em;
+      background: rgba(79,166,242,.10);
+      border: 1px solid rgba(79,166,242,.15);
+      border-radius: 5px;
+      padding: 1px 7px;
+      color: var(--b3);
+    }
+
+    /* Info / tip / warning boxes */
+    .callout {
+      display: flex;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: 12px;
+      margin: 16px 0 20px;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .callout p { margin: 0; }
+    .callout.info  { background: rgba(79,166,242,.08); border: 1px solid rgba(79,166,242,.22); color: #9fbfe8; }
+    .callout.tip   { background: rgba(79,242,166,.07); border: 1px solid rgba(79,242,166,.22); color: #7de8b8; }
+    .callout.warn  { background: rgba(242,198,79,.07); border: 1px solid rgba(242,198,79,.22); color: #e8c87d; }
+
+    /* Table */
+    .wiki-table-wrap { overflow-x: auto; margin: 14px 0 20px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    thead th {
+      background: rgba(79,166,242,.10);
+      color: var(--b3);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      letter-spacing: .5px;
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid #ffffff15;
+    }
+    tbody td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #ffffff08;
+      color: var(--muted);
+      vertical-align: top;
+    }
+    tbody tr:hover td { background: rgba(255,255,255,.025); color: var(--fg); }
+    tbody td:first-child { font-family: 'JetBrains Mono', monospace; color: var(--b3); }
+
+    /* Permission pills */
+    .perm-pill {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+    .perm-op    { background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.25); color: #f87171; }
+    .perm-true  { background: rgba(34,197,94,.10); border: 1px solid rgba(34,197,94,.25); color: #4ade80; }
+
+    /* Step cards */
+    .steps { display: flex; flex-direction: column; gap: 14px; }
+    .step-card {
+      display: flex;
+      gap: 16px;
+      padding: 18px 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.12)),
+                  linear-gradient(180deg, #0b1033, #070a22);
+      border: 1px solid #ffffff10;
+      border-radius: 14px;
+      transition: border-color .2s;
+    }
+    .step-card:hover { border-color: rgba(79,166,242,.3); }
+    .step-num {
+      min-width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+      background: linear-gradient(135deg, var(--b1), var(--b3));
+      flex-shrink: 0;
+    }
+    .step-body { flex: 1; }
+    .step-body strong { display: block; margin-bottom: 4px; color: var(--fg); font-size: 15px; }
+    .step-body p { margin: 0; font-size: 13.5px; }
+
+    /* Condition cards */
+    .condition-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      margin: 14px 0;
+    }
+    .condition-card {
+      padding: 16px 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.12)),
+                  linear-gradient(180deg, #0b1033, #070a22);
+      border: 1px solid #ffffff10;
+      border-radius: 12px;
+      transition: all .2s;
+    }
+    .condition-card:hover {
+      border-color: rgba(79,166,242,.3);
+      transform: translateY(-2px);
+    }
+    .condition-card .ctype {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--b3);
+      background: rgba(79,166,242,.1);
+      border: 1px solid rgba(79,166,242,.2);
+      border-radius: 6px;
+      padding: 2px 8px;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    .condition-card strong { display: block; color: var(--fg); font-size: 14px; margin-bottom: 4px; }
+    .condition-card p { margin: 0; font-size: 12.5px; color: var(--muted); }
+
+    /* TOC progress bar */
+    #wiki-progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--b1), var(--b3));
+      z-index: 9999;
+      width: 0%;
+      transition: width .1s linear;
+    }
+  </style>
+</head>
+
+<body>
+<div id="wiki-progress"></div>
+<canvas id="starfield" aria-hidden="true"></canvas>
+
+<!-- NAV (same as your site) -->
+<nav class="nav" id="nav">
+  <div class="brand">
+    <img src="/logo.png" alt="OreoEssentials" class="logo"/>
+    <span class="brand-text"><span class="accent">Oreo</span>Essentials</span>
+  </div>
+  <button id="menu" aria-label="Toggle menu">☰</button>
+  <div class="menu-overlay" id="overlay"></div>
+  <div style="display:flex;gap:18px;align-items:center">
+    <a href="/">Home</a>
+    <a href="/wiki" style="color:var(--b3)">Wiki</a>
+    <a href="/scoreboard" >Scoreboard</a>
+    <a href="/profile" class="btn">Profile</a>
+  </div>
+</nav>
+
+<div class="wiki-wrap">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────── -->
+  <aside class="wiki-sidebar">
+    <h3>Getting Started</h3>
+    <ul class="sidebar-nav">
+      <li><a href="#intro">What is OGUI?</a></li>
+      <li><a href="#install">Installation</a></li>
+      <li><a href="#quickstart">Quick Start</a></li>
+    </ul>
+
+    <h3>Configuration</h3>
+    <ul class="sidebar-nav">
+      <li><a href="#guis-yml">guis.yml Structure</a>
+        <ul class="sidebar-sub">
+          <li><a href="#gui-definition">GUI Definition</a></li>
+          <li><a href="#items">Items & Slots</a></li>
+          <li><a href="#commands-field">Commands Field</a></li>
+        </ul>
+      </li>
+      <li><a href="#colors">Colors & Formatting</a></li>
+    </ul>
+
+    <h3>Conditions</h3>
+    <ul class="sidebar-nav">
+      <li><a href="#conditions-intro">Overview</a></li>
+      <li><a href="#conditions-list">All Condition Types</a></li>
+      <li><a href="#conditions-examples">Examples</a></li>
+    </ul>
+
+    <h3>Reference</h3>
+    <ul class="sidebar-nav">
+      <li><a href="#commands">Commands</a></li>
+      <li><a href="#permissions">Permissions</a></li>
+      <li><a href="#placeholders">Placeholders</a></li>
+      <li><a href="#integrations">Integrations</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+  </aside>
+
+  <!-- ── Main ───────────────────────────────────────────────── -->
+  <main class="wiki-content">
+
+    <!-- Hero -->
+    <div class="wiki-hero">
+      <div class="badge">📖 Documentation</div>
+      <h1>OGUI Enhanced Wiki</h1>
+      <p>Everything you need to create powerful, condition-based inventory menus on your Minecraft server — from zero to pro, step by step.</p>
+    </div>
+
+    <!-- ── INTRO ──────────────────────────────────────────────── -->
+    <section class="wiki-section" id="intro">
+      <h2><span class="icon">🧩</span> What is OGUI?</h2>
+      <p>OGUI Enhanced is a Bukkit/Paper plugin that lets you build fully custom GUI menus (chest-based inventory windows) entirely through a config file — no coding required. You define what items appear, what commands they run when clicked, and what <strong>conditions</strong> must be met before a player can use them.</p>
+      <ul>
+        <li>Create unlimited menus with custom items, names, and lore</li>
+        <li>Bind menus to one or more custom slash commands</li>
+        <li>Require money, permissions, XP, items, ranks, or proximity before allowing a click</li>
+        <li>Deep integration with EssentialsX, Vault, LuckPerms, PlaceholderAPI, ItemsAdder, Nexo, WorldGuard, and OreoEssentials</li>
+        <li>Open menus on NPC interaction via ModeledNPCs</li>
+      </ul>
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <p>OGUI reads its config every time you run <code>/ogui reload</code>. You never need to restart your server to apply changes.</p>
+      </div>
+    </section>
+
+    <!-- ── INSTALL ────────────────────────────────────────────── -->
+    <section class="wiki-section" id="install">
+      <h2><span class="icon">📦</span> Installation</h2>
+      <div class="steps">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Drop the JAR</strong>
+            <p>Place <code>OGUI-Enhanced.jar</code> into your server's <code>/plugins/</code> folder.</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Install required dependencies</strong>
+            <p>OGUI requires 
+              <strong>Vault</strong> and an economy plugin, <strong>LuckPerms</strong>, <strong>PlaceholderAPI</strong>.</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Start your server</strong>
+            <p>OGUI generates <code>plugins/OGUI/guis.yml</code> and <code>lang.yml</code> automatically on first boot.</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <strong>Edit guis.yml and reload</strong>
+            <p>Add your menus, then run <code>/ogui reload</code> in-game or from console to apply.</p>
+          </div>
+        </div>
+      </div>
+      <div class="callout tip">
+        <span class="callout-icon">💡</span>
+        <p>Set <code>api-version</code> in your <code>plugin.yml</code> to match your actual server version (e.g., <code>'1.21'</code>). Mismatched api-version can cause command registration issues on modern Paper builds.</p>
+      </div>
+    </section>
+
+    <!-- ── QUICK START ────────────────────────────────────────── -->
+    <section class="wiki-section" id="quickstart">
+      <h2><span class="icon">⚡</span> Quick Start</h2>
+      <p>Here is the simplest possible GUI — a one-button menu that runs a command when clicked. Paste this into <code>guis.yml</code> under the <code>guis:</code> key:</p>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="lang-tag"><span class="lang-dot"></span>guis.yml</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre>
+<span class="key">guis</span>:
+  <span class="key">mymenu</span>:
+    <span class="key">title</span>: <span class="str">"&6&lMy First Menu"</span>
+    <span class="key">rows</span>: <span class="val">3</span>
+    <span class="key">commands</span>: [ <span class="str">"mymenu"</span>, <span class="str">"menu"</span> ]
+    <span class="key">items</span>:
+      <span class="str">"13"</span>:                        <span class="comment"># slot number (0-53)</span>
+        <span class="key">material</span>: <span class="val">DIAMOND</span>
+        <span class="key">name</span>: <span class="str">"&b&lClick Me!"</span>
+        <span class="key">lore</span>:
+          - <span class="str">"&7This button does something."</span>
+        <span class="key">commands</span>:
+          - <span class="cmd">"say Hello {player}!"</span>
+        <span class="key">close</span>: <span class="val">true</span>
+      <span class="str">"22"</span>:
+        <span class="key">material</span>: <span class="val">BARRIER</span>
+        <span class="key">name</span>: <span class="str">"&cClose"</span>
+        <span class="key">close</span>: <span class="val">true</span>
+</pre>
+      </div>
+      <p>After saving, run <code>/ogui reload</code>. Players can now open this menu with <code>/mymenu</code> or <code>/menu</code>.</p>
+      <div class="callout tip">
+        <span class="callout-icon">💡</span>
+        <p>All commands under an item's <code>commands:</code> list are executed by the <strong>console</strong>. Use <code>{player}</code> to insert the clicking player's name.</p>
+      </div>
+    </section>
+
+    <!-- ── GUIS.YML ───────────────────────────────────────────── -->
+    <section class="wiki-section" id="guis-yml">
+      <h2><span class="icon">⚙️</span> guis.yml Structure</h2>
+      <p>Everything lives under the top-level <code>guis:</code> key. Each child key is a unique <strong>GUI ID</strong> used internally by OGUI.</p>
+
+      <h3 id="gui-definition">GUI Definition Fields</h3>
+      <div class="wiki-table-wrap">
+        <table>
+          <thead>
+            <tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>title</td><td>String</td><td>(GUI ID)</td><td>The inventory title shown at the top. Supports color codes.</td></tr>
+            <tr><td>rows</td><td>Integer 1–6</td><td>1</td><td>Number of rows in the chest inventory. 1 row = 9 slots.</td></tr>
+            <tr><td>commands</td><td>List&lt;String&gt;</td><td>—</td><td>Slash commands that open this GUI. First entry is the primary command, rest are aliases.</td></tr>
+            <tr><td>npc_id</td><td>Integer</td><td>—</td><td>Bind this GUI to a ModeledNPCs NPC ID. Right-clicking the NPC opens the menu.</td></tr>
+            <tr><td>items</td><td>Map</td><td>—</td><td>Map of slot number → item definition. Slots are 0-indexed, left to right, top to bottom.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="items">Item Fields</h3>
+      <div class="wiki-table-wrap">
+        <table>
+          <thead>
+            <tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>material</td><td>String</td><td>STONE</td><td>Vanilla material name (e.g. <code>DIAMOND_SWORD</code>). Case-insensitive.</td></tr>
+            <tr><td>name</td><td>String</td><td>—</td><td>Display name of the item. Supports color codes and hex colors.</td></tr>
+            <tr><td>lore</td><td>List&lt;String&gt;</td><td>—</td><td>Lines of lore text. Each entry is one line. Supports color codes.</td></tr>
+            <tr><td>commands</td><td>List&lt;String&gt;</td><td>—</td><td>Commands run as console when clicked. Use <code>{player}</code> for the player's name.</td></tr>
+            <tr><td>close</td><td>Boolean</td><td>false</td><td>Whether to close the inventory after clicking this item.</td></tr>
+            <tr><td>conditions</td><td>List</td><td>—</td><td>List of condition objects that must all pass before the click is accepted.</td></tr>
+            <tr><td>item_type</td><td>String</td><td>vanilla</td><td>Item source: <code>vanilla</code>, <code>itemsadder</code>, or <code>nexo</code>.</td></tr>
+            <tr><td>item_id</td><td>String</td><td>—</td><td>Item ID for ItemsAdder / Nexo items.</td></tr>
+            <tr><td>custom_model_data</td><td>Integer</td><td>—</td><td>Custom model data value for resource pack items.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="commands-field">The commands field — GUI vs Item</h3>
+      <div class="callout warn">
+        <span class="callout-icon">⚠️</span>
+        <p>There are <strong>two different <code>commands:</code> fields</strong> — one at the GUI level (slash commands that open the menu) and one at the item level (console commands run on click). Don't mix them up!</p>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="lang-tag"><span class="lang-dot"></span>guis.yml</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre>
+<span class="key">guis</span>:
+  <span class="key">shop</span>:
+    <span class="key">title</span>: <span class="str">"&aShop"</span>
+    <span class="key">rows</span>: <span class="val">3</span>
+    <span class="key">commands</span>: [ <span class="str">"shop"</span>, <span class="str">"store"</span> ]   <span class="comment"># &lt;-- GUI commands (open the menu)</span>
+    <span class="key">items</span>:
+      <span class="str">"13"</span>:
+        <span class="key">material</span>: <span class="val">DIAMOND</span>
+        <span class="key">name</span>: <span class="str">"Buy Diamond"</span>
+        <span class="key">commands</span>:                           <span class="comment"># &lt;-- Item commands (run on click)</span>
+          - <span class="cmd">"give {player} diamond 1"</span>
+        <span class="key">close</span>: <span class="val">true</span>
+</pre>
+      </div>
+
+      <h3>Slot Numbers</h3>
+      <p>Slots are numbered left-to-right, top-to-bottom, starting at 0. For a 3-row (27-slot) inventory:</p>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="lang-tag"><span class="lang-dot"></span>Slot Map (3 rows)</span>
+        </div>
+        <pre>
+<span class="comment"> 0  1  2  3  4  5  6  7  8</span>
+<span class="comment"> 9 10 11 12 13 14 15 16 17</span>
+<span class="comment">18 19 20 21 22 23 24 25 26</span>
+</pre>
+      </div>
+      <p>For 6 rows (54 slots), the last row ends at slot 53. Slot 49 is center-bottom of a 6-row menu — great for a Close button.</p>
+    </section>
+
+    <!-- ── COLORS ─────────────────────────────────────────────── -->
+    <section class="wiki-section" id="colors">
+      <h2><span class="icon">🎨</span> Colors & Formatting</h2>
+      <p>OGUI uses the standard <code>&amp;</code> color code format, plus hex colors and gradient/rainbow tags.</p>
+
+      <h3>Standard Color Codes</h3>
+      <div class="wiki-table-wrap">
+        <table>
+          <thead><tr><th>Code</th><th>Color</th><th>Code</th><th>Color</th></tr></thead>
+          <tbody>
+            <tr><td>&amp;0</td><td>Black</td><td>&amp;8</td><td>Dark Gray</td></tr>
+            <tr><td>&amp;1</td><td>Dark Blue</td><td>&amp;9</td><td>Blue</td></tr>
+            <tr><td>&amp;2</td><td>Dark Green</td><td>&amp;a</td><td>Green</td></tr>
+            <tr><td>&amp;3</td><td>Dark Aqua</td><td>&amp;b</td><td>Aqua</td></tr>
+            <tr><td>&amp;4</td><td>Dark Red</td><td>&amp;c</td><td>Red</td></tr>
+            <tr><td>&amp;5</td><td>Dark Purple</td><td>&amp;d</td><td>Light Purple</td></tr>
+            <tr><td>&amp;6</td><td>Gold</td><td>&amp;e</td><td>Yellow</td></tr>
+            <tr><td>&amp;7</td><td>Gray</td><td>&amp;f</td><td>White</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Formatting Codes</h3>
+      <p><code>&amp;l</code> Bold &nbsp;|&nbsp; <code>&amp;o</code> Italic &nbsp;|&nbsp; <code>&amp;n</code> Underline &nbsp;|&nbsp; <code>&amp;m</code> Strikethrough &nbsp;|&nbsp; <code>&amp;r</code> Reset</p>
+
+      <h3>Hex Colors (1.16+)</h3>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="lang-tag"><span class="lang-dot"></span>Example</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre>
+<span class="key">name</span>: <span class="str">"&#FF5500My Orange Item"</span>
+</pre>
+      </div>
+
+      <h3>Gradients</h3>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="lang-tag"><span class="lang-dot"></span>Example</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre>
+<span class="key">name</span>: <span class="str">"&lt;gradient:#FF0000:#0000FF&gt;Rainbow Name&lt;/gradient&gt;"</span>
+<span class="comment"># Multi-stop gradient:</span>
+<span class="key">name</span>: <span class="str">"&lt;gradient:#FF0000:#FFFF00:#00FF00&gt;Text&lt;/gradient&gt;"</span>
+<span class="comment"># Rainbow shorthand:</span>
+<span class="key">name</span>: <span class="str">"&lt;rainbow&gt;Rainbow Text&lt;/rainbow&gt;"</span>
+</pre>
+      </div>
+    </section>
+
+    <!-- ── CONDITIONS INTRO ───────────────────────────────────── -->
+    <section class="wiki-section" id="conditions-intro">
+      <h2><span class="icon">🔒</span> Conditions — Overview</h2>
+      <p>Conditions are checks that run <strong>before</strong> an item click is accepted. If any condition fails, the click is blocked and the player receives an error message. If all pass, the commands execute and any consumable conditions (money, items, XP) are deducted.</p>
+      <p>Conditions are defined as a list under an item's <code>conditions:</code> key. Each condition is a map with at minimum a <code>type:</code> field.</p>
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <p>The check → execute → consume order guarantees atomicity: conditions are verified <em>first</em>, commands run <em>second</em>, and payment is taken <em>last</em>. If a command fails, payment is never taken.</p>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="lang-tag"><span class="lang-dot"></span>Condition skeleton</span>
+        </div>
+        <pre>
+<span class="key">conditions</span>:
+  - <span class="key">type</span>: <span class="val">VAULT_MONEY</span>         <span class="comment"># condition type (required)</span>
+    <span class="key">amount</span>: <span class="val">1000</span>              <span class="comment"># type-specific fields</span>
+    <span class="key">error_message</span>: <span class="str">"&cNeed $1000!"</span>  <span class="comment"># optional custom error</span>
+</pre>
+      </div>
+    </section>
+
+    <!-- ── CONDITIONS LIST ────────────────────────────────────── -->
+    <section class="wiki-section" id="conditions-list">
+      <h2><span class="icon">📋</span> All Condition Types</h2>
+
+      <div class="condition-grid">
+        <div class="condition-card">
+          <span class="ctype">VAULT_MONEY</span>
+          <strong>Vault Economy</strong>
+          <p>Requires the player to have at least <code>amount</code> in their Vault balance. Deducts on success.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">OREO_CURRENCY</span>
+          <strong>Custom Currency</strong>
+          <p>Requires a balance in a specific OreoEssentials custom currency. Deducts on success.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">XP_LEVEL</span>
+          <strong>XP Levels</strong>
+          <p>Requires the player to have at least <code>amount</code> XP levels. Deducts levels on success.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">XP_POINTS</span>
+          <strong>XP Points</strong>
+          <p>Requires the player to have at least <code>amount</code> total XP points. Deducts on success.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">ITEM</span>
+          <strong>Vanilla Item</strong>
+          <p>Requires <code>amount</code> of a vanilla <code>material</code> in the player's inventory. Removes items on success.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">ITEM_CUSTOM_MODEL</span>
+          <strong>Custom Model Data Item</strong>
+          <p>Same as ITEM but also checks <code>custom_model_data</code> value.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">ITEMSADDER</span>
+          <strong>ItemsAdder Item</strong>
+          <p>Requires <code>amount</code> of an ItemsAdder item by <code>item_id</code>. Removes on success.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">NEXO</span>
+          <strong>Nexo Item</strong>
+          <p>Requires <code>amount</code> of a Nexo item by <code>item_id</code>. Removes on success.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">PERMISSION</span>
+          <strong>Permission Node</strong>
+          <p>Requires the player to have the specified <code>permission</code> node. Not consumable.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">LUCKPERMS_GROUP</span>
+          <strong>LuckPerms Group</strong>
+          <p>Requires (or blocks) the player being in a LuckPerms <code>group</code>. Supports <code>negate</code> and <code>include_inherited</code>.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">PLACEHOLDER</span>
+          <strong>PlaceholderAPI</strong>
+          <p>Evaluates any PAPI placeholder against a value using an <code>operator</code> (==, !=, &gt;, &lt;, contains…).</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">WORLDGUARD_REGION</span>
+          <strong>WorldGuard Region</strong>
+          <p>Requires the player to be inside a specific WorldGuard <code>region</code>. Optional member check.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">WORLD</span>
+          <strong>World</strong>
+          <p>Requires the player to be in one of the listed <code>worlds</code>. Supports <code>blacklist: true</code> to invert.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">WEATHER</span>
+          <strong>Weather</strong>
+          <p>Requires specific weather in the player's world: <code>clear</code>, <code>rain</code>, or <code>thunder</code>.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">MODELED_NPC</span>
+          <strong>Near NPC</strong>
+          <p>Requires the player to be within <code>radius</code> blocks of a ModeledNPCs NPC by <code>npc_id</code>.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">OREO_WARPS</span>
+          <strong>Oreo Warp Exists</strong>
+          <p>Checks whether a specific OreoEssentials warp exists and/or if the player has permission to use it.</p>
+        </div>
+        <div class="condition-card">
+          <span class="ctype">OREO_WARPS_LOCATION</span>
+          <strong>Near Warp</strong>
+          <p>Requires the player to be within <code>radius</code> blocks of an OreoEssentials warp location.</p>
+        </div>
+      </div>
+
+      <h3>Field Reference per Condition Type</h3>
+      <div class="wiki-table-wrap">
+        <table>
+          <thead>
+            <tr><th>Type</th><th>Fields</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>VAULT_MONEY</td><td><code>amount</code> (double)</td></tr>
+            <tr><td>OREO_CURRENCY</td><td><code>currency</code> (string), <code>amount</code> (double)</td></tr>
+            <tr><td>XP_LEVEL</td><td><code>amount</code> (int)</td></tr>
+            <tr><td>XP_POINTS</td><td><code>amount</code> (int)</td></tr>
+            <tr><td>ITEM</td><td><code>material</code> (string), <code>amount</code> (int)</td></tr>
+            <tr><td>ITEM_CUSTOM_MODEL</td><td><code>material</code>, <code>amount</code>, <code>custom_model_data</code> (int)</td></tr>
+            <tr><td>ITEMSADDER</td><td><code>item_id</code> (string), <code>amount</code> (int)</td></tr>
+            <tr><td>NEXO</td><td><code>item_id</code> (string), <code>amount</code> (int)</td></tr>
+            <tr><td>PERMISSION</td><td><code>permission</code> (string)</td></tr>
+            <tr><td>LUCKPERMS_GROUP</td><td><code>group</code>, <code>include_inherited</code> (bool, default true), <code>negate</code> (bool), <code>error_message</code></td></tr>
+            <tr><td>PLACEHOLDER</td><td><code>placeholder</code>, <code>operator</code> (==,!=,&gt;,&lt;,&gt;=,&lt;=,contains), <code>value</code>, <code>error_message</code></td></tr>
+            <tr><td>WORLDGUARD_REGION</td><td><code>region</code> (string), <code>require_member</code> (bool)</td></tr>
+            <tr><td>WORLD</td><td><code>worlds</code> (list) or <code>world</code> (single), <code>blacklist</code> (bool)</td></tr>
+            <tr><td>WEATHER</td><td><code>weather</code>: clear / rain / thunder</td></tr>
+            <tr><td>MODELED_NPC</td><td><code>npc_id</code> (int), <code>radius</code> (double, default 5.0)</td></tr>
+            <tr><td>OREO_WARPS</td><td><code>warp</code>, <code>check_exists</code> (bool), <code>check_permission</code> (bool)</td></tr>
+            <tr><td>OREO_WARPS_LOCATION</td><td><code>warp</code>, <code>radius</code> (double), <code>error_message</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── CONDITIONS EXAMPLES ────────────────────────────────── -->
+    <section class="wiki-section" id="conditions-examples">
+      <h2><span class="icon">💡</span> Condition Examples</h2>
+
+      <h3>Pay $1,000 to use an item</h3>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="lang-tag"><span class="lang-dot"></span>guis.yml</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre>
+<span class="key">conditions</span>:
+  - <span class="key">type</span>: <span class="val">VAULT_MONEY</span>
+    <span class="key">amount</span>: <span class="val">1000</span>
+    <span class="key">error_message</span>: <span class="str">"&cYou need $1,000!"</span>
+</pre>
+      </div>
+
+      <h3>Require LuckPerms rank (and block if already has it)</h3>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="lang-tag"><span class="lang-dot"></span>guis.yml</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre>
+<span class="key">conditions</span>:
+  - <span class="key">type</span>: <span class="val">LUCKPERMS_GROUP</span>    <span class="comment"># must have this rank</span>
+    <span class="key">group</span>: <span class="val">ecuyer</span>
+    <span class="key">include_inherited</span>: <span class="val">true</span>
+    <span class="key">error_message</span>: <span class="str">"&cYou need the Écuyer rank!"</span>
+  - <span class="key">type</span>: <span class="val">LUCKPERMS_GROUP</span>    <span class="comment"># must NOT already have next rank</span>
+    <span class="key">group</span>: <span class="val">chevalier</span>
+    <span class="key">include_inherited</span>: <span class="val">true</span>
+    <span class="key">negate</span>: <span class="val">true</span>
+    <span class="key">error_message</span>: <span class="str">"&cYou already have Chevalier!"</span>
+  - <span class="key">type</span>: <span class="val">VAULT_MONEY</span>
+    <span class="key">amount</span>: <span class="val">1250000</span>
+</pre>
+      </div>
+
+      <h3>Require 5 diamonds and 10 XP levels</h3>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="lang-tag"><span class="lang-dot"></span>guis.yml</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre>
+<span class="key">conditions</span>:
+  - <span class="key">type</span>: <span class="val">ITEM</span>
+    <span class="key">material</span>: <span class="val">DIAMOND</span>
+    <span class="key">amount</span>: <span class="val">5</span>
+  - <span class="key">type</span>: <span class="val">XP_LEVEL</span>
+    <span class="key">amount</span>: <span class="val">10</span>
+    <span class="key">error_message</span>: <span class="str">"&cNeed 10 XP levels!"</span>
+</pre>
+      </div>
+
+      <h3>PlaceholderAPI check (e.g., kills ≥ 100)</h3>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="lang-tag"><span class="lang-dot"></span>guis.yml</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre>
+<span class="key">conditions</span>:
+  - <span class="key">type</span>: <span class="val">PLACEHOLDER</span>
+    <span class="key">placeholder</span>: <span class="str">"%statistic_player_kills%"</span>
+    <span class="key">operator</span>: <span class="str">">="</span>
+    <span class="key">value</span>: <span class="str">"100"</span>
+    <span class="key">error_message</span>: <span class="str">"&cYou need 100 kills!"</span>
+</pre>
+      </div>
+    </section>
+
+    <!-- ── COMMANDS ───────────────────────────────────────────── -->
+    <section class="wiki-section" id="commands">
+      <h2><span class="icon">💬</span> Commands</h2>
+      <div class="wiki-table-wrap">
+        <table>
+          <thead>
+            <tr><th>Command</th><th>Description</th><th>Permission</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>/ogui</td><td>Shows OGUI help and usage</td><td>—</td></tr>
+            <tr><td>/ogui open &lt;id&gt;</td><td>Opens a GUI by its ID for yourself</td><td><code>ogui.open</code></td></tr>
+            <tr><td>/ogui open &lt;id&gt; &lt;player&gt;</td><td>Opens a GUI for another player</td><td><code>ogui.open</code></td></tr>
+            <tr><td>/ogui reload</td><td>Reloads guis.yml and lang.yml, re-registers all commands</td><td><code>ogui.reload</code></td></tr>
+            <tr><td>/&lt;custom&gt;</td><td>Any command defined under a GUI's <code>commands:</code> list</td><td><code>ogui.command.&lt;guiId&gt;</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <p>Custom GUI commands are registered dynamically at startup and on reload. They do not need to appear in <code>plugin.yml</code>. If a command conflicts with another plugin's command, OGUI will override it and log a warning.</p>
+      </div>
+    </section>
+
+    <!-- ── PERMISSIONS ────────────────────────────────────────── -->
+    <section class="wiki-section" id="permissions">
+      <h2><span class="icon">🔑</span> Permissions</h2>
+      <div class="wiki-table-wrap">
+        <table>
+          <thead>
+            <tr><th>Permission</th><th>Default</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ogui.open</td>
+              <td><span class="perm-pill perm-true">true</span></td>
+              <td>Allows using <code>/ogui open</code> to open any GUI for yourself.</td>
+            </tr>
+            <tr>
+              <td>ogui.reload</td>
+              <td><span class="perm-pill perm-op">op</span></td>
+              <td>Allows using <code>/ogui reload</code> to reload configuration.</td>
+            </tr>
+            <tr>
+              <td>ogui.command.&lt;guiId&gt;</td>
+              <td><span class="perm-pill perm-true">true</span></td>
+              <td>Allows using the custom slash commands for a specific GUI. Replace <code>&lt;guiId&gt;</code> with the GUI's ID key in guis.yml.</td>
+            </tr>
+            <tr>
+              <td>ogui.command.*</td>
+              <td><span class="perm-pill perm-true">true</span></td>
+              <td>Allows using all GUI custom commands.</td>
+            </tr>
+            <tr>
+              <td>ogui.*</td>
+              <td><span class="perm-pill perm-op">op</span></td>
+              <td>Grants all OGUI permissions.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Example: Restrict a GUI to a specific rank</h3>
+      <p>To make <code>/vipshop</code> only available to players with the <code>vip</code> rank, deny <code>ogui.command.vipshop</code> by default and grant it to the <code>vip</code> group in LuckPerms:</p>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="lang-tag"><span class="lang-dot"></span>LuckPerms command</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre>
+<span class="cmd">/lp group vip permission set ogui.command.vipshop true</span>
+<span class="cmd">/lp group default permission set ogui.command.vipshop false</span>
+</pre>
+      </div>
+    </section>
+
+    <!-- ── PLACEHOLDERS ───────────────────────────────────────── -->
+    <section class="wiki-section" id="placeholders">
+      <h2><span class="icon">🔖</span> Placeholders</h2>
+      <p>Inside item <code>commands:</code>, you can use <code>{player}</code> to insert the clicking player's username. This works in every command string.</p>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="lang-tag"><span class="lang-dot"></span>Example</span>
+        </div>
+        <pre>
+<span class="key">commands</span>:
+  - <span class="cmd">"give {player} diamond 1"</span>
+  - <span class="cmd">"tellraw {player} {\"text\":\"You got a diamond!\",\"color\":\"green\"}"</span>
+  - <span class="cmd">"lp user {player} parent set vip"</span>
+</pre>
+      </div>
+      <p>If you have <strong>PlaceholderAPI</strong> installed, OGUI also processes PAPI placeholders in item <code>name</code> and <code>lore</code> fields automatically when the GUI opens.</p>
+    </section>
+
+    <!-- ── INTEGRATIONS ───────────────────────────────────────── -->
+    <section class="wiki-section" id="integrations">
+      <h2><span class="icon">🔗</span> Integrations</h2>
+      <div class="wiki-table-wrap">
+        <table>
+          <thead>
+            <tr><th>Plugin</th><th>Status</th><th>What it enables</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Vault</td><td>Optional</td><td><code>VAULT_MONEY</code> condition, legacy <code>price:</code> field</td></tr>
+            <tr><td>LuckPerms</td><td>Optional</td><td><code>LUCKPERMS_GROUP</code> condition</td></tr>
+            <tr><td>PlaceholderAPI</td><td>Optional</td><td><code>PLACEHOLDER</code> condition, placeholders in item name/lore</td></tr>
+            <tr><td>ItemsAdder</td><td>Optional</td><td><code>item_type: itemsadder</code> items, <code>ITEMSADDER</code> condition</td></tr>
+            <tr><td>Nexo</td><td>Optional</td><td><code>item_type: nexo</code> items, <code>NEXO</code> condition</td></tr>
+            <tr><td>WorldGuard</td><td>Optional</td><td><code>WORLDGUARD_REGION</code> condition</td></tr>
+            <tr><td>ModeledNPCs</td><td>Optional</td><td><code>npc_id</code> binding, <code>MODELED_NPC</code> condition</td></tr>
+            <tr><td>OreoEssentials</td><td>Optional</td><td><code>OREO_CURRENCY</code>, <code>OREO_WARPS</code>, <code>OREO_WARPS_LOCATION</code> conditions</td></tr>
+            <tr><td>EssentialsX</td><td>Optional</td><td>Kit commands via <code>essentials:kit &lt;name&gt; {player}</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout tip">
+        <span class="callout-icon">💡</span>
+        <p>OGUI detects all integrations automatically on startup. There is nothing extra to configure — just have the plugins installed and OGUI will hook into them.</p>
+      </div>
+    </section>
+
+    <!-- ── FAQ ───────────────────────────────────────────────────── -->
+    <section class="wiki-section" id="faq">
+      <h2><span class="icon">❓</span> FAQ</h2>
+
+      <h3>My custom command (/myshop) says "Unknown command"</h3>
+      <p>Make sure the GUI has a <code>commands:</code> list at the top level (not inside an item) and that you ran <code>/ogui reload</code> after saving. Also verify there are no YAML syntax errors above the <code>commands:</code> field. Check your server console for any OGUI errors during reload.</p>
+
+      <h3>My commands field is not opening the GUI</h3>
+      <p>Check the server logs during startup/reload. If you see <code>[SEVERE] Failed to register GUI commands</code>, there is a reflection error — usually caused by an outdated <code>api-version</code> in plugin.yml. Set it to match your actual server version.</p>
+
+      <h3>Conditions are being checked but items are not taken</h3>
+      <p>This is by design. OGUI checks all conditions first, then runs commands, then takes payment. If a command returns an error, payment is never deducted. If your commands are fine but items still aren't removed, make sure you're using the correct condition type (e.g., <code>ITEM</code> for vanilla items, not <code>ITEMSADDER</code>).</p>
+
+      <h3>How do I make a GUI only for OPs?</h3>
+      <p>Deny the <code>ogui.command.&lt;guiId&gt;</code> permission for the default group and grant it only to your OP/admin group in LuckPerms. Alternatively, add a <code>PERMISSION</code> condition to every item.</p>
+
+      <h3>Can I open a GUI from another GUI's button?</h3>
+      <p>Yes — add a command like <code>"ogui open othermenu {player}"</code> to the item's <code>commands:</code> list and set <code>close: true</code>.</p>
+
+      <h3>Can I use ItemsAdder / Nexo items as GUI icons?</h3>
+      <p>Yes. Set <code>item_type: itemsadder</code> (or <code>nexo</code>) and provide <code>item_id: your:item_id</code>. The plugin must be installed and the item ID must be valid.</p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="lang-tag"><span class="lang-dot"></span>ItemsAdder item example</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre>
+<span class="str">"4"</span>:
+  <span class="key">item_type</span>: <span class="val">itemsadder</span>
+  <span class="key">item_id</span>: <span class="str">"iasurvival:ruby"</span>
+  <span class="key">name</span>: <span class="str">"&cRuby"</span>
+  <span class="key">lore</span>:
+    - <span class="str">"&7A rare gemstone."</span>
+</pre>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <p>© 2025 OreoStudio · <a href="/" style="color:var(--b3)">Home</a> · <a href="/wiki" style="color:var(--b3)">Wiki</a></p>
+</footer>
+
+<script>
+  // ── Starfield ────────────────────────────────────────────────
+  (function() {
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const stars = Array.from({length: 180}, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.3,
+      o: Math.random(),
+      s: Math.random() * 0.4
+    }));
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(st => {
+        ctx.beginPath();
+        ctx.arc(st.x, st.y, st.r, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,255,255,${st.o})`;
+        ctx.fill();
+        st.o += st.s * 0.01;
+        if (st.o > 1 || st.o < 0) st.s = -st.s;
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  })();
+
+  // ── Nav toggle ───────────────────────────────────────────────
+  const nav = document.getElementById('nav');
+  document.getElementById('menu').addEventListener('click', () => nav.classList.toggle('open'));
+  document.getElementById('overlay').addEventListener('click', () => nav.classList.remove('open'));
+
+  // ── Read progress bar ────────────────────────────────────────
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    document.getElementById('wiki-progress').style.width = (scrollTop / docHeight * 100) + '%';
+  });
+
+  // ── Sidebar active highlight ─────────────────────────────────
+  const sections = document.querySelectorAll('.wiki-section');
+  const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        sidebarLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.sidebar-nav a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+
+  // ── Copy button ──────────────────────────────────────────────
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText.trim()).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1800);
+    });
+  }
+</script>
+</body>
+</html>

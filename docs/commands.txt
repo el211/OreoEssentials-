@@ -1,0 +1,626 @@
+# Commands & Permissions — Complete Reference
+
+Every command in OreoEssentials, sourced directly from `plugin.yml`.
+
+**Permission defaults:**
+- `true` = all players have this by default
+- `op` = only server operators have this by default
+- `false` = nobody has this by default (you must grant it manually in LuckPerms)
+
+**Corrections vs previous draft:**
+- `/tpaccept` permission is `oreo.tpaccept` (NOT `oreo.tpa`)
+- `/tpdeny` permission is `oreo.tpdeny` (NOT `oreo.tpa`)
+- `/tphere` permission is `oreo.tphere`, default `op`
+- `/tp` permission is `oreo.tp`, default `op`
+- Many commands were missing entirely — all are now included
+
+---
+
+## Economy
+
+### Vault Economy
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/balance` | `/bal` | `oreo.balance` (self) · `oreo.balance.others` (others) | true · op | `/balance [player]` |
+| `/pay` | — | `oreo.pay` | true | `/pay <player> <amount>` |
+| `/baltop` | — | `oreo.baltop` | true | `/baltop [size]` |
+| `/money` | — | `oreo.money` | op | `/money [player]` · `/money <give\|take\|set> <player> <amount>` |
+| `/cheque` | — | `oreo.cheque.create` (create) · `oreo.cheque.redeem` (redeem) | op · true | `/cheque <create\|redeem> ...` |
+
+**`/money` sub-permissions:**
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oreo.money` | op | View balances |
+| `oreo.money.give` | op | Give money to players |
+| `oreo.money.take` | op | Take money from players |
+| `oreo.money.set` | op | Set a player's balance |
+
+---
+
+### Custom Currency
+
+Custom currencies are additional in-game currencies separate from Vault money (e.g. tokens, gems, crystals). Each has its own balance, GUI, and leaderboard.
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/oecurrency` | `/currency` `/currencies` `/curr` | `oreo.currency.admin` | op | Manage currencies |
+| `/currencyadmin` | `/cadmin` `/currencygui` | `oreo.currency.admin` | op | Open currency admin GUI |
+| `/currencybalance` | `/cbal` `/cbalance` `/currbal` | `oreo.currency.balance` | — | Check your currency balance |
+| `/currencysend` | `/csend` `/sendcurrency` `/paycurrency` | `oreo.currency.send` | — | Send currency to a player |
+| `/currencytop` | `/ctop` `/currencyleaderboard` `/cbalancetop` | `oreo.currency.top` | — | View currency rich-list |
+
+---
+
+## Teleportation & Travel
+
+### Spawn
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/spawn` | `oreo.spawn` | true | Teleport to server spawn |
+| `/setspawn` | `oreo.setspawn` | op | Set the server spawn |
+
+---
+
+### Warps (Admin-Created)
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/warp` | — | `oreo.warp` | true | `/warp <name>` |
+| `/setwarp` | — | `oreo.setwarp` | op | `/setwarp <name>` |
+| `/delwarp` | — | `oreo.delwarp` | op | `/delwarp <name>` |
+| `/warps` | `/warplist` | `oreo.warps` | true | Open the warps browser GUI |
+| `/warpsadmin` | `/warpsgui` `/warpguiadmin` | `oreo.warps.admin` | op | Open warps admin GUI (delete/manage) |
+
+---
+
+### Player Warps
+
+Players can create their own public warps for others to visit.
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/pw` | `/playerwarp` `/playerwarps` | `oe.pw` | true | `/pw help` — main player warp command |
+| `/pwwhitelist` | — | `oe.pw.whitelist` (own) · `oe.pw.admin.whitelist` (any) | true · op | `/pwwhitelist <add\|remove> <warp> <player>` |
+
+**Player Warp sub-permissions:**
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oe.pw` | true | Base access to `/pw` |
+| `oe.pw.set` | true | Create your own player warps |
+| `oe.pw.remove` | true | Delete your own warps |
+| `oe.pw.list` | true | List your warps |
+| `oe.pw.amount` | true | Check how many warps you have |
+| `oe.pw.warp` | true | Teleport to player warps |
+| `oe.pw.whitelist` | true | Manage whitelist on your own warps |
+| `oe.pw.limit.bypass` | op | Bypass player warp limits |
+| `oe.pw.admin.whitelist` | op | Manage whitelist on any player's warps |
+
+---
+
+### Homes
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/home` | — | `oreo.home` | true | `/home <name>` |
+| `/sethome` | — | `oreo.sethome` | true | `/sethome <name>` |
+| `/delhome` | — | `oreo.delhome` | true | `/delhome <name>` |
+| `/homes` | `/listhomes` | `oreo.homes` | true | `/homes [name]` — list or teleport |
+| `/homesgui` | `/homesmenu` `/homegui` | `oreo.homes.gui` | true | Open the Homes GUI |
+| `/otherhomes` | `/listhomesof` `/ohomes` | `oreo.homes.other` | op | `/otherhomes <player>` |
+| `/otherhome` | `/ohome` | `oreo.homes.other` | op | `/otherhome <player> [home]` |
+
+---
+
+### TPA (Teleport Requests)
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/tpa` | `oreo.tpa` | true | `/tpa <player>` — request to tp to a player |
+| `/tpaccept` | `oreo.tpaccept` | true | Accept an incoming TP request |
+| `/tpdeny` | `oreo.tpdeny` | true | Deny an incoming TP request |
+
+> `/tpaccept` and `/tpdeny` each have **their own separate permission** nodes. This lets you grant players the ability to accept but not deny, or vice versa.
+
+---
+
+### Admin Teleport
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/tp` | `oreo.tp` | op | `/tp <player> [target]` — tp to player, or move player to target |
+| `/tphere` | `oreo.tphere` | op | `/tphere <player>` — bring a player to you |
+| `/move` | `oreo.move` | op | `/move <player> [target]` — cross-server-aware player move |
+
+---
+
+### Location & World Travel
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/back` | — | `oreo.back` | true | Return to your last location |
+| `/deathback` | — | `oreo.deathback` | true | Teleport to your last death location |
+| `/rtp` | `/randomtp` | `oreo.rtp` | true | Randomly teleport (tier-based radius) |
+| `/world` | `/oworld` `/tpworld` | `oreo.world` | op | `/world <name\|normal\|nether\|end\|index> [player] [-s]` |
+
+---
+
+### Structures & Pads
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/portal` | `oreo.portal` | op | `/portal <pos1\|pos2\|create\|remove\|list\|info>` |
+| `/jumpad` | `oreo.jumpad` | op | `/jumpad <create\|remove\|list\|info>` |
+
+---
+
+## Storage, Inventories & Sync
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/ec` | `/enderchest` | `oreo.ec` | true | Open your Ender Chest (tier-based rows) |
+| `/ecsee` | — | `oreo.ecsee` | op | `/ecsee <player>` — view/edit a player's EC |
+| `/invsee` | — | `oreo.invsee` | op | `/invsee <player>` — view/edit inventory |
+| `/invlook` | `/invview` | `oreo.invlook` | op | `/invlook <player>` — view inventory (read-only) |
+| `/sync` | — | `oreo.sync` | true | Open Player Sync toggle GUI |
+| `/oevault` | — | `oreo.vault.menu` | true | `/oevault [id]` — open vault menu or specific vault |
+| `/clone` | — | `oreo.clone` | op | `/clone <player>` — copy a player's inventory |
+| `/trash` | — | `oreo.trash` | true | Open a disposable inventory (not saved) |
+| `/sellgui` | `/sell` | `oreo.sellgui` | true | Open the Sell GUI |
+
+**PlayerVaults permissions:**
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oreo.vault.menu` | true | Open `/oevault` at all |
+| `oreo.vault.use.1` | false | Access vault #1 |
+| `oreo.vault.use.2` | false | Access vault #2 |
+| `oreo.vault.use.*` | false | Access all vaults |
+| `oreo.vault.bypass` | op | Bypass vault restrictions |
+| `oreo.vault.rows.global.3` | true | Global default of 3 rows per vault |
+| `oreo.vault.rows.global.4` | false | 4 rows globally |
+| `oreo.vault.rows.global.5` | false | 5 rows globally |
+| `oreo.vault.rows.global.6` | false | 6 rows globally |
+| `oreo.vault.rows.1.5` | false | 5 rows specifically for vault #1 |
+| `oreo.vault.rows.2.6` | false | 6 rows specifically for vault #2 |
+
+---
+
+## Player Utilities & QoL
+
+### Movement & Speed
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/fly` | — | `oreo.fly` | op | Toggle flight |
+| `/flyspeed` | `/fspeed` `/fs` | `oreo.flyspeed` | true | `/flyspeed <1-10\|reset>` |
+| `/walkspeed` | `/wspeed` `/ws` | `oreo.walkspeed` | true | `/walkspeed <1-10\|reset>` |
+| `/sit` | — | `oreo.sit` | true | Sit down (right-click to dismount) |
+| `/tempfly` | `/tfly` `/temporaryflight` | `oe.tempfly.use` | — | Toggle temporary flight / check time |
+| `/afk` | — | `oreo.afk` | true | Toggle AFK status |
+
+---
+
+### Healing & Food
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/heal` | `oreo.heal` | op | `/heal [player]` |
+| `/feed` | `oreo.feed` | op | `/feed [player]` |
+
+---
+
+### Virtual Blocks & Crafting
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/workbench` | `/wb` | `oreo.workbench` | true | Open a virtual crafting table |
+| `/anvil` | — | `oreo.anvil` | true | Open a virtual anvil |
+| `/furnace` | — | `oreo.furnace` | true | Open a virtual furnace |
+| `/cook` | — | `oreo.cook` | op | `/cook [amount\|max]` — quick-smelt held item |
+
+---
+
+### Inventory & Items
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/clear` | `/ci` | `oreo.clear` (self) · `oreo.clear.others` (others) | true · op | `/clear [player]` |
+| `/hat` | — | `oreo.hat` | true | Wear item in hand as a hat |
+| `/enchant` | — | `oreo.enchant` | op | `/enchant <enchantment> [level] [unsafe] [ignoreConflicts]` |
+| `/disenchant` | `/unenchant` `/deench` | `oreo.disenchant` | op | `/disenchant <enchantment\|all> [levels-to-remove]` |
+
+**Enchant sub-permissions:**
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oreo.enchant` | op | Basic enchanting |
+| `oreo.enchant.unsafe` | op | Apply enchantments above the normal max level |
+| `oreo.enchant.ignoreconflicts` | op | Ignore enchantment conflicts (e.g. Fortune + Silk Touch) |
+
+---
+
+### Player Information
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/ping` | `oreo.ping` | true | Show your ping |
+| `/seen` | `oreo.seen` | true | `/seen <player>` — when last online |
+| `/near` | `oreo.near` | true | `/near [radius]` — nearby players |
+| `/uuid` | `oreo.uuid` | true | Show your UUID (+ Bedrock UUID via Floodgate if applicable) |
+| `/realname` | `oreo.realname` | op | `/realname <nickname>` — resolve nick to real name |
+| `/playtime` | `oreo.playtime` | true | `/playtime [player]` — show playtime |
+
+---
+
+### Effects & Cosmetics
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/effectme` | `/eme` `/myeffect` | `oreo.effect.me` | true | `/effectme <effect\|clear> [seconds] [level] [hideParticles]` |
+| `/effectto` | `/eto` `/effectgive` | `oreo.effect.to` | op | `/effectto <player> <effect\|clear> [seconds] [level] [hideParticles]` |
+| `/bossbar` | — | `oreo.bossbar.toggle` | true | `/bossbar toggle` — toggle your personal boss bar |
+| `/skin` | — | `oreo.skin` | true | `/skin <player\|url\|reset>` |
+
+---
+
+## Moderation & Admin
+
+### Player Punishment
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/ban` | `oreo.ban` | op | `/ban <player> [duration] [reason...]` |
+| `/unban` | `oreo.unban` | op | `/unban <player>` |
+| `/kick` | `oreo.kick` | op | `/kick <player> [reason...]` |
+| `/mute` | `oreo.mute` | op | `/mute <player> <duration> [reason]` — formats: `30s` `10m` `2h` `1d` |
+| `/unmute` | `oreo.unmute` | op | `/unmute <player>` |
+| `/freeze` | `oreo.freeze` | op | `/freeze <player> [on\|off]` |
+
+---
+
+### Jail System
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/jail` | `oreo.jail.use` | op | `/jail <player> (time) (jailName) (cellId) (-s) (r:reason...)` · `/jail release <player>` |
+| `/jailedit` | `oreo.jail.edit` | op | `/jailedit <pos1\|pos2\|save <name>\|addcell <name> <cellId>>` |
+| `/jaillist` | `oreo.jail.list` | true | `/jaillist [jailName] [cellId\|*]` |
+
+**Jail sub-permissions:**
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oreo.jail.use` | op | Use `/jail` to jail players |
+| `oreo.jail.edit` | op | Use `/jailedit` to create/edit jails |
+| `oreo.jail.list` | true | Use `/jaillist` to view jails and inmates |
+| `oreo.jail.silent` | op | Use `-s` flag to jail silently (no broadcast) |
+| `oreo.jail.bypass` | op | Bypass jail movement and command restrictions |
+
+---
+
+### God Mode & Invulnerability
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/god` | `oreo.god` (self) · `oreo.god.others` (others) | op | `/god [player]` |
+
+---
+
+### Visibility & Gamemode
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/vanish` | `/v` | `oreo.vanish` | op | `/vanish [on\|off]` |
+| `/gamemode` | `/gm` | `oreo.gamemode` (self) · `oreo.gamemode.others` (others) | op | `/gamemode <survival\|creative\|spectator\|visitor\|s\|c\|sp\|v> [player]` |
+
+> `/gamemode` supports a special `visitor` mode in addition to the standard Minecraft gamemodes.
+
+---
+
+### Entity & World Cleanup
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/kill` | — | `oreo.kill` (self) · `oreo.kill.others` (others) | op | `/kill [player]` |
+| `/killallr` | — | `oreo.killall.radius` | op | `/killallr <radius> [--type=ALL\|HOSTILE\|PASSIVE\|NAMED\|CUSTOM] [--dry-run] [--reason="text"]` |
+| `/killallrlog` | — | `oreo.killall.view` | op | `/killallrlog [limit]` — view kill records |
+| `/olagg` | — | `oreo.lag.use` | op | `/olagg <help\|reload\|clear\|killmobs>` |
+| `/spawnmob` | `/smob` `/sm` | `oreo.spawnmob` | op | `/spawnmob <EntityType> [amount]` |
+
+**ClearLag sub-permissions:**
+
+| Permission | Default |
+|---|---|
+| `oreo.lag.use` | op |
+| `oreo.lag.reload` | op |
+| `oreo.lag.clear` | op |
+| `oreo.lag.killmobs` | op |
+
+---
+
+### Inventory Inspection
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/invsee` | — | `oreo.invsee` | op | View and edit a player's inventory |
+| `/invlook` | `/invview` | `oreo.invlook` | op | View a player's inventory (read-only) |
+| `/ecsee` | — | `oreo.ecsee` | op | View/edit a player's Ender Chest |
+| `/clone` | — | `oreo.clone` | op | Copy a player's entire inventory to yourself |
+
+---
+
+### Cosmetics (Admin)
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/head` | `oreo.head` | op | `/head <player>` — get a player's head item |
+| `/nick` | `oreo.nick` | op | `/nick <newName>` · `/nick unnick` |
+
+---
+
+### Moderation GUI
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/modgui` | `oreo.modgui.open` | op | Open the Server Management GUI |
+
+---
+
+## Chat & Social
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/msg` | `/tell` `/w` | `oreo.msg` | true | `/msg <player> <message>` — private message |
+| `/reply` | `/r` | `oreo.msg` | true | `/reply <message>` — reply to last PM |
+| `/broadcast` | `/bc` | `oreo.broadcast` | op | `/broadcast <message>` — server-wide colored message |
+| `/mute` | — | `oreo.mute` | op | `/mute <player> <duration> [reason]` |
+| `/unmute` | — | `oreo.unmute` | op | `/unmute <player>` |
+| `/oechannel` | `/channel` `/setchannel` | `oreo.chat.channel` | true | `/oechannel <channel>` — switch channel |
+| `/oechannels` | `/channels` `/ch` | `oreo.chat.channels` | true | Open channel picker GUI |
+| `/channelannounce` | `/channelbroadcast` `/chanannounce` `/ca` | `oreo.channel.announce` | op | `/channelannounce <channel> <message>` |
+| `/afelius` | `/af` | `oreo.afelius.reload` | op | `/afelius reload <all\|config\|chat-format>` |
+
+---
+
+## Kits & Rewards
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/kits` | — | `oreo.kits.open` | true | Open the kits GUI |
+| `/kit` | — | `oreo.kit.claim` | true | `/kit <name>` — claim a kit |
+| `/prewards` | `/preward` `/ptrewards` `/prew` | `oreo.prewards` | true | `/prewards` — open GUI · `/prewards claim <id> [player]` · `/prewards reload` |
+| `/daily` | `/dr` `/dailyrewards` | `oreo.daily` | true | `/daily [claim\|top]` — daily rewards |
+| `/playtime` | — | `oreo.playtime` | true | `/playtime [player]` |
+
+**Kit sub-permissions:**
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oreo.kit.claim` | true | Claim kits |
+| `oreo.kit.bypasscooldown` | op | Ignore kit cooldowns |
+| `oreo.kits.open` | true | Open the kits GUI |
+
+**Playtime Rewards sub-permissions:**
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oreo.prewards` | true | Use `/prewards` and claim your own rewards |
+| `oreo.prewards.notify` | true | Receive in-game reminders when a reward is ready |
+| `oreo.prewards.admin` | op | Use `/prewards reload` |
+| `oreo.prewards.claim.others` | op | Claim a reward for another player |
+| `oreo.prewards.*` | op | All prewards permissions |
+
+---
+
+## Shop
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/shop` | `oshopgui.shop` | true | `/shop [shopId\|reload\|check\|addmodifier\|resetmodifier\|checkmodifiers]` |
+| `/sell` | `oshopgui.sell.hand` | true | `/sell <hand\|handall\|all> [quantity]` |
+| `/sellgui` | `oreo.sellgui` | true | Open the Sell GUI |
+
+**Shop sub-permissions:**
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oshopgui.shop` | true | Open the shop |
+| `oshopgui.reload` | op | Reload the shop module |
+| `oshopgui.check` | true | Check item prices |
+| `oshopgui.others` | op | Open a shop for another player |
+| `oshopgui.sell.hand` | true | Sell item in hand (`/sell hand`) |
+| `oshopgui.sell.hand.all` | true | Sell all of item in hand (`/sell handall`) |
+| `oshopgui.sell.all` | true | Sell entire inventory (`/sell all`) |
+| `oshopgui.shop.addmodifier` | op | Add a price modifier for a player |
+| `oshopgui.shop.resetmodifier` | op | Reset a player's price modifier |
+| `oshopgui.shop.checkmodifiers` | op | Check a player's current modifiers |
+| `oshopgui.bypass.cooldown` | op | Bypass the transaction cooldown |
+
+---
+
+## Auction House
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/ah` | — | `oreo.ah.use` | true | Open the Auction House browser |
+| `/ahs` | — | `oreo.ah.sell` | true | `/ahs [price] [hours]` — list item in hand |
+| `/ahsearch` | — | `oreo.ah.use` | true | `/ahsearch <query...>` — search listings |
+| `/ahsold` | — | `oreo.ah.use` | true | View your sold items history |
+| `/ahexpired` | — | `oreo.ah.use` | true | View and reclaim your expired listings |
+| `/ahadmin` | — | `oreo.ah.admin` | op | `/ahadmin <reload\|save\|clear>` |
+
+**Auction House sub-permissions:**
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oreo.ah.use` | true | Browse, search, view sold/expired |
+| `oreo.ah.sell` | true | List items for sale |
+| `oreo.ah.admin` | op | Admin controls (reload, save, clear all) |
+| `oreo.ah.bypass` | op | Bypass all category restrictions |
+| `oreo.ah.category.*` | op | Access all categories |
+| `oreo.ah.category.<name>` | varies | Access a specific category |
+
+---
+
+## Orders / Market
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/order` | `/orders` `/market` | `oreo.orders.use` | true | Open the Market browser |
+| `/order reload` | — | `oreo.orders.admin` | op | Reload orders module config |
+
+---
+
+## Trade
+
+| Command | Permission | Default | Usage |
+|---|---|---|---|
+| `/trade` | — | `oreo.trade` | true | `/trade <player>` — open a live trade window |
+
+---
+
+## World & Environment
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/oetime` | `/settime` | `oreo.time` | op | `/oetime <day\|night\|hour(1-23)> [world\|all]` |
+| `/weather` | — | `oreo.weather` | op | `/weather <sun\|rain\|storm> [lock\|seconds] [world\|all]` |
+| `/sun` | — | `oreo.weather` | op | `/sun [lock\|seconds] [world\|all]` |
+| `/rain` | — | `oreo.weather` | op | `/rain [lock\|seconds] [world\|all]` |
+| `/storm` | — | `oreo.weather` | op | `/storm [lock\|seconds] [world\|all]` |
+| `/world` | `/oworld` `/tpworld` | `oreo.world` | op | `/world <name\|normal\|nether\|end\|index> [player] [-s]` |
+| `/spawnmob` | `/smob` `/sm` | `oreo.spawnmob` | op | `/spawnmob <EntityType> [amount]` |
+| `/shard` | `/shards` `/worldshard` | `oreo.shard.admin` | op | `/shard <create\|info\|list\|setup\|reload>` |
+
+---
+
+## Holograms
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/ohologram` | `/hologram` | `OreoHolograms.admin` | op | `/ohologram help` — manage holograms |
+
+---
+
+## Maintenance Mode
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/maintenance` | `/maint` | `oreo.maintenance.admin` | op | `/maintenance <on\|off\|toggle\|status\|whitelist\|clock\|motd\|reload>` |
+
+**Maintenance sub-permissions:**
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oreo.maintenance.admin` | op | Use all maintenance commands |
+| `oreo.maintenance.bypass` | op | Join the server during maintenance mode |
+
+---
+
+## Network & Proxy
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/oe` | — | `oreo.oe` | true | `/oe server <servername>` — switch servers |
+| `/oeserver` | `/server` | `oreo.server` | true | `/oeserver <server>` — switch servers |
+| `/move` | — | `oreo.move` | op | `/move <player> [target]` — cross-server move |
+
+---
+
+## Discord Integration
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/discord` | `/disc` | *(none — public)* | true | `/discord <link\|status\|unlink> [code]` — link Minecraft to Discord |
+| `/oe-discord` | — | `oreoessentials.discord.rcon` | op | Internal command for Discord bot RCON queries |
+
+---
+
+## Developer, Building & Config Tools
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/oereload` | `/oereloadall` `/oer` | `oreo.reload` | op | Reload all OreoEssentials configs |
+| `/oesettings` | `/oeconfig` `/oecfg` | `oreo.admin.settings` | op | Open the settings GUI |
+| `/aliaseditor` | `/alias` `/aliases` | `oreo.alias.manage` | op | `/aliaseditor <list\|create\|remove\|edit\|toggle\|reload> [...]` |
+| `/ic` | — | `oreo.ic` | op | `/ic <new\|addblock\|addentity\|addcmd\|public\|list\|info>` — interactive commands |
+| `/oevents` | — | `oreo.events` | op | `/oevents reload` — reload event command lists and death messages |
+| `/oecraft` | — | `oreo.craft` | op | `/oecraft craft <name>` · `/oecraft list` · `/oecraft reload` |
+| `/commandtoggle` | `/cmdtoggle` `/cmdt` | `oreo.commandtoggle.admin` | op | `/commandtoggle <list\|enable\|disable\|status\|reload> [command]` |
+
+**Command Toggle sub-permissions:**
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oreo.commandtoggle.admin` | op | Manage command toggles |
+| `oreo.commandtoggle.bypass` | op | Use commands even if they are disabled |
+
+---
+
+## Data Import (Admin Only)
+
+These are one-time tools used to migrate data from other plugins.
+
+| Command | Aliases | Permission | Default | Usage |
+|---|---|---|---|---|
+| `/importzhomes` | — | `oreo.admin.import` | op | Import homes from zEssentials |
+| `/zimport` | `/zessimport` `/importzessentials` | `oreo.admin.import` | op | `/zimport [homes\|warps\|economy\|all]` — migrate from zEssentials |
+| `/migrateessentials` | `/importessentials` `/esximport` | `oreo.admin.import` | op | `/migrateessentials [homes\|warps\|economy\|all]` — migrate from EssentialsX |
+
+---
+
+## Tier / Rank Perk Nodes
+
+These nodes are not tied to commands but grant feature tiers for RTP, EnderChest rows, and other rank-based perks:
+
+| Permission | Default | Effect |
+|---|---|---|
+| `oreo.tier.vip` | false | VIP-tier features (RTP radius, etc.) |
+| `oreo.tier.mvp` | false | MVP-tier features |
+| `oreo.vault.rows.global.3` | true | All vaults default to 3 rows |
+| `oreo.vault.rows.global.4` | false | All vaults get 4 rows |
+| `oreo.vault.rows.global.5` | false | All vaults get 5 rows |
+| `oreo.vault.rows.global.6` | false | All vaults get 6 rows |
+| `oreo.vault.rows.1.5` | false | Vault #1 specifically gets 5 rows |
+| `oreo.vault.rows.2.6` | false | Vault #2 specifically gets 6 rows |
+
+---
+
+## Chat Channel Permissions
+
+These permissions gate access to specific channels (only relevant if you use the channels system):
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oreo.chat.channels` | true | Open `/channels` GUI |
+| `oreo.chat.channel` | true | Use `/channel` to switch |
+| `oreo.channel.announce` | op | Use `/channelannounce` |
+| `oreo.chat.channel.global.talk` | true | Send in Global |
+| `oreo.chat.channel.global.view` | true | See Global messages |
+| `oreo.chat.channel.global.join` | true | Join Global |
+| `oreo.chat.channel.local.talk` | true | Send in Local |
+| `oreo.chat.channel.local.view` | true | See Local messages |
+| `oreo.chat.channel.local.join` | true | Join Local |
+| `oreo.chat.channel.trade.talk` | true | Send in Trade |
+| `oreo.chat.channel.trade.view` | true | See Trade messages |
+| `oreo.chat.channel.trade.join` | true | Join Trade |
+| `oreo.chat.channel.help.talk` | true | Send in Help |
+| `oreo.chat.channel.help.view` | op | See Help messages (staff read player requests) |
+| `oreo.chat.channel.help.join` | true | Join Help |
+| `oreo.chat.channel.staff.talk` | op | Send in Staff |
+| `oreo.chat.channel.staff.view` | op | See Staff messages |
+| `oreo.chat.channel.staff.join` | op | Join Staff |
+| `oreo.chat.channel.admin` | op | Bypass all channel restrictions |
+| `oreo.chat.colors` | false | Use MiniMessage colors in chat messages |
+
+---
+
+## Master Node
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oreo.*` | op | All OreoEssentials features |

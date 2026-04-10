@@ -16,13 +16,16 @@ import java.util.logging.Logger;
 
 public final class JsonAuctionStorage implements AuctionStorage {
 
+    private final File moduleFolder;
     private final File dataFile;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private final Logger logger;
 
     public JsonAuctionStorage(File moduleFolder, Logger logger) {
+        this.moduleFolder = moduleFolder;
         this.dataFile = new File(moduleFolder, "auctions.json");
         this.logger = logger;
+        ensureStoragePath();
         if (!dataFile.exists()) {
             try {
                 dataFile.createNewFile();
@@ -35,6 +38,7 @@ public final class JsonAuctionStorage implements AuctionStorage {
 
     @Override
     public AuctionSnapshot loadAll() {
+        ensureStoragePath();
         try (Reader reader = new FileReader(dataFile)) {
             Type type = new TypeToken<Map<String, Object>>(){}.getType();
             Map<String, Object> raw = gson.fromJson(reader, type);
@@ -53,6 +57,7 @@ public final class JsonAuctionStorage implements AuctionStorage {
 
     @Override
     public synchronized void saveAll(AuctionSnapshot snap) {
+        ensureStoragePath();
         try (Writer writer = new FileWriter(dataFile)) {
             Map<String, Object> out = new HashMap<>();
             out.put("auctions", serializeList(snap.active()));
@@ -61,6 +66,12 @@ public final class JsonAuctionStorage implements AuctionStorage {
             gson.toJson(out, writer);
         } catch (IOException e) {
             logger.severe("[AuctionHouse] Could not save auctions.json: " + e.getMessage());
+        }
+    }
+
+    private void ensureStoragePath() {
+        if (!moduleFolder.exists() && !moduleFolder.mkdirs()) {
+            logger.severe("[AuctionHouse] Could not create storage folder: " + moduleFolder.getPath());
         }
     }
 

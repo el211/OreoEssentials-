@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <title>Hosting — OreoStudios</title>
+  <meta name="description" content="Recommended Minecraft hosting providers and guidance." />
+
+  <link rel="icon" type="image/png" href="/logo.png" sizes="256x256"/>
+  <link rel="stylesheet" href="/styles.css"/>
+
+  <meta name="theme-color" content="#0b0f1a"/>
+
+  <style>
+    /* Page-specific layout only (keeps your global theme intact) */
+    .wrap{max-width:1100px;margin:0 auto;padding:90px 22px 64px}
+    .sub{color:var(--muted);margin-top:10px;font-size:1.05rem}
+    .box{background:linear-gradient(180deg,#0f1322,#0b0f1a);
+         border:1px solid #ffffff18;border-radius:18px;padding:24px;margin-top:24px}
+    .pill{display:inline-block;padding:6px 12px;border:1px solid #ffffff1a;
+          border-radius:999px;font-size:.9rem;margin:6px 6px 0 0}
+
+    .layout{display:grid;grid-template-columns:1fr 1.25fr;gap:26px;align-items:start;margin-top:10px}
+    .sideImage{position:sticky;top:90px}
+    .sideImageCard{border:1px solid #ffffff18;border-radius:18px;overflow:hidden;
+      background:linear-gradient(180deg,#0f1322,#0b0f1a)}
+    .sideImageCard img{width:100%;height:auto;display:block}
+    .sideImageCaption{padding:12px 14px;color:var(--muted);font-size:.95rem;border-top:1px solid #ffffff12}
+
+    @media (max-width: 900px){
+      .layout{grid-template-columns:1fr}
+      .sideImage{position:relative;top:auto}
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="nav">
+  <a class="brand" href="/">
+    <img class="logo" src="/logo.png" alt="OreoStudios"/>
+    <span class="brand-text">Oreo<span class="accent">Studios</span></span>
+  </a>
+  <nav>
+    <a href="/wiki/index.html">Wiki</a>
+    <a href="/index.html#services">Services</a>
+    <a href="/backend.html">Backend</a>
+    <a href="/hosting.html">Hosting</a>
+    <a href="/index.html#work">Work</a>
+    <a href="/index.html#about">About</a>
+    <a href="/index.html#contact" class="btn">Contact</a>
+    <a href="/wiki.html">Wiki</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <h1>Recommended <span class="accent">Minecraft Hosting</span></h1>
+    <p class="sub">
+      Oreo Studios does not provide public Minecraft hosting services.
+      However, for users looking to host a Minecraft server, we can recommend
+      reliable third-party providers commonly used by the community.
+    </p>
+  </section>
+
+  <section class="layout">
+    <aside class="sideImage">
+      <div class="sideImageCard">
+        <img src="/img/recommended-hosting.png" alt="Minecraft hosting illustration">
+        <div class="sideImageCaption">Choose a plan based on player count and plugin load.</div>
+      </div>
+    </aside>
+
+    <div>
+      <section class="box">
+        <h2 class="gradient-text">MineStrator</h2>
+
+        <p class="sub">
+          MineStrator is a well-known Minecraft hosting provider offering infrastructure suitable
+          for development servers, plugin testing, and production environments.
+        </p>
+
+        <div style="margin-top:12px">
+          <span class="pill">Minecraft hosting</span>
+          <span class="pill">Pterodactyl panel</span>
+          <span class="pill">DDoS protection</span>
+          <span class="pill">EU infrastructure</span>
+          <span class="pill">Mod &amp; plugin friendly</span>
+        </div>
+
+        <p style="margin-top:16px">👉 You can visit their website using the link below:</p>
+
+        <p>
+          <a class="btn primary" href="https://minestrator.com/a/OREOSTUDIOS" target="_blank" rel="noopener">
+            Visit MineStrator
+          </a>
+        </p>
+
+        <p class="sub" style="margin-top:10px">
+          Promo code available at checkout: <strong>OREOSTUDIOS</strong> (10% discount)
+        </p>
+      </section>
+
+      <section class="box">
+        <h3>Transparency notice</h3>
+        <p class="sub">
+          Oreo Studios is <strong></strong> officially partnered, affiliated, or sponsored by MineStrator.
+        </p>
+        <p class="sub">
+          Any purchase or service agreement is made directly between you and MineStrator.
+        </p>
+      </section>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <p>© <span id="y"></span> OreoStudios — All rights reserved.</p>
+  <p class="muted small">Entrepreneur individuel (France) — SIRET 993 823 469 00017</p>
+</footer>
+
+<script>
+  document.getElementById('y').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>

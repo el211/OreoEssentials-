@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>UltimateChristmas — Advent Calendar | OreoStudios Wiki</title>
+<meta name="description" content="Daily gifts system: reset/window logic, calendar slots, group overrides, GUI, rewards, streaks, best practices."/>
+<link rel="icon" type="image/png" href="/logo.png" sizes="256x256"/>
+<link rel="stylesheet" href="/styles.css"/><link rel="stylesheet" href="/wiki/_docs.css"/>
+<link rel="canonical" href="https://oreostudio.store/wiki/uc-advent.html"/>
+</head>
+<body class="with-sidebar">
+<header class="nav">
+  <a class="brand" href="/" aria-label="OreoStudios Home">
+    <img class="logo" src="/logo.png" alt=""><span class="brand-text">Oreo<span class="accent">Studios</span></span>
+  </a>
+  <nav>
+    <a href="/index.html#services">Services</a>
+    <a href="/backend.html">Backend</a>
+    <a href="/oreoessentials.html">OreoEssentials</a>
+    <a href="/hosting.html">Hosting</a>
+    <a href="/wiki/index.html" aria-current="page">Wiki</a>
+    <a href="/index.html#contact" class="btn">Contact</a>
+  </nav>
+  <button id="menu" aria-label="Open menu">☰</button>
+</header>
+
+<main class="docs">
+  <aside class="docs-sidebar">
+    <div class="docs-brand"><img src="/logo.png" alt=""><div>Oreo<span class="accent">Studios</span> Wiki</div></div>
+    <nav class="docs-tree">
+      <div class="docs-section">UltimateChristmas</div>
+      <a href="/wiki/uc-installation.html">🎄 Installation & Setup</a>
+      <a href="/wiki/uc-commands.html">📘 Commands & Permissions</a>
+      <a href="/wiki/uc-shards.html">💎 Shards Economy</a>
+      <a href="/wiki/uc-shardshop.html">🛍️ ShardShop</a>
+      <a href="/wiki/uc-snowball.html">❄️ Snowball Event</a>
+      <a href="/wiki/uc-advent.html" aria-current="page">🗓️ Advent Calendar</a>
+      <a href="/wiki/uc-santa.html">🎅 Santa Event</a>
+    </nav>
+  </aside>
+
+  <section class="docs-content">
+    <h1>🎄 Advent Calendar / Daily Gifts</h1>
+    <p>Give one reward per reset-day via a SmartInvs GUI. Reward selection order: (1) fixed calendar mapping for today’s slot, else (2) weighted random from the player’s group (or default).</p>
+
+    <h2 class="gradient-text">⏰ <code>claim</code> — Reset time & timezone</h2>
+<pre><code>claim:
+  timezone: "Europe/Paris"
+  reset-hour: 5</code></pre>
+    <ul>
+      <li><code>timezone</code> for boundary math and “time left”.</li>
+      <li><code>reset-hour</code> = new day boundary. At 05:00 local time, a new claim opens.</li>
+    </ul>
+
+    <h2 class="gradient-text">📅 <code>calendar</code> — Fixed advent season</h2>
+<pre><code>calendar:
+  start:
+    date: "2025-12-01"
+    timezone: "Europe/Paris"
+    length: 25
+
+  "1": "common_coal"
+  "2": "rare_money"
+  "3": "common_coal"
+  "4": "rare_money"
+
+  vip:
+    "1": "rare_money"</code></pre>
+    <ul>
+      <li><strong>Slots</strong> are “1..length” since <code>start.date</code> (not literal month days).</li>
+      <li>Group overrides (e.g., <code>vip</code>) take precedence over global mapping.</li>
+    </ul>
+
+    <h2 class="gradient-text">💬 <code>messages</code></h2>
+<pre><code>messages:
+  already-claimed: "&cYou've already claimed today's reward. Next in &f%remaining%&c."
+  claimed: "&aYou claimed today's reward! &7(Current streak: &f%streak%&7)"
+  no-reward-config: "&cNo gifts configured."</code></pre>
+
+    <h2 class="gradient-text">🖼️ <code>gui</code> — Look & layout</h2>
+<pre><code>gui:
+  title: "&6&lDaily Gifts"
+  rows: 6
+  rewards_per_page: 21
+
+  border:
+    enabled: true
+    material: GRAY_STAINED_GLASS_PANE
+
+  reward_slots:
+    - "1,1"
+    - "1,2"
+    - "3,7"
+
+  prev: { material: ARROW }
+  next: { material: ARROW }
+  open: { material: LIME_WOOL }</code></pre>
+    <p>States: Past (closed), Today (claimed), Today (available), Future (locked).</p>
+
+    <h2 class="gradient-text">🎁 <code>item</code> — Physical gift (optional)</h2>
+<pre><code>item:
+  material: KNOWLEDGE_BOOK
+  display_name: "&6&lDaily Christmas Gift"
+  lore:
+    - "&7Right-click to open and claim"
+    - "&7your festive reward!"
+    - " "
+    - "&cWarning: May contain coal."</code></pre>
+
+    <h2 class="gradient-text">🧩 <code>rewards</code> — Actual grants</h2>
+<pre><code>rewards:
+  default:
+    common_coal:
+      chance: 50
+      icon:
+        material: COAL
+        name: "&7common_coal"
+        lore:
+          - "&7Weight: 50"
+          - "&7Commands: &f/give %player% coal 10"
+      commands:
+        - "give %player% coal 10"
+      messages:
+        - "&cSanta gave you a lump of coal..."
+      event:
+        firework: false
+        sound: "ENTITY_WITCH_DRINK"
+
+    rare_money:
+      chance: 5
+      icon:
+        material: EMERALD
+        name: "&arare_money"
+        lore:
+          - "&7Weight: 5"
+          - "&7Commands: &f/eco give %player% 1000"
+      commands:
+        - "eco give %player% 1000"
+        - "shards give %player% 50"
+      messages:
+        - "&aHO HO HO! You found a rare prize!"
+      event:
+        firework: true
+        sound: "ENTITY_PLAYER_LEVELUP"</code></pre>
+
+    <h2 class="gradient-text">🔁 Claim rules</h2>
+    <ul>
+      <li>One claim per reset-day; store tracks last claim epoch-day.</li>
+      <li>Calendar mapping beats weighted random.</li>
+      <li>Streak increments only if consecutive days were claimed.</li>
+    </ul>
+
+    <h2 class="gradient-text">✅ Best practices</h2>
+    <ul>
+      <li>Define all slots 1..length to avoid unintended randomness.</li>
+      <li>Pick a reset hour like 4–6 AM local.</li>
+      <li>Use <code>icon.lore</code> for hints, not spoilers.</li>
+      <li>Add group overrides for donor differentiation.</li>
+      <li>Short, festive sounds; fireworks for rare wins.</li>
+    </ul>
+
+    <h2 class="gradient-text">🧪 Quick checklist</h2>
+    <ul>
+      <li>Set <code>calendar.start.date</code> to your event start.</li>
+      <li>Fill 1..length mappings.</li>
+      <li>Define <code>rewards.default</code> and any group overrides.</li>
+      <li>Open GUI via <code>/advent</code> and test claimed/available states.</li>
+      <li>Test streak and “time to reset” messages.</li>
+    </ul>
+
+    <div class="prevnext">
+      <a href="/wiki/uc-snowball.html">← Previous: Snowball Event</a>
+      <a href="/wiki/uc-santa.html">Next: Santa Event →</a>
+    </div>
+  </section>
+</main>
+
+<footer class="footer"><p>© <span id="y"></span> OreoStudios — Docs.</p></footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>

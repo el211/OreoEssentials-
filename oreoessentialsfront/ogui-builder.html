@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OGUI Builder — Visual GUI Config Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ========= OREO STUDIOS — DEEP SPACE BLUE THEME ========= */
+:root {
+  --bg-0: #04051b;
+  --bg-1: #07092f;
+  --bg-2: #0f1358;
+  --card: #0b1033;
+  --card2: #0d1540;
+  --fg: #f6f8ff;
+  --muted: #b7c3e6;
+  --dim: #6b7db3;
+  --b1: #2260d8;
+  --b2: #3695f6;
+  --b3: #4fa6f2;
+  --b4: #79c2f8;
+  --grad: linear-gradient(135deg, #2260d8 0%, #3695f6 45%, #4fa6f2 100%);
+  --grad-soft: linear-gradient(135deg, #1537a6 0%, #2260d8 40%, #4fa6f2 100%);
+  --border: rgba(79,166,242,.18);
+  --border-hover: rgba(79,166,242,.55);
+  --input-bg: rgba(7,9,47,.7);
+  --danger: #e53e3e;
+  --success: #38a169;
+  --warn: #d69e2e;
+  --shadow: 0 18px 60px #00000066, 0 6px 20px #00000044;
+  --nav-h: 58px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+
+body {
+  background:
+    radial-gradient(1400px 900px at 50% 20%, #2d4ba8 0%, #1a2f6f 28%, #0d1642 55%, #06091f 100%);
+  color: var(--fg);
+  font: 14px/1.55 'DM Sans', system-ui, sans-serif;
+  overflow: hidden;
+  height: 100vh;
+}
+
+body::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 18% 12%, rgba(54,149,246,.22), transparent 62%),
+    radial-gradient(820px 520px at 82% 10%, rgba(79,166,242,.18), transparent 64%),
+    radial-gradient(860px 640px at 50% 115%, rgba(34,96,216,.2), transparent 64%);
+  animation: cosmicFloat 20s ease-in-out infinite alternate;
+}
+@keyframes cosmicFloat {
+  from{transform:translateY(-6px) scale(1)}
+  to{transform:translateY(6px) scale(1.01)}
+}
+
+a{color:inherit;text-decoration:none}
+
+/* ========= HEADER ========= */
+.header {
+  position:relative;
+  height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: rgba(4,5,27,.75);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  z-index: 200;
+  gap: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Oxanium', sans-serif;
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: -.3px;
+  flex-shrink: 0;
+}
+.brand .accent {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.brand .version {
+  font-size: 10px;
+  background: var(--grad);
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  opacity: .85;
+  margin-left: 2px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ========= BUTTONS ========= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--fg);
+  cursor: pointer;
+  font-size: 12.5px;
+  font-family: 'DM Sans', sans-serif;
+  transition: all .18s ease;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--border-hover); background: rgba(79,166,242,.12); transform: translateY(-1px); }
+.btn-primary { background: var(--grad); border-color: transparent; font-weight: 600; }
+.btn-primary:hover { box-shadow: 0 8px 24px rgba(34,96,216,.4); transform: translateY(-2px); }
+.btn-danger { background: rgba(229,62,62,.15); border-color: rgba(229,62,62,.4); color: #fc8181; }
+.btn-danger:hover { background: rgba(229,62,62,.3); border-color: #e53e3e; }
+.btn-ghost { background: transparent; border-color: rgba(255,255,255,.12); }
+.btn-sm { padding: 5px 9px; font-size: 11.5px; }
+.btn-xs { padding: 3px 7px; font-size: 11px; border-radius: 5px; }
+
+/* ========= LAYOUT ========= */
+.app-layout {
+  display: grid;
+  grid-template-columns: 270px 1fr 380px;
+  height: calc(100vh - var(--nav-h));
+  overflow: hidden;
+}
+
+.panel {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px;
+  border-right: 1px solid var(--border);
+}
+.panel:last-child { border-right: none; }
+.panel::-webkit-scrollbar { width: 5px; }
+.panel::-webkit-scrollbar-track { background: transparent; }
+.panel::-webkit-scrollbar-thumb { background: rgba(79,166,242,.25); border-radius: 4px; }
+
+.panel-title {
+  font-family: 'Oxanium', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ========= LEFT PANEL ========= */
+.gui-list { display: flex; flex-direction: column; gap: 6px; }
+
+.gui-card {
+  padding: 10px 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.15));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all .18s;
+}
+.gui-card:hover { border-color: var(--border-hover); }
+.gui-card.active {
+  border-color: var(--b3);
+  background: linear-gradient(135deg, rgba(79,166,242,.15), rgba(0,0,0,.15));
+  box-shadow: 0 0 0 1px rgba(79,166,242,.2);
+}
+.gui-card-name { font-family: 'Oxanium', sans-serif; font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+.gui-card-meta { font-size: 11px; color: var(--muted); display:flex; gap:8px; flex-wrap:wrap; }
+.gui-card-actions { display:flex; gap:5px; margin-top:8px; }
+
+/* GUI Settings mini form */
+.gui-settings { margin-top: 14px; }
+.gui-settings .setting-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.gui-settings label { font-size: 12px; color: var(--muted); width: 60px; flex-shrink: 0; }
+
+/* ========= SLOT GRID ========= */
+.slot-grid-wrap { margin-top: 14px; }
+.slot-row-label {
+  font-size: 10px;
+  color: var(--dim);
+  text-align: right;
+  padding-right: 4px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 3px;
+  background: rgba(0,0,0,.3);
+  padding: 7px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.slot {
+  aspect-ratio: 1;
+  background: rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .15s;
+  font-size: 9px;
+  color: var(--dim);
+  position: relative;
+  overflow: hidden;
+}
+.slot:hover { border-color: var(--b3); background: rgba(79,166,242,.1); color: var(--muted); }
+.slot.has-item {
+  background: linear-gradient(135deg, rgba(34,96,216,.25), rgba(0,0,0,.3));
+  border-color: rgba(79,166,242,.4);
+  color: var(--b4);
+}
+.slot.selected {
+  background: var(--grad) !important;
+  border-color: var(--b4) !important;
+  box-shadow: 0 0 10px rgba(79,166,242,.5);
+  color: #fff;
+}
+.slot-num { font-size: 8px; opacity: .6; }
+.slot-icon { font-size: 14px; }
+
+/* ========= CENTER: EDITOR ========= */
+.editor-wrap { position: relative; }
+
+.empty-editor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--dim);
+  text-align: center;
+  gap: 12px;
+}
+.empty-editor-icon { font-size: 52px; opacity: .4; }
+.empty-editor h3 { font-family: 'Oxanium', sans-serif; opacity: .6; }
+.empty-editor p { font-size: 13px; opacity: .5; max-width: 260px; }
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: rgba(0,0,0,.3);
+  padding: 4px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 7px 10px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: 7px;
+  transition: all .18s;
+  text-align: center;
+}
+.tab-btn:hover { color: var(--fg); background: rgba(255,255,255,.06); }
+.tab-btn.active {
+  background: var(--grad);
+  color: #fff;
+  font-weight: 600;
+}
+
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* FORM ELEMENTS */
+.form-group { margin-bottom: 13px; }
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 5px;
+  letter-spacing: .2px;
+}
+.form-hint { font-size: 11px; color: var(--dim); margin-top: 4px; line-height: 1.4; }
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--fg);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  transition: all .18s;
+  outline: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--b3);
+  background: rgba(7,9,47,.9);
+  box-shadow: 0 0 0 2px rgba(79,166,242,.12);
+}
+.form-select { cursor: pointer; }
+.form-textarea {
+  resize: vertical;
+  min-height: 75px;
+  font-family: 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Autocomplete */
+.autocomplete-wrap { position: relative; }
+.ac-list {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 0; right: 0;
+  background: #0a0e2a;
+  border: 1px solid var(--border-hover);
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 500;
+  display: none;
+  box-shadow: 0 8px 30px rgba(0,0,0,.6);
+}
+.ac-list.open { display: block; }
+.ac-item {
+  padding: 7px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  transition: background .12s;
+}
+.ac-item:hover, .ac-item.focused { background: rgba(79,166,242,.15); }
+.ac-item-id { color: var(--b4); font-family: 'Consolas', monospace; font-size: 11px; flex-shrink:0; }
+.ac-item-name { color: var(--muted); }
+.ac-item-type {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.ac-type-block { background: rgba(56,161,105,.2); color: #68d391; }
+.ac-type-item { background: rgba(246,173,85,.2); color: #f6ad55; }
+.ac-type-mob { background: rgba(245,101,101,.2); color: #fc8181; }
+
+/* Checkbox row */
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  user-select: none;
+}
+.check-row input[type=checkbox] {
+  width: 16px; height: 16px;
+  accent-color: var(--b3);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Color preview */
+.color-preview-bar {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 7px;
+  background: rgba(0,0,0,.4);
+  border: 1px solid var(--border);
+  margin-top: 6px;
+  font-size: 13px;
+  min-height: 34px;
+  word-break: break-all;
+}
+
+/* Lore lines */
+.lore-list { display: flex; flex-direction: column; gap: 5px; }
+.lore-item { display: flex; gap: 6px; align-items: center; }
+.lore-item input { flex: 1; }
+
+/* Command list */
+.cmd-list { display: flex; flex-direction: column; gap: 5px; }
+.cmd-item { display: flex; gap: 6px; align-items: center; }
+.cmd-item input { flex: 1; font-family: 'Consolas', monospace; font-size: 12px; }
+
+/* ========= CONDITIONS ========= */
+.condition-list { display: flex; flex-direction: column; gap: 7px; }
+.cond-card {
+  background: linear-gradient(135deg, rgba(34,96,216,.12), rgba(0,0,0,.2));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.cond-info { flex: 1; min-width: 0; }
+.cond-type {
+  font-family: 'Oxanium', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 3px;
+}
+.cond-summary { font-size: 11.5px; color: var(--muted); word-break: break-all; }
+
+/* CONDITION TYPE PICKER */
+.cond-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 7px;
+  margin-bottom: 16px;
+}
+.cond-type-card {
+  padding: 10px 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.15));
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all .18s;
+}
+.cond-type-card:hover, .cond-type-card.sel {
+  border-color: var(--b3);
+  background: linear-gradient(135deg, rgba(79,166,242,.15), rgba(0,0,0,.15));
+}
+.cond-type-card .ct-name { font-weight: 700; font-size: 12.5px; margin-bottom: 2px; font-family: 'Oxanium', sans-serif; }
+.cond-type-card .ct-desc { font-size: 11px; color: var(--muted); }
+.cond-type-card .ct-icon { font-size: 20px; margin-bottom: 4px; }
+.cond-requires {
+  font-size: 10px;
+  margin-top: 3px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  display: inline-block;
+  background: rgba(246,173,85,.15);
+  color: #f6ad55;
+}
+
+/* ========= RIGHT PANEL: YAML ========= */
+.yaml-actions { display:flex; gap:6px; margin-bottom:8px; }
+.yaml-pre {
+  background: #040611;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 11.5px;
+  line-height: 1.65;
+  overflow-x: auto;
+  white-space: pre;
+  color: #c9d7ff;
+  height: calc(100vh - var(--nav-h) - 130px);
+  overflow-y: auto;
+  tab-size: 2;
+}
+.yaml-pre::-webkit-scrollbar { width: 5px; height: 5px; }
+.yaml-pre::-webkit-scrollbar-thumb { background: rgba(79,166,242,.25); border-radius:4px; }
+
+/* Syntax highlight classes */
+.yk { color: #60a5fa; }  /* key */
+.ys { color: #6ee7b7; }  /* string */
+.yn { color: #f87171; }  /* number */
+.yb { color: #c084fc; }  /* bool */
+.yc { color: #4b5563; }  /* comment */
+
+/* ========= MODAL ========= */
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: linear-gradient(180deg, #0c1040, #070921);
+  border: 1px solid var(--border-hover);
+  border-radius: 14px;
+  padding: 22px;
+  width: min(640px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 30px 80px rgba(0,0,0,.8);
+}
+.modal::-webkit-scrollbar { width: 5px; }
+.modal::-webkit-scrollbar-thumb { background: rgba(79,166,242,.3); border-radius:4px; }
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.modal-title {
+  font-family: 'Oxanium', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 22px;
+  cursor: pointer;
+  width: 30px; height: 30px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius: 6px;
+  transition: all .15s;
+}
+.modal-close:hover { background: rgba(255,255,255,.08); color: var(--fg); }
+
+/* ========= MISC ========= */
+.row { display:flex; gap:8px; align-items:flex-start; }
+.col { flex:1; min-width:0; }
+.divider { height:1px; background:var(--border); margin:12px 0; }
+.badge {
+  display:inline-flex; align-items:center;
+  padding: 2px 7px; border-radius: 5px;
+  font-size: 11px; font-weight: 600;
+}
+.badge-blue { background: rgba(79,166,242,.2); color: var(--b4); }
+.badge-green { background: rgba(56,161,105,.2); color: #68d391; }
+.badge-orange { background: rgba(246,173,85,.2); color: #f6ad55; }
+.badge-red { background: rgba(229,62,62,.2); color: #fc8181; }
+
+.info-box {
+  background: rgba(34,96,216,.12);
+  border: 1px solid rgba(79,166,242,.25);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.info-box strong { color: var(--b4); }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--b3);
+  margin: 14px 0 8px;
+  display:flex; align-items:center; gap:6px;
+}
+.section-label::after {
+  content:"";
+  flex:1; height:1px;
+  background: linear-gradient(to right, rgba(79,166,242,.3), transparent);
+}
+
+.toast {
+  position:fixed;
+  bottom:20px; right:20px;
+  padding:10px 16px;
+  background: var(--grad);
+  border-radius:9px;
+  font-size:13px;
+  font-weight:600;
+  color:#fff;
+  z-index:9999;
+  opacity:0;
+  transform:translateY(10px);
+  transition:all .3s ease;
+  pointer-events:none;
+}
+.toast.show { opacity:1; transform:translateY(0); }
+
+/* copy btn */
+.copy-indicator {
+  display:inline-flex;gap:4px;align-items:center;
+  font-size:11px; color:var(--dim); cursor:pointer;
+  padding:3px 7px; border-radius:5px;
+  transition:all .15s;
+}
+.copy-indicator:hover { color:var(--b4); background:rgba(79,166,242,.1); }
+
+/* step indicator for beginners */
+.step-row {
+  display:flex; gap:10px; align-items:flex-start;
+  padding:8px 10px; border-radius:8px;
+  background:rgba(34,96,216,.08); border:1px solid rgba(79,166,242,.12);
+  margin-bottom:6px;
+}
+.step-num {
+  background:var(--grad); color:#fff;
+  width:22px; height:22px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0;
+  margin-top:1px;
+}
+.step-text { font-size:12px; color:var(--muted); }
+.step-text strong { color:var(--fg); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="brand">
+    <span>OGUI</span><span class="accent">Builder</span>
+    <span class="version">v2</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-primary" onclick="App.newGUI()">➕ New GUI</button>
+    <button class="btn" onclick="App.exportYAML()">💾 Export YAML</button>
+    <button class="btn" onclick="App.importModal()">📁 Import YAML</button>
+    <button class="btn btn-ghost" onclick="App.showHelp()">❓ Guide</button>
+    <button class="btn btn-danger" onclick="App.clearAll()">🗑 Clear All</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="app-layout">
+
+  <!-- LEFT: GUI LIST + SLOT GRID -->
+  <div class="panel">
+    <div class="panel-title">📋 Your GUIs</div>
+    <div id="guiList" class="gui-list">
+      <div style="text-align:center;padding:20px 0;color:var(--dim);font-size:13px;">
+        <div style="font-size:36px;opacity:.4;margin-bottom:8px;">📦</div>
+        Click <strong style="color:var(--b4)">New GUI</strong> to start
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="panel-title">⚙️ GUI Settings</div>
+    <div id="guiSettings" style="color:var(--dim);font-size:12px;padding:8px 0;">
+      Select a GUI to edit its settings.
+    </div>
+
+    <div class="divider"></div>
+    <div class="panel-title">🎮 Slot Grid</div>
+    <div style="font-size:11px;color:var(--dim);margin-bottom:8px;">Click a slot to place/edit an item</div>
+    <div id="slotGrid" class="slot-grid" style="grid-template-columns:repeat(9,1fr)">
+      <div style="grid-column:1/-1;text-align:center;padding:10px;color:var(--dim);font-size:12px;">No GUI selected</div>
+    </div>
+  </div>
+
+  <!-- CENTER: ITEM EDITOR -->
+  <div class="panel" id="editorPanel">
+    <div id="editorContent">
+      <div class="empty-editor">
+        <div class="empty-editor-icon">✨</div>
+        <h3>No slot selected</h3>
+        <p>Create a GUI, then click any slot in the grid to start building your menu item.</p>
+        <div style="margin-top:20px;text-align:left;max-width:300px;">
+          <div class="step-row"><div class="step-num">1</div><div class="step-text"><strong>New GUI</strong> — click the button top-left</div></div>
+          <div class="step-row"><div class="step-num">2</div><div class="step-text"><strong>Click a slot</strong> in the grid to add an item</div></div>
+          <div class="step-row"><div class="step-num">3</div><div class="step-text"><strong>Fill in</strong> the item name, icon & conditions</div></div>
+          <div class="step-row"><div class="step-num">4</div><div class="step-text"><strong>Export YAML</strong> and drop it into your server!</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: YAML PREVIEW -->
+  <div class="panel">
+    <div class="panel-title">📄 YAML Preview</div>
+    <div class="yaml-actions">
+      <button class="btn btn-sm" onclick="App.copyYAML()">📋 Copy All</button>
+      <button class="btn btn-sm btn-primary" onclick="App.exportYAML()">💾 Download</button>
+    </div>
+    <pre id="yamlPre" class="yaml-pre">guis:
+  # 👈 Create a GUI and add items
+  # to see live YAML here!</pre>
+  </div>
+</div>
+
+<!-- CONDITION MODAL -->
+<div id="condModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="condModalTitle">Add Condition</span>
+      <button class="modal-close" onclick="App.closeModal('condModal')">×</button>
+    </div>
+    <div id="condModalBody"></div>
+  </div>
+</div>
+
+<!-- HELP MODAL -->
+<div id="helpModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📖 OGUI Builder Guide</span>
+      <button class="modal-close" onclick="App.closeModal('helpModal')">×</button>
+    </div>
+    <div id="helpModalBody"></div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div id="importModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📁 Import YAML</span>
+      <button class="modal-close" onclick="App.closeModal('importModal')">×</button>
+    </div>
+    <div>
+      <div class="info-box">Paste your <strong>guis.yml</strong> content below, or upload the file. The builder will parse and load your GUIs.</div>
+      <div class="form-group">
+        <label class="form-label">Paste YAML</label>
+        <textarea class="form-textarea" id="importText" style="min-height:200px;font-size:11.5px;" placeholder="guis:&#10;  my_shop:&#10;    title: '&6My Shop'&#10;    rows: 3&#10;    ..."></textarea>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-primary" onclick="App.processImport()">⚡ Parse & Load</button>
+        <label class="btn" style="cursor:pointer;">
+          📂 Upload File
+          <input type="file" accept=".yml,.yaml" style="display:none" onchange="App.loadImportFile(this)">
+        </label>
+      </div>
+      <div id="importFeedback" style="margin-top:10px;font-size:12px;color:var(--muted);"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ========================================
+// MINECRAFT ITEMS DATABASE
+// ========================================
+const MC_ITEMS = [
+["acacia_boat","Acacia Boat","item"],["acacia_chest_boat","Acacia Boat with Chest","item"],["acacia_button","Acacia Button","block"],["acacia_door","Acacia Door","block"],["acacia_fence","Acacia Fence","block"],["acacia_fence_gate","Acacia Fence Gate","block"],["acacia_hanging_sign","Acacia Hanging Sign","block"],["acacia_leaves","Acacia Leaves","block"],["acacia_log","Acacia Log","block"],["acacia_planks","Acacia Planks","block"],["acacia_pressure_plate","Acacia Pressure Plate","block"],["acacia_sapling","Acacia Sapling","block"],["acacia_shelf","Acacia Shelf","block"],["acacia_sign","Acacia Sign","block"],["acacia_slab","Acacia Slab","block"],["acacia_stairs","Acacia Stairs","block"],["acacia_trapdoor","Acacia Trapdoor","block"],["acacia_wood","Acacia Wood","block"],["activator_rail","Activator Rail","block"],["air","Air","block"],["allay_spawn_egg","Allay Spawn Egg","item"],["allium","Allium","block"],["amethyst_block","Block of Amethyst","block"],["amethyst_cluster","Amethyst Cluster","block"],["amethyst_shard","Amethyst Shard","item"],["ancient_debris","Ancient Debris","block"],["andesite","Andesite","block"],["andesite_slab","Andesite Slab","block"],["andesite_stairs","Andesite Stairs","block"],["andesite_wall","Andesite Wall","block"],["angler_pottery_sherd","Angler Pottery Sherd","item"],["anvil","Anvil","block"],["apple","Apple","item"],["archer_pottery_sherd","Archer Pottery Sherd","item"],["armadillo_scute","Armadillo Scute","item"],["armadillo_spawn_egg","Armadillo Spawn Egg","item"],["armor_stand","Armor Stand","item"],["arms_up_pottery_sherd","Arms Up Pottery Sherd","item"],["arrow","Arrow","item"],["tipped_arrow","Arrow of Poison","item"],["azalea","Azalea","block"],["azalea_leaves","Azalea Leaves","block"],["azure_bluet","Azure Bluet","block"],["baked_potato","Baked Potato","item"],["bamboo","Bamboo","block"],["bamboo_block","Block of Bamboo","block"],["bamboo_button","Bamboo Button","block"],["bamboo_door","Bamboo Door","block"],["bamboo_fence","Bamboo Fence","block"],["bamboo_fence_gate","Bamboo Fence Gate","block"],["bamboo_hanging_sign","Bamboo Hanging Sign","block"],["bamboo_mosaic","Bamboo Mosaic","block"],["bamboo_mosaic_slab","Bamboo Mosaic Slab","block"],["bamboo_mosaic_stairs","Bamboo Mosaic Stairs","block"],["bamboo_planks","Bamboo Planks","block"],["bamboo_pressure_plate","Bamboo Pressure Plate","block"],["bamboo_raft","Bamboo Raft","item"],["bamboo_chest_raft","Bamboo Raft with Chest","item"],["bamboo_sapling","Bamboo Shoot","block"],["bamboo_sign","Bamboo Sign","block"],["bamboo_slab","Bamboo Slab","block"],["bamboo_stairs","Bamboo Stairs","block"],["bamboo_trapdoor","Bamboo Trapdoor","block"],["barrel","Barrel","block"],["barrier","Barrier","block"],["basalt","Basalt","block"],["bat_spawn_egg","Bat Spawn Egg","item"],["beacon","Beacon","block"],["bedrock","Bedrock","block"],["bee_nest","Bee Nest","block"],["bee_spawn_egg","Bee Spawn Egg","item"],["beehive","Beehive","block"],["beetroot","Beetroot","item"],["beetroot_seeds","Beetroot Seeds","item"],["beetroot_soup","Beetroot Soup","item"],["bell","Bell","block"],["birch_boat","Birch Boat","item"],["birch_chest_boat","Birch Boat with Chest","item"],["birch_button","Birch Button","block"],["birch_door","Birch Door","block"],["birch_fence","Birch Fence","block"],["birch_fence_gate","Birch Fence Gate","block"],["birch_hanging_sign","Birch Hanging Sign","block"],["birch_leaves","Birch Leaves","block"],["birch_log","Birch Log","block"],["birch_planks","Birch Planks","block"],["birch_pressure_plate","Birch Pressure Plate","block"],["birch_sapling","Birch Sapling","block"],["birch_sign","Birch Sign","block"],["birch_slab","Birch Slab","block"],["birch_stairs","Birch Stairs","block"],["birch_trapdoor","Birch Trapdoor","block"],["birch_wood","Birch Wood","block"],["black_banner","Black Banner","block"],["black_bed","Black Bed","block"],["black_bundle","Black Bundle","item"],["black_candle","Black Candle","block"],["black_carpet","Black Carpet","block"],["black_concrete","Black Concrete","block"],["black_concrete_powder","Black Concrete Powder","block"],["black_dye","Black Dye","item"],["black_glazed_terracotta","Black Glazed Terracotta","block"],["black_harness","Black Harness","item"],["black_shulker_box","Black Shulker Box","block"],["black_stained_glass","Black Stained Glass","block"],["black_stained_glass_pane","Black Stained Glass Pane","block"],["black_terracotta","Black Terracotta","block"],["black_wool","Black Wool","block"],["blackstone","Blackstone","block"],["blackstone_slab","Blackstone Slab","block"],["blackstone_stairs","Blackstone Stairs","block"],["blackstone_wall","Blackstone Wall","block"],["blade_pottery_sherd","Blade Pottery Sherd","item"],["blast_furnace","Blast Furnace","block"],["blaze_powder","Blaze Powder","item"],["blaze_rod","Blaze Rod","item"],["blaze_spawn_egg","Blaze Spawn Egg","item"],["coal_block","Block of Coal","block"],["copper_block","Block of Copper","block"],["diamond_block","Block of Diamond","block"],["emerald_block","Block of Emerald","block"],["gold_block","Block of Gold","block"],["iron_block","Block of Iron","block"],["lapis_block","Block of Lapis Lazuli","block"],["netherite_block","Block of Netherite","block"],["quartz_block","Block of Quartz","block"],["raw_copper_block","Block of Raw Copper","block"],["raw_gold_block","Block of Raw Gold","block"],["raw_iron_block","Block of Raw Iron","block"],["redstone_block","Block of Redstone","block"],["resin_block","Block of Resin","block"],["blue_banner","Blue Banner","block"],["blue_bed","Blue Bed","block"],["blue_bundle","Blue Bundle","item"],["blue_candle","Blue Candle","block"],["blue_carpet","Blue Carpet","block"],["blue_concrete","Blue Concrete","block"],["blue_concrete_powder","Blue Concrete Powder","block"],["blue_dye","Blue Dye","item"],["blue_egg","Blue Egg","item"],["blue_glazed_terracotta","Blue Glazed Terracotta","block"],["blue_harness","Blue Harness","item"],["blue_ice","Blue Ice","block"],["blue_orchid","Blue Orchid","block"],["blue_shulker_box","Blue Shulker Box","block"],["blue_stained_glass","Blue Stained Glass","block"],["blue_stained_glass_pane","Blue Stained Glass Pane","block"],["blue_terracotta","Blue Terracotta","block"],["blue_wool","Blue Wool","block"],["bogged_spawn_egg","Bogged Spawn Egg","item"],["bolt_armor_trim_smithing_template","Bolt Armor Trim","item"],["bone","Bone","item"],["bone_block","Bone Block","block"],["bone_meal","Bone Meal","item"],["book","Book","item"],["writable_book","Book and Quill","item"],["bookshelf","Bookshelf","block"],["experience_bottle","Bottle o' Enchanting","item"],["bow","Bow","item"],["bowl","Bowl","item"],["brain_coral","Brain Coral","block"],["brain_coral_block","Brain Coral Block","block"],["brain_coral_fan","Brain Coral Fan","block"],["bread","Bread","item"],["breeze_rod","Breeze Rod","item"],["breeze_spawn_egg","Breeze Spawn Egg","item"],["brewer_pottery_sherd","Brewer Pottery Sherd","item"],["brewing_stand","Brewing Stand","block"],["brick","Brick","item"],["brick_slab","Brick Slab","block"],["brick_stairs","Brick Stairs","block"],["brick_wall","Brick Wall","block"],["bricks","Bricks","block"],["brown_banner","Brown Banner","block"],["brown_bed","Brown Bed","block"],["brown_bundle","Brown Bundle","item"],["brown_candle","Brown Candle","block"],["brown_carpet","Brown Carpet","block"],["brown_concrete","Brown Concrete","block"],["brown_concrete_powder","Brown Concrete Powder","block"],["brown_dye","Brown Dye","item"],["brown_egg","Brown Egg","item"],["brown_glazed_terracotta","Brown Glazed Terracotta","block"],["brown_harness","Brown Harness","item"],["brown_mushroom","Brown Mushroom","block"],["brown_mushroom_block","Brown Mushroom Block","block"],["brown_shulker_box","Brown Shulker Box","block"],["brown_stained_glass","Brown Stained Glass","block"],["brown_stained_glass_pane","Brown Stained Glass Pane","block"],["brown_terracotta","Brown Terracotta","block"],["brown_wool","Brown Wool","block"],["brush","Brush","item"],["bucket","Bucket","item"],["axolotl_bucket","Bucket of Axolotl","item"],["cod_bucket","Bucket of Cod","item"],["pufferfish_bucket","Bucket of Pufferfish","item"],["salmon_bucket","Bucket of Salmon","item"],["tadpole_bucket","Bucket of Tadpole","item"],["tropical_fish_bucket","Bucket of Tropical Fish","item"],["bundle","Bundle","item"],["burn_pottery_sherd","Burn Pottery Sherd","item"],["bush","Bush","block"],["cactus","Cactus","block"],["cactus_flower","Cactus Flower","block"],["cake","Cake","block"],["calcite","Calcite","block"],["calibrated_sculk_sensor","Calibrated Sculk Sensor","block"],["camel_spawn_egg","Camel Spawn Egg","item"],["campfire","Campfire","block"],["candle","Candle","block"],["carrot","Carrot","item"],["carrot_on_a_stick","Carrot on a Stick","item"],["cartography_table","Cartography Table","block"],["carved_pumpkin","Carved Pumpkin","block"],["cat_spawn_egg","Cat Spawn Egg","item"],["cauldron","Cauldron","block"],["cave_spider_spawn_egg","Cave Spider Spawn Egg","item"],["chainmail_boots","Chainmail Boots","item"],["chainmail_chestplate","Chainmail Chestplate","item"],["chainmail_helmet","Chainmail Helmet","item"],["chainmail_leggings","Chainmail Leggings","item"],["charcoal","Charcoal","item"],["cherry_boat","Cherry Boat","item"],["cherry_chest_boat","Cherry Boat with Chest","item"],["cherry_button","Cherry Button","block"],["cherry_door","Cherry Door","block"],["cherry_fence","Cherry Fence","block"],["cherry_fence_gate","Cherry Fence Gate","block"],["cherry_hanging_sign","Cherry Hanging Sign","block"],["cherry_leaves","Cherry Leaves","block"],["cherry_log","Cherry Log","block"],["cherry_planks","Cherry Planks","block"],["cherry_pressure_plate","Cherry Pressure Plate","block"],["cherry_sapling","Cherry Sapling","block"],["cherry_sign","Cherry Sign","block"],["cherry_slab","Cherry Slab","block"],["cherry_stairs","Cherry Stairs","block"],["cherry_trapdoor","Cherry Trapdoor","block"],["cherry_wood","Cherry Wood","block"],["chest","Chest","block"],["chicken_spawn_egg","Chicken Spawn Egg","item"],["chipped_anvil","Chipped Anvil","block"],["chiseled_bookshelf","Chiseled Bookshelf","block"],["chiseled_copper","Chiseled Copper","block"],["chiseled_deepslate","Chiseled Deepslate","block"],["chiseled_nether_bricks","Chiseled Nether Bricks","block"],["chiseled_polished_blackstone","Chiseled Polished Blackstone","block"],["chiseled_quartz_block","Chiseled Quartz Block","block"],["chiseled_red_sandstone","Chiseled Red Sandstone","block"],["chiseled_resin_bricks","Chiseled Resin Bricks","block"],["chiseled_sandstone","Chiseled Sandstone","block"],["chiseled_stone_bricks","Chiseled Stone Bricks","block"],["chiseled_tuff","Chiseled Tuff","block"],["chiseled_tuff_bricks","Chiseled Tuff Bricks","block"],["chorus_flower","Chorus Flower","block"],["chorus_fruit","Chorus Fruit","item"],["chorus_plant","Chorus Plant","block"],["clay","Clay","block"],["clay_ball","Clay Ball","item"],["clock","Clock","item"],["closed_eyeblossom","Closed Eyeblossom","block"],["coal","Coal","item"],["coal_ore","Coal Ore","block"],["coarse_dirt","Coarse Dirt","block"],["coast_armor_trim_smithing_template","Coast Armor Trim","item"],["cobbled_deepslate","Cobbled Deepslate","block"],["cobblestone","Cobblestone","block"],["cobblestone_slab","Cobblestone Slab","block"],["cobblestone_stairs","Cobblestone Stairs","block"],["cobblestone_wall","Cobblestone Wall","block"],["cobweb","Cobweb","block"],["cocoa_beans","Cocoa Beans","item"],["cod_spawn_egg","Cod Spawn Egg","item"],["command_block","Command Block","block"],["compass","Compass","item"],["composter","Composter","block"],["conduit","Conduit","block"],["cooked_chicken","Cooked Chicken","item"],["cooked_cod","Cooked Cod","item"],["cooked_mutton","Cooked Mutton","item"],["cooked_porkchop","Cooked Porkchop","item"],["cooked_rabbit","Cooked Rabbit","item"],["cooked_salmon","Cooked Salmon","item"],["cookie","Cookie","item"],["copper_axe","Copper Axe","item"],["copper_ingot","Copper Ingot","item"],["copper_nugget","Copper Nugget","item"],["copper_ore","Copper Ore","block"],["copper_sword","Copper Sword","item"],["cornflower","Cornflower","block"],["cow_spawn_egg","Cow Spawn Egg","item"],["cracker_pottery_sherd","Cracker Pottery Sherd","item"],["crafter","Crafter","block"],["crafting_table","Crafting Table","block"],["creaking_heart","Creaking Heart","block"],["creaking_spawn_egg","Creaking Spawn Egg","item"],["creeper_banner_pattern","Creeper Charge Banner Pattern","item"],["creeper_head","Creeper Head","block"],["creeper_spawn_egg","Creeper Spawn Egg","item"],["crimson_button","Crimson Button","block"],["crimson_door","Crimson Door","block"],["crimson_fence","Crimson Fence","block"],["crimson_fence_gate","Crimson Fence Gate","block"],["crimson_fungus","Crimson Fungus","block"],["crimson_hanging_sign","Crimson Hanging Sign","block"],["crimson_hyphae","Crimson Hyphae","block"],["crimson_nylium","Crimson Nylium","block"],["crimson_planks","Crimson Planks","block"],["crimson_pressure_plate","Crimson Pressure Plate","block"],["crimson_roots","Crimson Roots","block"],["crimson_sign","Crimson Sign","block"],["crimson_slab","Crimson Slab","block"],["crimson_stairs","Crimson Stairs","block"],["crimson_stem","Crimson Stem","block"],["crimson_trapdoor","Crimson Trapdoor","block"],["crossbow","Crossbow","item"],["crying_obsidian","Crying Obsidian","block"],["cut_copper","Cut Copper","block"],["cut_copper_slab","Cut Copper Slab","block"],["cut_copper_stairs","Cut Copper Stairs","block"],["cyan_banner","Cyan Banner","block"],["cyan_bed","Cyan Bed","block"],["cyan_bundle","Cyan Bundle","item"],["cyan_candle","Cyan Candle","block"],["cyan_carpet","Cyan Carpet","block"],["cyan_concrete","Cyan Concrete","block"],["cyan_concrete_powder","Cyan Concrete Powder","block"],["cyan_dye","Cyan Dye","item"],["cyan_glazed_terracotta","Cyan Glazed Terracotta","block"],["cyan_harness","Cyan Harness","item"],["cyan_shulker_box","Cyan Shulker Box","block"],["cyan_stained_glass","Cyan Stained Glass","block"],["cyan_stained_glass_pane","Cyan Stained Glass Pane","block"],["cyan_terracotta","Cyan Terracotta","block"],["cyan_wool","Cyan Wool","block"],["damaged_anvil","Damaged Anvil","block"],["dandelion","Dandelion","block"],["danger_pottery_sherd","Danger Pottery Sherd","item"],["dark_oak_boat","Dark Oak Boat","item"],["dark_oak_chest_boat","Dark Oak Boat with Chest","item"],["dark_oak_button","Dark Oak Button","block"],["dark_oak_door","Dark Oak Door","block"],["dark_oak_fence","Dark Oak Fence","block"],["dark_oak_fence_gate","Dark Oak Fence Gate","block"],["dark_oak_hanging_sign","Dark Oak Hanging Sign","block"],["dark_oak_leaves","Dark Oak Leaves","block"],["dark_oak_log","Dark Oak Log","block"],["dark_oak_planks","Dark Oak Planks","block"],["dark_oak_pressure_plate","Dark Oak Pressure Plate","block"],["dark_oak_sapling","Dark Oak Sapling","block"],["dark_oak_sign","Dark Oak Sign","block"],["dark_oak_slab","Dark Oak Slab","block"],["dark_oak_stairs","Dark Oak Stairs","block"],["dark_oak_trapdoor","Dark Oak Trapdoor","block"],["dark_oak_wood","Dark Oak Wood","block"],["dark_prismarine","Dark Prismarine","block"],["dark_prismarine_slab","Dark Prismarine Slab","block"],["dark_prismarine_stairs","Dark Prismarine Stairs","block"],["daylight_detector","Daylight Detector","block"],["dead_bush","Dead Bush","block"],["debug_stick","Debug Stick","item"],["decorated_pot","Decorated Pot","block"],["deepslate","Deepslate","block"],["deepslate_bricks","Deepslate Bricks","block"],["deepslate_coal_ore","Deepslate Coal Ore","block"],["deepslate_copper_ore","Deepslate Copper Ore","block"],["deepslate_diamond_ore","Deepslate Diamond Ore","block"],["deepslate_emerald_ore","Deepslate Emerald Ore","block"],["deepslate_gold_ore","Deepslate Gold Ore","block"],["deepslate_iron_ore","Deepslate Iron Ore","block"],["deepslate_lapis_ore","Deepslate Lapis Lazuli Ore","block"],["deepslate_redstone_ore","Deepslate Redstone Ore","block"],["deepslate_tiles","Deepslate Tiles","block"],["detector_rail","Detector Rail","block"],["diamond","Diamond","item"],["diamond_axe","Diamond Axe","item"],["diamond_boots","Diamond Boots","item"],["diamond_chestplate","Diamond Chestplate","item"],["diamond_helmet","Diamond Helmet","item"],["diamond_hoe","Diamond Hoe","item"],["diamond_horse_armor","Diamond Horse Armor","item"],["diamond_leggings","Diamond Leggings","item"],["diamond_ore","Diamond Ore","block"],["diamond_pickaxe","Diamond Pickaxe","item"],["diamond_shovel","Diamond Shovel","item"],["diamond_sword","Diamond Sword","item"],["diorite","Diorite","block"],["diorite_slab","Diorite Slab","block"],["diorite_stairs","Diorite Stairs","block"],["diorite_wall","Diorite Wall","block"],["dirt","Dirt","block"],["dirt_path","Dirt Path","block"],["disc_fragment_5","Disc Fragment","item"],["dispenser","Dispenser","block"],["dolphin_spawn_egg","Dolphin Spawn Egg","item"],["donkey_spawn_egg","Donkey Spawn Egg","item"],["dragon_egg","Dragon Egg","block"],["dragon_head","Dragon Head","block"],["dragon_breath","Dragon's Breath","item"],["dried_ghast","Dried Ghast","block"],["dried_kelp","Dried Kelp","item"],["dried_kelp_block","Dried Kelp Block","block"],["dripstone_block","Dripstone Block","block"],["dropper","Dropper","block"],["drowned_spawn_egg","Drowned Spawn Egg","item"],["dune_armor_trim_smithing_template","Dune Armor Trim","item"],["echo_shard","Echo Shard","item"],["egg","Egg","item"],["elder_guardian_spawn_egg","Elder Guardian Spawn Egg","item"],["elytra","Elytra","item"],["emerald","Emerald","item"],["emerald_ore","Emerald Ore","block"],["map","Empty Map","item"],["enchanted_book","Enchanted Book","item"],["enchanted_golden_apple","Enchanted Golden Apple","item"],["enchanting_table","Enchanting Table","block"],["end_crystal","End Crystal","item"],["end_portal_frame","End Portal Frame","block"],["end_rod","End Rod","block"],["end_stone","End Stone","block"],["end_stone_bricks","End Stone Bricks","block"],["ender_chest","Ender Chest","block"],["ender_dragon_spawn_egg","Ender Dragon Spawn Egg","item"],["ender_pearl","Ender Pearl","item"],["enderman_spawn_egg","Enderman Spawn Egg","item"],["endermite_spawn_egg","Endermite Spawn Egg","item"],["evoker_spawn_egg","Evoker Spawn Egg","item"],["explorer_pottery_sherd","Explorer Pottery Sherd","item"],["eye_armor_trim_smithing_template","Eye Armor Trim","item"],["ender_eye","Eye of Ender","item"],["farmland","Farmland","block"],["feather","Feather","item"],["fermented_spider_eye","Fermented Spider Eye","item"],["fern","Fern","block"],["field_masoned_banner_pattern","Field Masoned Banner Pattern","item"],["fire_charge","Fire Charge","item"],["fire_coral","Fire Coral","block"],["fire_coral_block","Fire Coral Block","block"],["firework_rocket","Firework Rocket","item"],["firework_star","Firework Star","item"],["fishing_rod","Fishing Rod","item"],["fletching_table","Fletching Table","block"],["flint","Flint","item"],["flint_and_steel","Flint and Steel","item"],["flow_armor_trim_smithing_template","Flow Armor Trim","item"],["flow_banner_pattern","Flow Banner Pattern","item"],["flow_pottery_sherd","Flow Pottery Sherd","item"],["flower_banner_pattern","Flower Charge Banner Pattern","item"],["flower_pot","Flower Pot","block"],["flowering_azalea","Flowering Azalea","block"],["fox_spawn_egg","Fox Spawn Egg","item"],["friend_pottery_sherd","Friend Pottery Sherd","item"],["frog_spawn_egg","Frog Spawn Egg","item"],["frogspawn","Frogspawn","block"],["furnace","Furnace","block"],["ghast_spawn_egg","Ghast Spawn Egg","item"],["ghast_tear","Ghast Tear","item"],["gilded_blackstone","Gilded Blackstone","block"],["glass","Glass","block"],["glass_bottle","Glass Bottle","item"],["glass_pane","Glass Pane","block"],["glistering_melon_slice","Glistering Melon Slice","item"],["globe_banner_pattern","Globe Banner Pattern","item"],["glow_berries","Glow Berries","item"],["glow_ink_sac","Glow Ink Sac","item"],["glow_item_frame","Glow Item Frame","item"],["glow_lichen","Glow Lichen","block"],["glow_squid_spawn_egg","Glow Squid Spawn Egg","item"],["glowstone","Glowstone","block"],["glowstone_dust","Glowstone Dust","item"],["goat_horn","Goat Horn","item"],["goat_spawn_egg","Goat Spawn Egg","item"],["gold_ingot","Gold Ingot","item"],["gold_nugget","Gold Nugget","item"],["gold_ore","Gold Ore","block"],["golden_apple","Golden Apple","item"],["golden_axe","Golden Axe","item"],["golden_boots","Golden Boots","item"],["golden_carrot","Golden Carrot","item"],["golden_chestplate","Golden Chestplate","item"],["golden_helmet","Golden Helmet","item"],["golden_hoe","Golden Hoe","item"],["golden_horse_armor","Golden Horse Armor","item"],["golden_leggings","Golden Leggings","item"],["golden_pickaxe","Golden Pickaxe","item"],["golden_shovel","Golden Shovel","item"],["golden_sword","Golden Sword","item"],["granite","Granite","block"],["granite_slab","Granite Slab","block"],["granite_stairs","Granite Stairs","block"],["granite_wall","Granite Wall","block"],["grass_block","Grass Block","block"],["gravel","Gravel","block"],["gray_banner","Gray Banner","block"],["gray_bed","Gray Bed","block"],["gray_bundle","Gray Bundle","item"],["gray_candle","Gray Candle","block"],["gray_carpet","Gray Carpet","block"],["gray_concrete","Gray Concrete","block"],["gray_concrete_powder","Gray Concrete Powder","block"],["gray_dye","Gray Dye","item"],["gray_glazed_terracotta","Gray Glazed Terracotta","block"],["gray_shulker_box","Gray Shulker Box","block"],["gray_stained_glass","Gray Stained Glass","block"],["gray_stained_glass_pane","Gray Stained Glass Pane","block"],["gray_terracotta","Gray Terracotta","block"],["gray_wool","Gray Wool","block"],["green_banner","Green Banner","block"],["green_bed","Green Bed","block"],["green_bundle","Green Bundle","item"],["green_candle","Green Candle","block"],["green_carpet","Green Carpet","block"],["green_concrete","Green Concrete","block"],["green_concrete_powder","Green Concrete Powder","block"],["green_dye","Green Dye","item"],["green_glazed_terracotta","Green Glazed Terracotta","block"],["green_shulker_box","Green Shulker Box","block"],["green_stained_glass","Green Stained Glass","block"],["green_stained_glass_pane","Green Stained Glass Pane","block"],["green_terracotta","Green Terracotta","block"],["green_wool","Green Wool","block"],["grindstone","Grindstone","block"],["guardian_spawn_egg","Guardian Spawn Egg","item"],["gunpowder","Gunpowder","item"],["guster_banner_pattern","Guster Banner Pattern","item"],["guster_pottery_sherd","Guster Pottery Sherd","item"],["hanging_roots","Hanging Roots","block"],["happy_ghast_spawn_egg","Happy Ghast Spawn Egg","item"],["hay_block","Hay Bale","block"],["heart_of_the_sea","Heart of the Sea","item"],["heart_pottery_sherd","Heart Pottery Sherd","item"],["heartbreak_pottery_sherd","Heartbreak Pottery Sherd","item"],["heavy_core","Heavy Core","block"],["heavy_weighted_pressure_plate","Heavy Weighted Pressure Plate","block"],["hoglin_spawn_egg","Hoglin Spawn Egg","item"],["honey_block","Honey Block","block"],["honey_bottle","Honey Bottle","item"],["honeycomb","Honeycomb","item"],["honeycomb_block","Honeycomb Block","block"],["hopper","Hopper","block"],["horn_coral","Horn Coral","block"],["horn_coral_block","Horn Coral Block","block"],["horse_spawn_egg","Horse Spawn Egg","item"],["host_armor_trim_smithing_template","Host Armor Trim","item"],["howl_pottery_sherd","Howl Pottery Sherd","item"],["husk_spawn_egg","Husk Spawn Egg","item"],["ice","Ice","block"],["infested_deepslate","Infested Deepslate","block"],["infested_stone","Infested Stone","block"],["infested_stone_bricks","Infested Stone Bricks","block"],["ink_sac","Ink Sac","item"],["iron_axe","Iron Axe","item"],["iron_bars","Iron Bars","block"],["iron_boots","Iron Boots","item"],["iron_chestplate","Iron Chestplate","item"],["iron_door","Iron Door","block"],["iron_golem_spawn_egg","Iron Golem Spawn Egg","item"],["iron_helmet","Iron Helmet","item"],["iron_hoe","Iron Hoe","item"],["iron_horse_armor","Iron Horse Armor","item"],["iron_ingot","Iron Ingot","item"],["iron_leggings","Iron Leggings","item"],["iron_nugget","Iron Nugget","item"],["iron_ore","Iron Ore","block"],["iron_pickaxe","Iron Pickaxe","item"],["iron_shovel","Iron Shovel","item"],["iron_sword","Iron Sword","item"],["iron_trapdoor","Iron Trapdoor","block"],["item_frame","Item Frame","item"],["jack_o_lantern","Jack o'Lantern","block"],["jukebox","Jukebox","block"],["jungle_boat","Jungle Boat","item"],["jungle_chest_boat","Jungle Boat with Chest","item"],["jungle_button","Jungle Button","block"],["jungle_door","Jungle Door","block"],["jungle_fence","Jungle Fence","block"],["jungle_fence_gate","Jungle Fence Gate","block"],["jungle_leaves","Jungle Leaves","block"],["jungle_log","Jungle Log","block"],["jungle_planks","Jungle Planks","block"],["jungle_pressure_plate","Jungle Pressure Plate","block"],["jungle_sapling","Jungle Sapling","block"],["jungle_sign","Jungle Sign","block"],["jungle_slab","Jungle Slab","block"],["jungle_stairs","Jungle Stairs","block"],["jungle_trapdoor","Jungle Trapdoor","block"],["jungle_wood","Jungle Wood","block"],["kelp","Kelp","block"],["knowledge_book","Knowledge Book","item"],["ladder","Ladder","block"],["lantern","Lantern","block"],["lapis_lazuli","Lapis Lazuli","item"],["lapis_ore","Lapis Lazuli Ore","block"],["large_amethyst_bud","Large Amethyst Bud","block"],["large_fern","Large Fern","block"],["lava_bucket","Lava Bucket","item"],["lead","Lead","item"],["leather","Leather","item"],["leather_boots","Leather Boots","item"],["leather_helmet","Leather Cap","item"],["leather_horse_armor","Leather Horse Armor","item"],["leather_leggings","Leather Pants","item"],["leather_chestplate","Leather Tunic","item"],["lectern","Lectern","block"],["lever","Lever","block"],["light_blue_banner","Light Blue Banner","block"],["light_blue_bed","Light Blue Bed","block"],["light_blue_bundle","Light Blue Bundle","item"],["light_blue_candle","Light Blue Candle","block"],["light_blue_carpet","Light Blue Carpet","block"],["light_blue_concrete","Light Blue Concrete","block"],["light_blue_concrete_powder","Light Blue Concrete Powder","block"],["light_blue_dye","Light Blue Dye","item"],["light_blue_glazed_terracotta","Light Blue Glazed Terracotta","block"],["light_blue_shulker_box","Light Blue Shulker Box","block"],["light_blue_stained_glass","Light Blue Stained Glass","block"],["light_blue_stained_glass_pane","Light Blue Stained Glass Pane","block"],["light_blue_terracotta","Light Blue Terracotta","block"],["light_blue_wool","Light Blue Wool","block"],["light_gray_banner","Light Gray Banner","block"],["light_gray_bed","Light Gray Bed","block"],["light_gray_bundle","Light Gray Bundle","item"],["light_gray_candle","Light Gray Candle","block"],["light_gray_carpet","Light Gray Carpet","block"],["light_gray_concrete","Light Gray Concrete","block"],["light_gray_concrete_powder","Light Gray Concrete Powder","block"],["light_gray_dye","Light Gray Dye","item"],["light_gray_glazed_terracotta","Light Gray Glazed Terracotta","block"],["light_gray_shulker_box","Light Gray Shulker Box","block"],["light_gray_stained_glass","Light Gray Stained Glass","block"],["light_gray_stained_glass_pane","Light Gray Stained Glass Pane","block"],["light_gray_terracotta","Light Gray Terracotta","block"],["light_gray_wool","Light Gray Wool","block"],["light_weighted_pressure_plate","Light Weighted Pressure Plate","block"],["lightning_rod","Lightning Rod","block"],["lilac","Lilac","block"],["lily_of_the_valley","Lily of the Valley","block"],["lily_pad","Lily Pad","block"],["lime_banner","Lime Banner","block"],["lime_bed","Lime Bed","block"],["lime_bundle","Lime Bundle","item"],["lime_candle","Lime Candle","block"],["lime_carpet","Lime Carpet","block"],["lime_concrete","Lime Concrete","block"],["lime_concrete_powder","Lime Concrete Powder","block"],["lime_dye","Lime Dye","item"],["lime_glazed_terracotta","Lime Glazed Terracotta","block"],["lime_shulker_box","Lime Shulker Box","block"],["lime_stained_glass","Lime Stained Glass","block"],["lime_stained_glass_pane","Lime Stained Glass Pane","block"],["lime_terracotta","Lime Terracotta","block"],["lime_wool","Lime Wool","block"],["lingering_potion","Lingering Water Bottle","item"],["llama_spawn_egg","Llama Spawn Egg","item"],["lodestone","Lodestone","block"],["loom","Loom","block"],["mace","Mace","item"],["magenta_banner","Magenta Banner","block"],["magenta_bed","Magenta Bed","block"],["magenta_bundle","Magenta Bundle","item"],["magenta_candle","Magenta Candle","block"],["magenta_carpet","Magenta Carpet","block"],["magenta_concrete","Magenta Concrete","block"],["magenta_concrete_powder","Magenta Concrete Powder","block"],["magenta_dye","Magenta Dye","item"],["magenta_glazed_terracotta","Magenta Glazed Terracotta","block"],["magenta_shulker_box","Magenta Shulker Box","block"],["magenta_stained_glass","Magenta Stained Glass","block"],["magenta_stained_glass_pane","Magenta Stained Glass Pane","block"],["magenta_terracotta","Magenta Terracotta","block"],["magenta_wool","Magenta Wool","block"],["magma_block","Magma Block","block"],["magma_cream","Magma Cream","item"],["magma_cube_spawn_egg","Magma Cube Spawn Egg","item"],["mangrove_boat","Mangrove Boat","item"],["mangrove_chest_boat","Mangrove Boat with Chest","item"],["mangrove_button","Mangrove Button","block"],["mangrove_door","Mangrove Door","block"],["mangrove_fence","Mangrove Fence","block"],["mangrove_fence_gate","Mangrove Fence Gate","block"],["mangrove_leaves","Mangrove Leaves","block"],["mangrove_log","Mangrove Log","block"],["mangrove_planks","Mangrove Planks","block"],["mangrove_pressure_plate","Mangrove Pressure Plate","block"],["mangrove_propagule","Mangrove Propagule","block"],["mangrove_roots","Mangrove Roots","block"],["mangrove_sign","Mangrove Sign","block"],["mangrove_slab","Mangrove Slab","block"],["mangrove_stairs","Mangrove Stairs","block"],["mangrove_trapdoor","Mangrove Trapdoor","block"],["mangrove_wood","Mangrove Wood","block"],["filled_map","Map","item"],["medium_amethyst_bud","Medium Amethyst Bud","block"],["melon","Melon","block"],["melon_seeds","Melon Seeds","item"],["melon_slice","Melon Slice","item"],["milk_bucket","Milk Bucket","item"],["minecart","Minecart","item"],["chest_minecart","Minecart with Chest","item"],["command_block_minecart","Minecart with Command Block","item"],["furnace_minecart","Minecart with Furnace","item"],["hopper_minecart","Minecart with Hopper","item"],["tnt_minecart","Minecart with TNT","item"],["miner_pottery_sherd","Miner Pottery Sherd","item"],["spawner","Monster Spawner","block"],["mooshroom_spawn_egg","Mooshroom Spawn Egg","item"],["moss_block","Moss Block","block"],["moss_carpet","Moss Carpet","block"],["mossy_cobblestone","Mossy Cobblestone","block"],["mossy_stone_bricks","Mossy Stone Bricks","block"],["mourner_pottery_sherd","Mourner Pottery Sherd","item"],["mud","Mud","block"],["mud_bricks","Mud Bricks","block"],["muddy_mangrove_roots","Muddy Mangrove Roots","block"],["mule_spawn_egg","Mule Spawn Egg","item"],["mushroom_stew","Mushroom Stew","item"],["name_tag","Name Tag","item"],["nautilus_shell","Nautilus Shell","item"],["nether_brick","Nether Brick","item"],["nether_brick_fence","Nether Brick Fence","block"],["nether_bricks","Nether Bricks","block"],["nether_gold_ore","Nether Gold Ore","block"],["quartz","Nether Quartz","item"],["nether_quartz_ore","Nether Quartz Ore","block"],["nether_star","Nether Star","item"],["nether_wart","Nether Wart","block"],["nether_wart_block","Nether Wart Block","block"],["netherite_axe","Netherite Axe","item"],["netherite_boots","Netherite Boots","item"],["netherite_chestplate","Netherite Chestplate","item"],["netherite_helmet","Netherite Helmet","item"],["netherite_hoe","Netherite Hoe","item"],["netherite_horse_armor","Netherite Horse Armor","item"],["netherite_ingot","Netherite Ingot","item"],["netherite_leggings","Netherite Leggings","item"],["netherite_pickaxe","Netherite Pickaxe","item"],["netherite_scrap","Netherite Scrap","item"],["netherite_shovel","Netherite Shovel","item"],["netherite_sword","Netherite Sword","item"],["netherite_upgrade_smithing_template","Netherite Upgrade","item"],["netherrack","Netherrack","block"],["note_block","Note Block","block"],["oak_boat","Oak Boat","item"],["oak_chest_boat","Oak Boat with Chest","item"],["oak_button","Oak Button","block"],["oak_door","Oak Door","block"],["oak_fence","Oak Fence","block"],["oak_fence_gate","Oak Fence Gate","block"],["oak_hanging_sign","Oak Hanging Sign","block"],["oak_leaves","Oak Leaves","block"],["oak_log","Oak Log","block"],["oak_planks","Oak Planks","block"],["oak_pressure_plate","Oak Pressure Plate","block"],["oak_sapling","Oak Sapling","block"],["oak_sign","Oak Sign","block"],["oak_slab","Oak Slab","block"],["oak_stairs","Oak Stairs","block"],["oak_trapdoor","Oak Trapdoor","block"],["oak_wood","Oak Wood","block"],["observer","Observer","block"],["obsidian","Obsidian","block"],["ocelot_spawn_egg","Ocelot Spawn Egg","item"],["ochre_froglight","Ochre Froglight","block"],["ominous_bottle","Ominous Bottle","item"],["ominous_trial_key","Ominous Trial Key","item"],["open_eyeblossom","Open Eyeblossom","block"],["orange_banner","Orange Banner","block"],["orange_bed","Orange Bed","block"],["orange_bundle","Orange Bundle","item"],["orange_candle","Orange Candle","block"],["orange_carpet","Orange Carpet","block"],["orange_concrete","Orange Concrete","block"],["orange_concrete_powder","Orange Concrete Powder","block"],["orange_dye","Orange Dye","item"],["orange_glazed_terracotta","Orange Glazed Terracotta","block"],["orange_shulker_box","Orange Shulker Box","block"],["orange_stained_glass","Orange Stained Glass","block"],["orange_stained_glass_pane","Orange Stained Glass Pane","block"],["orange_terracotta","Orange Terracotta","block"],["orange_tulip","Orange Tulip","block"],["orange_wool","Orange Wool","block"],["oxeye_daisy","Oxeye Daisy","block"],["obsidian","Obsidian","block"],["packed_ice","Packed Ice","block"],["packed_mud","Packed Mud","block"],["painting","Painting","item"],["pale_oak_boat","Pale Oak Boat","item"],["pale_oak_button","Pale Oak Button","block"],["pale_oak_door","Pale Oak Door","block"],["pale_oak_fence","Pale Oak Fence","block"],["pale_oak_fence_gate","Pale Oak Fence Gate","block"],["pale_oak_leaves","Pale Oak Leaves","block"],["pale_oak_log","Pale Oak Log","block"],["pale_oak_planks","Pale Oak Planks","block"],["pale_oak_sapling","Pale Oak Sapling","block"],["pale_oak_slab","Pale Oak Slab","block"],["pale_oak_stairs","Pale Oak Stairs","block"],["pale_oak_trapdoor","Pale Oak Trapdoor","block"],["pale_oak_wood","Pale Oak Wood","block"],["panda_spawn_egg","Panda Spawn Egg","item"],["paper","Paper","item"],["peony","Peony","block"],["phantom_membrane","Phantom Membrane","item"],["phantom_spawn_egg","Phantom Spawn Egg","item"],["pig_spawn_egg","Pig Spawn Egg","item"],["piglin_brute_spawn_egg","Piglin Brute Spawn Egg","item"],["piglin_head","Piglin Head","block"],["piglin_spawn_egg","Piglin Spawn Egg","item"],["pillager_spawn_egg","Pillager Spawn Egg","item"],["pink_banner","Pink Banner","block"],["pink_bed","Pink Bed","block"],["pink_bundle","Pink Bundle","item"],["pink_candle","Pink Candle","block"],["pink_carpet","Pink Carpet","block"],["pink_concrete","Pink Concrete","block"],["pink_concrete_powder","Pink Concrete Powder","block"],["pink_dye","Pink Dye","item"],["pink_glazed_terracotta","Pink Glazed Terracotta","block"],["pink_shulker_box","Pink Shulker Box","block"],["pink_stained_glass","Pink Stained Glass","block"],["pink_stained_glass_pane","Pink Stained Glass Pane","block"],["pink_terracotta","Pink Terracotta","block"],["pink_tulip","Pink Tulip","block"],["pink_wool","Pink Wool","block"],["piston","Piston","block"],["player_head","Player Head","block"],["podzol","Podzol","block"],["pointed_dripstone","Pointed Dripstone","block"],["poisonous_potato","Poisonous Potato","item"],["polar_bear_spawn_egg","Polar Bear Spawn Egg","item"],["polished_andesite","Polished Andesite","block"],["polished_basalt","Polished Basalt","block"],["polished_blackstone","Polished Blackstone","block"],["polished_blackstone_bricks","Polished Blackstone Bricks","block"],["polished_deepslate","Polished Deepslate","block"],["polished_diorite","Polished Diorite","block"],["polished_granite","Polished Granite","block"],["polished_tuff","Polished Tuff","block"],["popped_chorus_fruit","Popped Chorus Fruit","item"],["poppy","Poppy","block"],["potato","Potato","item"],["powder_snow_bucket","Powder Snow Bucket","item"],["powered_rail","Powered Rail","block"],["prismarine","Prismarine","block"],["prismarine_bricks","Prismarine Bricks","block"],["prismarine_crystals","Prismarine Crystals","item"],["prismarine_shard","Prismarine Shard","item"],["prize_pottery_sherd","Prize Pottery Sherd","item"],["pufferfish","Pufferfish","item"],["pumpkin","Pumpkin","block"],["pumpkin_pie","Pumpkin Pie","item"],["pumpkin_seeds","Pumpkin Seeds","item"],["purple_banner","Purple Banner","block"],["purple_bed","Purple Bed","block"],["purple_bundle","Purple Bundle","item"],["purple_candle","Purple Candle","block"],["purple_carpet","Purple Carpet","block"],["purple_concrete","Purple Concrete","block"],["purple_concrete_powder","Purple Concrete Powder","block"],["purple_dye","Purple Dye","item"],["purple_glazed_terracotta","Purple Glazed Terracotta","block"],["purple_shulker_box","Purple Shulker Box","block"],["purple_stained_glass","Purple Stained Glass","block"],["purple_stained_glass_pane","Purple Stained Glass Pane","block"],["purple_terracotta","Purple Terracotta","block"],["purple_wool","Purple Wool","block"],["purpur_block","Purpur Block","block"],["purpur_pillar","Purpur Pillar","block"],["purpur_slab","Purpur Slab","block"],["purpur_stairs","Purpur Stairs","block"],["quartz_bricks","Quartz Bricks","block"],["quartz_pillar","Quartz Pillar","block"],["quartz_slab","Quartz Slab","block"],["quartz_stairs","Quartz Stairs","block"],["rabbit_hide","Rabbit Hide","item"],["rabbit_spawn_egg","Rabbit Spawn Egg","item"],["rabbit_stew","Rabbit Stew","item"],["rabbit_foot","Rabbit's Foot","item"],["rail","Rail","block"],["raiser_armor_trim_smithing_template","Raiser Armor Trim","item"],["ravager_spawn_egg","Ravager Spawn Egg","item"],["beef","Raw Beef","item"],["chicken","Raw Chicken","item"],["cod","Raw Cod","item"],["raw_copper","Raw Copper","item"],["raw_gold","Raw Gold","item"],["raw_iron","Raw Iron","item"],["mutton","Raw Mutton","item"],["porkchop","Raw Porkchop","item"],["rabbit","Raw Rabbit","item"],["salmon","Raw Salmon","item"],["recovery_compass","Recovery Compass","item"],["red_banner","Red Banner","block"],["red_bed","Red Bed","block"],["red_bundle","Red Bundle","item"],["red_candle","Red Candle","block"],["red_carpet","Red Carpet","block"],["red_concrete","Red Concrete","block"],["red_concrete_powder","Red Concrete Powder","block"],["red_dye","Red Dye","item"],["red_glazed_terracotta","Red Glazed Terracotta","block"],["red_mushroom","Red Mushroom","block"],["red_mushroom_block","Red Mushroom Block","block"],["red_nether_bricks","Red Nether Bricks","block"],["red_sand","Red Sand","block"],["red_sandstone","Red Sandstone","block"],["red_sandstone_slab","Red Sandstone Slab","block"],["red_sandstone_stairs","Red Sandstone Stairs","block"],["red_shulker_box","Red Shulker Box","block"],["red_stained_glass","Red Stained Glass","block"],["red_stained_glass_pane","Red Stained Glass Pane","block"],["red_terracotta","Red Terracotta","block"],["red_tulip","Red Tulip","block"],["red_wool","Red Wool","block"],["comparator","Redstone Comparator","block"],["redstone","Redstone Dust","item"],["redstone_lamp","Redstone Lamp","block"],["redstone_ore","Redstone Ore","block"],["repeater","Redstone Repeater","block"],["redstone_torch","Redstone Torch","block"],["reinforced_deepslate","Reinforced Deepslate","block"],["resin_brick","Resin Brick","item"],["resin_bricks","Resin Bricks","block"],["respawn_anchor","Respawn Anchor","block"],["rib_armor_trim_smithing_template","Rib Armor Trim","item"],["rooted_dirt","Rooted Dirt","block"],["rose_bush","Rose Bush","block"],["rotten_flesh","Rotten Flesh","item"],["saddle","Saddle","item"],["salmon_spawn_egg","Salmon Spawn Egg","item"],["sand","Sand","block"],["sandstone","Sandstone","block"],["sandstone_slab","Sandstone Slab","block"],["sandstone_stairs","Sandstone Stairs","block"],["sandstone_wall","Sandstone Wall","block"],["scaffolding","Scaffolding","block"],["scrape_pottery_sherd","Scrape Pottery Sherd","item"],["sculk","Sculk","block"],["sculk_catalyst","Sculk Catalyst","block"],["sculk_sensor","Sculk Sensor","block"],["sculk_shrieker","Sculk Shrieker","block"],["sculk_vein","Sculk Vein","block"],["sea_lantern","Sea Lantern","block"],["sea_pickle","Sea Pickle","block"],["seagrass","Seagrass","block"],["sentry_armor_trim_smithing_template","Sentry Armor Trim","item"],["shaper_armor_trim_smithing_template","Shaper Armor Trim","item"],["sheaf_pottery_sherd","Sheaf Pottery Sherd","item"],["shears","Shears","item"],["sheep_spawn_egg","Sheep Spawn Egg","item"],["shelter_pottery_sherd","Shelter Pottery Sherd","item"],["shield","Shield","item"],["short_grass","Short Grass","block"],["shroomlight","Shroomlight","block"],["shulker_box","Shulker Box","block"],["shulker_shell","Shulker Shell","item"],["shulker_spawn_egg","Shulker Spawn Egg","item"],["silence_armor_trim_smithing_template","Silence Armor Trim","item"],["silverfish_spawn_egg","Silverfish Spawn Egg","item"],["skeleton_horse_spawn_egg","Skeleton Horse Spawn Egg","item"],["skeleton_skull","Skeleton Skull","block"],["skeleton_spawn_egg","Skeleton Spawn Egg","item"],["skull_banner_pattern","Skull Charge Banner Pattern","item"],["skull_pottery_sherd","Skull Pottery Sherd","item"],["slime_block","Slime Block","block"],["slime_spawn_egg","Slime Spawn Egg","item"],["slime_ball","Slimeball","item"],["small_amethyst_bud","Small Amethyst Bud","block"],["smithing_table","Smithing Table","block"],["smoker","Smoker","block"],["smooth_basalt","Smooth Basalt","block"],["smooth_quartz","Smooth Quartz Block","block"],["smooth_red_sandstone","Smooth Red Sandstone","block"],["smooth_sandstone","Smooth Sandstone","block"],["smooth_stone","Smooth Stone","block"],["sniffer_egg","Sniffer Egg","block"],["sniffer_spawn_egg","Sniffer Spawn Egg","item"],["snort_pottery_sherd","Snort Pottery Sherd","item"],["snout_armor_trim_smithing_template","Snout Armor Trim","item"],["snow","Snow","block"],["snow_block","Snow Block","block"],["snowball","Snowball","item"],["soul_campfire","Soul Campfire","block"],["soul_lantern","Soul Lantern","block"],["soul_sand","Soul Sand","block"],["soul_soil","Soul Soil","block"],["soul_torch","Soul Torch","block"],["spectral_arrow","Spectral Arrow","item"],["spider_eye","Spider Eye","item"],["spider_spawn_egg","Spider Spawn Egg","item"],["spire_armor_trim_smithing_template","Spire Armor Trim","item"],["splash_potion","Splash Water Bottle","item"],["sponge","Sponge","block"],["spore_blossom","Spore Blossom","block"],["spruce_boat","Spruce Boat","item"],["spruce_chest_boat","Spruce Boat with Chest","item"],["spruce_button","Spruce Button","block"],["spruce_door","Spruce Door","block"],["spruce_fence","Spruce Fence","block"],["spruce_fence_gate","Spruce Fence Gate","block"],["spruce_leaves","Spruce Leaves","block"],["spruce_log","Spruce Log","block"],["spruce_planks","Spruce Planks","block"],["spruce_pressure_plate","Spruce Pressure Plate","block"],["spruce_sapling","Spruce Sapling","block"],["spruce_sign","Spruce Sign","block"],["spruce_slab","Spruce Slab","block"],["spruce_stairs","Spruce Stairs","block"],["spruce_trapdoor","Spruce Trapdoor","block"],["spruce_wood","Spruce Wood","block"],["spyglass","Spyglass","item"],["squid_spawn_egg","Squid Spawn Egg","item"],["cooked_beef","Steak","item"],["stick","Stick","item"],["sticky_piston","Sticky Piston","block"],["stone","Stone","block"],["stone_axe","Stone Axe","item"],["stone_bricks","Stone Bricks","block"],["stone_button","Stone Button","block"],["stone_hoe","Stone Hoe","item"],["stone_pickaxe","Stone Pickaxe","item"],["stone_pressure_plate","Stone Pressure Plate","block"],["stone_shovel","Stone Shovel","item"],["stone_slab","Stone Slab","block"],["stone_sword","Stone Sword","item"],["stonecutter","Stonecutter","block"],["stray_spawn_egg","Stray Spawn Egg","item"],["strider_spawn_egg","Strider Spawn Egg","item"],["string","String","item"],["structure_block","Structure Block","block"],["sugar","Sugar","item"],["sugar_cane","Sugar Cane","block"],["sunflower","Sunflower","block"],["suspicious_gravel","Suspicious Gravel","block"],["suspicious_sand","Suspicious Sand","block"],["suspicious_stew","Suspicious Stew","item"],["sweet_berries","Sweet Berries","item"],["tadpole_spawn_egg","Tadpole Spawn Egg","item"],["tall_grass","Tall Grass","block"],["target","Target","block"],["terracotta","Terracotta","block"],["tide_armor_trim_smithing_template","Tide Armor Trim","item"],["tinted_glass","Tinted Glass","block"],["tnt","TNT","block"],["torch","Torch","block"],["torchflower","Torchflower","block"],["torchflower_seeds","Torchflower Seeds","item"],["totem_of_undying","Totem of Undying","item"],["trapped_chest","Trapped Chest","block"],["trial_key","Trial Key","item"],["trial_spawner","Trial Spawner","block"],["trident","Trident","item"],["tropical_fish","Tropical Fish","item"],["tropical_fish_spawn_egg","Tropical Fish Spawn Egg","item"],["tube_coral","Tube Coral","block"],["tube_coral_block","Tube Coral Block","block"],["tuff","Tuff","block"],["tuff_bricks","Tuff Bricks","block"],["turtle_egg","Turtle Egg","block"],["turtle_scute","Turtle Scute","item"],["turtle_helmet","Turtle Shell","item"],["turtle_spawn_egg","Turtle Spawn Egg","item"],["vault","Vault","block"],["verdant_froglight","Verdant Froglight","block"],["vex_armor_trim_smithing_template","Vex Armor Trim","item"],["vex_spawn_egg","Vex Spawn Egg","item"],["villager_spawn_egg","Villager Spawn Egg","item"],["vindicator_spawn_egg","Vindicator Spawn Egg","item"],["vine","Vines","block"],["wandering_trader_spawn_egg","Wandering Trader Spawn Egg","item"],["ward_armor_trim_smithing_template","Ward Armor Trim","item"],["warden_spawn_egg","Warden Spawn Egg","item"],["warped_button","Warped Button","block"],["warped_door","Warped Door","block"],["warped_fence","Warped Fence","block"],["warped_fence_gate","Warped Fence Gate","block"],["warped_fungus","Warped Fungus","block"],["warped_fungus_on_a_stick","Warped Fungus on a Stick","item"],["warped_hyphae","Warped Hyphae","block"],["warped_nylium","Warped Nylium","block"],["warped_planks","Warped Planks","block"],["warped_pressure_plate","Warped Pressure Plate","block"],["warped_roots","Warped Roots","block"],["warped_sign","Warped Sign","block"],["warped_slab","Warped Slab","block"],["warped_stairs","Warped Stairs","block"],["warped_stem","Warped Stem","block"],["warped_trapdoor","Warped Trapdoor","block"],["warped_wart_block","Warped Wart Block","block"],["water_bucket","Water Bucket","item"],["wayfinder_armor_trim_smithing_template","Wayfinder Armor Trim","item"],["weeping_vines","Weeping Vines","block"],["wet_sponge","Wet Sponge","block"],["wheat_seeds","Wheat Seeds","item"],["white_banner","White Banner","block"],["white_bed","White Bed","block"],["white_bundle","White Bundle","item"],["white_candle","White Candle","block"],["white_carpet","White Carpet","block"],["white_concrete","White Concrete","block"],["white_concrete_powder","White Concrete Powder","block"],["white_dye","White Dye","item"],["white_glazed_terracotta","White Glazed Terracotta","block"],["white_shulker_box","White Shulker Box","block"],["white_stained_glass","White Stained Glass","block"],["white_stained_glass_pane","White Stained Glass Pane","block"],["white_terracotta","White Terracotta","block"],["white_tulip","White Tulip","block"],["white_wool","White Wool","block"],["wild_armor_trim_smithing_template","Wild Armor Trim","item"],["wildflowers","Wildflowers","block"],["wind_charge","Wind Charge","item"],["witch_spawn_egg","Witch Spawn Egg","item"],["wither_rose","Wither Rose","block"],["wither_skeleton_skull","Wither Skeleton Skull","block"],["wither_skeleton_spawn_egg","Wither Skeleton Spawn Egg","item"],["wither_spawn_egg","Wither Spawn Egg","item"],["wolf_armor","Wolf Armor","item"],["wolf_spawn_egg","Wolf Spawn Egg","item"],["wooden_axe","Wooden Axe","item"],["wooden_hoe","Wooden Hoe","item"],["wooden_pickaxe","Wooden Pickaxe","item"],["wooden_shovel","Wooden Shovel","item"],["wooden_sword","Wooden Sword","item"],["written_book","Written Book","item"],["yellow_banner","Yellow Banner","block"],["yellow_bed","Yellow Bed","block"],["yellow_bundle","Yellow Bundle","item"],["yellow_candle","Yellow Candle","block"],["yellow_carpet","Yellow Carpet","block"],["yellow_concrete","Yellow Concrete","block"],["yellow_concrete_powder","Yellow Concrete Powder","block"],["yellow_dye","Yellow Dye","item"],["yellow_glazed_terracotta","Yellow Glazed Terracotta","block"],["yellow_shulker_box","Yellow Shulker Box","block"],["yellow_stained_glass","Yellow Stained Glass","block"],["yellow_stained_glass_pane","Yellow Stained Glass Pane","block"],["yellow_terracotta","Yellow Terracotta","block"],["yellow_wool","Yellow Wool","block"],["zoglin_spawn_egg","Zoglin Spawn Egg","item"],["zombie_head","Zombie Head","block"],["zombie_horse_spawn_egg","Zombie Horse Spawn Egg","item"],["zombie_spawn_egg","Zombie Spawn Egg","item"],["zombie_villager_spawn_egg","Zombie Villager Spawn Egg","item"],["zombified_piglin_spawn_egg","Zombified Piglin Spawn Egg","item"]
+];
+
+// Build lookup for fast search
+const MC_INDEX = MC_ITEMS.map(([id,name,type]) => ({id, name, type, search: (id+' '+name).toLowerCase()}));
+
+// ========================================
+// COLOR CODES
+// ========================================
+const COLOR_MAP = {
+  '0':'#000000','1':'#0000AA','2':'#00AA00','3':'#00AAAA','4':'#AA0000',
+  '5':'#AA00AA','6':'#FFAA00','7':'#AAAAAA','8':'#555555','9':'#5555FF',
+  'a':'#55FF55','b':'#55FFFF','c':'#FF5555','d':'#FF55FF','e':'#FFFF55','f':'#FFFFFF',
+  'l':'bold','o':'italic','n':'underline','m':'strikethrough','r':'reset'
+};
+
+function renderColorCodes(text) {
+  if (!text) return '';
+  // Handle hex &#RRGGBB
+  text = text.replace(/&#([A-Fa-f0-9]{6})/g, (_, hex) => `<span style="color:#${hex}">`);
+  // Handle &x
+  let result = '';
+  let i = 0;
+  let openSpans = 0;
+  while (i < text.length) {
+    if (text[i] === '&' && i+1 < text.length) {
+      const code = text[i+1].toLowerCase();
+      if (COLOR_MAP[code]) {
+        const val = COLOR_MAP[code];
+        if (code === 'r') {
+          result += '</span>'.repeat(openSpans);
+          openSpans = 0;
+        } else if (['l','o','n','m'].includes(code)) {
+          const styles = {l:'font-weight:bold',o:'font-style:italic',n:'text-decoration:underline',m:'text-decoration:line-through'};
+          result += `<span style="${styles[code]}">`;
+          openSpans++;
+        } else {
+          result += `<span style="color:${val}">`;
+          openSpans++;
+        }
+        i += 2;
+        continue;
+      }
+    }
+    result += text[i] === '<' ? '&lt;' : text[i] === '>' ? '&gt;' : text[i];
+    i++;
+  }
+  result += '</span>'.repeat(openSpans);
+  return result;
+}
+
+// ========================================
+// CONDITION DEFINITIONS
+// ========================================
+const CONDITIONS = [
+  {
+    type:'VAULT_MONEY', name:'💰 Money (Vault)', desc:'Require & deduct Vault economy balance',
+    plugin:'Vault', category:'economy',
+    fields:[
+      {key:'amount', label:'Required Amount', type:'number', placeholder:'500', hint:'How much money is required?', required:true}
+    ]
+  },
+  {
+    type:'OREO_CURRENCY', name:'💎 Oreo Currency', desc:'Require & deduct OreoEssentials custom currency',
+    plugin:'OreoEssentials', category:'economy',
+    fields:[
+      {key:'currency', label:'Currency ID', type:'text', placeholder:'gems', hint:'Your OreoEssentials currency ID', required:true},
+      {key:'amount', label:'Required Amount', type:'number', placeholder:'100', hint:'How much currency is required?', required:true}
+    ]
+  },
+  {
+    type:'XP_LEVEL', name:'⭐ XP Levels', desc:'Require & deduct player XP levels',
+    plugin:'Vanilla', category:'player',
+    fields:[
+      {key:'amount', label:'XP Levels Required', type:'number', placeholder:'5', hint:'Number of XP levels to consume', required:true}
+    ]
+  },
+  {
+    type:'XP_POINTS', name:'✨ XP Points', desc:'Require & deduct raw XP experience points',
+    plugin:'Vanilla', category:'player',
+    fields:[
+      {key:'amount', label:'XP Points Required', type:'number', placeholder:'500', hint:'Total raw XP points to consume', required:true}
+    ]
+  },
+  {
+    type:'ITEM', name:'📦 Vanilla Item', desc:'Require & remove items from player inventory',
+    plugin:'Vanilla', category:'items',
+    fields:[
+      {key:'material', label:'Material', type:'material', placeholder:'DIAMOND', hint:'Minecraft item ID (use autocomplete)', required:true},
+      {key:'amount', label:'Amount', type:'number', placeholder:'1', hint:'How many items are required?', required:true}
+    ]
+  },
+  {
+    type:'ITEM_CUSTOM_MODEL', name:'🎨 Custom Model Item', desc:'Require items with a specific Custom Model Data',
+    plugin:'Vanilla', category:'items',
+    fields:[
+      {key:'material', label:'Material', type:'material', placeholder:'DIAMOND', hint:'Base material of the item', required:true},
+      {key:'custom_model_data', label:'Custom Model Data', type:'number', placeholder:'1001', hint:'The Custom Model Data value', required:true},
+      {key:'amount', label:'Amount', type:'number', placeholder:'1', hint:'How many items are required?', required:true}
+    ]
+  },
+  {
+    type:'ITEMSADDER', name:'🔥 ItemsAdder Item', desc:'Require & remove ItemsAdder custom items',
+    plugin:'ItemsAdder', category:'items',
+    fields:[
+      {key:'item_id', label:'ItemsAdder Item ID', type:'text', placeholder:'iasurvival:ruby', hint:'Format: namespace:item_id', required:true},
+      {key:'amount', label:'Amount', type:'number', placeholder:'1', hint:'How many items are required?', required:true}
+    ]
+  },
+  {
+    type:'NEXO', name:'⚡ Nexo Item', desc:'Require & remove Nexo custom items',
+    plugin:'Nexo', category:'items',
+    fields:[
+      {key:'item_id', label:'Nexo Item ID', type:'text', placeholder:'sapphire', hint:'Your Nexo item ID', required:true},
+      {key:'amount', label:'Amount', type:'number', placeholder:'1', hint:'How many items are required?', required:true}
+    ]
+  },
+  {
+    type:'PERMISSION', name:'🔑 Permission', desc:'Check player has a permission node (not consumed)',
+    plugin:'Vanilla', category:'player',
+    fields:[
+      {key:'permission', label:'Permission Node', type:'text', placeholder:'rank.vip', hint:'The permission node to check', required:true}
+    ]
+  },
+  {
+    type:'LUCKPERMS_GROUP', name:'👑 LuckPerms Group', desc:'Check player rank/group. Can negate (block if already in group)',
+    plugin:'LuckPerms', category:'player',
+    fields:[
+      {key:'group', label:'Group Name', type:'text', placeholder:'vip', hint:'LuckPerms group name (lowercase)', required:true},
+      {key:'include_inherited', label:'Include Inherited Groups', type:'checkbox', default:true, hint:'Check parent groups too'},
+      {key:'negate', label:'Negate (must NOT be in group)', type:'checkbox', default:false, hint:'Block if player IS in this group'},
+      {key:'error_message', label:'Custom Error Message (optional)', type:'text', placeholder:'&c❌ You need VIP rank!', hint:'Leave empty for default'}
+    ]
+  },
+  {
+    type:'PLACEHOLDER', name:'📊 PlaceholderAPI', desc:'Compare any PAPI placeholder value',
+    plugin:'PlaceholderAPI', category:'advanced',
+    fields:[
+      {key:'placeholder', label:'Placeholder', type:'text', placeholder:'%vault_eco_balance%', hint:'Any PlaceholderAPI placeholder', required:true},
+      {key:'operator', label:'Operator', type:'select', options:['>=','<=','>','<','==','!=','contains'], hint:'How to compare the value', required:true},
+      {key:'value', label:'Value', type:'text', placeholder:'10000', hint:'The value to compare against', required:true},
+      {key:'error_message', label:'Custom Error Message (optional)', type:'text', placeholder:'&cYou need more money!', hint:'Leave empty for default'}
+    ]
+  },
+  {
+    type:'WORLDGUARD_REGION', name:'🏰 WorldGuard Region', desc:'Require player to be inside a WG region',
+    plugin:'WorldGuard', category:'location',
+    fields:[
+      {key:'region', label:'Region Name', type:'text', placeholder:'spawn', hint:'The WorldGuard region name', required:true},
+      {key:'require_member', label:'Require Member/Owner', type:'checkbox', default:false, hint:'Player must be a member of the region'}
+    ]
+  },
+  {
+    type:'WEATHER', name:'🌤 Weather', desc:'Require specific weather in the player\'s world',
+    plugin:'Vanilla', category:'world',
+    fields:[
+      {key:'weather', label:'Required Weather', type:'select', options:['clear','rain','thunder'], hint:'What weather must be active?', required:true}
+    ]
+  },
+  {
+    type:'WORLD', name:'🌍 World', desc:'Restrict to specific worlds (whitelist or blacklist)',
+    plugin:'Vanilla', category:'world',
+    fields:[
+      {key:'worlds', label:'World(s)', type:'text', placeholder:'world, lobby', hint:'Comma-separated world names. Leave blank if using "world" field.', required:false},
+      {key:'world', label:'Single World (shorthand)', type:'text', placeholder:'world_nether', hint:'Quick shorthand for a single world'},
+      {key:'blacklist', label:'Blacklist Mode', type:'checkbox', default:false, hint:'Block these worlds (allow everything else)'}
+    ]
+  },
+  {
+    type:'OREO_WARPS', name:'🗺 Oreo Warps', desc:'Check warp exists and/or player has warp permission',
+    plugin:'OreoEssentials', category:'location',
+    fields:[
+      {key:'warp', label:'Warp Name', type:'text', placeholder:'spawn', hint:'OreoEssentials warp name', required:true},
+      {key:'check_exists', label:'Check Warp Exists', type:'checkbox', default:true, hint:'Fail if warp doesn\'t exist'},
+      {key:'check_permission', label:'Check Warp Permission', type:'checkbox', default:false, hint:'Require player to have warp permission'}
+    ]
+  },
+  {
+    type:'OREO_WARPS_LOCATION', name:'📍 Warp Proximity', desc:'Require player to be near a warp location',
+    plugin:'OreoEssentials', category:'location',
+    fields:[
+      {key:'warp', label:'Warp Name', type:'text', placeholder:'spawn', hint:'The target warp name', required:true},
+      {key:'radius', label:'Radius (blocks)', type:'number', placeholder:'10', hint:'Maximum distance allowed', required:true},
+      {key:'error_message', label:'Custom Error Message (optional)', type:'text', placeholder:'&c❌ You must be at spawn!', hint:'{distance} and {radius} are available'}
+    ]
+  },
+  {
+    type:'MODELED_NPC', name:'🤖 NPC Proximity', desc:'Require player to be near a ModeledNPCs NPC',
+    plugin:'ModeledNPCs', category:'location',
+    fields:[
+      {key:'npc_id', label:'NPC ID', type:'number', placeholder:'1', hint:'The ModeledNPCs NPC integer ID', required:true},
+      {key:'radius', label:'Radius (blocks)', type:'number', placeholder:'10', hint:'Maximum distance allowed', required:true}
+    ]
+  }
+];
+
+// ========================================
+// APP STATE
+// ========================================
+const App = {
+  guis: [],
+  activeGUI: null,
+  activeSlot: null,
+  condModalEditIdx: null, // null = new, number = editing existing
+
+  // ========================================
+  // INIT
+  // ========================================
+  init() {
+    this.loadFromStorage();
+    this.render();
+    if (this.guis.length === 0) this.newGUI();
+  },
+
+  render() {
+    this.renderGUIList();
+    this.renderGUISettings();
+    this.renderSlotGrid();
+    this.renderEditor();
+    this.renderYAML();
+  },
+
+  // ========================================
+  // GUI MANAGEMENT
+  // ========================================
+  newGUI() {
+    const id = prompt('GUI ID (lowercase, underscores ok):', `shop_${this.guis.length + 1}`);
+    if (!id) return;
+    const clean = id.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    const gui = { id: clean, title: '&6&lMy Shop', rows: 3, commands: [], npcId: '', items: {} };
+    this.guis.push(gui);
+    this.activeGUI = gui;
+    this.activeSlot = null;
+    this.save();
+    this.render();
+  },
+
+  selectGUI(idx) {
+    this.activeGUI = this.guis[idx];
+    this.activeSlot = null;
+    this.render();
+  },
+
+  deleteGUI(idx) {
+    if (!confirm(`Delete "${this.guis[idx].id}"?`)) return;
+    this.guis.splice(idx, 1);
+    this.activeGUI = this.guis[0] || null;
+    this.activeSlot = null;
+    this.save();
+    this.render();
+  },
+
+  duplicateGUI(idx) {
+    const orig = this.guis[idx];
+    const copy = JSON.parse(JSON.stringify(orig));
+    copy.id = orig.id + '_copy';
+    this.guis.splice(idx+1, 0, copy);
+    this.activeGUI = copy;
+    this.save();
+    this.render();
+  },
+
+  // ========================================
+  // SLOT MANAGEMENT
+  // ========================================
+  selectSlot(s) {
+    if (!this.activeGUI) return;
+    this.activeSlot = s;
+    if (!this.activeGUI.items[s]) {
+      this.activeGUI.items[s] = {
+        material: 'BARRIER', name: '&c&lNew Item', lore: [], commands: [],
+        conditions: [], close: false, itemType: 'vanilla', itemId: '', customModelData: ''
+      };
+    }
+    this.renderSlotGrid();
+    this.renderEditor();
+    this.renderYAML();
+    this.save();
+  },
+
+  removeSlot(s) {
+    if (!this.activeGUI) return;
+    delete this.activeGUI.items[s];
+    if (this.activeSlot === s) this.activeSlot = null;
+    this.save();
+    this.renderSlotGrid();
+    this.renderEditor();
+    this.renderYAML();
+  },
+
+  getItem() {
+    if (this.activeGUI && this.activeSlot !== null) return this.activeGUI.items[this.activeSlot];
+    return null;
+  },
+
+  updateItem(key, val) {
+    const item = this.getItem();
+    if (!item) return;
+    item[key] = val;
+    this.save();
+    this.renderYAML();
+    // Update slot preview
+    this.renderSlotGrid();
+  },
+
+  // ========================================
+  // RENDER: GUI LIST
+  // ========================================
+  renderGUIList() {
+    const el = document.getElementById('guiList');
+    if (!this.guis.length) {
+      el.innerHTML = `<div style="text-align:center;padding:20px 0;color:var(--dim);font-size:13px;"><div style="font-size:36px;opacity:.4;margin-bottom:8px;">📦</div>Click <strong style="color:var(--b4)">New GUI</strong> to start</div>`;
+      return;
+    }
+    el.innerHTML = this.guis.map((g, i) => `
+      <div class="gui-card ${this.activeGUI === g ? 'active' : ''}" onclick="App.selectGUI(${i})">
+        <div class="gui-card-name">${g.id}</div>
+        <div class="gui-card-meta">
+          <span>📦 ${Object.keys(g.items).length} items</span>
+          <span>📐 ${g.rows} rows</span>
+          ${g.npcId ? `<span>🤖 NPC #${g.npcId}</span>` : ''}
+        </div>
+        <div class="gui-card-actions" onclick="event.stopPropagation()">
+          <button class="btn btn-xs" onclick="App.duplicateGUI(${i})" title="Duplicate">⧉</button>
+          <button class="btn btn-xs btn-danger" onclick="App.deleteGUI(${i})">🗑</button>
+        </div>
+      </div>`).join('');
+  },
+
+  // ========================================
+  // RENDER: GUI SETTINGS
+  // ========================================
+  renderGUISettings() {
+    const el = document.getElementById('guiSettings');
+    if (!this.activeGUI) { el.innerHTML = '<span style="color:var(--dim);font-size:12px;">Select a GUI to edit settings</span>'; return; }
+    const g = this.activeGUI;
+    el.innerHTML = `
+      <div class="form-group">
+        <label class="form-label">Display Title</label>
+        <input class="form-input" value="${escH(g.title)}" oninput="App.updateGUI('title',this.value)" placeholder="&6&lMy Shop">
+        <div class="form-hint" style="margin-top:5px;">Preview: <span style="font-size:13px;" id="titlePreview"></span></div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="form-group">
+            <label class="form-label">Rows (1-6)</label>
+            <input class="form-input" type="number" min="1" max="6" value="${g.rows}" oninput="App.updateGUI('rows',parseInt(this.value)||3)">
+          </div>
+        </div>
+        <div class="col">
+          <div class="form-group">
+            <label class="form-label">NPC ID (optional)</label>
+            <input class="form-input" type="number" value="${g.npcId||''}" oninput="App.updateGUI('npcId',this.value)" placeholder="Leave blank">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Slash Commands (comma-separated)</label>
+        <input class="form-input" value="${escH((g.commands||[]).join(', '))}" oninput="App.updateGUI('commands',this.value.split(',').map(s=>s.trim()).filter(Boolean))" placeholder="myshop, shop, s">
+        <div class="form-hint">Players can open this GUI with these commands. Leave blank for no command.</div>
+      </div>`;
+    // Render title preview
+    const prev = document.getElementById('titlePreview');
+    if (prev) prev.innerHTML = renderColorCodes(g.title);
+  },
+
+  updateGUI(key, val) {
+    if (!this.activeGUI) return;
+    this.activeGUI[key] = val;
+    if (key === 'rows') this.renderSlotGrid();
+    this.save();
+    this.renderGUIList();
+    this.renderGUISettings();
+    this.renderYAML();
+  },
+
+  // ========================================
+  // RENDER: SLOT GRID
+  // ========================================
+  renderSlotGrid() {
+    const el = document.getElementById('slotGrid');
+    if (!this.activeGUI) {
+      el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:10px;color:var(--dim);font-size:12px;">No GUI selected</div>';
+      return;
+    }
+    const rows = Math.min(6, Math.max(1, this.activeGUI.rows||3));
+    el.style.gridTemplateColumns = 'repeat(9, 1fr)';
+    const total = rows * 9;
+    let html = '';
+    for (let i = 0; i < total; i++) {
+      const hasItem = !!this.activeGUI.items[i];
+      const isSel = this.activeSlot === i;
+      const item = this.activeGUI.items[i];
+      const icon = hasItem ? getMaterialIcon(item.material) : '';
+      html += `<div class="slot ${hasItem?'has-item':''} ${isSel?'selected':''}" onclick="App.selectSlot(${i})" title="${hasItem ? escH(item.name) : 'Slot '+i}">
+        ${hasItem ? `<span class="slot-icon">${icon}</span>` : `<span class="slot-num">${i}</span>`}
+      </div>`;
+    }
+    el.innerHTML = html;
+  },
+
+  // ========================================
+  // RENDER: ITEM EDITOR
+  // ========================================
+  renderEditor() {
+    const el = document.getElementById('editorContent');
+    if (!this.activeGUI || this.activeSlot === null) {
+      el.innerHTML = `<div class="empty-editor"><div class="empty-editor-icon">✨</div><h3>No slot selected</h3><p>Click any slot in the grid to place an item there.</p></div>`;
+      return;
+    }
+    const item = this.getItem();
+    if (!item) return;
+    el.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div>
+          <span style="font-family:'Oxanium',sans-serif;font-size:15px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;">Slot ${this.activeSlot}</span>
+          <span style="font-size:11px;color:var(--dim);margin-left:8px;">${this.activeGUI.id}</span>
+        </div>
+        <button class="btn btn-xs btn-danger" onclick="App.removeSlot(${this.activeSlot})">🗑 Remove</button>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="App.switchTab(this,0)">🎨 Display</button>
+        <button class="tab-btn" onclick="App.switchTab(this,1)">⚙️ Conditions</button>
+        <button class="tab-btn" onclick="App.switchTab(this,2)">⌨️ Commands</button>
+        <button class="tab-btn" onclick="App.switchTab(this,3)">🔧 Advanced</button>
+      </div>
+
+      <!-- TAB 0: DISPLAY -->
+      <div class="tab-pane active" data-tab="0">
+        <div class="form-group">
+          <label class="form-label">Icon Material <span style="color:var(--dim);font-weight:400;">— what the item looks like</span></label>
+          <div class="autocomplete-wrap">
+            <input class="form-input" id="materialInput" value="${escH(item.material)}" placeholder="e.g. DIAMOND or diamond"
+              oninput="App.onMaterialInput(this.value)"
+              onblur="setTimeout(()=>App.closeAC(),180)"
+              onfocus="App.onMaterialInput(this.value)">
+            <div class="ac-list" id="acList"></div>
+          </div>
+          <div class="form-hint">Type any item name or ID — all 1,700+ Minecraft items are searchable above!</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Display Name</label>
+          <input class="form-input" value="${escH(item.name)}" oninput="App.updateItem('name',this.value)" placeholder="&b&lMy Item">
+          <div class="form-hint">Color codes: <code style="color:var(--b4)">&c</code>=red <code style="color:var(--b4)">&a</code>=green <code style="color:var(--b4)">&e</code>=yellow <code style="color:var(--b4)">&l</code>=bold <code style="color:var(--b4)">&#FF6600</code>=hex</div>
+          <div class="color-preview-bar" id="namePreview">${renderColorCodes(item.name) || '<span style="color:var(--dim)">Preview here...</span>'}</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Lore Lines <span style="color:var(--dim);font-weight:400;">— item description</span></label>
+          <div class="lore-list" id="loreList">${this.renderLoreLines(item.lore)}</div>
+          <button class="btn btn-sm" style="margin-top:6px;" onclick="App.addLoreLine()">➕ Add Line</button>
+          <div class="form-hint">Tip: Start with <code style="color:var(--b4)">&7</code> for gray text. Use empty line for spacing.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="check-row">
+            <input type="checkbox" ${item.close?'checked':''} onchange="App.updateItem('close',this.checked)">
+            Close GUI when this item is clicked
+          </label>
+        </div>
+      </div>
+
+      <!-- TAB 1: CONDITIONS -->
+      <div class="tab-pane" data-tab="1">
+        <div class="info-box">
+          <strong>What are conditions?</strong> Conditions are requirements a player must meet to click this item. You can require money, items, permissions, etc. All conditions must pass. Payment is taken <em>only after</em> all conditions are met.
+        </div>
+        <div class="condition-list" id="conditionList">${this.renderConditions(item.conditions)}</div>
+        <button class="btn btn-primary" style="margin-top:10px;" onclick="App.openCondModal()">➕ Add Condition</button>
+      </div>
+
+      <!-- TAB 2: COMMANDS -->
+      <div class="tab-pane" data-tab="2">
+        <div class="info-box">
+          Commands run <strong>as console</strong> when the item is successfully clicked (all conditions pass). Use <code style="color:var(--b4)">{player}</code> for the player's name.
+        </div>
+        <div class="cmd-list" id="cmdList">${this.renderCommands(item.commands)}</div>
+        <button class="btn btn-primary" style="margin-top:8px;" onclick="App.addCommand()">➕ Add Command</button>
+        <div class="form-hint" style="margin-top:10px;">
+          <strong>Examples:</strong><br>
+          • <code>give {player} diamond 1</code><br>
+          • <code>eco give {player} 500</code><br>
+          • <code>lp user {player} parent set vip</code><br>
+          • <code>broadcast &6{player} bought something!</code>
+        </div>
+      </div>
+
+      <!-- TAB 3: ADVANCED -->
+      <div class="tab-pane" data-tab="3">
+        <div class="form-group">
+          <label class="form-label">Item Type</label>
+          <select class="form-select" onchange="App.updateItem('itemType',this.value);App.renderEditor()">
+            <option value="vanilla" ${(!item.itemType||item.itemType==='vanilla')?'selected':''}>Vanilla Minecraft</option>
+            <option value="itemsadder" ${item.itemType==='itemsadder'?'selected':''}>ItemsAdder</option>
+            <option value="nexo" ${item.itemType==='nexo'?'selected':''}>Nexo</option>
+          </select>
+          <div class="form-hint">Use Vanilla unless you have custom item plugins.</div>
+        </div>
+        ${item.itemType && item.itemType !== 'vanilla' ? `
+        <div class="form-group">
+          <label class="form-label">Custom Item ID</label>
+          <input class="form-input" value="${escH(item.itemId||'')}" oninput="App.updateItem('itemId',this.value)" placeholder="${item.itemType==='itemsadder'?'namespace:item_id':'nexo_item_id'}">
+          <div class="form-hint">The ${item.itemType} item identifier. The Material above is used as fallback.</div>
+        </div>` : ''}
+        <div class="form-group">
+          <label class="form-label">Custom Model Data <span style="color:var(--dim);font-weight:400;">(optional)</span></label>
+          <input class="form-input" type="number" value="${escH(item.customModelData||'')}" oninput="App.updateItem('customModelData',this.value?parseInt(this.value):'')" placeholder="e.g. 1001">
+          <div class="form-hint">Set this if your resource pack uses Custom Model Data for textures.</div>
+        </div>
+      </div>
+    `;
+  },
+
+  renderLoreLines(lore) {
+    if (!lore || !lore.length) return '<div style="color:var(--dim);font-size:12px;padding:4px 0;">No lore yet — click "Add Line"</div>';
+    return lore.map((line, i) => `
+      <div class="lore-item">
+        <input class="form-input" value="${escH(line)}" oninput="App.updateLore(${i},this.value)" placeholder="&7Lore line...">
+        <button class="btn btn-xs btn-danger" onclick="App.removeLoreLine(${i})">✕</button>
+      </div>`).join('');
+  },
+
+  renderCommands(cmds) {
+    if (!cmds || !cmds.length) return '<div style="color:var(--dim);font-size:12px;padding:4px 0;">No commands yet — click "Add Command"</div>';
+    return cmds.map((cmd, i) => `
+      <div class="cmd-item">
+        <input class="form-input" value="${escH(cmd)}" oninput="App.updateCommand(${i},this.value)" placeholder="give {player} diamond 1">
+        <button class="btn btn-xs btn-danger" onclick="App.removeCommand(${i})">✕</button>
+      </div>`).join('');
+  },
+
+  renderConditions(conds) {
+    if (!conds || !conds.length) return '<div style="color:var(--dim);font-size:12px;padding:8px 0;">No conditions — item is free to click</div>';
+    return conds.map((c, i) => {
+      const def = CONDITIONS.find(x => x.type === c.type);
+      const name = def ? def.name : c.type;
+      return `<div class="cond-card">
+        <div class="cond-info">
+          <div class="cond-type">${name}</div>
+          <div class="cond-summary">${this.condSummary(c)}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <button class="btn btn-xs" onclick="App.editCond(${i})">✏️</button>
+          <button class="btn btn-xs btn-danger" onclick="App.removeCond(${i})">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+  },
+
+  condSummary(c) {
+    const parts = [];
+    if (c.amount !== undefined) parts.push(`Amount: ${c.amount}`);
+    if (c.currency) parts.push(`Currency: ${c.currency}`);
+    if (c.material) parts.push(`Material: ${c.material}`);
+    if (c.item_id) parts.push(`Item: ${c.item_id}`);
+    if (c.permission) parts.push(`Permission: ${c.permission}`);
+    if (c.group) parts.push(`Group: ${c.group}${c.negate?' (must NOT have)':''}`);
+    if (c.region) parts.push(`Region: ${c.region}`);
+    if (c.placeholder) parts.push(`${c.placeholder} ${c.operator||'=='} ${c.value}`);
+    if (c.weather) parts.push(`Weather: ${c.weather}`);
+    if (c.world) parts.push(`World: ${c.world}`);
+    if (c.worlds) parts.push(`Worlds: ${c.worlds}`);
+    if (c.warp) parts.push(`Warp: ${c.warp}`);
+    if (c.radius !== undefined) parts.push(`Radius: ${c.radius} blocks`);
+    if (c.npc_id !== undefined) parts.push(`NPC: #${c.npc_id}`);
+    if (c.custom_model_data !== undefined) parts.push(`CMD: ${c.custom_model_data}`);
+    return parts.join(' · ') || 'Click to configure';
+  },
+
+  switchTab(btn, tabIdx) {
+    const wrap = btn.closest('.tab-pane')?.parentElement || document.getElementById('editorContent');
+    wrap.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i === tabIdx));
+    wrap.querySelectorAll('.tab-pane').forEach((p,i) => p.classList.toggle('active', i === tabIdx));
+  },
+
+  // Lore
+  addLoreLine() {
+    const item = this.getItem(); if (!item) return;
+    item.lore = item.lore || [];
+    item.lore.push('&7New line');
+    this.save(); this.renderEditor(); this.renderYAML();
+  },
+  updateLore(i, v) {
+    const item = this.getItem(); if (!item) return;
+    item.lore[i] = v; this.save(); this.renderYAML();
+  },
+  removeLoreLine(i) {
+    const item = this.getItem(); if (!item) return;
+    item.lore.splice(i, 1); this.save(); this.renderEditor(); this.renderYAML();
+  },
+
+  // Commands
+  addCommand() {
+    const item = this.getItem(); if (!item) return;
+    item.commands = item.commands || [];
+    item.commands.push('give {player} diamond 1');
+    this.save(); this.renderEditor(); this.renderYAML();
+  },
+  updateCommand(i, v) {
+    const item = this.getItem(); if (!item) return;
+    item.commands[i] = v; this.save(); this.renderYAML();
+  },
+  removeCommand(i) {
+    const item = this.getItem(); if (!item) return;
+    item.commands.splice(i, 1); this.save(); this.renderEditor(); this.renderYAML();
+  },
+
+  // ========================================
+  // AUTOCOMPLETE
+  // ========================================
+  onMaterialInput(val) {
+    const list = document.getElementById('acList');
+    if (!list) return;
+    const q = val.toLowerCase().trim();
+    if (!q) { list.classList.remove('open'); return; }
+    const results = MC_INDEX.filter(x => x.search.includes(q)).slice(0,12);
+    if (!results.length) { list.classList.remove('open'); return; }
+    list.innerHTML = results.map((x,i) => `
+      <div class="ac-item" onmousedown="App.selectMaterial('${x.id}')">
+        <span class="ac-item-id">${x.id.toUpperCase()}</span>
+        <span class="ac-item-name">${x.name}</span>
+        <span class="ac-item-type ac-type-${x.type}">${x.type}</span>
+      </div>`).join('');
+    list.classList.add('open');
+  },
+  selectMaterial(id) {
+    const upper = id.toUpperCase();
+    this.updateItem('material', upper);
+    const inp = document.getElementById('materialInput');
+    if (inp) inp.value = upper;
+    this.closeAC();
+    this.renderSlotGrid();
+  },
+  closeAC() {
+    const list = document.getElementById('acList');
+    if (list) list.classList.remove('open');
+  },
+
+  // ========================================
+  // CONDITION MODAL
+  // ========================================
+  openCondModal(editIdx) {
+    this.condModalEditIdx = editIdx !== undefined ? editIdx : null;
+    const title = editIdx !== undefined ? 'Edit Condition' : 'Add Condition';
+    document.getElementById('condModalTitle').textContent = title;
+    document.getElementById('condModalBody').innerHTML = this.buildCondTypeGrid();
+    document.getElementById('condModal').classList.add('open');
+  },
+  editCond(i) { this.openCondModal(i); },
+
+  buildCondTypeGrid() {
+    const cats = {
+      economy: '💰 Economy',
+      player: '👤 Player',
+      items: '📦 Items',
+      location: '📍 Location',
+      world: '🌍 World',
+      advanced: '⚙️ Advanced'
+    };
+    let html = '';
+    Object.entries(cats).forEach(([cat, label]) => {
+      const types = CONDITIONS.filter(c => c.category === cat);
+      if (!types.length) return;
+      html += `<div class="section-label">${label}</div><div class="cond-type-grid">`;
+      types.forEach(c => {
+        html += `<div class="cond-type-card" onclick="App.showCondForm('${c.type}')">
+          <div class="ct-icon">${c.name.split(' ')[0]}</div>
+          <div class="ct-name">${c.name.slice(c.name.indexOf(' ')+1)}</div>
+          <div class="ct-desc">${c.desc}</div>
+          ${c.plugin !== 'Vanilla' ? `<div class="cond-requires">Requires: ${c.plugin}</div>` : ''}
+        </div>`;
+      });
+      html += '</div>';
+    });
+    return html;
+  },
+
+  showCondForm(type) {
+    const def = CONDITIONS.find(c => c.type === type);
+    if (!def) return;
+    // Pre-fill if editing
+    const item = this.getItem();
+    const existing = this.condModalEditIdx !== null && item ? item.conditions[this.condModalEditIdx] : null;
+
+    let html = `
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('condModalBody').innerHTML=App.buildCondTypeGrid()" style="margin-bottom:14px;">← Back</button>
+      <div style="margin-bottom:16px;">
+        <div class="modal-title" style="font-size:15px;">${def.name}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">${def.desc}</div>
+        ${def.plugin !== 'Vanilla' ? `<div style="margin-top:6px;"><span class="badge badge-orange">Requires: ${def.plugin}</span></div>` : ''}
+      </div>`;
+
+    def.fields.forEach(f => {
+      const savedVal = existing && existing[f.key] !== undefined ? existing[f.key] : (f.default !== undefined ? f.default : '');
+      html += `<div class="form-group"><label class="form-label">${f.label}${f.required?' <span style="color:var(--danger)">*</span>':''}</label>`;
+
+      if (f.type === 'checkbox') {
+        html += `<label class="check-row"><input type="checkbox" id="cf_${f.key}" ${savedVal?'checked':''}> ${f.hint||''}</label>`;
+      } else if (f.type === 'select') {
+        html += `<select class="form-select" id="cf_${f.key}">${f.options.map(o=>`<option value="${o}" ${savedVal===o?'selected':''}>${o}</option>`).join('')}</select>`;
+        if (f.hint) html += `<div class="form-hint">${f.hint}</div>`;
+      } else if (f.type === 'material') {
+        html += `<div class="autocomplete-wrap"><input class="form-input" id="cf_${f.key}" value="${escH(savedVal)}" placeholder="${f.placeholder||''}" oninput="App.onCondMaterialInput('cf_${f.key}',this.value)" onblur="setTimeout(()=>App.closeCondAC('cf_${f.key}'),180)" onfocus="App.onCondMaterialInput('cf_${f.key}',this.value)"><div class="ac-list" id="ac_cf_${f.key}"></div></div>`;
+        if (f.hint) html += `<div class="form-hint">${f.hint}</div>`;
+      } else {
+        html += `<input class="form-input" id="cf_${f.key}" type="${f.type}" value="${escH(String(savedVal))}" placeholder="${f.placeholder||''}">`;
+        if (f.hint) html += `<div class="form-hint">${f.hint}</div>`;
+      }
+      html += '</div>';
+    });
+
+    html += `<div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btn-primary" onclick="App.saveCond('${type}')">💾 Save Condition</button>
+      <button class="btn" onclick="App.closeModal('condModal')">Cancel</button>
+    </div>`;
+
+    document.getElementById('condModalBody').innerHTML = html;
+  },
+
+  onCondMaterialInput(fieldId, val) {
+    const listId = 'ac_' + fieldId;
+    const list = document.getElementById(listId);
+    if (!list) return;
+    const q = val.toLowerCase().trim();
+    if (!q) { list.classList.remove('open'); return; }
+    const results = MC_INDEX.filter(x => x.search.includes(q)).slice(0, 8);
+    if (!results.length) { list.classList.remove('open'); return; }
+    list.innerHTML = results.map(x => `
+      <div class="ac-item" onmousedown="App.selectCondMaterial('${fieldId}','${x.id}')">
+        <span class="ac-item-id">${x.id.toUpperCase()}</span>
+        <span class="ac-item-name">${x.name}</span>
+      </div>`).join('');
+    list.classList.add('open');
+  },
+  selectCondMaterial(fieldId, id) {
+    const inp = document.getElementById(fieldId);
+    if (inp) inp.value = id.toUpperCase();
+    this.closeCondAC(fieldId);
+  },
+  closeCondAC(fieldId) {
+    const list = document.getElementById('ac_' + fieldId);
+    if (list) list.classList.remove('open');
+  },
+
+  saveCond(type) {
+    const def = CONDITIONS.find(c => c.type === type);
+    const item = this.getItem(); if (!item) return;
+    const cond = { type };
+    let valid = true;
+    def.fields.forEach(f => {
+      const el = document.getElementById('cf_' + f.key);
+      if (!el) return;
+      if (f.type === 'checkbox') {
+        cond[f.key] = el.checked;
+      } else if (f.type === 'number') {
+        const v = parseFloat(el.value);
+        if (!isNaN(v)) cond[f.key] = v;
+        else if (f.required) { alert(`"${f.label}" is required`); valid=false; }
+      } else {
+        if (el.value.trim()) {
+          // For worlds field, convert comma list
+          if (f.key === 'worlds') {
+            const worlds = el.value.split(',').map(s=>s.trim()).filter(Boolean);
+            if (worlds.length) cond[f.key] = worlds;
+          } else {
+            cond[f.key] = el.value.trim();
+          }
+        } else if (f.required) { alert(`"${f.label}" is required`); valid=false; }
+      }
+    });
+    if (!valid) return;
+    item.conditions = item.conditions || [];
+    if (this.condModalEditIdx !== null) item.conditions[this.condModalEditIdx] = cond;
+    else item.conditions.push(cond);
+    this.closeModal('condModal');
+    this.save();
+    this.renderEditor();
+    this.renderYAML();
+  },
+
+  removeCond(i) {
+    const item = this.getItem(); if (!item) return;
+    item.conditions.splice(i,1); this.save(); this.renderEditor(); this.renderYAML();
+  },
+
+  closeModal(id) { document.getElementById(id).classList.remove('open'); },
+
+  // ========================================
+  // YAML GENERATION
+  // ========================================
+  generateYAML() {
+    if (!this.guis.length) return 'guis:\n  # 👈 Create a GUI and add items\n  # to see live YAML here!';
+    let out = 'guis:\n';
+    this.guis.forEach(g => {
+      out += `  ${g.id}:\n`;
+      out += `    title: "${escYaml(g.title)}"\n`;
+      out += `    rows: ${Math.min(6,Math.max(1,g.rows||3))}\n`;
+      const cmds = (g.commands||[]).filter(Boolean);
+      if (cmds.length) {
+        out += `    commands: [${cmds.map(c=>`"${escYaml(c)}"`).join(', ')}]\n`;
+      }
+      if (g.npcId) out += `    npc_id: ${parseInt(g.npcId)}\n`;
+      out += `    items:\n`;
+      const slotKeys = Object.keys(g.items).map(Number).sort((a,b)=>a-b);
+      if (!slotKeys.length) {
+        out += `      # No items yet — click slots in the grid to add items!\n`;
+      }
+      slotKeys.forEach(s => {
+        const item = g.items[s];
+        out += `      "${s}":\n`;
+        if (item.itemType && item.itemType !== 'vanilla') {
+          out += `        item_type: ${item.itemType}\n`;
+          if (item.itemId) out += `        item_id: "${escYaml(item.itemId)}"\n`;
+        }
+        out += `        material: ${item.material||'STONE'}\n`;
+        if (item.customModelData) out += `        custom_model_data: ${item.customModelData}\n`;
+        out += `        name: "${escYaml(item.name||'')}"\n`;
+        if (item.lore && item.lore.length) {
+          out += `        lore:\n`;
+          item.lore.forEach(l => out += `          - "${escYaml(l)}"\n`);
+        }
+        if (item.commands && item.commands.length) {
+          out += `        commands:\n`;
+          item.commands.forEach(c => out += `          - "${escYaml(c)}"\n`);
+        }
+        if (item.close) out += `        close: true\n`;
+        if (item.conditions && item.conditions.length) {
+          out += `        conditions:\n`;
+          item.conditions.forEach(c => {
+            out += `          - type: ${c.type}\n`;
+            Object.entries(c).forEach(([k,v]) => {
+              if (k === 'type') return;
+              if (Array.isArray(v)) {
+                out += `            ${k}:\n`;
+                v.forEach(i => out += `              - "${i}"\n`);
+              } else if (typeof v === 'boolean') {
+                out += `            ${k}: ${v}\n`;
+              } else if (typeof v === 'number') {
+                out += `            ${k}: ${v}\n`;
+              } else if (v !== '' && v !== undefined && v !== null) {
+                out += `            ${k}: "${escYaml(String(v))}"\n`;
+              }
+            });
+          });
+        }
+      });
+      out += '\n';
+    });
+    return out;
+  },
+
+  renderYAML() {
+    document.getElementById('yamlPre').textContent = this.generateYAML();
+  },
+
+  copyYAML() {
+    navigator.clipboard.writeText(this.generateYAML()).then(() => this.toast('✅ YAML copied to clipboard!'));
+  },
+
+  exportYAML() {
+    const blob = new Blob([this.generateYAML()], {type:'text/yaml'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'guis.yml'; a.click();
+    URL.revokeObjectURL(a.href);
+    this.toast('💾 guis.yml downloaded!');
+  },
+
+  // ========================================
+  // IMPORT
+  // ========================================
+  importModal() { document.getElementById('importModal').classList.add('open'); },
+
+  loadImportFile(input) {
+    const f = input.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = e => { document.getElementById('importText').value = e.target.result; };
+    r.readAsText(f);
+  },
+
+  processImport() {
+    const text = document.getElementById('importText').value.trim();
+    const fb = document.getElementById('importFeedback');
+    if (!text) { fb.textContent = '⚠️ Nothing to parse.'; return; }
+    try {
+      const result = this.parseYAML(text);
+      if (!result || !result.length) { fb.textContent = '❌ No GUIs found. Make sure your YAML starts with "guis:".'; return; }
+      this.guis.push(...result);
+      this.activeGUI = result[0];
+      this.save();
+      this.render();
+      this.closeModal('importModal');
+      this.toast(`✅ Imported ${result.length} GUI(s)!`);
+    } catch(e) {
+      fb.textContent = '❌ Parse error: ' + e.message;
+    }
+  },
+
+  parseYAML(text) {
+    // Basic YAML parser for our format
+    const lines = text.split('\n');
+    const guis = [];
+    let currentGUI = null, currentSlot = null, currentItem = null;
+    let inConditions = false, currentCond = null, inLore = false, inCmds = false, inGuiCmds = false;
+
+    lines.forEach(rawLine => {
+      const line = rawLine.replace(/\r/,'');
+      const stripped = line.trim();
+      if (!stripped || stripped.startsWith('#')) return;
+      const indent = line.length - line.trimStart().length;
+      const kv = stripped.match(/^([^:]+):\s*(.*)$/);
+      if (!kv) {
+        // list item
+        if (stripped.startsWith('- ')) {
+          const val = stripped.slice(2).replace(/^["']|["']$/g,'');
+          if (currentCond && indent >= 12) { /* handled elsewhere */ }
+          else if (inLore && currentItem) currentItem.lore.push(val);
+          else if (inCmds && currentItem) currentItem.commands.push(val);
+          else if (inGuiCmds && currentGUI) currentGUI.commands.push(val);
+          else if (inConditions && currentItem) {
+            if (currentCond) currentItem.conditions.push(currentCond);
+            currentCond = {type: val.replace('type: ','').trim()};
+          }
+        } else if (stripped.startsWith('type: ') && inConditions && currentItem) {
+          if (currentCond) currentItem.conditions.push(currentCond);
+          currentCond = {type: stripped.slice(6).trim()};
+        }
+        return;
+      }
+      const [,key, rawVal] = kv;
+      const val = rawVal.replace(/^["']|["']$/g,'').trim();
+
+      if (indent === 0) { /* guis: */ return; }
+      if (indent === 2) {
+        if (currentGUI) guis.push(currentGUI);
+        currentGUI = {id: key.trim(), title:'My Shop', rows:3, commands:[], items:{}, npcId:''};
+        currentSlot = null; currentItem = null; inConditions=false; currentCond=null; inLore=false; inCmds=false; inGuiCmds=false;
+      } else if (indent === 4 && currentGUI) {
+        inLore=false; inCmds=false; inGuiCmds=false; inConditions=false;
+        if (key.trim()==='title') currentGUI.title = val;
+        else if (key.trim()==='rows') currentGUI.rows = parseInt(val)||3;
+        else if (key.trim()==='npc_id') currentGUI.npcId = val;
+        else if (key.trim()==='commands') { inGuiCmds=true; if(val&&val!=='[]') currentGUI.commands=val.replace(/^\[|\]$/g,'').split(',').map(s=>s.trim().replace(/^["']|["']$/g,'')).filter(Boolean); }
+        else if (key.trim()==='items') { /* section start */ }
+      } else if (indent === 6 && currentGUI) {
+        // slot key
+        inLore=false; inCmds=false; inConditions=false;
+        const slotNum = parseInt(key.trim().replace(/^["']|["']$/g,''));
+        if (!isNaN(slotNum)) {
+          if (currentCond && currentItem) currentItem.conditions.push(currentCond);
+          currentCond=null;
+          currentSlot = slotNum;
+          currentItem = {material:'STONE', name:'', lore:[], commands:[], conditions:[], close:false, itemType:'vanilla', itemId:'', customModelData:''};
+          currentGUI.items[slotNum] = currentItem;
+        }
+      } else if (indent === 8 && currentItem) {
+        inLore=false; inCmds=false; inConditions=false;
+        const k = key.trim();
+        if (k==='material') currentItem.material = val.toUpperCase();
+        else if (k==='name') currentItem.name = val;
+        else if (k==='close') currentItem.close = val==='true';
+        else if (k==='item_type') currentItem.itemType = val;
+        else if (k==='item_id') currentItem.itemId = val;
+        else if (k==='custom_model_data') currentItem.customModelData = parseInt(val)||'';
+        else if (k==='lore') inLore=true;
+        else if (k==='commands') inCmds=true;
+        else if (k==='conditions') { inConditions=true; if(currentCond) {currentItem.conditions.push(currentCond); currentCond=null;} }
+      } else if (indent === 10 && inConditions && currentItem) {
+        const k = key.trim();
+        if (k==='type') { if(currentCond) currentItem.conditions.push(currentCond); currentCond={type:val}; }
+        else if (currentCond) {
+          if (val==='true') currentCond[k]=true;
+          else if (val==='false') currentCond[k]=false;
+          else if (!isNaN(parseFloat(val))) currentCond[k]=parseFloat(val);
+          else currentCond[k]=val;
+        }
+      }
+    });
+    if (currentCond && currentItem) currentItem.conditions.push(currentCond);
+    if (currentGUI) guis.push(currentGUI);
+    return guis;
+  },
+
+  // ========================================
+  // HELP
+  // ========================================
+  showHelp() {
+    document.getElementById('helpModalBody').innerHTML = `
+      <div class="info-box"><strong>Welcome to OGUI Builder!</strong> Build your entire GUI config visually — no coding needed.</div>
+      <div class="section-label">Getting Started</div>
+      <div class="step-row"><div class="step-num">1</div><div class="step-text"><strong>Create a GUI</strong> — click "New GUI" and give it an ID like <code>my_shop</code>.</div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-text"><strong>Edit settings</strong> — set the title and rows in the left panel.</div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-text"><strong>Click a slot</strong> — the center editor opens. Choose your icon and name.</div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-text"><strong>Add conditions</strong> — require money, items, perms, etc. via the Conditions tab.</div></div>
+      <div class="step-row"><div class="step-num">5</div><div class="step-text"><strong>Add commands</strong> — what runs when the player clicks successfully.</div></div>
+      <div class="step-row"><div class="step-num">6</div><div class="step-text"><strong>Export YAML</strong> — download and drop into your server's OGUI plugin folder!</div></div>
+      <div class="divider"></div>
+      <div class="section-label">Color Codes</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;">
+        <code style="color:var(--b4)">&0</code>-<code style="color:var(--b4)">&f</code> — standard colors &nbsp;
+        <code style="color:var(--b4)">&l</code> = bold &nbsp;
+        <code style="color:var(--b4)">&o</code> = italic &nbsp;
+        <code style="color:var(--b4)">&r</code> = reset<br>
+        <code style="color:var(--b4)">&#FF6600</code> — hex color (1.16+)<br>
+        <code style="color:var(--b4)">&lt;gradient:#FF0000:#0000FF&gt;text&lt;/gradient&gt;</code> — gradient<br>
+        <code style="color:var(--b4)">&lt;rainbow&gt;text&lt;/rainbow&gt;</code> — rainbow
+      </div>
+      <div class="divider"></div>
+      <div class="section-label">Condition Types</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;">
+        <strong style="color:var(--fg)">💰 Economy:</strong> VAULT_MONEY, OREO_CURRENCY<br>
+        <strong style="color:var(--fg)">👤 Player:</strong> XP_LEVEL, XP_POINTS, PERMISSION, LUCKPERMS_GROUP<br>
+        <strong style="color:var(--fg)">📦 Items:</strong> ITEM, ITEM_CUSTOM_MODEL, ITEMSADDER, NEXO<br>
+        <strong style="color:var(--fg)">📍 Location:</strong> WORLDGUARD_REGION, OREO_WARPS, OREO_WARPS_LOCATION, MODELED_NPC<br>
+        <strong style="color:var(--fg)">🌍 World:</strong> WEATHER, WORLD<br>
+        <strong style="color:var(--fg)">⚙️ Advanced:</strong> PLACEHOLDER (any PAPI placeholder)
+      </div>
+    `;
+    document.getElementById('helpModal').classList.add('open');
+  },
+
+  // ========================================
+  // STORAGE
+  // ========================================
+  save() {
+    try { localStorage.setItem('ogui_v2', JSON.stringify(this.guis)); } catch(e) {}
+  },
+  loadFromStorage() {
+    try {
+      const d = localStorage.getItem('ogui_v2');
+      if (d) { this.guis = JSON.parse(d); this.activeGUI = this.guis[0]||null; }
+    } catch(e) {}
+  },
+
+  // ========================================
+  // TOAST
+  // ========================================
+  toast(msg, duration=2500) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => t.classList.remove('show'), duration);
+  },
+
+  clearAll() {
+    if (!confirm('Delete ALL GUIs? This cannot be undone!')) return;
+    this.guis = []; this.activeGUI = null; this.activeSlot = null;
+    this.save(); this.render();
+  }
+};
+
+// ========================================
+// HELPERS
+// ========================================
+function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escYaml(s) { return String(s||'').replace(/"/g,'\\"'); }
+
+// Material → emoji icon mapping (common items)
+const ICON_MAP = {
+  DIAMOND:'💎', GOLD_INGOT:'🟡', IRON_INGOT:'⬜', EMERALD:'💚', NETHERITE_INGOT:'⬛',
+  NETHER_STAR:'⭐', DIAMOND_SWORD:'⚔️', IRON_SWORD:'🗡️', BOW:'🏹', SHIELD:'🛡️',
+  APPLE:'🍎', GOLDEN_APPLE:'🍏', BREAD:'🍞', COOKED_BEEF:'🥩', MUSHROOM_STEW:'🍜',
+  DIAMOND_PICKAXE:'⛏️', IRON_PICKAXE:'⛏️', GOLDEN_PICKAXE:'⛏️', STONE_PICKAXE:'⛏️',
+  DIAMOND_AXE:'🪓', IRON_AXE:'🪓', DIAMOND_BOOTS:'👟', DIAMOND_HELMET:'🪖',
+  BARRIER:'🚫', CHEST:'📦', ENDER_CHEST:'🟣', TRAPPED_CHEST:'📦',
+  BOOK:'📖', ENCHANTED_BOOK:'✨', WRITTEN_BOOK:'📕', WRITABLE_BOOK:'📝',
+  COMPASS:'🧭', CLOCK:'🕐', MAP:'🗺️', FILLED_MAP:'🗺️',
+  BONE:'🦴', BLAZE_ROD:'🔥', ENDER_PEARL:'🫧', EYE_OF_ENDER:'👁️',
+  TOTEM_OF_UNDYING:'🗿', HEART_OF_THE_SEA:'💙', NETHER_STAR:'⭐',
+  TNT:'💥', FIREWORK_ROCKET:'🎆', FIREWORK_STAR:'🌟',
+  GRASS_BLOCK:'🌿', DIRT:'🟫', STONE:'🪨', COBBLESTONE:'🪨', OAK_LOG:'🪵',
+  OAK_PLANKS:'🪵', OAK_LEAVES:'🍃', OAK_SAPLING:'🌱',
+  WATER_BUCKET:'🪣', LAVA_BUCKET:'🪣', MILK_BUCKET:'🥛', BUCKET:'🪣',
+  SADDLE:'🐴', LEAD:'🪢', NAME_TAG:'🏷️', FISHING_ROD:'🎣',
+  EXPERIENCE_BOTTLE:'✨', SNOWBALL:'⚽', EGG:'🥚',
+  PAPER:'📄', FEATHER:'🪶', STICK:'🪃', STRING:'🧵',
+  WHEAT:'🌾', CARROT:'🥕', POTATO:'🥔', BEETROOT:'🫐',
+  PUMPKIN:'🎃', MELON_SLICE:'🍉', APPLE:'🍎', COOKIE:'🍪',
+  CAKE:'🎂', PUMPKIN_PIE:'🥧',
+  OAK_SWORD:'⚔️', STONE_SWORD:'⚔️', GOLDEN_SWORD:'⚔️', NETHERITE_SWORD:'⚔️',
+  TRIDENT:'🔱', CROSSBOW:'🏹', MACE:'🔨',
+  FLINT_AND_STEEL:'🔥', SHEARS:'✂️', BRUSH:'🖌️',
+  ELYTRA:'🦅', PHANTOM_MEMBRANE:'👻',
+  PRISMARINE_CRYSTALS:'💠', GHAST_TEAR:'😢', BLAZE_POWDER:'🔆',
+  MAGMA_CREAM:'🟠', FERMENTED_SPIDER_EYE:'🕷️', SPIDER_EYE:'🕷️',
+  GLOWSTONE_DUST:'✨', REDSTONE:'🔴', GUNPOWDER:'💥', SUGAR:'🍬',
+  CLAY_BALL:'⚪', BRICK:'🟫', QUARTZ:'⬜', FLINT:'🪨',
+  INK_SAC:'🖤', LAPIS_LAZULI:'🔵', BONE_MEAL:'⚪', COAL:'⬛', CHARCOAL:'⬛',
+  IRON_NUGGET:'⚫', GOLD_NUGGET:'🟡', COPPER_INGOT:'🟠', COPPER_NUGGET:'🟠',
+  NETHERITE_SCRAP:'⬛', NETHERITE_BLOCK:'⬛', DIAMOND_BLOCK:'💎', GOLD_BLOCK:'🟡', IRON_BLOCK:'⬜',
+  BEACON:'🔆', CONDUIT:'💠', ENCHANTING_TABLE:'📖', ANVIL:'⚙️', BREWING_STAND:'⚗️',
+  CHEST_MINECART:'🚂', FURNACE_MINECART:'🚂', MINECART:'🚂',
+  PAINTING:'🖼️', ITEM_FRAME:'🖼️',
+  SPAWNER:'🔲', JUKEBOX:'🎵', NOTE_BLOCK:'🎶',
+  COMMAND_BLOCK:'🟩',
+  WITHER_SKELETON_SKULL:'💀', SKELETON_SKULL:'💀', DRAGON_HEAD:'🐲', CREEPER_HEAD:'😵',
+  ZOMBIE_HEAD:'🧟', PLAYER_HEAD:'👤', PIGLIN_HEAD:'🐗',
+};
+function getMaterialIcon(mat) {
+  if (!mat) return '';
+  return ICON_MAP[mat.toUpperCase()] || '📦';
+}
+
+// ========================================
+// INIT
+// ========================================
+window.addEventListener('DOMContentLoaded', () => App.init());
+</script>
+</body>
+</html>

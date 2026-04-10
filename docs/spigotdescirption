@@ -1,0 +1,731 @@
+OreoEssentials
+#1 Modern Essentials Plugin : Better Than CMI & ZEssentials/SunLight
+
+The ONLY fully cross-server, all-in-one Essentials plugin and completely Open Source!
+
+[ATTACH=full]938742[/ATTACH]
+Overview:
+OreoEssentials is the next generation of Essentials built for modern Minecraft networks with true cross-server synchronisation. Clean, fast, and extremely easy to configure.
+Everything syncs across servers: Homes, Warps, Economy, Chat, Inventories, Enderchests, Health, Food, Teleports, Auction House, Player Warps, Trades, and more.
+This plugin is 100% Open Source. If you'd like to support development and future updates, donations are appreciated here. Please also consider leaving positive feedback!
+
+⚡ FOR VELOCITY USERS
+Want cross-server tab and join/quit messages across your entire network?
+Download our Velocity extension: Oreo Velocity Extension
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ Core Features
+[ATTACH=full]938735[/ATTACH]
+
+✅ Full Cross-Server Synchronisation
+Homes, warps, inventories, economy, chat, health, food, and enderchests sync via MongoDB + Redis + RabbitMQ. Everything your players need, everywhere on your network.
+
+✅ Cross-Server Auction House
+A fully-featured, live-synced auction house across every server in your network. Players list items on any server, buyers bid or buy from any other. Real-time updates push to every open GUI instantly — no refresh, no delay.
+• 10 built-in item categories with automatic detection
+• Custom item support: ItemsAdder, Nexo, Oraxen — textures show correctly everywhere
+• Full search by item name, category filter, and price sort
+• Seller fees, buyer tax, configurable listing durations
+• Expired / sold item reclaim system
+• Discord webhook notifications on sales
+• MongoDB atomic writes — zero duplicate purchases, zero item loss
+• Live GUI refresh via RabbitMQ — every open AH updates in real time
+
+✅ Cross-Server Market / Orders (Buy Order System)
+Players post buy orders — "I want 64 Diamond Swords, paying $10 each." Other players fill those orders from any server and get paid instantly. The money is escrowed up front, so the requester always pays and the filler always gets paid.
+• Full cross-server order sync via RabbitMQ + MongoDB
+• Supports Vault economy AND custom currencies
+• Atomic fill logic — no race conditions, no double-spending
+• Pending delivery system — items safely delivered even if the requester is offline
+• Live market browser with real-time updates across the network
+• Optional creation fees and fill fees
+
+✅ Shop GUI & Sell GUI
+Fully integrated shop and sell interfaces with ItemsAdder and Nexo support.
+• SellGUI: drag and drop any item to sell, configurable shop prices per item
+• ShopGUI: supports Vault economy and custom currencies per item
+• Cross-server economy sync ensures balances are always current when players shop
+
+✅ Custom Multiple Economy System
+Create as many custom economies as you want — tokens, gems, crystals, anything. Full cross-server sync. Works in the Auction House, Market, Shop, and anywhere else.
+• Per-currency balances, top lists, and transfer commands
+• Fully independent from Vault — or use both side-by-side
+• Supported in AH, Market/Orders, Shop, and Kits
+
+✅ Full Custom Chat Channels
+Five scope types: ALL, WORLD, RANGE, SERVER, SHARD — put each channel exactly where it belongs. Per-rank format overrides via LuckPerms primary groups. Everything you need for a professional chat system.
+• Private staff channels, trade channels, local range chat, network-wide broadcast
+• MiniMessage formatting with gradient support, hover events, click events
+• Per-rank format overrides (different format per LuckPerms group, per channel)
+• Item-in-Chat: type [item] to share your held item as a hoverable link
+• Cross-server global chat via RabbitMQ
+• Discord bridge per channel — post to different webhooks per channel
+• Mute system with duration support (30s, 10m, 2h, 1d) + cross-server mute sync
+• Private messaging /msg and /reply with cross-server delivery
+
+✅ Playtime Rewards & Daily Rewards
+Reward players automatically based on how long they play. Configurable milestones that trigger once or repeat. Full GUI to claim rewards.
+• One-time milestone rewards (e.g. "1 hour played → reward pack")
+• Repeatable rewards for ongoing engagement
+• /daily command for daily login rewards with cooldown tracking
+• PlaceholderAPI integration: show state (LOCKED / READY / CLAIMED / REPEATING) in scoreboards
+
+✅ TempFly — Temporary Flight
+Give players temporary flight with a countdown. Buy time with in-game currency, give it with commands, or award it via kits and rewards.
+• Configurable time units via command: /tempfly give <player> <time>
+• Remaining time shown via PlaceholderAPI placeholders
+• Auto-lands players safely when time expires
+• Full cross-server support — fly time follows the player across servers
+
+✅ Kits & Cooldowns
+Unlimited kits with per-kit permissions, configurable cooldowns, and an optional GUI browser.
+• Permission-gated kits with bypass cooldown support
+• Per-kit PlaceholderAPI placeholders: ready state, cooldown seconds, formatted countdown
+• GUI kit browser for easy player access
+
+✅ Player Vaults (Cross-Server)
+Your players' personal vaults sync seamlessly across all servers via MongoDB.
+• Permission-based vault count and row size (tier system)
+• Per-vault title customisation
+• PlaceholderAPI: check vault count, rows, access status
+
+✅ Moderation Suite
+Complete cross-server moderation with a unified interface.
+• /ban, /tempban, /unban, /kick, /mute, /tempmute, /unmute
+• /jail, /unjail with configurable jail locations
+• /god, /vanish for staff utilities
+• /invsee, /invlook — inspect any player's inventory live
+• Cross-server mute sync via RabbitMQ
+• ModGUI — moderate your entire network from one interface
+
+✅ Alias Editor System
+Create runtime command aliases with full logic, conditions, cooldowns, and run-as-player or run-as-console modes. No restarts needed — changes apply instantly.
+• GUI editor for non-technical admins
+• Condition checks: permissions, money, EXP level, PlaceholderAPI values (with >=, <=, =, !=, contains, startsWith operators)
+• AND/OR logic for multi-condition aliases
+• Per-alias and per-line cooldowns
+• permGate: gate an alias behind a permission node
+• Custom tab completions per alias
+• Runtime registration — enabled/disabled aliases apply to all players immediately
+
+✅ Holograms
+Create floating hologram text displays anywhere in the world.
+• Multi-line support
+• PlaceholderAPI support in hologram lines
+• Admin management commands (/ohologram)
+
+✅ Warps, Homes & RTP
+Full teleportation suite with tier-based limits.
+• Homes: permission-based max homes per player, GUI home list
+• Warps: global warp list GUI, cross-server warp teleportation
+• Player Warps: players create their own public warps, visible and accessible from any server
+• RTP: safe random teleport with configurable min/max radius, tier-based radius boosts
+
+✅ TPA & Teleport Requests
+Full cross-server TPA with accept/deny flow. /tphere, /tpall, /tppos, /tpworld — all included.
+
+✅ Custom Crafting System GUI
+Create custom crafting recipes with a full GUI editor. Supports ItemsAdder custom items as ingredients and results.
+
+✅ Maintenance Mode
+Lock your server to non-staff players with /maintenance. Custom join messages and bypass permissions.
+
+✅ Scoreboard, BossBar & Tab
+Fully customisable displays powered by PlaceholderAPI.
+• Animated scoreboard lines, per-world layouts
+• BossBar with configurable text, colour, and progress
+• Tab header/footer with PAPI support
+
+✅ Portals & JumpPads
+Cuboid portals and configurable launch pads with particle effects.
+
+✅ Disenchant
+Remove enchantments from items via /disenchant — configurable cost.
+
+✅ Sit Command
+Let players sit on any block with /sit. Smart offset detection for stairs, slabs, and regular blocks.
+
+✅ Effect System
+Apply and remove potion effects with /effect give and /effect remove. Time-limited or permanent.
+
+✅ Walk Speed / Fly Speed
+Set player movement speed with /walkspeed and /flyspeed. Permission-gated per speed level.
+
+✅ Enderchest & Inventory Management
+Open your own or another player's enderchest and inventory remotely. Full cross-server sync.
+
+✅ Player Sync (Inventory, Health, EXP, Hunger, Potions)
+When a player switches servers, their full state — inventory, hotbar, armor, offhand, enderchest, health, hunger, EXP, and active potion effects — transfers seamlessly. Configurable per data type.
+
+✅ ItemsAdder, Nexo & Oraxen Support
+Full integration across Auction House, Market, Shop, Kits, Custom Crafting, Chat Item display, and more.
+
+✅ MythicMobs Support
+Seamless integration with custom mob loot and drops.
+
+✅ Discord Integration
+• Per-channel Discord webhooks for chat channels
+• Auction House sale notifications via webhook
+• Configurable webhook URL, username, and avatar per feature
+
+✅ Data Import Tools
+Migrate from EssentialsX or ZEssentials with built-in import commands. Don't lose your player data.
+
+✅ PlaceholderAPI (46+ Placeholders)
+Two PAPI expansions registered: %oreo_...% and %oreoah_...%
+Economy, Kits, Playtime, Playtime Rewards, Vaults, Homes, TempFly, Server/Network player counts, World names, Auction House stats — everything exposed for scoreboards and GUIs.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ATTACH=full]938743[/ATTACH]
+
+Cross-Server Sync Modules
+• Homes & Warps — Access your homes from any server
+• Player Warps — Players' public warps visible network-wide
+• Economy — Vault, MongoDB or PostgreSQL with full sync
+• Custom Currencies — Multiple economies, fully synced
+• Auction House — Live listings and purchases across all servers
+• Market / Orders — Buy orders filled from any server
+• Chat & Global Messages — Channels, private messages, and mutes across your network
+• Inventories, Enderchests, Health, Food, Potions — Complete player state sync
+• Teleport Requests & RTPs — Cross-server teleportation
+• Trades — Players on different servers trade items in real time
+• TempFly — Fly time follows the player across servers
+• Moderation Logs — Network-wide moderation tracking
+
+Powered by a hybrid backend: MongoDB + Redis + RabbitMQ
+
+[ATTACH=full]939882[/ATTACH]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Preview Videos
+FULL GUI CONTROL:
+[MEDIA=youtube]owLLUPkMKSQ[/MEDIA]
+Feature Showcases:
+[MEDIA=youtube]KVXxPoUyy3U[/MEDIA]
+[MEDIA=youtube]midppizL8kU[/MEDIA]
+[MEDIA=youtube]Gss36V8oAl4[/MEDIA]
+[MEDIA=youtube]66b70_GxOaA[/MEDIA]
+[MEDIA=youtube]TqbDlKOTLk4[/MEDIA]
+[MEDIA=youtube]xnUNUyBzjvE[/MEDIA]
+[MEDIA=youtube]T8AUcYJ_e1k[/MEDIA]
+[MEDIA=youtube]LAEccr6N6dk[/MEDIA]
+SellGUI with ItemsAdder and Nexo Support:
+[ATTACH=full]935008[/ATTACH]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Installation
+Quick Setup:
+1) Drop the JAR into /plugins
+2) Start once to generate configs
+3) Configure databases in config.yml:
+[CODE]MongoDB:
+  enabled: true
+  uri: "mongodb://user:pass@127.0.0.1:27017/oreo"
+RabbitMQ:
+  enabled: true
+  uri: "amqp://guest:guest@127.0.0.1:5672/"
+Redis:
+  enabled: true
+  host: "127.0.0.1"
+  port: 6379
+  password: "yourpass"[/CODE]
+4) Restart all servers — syncing starts automatically!
+Don't want to self-host? Oreo Studios offers pre-configured DB hosting for $2/month — open a ticket on our Discord!
+
+Online Editor For config:
+Link: CLICK HERE!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+️Cross-Server Setup — What You Need
+[TABLE]
+[TR][TH]Type[/TH][TH]Purpose[/TH][TH]Required?[/TH][TH]Recommended?[/TH][/TR]
+[TR][TD]MongoDB[/TD][TD]Core data (Homes, Warps, Inventories, AH listings, Orders, etc.)[/TD][TD]Required[/TD][TD]✅ Yes[/TD][/TR]
+[TR][TD]RabbitMQ[/TD][TD]Real-time cross-server messaging (Chat, AH sync, Orders, TP, Moderation)[/TD][TD]Required[/TD][TD]✅ Yes[/TD][/TR]
+[TR][TD]Redis[/TD][TD]Cache for Economy & Chat[/TD][TD]Optional[/TD][TD]✅ Highly[/TD][/TR]
+[TR][TD]PostgreSQL[/TD][TD]Optional economy backend[/TD][TD]Optional[/TD][TD]Optional[/TD][/TR]
+[/TABLE]
+Full guides available in the wiki:
+Cross-Server Sync Setup
+RabbitMQ on Pterodactyl (egg included)
+MongoDB + Redis Setup
+Global Chat Example
+
+[CODE][Survival] [VIP] Elias: Hello from Server 1!
+[Creative] [Admin] Sarah: Hey from Server 2![/CODE]
+Private channels in chat-format.yml:
+[CODE=yaml]channels:
+  staff:
+    format: "&c[Staff] {player}: &f{message}"
+    permission: "oreo.chat.staff"[/CODE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ Configuration Highlights
+• Chat Format System — MiniMessage, per-rank formats, Discord webhooks, full cross-server sync
+• Auction House — categories, fees, listing duration, Discord notifications, all in auctionhouse/settings.yml
+• Market / Orders — escrow fees, fill fees, currency picker, cross-server in orders/settings.yml
+• TabList — Animated headers/footers, per-world layouts
+• EnderChest — Tier rows via oreo.tier.vip, etc.
+• RTP — Safe spawn search, tier-based distances
+• TempFly — Configurable units, auto-land, balance deduction
+• Playtime Rewards — Milestone and repeatable reward definitions in playtime/rewards.yml
+• Alias Editor — aliases.yml + full GUI, no restart needed
+
+Permissions:
+Use oreo.* for full access, or per-command nodes.
+Tiers: oreo.tier.default, oreo.tier.vip, oreo.tier.mvp
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ Performance
+Built for speed:
+• Java 21 optimized
+• Fully asynchronous I/O across all modules
+• Redis caching layer for economy and player lookups
+• Thread-safe operations throughout
+• Debounced live GUI refresh — events batched before re-rendering
+• Atomic MongoDB writes — no race conditions in AH or Market
+• Tested on Paper / Purpur / Folia
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Plugin Comparison — OreoEssentials vs Others
+[TABLE]
+[TR][TH]Feature[/TH][TH]🍪 OreoEssentials[/TH][TH]⚡ ZEssentials[/TH][TH]⚙️ EssentialsX[/TH][TH]🔧 CMI[/TH][TH]☀️ SunLight[/TH][/TR]
+
+[TR][TD][B]── ECONOMY ──[/B][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][/TR]
+[TR][TD]Vault Economy Support[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes + internal[/TD]
+    [TD]✅ Yes[/TD][/TR]
+[TR][TD]Custom Multiple Currencies[/TD]
+    [TD]✅ Unlimited, fully cross-server[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Cross-Server Economy Sync[/TD]
+    [TD]✅ Redis cache + MongoDB/PostgreSQL[/TD]
+    [TD]⚠️ Shared DB, no real-time sync[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ Local MySQL only[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Economy Storage Backends[/TD]
+    [TD]✅ MongoDB, PostgreSQL, Redis cache[/TD]
+    [TD]⚠️ MySQL/SQLite[/TD]
+    [TD]⚠️ Flat file / MySQL[/TD]
+    [TD]⚠️ MySQL / SQLite[/TD]
+    [TD]⚠️ Basic[/TD][/TR]
+
+[TR][TD][B]── MARKETPLACE ──[/B][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][/TR]
+[TR][TD]Auction House[/TD]
+    [TD]✅ Full-featured, cross-server live sync[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]⚠️ Local server only[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]AH — Live GUI Updates (real-time)[/TD]
+    [TD]✅ RabbitMQ push, zero flicker[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]AH — Item Categories + Search[/TD]
+    [TD]✅ 10 auto-detected categories + name search[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]AH — Custom Item Support (IA/Nexo)[/TD]
+    [TD]✅ Textures correct on every server[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]AH — Fees, Tax, Listing Duration[/TD]
+    [TD]✅ Fully configurable[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Buy Order Market (demand-side)[/TD]
+    [TD]✅ Escrow orders, cross-server fill[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Sell GUI[/TD]
+    [TD]✅ Drag-and-drop, IA/Nexo support[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]⚠️ /sell hand only[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]⚠️ Basic[/TD][/TR]
+[TR][TD]Shop GUI[/TD]
+    [TD]✅ Custom currencies + Vault[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]❌ No[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]⚠️ Basic[/TD][/TR]
+
+[TR][TD][B]── CHAT ──[/B][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][/TR]
+[TR][TD]Chat Channels (scoped)[/TD]
+    [TD]✅ ALL / WORLD / RANGE / SERVER / SHARD[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]⚠️ Basic local channels[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Cross-Server Global Chat[/TD]
+    [TD]✅ Real-time via RabbitMQ[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Per-Rank Chat Formats[/TD]
+    [TD]✅ Per LuckPerms group, per channel[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]⚠️ Via PAPI only[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]⚠️ Basic[/TD][/TR]
+[TR][TD]MiniMessage / Adventure Text[/TD]
+    [TD]✅ Full MiniMessage, gradients, hover, click[/TD]
+    [TD]❌ Legacy only[/TD]
+    [TD]❌ Legacy only[/TD]
+    [TD]❌ Legacy only[/TD]
+    [TD]⚠️ Partial[/TD][/TR]
+[TR][TD]Item-in-Chat ([item])[/TD]
+    [TD]✅ Hover display, IA/Nexo support[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Discord Webhook Bridge[/TD]
+    [TD]✅ Per-channel webhooks + AH sale alerts[/TD]
+    [TD]❌ No[/TD]
+    [TD]⚠️ Separate addon required[/TD]
+    [TD]⚠️ Basic webhook[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Mute System[/TD]
+    [TD]✅ Timed, persistent, cross-server broadcast[/TD]
+    [TD]⚠️ Local only[/TD]
+    [TD]⚠️ Local only[/TD]
+    [TD]✅ Local only[/TD]
+    [TD]⚠️ Basic[/TD][/TR]
+[TR][TD]Private Messaging (/msg /reply)[/TD]
+    [TD]✅ Cross-server delivery[/TD]
+    [TD]⚠️ Local only[/TD]
+    [TD]⚠️ Local only[/TD]
+    [TD]✅ Local only[/TD]
+    [TD]⚠️ Local only[/TD][/TR]
+
+[TR][TD][B]── TELEPORTATION ──[/B][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][/TR]
+[TR][TD]Homes (cross-server)[/TD]
+    [TD]✅ MongoDB sync, access from any server[/TD]
+    [TD]⚠️ Shared SQL, no real-time sync[/TD]
+    [TD]❌ Local only[/TD]
+    [TD]❌ Local MySQL only[/TD]
+    [TD]❌ Local only[/TD][/TR]
+[TR][TD]Admin Warps (cross-server)[/TD]
+    [TD]✅ Network-wide, GUI browser[/TD]
+    [TD]⚠️ Shared DB only[/TD]
+    [TD]❌ Local only[/TD]
+    [TD]❌ Local only[/TD]
+    [TD]❌ Local only[/TD][/TR]
+[TR][TD]Player Warps (cross-server)[/TD]
+    [TD]✅ Player-created, full network visibility[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No (addon required)[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]TPA / TPHere (cross-server)[/TD]
+    [TD]✅ Cross-server requests via RabbitMQ[/TD]
+    [TD]❌ Local only[/TD]
+    [TD]❌ Local only[/TD]
+    [TD]❌ Local only[/TD]
+    [TD]❌ Local only[/TD][/TR]
+[TR][TD]Random Teleport (RTP)[/TD]
+    [TD]✅ Safe search, tier-based radius[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]❌ No[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]⚠️ Basic[/TD][/TR]
+
+[TR][TD][B]── PLAYER FEATURES ──[/B][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][/TR]
+[TR][TD]TempFly (timed flight)[/TD]
+    [TD]✅ Cross-server, auto-land, configurable[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No (/fly is toggle only)[/TD]
+    [TD]✅ Local only[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Playtime Rewards (milestones)[/TD]
+    [TD]✅ One-time + repeatable milestones[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Daily Rewards[/TD]
+    [TD]✅ Configurable cooldown + GUI claim[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Player Vaults[/TD]
+    [TD]✅ Cross-server sync, tier-based rows[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ Needs separate addon[/TD]
+    [TD]✅ Local only[/TD]
+    [TD]⚠️ Basic[/TD][/TR]
+[TR][TD]Kits & Cooldowns[/TD]
+    [TD]✅ Unlimited kits, permissions, GUI browser[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes[/TD][/TR]
+[TR][TD]Player Inventory / EC / State Sync[/TD]
+    [TD]✅ Inv + EC + Health + EXP + Hunger + Potions[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Sit Command[/TD]
+    [TD]✅ Smart offset for stairs/slabs[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Walk Speed / Fly Speed[/TD]
+    [TD]✅ Permission-gated per level[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]⚠️ Basic[/TD][/TR]
+[TR][TD]Effect Commands[/TD]
+    [TD]✅ Apply / remove, timed or permanent[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]⚠️ Basic[/TD][/TR]
+[TR][TD]Disenchant[/TD]
+    [TD]✅ Configurable cost[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]❌ No[/TD][/TR]
+
+[TR][TD][B]── MODERATION ──[/B][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][/TR]
+[TR][TD]Ban / Tempban[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes[/TD][/TR]
+[TR][TD]Mute / Tempmute (cross-server)[/TD]
+    [TD]✅ Cross-server sync via RabbitMQ[/TD]
+    [TD]⚠️ Local only[/TD]
+    [TD]⚠️ Local only[/TD]
+    [TD]✅ Local only[/TD]
+    [TD]⚠️ Local only[/TD][/TR]
+[TR][TD]Jail System[/TD]
+    [TD]✅ Named jails, configurable[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]God Mode / Vanish[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]⚠️ Basic[/TD][/TR]
+[TR][TD]Inventory Inspection (/invsee)[/TD]
+    [TD]✅ Live view[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]❌ No[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Cross-Server ModGUI[/TD]
+    [TD]✅ Moderate entire network from one GUI[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD][/TR]
+
+[TR][TD][B]── ADMIN TOOLS ──[/B][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][/TR]
+[TR][TD]Holograms[/TD]
+    [TD]✅ Multi-line + PAPI[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Alias Editor (runtime command creator)[/TD]
+    [TD]✅ GUI + conditions + cooldowns + logic[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]⚠️ Basic /cmi command system[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Maintenance Mode[/TD]
+    [TD]✅ Permission bypass, custom message[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Scoreboard / BossBar[/TD]
+    [TD]✅ PAPI, animated, per-world[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]❌ No (needs addon)[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]⚠️ Basic[/TD][/TR]
+[TR][TD]Tab List (header/footer)[/TD]
+    [TD]✅ Animated, PAPI, per-world[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]❌ No (needs addon)[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]⚠️ Basic[/TD][/TR]
+[TR][TD]Portals & JumpPads[/TD]
+    [TD]✅ Cuboid portals, particle launch pads[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Custom Crafting System[/TD]
+    [TD]✅ GUI editor + ItemsAdder support[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Command Toggle[/TD]
+    [TD]✅ Enable/disable any command at runtime[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Data Import (EssX / ZEssentials)[/TD]
+    [TD]✅ Built-in import commands[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ N/A[/TD]
+    [TD]⚠️ Partial[/TD]
+    [TD]❌ No[/TD][/TR]
+
+[TR][TD][B]── CROSS-SERVER INFRASTRUCTURE ──[/B][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][/TR]
+[TR][TD]RabbitMQ Real-Time Messaging[/TD]
+    [TD]✅ Built-in across all modules[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Redis Caching Layer[/TD]
+    [TD]✅ Economy + player lookups[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]MongoDB (Native Async Driver)[/TD]
+    [TD]✅ Atomic writes, async, all modules[/TD]
+    [TD]⚠️ Basic/partial[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]Cross-Server Trading[/TD]
+    [TD]✅ GUI trade between different servers[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ Local only[/TD]
+    [TD]❌ No[/TD][/TR]
+
+[TR][TD][B]── INTEGRATIONS ──[/B][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][/TR]
+[TR][TD]ItemsAdder / Nexo / Oraxen Support[/TD]
+    [TD]✅ AH, Market, Shop, Kits, Chat, Crafting[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]⚠️ Partial[/TD]
+    [TD]❌ No[/TD][/TR]
+[TR][TD]LuckPerms Integration[/TD]
+    [TD]✅ Groups in chat, per-rank formats[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]⚠️ Basic[/TD][/TR]
+[TR][TD]PlaceholderAPI (custom expansions)[/TD]
+    [TD]✅ 46+ placeholders, 2 expansions[/TD]
+    [TD]⚠️ Partial[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]⚠️ Limited[/TD][/TR]
+[TR][TD]MythicMobs Integration[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]❌ No[/TD]
+    [TD]❌ No[/TD]
+    [TD]⚠️ Partial[/TD]
+    [TD]❌ No[/TD][/TR]
+
+[TR][TD][B]── GENERAL ──[/B][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][TD][/TD][/TR]
+[TR][TD]Modern GUIs (SmartInventories)[/TD]
+    [TD]✅ Every feature has a GUI[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]❌ Minimal[/TD]
+    [TD]✅ Has GUIs[/TD]
+    [TD]❌ Minimal[/TD][/TR]
+[TR][TD]Localization (lang.yml per module)[/TD]
+    [TD]✅ Full lang.yml per module[/TD]
+    [TD]⚠️ Partial[/TD]
+    [TD]⚠️ Basic[/TD]
+    [TD]✅ Yes[/TD]
+    [TD]⚠️ Minimal[/TD][/TR]
+[TR][TD]Performance (Java 21 / Async I/O)[/TD]
+    [TD]✅ Fully async, thread-safe, debounced GUIs[/TD]
+    [TD]⚙️ Standard[/TD]
+    [TD]⚙️ Standard[/TD]
+    [TD]⚠️ Heavy — known startup lag[/TD]
+    [TD]⚙️ Lightweight[/TD][/TR]
+[TR][TD]Open Source[/TD]
+    [TD]✅ 100% Open Source[/TD]
+    [TD]❌ Closed source[/TD]
+    [TD]✅ Open Source[/TD]
+    [TD]❌ Closed source[/TD]
+    [TD]✅ Open Source[/TD][/TR]
+[TR][TD]Replaces plugins[/TD]
+    [TD]✅ 10+ plugins replaced[/TD]
+    [TD]⚙️ ~5 plugins[/TD]
+    [TD]⚙️ ~5 plugins[/TD]
+    [TD]⚙️ ~8 plugins[/TD]
+    [TD]⚙️ ~4 plugins[/TD][/TR]
+[TR][TD]Price[/TD]
+    [TD]✅ €5[/TD]
+    [TD]❌ €19.99[/TD]
+    [TD]✅ FREE[/TD]
+    [TD]❌ ~$28[/TD]
+    [TD]✅ FREE[/TD][/TR]
+[/TABLE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Official Partners
+Trusted services we recommend for OreoEssentials users
+NEED A POWERFUL HOSTING PROVIDER?
+Reliable & well-known Minecraft hosting provider
+[ATTACH=full]938739[/ATTACH]
+MineStrator is now the hosting provider we officially recommend if you want to test our plugins, host your projects, or run a production server.
+✅ Fast setup
+✅ Stable infrastructure
+✅ Perfect for modern networks (databases, proxies, cross-server setups)
+10% OFF for Oreo Studios users
+Use our partner code at checkout:
+OREOSTUDIOS
+Click here to get started with MineStrator
+Thank you MineStrator for the trust • Thank you for supporting Oreo Studios ❤️
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❓ Why OreoEssentials?
+
+✅ Open Source
+✅ Fully Cross-Server
+✅ Replaces CMI / EssentialsX / ZEssentials
+✅ Built-in Auction House + Market — no extra plugins needed
+✅ Built for Networks — designed from the ground up for multi-server setups
+✅ Backed by Oreo Studios
+
+Important Links
+Wiki & Documentation
+Discord Support
+Support the Project
+Developed by Oreo Studios
+☁️ MongoDB, Redis, RabbitMQ • Vault, PlaceholderAPI, Smart Inventories, LuckPerms
+[ATTACH=full]938742[/ATTACH]
+Transform your Minecraft network with true cross-server synchronization

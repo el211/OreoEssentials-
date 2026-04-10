@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>UltimateChristmas — Snow Effect Settings | OreoStudios Wiki</title>
+<meta name="description" content="Global snow overlay with player bias and ground placement rules: roof respect, blocked WorldGuard regions, density, radius, cooldowns."/>
+<link rel="icon" type="image/png" href="/logo.png" sizes="256x256"/>
+<link rel="stylesheet" href="/styles.css"/><link rel="stylesheet" href="/wiki/_docs.css"/>
+<link rel="canonical" href="https://oreostudio.store/wiki/uc-snow.html"/>
+</head>
+<body class="with-sidebar">
+<header class="nav">
+  <a class="brand" href="/" aria-label="OreoStudios Home">
+    <img class="logo" src="/logo.png" alt=""><span class="brand-text">Oreo<span class="accent">Studios</span></span>
+  </a>
+  <nav>
+    <a href="/index.html#services">Services</a>
+    <a href="/backend.html">Backend</a>
+    <a href="/oreoessentials.html">OreoEssentials</a>
+    <a href="/hosting.html">Hosting</a>
+    <a href="/wiki/index.html" aria-current="page">Wiki</a>
+    <a href="/index.html#contact" class="btn">Contact</a>
+  </nav>
+  <button id="menu" aria-label="Open menu">☰</button>
+</header>
+
+<main class="docs">
+  <aside class="docs-sidebar">
+    <div class="docs-brand"><img src="/logo.png" alt=""><div>Oreo<span class="accent">Studios</span> Wiki</div></div>
+    <nav class="docs-tree">
+      <div class="docs-section">UltimateChristmas</div>
+      <a href="/wiki/uc-installation.html">🎄 Installation & Setup</a>
+      <a href="/wiki/uc-commands.html">📘 Commands & Permissions</a>
+      <a href="/wiki/uc-shards.html">💎 Shards Economy</a>
+      <a href="/wiki/uc-shardshop.html">🛍️ ShardShop</a>
+      <a href="/wiki/uc-snowball.html">❄️ Snowball Event</a>
+      <a href="/wiki/uc-advent.html">🗓️ Advent Calendar</a>
+      <a href="/wiki/uc-santa.html">🎅 Santa Event</a>
+      <a href="/wiki/uc-snow.html" aria-current="page">🌨️ Snow Effect</a>
+      <a href="/wiki/uc-grinch.html">💚 Grinch Boss</a>
+    </nav>
+  </aside>
+
+  <section class="docs-content">
+    <h1>🌨️ Snow Effect Settings</h1>
+    <p>The snow system has two parts:</p>
+    <ol>
+      <li><strong>Overlay</strong> (visual particles around players, with “pre-snow” bias in their look direction).</li>
+      <li><strong>Ground placement</strong> (thin snow layers) with safety rules (roof respect, WG region blocklist, safe rings).</li>
+    </ol>
+
+    <h2 class="gradient-text">YAML Configuration</h2>
+    <pre><code># ❄ Snow effect settings
+snow:
+  enabled: true
+  apply-to-all-players: true        # auto-enable for everyone online
+  keep-snow-on-disable: true        # keep thin layers when a player disables the effect
+  radius: 24                        # horizontal radius around the player
+  density: 40                       # particle burst per tick slice (visual only)
+  duration: 0                       # 0 = infinite (seconds per player)
+  no-snow-near-player-radius: 1.5   # safe ring around feet
+  no-snow-near-entity-radius: 1.25  # avoid placing near interactables/Santa
+
+  presnow:
+    bias-front: true
+    lookahead-factor: 0.66          # 0.0..2.0 how much to bias ahead
+
+  # Ground placement rules
+  respect-roof: true                # no ground snow if player under a ceiling
+  blocked-wg-regions:               # particles still show here; only ground snow is blocked
+    - santa_zone
+    # - market
+    # - spawn</code></pre>
+
+    <h2 class="gradient-text">Key Options</h2>
+    <ul>
+      <li><code>enabled</code>: master toggle for the system.</li>
+      <li><code>apply-to-all-players</code>: auto-on globally; set false to only allow opt-in via <code>/snow me on</code>.</li>
+      <li><code>keep-snow-on-disable</code>: if true, turning the system off won’t clean up existing thin layers.</li>
+      <li><code>radius</code>: horizontal effect radius around each player; increase carefully for performance.</li>
+      <li><code>density</code>: purely visual particle volume.</li>
+      <li><code>duration</code>: seconds per player; 0 = infinite.</li>
+      <li><code>no-snow-near-player-radius</code>: prevents placement right at feet (avoid “clip”/annoyance).</li>
+      <li><code>no-snow-near-entity-radius</code>: keeps interactables (e.g., villagers/Santa) clear.</li>
+      <li><code>presnow.bias-front</code> &amp; <code>lookahead-factor</code>: bias overlay particles in the player’s facing direction (windlike feel).</li>
+      <li><code>respect-roof</code>: block ground placement when a solid ceiling is above the player.</li>
+      <li><code>blocked-wg-regions</code>: list of WorldGuard regions where <em>ground</em> snow is blocked (overlay still allowed).</li>
+    </ul>
+
+    <h2 class="gradient-text">Commands & Permissions</h2>
+    <table class="table">
+      <thead><tr><th>Command</th><th>Description</th><th>Permission</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>/snow on</code></td><td>Enable global snow overlay</td><td><code>ultimatechristmas.snow.admin</code></td><td>OP</td></tr>
+        <tr><td><code>/snow off</code></td><td>Disable global snow overlay</td><td><code>ultimatechristmas.snow.admin</code></td><td>OP</td></tr>
+        <tr><td><code>/snow radius &lt;blocks&gt;</code></td><td>Set effect radius</td><td><code>ultimatechristmas.snow.admin</code></td><td>OP</td></tr>
+        <tr><td><code>/snow density &lt;0..100&gt;</code></td><td>Set particle density</td><td><code>ultimatechristmas.snow.admin</code></td><td>OP</td></tr>
+        <tr><td><code>/snow reload</code></td><td>Reload snow config</td><td><code>ultimatechristmas.snow.admin</code></td><td>OP</td></tr>
+        <tr><td><code>/snow me &lt;on|off&gt;</code></td><td>Player-level toggle (if allowed)</td><td><code>ultimatechristmas.snow.player</code></td><td>true</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="gradient-text">Tips</h2>
+    <ul>
+      <li>Keep <code>radius</code> modest (16–32) for crowded hubs.</li>
+      <li>Use <code>blocked-wg-regions</code> for markets/parkours to avoid grief-like layering.</li>
+      <li><code>respect-roof</code> improves immersion (no snow indoors).</li>
+    </ul>
+
+    <div class="prevnext">
+      <a href="/wiki/uc-santa.html">← Previous: Santa Event</a>
+      <a href="/wiki/uc-grinch.html">Next: Grinch Boss →</a>
+    </div>
+  </section>
+</main>
+
+<footer class="footer"><p>© <span id="y"></span> OreoStudios — Docs.</p></footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>

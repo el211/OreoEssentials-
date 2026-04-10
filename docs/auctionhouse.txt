@@ -1,0 +1,790 @@
+# Auction House
+
+The **Auction House** module is a full-featured player-to-player marketplace built into OreoEssentials. Players list items for sale, other players buy them, and everything is synchronized in real time across every server in the network via RabbitMQ.
+
+---
+
+## Concept
+
+Unlike a shop (where admins define fixed prices), the Auction House is entirely player-driven:
+
+- A **seller** holds an item, runs `/ahs`, picks a currency and a price, and the item is publicly listed.
+- Any other player browsing the Auction House can **purchase** the listing instantly.
+- If a listing is not purchased within its configured duration, it **expires** and the seller can reclaim the item.
+- Sellers can **cancel** an active listing at any time to get the item back.
+- All money flows through the economy system — the buyer pays, the seller receives (minus an optional tax).
+
+---
+
+## Commands
+
+| Command | Aliases | Description |
+|---|---|---|
+| `/ah` | `/auctionhouse` | Opens the Auction House browser GUI |
+| `/ahs [price] [duration]` | `/ahsell` | Sells the item in your main hand |
+| `/ahsearch <keyword...>` | `/ahs-search` | Opens the browser pre-filtered by a keyword |
+| `/ahexpired` | — | Opens your expired listings so you can reclaim them |
+| `/ahsold` | — | Opens your sold items history |
+| `/ahadmin` | — | Admin sub-commands (reload, save, clear) |
+
+### `/ahs` — Sell Command in Detail
+
+- **`/ahs` (no arguments)** — Opens the **Currency Picker GUI**. You choose Vault or a custom currency, then type the price in chat.
+- **`/ahs <price>`** — Skips the picker, uses Vault. Opens the Sell GUI directly at the given price.
+- **`/ahs <price> <duration>`** — Same as above but sets a custom duration in hours (up to `max-duration-hours`).
+
+### `/ahadmin` Sub-Commands
+
+| Sub-Command | Description |
+|---|---|
+| `/ahadmin reload` | Reloads all config files (config.yml, categories.yml, messages.yml, gui.yml) |
+| `/ahadmin save` | Force-saves all active auctions to storage immediately |
+| `/ahadmin clear` | Starts a two-step deletion of ALL active auctions (must confirm within 15 seconds) |
+| `/ahadmin clear confirm` | Confirms the clear operation |
+
+The `clear` sub-command has a built-in safety gate: typing `/ahadmin clear` alone shows a warning and gives 15 seconds to confirm. If you do not type `/ahadmin clear confirm` within that window, the request expires and you must start again.
+
+---
+
+## Permissions
+
+| Permission | Default | Description |
+|---|---|---|
+| `oreo.ah.use` | `true` | Open the browser (`/ah`), view expired (`/ahexpired`), view sold (`/ahsold`) |
+| `oreo.ah.sell` | `true` | List items for sale (`/ahs`) |
+| `oreo.ah.admin` | `op` | Use `/ahadmin` sub-commands |
+| `oreo.ah.bypass` | `op` | Bypass all category restrictions |
+| `oreo.ah.category.*` | `op` | Access all categories |
+| `oreo.ah.category.<name>` | see below | Access a specific category (e.g. `oreo.ah.category.weapons`) |
+
+### Category Permissions
+
+Each category can optionally require a permission node. The default is open to all. The permission node for a category follows the pattern `oreo.ah.category.<category_name_lowercase>`.
+
+Players with `oreo.ah.bypass` or `oreo.ah.category.*` skip all per-category checks.
+
+---
+
+## GUI Overview
+
+The Auction House has several interconnected GUI screens.
+
+### 1. Browser (`/ah`)
+
+The main listing screen — a 6-row chest GUI showing all active listings from all players (on all servers in cross-server mode).
+
+**Layout:**
+- Slots 0–8 (row 0): border + balance head at slot 4
+- Slots 9–44 (rows 1–4): auction listings (up to **28 per page**)
+- Slots 45–53 (row 5): navigation bar
+
+**Listing icon lore** (appended below the item's original lore):
+```
+Seller: <name>
+Price: <formatted amount>
+Currency: <id>          ← only shown for custom currencies
+Time Left: <hh:mm:ss>
+Category: <name>
+ItemsAdder Item         ← only shown for custom-item plugins
+Click to purchase!      ← or "YOUR LISTING — click to manage" if it's yours
+```
+
+**Navigation bar (row 5):**
+- Slot 48 — Previous Page (arrow)
+- Slot 49 — Page indicator (paper)
+- Slot 50 — Next Page (arrow)
+- Slot 45 — Clear Search (only visible when a search filter is active)
+- Slot 46 — Categories (compass) when no category filter; Back to All (barrier) when a category is active
+- Slot 52 — Your Listings (chest) — goes to Manage GUI
+- Slot 53 — Close
+
+**Clicking a listing:**
+- If it is **your own listing** → opens Manage GUI.
+- If it is **someone else's listing** → opens Confirm Purchase GUI.
+
+**Balance head (slot 4, row 0):**
+Always visible in the top-center. Shows your current Vault balance and number of active listings at a glance.
+
+**Search filter:**
+The browser can be opened pre-filtered. When a search query is active, only auctions whose item type, display name, lore, seller name, or custom item ID contains the query (case-insensitive) are shown. The "Clear Search" button removes the filter.
+
+**Category filter:**
+When accessed through the Category GUI, the title and listings are filtered to that category only. The "Back to All" button removes the filter.
+
+---
+
+### 2. Category Browser
+
+Accessed from the Categories button in the main browser.
+
+Shows one button per enabled category, with:
+- The category icon (configurable in `categories.yml`)
+- Item count: how many active listings are in that category right now
+- Your permission status (shows "No permission!" if you lack `oreo.ah.category.<name>`)
+
+Clicking a category opens the browser filtered to that category.
+
+---
+
+### 3. Sell Flow
+
+When a player runs `/ahs` (no arguments), the sell flow is:
+
+#### Step 1 — Currency Picker (3-row GUI)
+
+Shows one button per available payment method:
+- **Gold Ingot** — Vault (server's primary economy). Name shows the economy plugin's name.
+- **Sunflower** per custom currency — one button per currency registered in OreoEssentials' Currency module, showing currency display name, symbol, and ID.
+
+Clicking a currency:
+1. Closes the GUI.
+2. Stores the selected currency and item in a **pending sell record** (`pendingSells` map, keyed by player UUID).
+3. Sends the player a chat prompt: `"Type the listing price in chat:"`.
+
+The player then types the price in chat. This is intercepted by the chat listener. On valid input, the Sell GUI opens.
+
+When `/ahs <price>` is used with explicit arguments, the Currency Picker is skipped entirely and the Sell GUI opens immediately using Vault.
+
+#### Step 2 — Sell GUI / Category Selection (6-row GUI)
+
+Shows:
+- **Top-center preview** of the item being listed (with price/duration/category in lore).
+- **One button per enabled category** at their configured slots — the player selects which category the item belongs to. The auto-detected category is pre-selected (highlighted with an enchantment glow).
+- **Confirm button** — lists the item and removes it from the player's hand.
+- **Cancel button** — closes without listing.
+
+If a category requires a permission the player does not have, clicking it plays the villager "no" sound and does nothing.
+
+The confirm button lore shows:
+```
+Item: <material>
+Price: <formatted>
+Currency: <name>
+Duration: <hours> hours
+Category: <name>
+Click to list!
+```
+
+On confirm:
+1. The item is taken from the player's main hand.
+2. `createAuction()` is called. If the listing fee is non-zero, it is deducted immediately.
+3. A success sound plays (note block pling).
+4. The listing broadcasts to RabbitMQ for cross-server sync.
+5. A Discord notification fires asynchronously (if enabled).
+
+---
+
+### 4. Confirm Purchase GUI (3-row GUI)
+
+Shown when clicking someone else's listing.
+
+**Center slot** — item preview with seller name, price, and time remaining.
+
+**Slot 11** — Confirm Purchase button (green wool). Lore shows:
+```
+You will pay: <price>
+Your balance: <current balance>
+Click to confirm!
+```
+
+**Slot 15** — Cancel (red wool). Goes back to the category browser.
+
+**Slot 22** — Info panel (paper). Explains what will happen:
+- Item added to inventory
+- Money deducted from balance
+- Seller receives payment
+- Transaction cannot be reversed
+
+On confirm:
+1. Buyer's balance is checked. If insufficient → error message.
+2. `purchaseAuction()` is called (see Purchase Flow below).
+3. Success sound (note block pling) on success; villager "no" sound on failure.
+
+---
+
+### 5. Manage GUI (Your Listings)
+
+Accessed via "Your Listings" from the browser, or by clicking your own listing.
+
+Shows all your **active** listings (up to 28 per page). Each listing icon shows:
+- Original item lore
+- Price and time remaining
+- `Left-Click: Cancel`
+- `Right-Click: View in Browse`
+
+**Top-center statistics** (book item):
+- Active count
+- Sold count
+- Expired count
+
+**Bottom row:**
+- Slot 46 — Expired (`<count>`) — opens Expired GUI (inactive if count = 0)
+- Slot 49 — Back to browser
+- Slot 52 — Sold (`<count>`) — opens Sold GUI (inactive if count = 0)
+
+---
+
+### 6. Expired GUI
+
+Accessible from Manage GUI or via `/ahexpired`.
+
+Shows all your **expired** listings (items that were not purchased in time).
+
+Each expired item shows:
+- Original item lore
+- Was priced at: `<price>`
+- Expired `<time ago>`
+- `Click to reclaim!`
+
+**Reclaim All** button — reclaims every expired item at once (shows count in button name).
+
+Reclaiming adds the item to the player's inventory directly.
+
+---
+
+### 7. Sold GUI
+
+Accessible from Manage GUI or via `/ahsold`.
+
+Shows your **sold** listings (history). These are read-only.
+
+Each sold item shows:
+- Original lore
+- Sold to: `<buyer name>`
+- Price received
+- How long ago it sold
+- Shortened listing ID (first 8 chars)
+
+**Top-center statistics** (emerald):
+- Total items sold
+- Total money earned
+- Average sale price
+
+---
+
+## Listing a Item — Full Flow
+
+1. Player holds item in main hand and types `/ahs`.
+2. Currency Picker GUI opens. Player selects Vault or a custom currency.
+3. GUI closes. Player types the price in chat. Chat listener intercepts the message, parses the price.
+4. Sell GUI opens with the item preview and auto-detected category selected.
+5. Player optionally picks a different category, then clicks **Confirm**.
+6. On confirm:
+   a. Validation: is the player online? Does the item still match? Is the price within `min-price`/`max-price`? Is the duration within `max-duration-hours`? Has the player hit `max-per-player`?
+   b. If a **listing fee** is configured (flat or percent), it is deducted from the player's balance now. If the player cannot afford the fee, the listing is aborted.
+   c. The item is taken from the player's main hand.
+   d. An `Auction` object is created with a UUID, stored in the in-memory list and persisted to storage.
+   e. An `AuctionSyncPacket` of type `CREATE` is broadcast to RabbitMQ.
+   f. Other servers receive the packet and add the auction to their in-memory cache, then refresh all browser viewers.
+   g. A Discord webhook notification fires asynchronously (if enabled).
+
+---
+
+## Purchasing a Listing — Full Flow
+
+1. Buyer clicks a listing in the browser → Confirm Purchase GUI.
+2. Buyer clicks Confirm.
+3. On confirm:
+   a. The auction is looked up by ID in the in-memory cache. If it no longer exists (already sold or cancelled) → error.
+   b. The buyer cannot purchase their own listing → error.
+   c. Buyer's balance (in the appropriate currency) is checked. If insufficient → error.
+   d. Buyer's balance is withdrawn.
+   e. Seller's payment is calculated: `price × (1 - taxPercent/100)`. This net amount is deposited to the seller.
+   f. The item is given to the buyer (or dropped at their feet if inventory is full).
+   g. The auction is marked as SOLD in memory and storage, with buyer UUID/name and sold timestamp.
+   h. If the seller is currently online on the same server, they receive a notification message.
+   i. An `AuctionSyncPacket` of type `PURCHASE` is broadcast — all other servers remove the listing from their cache and refresh browser viewers.
+   j. A Discord webhook fires for the sale (if enabled).
+
+---
+
+## Expiration System
+
+A background task runs every **60 seconds** and scans all active auctions.
+
+If `System.currentTimeMillis() >= auction.getExpirationTime()`, the auction is marked as EXPIRED.
+
+Expired auctions:
+- Are removed from the active listing cache and storage.
+- Stay in the seller's **expired list** until the seller reclaims them via the Expired GUI.
+- An `AuctionSyncPacket` of type `EXPIRE` is broadcast so other servers remove the listing from their browser.
+
+The seller reclaims the item by clicking it in the Expired GUI. The item is given directly to their inventory. The expired record is then deleted from storage.
+
+---
+
+## Cancellation Flow
+
+From the Manage GUI, left-clicking a listing cancels it:
+
+1. The auction is removed from the active list in memory and storage.
+2. The item is returned to the seller's inventory (or dropped at their feet if full).
+3. **No refund of listing fee** — the fee is non-refundable once the item is listed.
+4. An `AuctionSyncPacket` of type `CANCEL` broadcasts to all servers.
+5. Other servers remove the listing from their browser cache and refresh viewers.
+
+---
+
+## Economy & Currency
+
+The Auction House supports two currency types per listing:
+
+| Type | How It Works |
+|---|---|
+| Vault | Standard server economy. Buyer's `eco.withdrawPlayer()` and seller's `eco.depositPlayer()` are called. |
+| Custom Currency | OreoEssentials CurrencyService is used. Each currency has an ID, display name, and symbol. |
+
+**Each listing stores its own currency.** A listing in "tokens" can only be purchased by a buyer who has enough tokens. Vault listings can only be purchased with Vault balance. The two are never mixed.
+
+The currency picker GUI shows only the currencies that are currently registered. If the CurrencyService is not available (no Currency module), only the Vault option is shown.
+
+In the browser lore, the `Currency:` line is only shown for non-Vault listings. Vault listings show only the price.
+
+---
+
+## Fees & Tax
+
+Three optional fee settings exist in `config.yml`:
+
+```yaml
+fees:
+  listing-percent: 0.0   # % of price charged to seller at listing time
+  listing-flat: 0.0      # flat amount charged to seller at listing time
+  tax-percent: 0.0       # % deducted from seller's payout when item sells
+```
+
+### Listing Fee (charged at listing time)
+
+When a player lists an item, the listing fee is calculated as:
+
+```
+fee = price × (listing-percent / 100) + listing-flat
+```
+
+- Deducted immediately when the player clicks Confirm in the Sell GUI.
+- If the player cannot afford the fee, the listing is aborted and the item is not taken.
+- **Not refunded** if the listing is cancelled or expires.
+
+### Tax (charged at sale time)
+
+When an item sells, the tax is deducted from the seller's gross payout:
+
+```
+seller_receives = price × (1 - tax-percent / 100)
+```
+
+Example: if `tax-percent: 5.0` and an item sells for $1,000, the seller receives $950.
+
+Both fees can be active simultaneously. A listing fee of 1% and a tax of 5% means the seller pays $10 upfront to list a $1,000 item and receives $950 when it sells.
+
+---
+
+## Categories
+
+The Auction House has 10 built-in categories:
+
+| Category | Default Icon | Auto-Detection |
+|---|---|---|
+| ALL | Chest | (virtual — shows everything) |
+| BLOCKS | Grass Block | STONE, DIRT, SAND, GLASS, WOOL, CONCRETE, etc. |
+| TOOLS | Diamond Pickaxe | PICKAXE, AXE, SHOVEL, HOE, SHEARS, FISHING_ROD |
+| WEAPONS | Diamond Sword | SWORD, BOW, CROSSBOW, TRIDENT, AXE |
+| ARMOR | Diamond Chestplate | HELMET, CHESTPLATE, LEGGINGS, BOOTS, SHIELD |
+| FOOD | Cooked Beef | Food items, potions |
+| POTIONS | Potion | POTION, SPLASH_POTION, LINGERING_POTION, TIPPED_ARROW |
+| SPAWNERS | Spawner | SPAWNER |
+| CUSTOM | Nether Star | Custom Model Data > 0, or ItemsAdder/Nexo/Oraxen items |
+| MISC | Paper | Anything that doesn't match above |
+
+**Auto-detection** happens when a player runs `/ahs`. The item in their hand is analyzed and the most appropriate category is pre-selected. The player can override this by clicking a different category in the Sell GUI.
+
+**Custom category** auto-detects items with a custom model data value above 0, or any item recognized by ItemsAdder, Nexo, or Oraxen. This makes all custom items automatically sort into their own category without extra configuration.
+
+### Configuring Categories (`categories.yml`)
+
+Each category section supports:
+
+```yaml
+weapons:
+  enabled: true
+  slot: 12
+  icon: DIAMOND_SWORD
+  display-name: "&c&lWeapons"
+  description:
+    - "&7Swords, bows, crossbows,"
+    - "&7tridents & more."
+  permission: oreo.ah.category.weapons   # optional; leave out for open access
+```
+
+- `enabled: false` hides the category from both the browser filter and the sell GUI.
+- `slot` controls where the button appears in the Category GUI and Sell GUI.
+- Permissions are optional per category. If `permission` is not set, any player can access it.
+
+---
+
+## Custom Items (ItemsAdder / Nexo / Oraxen)
+
+The Auction House fully supports all three major custom item plugins.
+
+**On listing:**
+- When the player holds an item, the module checks all three APIs (via reflection) to detect if it is a custom item.
+- If detected, the custom item ID (e.g. `my_pack:emerald_gem`) is stored alongside the Base64-serialized item.
+
+**On display:**
+- When building the listing icon in any GUI screen, the module first attempts to reconstruct the item using the custom ID through the plugin API. This ensures the correct texture and NBT data are shown even on servers that didn't originate the listing.
+
+**On purchase:**
+- The buyer receives the fully reconstructed item with all custom NBT intact.
+
+**In search:**
+- `/ahsearch` also matches against custom item IDs (ItemsAdder ID, Nexo ID, Oraxen ID), so players can search by custom item name.
+
+**In categories:**
+- Any item detected as a custom item is automatically assigned to the `CUSTOM` category.
+
+---
+
+## Search
+
+`/ahsearch <keyword...>` (minimum 2 characters) opens the browser with a filter applied.
+
+The search matches against (case-insensitive):
+- Item **material name** (e.g. `diamond_sword`)
+- Item **display name** (color codes stripped)
+- Item **lore lines** (color codes stripped)
+- **Seller name**
+- **ItemsAdder ID**
+- **Nexo ID**
+- **Oraxen ID**
+
+The search title changes to show the active query: `Search: <query>`.
+
+The "Clear Search" button (slot 45) removes the filter and returns to the normal browser.
+
+Category filter and search filter can be active simultaneously — the browser title reflects both.
+
+---
+
+## Live GUI Updates (Cross-Server)
+
+When any auction event happens (create, purchase, cancel, expire) on any server in the network, all players currently viewing the browser GUI see the update automatically — **without closing or reopening their inventory**.
+
+### How it works
+
+1. Server A performs an action (e.g. a listing is purchased).
+2. Server A updates its in-memory cache and broadcasts an `AuctionSyncPacket` via RabbitMQ.
+3. Every other server receives the packet and applies the change to their own in-memory cache.
+4. Each server calls `refreshAllBrowseViewers()`, which re-opens the browser GUI on the correct page for every player currently viewing it.
+
+The viewer registry is maintained per-server in a `ConcurrentHashMap`. Players are registered when they open BrowseGUI (`init()` calls `registerBrowseViewer`) and unregistered when they close any inventory (handled by `AHGuiListener` → `InventoryCloseEvent`).
+
+### Same-server echo suppression
+
+Each packet carries the `originServer` ID. When a server receives its own packet, it silently ignores it — the originating server already applied the change locally before broadcasting.
+
+---
+
+## Cross-Server Synchronization
+
+### Requirements
+
+- `cross_server` enabled in OreoEssentials core config
+- MongoDB as the storage backend (configured storage type `mongodb` or `auto` with MongoDB available)
+- Working RabbitMQ connection in core `config.yml`
+
+### Packet format (`AuctionSyncPacket`)
+
+| Action | Data Sent |
+|---|---|
+| `CREATE` | Full auction: ID, seller UUID/name, item (Base64), price, listedTime, expirationTime, category, itemsAdderID, nexoID, oraxenID, customModelData, currencyId |
+| `PURCHASE` | Auction ID, buyer UUID, buyer name |
+| `CANCEL` | Auction ID |
+| `EXPIRE` | Auction ID |
+
+- `CREATE` sends full data so the receiving server can reconstruct the `Auction` object without a database query.
+- `PURCHASE`, `CANCEL`, and `EXPIRE` send only the ID since the receiving servers just need to remove or update the cached entry.
+
+### Storage auto-selection
+
+`storage.type` in `config.yml` can be:
+
+| Value | Behavior |
+|---|---|
+| `auto` | Uses MongoDB if a connection is available; falls back to JSON file storage |
+| `mongodb` | Always uses MongoDB |
+| `json` | Always uses JSON file storage (single-server only) |
+
+JSON storage writes to `plugins/OreoEssentials/auctionhouse/auctions.json`. This file is human-readable but not suitable for multi-server setups since each server would have its own independent file.
+
+---
+
+## Storage
+
+### MongoDB (recommended for cross-server)
+
+```yaml
+storage:
+  type: mongodb
+  mongodb:
+    collection: oreo_auctions
+```
+
+- Uses the MongoDB URI from OreoEssentials core `config.yml`.
+- Each auction is one document in the collection.
+- Queries for active/expired/sold listings use indexed status fields.
+- The collection name is prefixed with the global collection prefix if configured.
+
+### JSON (single-server)
+
+```yaml
+storage:
+  type: json
+```
+
+- Stores all auctions in `auctionhouse/auctions.json`.
+- Loaded fully into memory on startup.
+- Auto-saved every **300 seconds** (5 minutes) by a repeating task.
+- Can be force-saved at any time with `/ahadmin save`.
+- Not suitable for cross-server networks.
+
+---
+
+## Limits
+
+```yaml
+listings:
+  min-price: 1.0
+  max-price: 1000000000.0
+  max-per-player: 10
+  default-duration-hours: 24
+  max-duration-hours: 168
+```
+
+- `min-price` and `max-price` are validated at listing creation time. Out-of-range prices produce an error message.
+- `max-per-player` is the maximum number of **active** listings a single player can have simultaneously. Reaching this limit blocks new listings until some are purchased, cancelled, or expired.
+- `default-duration-hours` is used when no duration argument is given.
+- `max-duration-hours` caps the duration even if a player specifies a higher value via `/ahs <price> <duration>`.
+
+---
+
+## Discord Webhooks
+
+The Auction House can post notifications to a Discord channel via webhook.
+
+```yaml
+discord:
+  enabled: false
+  webhook-url: "https://discord.com/api/webhooks/..."
+  bot-name: "OreoAuctions"
+  bot-avatar: "https://..."
+```
+
+Notifications are sent **asynchronously** (never on the main thread) for two events:
+- **Item listed** — posts when a new listing is created.
+- **Item sold** — posts when a listing is purchased.
+
+The payload includes the item name, seller name, price, and (on sale) the buyer name. If `enabled: false` or `webhook-url` is blank, no requests are made.
+
+---
+
+## PlaceholderAPI
+
+The module registers placeholders under the `oreoah` identifier (requires PlaceholderAPI installed).
+
+| Placeholder | Returns |
+|---|---|
+| `%oreoah_active_listings%` | Total number of active listings across all players |
+| `%oreoah_player_listings%` | Number of active listings by this player |
+| `%oreoah_player_sales%` | Number of items this player has sold |
+| `%oreoah_player_expired%` | Number of expired items this player has not yet reclaimed |
+
+These update in real time — no caching.
+
+---
+
+## Configuration Files
+
+All files live in `plugins/OreoEssentials/auctionhouse/`.
+
+### `config.yml` — Main Configuration
+
+```yaml
+enabled: true
+
+storage:
+  type: auto           # auto, mongodb, json
+  mongodb:
+    collection: oreo_auctions
+
+listings:
+  min-price: 1.0
+  max-price: 1000000000.0
+  max-per-player: 10
+  default-duration-hours: 24
+  max-duration-hours: 168
+
+fees:
+  listing-percent: 0.0
+  listing-flat: 0.0
+  tax-percent: 0.0
+
+discord:
+  enabled: false
+  webhook-url: ""
+  bot-name: "OreoAuctions"
+  bot-avatar: ""
+```
+
+### `categories.yml` — Category Configuration
+
+Controls which categories are enabled, their icons, slots, display names, descriptions, and optional permission nodes.
+
+```yaml
+weapons:
+  enabled: true
+  slot: 12
+  icon: DIAMOND_SWORD
+  display-name: "&c&lWeapons"
+  description:
+    - "&7Swords, bows, crossbows & more."
+  # permission: oreo.ah.category.weapons   ← uncomment to restrict
+
+blocks:
+  enabled: true
+  slot: 10
+  icon: GRASS_BLOCK
+  display-name: "&a&lBlocks"
+  description:
+    - "&7Building materials."
+```
+
+### `messages.yml` — Player Messages
+
+All player-facing text. Key examples:
+
+```yaml
+errors:
+  no-permission: "&cYou don't have permission."
+  no-item-in-hand: "&cHold an item to sell."
+  price-too-low: "&cPrice must be at least %min%."
+  price-too-high: "&cPrice cannot exceed %max%."
+  max-listings: "&cYou have reached the maximum number of listings."
+  already-sold: "&cThis listing no longer exists."
+  cannot-buy-own: "&cYou cannot buy your own listing."
+  insufficient-funds: "&cYou don't have enough money."
+```
+
+### `gui.yml` — GUI Appearance
+
+Controls titles, border materials, and button slots for every GUI screen.
+
+Supported screen keys:
+- `browse` — main browser
+- `categories` — category picker
+- `sell` — category selection / confirm screen
+- `confirm` — purchase confirmation
+- `manage` — your listings
+- `expired` — expired items
+- `sold` — sold items history
+
+Each screen supports:
+```yaml
+browse:
+  title: "&6&lAuction House"
+  title-category: "&6&lAuction House &8- &e{category}"
+  title-search: "&6&lSearch: &f{query}"
+  title-search-category: "&6&lSearch: &f{query} &8- &e{category}"
+  border: GRAY_STAINED_GLASS_PANE
+  buttons:
+    prev-page:
+      slot: 48
+      material: ARROW
+      name: "&e&lPrevious Page"
+    next-page:
+      slot: 50
+      material: ARROW
+      name: "&e&lNext Page"
+    page-indicator:
+      slot: 49
+      material: PAPER
+      name: "&ePage {page}"
+    categories:
+      slot: 46
+      material: COMPASS
+      name: "&b&lCategories"
+    your-listings:
+      slot: 52
+      material: CHEST
+      name: "&6&lYour Listings"
+    close:
+      slot: 53
+      material: BARRIER
+      name: "&c&lClose"
+```
+
+---
+
+## Startup Sequence
+
+On server start, the Auction House module initializes in this order:
+
+1. Load `config.yml`, `categories.yml`, `messages.yml`, and `gui.yml`.
+2. Set up storage (MongoDB or JSON, based on `storage.type` and availability).
+3. Load all auctions from storage into memory, split into active, sold, and expired lists.
+4. Register the `AHGuiListener` for inventory-close events (viewer registry cleanup).
+5. Register `AuctionPlaceholders` with PlaceholderAPI (if available).
+6. Start the **expiration task** (runs every 60 seconds).
+7. Start the **auto-save task** for JSON storage (runs every 300 seconds; skipped for MongoDB).
+8. After RabbitMQ connects (done in OreoEssentials core), subscribe to `AuctionSyncPacket` events.
+9. Module marked as ready.
+
+---
+
+## Admin Reference
+
+### Reload
+```
+/ahadmin reload
+```
+Reloads all four config files. Does not disconnect storage or restart tasks. GUI viewers are not affected.
+
+### Force Save
+```
+/ahadmin save
+```
+Writes all in-memory auction data to storage immediately. Useful before a planned restart to prevent data loss with JSON storage.
+
+### Clear All Auctions
+```
+/ahadmin clear
+/ahadmin clear confirm
+```
+Two-step operation. The first command registers a 15-second confirmation window. The second command, run within that window, removes all active listings from memory and storage. Items are **not returned** to sellers — use this only for emergency resets. The count of removed auctions is reported.
+
+---
+
+## Common Questions
+
+**Q: Can players from Server A see listings from Server B?**
+Yes — as long as MongoDB is configured and RabbitMQ is running. When a player on Server A lists an item, an `AuctionSyncPacket` is broadcast and Server B's browser updates within milliseconds. All browsers across all servers see the same listings.
+
+**Q: What if a player on Server A purchases a listing while a player on Server B is also trying to buy it at the same moment?**
+The first purchase to complete wins. The second call to `purchaseAuction()` finds the auction already in SOLD status (or absent from the cache) and returns an error to the second buyer. Their money is never withdrawn — the balance check and withdrawal only happen after confirming the listing is still active.
+
+**Q: What happens if the seller is offline when their item sells?**
+The money is deposited to their account via Vault or CurrencyService — this works even when offline in most economy plugins. If the seller comes online and has `oreo.ah.use`, the next time they open `/ah` or `/ahsold` they will see the sale in their history.
+
+**Q: Can I use JSON storage on a multi-server network?**
+No. JSON is a local file. Each server has its own copy and they cannot share it. Use MongoDB for any multi-server setup.
+
+**Q: What happens to the listing fee if I cancel my listing?**
+The listing fee is non-refundable. It is deducted the moment you confirm the listing. If you cancel before anyone buys, the fee is not returned.
+
+**Q: Can a listing use tokens while the server also uses Vault?**
+Yes. Both can be active simultaneously. Each listing stores its own currency. A token listing and a Vault listing can both be visible in the same browser at the same time.
+
+**Q: A player listed an ItemsAdder item on Server A. Can a player on Server B see the correct texture?**
+Yes. The custom item ID is stored and included in the sync packet. When Server B renders the listing icon, it uses the ItemsAdder API to reconstruct the item from the custom ID, so the correct texture and NBT are shown.
+
+**Q: How is the page preserved during a live refresh?**
+The viewer registry stores each viewer's current page number. When `refreshAllBrowseViewers()` runs, it reopens the browser GUI at the correct page for each viewer, so they do not jump back to page 1.

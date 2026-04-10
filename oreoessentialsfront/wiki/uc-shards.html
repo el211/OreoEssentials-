@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>UltimateChristmas — Shards Economy | OreoStudios Wiki</title>
+<meta name="description" content="How the Shards economy works in UltimateChristmas: earn sources, configs, examples, advanced uses."/>
+<link rel="icon" type="image/png" href="/logo.png" sizes="256x256"/>
+<link rel="stylesheet" href="/styles.css"/><link rel="stylesheet" href="/wiki/_docs.css"/>
+<link rel="canonical" href="https://oreostudio.store/wiki/uc-shards.html"/>
+</head>
+<body class="with-sidebar">
+<header class="nav">
+  <a class="brand" href="/" aria-label="OreoStudios Home">
+    <img class="logo" src="/logo.png" alt=""><span class="brand-text">Oreo<span class="accent">Studios</span></span>
+  </a>
+  <nav>
+    <a href="/index.html#services">Services</a>
+    <a href="/backend.html">Backend</a>
+    <a href="/oreoessentials.html">OreoEssentials</a>
+    <a href="/hosting.html">Hosting</a>
+    <a href="/wiki/index.html" aria-current="page">Wiki</a>
+    <a href="/index.html#contact" class="btn">Contact</a>
+  </nav>
+  <button id="menu" aria-label="Open menu">☰</button>
+</header>
+
+<main class="docs">
+  <aside class="docs-sidebar">
+    <div class="docs-brand"><img src="/logo.png" alt=""><div>Oreo<span class="accent">Studios</span> Wiki</div></div>
+    <nav class="docs-tree">
+      <div class="docs-section">UltimateChristmas</div>
+      <a href="/wiki/uc-installation.html">🎄 Installation & Setup</a>
+      <a href="/wiki/uc-commands.html">📘 Commands & Permissions</a>
+      <a href="/wiki/uc-shards.html" aria-current="page">💎 Shards Economy</a>
+      <a href="/wiki/uc-shardshop.html">🛍️ ShardShop</a>
+      <a href="/wiki/uc-snowball.html">❄️ Snowball Event</a>
+      <a href="/wiki/uc-advent.html">🗓️ Advent Calendar</a>
+      <a href="/wiki/uc-santa.html">🎅 Santa Event</a>
+    </nav>
+  </aside>
+
+  <section class="docs-content">
+    <h1>💎 The Shard Economy</h1>
+    <p>The Shard system is the backbone of the UltimateChristmas plugin’s progression. Shards act as a special event currency, earned through everyday activities like mining, farming, and fighting festive mobs—and later spent in the <a href="/wiki/uc-shardshop.html">Shard Shop</a>.</p>
+
+    <h2 class="gradient-text">🎯 What are Shards?</h2>
+    <ul>
+      <li>In-game currency distinct from money/tokens/XP.</li>
+      <li>Rewards playtime and engagement (not trading/automation).</li>
+      <li>Players earn shards by:
+        <ul>
+          <li>Breaking specific blocks (configurable per material),</li>
+          <li>Killing certain mobs or MythicMobs,</li>
+          <li>Interacting with ItemsAdder blocks (if enabled).</li>
+        </ul>
+      </li>
+    </ul>
+    <p>Chat feedback example: <code>+ 5 shards (You now have 120)</code>. Spend shards via the <code>/shards</code> shop GUI, admin commands (<code>/shards give</code>/<code>take</code>), or as rewards from NPCs/quests.</p>
+
+    <h2 class="gradient-text">⚙️ Config summary (<code>shards.yml</code>)</h2>
+    <table class="table">
+      <thead><tr><th>Section</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>blocks</code></td><td>Vanilla block rewards (e.g., <code>coal_ore</code>, <code>oak_log</code>).</td></tr>
+        <tr><td><code>mobs</code></td><td>Natural mob rewards (e.g., <code>zombie</code>, <code>creeper</code>).</td></tr>
+        <tr><td><code>itemsadder-blocks</code></td><td>Custom ItemsAdder blocks drop shards.</td></tr>
+        <tr><td><code>mythicmobs</code></td><td>Boss/event creature rewards via MythicMobs.</td></tr>
+        <tr><td><code>enable-itemsadder</code> / <code>enable-mythicmobs</code></td><td>Toggles for those hooks.</td></tr>
+      </tbody>
+    </table>
+    <p>Each source has two parameters: <code>shards</code> (amount) and <code>chance</code> (0.0–1.0 probability).</p>
+
+    <h3>Example</h3>
+    <pre><code>coal_ore:
+  shards: 2
+  chance: 0.1
+# → 10% chance to get 2 shards on mining coal ore.</code></pre>
+
+    <h3>MythicMobs example</h3>
+    <pre><code>FrostGiant:
+  shards: 50
+  chance: 0.5
+# → 50% chance to drop 50 shards on kill.</code></pre>
+
+    <h2 class="gradient-text">📈 Player feel</h2>
+    <p>Shards create a steady drip of progress—random “sparkles” that make routine actions feel valuable. Tweak weights to balance your economy and combine with Advent/Santa/Snowball for cross-feature synergy.</p>
+
+    <h2 class="gradient-text">🧩 Advanced uses</h2>
+    <ul>
+      <li><strong>Shops</strong> — spend in <code>/shards</code> shop.</li>
+      <li><strong>Quests</strong> — grant via <code>shards give %player% 50</code>.</li>
+      <li><strong>Bosses</strong> — MythicMobs drops shards automatically.</li>
+    </ul>
+
+    <div class="prevnext">
+      <a href="/wiki/uc-commands.html">← Previous: Commands & Permissions</a>
+      <a href="/wiki/uc-shardshop.html">Next: ShardShop →</a>
+    </div>
+  </section>
+</main>
+
+<footer class="footer"><p>© <span id="y"></span> OreoStudios — Docs.</p></footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>

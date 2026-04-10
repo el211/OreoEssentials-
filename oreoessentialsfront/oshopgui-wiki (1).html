@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>oSHOP GUI Premium — Wiki | OreoStudios</title>
+  <meta name="description" content="Complete documentation for oSHOP GUI Premium — installation, configuration, shop files, economy, GUI system, anti-dupe protection and more."/>
+  <link rel="icon" type="image/png" href="/logo.png" sizes="256x256"/>
+  <link rel="stylesheet" href="/styles.css"/>
+  <meta name="theme-color" content="#2d4ba8"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --gold: #f5b43a;
+      --gold-dim: #c4882a;
+      --teal: #3dd6c8;
+      --sidebar-w: 260px;
+    }
+
+    body.wiki-page { overflow-x: hidden; }
+
+    .wiki-wrap {
+      display: block;
+      min-height: 100vh;
+      padding-top: 56px;
+    }
+
+    /* SIDEBAR */
+    .wiki-sidebar {
+      position: fixed;
+      top: 56px; left: 0;
+      width: var(--sidebar-w);
+      height: calc(100vh - 56px);
+      overflow-y: auto;
+      background: rgba(6,8,26,.94);
+      border-right: 1px solid #ffffff12;
+      padding: 24px 0 60px;
+      z-index: 200;
+      scrollbar-width: thin;
+      scrollbar-color: #2260d840 transparent;
+    }
+    .wiki-sidebar::-webkit-scrollbar { width: 4px; }
+    .wiki-sidebar::-webkit-scrollbar-thumb { background: #2260d840; border-radius: 2px; }
+
+    .sb-logo {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 20px 20px;
+      border-bottom: 1px solid #ffffff0e;
+      margin-bottom: 18px;
+    }
+    .sb-logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #f5b43a, #e07b20);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 4px 16px #f5b43a30;
+      flex-shrink: 0;
+    }
+    .sb-logo-text { font-weight: 800; font-size: 13px; line-height: 1.2; }
+    .sb-logo-text span { display: block; font-size: 11px; color: var(--muted); font-weight: 400; }
+
+    .sb-group { margin-bottom: 10px; }
+    .sb-group-label {
+      padding: 5px 20px;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      color: var(--muted); opacity: .5;
+    }
+    .sb-link {
+      display: flex; align-items: center; gap: 9px;
+      padding: 7px 20px;
+      font-size: 13.5px; color: var(--muted);
+      transition: all .18s ease;
+      border-left: 2px solid transparent;
+      text-decoration: none;
+    }
+    .sb-link:hover { color: var(--fg); background: rgba(255,255,255,.04); border-left-color: #ffffff20; }
+    .sb-link.active { color: var(--gold); background: rgba(245,180,58,.07); border-left-color: var(--gold); font-weight: 600; }
+    .sb-link .icon { font-size: 14px; width: 16px; flex-shrink: 0; }
+
+    /* MAIN */
+    .wiki-main {
+      margin-left: var(--sidebar-w);
+      padding: 48px 56px 80px;
+      width: calc(100% - var(--sidebar-w));
+      max-width: 1100px;
+      box-sizing: border-box;
+    }
+
+    /* HERO */
+    .w-hero { margin-bottom: 52px; padding-bottom: 40px; border-bottom: 1px solid #ffffff0e; }
+    .w-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      background: rgba(245,180,58,.12); border: 1px solid rgba(245,180,58,.3);
+      border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--gold);
+      margin-bottom: 16px; letter-spacing: .3px;
+    }
+    .w-hero h1 {
+      font-size: clamp(1.9rem, 3.5vw, 2.8rem); font-weight: 900;
+      letter-spacing: -.02em; margin: 0 0 14px;
+    }
+    .w-hero h1 .g {
+      background: linear-gradient(135deg, #f5b43a 0%, #ffd97a 50%, #e07b20 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .w-hero p { color: var(--muted); font-size: 1.05rem; max-width: 600px; margin: 0 0 24px; }
+    .hero-meta { display: flex; gap: 12px; flex-wrap: wrap; }
+    .meta-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,.05); border: 1px solid #ffffff14;
+      border-radius: 999px; font-size: 12.5px; color: var(--muted);
+    }
+    .meta-pill strong { color: var(--fg); }
+
+    /* SECTIONS */
+    .ws { margin-bottom: 62px; scroll-margin-top: 80px; }
+    .ws h2 {
+      font-size: 1.5rem; font-weight: 800; margin: 0 0 6px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .ws h2 .si {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, rgba(245,180,58,.2), rgba(224,123,32,.1));
+      border: 1px solid rgba(245,180,58,.22);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+    .ws .slead {
+      color: var(--muted); font-size: .97rem; margin: 0 0 26px;
+      padding-bottom: 14px; border-bottom: 1px solid #ffffff08;
+    }
+    .ws h3 { font-size: 1.08rem; font-weight: 700; margin: 26px 0 10px; color: var(--fg); }
+    .ws p { color: var(--muted); line-height: 1.75; margin: 0 0 14px; }
+    .ws ul { padding-left: 1.2rem; margin: 0 0 14px; }
+    .ws ul li { color: var(--muted); margin-bottom: 6px; line-height: 1.65; }
+    .ws ul li strong { color: var(--fg); }
+
+    /* CODE */
+    pre {
+      background: rgba(6,8,26,.75);
+      border: 1px solid #ffffff12; border-radius: 12px;
+      padding: 18px 20px; overflow-x: auto;
+      margin: 14px 0 20px; position: relative;
+    }
+    pre code {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 13px; line-height: 1.7; color: #c9d3f0;
+    }
+    .clbl {
+      position: absolute; top: 10px; right: 14px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--muted); opacity: .4;
+    }
+    code:not(pre code) {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 12.5px;
+      background: rgba(245,180,58,.1); border: 1px solid rgba(245,180,58,.2);
+      color: var(--gold); padding: 2px 7px; border-radius: 5px;
+    }
+    .yk { color: #79a6f2; } .ys { color: #9be89b; } .yn { color: #f5b43a; }
+    .yb { color: #3dd6c8; } .yc { color: #555e7a; font-style: italic; }
+    .ysec { color: #d5a0f5; font-weight: 600; }
+
+    /* CALLOUTS */
+    .callout {
+      display: flex; gap: 12px;
+      padding: 16px 18px; border-radius: 12px;
+      margin: 16px 0 20px; font-size: .93rem; line-height: 1.6;
+    }
+    .callout .ci { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .callout p { margin: 0; }
+    .callout.info   { background: rgba(61,214,200,.08); border: 1px solid rgba(61,214,200,.25); color: #a8eee9; }
+    .callout.warn   { background: rgba(245,180,58,.08); border: 1px solid rgba(245,180,58,.25); color: #f5d68a; }
+    .callout.danger { background: rgba(239,68,68,.08);  border: 1px solid rgba(239,68,68,.25);  color: #f8aaaa; }
+    .callout.tip    { background: rgba(74,222,128,.08); border: 1px solid rgba(74,222,128,.25); color: #a7f3c0; }
+
+    /* TABLES */
+    .wt {
+      width: 100%; border-collapse: separate; border-spacing: 0;
+      border: 1px solid #ffffff12; border-radius: 12px; overflow: hidden;
+      margin: 14px 0 22px; font-size: 13.5px;
+    }
+    .wt th {
+      background: rgba(245,180,58,.08); color: var(--gold);
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px;
+      padding: 11px 14px; text-align: left; border-bottom: 1px solid #ffffff12;
+    }
+    .wt td {
+      padding: 10px 14px; color: var(--muted);
+      border-bottom: 1px solid #ffffff08; vertical-align: top;
+    }
+    .wt tr:last-child td { border-bottom: none; }
+    .wt td strong { color: var(--fg); }
+    .wt td code { font-size: 12px; }
+    .wt tr:hover td { background: rgba(255,255,255,.02); }
+
+    /* CARDS */
+    .wcards {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr));
+      gap: 16px; margin: 16px 0 22px;
+    }
+    .wcard {
+      background: linear-gradient(160deg, rgba(255,255,255,.05), rgba(0,0,0,.12));
+      border: 1px solid #ffffff10; border-radius: 14px; padding: 18px;
+      transition: all .22s ease;
+    }
+    .wcard:hover { transform: translateY(-3px); border-color: rgba(245,180,58,.3); box-shadow: 0 10px 30px rgba(245,180,58,.08); }
+    .wcard .cicon { font-size: 24px; margin-bottom: 10px; }
+    .wcard h4 { margin: 0 0 6px; font-size: .95rem; color: var(--fg); }
+    .wcard p  { margin: 0; font-size: .85rem; color: var(--muted); line-height: 1.5; }
+
+    /* STEPS */
+    .steps { display: flex; flex-direction: column; gap: 14px; margin: 14px 0 22px; }
+    .step { display: grid; grid-template-columns: 32px 1fr; gap: 14px; align-items: start; }
+    .snum {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #f5b43a, #e07b20);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 13px; color: #07092f;
+      flex-shrink: 0; margin-top: 2px;
+    }
+    .sbody h4 { margin: 0 0 4px; font-size: .95rem; color: var(--fg); }
+    .sbody p  { margin: 0; font-size: .9rem; color: var(--muted); line-height: 1.6; }
+
+    /* SHOP GRID */
+    .shgrid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(155px,1fr));
+      gap: 12px; margin: 14px 0 22px;
+    }
+    .shtile {
+      background: rgba(255,255,255,.04); border: 1px solid #ffffff0e;
+      border-radius: 12px; padding: 14px; text-align: center;
+      transition: all .2s ease;
+    }
+    .shtile:hover { border-color: rgba(245,180,58,.3); background: rgba(245,180,58,.06); }
+    .shtile .ti { font-size: 26px; display: block; margin-bottom: 6px; }
+    .shtile .tn { font-size: 12px; font-weight: 700; color: var(--fg); }
+    .shtile .tc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* PERM */
+    .pn { color: var(--teal); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+    /* DIVIDER */
+    .wdiv { height: 1px; background: linear-gradient(90deg, transparent, #ffffff14, transparent); margin: 48px 0; }
+
+    /* PROGRESS */
+    .wbar { position: fixed; top: 56px; left: 0; width: var(--sidebar-w); height: 2px; z-index: 300; }
+    .wbar-fill { height: 100%; background: linear-gradient(90deg,#f5b43a,#ffd97a); width: 0; transition: width .1s ease; }
+
+    /* BACK TOP */
+    .btt {
+      position: fixed; bottom: 28px; right: 28px;
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg,#f5b43a,#e07b20);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 18px; cursor: pointer;
+      opacity: 0; transform: translateY(10px);
+      transition: all .25s ease; z-index: 500;
+      box-shadow: 0 6px 20px rgba(245,180,58,.4);
+      color: #07092f; font-weight: 900; border: none;
+    }
+    .btt.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 900px) {
+      .wiki-sidebar { display: none; }
+      .wiki-main { margin-left: 0; width: 100%; padding: 32px 22px 64px; max-width: 100%; }
+    }
+  </style>
+</head>
+
+<body class="wiki-page">
+<canvas id="starfield" aria-hidden="true"></canvas>
+
+<header class="nav">
+  <a class="brand" href="/">
+    <img class="logo" src="/logo.png" alt="OreoStudios"/>
+    <span class="brand-text">Oreo<span class="accent">Studios</span></span>
+  </a>
+  <nav>
+    <a href="/wiki/index.html">Wiki</a>
+    <a href="/index.html#services">Services</a>
+    <a href="/backend.html">Backend</a>
+    <a href="/hosting.html">Hosting</a>
+    <a href="/index.html#work">Work</a>
+    <a href="/index.html#about">About</a>
+    <a href="/index.html#contact" class="btn">Contact</a>
+  </nav>
+  <button id="menu" aria-label="Open menu">☰</button>
+</header>
+
+<div class="wbar"><div class="wbar-fill" id="pb"></div></div>
+
+<div class="wiki-wrap">
+
+  <aside class="wiki-sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">🛒</div>
+      <div class="sb-logo-text">oSHOP GUI Premium<span>Documentation v1.0</span></div>
+    </div>
+
+    <div class="sb-group">
+      <div class="sb-group-label">Getting Started</div>
+      <a class="sb-link active" href="#overview"><span class="icon">🏠</span>Overview</a>
+      <a class="sb-link" href="#installation"><span class="icon">📦</span>Installation</a>
+      <a class="sb-link" href="#quickstart"><span class="icon">⚡</span>Quick Start</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">Configuration</div>
+      <a class="sb-link" href="#config"><span class="icon">⚙️</span>config.yml</a>
+      <a class="sb-link" href="#messages"><span class="icon">💬</span>messages.yml</a>
+      <a class="sb-link" href="#shop-files"><span class="icon">📄</span>Shop Files</a>
+      <a class="sb-link" href="#main-menu"><span class="icon">🗂️</span>Main Menu</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">Features</div>
+      <a class="sb-link" href="#economy"><span class="icon">💰</span>Economy</a>
+      <a class="sb-link" href="#gui"><span class="icon">🎨</span>GUI System</a>
+      <a class="sb-link" href="#transactions"><span class="icon">🔄</span>Transactions</a>
+      <a class="sb-link" href="#anti-dupe"><span class="icon">🛡️</span>Anti-Dupe</a>
+      <a class="sb-link" href="#modifiers"><span class="icon">📊</span>Price Modifiers</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">Integration</div>
+      <a class="sb-link" href="#hooks"><span class="icon">🔌</span>Plugin Hooks</a>
+      <a class="sb-link" href="#commands"><span class="icon">💻</span>Commands</a>
+      <a class="sb-link" href="#permissions"><span class="icon">🔑</span>Permissions</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">Reference</div>
+      <a class="sb-link" href="#catalog"><span class="icon">🗃️</span>Shop Catalog</a>
+      <a class="sb-link" href="#faq"><span class="icon">❓</span>FAQ</a>
+    </div>
+  </aside>
+
+  <main class="wiki-main">
+
+    <!-- HERO -->
+    <div class="w-hero" id="overview">
+      <div class="w-badge">🛒 Premium Plugin</div>
+      <h1>oSHOP GUI <span class="g">Premium</span></h1>
+      <p>A fully-featured, production-ready Minecraft shop plugin with multi-category GUI, flexible economy support, per-player price modifiers, anti-dupe protection, and hooks for custom item plugins.</p>
+      <div class="hero-meta">
+        <span class="meta-pill">📌 <strong>Paper / Spigot</strong></span>
+        <span class="meta-pill">☕ Java <strong>17+</strong></span>
+        <span class="meta-pill">🔌 Vault / XP</span>
+        <span class="meta-pill">📦 14 Default Shops</span>
+      </div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section class="ws">
+      <h2><span class="si">🏠</span> What is oSHOP GUI Premium?</h2>
+      <p class="slead">A premium Minecraft server shop plugin by OreoStudios — fully paginated, multi-category, with real-time price previews and a lag-resistant transaction engine.</p>
+      <div class="wcards">
+        <div class="wcard"><div class="cicon">🛒</div><h4>Multi-Shop System</h4><p>Unlimited categories with per-page item layouts and full pagination.</p></div>
+        <div class="wcard"><div class="cicon">💰</div><h4>Flexible Economy</h4><p>Vault, EXP Points, or EXP Levels — switch anytime with a reload.</p></div>
+        <div class="wcard"><div class="cicon">📊</div><h4>Price Modifiers</h4><p>3-tier modifier system: global → shop → item, stored persistently per player.</p></div>
+        <div class="wcard"><div class="cicon">🛡️</div><h4>Anti-Dupe</h4><p>Cooldown locks, rate limiting, inventory verification, concurrency guards.</p></div>
+        <div class="wcard"><div class="cicon">🎨</div><h4>Amount Selection</h4><p>Configurable preset-amount GUI before every buy or sell transaction.</p></div>
+        <div class="wcard"><div class="cicon">🔌</div><h4>Custom Items</h4><p>Native hooks for ItemsAdder and Nexo custom item namespaces.</p></div>
+      </div>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- INSTALLATION -->
+    <section class="ws" id="installation">
+      <h2><span class="si">📦</span> Installation</h2>
+      <p class="slead">Get oSHOP GUI Premium running in under five minutes.</p>
+
+      <h3>Requirements</h3>
+      <table class="wt">
+        <thead><tr><th>Dependency</th><th>Version</th><th>Required</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Paper / Spigot</strong></td><td>1.20+</td><td>✅ Required</td></tr>
+          <tr><td><strong>Java</strong></td><td>17 or higher</td><td>✅ Required</td></tr>
+          <tr><td><strong>Vault</strong></td><td>Latest</td><td>⚠️ For Vault economy</td></tr>
+          <tr><td><strong>Economy plugin</strong></td><td>EssentialsX / CMI…</td><td>⚠️ Paired with Vault</td></tr>
+          <tr><td><strong>LuckPerms</strong></td><td>Any</td><td>ℹ️ Recommended</td></tr>
+          <tr><td><strong>ItemsAdder / Nexo</strong></td><td>Any</td><td>ℹ️ Optional</td></tr>
+        </tbody>
+      </table>
+
+      <div class="steps">
+        <div class="step"><div class="snum">1</div><div class="sbody"><h4>Download the plugin JAR</h4><p>Grab <code>oSHOPGUI-Premium.jar</code> from the OreoStudios Spigot page or your purchase receipt.</p></div></div>
+        <div class="step"><div class="snum">2</div><div class="sbody"><h4>Place in <code>/plugins/</code></h4><p>Drop the JAR into your server's <code>plugins/</code> folder alongside Vault and your economy provider.</p></div></div>
+        <div class="step"><div class="snum">3</div><div class="sbody"><h4>Start the server</h4><p>The plugin generates <code>plugins/OSHOPGUI/config.yml</code>, <code>messages.yml</code>, and all default shop files in <code>plugins/OSHOPGUI/shops/</code>.</p></div></div>
+        <div class="step"><div class="snum">4</div><div class="sbody"><h4>Set economy backend</h4><p>Open <code>config.yml</code>, set <code>economy.backend</code> to <code>VAULT</code>, <code>EXP_POINTS</code>, or <code>EXP_LEVELS</code>, then run <code>/shop reload</code>.</p></div></div>
+        <div class="step"><div class="snum">5</div><div class="sbody"><h4>Open the shop</h4><p>Run <code>/shop</code> in-game. Grant <code>oshopgui.shop</code> to players so they can access it.</p></div></div>
+      </div>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- QUICK START -->
+    <section class="ws" id="quickstart">
+      <h2><span class="si">⚡</span> Quick Start</h2>
+      <p class="slead">The fastest path from zero to a working shop.</p>
+      <div class="callout tip"><span class="ci">💡</span><p>The plugin ships with 14 fully pre-configured categories. Pick an economy backend and reload — you're ready to go.</p></div>
+      <pre><code><span class="yc"># Minimum viable config.yml</span>
+<span class="yk">economy</span>:
+  <span class="yk">backend</span>: <span class="yb">VAULT</span>   <span class="yc"># or EXP_POINTS / EXP_LEVELS</span>
+
+<span class="yk">main-menu</span>:
+  <span class="yk">title</span>: <span class="ys">"&amp;8» &amp;6&amp;lSHOP &amp;8«"</span>
+  <span class="yk">rows</span>: <span class="yn">4</span></code><span class="clbl">config.yml</span></pre>
+      <p>After saving, run <code>/shop reload</code>. Players with <code>oshopgui.shop</code> can immediately use <code>/shop</code>.</p>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- CONFIG -->
+    <section class="ws" id="config">
+      <h2><span class="si">⚙️</span> config.yml Reference</h2>
+      <p class="slead">Full reference for every key in <code>plugins/OSHOPGUI/config.yml</code>.</p>
+
+      <h3>Main Menu</h3>
+      <table class="wt">
+        <thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>main-menu.title</code></td><td>String</td><td><code>"&amp;8» &amp;6&amp;lSHOP &amp;8«"</code></td><td>GUI title. Supports color codes.</td></tr>
+          <tr><td><code>main-menu.rows</code></td><td>int 1–6</td><td><code>4</code></td><td>Number of inventory rows.</td></tr>
+          <tr><td><code>main-menu.fill-empty</code></td><td>boolean</td><td><code>true</code></td><td>Fill empty slots with decorative glass.</td></tr>
+          <tr><td><code>main-menu.fill-material</code></td><td>Material</td><td><code>GRAY_STAINED_GLASS_PANE</code></td><td>Material used as the filler.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Economy</h3>
+      <table class="wt">
+        <thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>economy.backend</code></td><td>Enum</td><td><code>VAULT</code></td><td><code>VAULT</code>, <code>EXP_POINTS</code>, or <code>EXP_LEVELS</code>.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Anti-Dupe</h3>
+      <table class="wt">
+        <thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>anti-dupe.cooldown-ms</code></td><td>long</td><td><code>300</code></td><td>Milliseconds between consecutive transactions.</td></tr>
+          <tr><td><code>anti-dupe.max-transactions-per-second</code></td><td>int</td><td><code>5</code></td><td>Max transactions in any 1-second window.</td></tr>
+          <tr><td><code>anti-dupe.verify-inventory</code></td><td>boolean</td><td><code>true</code></td><td>Verify player inventory before completing a sale.</td></tr>
+          <tr><td><code>anti-dupe.lock-during-transaction</code></td><td>boolean</td><td><code>true</code></td><td>Lock the player during an active transaction.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Amount Selection GUI</h3>
+      <table class="wt">
+        <thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>amount-selection.enabled</code></td><td>boolean</td><td><code>true</code></td><td>Show the amount-selection GUI before transactions.</td></tr>
+          <tr><td><code>amount-selection.presets</code></td><td>List&lt;int&gt;</td><td><code>[1,16,32,64,128]</code></td><td>Quick-pick amounts shown as buttons.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Navigation Slots</h3>
+      <pre><code><span class="yk">navigation</span>:
+  <span class="yk">back-slot</span>:      <span class="yn">45</span>   <span class="yc"># Return to main menu</span>
+  <span class="yk">prev-slot</span>:      <span class="yn">48</span>   <span class="yc"># Previous page</span>
+  <span class="yk">next-slot</span>:      <span class="yn">50</span>   <span class="yc"># Next page</span>
+  <span class="yk">page-info-slot</span>: <span class="yn">49</span>   <span class="yc"># "Page 1/2" indicator</span></code><span class="clbl">config.yml</span></pre>
+
+      <h3>Transaction Logging</h3>
+      <table class="wt">
+        <thead><tr><th>Key</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>transaction-log.format</code></td><td>String</td><td>Log line format. Placeholders: <code>{player}</code> <code>{action}</code> <code>{item}</code> <code>{amount}</code> <code>{price}</code> <code>{time}</code></td></tr>
+          <tr><td><code>transaction-log.file</code></td><td>String</td><td>Filename relative to <code>plugins/OSHOPGUI/</code>. Default: <code>transactions.log</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- MESSAGES -->
+    <section class="ws" id="messages">
+      <h2><span class="si">💬</span> messages.yml Reference</h2>
+      <p class="slead">All player-facing text lives in <code>plugins/OSHOPGUI/messages.yml</code>. Every string supports Minecraft color codes and MiniMessage.</p>
+
+      <h3>Available Placeholders</h3>
+      <table class="wt">
+        <thead><tr><th>Placeholder</th><th>Available in</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>{item}</code></td><td>buy/sell messages</td><td>Human-readable item name</td></tr>
+          <tr><td><code>{amount}</code></td><td>buy/sell messages</td><td>Quantity purchased or sold</td></tr>
+          <tr><td><code>{price}</code></td><td>buy/sell messages</td><td>Total price with economy symbol</td></tr>
+          <tr><td><code>{balance}</code></td><td>error messages</td><td>Player's current balance</td></tr>
+          <tr><td><code>{shop}</code></td><td>GUI labels</td><td>Shop category name</td></tr>
+          <tr><td><code>{page}</code></td><td>navigation</td><td>Current page number</td></tr>
+          <tr><td><code>{max-page}</code></td><td>navigation</td><td>Total page count</td></tr>
+          <tr><td><code>{modifier}</code></td><td>modifier messages</td><td>Modifier multiplier, e.g. <code>1.2</code></td></tr>
+          <tr><td><code>{player}</code></td><td>check command</td><td>Target player name</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Example Messages</h3>
+      <pre><code><span class="yc"># Transaction feedback</span>
+<span class="yk">buy-success</span>:      <span class="ys">"&amp;aBought &amp;f{amount}x {item} &amp;afor &amp;f{price}"</span>
+<span class="yk">sell-success</span>:     <span class="ys">"&amp;aSold &amp;f{amount}x {item} &amp;afor &amp;f{price}"</span>
+<span class="yk">not-enough-money</span>: <span class="ys">"&amp;cInsufficient funds. Balance: &amp;f{balance}"</span>
+<span class="yk">item-not-sellable</span>: <span class="ys">"&amp;cThis item cannot be sold."</span>
+
+<span class="yc"># Navigation</span>
+<span class="yk">back-button</span>:    <span class="ys">"&amp;c« Back"</span>
+<span class="yk">prev-button</span>:    <span class="ys">"&amp;e« Previous"</span>
+<span class="yk">next-button</span>:    <span class="ys">"&amp;eNext »"</span>
+<span class="yk">page-indicator</span>: <span class="ys">"&amp;7Page &amp;f{page}&amp;7/&amp;f{max-page}"</span>
+
+<span class="yc"># Anti-dupe</span>
+<span class="yk">cooldown-active</span>: <span class="ys">"&amp;cTransaction cooldown active."</span>
+<span class="yk">rate-limit-hit</span>:  <span class="ys">"&amp;cSlow down! Too many transactions."</span></code><span class="clbl">messages.yml</span></pre>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- SHOP FILES -->
+    <section class="ws" id="shop-files">
+      <h2><span class="si">📄</span> Shop Files</h2>
+      <p class="slead">Each shop category is a YAML file in <code>plugins/OSHOPGUI/shops/</code>. The plugin auto-loads every <code>.yml</code> in that folder.</p>
+
+      <h3>File Structure</h3>
+      <pre><code><span class="yc"># plugins/OSHOPGUI/shops/example.yml</span>
+<span class="yk">shop-name</span>: <span class="ys">"My Shop"</span>
+<span class="yk">shop-id</span>:   <span class="ys">"my_shop"</span>
+<span class="yk">page-size</span>: <span class="yn">45</span>    <span class="yc"># items per page (max 45)</span>
+
+<span class="yk">items</span>:
+  <span class="ysec">DIAMOND</span>:              <span class="yc"># Bukkit Material name</span>
+    <span class="yk">slot</span>:         <span class="yn">0</span>
+    <span class="yk">buy-price</span>:    <span class="yn">150.0</span>
+    <span class="yk">sell-price</span>:   <span class="yn">75.0</span>
+    <span class="yk">display-name</span>: <span class="ys">"&amp;b✦ Diamond"</span>
+    <span class="yk">lore</span>:
+      <span class="ys">- "&amp;7Buy: &amp;a$150.00"</span>
+      <span class="ys">- "&amp;7Sell: &amp;c$75.00"</span>
+    <span class="yk">page</span>:         <span class="yn">1</span>
+    <span class="yk">custom-item</span>:  <span class="yb">false</span>
+    <span class="yk">custom-item-id</span>: <span class="ys">""</span></code><span class="clbl">shops/example.yml</span></pre>
+
+      <h3>Item Field Reference</h3>
+      <table class="wt">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>slot</code></td><td>int</td><td>✅</td><td>Inventory slot (0-indexed). Slots 45–53 are reserved for navigation.</td></tr>
+          <tr><td><code>buy-price</code></td><td>double</td><td>✅</td><td>Purchase price. Set <code>-1</code> to disable buying.</td></tr>
+          <tr><td><code>sell-price</code></td><td>double</td><td>✅</td><td>Sell price. Set <code>-1</code> to disable selling.</td></tr>
+          <tr><td><code>display-name</code></td><td>String</td><td>❌</td><td>Override display name. Supports color codes.</td></tr>
+          <tr><td><code>lore</code></td><td>List</td><td>❌</td><td>Custom lore lines shown in the GUI.</td></tr>
+          <tr><td><code>page</code></td><td>int</td><td>❌</td><td>Page number for this item. Defaults to <code>1</code>.</td></tr>
+          <tr><td><code>custom-item</code></td><td>boolean</td><td>❌</td><td><code>true</code> to use a custom item from ItemsAdder or Nexo.</td></tr>
+          <tr><td><code>custom-item-id</code></td><td>String</td><td>❌</td><td>Namespaced ID of the custom item, e.g. <code>ia:ruby</code>.</td></tr>
+          <tr><td><code>enchantments</code></td><td>List</td><td>❌</td><td>Enchantment list for enchanted book items.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warn"><span class="ci">⚠️</span><p>Slots <strong>45–53</strong> are reserved for navigation buttons. Do not assign shop items to these slots or they will be overwritten.</p></div>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- MAIN MENU -->
+    <section class="ws" id="main-menu">
+      <h2><span class="si">🗂️</span> Main Menu Setup</h2>
+      <p class="slead">The main menu is the landing GUI players see when running <code>/shop</code>. Buttons are configured under <code>main-menu-items</code> in <code>config.yml</code>.</p>
+
+      <pre><code><span class="yk">main-menu-items</span>:
+  <span class="ysec">ores</span>:
+    <span class="yk">slot</span>:     <span class="yn">10</span>
+    <span class="yk">material</span>: <span class="ys">DIAMOND_ORE</span>
+    <span class="yk">name</span>:     <span class="ys">"&amp;b✦ Ores &amp;7&amp;l»"</span>
+    <span class="yk">lore</span>:
+      <span class="ys">- "&amp;7Browse ores &amp; minerals"</span>
+      <span class="ys">- ""</span>
+      <span class="ys">- "&amp;eClick to browse!"</span>
+    <span class="yk">shop-id</span>: <span class="ys">"ores_minerals"</span>   <span class="yc"># must match shop-id in the .yml</span>
+
+  <span class="ysec">food</span>:
+    <span class="yk">slot</span>:     <span class="yn">11</span>
+    <span class="yk">material</span>: <span class="ys">BREAD</span>
+    <span class="yk">name</span>:     <span class="ys">"&amp;e🍞 Food &amp;7&amp;l»"</span>
+    <span class="yk">lore</span>:
+      <span class="ys">- "&amp;7Food &amp; consumables"</span>
+      <span class="ys">- ""</span>
+      <span class="ys">- "&amp;eClick to browse!"</span>
+    <span class="yk">shop-id</span>: <span class="ys">"food"</span></code><span class="clbl">config.yml</span></pre>
+
+      <div class="callout info"><span class="ci">ℹ️</span><p>The <code>shop-id</code> value must exactly match the <code>shop-id</code> field inside the corresponding shop <code>.yml</code> file. IDs are case-sensitive.</p></div>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- ECONOMY -->
+    <section class="ws" id="economy">
+      <h2><span class="si">💰</span> Economy System</h2>
+      <p class="slead">Three backends available, switched via a single config key — no restart required.</p>
+
+      <table class="wt">
+        <thead><tr><th>Backend</th><th>Config Value</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Vault</strong></td><td><code>VAULT</code></td><td>Any Vault-compatible economy plugin (EssentialsX, CMI, etc.). Displays currency symbol from Vault API.</td></tr>
+          <tr><td><strong>EXP Points</strong></td><td><code>EXP_POINTS</code></td><td>Uses raw experience points. Ideal for vanilla-friendly servers with no Vault dependency.</td></tr>
+          <tr><td><strong>EXP Levels</strong></td><td><code>EXP_LEVELS</code></td><td>Uses player experience levels as the currency unit.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout tip"><span class="ci">💡</span><p>Switch backends at any time by editing <code>economy.backend</code> and running <code>/shop reload</code>. Player data is not affected.</p></div>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- GUI -->
+    <section class="ws" id="gui">
+      <h2><span class="si">🎨</span> GUI System</h2>
+      <p class="slead">All GUIs are powered by SmartInvs (bundled) for safe, lag-resistant inventory management.</p>
+
+      <div class="steps">
+        <div class="step"><div class="snum">1</div><div class="sbody"><h4>Main Menu</h4><p>Shows all shop category buttons. Empty slots filled with glass pane. Fully configurable layout.</p></div></div>
+        <div class="step"><div class="snum">2</div><div class="sbody"><h4>Shop GUI</h4><p>Displays items for the selected category with automatic pagination. Left-click to buy, right-click to sell.</p></div></div>
+        <div class="step"><div class="snum">3</div><div class="sbody"><h4>Amount Selection</h4><p>Optional GUI to pick a preset quantity (1, 16, 32, 64, 128…) before confirming. Fully configurable or can be disabled.</p></div></div>
+        <div class="step"><div class="snum">4</div><div class="sbody"><h4>Transaction</h4><p>Processor checks balance, applies modifiers, verifies inventory, executes the transfer, logs it, and returns the player to the shop.</p></div></div>
+      </div>
+
+      <h3>Click Behavior</h3>
+      <table class="wt">
+        <thead><tr><th>Action</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Left Click</strong> on item</td><td>Opens amount selection for <strong>buying</strong></td></tr>
+          <tr><td><strong>Right Click</strong> on item</td><td>Opens amount selection for <strong>selling</strong></td></tr>
+          <tr><td><strong>Left Click</strong> Back button</td><td>Returns to main menu</td></tr>
+          <tr><td><strong>Left Click</strong> Prev / Next</td><td>Paginates within the same shop category</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- TRANSACTIONS -->
+    <section class="ws" id="transactions">
+      <h2><span class="si">🔄</span> Transaction System</h2>
+      <p class="slead">Every buy and sell action goes through <code>TransactionProcessor</code> — balance checks, modifier application, inventory verification, and logging in a single atomic flow.</p>
+
+      <h3>Buy Flow</h3>
+      <pre><code>Player clicks item → Amount Selection → TransactionProcessor
+  <span class="yn">1.</span> Permission check (oshopgui.shop)
+  <span class="yn">2.</span> Anti-dupe: cooldown + rate-limit check
+  <span class="yn">3.</span> Lock player (if lock-during-transaction: true)
+  <span class="yn">4.</span> Final price = base_price × modifier
+  <span class="yn">5.</span> Check player balance >= final_price
+  <span class="yn">6.</span> Deduct balance via economy backend
+  <span class="yn">7.</span> Give items to player inventory
+  <span class="yn">8.</span> Verify items landed (anti-dupe check)
+  <span class="yn">9.</span> Log transaction to file
+ <span class="yn">10.</span> Unlock player + send success message</code></pre>
+
+      <h3>Sell Flow</h3>
+      <pre><code>Player right-clicks item → Amount Selection → TransactionProcessor
+  <span class="yn">1.</span> Permission check + anti-dupe checks
+  <span class="yn">2.</span> Verify player has sufficient quantity
+  <span class="yn">3.</span> Payout = sell_price × modifier
+  <span class="yn">4.</span> Remove items from inventory
+  <span class="yn">5.</span> Add payout to player balance
+  <span class="yn">6.</span> Log + send success message</code></pre>
+
+      <h3>Transaction Log Example</h3>
+      <pre><code><span class="yc"># plugins/OSHOPGUI/transactions.log</span>
+[2025-06-12 14:32:07] Steve BOUGHT 64x DIAMOND for $9600.00
+[2025-06-12 14:33:15] Alex SOLD 128x WHEAT for $256.00</code><span class="clbl">transactions.log</span></pre>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- ANTI-DUPE -->
+    <section class="ws" id="anti-dupe">
+      <h2><span class="si">🛡️</span> Anti-Dupe Protection</h2>
+      <p class="slead">A multi-layer system to prevent exploit-based item generation.</p>
+
+      <div class="wcards">
+        <div class="wcard"><div class="cicon">⏱️</div><h4>Cooldown Lock</h4><p>Configurable cooldown (default 300ms) prevents spam-clicking the shop GUI.</p></div>
+        <div class="wcard"><div class="cicon">📊</div><h4>Rate Limiting</h4><p>Max 5 tx/second per player. Exceeding the limit blocks the transaction and warns the player.</p></div>
+        <div class="wcard"><div class="cicon">🔍</div><h4>Inventory Verify</h4><p>After giving items, the plugin verifies the inventory state before finalising.</p></div>
+        <div class="wcard"><div class="cicon">🔒</div><h4>Transaction Lock</h4><p>Players are locked from all GUI interactions during an active transaction.</p></div>
+      </div>
+
+      <div class="callout danger"><span class="ci">⛔</span><p>Disabling both <code>verify-inventory</code> and <code>lock-during-transaction</code> simultaneously is strongly discouraged on production servers — it removes critical duplication safeguards.</p></div>
+      <p>Players with <code>oshopgui.bypass.cooldown</code> skip the cooldown entirely. This node is intended for admin/test use only.</p>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- MODIFIERS -->
+    <section class="ws" id="modifiers">
+      <h2><span class="si">📊</span> Price Modifiers</h2>
+      <p class="slead">Per-player buy/sell price multipliers with three levels of specificity. Most specific wins.</p>
+
+      <table class="wt">
+        <thead><tr><th>Tier</th><th>Scope</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Global</strong></td><td>All shops, all items for that player</td><td>Lowest</td></tr>
+          <tr><td><strong>Shop</strong></td><td>All items within a specific shop category</td><td>Medium</td></tr>
+          <tr><td><strong>Item</strong></td><td>One specific item in one specific shop</td><td>Highest</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Commands</h3>
+      <pre><code><span class="yc"># Set modifiers</span>
+/shop modifier set &lt;player&gt; global &lt;multiplier&gt;
+/shop modifier set &lt;player&gt; shop &lt;shop-id&gt; &lt;multiplier&gt;
+/shop modifier set &lt;player&gt; item &lt;shop-id&gt; &lt;item&gt; &lt;multiplier&gt;
+
+<span class="yc"># Check / reset</span>
+/shop check &lt;player&gt;
+/shop modifier reset &lt;player&gt;</code></pre>
+
+      <div class="callout info"><span class="ci">ℹ️</span><p>Modifiers are stored <strong>persistently</strong> per player in <code>plugins/OSHOPGUI/data/</code>. They survive restarts and reloads.</p></div>
+
+      <h3>Example Use Cases</h3>
+      <ul>
+        <li><strong>VIP 20% discount:</strong> <code>/shop modifier set VIPPlayer global 0.8</code> (buy price × 0.8)</li>
+        <li><strong>Donor sell bonus:</strong> <code>/shop modifier set DonorPlayer global 1.25</code> (sell price × 1.25)</li>
+        <li><strong>Seasonal event:</strong> Shop modifier on <code>farming_nature</code> for a harvest event.</li>
+        <li><strong>Item rarity:</strong> 2.0 buy modifier on <code>NETHERITE_INGOT</code> to double its cost.</li>
+      </ul>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- HOOKS -->
+    <section class="ws" id="hooks">
+      <h2><span class="si">🔌</span> Plugin Hooks</h2>
+      <p class="slead">Third-party integrations are detected and initialized automatically at startup.</p>
+
+      <table class="wt">
+        <thead><tr><th>Plugin</th><th>Hook Type</th><th>What it enables</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Vault</strong></td><td>Economy API</td><td>Use any Vault-compatible economy as the currency backend.</td></tr>
+          <tr><td><strong>ItemsAdder</strong></td><td>Custom items</td><td>Reference ItemsAdder items using <code>custom-item: true</code> + <code>custom-item-id: ia:namespace:item</code>.</td></tr>
+          <tr><td><strong>Nexo</strong></td><td>Custom items</td><td>Same <code>custom-item</code> fields — hook auto-detects which plugin is present.</td></tr>
+          <tr><td><strong>SmartInvs</strong></td><td>GUI framework</td><td>Powers all chest GUIs. Bundled inside the JAR — no separate install needed.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Custom Item Example</h3>
+      <pre><code><span class="yk">items</span>:
+  <span class="ysec">RUBY</span>:
+    <span class="yk">slot</span>:          <span class="yn">0</span>
+    <span class="yk">buy-price</span>:     <span class="yn">500.0</span>
+    <span class="yk">sell-price</span>:    <span class="yn">250.0</span>
+    <span class="yk">display-name</span>:  <span class="ys">"&amp;c💎 Ruby Gem"</span>
+    <span class="yk">custom-item</span>:   <span class="yb">true</span>
+    <span class="yk">custom-item-id</span>: <span class="ys">"ia:gems:ruby"</span>  <span class="yc"># ItemsAdder namespace</span></code><span class="clbl">shops/custom.yml</span></pre>
+
+      <p>Hook status is logged at startup: <code>[OSHOPGUI] ItemsAdder hook: ✔</code> or <code>[OSHOPGUI] Nexo hook: ✔</code>. If neither is found, custom items fall back to standard Bukkit materials.</p>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- COMMANDS -->
+    <section class="ws" id="commands">
+      <h2><span class="si">💻</span> Commands</h2>
+      <p class="slead">All commands registered by oSHOP GUI Premium.</p>
+
+      <table class="wt">
+        <thead><tr><th>Command</th><th>Aliases</th><th>Permission</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>/shop</code></td><td><code>/s</code> <code>/store</code></td><td><code>oshopgui.shop</code></td><td>Opens the main shop menu.</td></tr>
+          <tr><td><code>/shop reload</code></td><td>—</td><td><code>oshopgui.reload</code></td><td>Reloads config, messages, and all shop files.</td></tr>
+          <tr><td><code>/shop check &lt;player&gt;</code></td><td>—</td><td><code>oshopgui.check</code></td><td>Shows a player's active price modifiers.</td></tr>
+          <tr><td><code>/shop &lt;player&gt;</code></td><td>—</td><td><code>oshopgui.shop.others</code></td><td>Opens the shop for another player.</td></tr>
+          <tr><td><code>/shop modifier set …</code></td><td>—</td><td><code>oshopgui.modifier.set</code></td><td>Set a global, shop, or item modifier.</td></tr>
+          <tr><td><code>/shop modifier reset &lt;player&gt;</code></td><td>—</td><td><code>oshopgui.modifier.reset</code></td><td>Remove all price modifiers for a player.</td></tr>
+          <tr><td><code>/sell</code></td><td><code>/sellall</code></td><td><code>oshopgui.sell</code></td><td>Sell all sellable items in inventory at once.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- PERMISSIONS -->
+    <section class="ws" id="permissions">
+      <h2><span class="si">🔑</span> Permissions</h2>
+      <p class="slead">All permissions in the <code>oshopgui.*</code> namespace.</p>
+
+      <table class="wt">
+        <thead><tr><th>Node</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="pn">oshopgui.*</td><td>op</td><td>Wildcard — grants all permissions below.</td></tr>
+          <tr><td class="pn">oshopgui.shop</td><td>true</td><td>Open <code>/shop</code>. Grant to all players.</td></tr>
+          <tr><td class="pn">oshopgui.reload</td><td>op</td><td>Run <code>/shop reload</code>.</td></tr>
+          <tr><td class="pn">oshopgui.check</td><td>op</td><td>Run <code>/shop check &lt;player&gt;</code>.</td></tr>
+          <tr><td class="pn">oshopgui.shop.others</td><td>op</td><td>Open shop GUI for another player.</td></tr>
+          <tr><td class="pn">oshopgui.sell</td><td>true</td><td>Use <code>/sell</code> command.</td></tr>
+          <tr><td class="pn">oshopgui.modifier.set</td><td>op</td><td>Set price modifiers for players.</td></tr>
+          <tr><td class="pn">oshopgui.modifier.reset</td><td>op</td><td>Reset all price modifiers for a player.</td></tr>
+          <tr><td class="pn">oshopgui.bypass.cooldown</td><td>op</td><td>Bypass anti-dupe cooldown. Admin/test use only.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>LuckPerms Setup Example</h3>
+      <pre><code><span class="yc"># All players — basic shop access</span>
+/lp group default permission set oshopgui.shop true
+/lp group default permission set oshopgui.sell true
+
+<span class="yc"># Admin group — full control</span>
+/lp group admin permission set oshopgui.* true</code></pre>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- CATALOG -->
+    <section class="ws" id="catalog">
+      <h2><span class="si">🗃️</span> Default Shop Catalog</h2>
+      <p class="slead">14 pre-configured categories, 600+ items covering all major Minecraft item groups. Every file is in <code>plugins/OSHOPGUI/shops/</code> and fully editable.</p>
+
+      <div class="shgrid">
+        <div class="shtile"><span class="ti">⛏️</span><div class="tn">Ores & Minerals</div><div class="tc">45 items</div></div>
+        <div class="shtile"><span class="ti">🍖</span><div class="tn">Food</div><div class="tc">45 items</div></div>
+        <div class="shtile"><span class="ti">🌿</span><div class="tn">Farming & Nature</div><div class="tc">45 items</div></div>
+        <div class="shtile"><span class="ti">🔴</span><div class="tn">Nether</div><div class="tc">45 items</div></div>
+        <div class="shtile"><span class="ti">🏝️</span><div class="tn">End & Misc</div><div class="tc">50 items, 2 pages</div></div>
+        <div class="shtile"><span class="ti">🔧</span><div class="tn">Tools</div><div class="tc">46 items, 2 pages</div></div>
+        <div class="shtile"><span class="ti">⚔️</span><div class="tn">Weapons & Armor</div><div class="tc">43 items</div></div>
+        <div class="shtile"><span class="ti">📚</span><div class="tn">Enchanted Books</div><div class="tc">39 max-level books</div></div>
+        <div class="shtile"><span class="ti">🦴</span><div class="tn">Mob Drops</div><div class="tc">46 items, 2 pages</div></div>
+        <div class="shtile"><span class="ti">🧪</span><div class="tn">Potions</div><div class="tc">48 items, 2 pages</div></div>
+        <div class="shtile"><span class="ti">🍶</span><div class="tn">Brewing</div><div class="tc">21 ingredients</div></div>
+        <div class="shtile"><span class="ti">🔴</span><div class="tn">Redstone</div><div class="tc">37 components</div></div>
+      </div>
+
+      <p>Add new categories by creating a <code>.yml</code> file, adding a button in <code>main-menu-items</code>, and running <code>/shop reload</code>. No restart needed.</p>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <!-- FAQ -->
+    <section class="ws" id="faq">
+      <h2><span class="si">❓</span> FAQ</h2>
+      <p class="slead">Common questions and solutions.</p>
+
+      <h3>Players can't open the shop</h3>
+      <p>Ensure the player has <code>oshopgui.shop</code>. It defaults to <code>true</code> but may be overridden with an explicit deny. Check with <code>/lp user &lt;name&gt; permission check oshopgui.shop</code>.</p>
+
+      <h3>Economy isn't working / balance not deducting</h3>
+      <p>Confirm <code>economy.backend: VAULT</code> and that both Vault and an economy plugin (EssentialsX, CMI…) are loaded. Check the startup log for <code>[OSHOPGUI] Economy: Vault ✔</code>.</p>
+
+      <h3>Items show as "Invalid Material"</h3>
+      <p>Material names must be ALL_CAPS with underscores — e.g. <code>DIAMOND_SWORD</code> not <code>diamondSword</code>. Invalid items are skipped and logged to console. Fix and run <code>/shop reload</code>.</p>
+
+      <h3>Custom items (ItemsAdder/Nexo) aren't loading</h3>
+      <p>Ensure ItemsAdder or Nexo loads <em>before</em> oSHOP GUI. Set <code>custom-item: true</code> with the correct <code>custom-item-id</code>. The hook status is logged at startup.</p>
+
+      <h3>How do I disable buy or sell for an item?</h3>
+      <p>Set <code>buy-price: -1</code> to disable buying, or <code>sell-price: -1</code> to disable selling. Both can be <code>-1</code> for a display-only item.</p>
+
+      <h3>Price modifiers aren't saving after restart</h3>
+      <p>Modifiers are stored in <code>plugins/OSHOPGUI/data/</code>. Check that the server has write permissions to the plugin directory. The plugin creates the folder on first run.</p>
+
+      <h3>How do I add a new shop category?</h3>
+      <p>Create a <code>.yml</code> file in <code>plugins/OSHOPGUI/shops/</code>, add a button under <code>main-menu-items</code> in <code>config.yml</code>, then run <code>/shop reload</code>. No restart required.</p>
+
+      <h3>Amount selection GUI is not appearing</h3>
+      <p>Ensure <code>amount-selection.enabled: true</code> and that <code>amount-selection.presets</code> has at least one value. Reload after changes.</p>
+    </section>
+
+    <div class="wdiv"></div>
+
+    <div style="text-align:center; padding: 16px 0 8px;">
+      <p style="color:var(--muted); margin-bottom: 18px;">Need help? Join the OreoStudios Discord for support.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://discord.gg/A6wCGJD2Ez" target="_blank" rel="noopener">Join Discord</a>
+        <a class="btn ghost" href="/index.html#contact">Contact Sales</a>
+        <a class="btn ghost" href="/wiki/index.html">← All Wikis</a>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<button class="btt" id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+
+<footer class="footer">
+  <p>© <span id="y"></span> OreoStudios — All rights reserved.</p>
+  <p class="muted small">SIRET : 993 823 469 00017 — Code APE : 62.01Z — Entrepreneur individuel (France)</p>
+  <p class="muted small">Made with ❤️ by the OreoStudios team.</p>
+</footer>
+
+<script src="/app.js"></script>
+<script>
+  // Starfield
+  (function(){
+    const c = document.getElementById('starfield');
+    if (!c) return;
+    const x = c.getContext('2d');
+    c.width = window.innerWidth; c.height = window.innerHeight;
+    const stars = Array.from({length:160},()=>({
+      x:Math.random()*c.width, y:Math.random()*c.height,
+      r:Math.random()*1.2, o:Math.random(), s:(Math.random()-.5)*.008
+    }));
+    (function draw(){
+      x.clearRect(0,0,c.width,c.height);
+      stars.forEach(s=>{
+        s.o=Math.max(0,Math.min(1,s.o+s.s));
+        if(s.o<=0||s.o>=1)s.s*=-1;
+        x.beginPath(); x.arc(s.x,s.y,s.r,0,Math.PI*2);
+        x.fillStyle=`rgba(255,255,255,${s.o})`; x.fill();
+      });
+      requestAnimationFrame(draw);
+    })();
+    window.addEventListener('resize',()=>{c.width=window.innerWidth;c.height=window.innerHeight;});
+  })();
+
+  // Misc
+  document.getElementById('y').textContent = new Date().getFullYear();
+
+  // Progress bar
+  const pb = document.getElementById('pb');
+  window.addEventListener('scroll',()=>{
+    pb.style.width=(window.scrollY/(document.documentElement.scrollHeight-window.innerHeight)*100)+'%';
+  });
+
+  // Back to top
+  const btt = document.getElementById('btt');
+  window.addEventListener('scroll',()=>btt.classList.toggle('show',window.scrollY>400));
+
+  // Active sidebar link on scroll
+  const links = document.querySelectorAll('.sb-link');
+  const obs = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        links.forEach(l=>l.classList.remove('active'));
+        const m=document.querySelector(`.sb-link[href="#${e.target.id}"]`);
+        if(m)m.classList.add('active');
+      }
+    });
+  },{rootMargin:'-15% 0px -80% 0px'});
+  document.querySelectorAll('[id]').forEach(s=>obs.observe(s));
+
+  // Click override
+  links.forEach(l=>l.addEventListener('click',()=>{
+    links.forEach(x=>x.classList.remove('active'));
+    l.classList.add('active');
+  }));
+</script>
+</body>
+</html>

@@ -1,0 +1,871 @@
+# Chat
+
+The Chat module controls everything related to player messages: how they look, who can see them, channels, muting, private messages, item sharing in chat, hover cards, and Discord bridging. Everything is configured in one file: `plugins/OreoEssentials/chat-format.yml`.
+
+This guide explains every single setting from the ground up. No prior knowledge needed.
+
+---
+
+## How the Chat System Works — Big Picture
+
+There are **two modes**. You use one or the other, not both at the same time:
+
+**Mode 1 — Simple (channels disabled)**
+- Every message goes to everyone on the server.
+- The look of the message is controlled by the player's LuckPerms group.
+- You set a format for `default` and optionally override it for `admin`, `vip`, etc.
+- Simpler to set up. Recommended for small servers.
+
+**Mode 2 — Channels (channels enabled)**
+- Players can be in different "rooms" (Global, Trade, Staff, Local, etc.).
+- They only see messages from the channel they are currently in.
+- Each channel has its own format and can have per-rank sub-formats.
+- Supports range-limited chat (only nearby players hear you) and cross-server chat.
+- Recommended for larger servers with a more complex community.
+
+You switch between modes with `channels.enabled: true/false` in `chat-format.yml`.
+
+---
+
+## The Configuration File Explained
+
+File location: `plugins/OreoEssentials/chat-format.yml`
+
+Below is every setting, what it does, and what values it accepts.
+
+---
+
+### Top-Level Chat Settings
+
+```yaml
+chat:
+  enabled: true
+```
+
+`enabled: true` — turns the entire chat module on.
+`enabled: false` — disables all chat formatting. Vanilla Minecraft chat will be used.
+
+---
+
+```yaml
+  strip-name-colors: false
+```
+
+When `true`, any color codes inside the player's username are stripped before displaying it. Useful if you have players with colored names from other plugins and want to remove those colors in chat.
+
+---
+
+```yaml
+  use-minimessage: true
+```
+
+This controls the formatting engine.
+
+- `true` (recommended) — uses MiniMessage. This is the modern Paper/Adventure formatting system that supports gradients, hover text, click events, and more.
+- `false` — uses legacy `&` color codes and `<gradient:>` is processed manually.
+
+**Leave this as `true` unless you have a very specific reason not to.**
+
+---
+
+```yaml
+  minimessage-translate-legacy-amp: true
+```
+
+When `true`, legacy `&` color codes from LuckPerms prefixes/suffixes (like `&6[Admin]&r`) are automatically converted to MiniMessage format before rendering. This means your LuckPerms prefix colors will work even in MiniMessage mode.
+
+**Always keep this `true`** if your LuckPerms groups use `&` color codes.
+
+---
+
+```yaml
+  papi:
+    apply-to-format: true
+    apply-to-message: false
+```
+
+`apply-to-format: true` — PlaceholderAPI placeholders like `%player_name%` are processed inside the format template. This is what lets you use things like `%luckperms_primary_group%` in the hover card.
+
+`apply-to-message: false` — PlaceholderAPI is NOT applied to what players type. **Keep this false.** If you set it to true, players could type `%oreo_balance%` in chat and it would be replaced with their real balance — a security risk.
+
+---
+
+### Per-Group Formats (used when channels are DISABLED)
+
+```yaml
+  default: "<lp_prefix><white><player_name></white> <dark_gray>»</dark_gray> <white><chat_message></white>"
+```
+
+This is the format used for any player whose LuckPerms group doesn't have its own entry. It is also the fallback if channels are disabled.
+
+**To add a format for a specific group**, add it like this:
+
+```yaml
+chat:
+  default: "<lp_prefix><white><player_name></white> <dark_gray>»</dark_gray> <white><chat_message></white>"
+  admin: "<red><bold>[Admin]</bold></red> <lp_prefix><gold><player_name></gold> <dark_gray>»</dark_gray> <white><chat_message></white>"
+  vip: "<gold>[VIP]</gold> <lp_prefix><yellow><player_name></yellow> <dark_gray>»</dark_gray> <white><chat_message></white>"
+  moderator: "<blue>[MOD]</blue> <lp_prefix><white><player_name></white> <dark_gray>»</dark_gray> <white><chat_message></white>"
+```
+
+The key (e.g. `admin`, `vip`) must **exactly match** the LuckPerms primary group name in lowercase.
+
+---
+
+### Format Placeholders
+
+These are the tags you can use inside any format string (both in simple mode and in channel formats):
+
+| Placeholder | What it shows |
+|---|---|
+| `<lp_prefix>` | The player's LuckPerms prefix (e.g. `[Admin]`) — colors included |
+| `<lp_suffix>` | The player's LuckPerms suffix |
+| `<player_name>` | The player's Minecraft username |
+| `<player_displayname>` | The player's display name (may differ if set by another plugin) |
+| `<chat_message>` | The actual message the player typed |
+| `<server_name>` | The name of the server (from OreoEssentials config) |
+| `<player_world>` | The world the player is currently in |
+| `<player_health>` | Player's current health (hearts × 2) |
+| `<player_max_health>` | Player's maximum health |
+| `<player_level>` | Player's XP level |
+| `<player_ping>` | Player's ping in milliseconds |
+| `<player_gamemode>` | Player's game mode (SURVIVAL, CREATIVE, etc.) |
+| `<time_24h>` | Current server time in HH:mm:ss format |
+| `<date>` | Current server date in yyyy-MM-dd format |
+| `%any_papi_placeholder%` | Any PlaceholderAPI placeholder |
+
+> `<chat_message>` is **required** in every format. If you forget it, players' messages will not appear.
+
+---
+
+### MiniMessage Color Reference
+
+MiniMessage uses `<tag>text</tag>` syntax. Here are the most common ones:
+
+**Named colors:**
+`<black>`, `<dark_blue>`, `<dark_green>`, `<dark_aqua>`, `<dark_red>`, `<dark_purple>`, `<gold>`, `<gray>`, `<dark_gray>`, `<blue>`, `<green>`, `<aqua>`, `<red>`, `<light_purple>`, `<yellow>`, `<white>`
+
+**Text styles:**
+`<bold>`, `<italic>`, `<underlined>`, `<strikethrough>`, `<obfuscated>`, `<reset>`
+
+**Hex colors:**
+`<#FF5733>text</#FF5733>` or just `<#FF5733>text` (no close tag needed for simple coloring)
+
+**Gradients:**
+`<gradient:#FF1493:#00FF7F>Gradient Text</gradient>` — fades from pink to green
+`<gradient:#FF0000:#00FF00:#0000FF>RGB Gradient</gradient>` — multi-stop gradient
+
+**Example — a colorful admin format:**
+```yaml
+admin: "<gradient:#ff4444:#ff8888>[Admin]</gradient> <lp_prefix><red><player_name></red> <dark_gray>»</dark_gray> <white><chat_message></white>"
+```
+
+---
+
+### Player Chat Colors Permission
+
+Players with the permission `oreo.chat.colors` can use MiniMessage color tags inside their own messages.
+
+For example, a player with this permission can type:
+```
+<red>Hello everyone!
+```
+And it will show in red in chat.
+
+Players **without** this permission have their MiniMessage tags stripped — they show as plain text.
+
+This lets you give color chat as a VIP perk without any extra config.
+
+---
+
+## Discord Bridge (Simple Mode)
+
+```yaml
+  discord:
+    enabled: false
+    webhook_url: "https://discord.com/api/webhooks/REPLACE_ME"
+```
+
+When `enabled: true` and a valid webhook URL is provided, every chat message is also sent to a Discord channel.
+
+**How to get a webhook URL:**
+1. In Discord, go to your channel settings.
+2. Click **Integrations** → **Webhooks** → **New Webhook**.
+3. Give it a name and copy the URL.
+4. Paste it into `webhook_url`.
+
+> This is the global Discord bridge for simple mode. Each channel can also have its own webhook — see the Channels section.
+
+---
+
+## Hover Card
+
+```yaml
+  hover:
+    enabled: true
+    lines:
+      - "<gradient:#FFD700:#FFA500><bold>%player_name%</bold></gradient>"
+      - ""
+      - "<gray>━━━━━━━━━━━━━━━━━━━━</gray>"
+      ...
+```
+
+When `enabled: true`, hovering your mouse over a player's name in chat shows a popup with information about them.
+
+Each entry in `lines` is one line of the popup. Supports:
+- MiniMessage formatting (`<red>`, `<gradient:>`, `<bold>`, etc.)
+- PlaceholderAPI placeholders (`%player_health%`, `%luckperms_primary_group%`, etc.)
+- Special hover-card variables: `%player_name%`, `%player_health%`, `%player_max_health%`, `%player_level%`, `%player_ping%`, `%player_world%`, `%player_x%`, `%player_y%`, `%player_z%`, `%player_gamemode%`
+- An empty string `""` creates a blank line.
+
+**Example — minimal hover card:**
+```yaml
+hover:
+  enabled: true
+  lines:
+    - "<gold><bold>%player_name%</bold></gold>"
+    - "<gray>Health: <red>%player_health%</red></gray>"
+    - "<gray>Ping: <green>%player_ping%ms</green></gray>"
+```
+
+**To disable hover cards entirely:**
+```yaml
+hover:
+  enabled: false
+```
+
+---
+
+## Item in Chat (`[item]`)
+
+```yaml
+  item-in-chat:
+    enabled: true
+    placeholder: "[item]"
+    empty-hand-text: "<gray>[Air]</gray>"
+```
+
+When `enabled: true`, any player who types `[item]` in their message will have that text replaced with a **clickable, hoverable item display** showing the item they are currently holding.
+
+**How players use it:**
+A player holds a Diamond Sword and types: `Anyone want to trade? [item]`
+
+The `[item]` becomes a colored, hoverable tag showing the sword's name. Other players can hover over it to see its full stats: name, lore, enchantments, and durability.
+
+**Settings:**
+- `placeholder` — the text players type to trigger it. Default is `[item]`. You can change it to `[show]`, `(item)`, or anything you want.
+- `empty-hand-text` — what is shown if the player is holding nothing (air). Default is gray `[Air]`.
+
+**ItemsAdder / Nexo support:** If ItemsAdder or Nexo is installed, custom item names and IDs are shown correctly in the hover tooltip.
+
+**To disable item-in-chat:**
+```yaml
+item-in-chat:
+  enabled: false
+```
+
+---
+
+## Channel System
+
+### Enabling Channels
+
+```yaml
+  channels:
+    enabled: true
+```
+
+Set to `true` to use channels mode. Set to `false` for simple single-format chat.
+
+---
+
+### Default Channel
+
+```yaml
+    default_channel: "global"
+```
+
+The channel every player is in when they first join the server (or if their saved channel no longer exists). Must match a channel ID defined in `channel_definitions`.
+
+---
+
+### Remember Last Channel
+
+```yaml
+    remember_last_channel: true
+```
+
+When `true`, the player's channel selection is saved and restored when they relog. When `false`, players are always placed in the default channel on login.
+
+By default, channels are saved to a YAML file (`plugins/OreoEssentials/channel_data.yml`). If MongoDB is configured in OreoEssentials core, it is used instead for better performance.
+
+---
+
+### Cross-Server Channels
+
+```yaml
+    cross_server:
+      enabled: false
+```
+
+When `true`, messages sent in channels with scope `ALL` or `SHARD` are broadcast to all other servers in the network via RabbitMQ. Players on Server A and Server B see the same global chat.
+
+**Requirements for cross-server chat:**
+- `cross_server.enabled: true` in this file
+- A working RabbitMQ connection configured in OreoEssentials core `config.yml`
+- Both servers must be running OreoEssentials
+
+---
+
+### Channel Formatting Fallback
+
+```yaml
+    formatting:
+      enabled: true
+      fallback_format: "<gray><player_name></gray><dark_gray>: </dark_gray><white><chat_message></white>"
+```
+
+This is the format used when a channel has `formatting.enabled: false`, or as a last resort if the channel's format is missing. Think of it as the emergency backup format.
+
+---
+
+### Channel GUI Settings
+
+```yaml
+    gui:
+      title: "<gold>Oreo Channels</gold>"
+      rows: 4
+      fill_empty_with_glass: true
+```
+
+Controls the appearance of the channel-picker GUI (opened with `/channels` or `/ch`):
+- `title` — the title bar of the GUI. Supports MiniMessage.
+- `rows` — how many rows tall the GUI is (1–6). One row = 9 slots.
+- `fill_empty_with_glass` — fills unused slots with glass panes to look cleaner.
+
+---
+
+### Channel Display Order
+
+```yaml
+    list_order:
+      - "global"
+      - "announcements"
+      - "trade"
+      - "local"
+      - "staff"
+      - "help"
+```
+
+The order in which channels appear in the GUI and in `/channels` listings. Any channel not listed here still appears but is placed at the end.
+
+---
+
+## Defining Channels
+
+All channels live under `channel_definitions:`. You can add as many as you want.
+
+### Full Channel Template
+
+```yaml
+    channel_definitions:
+
+      my_channel:
+        enabled: true
+        display_name: "<green>My Channel</green>"
+        description: "<gray>A description of this channel</gray>"
+
+        talk_permission: null
+        view_permission: null
+        join_permission: null
+
+        scope:
+          type: "ALL"
+          range_blocks: 0
+
+        formatting:
+          enabled: true
+          format: "<green>[MC]</green> <lp_prefix><white><player_name></white><dark_gray>: </dark_gray><white><chat_message></white>"
+
+          rank_formats:
+            default: "<green>[MC]</green> <white><player_name></white><dark_gray>: </dark_gray><white><chat_message></white>"
+            vip: "<gold>[VIP-MC]</gold> <lp_prefix><gold><player_name></gold><dark_gray>: </dark_gray><yellow><chat_message></yellow>"
+
+        join_message: "<gray>You are now in </gray><green>My Channel</green><gray>!</gray>"
+        discord_webhook: null
+```
+
+---
+
+### Channel Settings Explained
+
+#### `enabled`
+
+```yaml
+enabled: true
+```
+
+`true` — channel is active and visible.
+`false` — channel is hidden and cannot be joined. Useful for temporarily disabling a channel without deleting it.
+
+---
+
+#### `display_name`
+
+```yaml
+display_name: "<gradient:#FF1493:#00FF7F>Global</gradient>"
+```
+
+The name shown in the GUI, in join messages, and in the channel selector. Supports full MiniMessage formatting including gradients.
+
+---
+
+#### `description`
+
+```yaml
+description: "<gray>Server-wide chat</gray>"
+```
+
+A short description shown in the channel GUI when players hover over the channel icon.
+
+---
+
+#### Permissions
+
+```yaml
+talk_permission: null
+view_permission: null
+join_permission: null
+```
+
+Three independent permissions control access:
+
+| Permission | What it controls |
+|---|---|
+| `talk_permission` | Whether the player can **send** messages in this channel |
+| `view_permission` | Whether the player can **read** messages in this channel |
+| `join_permission` | Whether the player can **switch** to this channel |
+
+**Setting a permission to `null`** means anyone can do that action — no permission required.
+
+**Setting a permission to a string** like `"oreo.chat.channel.staff.talk"` means only players with that permission node can do it.
+
+**Important note:** If `join_permission` is `null` but `talk_permission` is set, players can join the channel but will see an error when they try to talk. This is useful for read-only announcement channels where everyone can see messages but only staff can post.
+
+**Example — staff-only channel:**
+```yaml
+talk_permission: "oreo.chat.channel.staff.talk"
+view_permission: "oreo.chat.channel.staff.view"
+join_permission: "oreo.chat.channel.staff.join"
+```
+
+**Example — anyone can join and read, but only admins can post (announcement channel):**
+```yaml
+talk_permission: "oreo.chat.channel.announcements.talk"
+view_permission: null
+join_permission: null
+```
+
+---
+
+#### Scope
+
+```yaml
+scope:
+  type: "ALL"
+  range_blocks: 0
+```
+
+The scope controls **who receives messages** in this channel.
+
+| Scope Type | Who sees the messages |
+|---|---|
+| `ALL` | Every player on the server (or network if cross-server is enabled) |
+| `WORLD` | Only players in the same world as the sender |
+| `RANGE` | Only players within `range_blocks` blocks of the sender |
+| `SERVER` | Only players on this specific server (no cross-server even if enabled) |
+| `SHARD` | Same as ALL but explicitly includes cross-server broadcasting |
+
+`range_blocks` only matters when `type: "RANGE"`. For all other types, leave it at `0`.
+
+**Example — local proximity chat (100 blocks):**
+```yaml
+scope:
+  type: "RANGE"
+  range_blocks: 100
+```
+
+**Example — world-only chat:**
+```yaml
+scope:
+  type: "WORLD"
+  range_blocks: 0
+```
+
+---
+
+#### Formatting
+
+```yaml
+formatting:
+  enabled: true
+  format: "<gray>[<gradient:#FF1493:#00FF7F>G</gradient>]</gray> <lp_prefix><white><player_name></white><dark_gray>: </dark_gray><white><chat_message></white>"
+```
+
+`enabled: true` — uses this channel's custom format.
+`enabled: false` — falls back to the global `formatting.fallback_format`.
+
+`format` — the MiniMessage template for messages in this channel. Uses the same placeholders as the simple format (`<lp_prefix>`, `<player_name>`, `<chat_message>`, etc.).
+
+---
+
+#### Per-Rank Formats
+
+```yaml
+          rank_formats:
+            default: "<gray>[G]</gray> <white><player_name></white><dark_gray>: </dark_gray><white><chat_message></white>"
+            vip:   "<gold>[★ G]</gold> <lp_prefix><gold><player_name></gold><dark_gray>: </dark_gray><yellow><chat_message></yellow>"
+            admin: "<red>[⚡ G]</red> <lp_prefix><red><player_name></red><dark_gray>: </dark_gray><white><chat_message></white>"
+```
+
+Rank formats let you give different-looking messages to different LuckPerms groups **within the same channel**.
+
+**How it works:**
+1. When a player sends a message, their LuckPerms primary group is checked.
+2. If that group has an entry in `rank_formats`, that format is used.
+3. If no matching group is found, the `default` rank_format is used.
+4. If `default` is also not set, the channel's main `format` is used.
+
+**The key must exactly match the LuckPerms group name** (lowercase).
+
+**Example — Global channel where VIPs have a gold prefix:**
+```yaml
+rank_formats:
+  default: "<gray>[G]</gray> <player_name><dark_gray>: </dark_gray><white><chat_message></white>"
+  vip:     "<gold>[★]</gold> <lp_prefix><gold><player_name></gold><dark_gray>: </dark_gray><yellow><chat_message></yellow>"
+  mvp:     "<gradient:#ffd700:#ff8c00>[✦]</gradient> <lp_prefix><gradient:#ffd700:#ff8c00><player_name></gradient><dark_gray>: </dark_gray><white><chat_message></white>"
+  admin:   "<red>[Admin]</red> <lp_prefix><red><player_name></red><dark_gray>: </dark_gray><white><chat_message></white>"
+```
+
+---
+
+#### Join Message
+
+```yaml
+join_message: "<gray>You are now chatting in </gray><green>Global</green><gray>!</gray>"
+```
+
+The message shown privately to a player when they switch to this channel. Only they see it. Supports MiniMessage.
+
+Set to `null` or remove the field entirely to show no join message.
+
+---
+
+#### Discord Webhook per Channel
+
+```yaml
+discord_webhook: null
+```
+
+Set this to a Discord webhook URL to mirror this specific channel's messages to a Discord channel.
+
+```yaml
+discord_webhook: "https://discord.com/api/webhooks/123456789/abcdef"
+```
+
+Each channel can have its own webhook pointing to a different Discord channel. For example: global chat → `#mc-global`, staff chat → `#staff-chat`.
+
+**Set to `null`** to disable Discord mirroring for this channel.
+
+---
+
+## Built-In Channels (Default Config)
+
+The default config ships with 6 channels. Here is what each one does:
+
+| Channel ID | Scope | Who can talk | Purpose |
+|---|---|---|---|
+| `global` | ALL | Everyone | Main server-wide chat |
+| `announcements` | ALL | `oreo.chat.channel.announcements.talk` | Read-only for players, staff-only writing |
+| `local` | RANGE (100 blocks) | Everyone | Proximity chat |
+| `trade` | ALL | Everyone | Buying and selling items |
+| `staff` | ALL | `oreo.chat.channel.staff.talk` | Private staff communication |
+| `help` | ALL | Everyone | Players asking questions |
+
+---
+
+## Commands
+
+### Channel Commands
+
+| Command | Aliases | Permission | Description |
+|---|---|---|---|
+| `/oechannel <channel>` | `/channel`, `/setchannel` | `oreo.chat.channel` | Switch to a different channel |
+| `/oechannel` (no args) | `/channel` | `oreo.chat.channel` | Shows your current channel |
+| `/oechannels` | `/channels`, `/ch` | `oreo.chat.channels` | Opens the channel picker GUI |
+| `/channelannounce <channel> <message>` | — | `oreo.channel.announce` | Sends a staff announcement to a specific channel |
+
+**Tab completion** for `/channel` automatically shows only the channels the player has permission to join.
+
+**`/channelannounce` details:**
+- Sends a formatted announcement to all players currently in the specified channel.
+- The message is prefixed with `[ANNOUNCEMENT] »`.
+- If cross-server is enabled and the channel scope is `ALL` or `SHARD`, the announcement is also broadcast to other servers.
+- The message supports MiniMessage formatting tags (e.g. `<red>Server restart in 5 minutes!`).
+
+---
+
+### Moderation Commands
+
+| Command | Aliases | Permission | Description |
+|---|---|---|---|
+| `/mute <player> <duration> [reason]` | — | `oreo.mute` | Mutes a player for a set duration |
+| `/unmute <player>` | — | `oreo.unmute` | Removes a mute |
+| `/broadcast <message>` | `/bc` | `oreo.broadcast` | Sends a colored message to the entire server |
+
+#### `/mute` Duration Format
+
+| Format | Meaning |
+|---|---|
+| `30s` | 30 seconds |
+| `10m` | 10 minutes |
+| `2h` | 2 hours |
+| `1d` | 1 day |
+| `120` | 120 seconds (plain number = seconds) |
+
+**Example:** `/mute Steve 1h Spamming`
+
+**What happens when you mute someone:**
+1. The mute is saved to `plugins/OreoEssentials/mutes.yml` and survives server restarts.
+2. The target player is notified with a message showing the duration and reason.
+3. A public moderation notice is shown to all online players.
+4. If Discord moderation notifications are enabled, a Discord alert fires.
+5. If cross-server sync is enabled, the mute is broadcast to all servers so they also block the player.
+
+**What happens when a muted player tries to chat:**
+Their message is silently blocked. They receive a message saying they are muted, how long is left, and the reason.
+
+**Mutes auto-expire** — a cleanup task runs every minute. When a mute's time is up, it is automatically removed. No manual action needed.
+
+#### `/broadcast` Details
+
+- Supports `&` color codes: `/bc &cServer restart in &e5 minutes&c!`
+- Supports hex colors: `/bc &#FF5733This is a custom hex color`
+- Supports PlaceholderAPI placeholders (resolved as the sender's values)
+- The `[Broadcast]` prefix is configurable in the language file
+
+---
+
+### Private Messages
+
+| Command | Aliases | Permission | Description |
+|---|---|---|---|
+| `/msg <player> <message>` | `/tell`, `/w` | `oreo.msg` | Send a private message to a player |
+| `/reply <message>` | `/r` | `oreo.msg` | Reply to the last person who messaged you |
+
+**Cross-server private messages:** If the target player is on a different server, the message is routed via RabbitMQ automatically. The sender sees `-> PlayerName: message` and the receiver gets the message instantly on their server. `/reply` works across servers too.
+
+---
+
+## Permissions Reference
+
+| Permission | Default | What it grants |
+|---|---|---|
+| `oreo.chat.colors` | `false` | Use MiniMessage color tags in chat messages |
+| `oreo.chat.channel` | `true` | Use `/channel` to switch channels |
+| `oreo.chat.channels` | `true` | Use `/channels` to open the GUI |
+| `oreo.channel.announce` | `op` | Use `/channelannounce` |
+| `oreo.mute` | `op` | Mute players |
+| `oreo.unmute` | `op` | Unmute players |
+| `oreo.broadcast` | `op` | Use `/broadcast` |
+| `oreo.msg` | `true` | Use `/msg` and `/reply` |
+| `oreo.chat.channel.<id>.talk` | depends | Talk in a specific channel (if configured) |
+| `oreo.chat.channel.<id>.view` | depends | View messages in a specific channel (if configured) |
+| `oreo.chat.channel.<id>.join` | depends | Join a specific channel (if configured) |
+
+Permissions in the `oreo.chat.channel.<id>.*` group only matter if you explicitly set them in the channel definition. If the channel has `talk_permission: null`, no permission is needed and these nodes are unused.
+
+---
+
+## Cross-Server Chat Sync
+
+Chat cross-server sync is powered by **RabbitMQ** (the same message broker used by other OreoEssentials cross-server features).
+
+### Setup
+
+1. Make sure RabbitMQ is running and configured in OreoEssentials core `config.yml`.
+2. In `chat-format.yml`, set:
+```yaml
+channels:
+  cross_server:
+    enabled: true
+```
+3. Reload: `/oe reload` or restart the server.
+
+### What gets synced
+
+- **Channel messages** — messages in channels with scope `ALL` or `SHARD` are forwarded to all servers.
+- **Mutes** — when a player is muted on Server A, the mute is broadcast to Server B so the player cannot chat there either.
+- **System broadcasts** — the mute notification is sent network-wide so all servers see the moderation action.
+
+### What does NOT get synced
+
+- `RANGE` and `WORLD` scoped channels — proximity and world chat are never sent cross-server by design.
+- `SERVER` scoped channels — explicitly local to one server.
+
+---
+
+## Complete Setup Examples for Beginners
+
+### Example 1 — Simple server, no channels
+
+**Goal:** Everyone chats together. Admins get a red prefix, VIPs get gold, everyone else gets white.
+
+```yaml
+chat:
+  enabled: true
+  use-minimessage: true
+  minimessage-translate-legacy-amp: true
+
+  papi:
+    apply-to-format: true
+    apply-to-message: false
+
+  default: "<lp_prefix><white><player_name></white> <dark_gray>»</dark_gray> <white><chat_message></white>"
+  admin: "<red><bold>[Admin]</bold></red> <lp_prefix><red><player_name></red> <dark_gray>»</dark_gray> <white><chat_message></white>"
+  vip: "<gold>[VIP]</gold> <lp_prefix><yellow><player_name></yellow> <dark_gray>»</dark_gray> <white><chat_message></white>"
+
+  hover:
+    enabled: true
+    lines:
+      - "<gold><bold>%player_name%</bold></gold>"
+      - "<gray>Health: <red>%player_health%/%player_max_health%</red></gray>"
+      - "<gray>Ping: <green>%player_ping%ms</green></gray>"
+
+  item-in-chat:
+    enabled: true
+    placeholder: "[item]"
+    empty-hand-text: "<gray>[Air]</gray>"
+
+  channels:
+    enabled: false
+```
+
+---
+
+### Example 2 — Channels server with Global and Staff
+
+**Goal:** Two channels. Global for everyone, Staff for staff only. Players start in Global.
+
+```yaml
+chat:
+  enabled: true
+  use-minimessage: true
+  minimessage-translate-legacy-amp: true
+
+  papi:
+    apply-to-format: true
+    apply-to-message: false
+
+  default: "<lp_prefix><white><player_name></white> <dark_gray>»</dark_gray> <white><chat_message></white>"
+
+  hover:
+    enabled: true
+    lines:
+      - "<gold><bold>%player_name%</bold></gold>"
+      - "<gray>Ping: %player_ping%ms</gray>"
+
+  item-in-chat:
+    enabled: true
+    placeholder: "[item]"
+    empty-hand-text: "<gray>[Air]</gray>"
+
+  channels:
+    enabled: true
+    default_channel: "global"
+    remember_last_channel: true
+
+    cross_server:
+      enabled: false
+
+    formatting:
+      enabled: true
+      fallback_format: "<gray><player_name>: <chat_message></gray>"
+
+    gui:
+      title: "<gold>Chat Channels</gold>"
+      rows: 3
+      fill_empty_with_glass: true
+
+    list_order:
+      - "global"
+      - "staff"
+
+    channel_definitions:
+
+      global:
+        enabled: true
+        display_name: "<green>Global</green>"
+        description: "<gray>Main server chat</gray>"
+        talk_permission: null
+        view_permission: null
+        join_permission: null
+        scope:
+          type: "ALL"
+          range_blocks: 0
+        formatting:
+          enabled: true
+          format: "<gray>[<green>G</green>]</gray> <lp_prefix><white><player_name></white><dark_gray>: </dark_gray><white><chat_message></white>"
+          rank_formats:
+            vip: "<gold>[<white>★</white> G]</gold> <lp_prefix><gold><player_name></gold><dark_gray>: </dark_gray><yellow><chat_message></yellow>"
+            admin: "<red>[⚡ G]</red> <lp_prefix><red><player_name></red><dark_gray>: </dark_gray><white><chat_message></white>"
+        join_message: "<gray>Now in </gray><green>Global</green><gray>!</gray>"
+        discord_webhook: null
+
+      staff:
+        enabled: true
+        display_name: "<red>Staff</red>"
+        description: "<gray>Staff-only channel</gray>"
+        talk_permission: "oreo.chat.channel.staff.talk"
+        view_permission: "oreo.chat.channel.staff.view"
+        join_permission: "oreo.chat.channel.staff.join"
+        scope:
+          type: "ALL"
+          range_blocks: 0
+        formatting:
+          enabled: true
+          format: "<dark_red><bold>[STAFF]</bold></dark_red> <lp_prefix><red><player_name></red><dark_gray>: </dark_gray><white><chat_message></white>"
+          rank_formats:
+            moderator: "<aqua>[MOD]</aqua> <lp_prefix><aqua><player_name></aqua><dark_gray>: </dark_gray><white><chat_message></white>"
+            admin: "<red>[ADMIN]</red> <lp_prefix><red><player_name></red><dark_gray>: </dark_gray><white><chat_message></white>"
+        join_message: "<gray>Now in </gray><red>Staff Chat</red><gray>!</gray>"
+        discord_webhook: null
+```
+
+---
+
+## Common Mistakes and Fixes
+
+**Problem: All chat is going to one channel even after switching.**
+Fix: Make sure `channels.enabled: true` in `chat-format.yml`. If it is `false`, the channel system is off and everyone uses the simple format.
+
+**Problem: A player's rank format is not showing (it shows the `default` format instead).**
+Fix: The key in `rank_formats` must exactly match the player's LuckPerms primary group name in **lowercase**. Check with `/lp user <name> info` and look at "Primary Group".
+
+**Problem: MiniMessage tags like `<red>` are showing as literal text in chat.**
+Fix: Make sure `use-minimessage: true` in `chat-format.yml`.
+
+**Problem: LuckPerms prefix colors are not showing.**
+Fix: Make sure `minimessage-translate-legacy-amp: true`. This converts `&6[Admin]` style codes to MiniMessage automatically.
+
+**Problem: The hover card is not appearing.**
+Fix: Make sure `hover.enabled: true`. Also, hover cards only show in Paper/modern clients — they do not appear in the F3 debug console.
+
+**Problem: `[item]` is not being replaced.**
+Fix: Make sure `item-in-chat.enabled: true` and that the player is typing the exact placeholder from `item-in-chat.placeholder` (default: `[item]` — square brackets, lowercase).
+
+**Problem: A muted player can still chat on other servers.**
+Fix: Cross-server mute sync requires `cross_server.enabled: true` in the channels section AND a working RabbitMQ connection. Check the console on startup for connection errors.
+
+**Problem: I want to add a new channel.**
+Fix: Add a new section under `channel_definitions` with a unique ID (e.g. `pvp`), then add it to `list_order`. Run `/oe reload` to apply without restarting.

@@ -1,0 +1,33 @@
+# Test profile — H2 in-memory, Flyway disabled (JPA creates schema via ddl-auto).
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;NON_KEYWORDS=USER
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+  flyway:
+    enabled: false   # H2 handles schema; Flyway SQL is PostgreSQL-specific
+
+app:
+  jwt:
+    secret: "TEST_SECRET_KEY_MUST_BE_32_CHARS!!"
+    access-token-expiration-ms: 900000
+    refresh-token-expiration-ms: 604800000
+  encryption:
+    secret-key: "TEST_ENCKEY_32_BYTES_EXACTLY_0000"
+  cors:
+    allowed-origins: "http://localhost:3000"
+  mongo:
+    connect-timeout-ms: 5000
+    socket-timeout-ms: 10000
+    max-pool-size: 1
+
+logging:
+  level:
+    fr.elias.oreoessentialsweb: WARN
+    org.springframework.security: WARN

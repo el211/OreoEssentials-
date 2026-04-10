@@ -1,0 +1,747 @@
+# Shop
+
+The **Shop** module is a fully-featured GUI-based shop system built into OreoEssentials.
+It supports buying and selling items, multiple shops with pagination, custom currencies,
+dynamic demand-based pricing, per-player price modifiers, daily rotating shops,
+ItemsAdder and Nexo custom items, anti-dupe protection, and transaction logging.
+
+---
+
+## Commands
+
+### `/shop` — Main shop command
+
+| Usage | Permission | Description |
+|---|---|---|
+| `/shop` | `oshopgui.shop` | Opens the main shop menu |
+| `/shop <shopId>` | `oshopgui.shop` | Opens a specific shop directly |
+| `/shop <player> <shopId>` | `oshopgui.others` | Opens a shop for another player |
+| `/shop reload` | `oshopgui.reload` | Reloads all shop config, shops, and prices |
+| `/shop check` | `oshopgui.check` | Checks the buy/sell price of the item in your hand |
+| `/shop reroll <shopId>` | `oshopgui.reroll` | Force-rerolls a rotating shop's daily selection |
+| `/shop addmodifier global <player> <value> [buy\|sell]` | `oshopgui.shop.addmodifier` | Applies a global price modifier to a player |
+| `/shop addmodifier shop <player> <shop> <value> [buy\|sell]` | `oshopgui.shop.addmodifier` | Applies a shop-level modifier to a player |
+| `/shop addmodifier item <player> <shop> <item> <value> [buy\|sell]` | `oshopgui.shop.addmodifier` | Applies an item-level modifier to a player |
+| `/shop resetmodifier global <player>` | `oshopgui.shop.resetmodifier` | Resets a player's global modifier |
+| `/shop resetmodifier shop <player> <shop>` | `oshopgui.shop.resetmodifier` | Resets a player's shop-level modifier |
+| `/shop resetmodifier item <player> <shop> <item>` | `oshopgui.shop.resetmodifier` | Resets a player's item-level modifier |
+| `/shop checkmodifiers <player>` | `oshopgui.shop.checkmodifiers` | Lists all active modifiers for a player |
+
+---
+
+### `/sell` — Quick sell command
+
+| Usage | Permission | Description |
+|---|---|---|
+| `/sell hand [qty]` | `oshopgui.sell.hand` | Sells the item in your main hand (default qty 1) |
+| `/sell handall` | `oshopgui.sell.hand.all` | Sells ALL of the item in your main hand from your inventory |
+| `/sell all` | `oshopgui.sell.all` | Sells every sellable item in your entire inventory |
+
+`/sell all` and `/sell handall` automatically group earnings by currency — if your inventory contains items from different shops using different currencies, you receive each currency separately.
+
+---
+
+## Full Permissions Reference
+
+| Permission | Default | Description |
+|---|---|---|
+| `oshopgui.shop` | op | Open the shop GUI and browse any shop |
+| `oshopgui.others` | op | Open a shop GUI for another player |
+| `oshopgui.reload` | op | Reload the shop module |
+| `oshopgui.check` | op | Check buy/sell price of item in hand |
+| `oshopgui.reroll` | op | Force-reroll a rotating shop |
+| `oshopgui.sell.hand` | op | Use `/sell hand` |
+| `oshopgui.sell.hand.all` | op | Use `/sell handall` |
+| `oshopgui.sell.all` | op | Use `/sell all` |
+| `oshopgui.shop.addmodifier` | op | Set price modifiers on players |
+| `oshopgui.shop.resetmodifier` | op | Reset price modifiers on players |
+| `oshopgui.shop.checkmodifiers` | op | Inspect a player's modifiers |
+| `oshopgui.bypass.cooldown` | op | Bypass the anti-dupe transaction cooldown |
+
+---
+
+## GUI Overview
+
+### Main Menu
+
+Opened with `/shop`. Configured entirely in `shop/config.yml` under `main-menu-items`.
+
+- Displays category buttons, one per shop (e.g. "Building Blocks", "Ores & Minerals").
+- Each button's slot, material, name, lore, and target shop ID are configurable.
+- A close button is placed at the configurable `close-slot`.
+- Unfilled slots can be padded with a configurable filler material.
+
+### Shop Browser
+
+Opened when clicking a category button or using `/shop <id>`.
+
+- Displays all items for the current page of the selected shop.
+- Items in the last row (nav bar) are reserved for navigation: Previous Page, Back to Menu, Page Indicator, Next Page.
+- Each item shows its lore (custom lore from YAML), then appended price lines:
+  - Amount per transaction
+  - Buy price (with modifiers + dynamic pricing applied)
+  - Sell price (with modifiers + dynamic pricing applied)
+  - Dynamic pricing trend label (if enabled and demand is elevated)
+  - Action hints (Left-click to buy / Right-click to sell / Q for instant x1)
+- **Left-click** → opens Amount Selection GUI in BUY mode (or instant x1 if Amount Selection disabled).
+- **Right-click** → opens Amount Selection GUI in SELL mode (or instant x1).
+- **Q (Drop key)** → always bypasses Amount Selection and instantly buys/sells 1 unit.
+- Items with a `permission` field are hidden from players who don't have that permission.
+
+### Amount Selection GUI
+
+A 4-row GUI for choosing exactly how many to buy or sell before confirming.
+
+- **Row 0** — Five `+` increment buttons: +1, +16, +32, +64, +128.
+- **Row 1, slot 4** — The item being transacted (visual only).
+- **Row 1, slot 5** — Counter showing current quantity and total cost/earn.
+- **Row 2** — Five `-` decrement buttons: -1, -16, -32, -64, -128 (clamped to minimum 1).
+- **Row 3**:
+  - **Cancel** (Barrier) — returns to the shop page.
+  - **Confirm Purchase / Confirm Sale** (Wool) — executes the transaction.
+  - **Reset** (Yellow Wool) — resets quantity back to the item's default amount.
+  - **Max Affordable** (Gold Ingot, buy mode) — auto-fills the maximum quantity the player can afford based on their current balance.
+  - **Sell All** (Hopper, sell mode) — auto-fills the quantity with how many of that item the player has in their inventory.
+
+The quantity updates live every 10 ticks as the player clicks +/- buttons. Total cost/earn recalculates automatically, always reflecting the player's effective price (with modifiers and dynamic pricing).
+
+---
+
+## Creating Shops (YAML Format)
+
+Shop files are placed in `plugins/OreoEssentials/shop/shops/`. One file can contain one shop (flat format) or multiple shops (`shops:` map format).
+
+### Flat format (one shop per file)
+
+```yaml
+shop-id: my_shop
+title: "&a&lMy Shop"
+rows: 6
+pages: 1
+currency: tokens   # optional; omit for Vault
+
+items:
+  diamond:
+    material: DIAMOND
+    name: "&b&lDiamond"
+    lore:
+      - "&7A precious gem."
+    buy-price: 150.0
+    sell-price: 75.0
+    amount: 1
+    slot: 10
+    page: 1
+    permission: "shop.vip"          # optional; hide from players without this perm
+    custom-model-data: 0            # optional
+    damage: 0                       # optional durability value
+    enchantments:                   # optional
+      sharpness: 3
+    potion-type: STRENGTH           # optional; only for POTION/SPLASH_POTION items
+    itemsadder-id: "mypack:gem"     # optional; see Custom Items section
+    nexo-id: "my_nexo_item"         # optional; see Custom Items section
+```
+
+### Multi-shop format (multiple shops in one file)
+
+```yaml
+shops:
+  tools:
+    title: "&7&lTools"
+    rows: 6
+    pages: 1
+    items:
+      iron_pickaxe:
+        material: IRON_PICKAXE
+        buy-price: 50.0
+        sell-price: 20.0
+        amount: 1
+        slot: 11
+        page: 1
+  food:
+    title: "&6&lFood"
+    rows: 6
+    pages: 1
+    items:
+      bread:
+        material: BREAD
+        buy-price: 5.0
+        sell-price: 2.0
+        amount: 8
+        slot: 11
+        page: 1
+```
+
+### Item field reference
+
+| Field | Required | Description |
+|---|---|---|
+| `material` | Yes | Bukkit material name (e.g. `DIAMOND_SWORD`) |
+| `buy-price` | No | Price to buy from shop. Omit or set `-1` to disable buying |
+| `sell-price` | No | Price players receive when selling. Omit or set `-1` to disable selling |
+| `amount` | No | Items given/taken per transaction unit. Default: 1 |
+| `slot` | Yes | Inventory slot index (0–based). Last row is the nav bar — do not use it |
+| `page` | No | Which page of the shop this item appears on. Default: 1 |
+| `name` | No | Display name (supports `&` color codes) |
+| `lore` | No | List of lore lines (supports `&` color codes) |
+| `permission` | No | If set, item is hidden from players without this permission |
+| `enchantments` | No | Map of enchantment names to levels |
+| `potion-type` | No | Potion effect type for POTION/SPLASH_POTION items |
+| `custom-model-data` | No | Custom model data int for resource pack items |
+| `damage` | No | Durability damage value |
+| `itemsadder-id` | No | ItemsAdder namespaced ID (e.g. `mypack:custom_sword`) |
+| `nexo-id` | No | Nexo item ID |
+
+### Slot layout reference (6-row shop, rows 0–5)
+
+```
+Row 0: slots  0- 8
+Row 1: slots  9-17
+Row 2: slots 18-26
+Row 3: slots 27-35
+Row 4: slots 36-44
+Row 5: slots 45-53  ← nav bar (prev page, back, page indicator, next page)
+```
+
+Place your items in rows 0–4 (slots 0–44). The nav bar row is automatically filled and should not be used for items.
+
+---
+
+## Economy & Currency
+
+Each shop can use either Vault (standard server economy) or a custom OreoEssentials currency.
+
+```yaml
+shop-id: token_shop
+currency: tokens    # ID of the custom currency
+```
+
+- If `currency` is omitted or blank, the shop uses Vault.
+- If `currency` is set to a registered currency ID, all buy/sell prices in that shop use that currency.
+- The amount selection GUI and price lore automatically display prices in the correct format for the shop's currency.
+
+---
+
+## Dynamic Pricing
+
+Dynamic pricing makes buy prices increase and sell prices decrease as an item gets purchased more. This simulates real supply and demand — popular items become more expensive, rare items stay cheap.
+
+### How it works
+
+Every time a player buys an item, an internal **buy counter** for that item increments by the quantity purchased.
+
+The **pressure** is a value between 0.0 and 1.0 calculated as:
+```
+pressure = min(buyCount / demandScale, 1.0)
+```
+
+Where `demandScale` is how many total purchases are needed to reach maximum demand (default: 500).
+
+**Buy price multiplier:**
+```
+multiplier = 1.0 + pressure × (maxBuyMultiplier - 1.0)
+```
+Capped at `maxBuyMultiplier` (default 3.0 = 300% of base price at maximum demand).
+
+**Sell price multiplier:**
+```
+multiplier = 1.0 - pressure × (1.0 - minSellMultiplier)
+```
+Floored at `minSellMultiplier` (default 0.2 = 20% of base price at maximum demand).
+
+### Example
+
+An item has `buy-price: 100` and `sell-price: 50`. `demandScale: 500`, `maxBuyMultiplier: 3.0`, `minSellMultiplier: 0.2`.
+
+| Buy count | Pressure | Effective buy | Effective sell |
+|---|---|---|---|
+| 0 | 0.00 | $100.00 | $50.00 |
+| 100 | 0.20 | $140.00 | $42.00 |
+| 250 | 0.50 | $200.00 | $30.00 |
+| 500 | 1.00 | $300.00 | $10.00 |
+
+### Decay
+
+Buy counts are not permanent. A periodic decay task reduces all counts by a configurable percentage every N minutes. This means prices naturally fall back to base over time when demand slows.
+
+```yaml
+dynamic-pricing:
+  decay-interval-minutes: 60   # how often decay runs
+  decay-rate: 0.05             # 5% of current count removed per interval
+```
+
+After decay, any item with a count of 0 is removed from memory entirely.
+
+### Trend labels in lore
+
+When `show-trend-in-lore: true`, each item's lore shows a demand indicator:
+
+| Pressure | Label shown |
+|---|---|
+| < 5% | `● Market: normal` (grey) |
+| 5–30% | `▲ Demand: +X% (buy cost up)` (yellow) |
+| 30–70% | `▲▲ High demand: +X% (prices rising)` (red) |
+| > 70% | `▲▲▲ Extreme demand: +X% (very expensive!)` (dark red, bold) |
+
+### Configuration
+
+```yaml
+dynamic-pricing:
+  enabled: true
+  demand-scale: 500.0          # purchases needed to reach max pressure
+  max-buy-multiplier: 3.0      # maximum buy price = base × this
+  min-sell-multiplier: 0.2     # minimum sell price = base × this
+  decay-interval-minutes: 60   # how often buy counts decay
+  decay-rate: 0.05             # fraction removed per decay cycle
+  save-interval-minutes: 5     # how often counts are saved to disk
+  show-trend-in-lore: true     # show demand label on items
+```
+
+Data is persisted to `shop/dynamic_prices.yml` and reloaded on restart. Dynamic pricing runs independently of price modifiers — both systems are applied in combination (modifiers first, then dynamic multiplier).
+
+---
+
+## Price Modifiers
+
+Price modifiers let admins give individual players discounts or markups on buy and sell prices. They are runtime-only (in-memory) and reset on server restart unless you re-apply them.
+
+### Priority (highest wins)
+
+```
+Item-level modifier  >  Shop-level modifier  >  Global modifier  >  No modifier (1.0)
+```
+
+Only the most specific modifier applies. If a player has both a global and a shop modifier, the shop modifier takes priority for that shop. If they also have an item modifier, that takes priority for that specific item.
+
+### Modifier values
+
+Modifiers are **multipliers** — they are passed as **percentages** in the command:
+
+- `100` = 1.0 × base price = no change (default)
+- `90` = 0.9 × base price = 10% discount
+- `110` = 1.1 × base price = 10% markup
+- `50` = 0.5 × base price = 50% discount
+
+The final effective price is:
+```
+effectiveBuyPrice  = baseBuyPrice  × modifier × dynamicBuyMultiplier
+effectiveSellPrice = baseSellPrice × modifier × dynamicSellMultiplier
+```
+
+### Commands
+
+**Set a global modifier** (affects all shops and all items for that player):
+```
+/shop addmodifier global <player> <value> [buy|sell]
+```
+Examples:
+```
+/shop addmodifier global Steve 90 buy     → 10% buy discount for Steve everywhere
+/shop addmodifier global Steve 110 sell   → 10% sell markup for Steve everywhere
+```
+
+**Set a shop-level modifier** (affects all items in one specific shop):
+```
+/shop addmodifier shop <player> <shopId> <value> [buy|sell]
+```
+Example:
+```
+/shop addmodifier shop Steve ores_minerals 80 buy   → 20% buy discount in ores shop only
+```
+
+**Set an item-level modifier** (affects one specific item in one shop):
+```
+/shop addmodifier item <player> <shopId> <itemId> <value> [buy|sell]
+```
+Example:
+```
+/shop addmodifier item Steve ores_minerals diamond 50 buy   → 50% discount on diamonds only
+```
+
+**Inspect a player's modifiers:**
+```
+/shop checkmodifiers <player>
+```
+Shows their global modifier and all shop/item overrides.
+
+**Reset modifiers:**
+```
+/shop resetmodifier global <player>
+/shop resetmodifier shop <player> <shopId>
+/shop resetmodifier item <player> <shopId> <itemId>
+```
+
+---
+
+## Daily Rotating Shop
+
+A rotating shop has a large pool of configured items but only shows a random subset each day. The selection is drawn once and persists across restarts — it does not reroll every time a player opens the GUI.
+
+### How it works
+
+1. On server start, the plugin reads the rotation file at `shop/rotations/<shopId>.yml`.
+2. If no rotation exists or it has expired, a new random selection is drawn from all items in the shop.
+3. The selection is saved to disk immediately. Future startups that occur before the reset time reuse the same selection.
+4. At the configured `reset-time` in the configured `timezone`, the selection becomes expired. The next player to open the shop triggers a fresh draw.
+5. The admin can force an immediate reroll at any time with `/shop reroll <shopId>`.
+
+### Configuration in the shop YAML
+
+```yaml
+shop-id: daily_shop
+title: "&5&l✦ Daily Shop"
+rows: 6
+pages: 1
+
+rotating:
+  enabled: true
+  display-count: 4       # how many of the pool items to show each day
+  reset: daily           # informational label
+  reset-time: "00:00"    # HH:mm — when the new selection is drawn
+  timezone: "Europe/Paris"   # any valid IANA timezone ID
+
+items:
+  item_one:
+    ...
+  item_two:
+    ...
+  # configure as many as you want — only display-count will appear on any given day
+```
+
+- If `display-count` is greater than or equal to the total number of configured items, all items are shown (no rotation effect).
+- If an item is removed from the YAML after a rotation was saved, the rotation is considered invalid and a new one is generated automatically.
+
+### Persistence file
+
+`plugins/OreoEssentials/shop/rotations/<shopId>.yml`:
+```yaml
+shop-id: daily_shop
+active-items:
+  - diamond_sword
+  - golden_apple
+  - elytra
+  - trident
+next-reset: 1709769600000   # epoch ms of next reset
+```
+
+### Adding a rotating shop to the main menu
+
+Add an entry under `main-menu-items` in `shop/config.yml`:
+```yaml
+daily_shop:
+  slot: 19
+  material: CLOCK
+  name: "&5&l✦ Daily Shop"
+  lore:
+    - "&7A rotating selection of"
+    - "&7rare items — changes every day!"
+    - ""
+    - "&eClick to open!"
+  shop: daily_shop
+```
+
+---
+
+## Custom Items — ItemsAdder & Nexo
+
+The shop natively supports ItemsAdder and Nexo custom items. No extra configuration is needed beyond having the plugin installed and loaded.
+
+### ItemsAdder
+
+```yaml
+items:
+  my_custom_sword:
+    itemsadder-id: "mypack:custom_sword"
+    name: "&d&lCustom Sword"
+    buy-price: 500.0
+    sell-price: 200.0
+    amount: 1
+    slot: 10
+    page: 1
+```
+
+- `itemsadder-id` is the namespaced ID as defined in your ItemsAdder pack (e.g. `namespace:item_name`).
+- The `material` field is still required for fallback but does not need to match.
+- When building the item for the GUI, the plugin calls `CustomStack.getInstance(id)` and returns the real ItemsAdder item with its full NBT and texture.
+- When matching during `/sell`, the plugin calls `CustomStack.byItemStack(item)` and compares the namespaced ID — so only the exact custom item matches, not a plain vanilla item of the same material.
+
+### Nexo
+
+```yaml
+items:
+  my_nexo_gem:
+    nexo-id: "my_nexo_gem"
+    name: "&aNexo Gem"
+    buy-price: 300.0
+    sell-price: 100.0
+    amount: 1
+    slot: 12
+    page: 1
+```
+
+- `nexo-id` is the Nexo item ID.
+- Building uses `NexoItems.itemFromId(id).build()` for the correct NBT.
+- Matching uses `NexoItems.idFromItem(item)` for reliable identification.
+
+### Hook detection
+
+Both hooks are detected automatically at startup. If the plugin is present but the API class is unavailable, a warning is logged and the hook is disabled gracefully. Items configured with a missing hook fall back to their `material` field.
+
+Startup log examples:
+```
+[Shop] ItemsAdder hook enabled.
+[Shop] Nexo hook enabled.
+```
+
+---
+
+## Anti-Dupe Protection
+
+A built-in protection layer prevents item duplication exploits during shop transactions.
+
+### Transaction lock
+
+Each player has a transaction lock. While a transaction is processing, any additional click is rejected silently. This prevents double-purchases from network lag or rapid clicking.
+
+### Cooldown
+
+After every transaction completes, a cooldown timer starts. Any new transaction from the same player within the cooldown window is rejected with a message. Default: 300 ms.
+
+Players with `oshopgui.bypass.cooldown` skip the cooldown entirely.
+
+### Rate limiting
+
+A rolling 1-second window tracks how many transactions a player has made. If they exceed `max-transactions-per-second` (default 5), they are flagged and the transaction is denied.
+
+### Inventory verification
+
+Before processing:
+- **Buying**: the plugin verifies the player actually has free inventory space for the items they are buying. If not, the transaction is rejected.
+- **Selling**: the plugin verifies the player has the items they claim to be selling.
+
+This is controlled by `verify-inventory: true` in config.
+
+### Suspicious player detection
+
+Each rejected transaction due to suspicious behaviour adds a flag to the player. If a player accumulates 10 flags, they are kicked with the message `[SHOP] Kicked for suspicious activity.` Flags reset on kick.
+
+If `log-suspicious: true`, every flagged event is logged to console with the player's name and reason.
+
+### Configuration
+
+```yaml
+anti-dupe:
+  enabled: true
+  transaction-cooldown-ms: 300
+  verify-inventory: true
+  log-suspicious: true
+  max-transactions-per-second: 5
+  lock-during-transaction: true
+```
+
+---
+
+## Transaction Logging
+
+Every buy, sell, and sell-all is appended to a log file for audit purposes.
+
+Default log file: `shop/transactions.log`
+
+Default format:
+```
+[{date}] {player} {action} x{amount} {item} for {price} ({economy})
+```
+
+Example entries:
+```
+[2026-03-07 14:32:11] Steve BOUGHT x64 DIAMOND for $9600.00 (Vault)
+[2026-03-07 14:33:05] Alex SOLD x32 IRON_INGOT for $160.00 (Vault)
+[2026-03-07 14:35:22] Steve SOLD_ALL x128 multiple items for 640.00 tokens (tokens)
+```
+
+### Configuration
+
+```yaml
+logging:
+  enabled: true
+  log-file: "shop/transactions.log"
+  log-format: "[{date}] {player} {action} x{amount} {item} for {price} ({economy})"
+```
+
+Setting `enabled: false` disables logging entirely.
+
+---
+
+## Configuration Files
+
+All shop configuration lives in `plugins/OreoEssentials/shop/`.
+
+### `shop/config.yml` — Main Configuration
+
+```yaml
+enabled: true
+
+# Redeploy missing bundled shop YAMLs on startup
+auto-deploy-missing-shops: false
+
+language: en
+
+economy:
+  currency-symbol: "$"
+
+anti-dupe:
+  enabled: true
+  transaction-cooldown-ms: 300
+  verify-inventory: true
+  log-suspicious: true
+  max-transactions-per-second: 5
+  lock-during-transaction: true
+
+# ── Main Menu ──────────────────────────────────────────
+main-menu:
+  title: "&8&lOSHOP &r&6&lGUI"
+  rows: 6
+  fill-empty-slots: true
+  fill-material: "BLACK_STAINED_GLASS_PANE"
+  close-slot: 49
+
+# ── Category Buttons ───────────────────────────────────
+# Each entry maps to one shop; slot must be within the menu rows
+main-menu-items:
+  building_blocks:
+    slot: 10
+    material: GRASS_BLOCK
+    name: "&a&lBuilding Blocks"
+    lore:
+      - "&7Click to open!"
+    shop: building_blocks
+
+  daily_shop:
+    slot: 19
+    material: CLOCK
+    name: "&5&l✦ Daily Shop"
+    lore:
+      - "&7Rotates every day!"
+    shop: daily_shop
+
+  # ... add more entries for your shops
+
+# ── Amount Selection ───────────────────────────────────
+amount-selection:
+  enabled: true   # false = always instant x1 transactions
+
+# ── GUI Navigation slots ───────────────────────────────
+gui:
+  previous-page-slot: 45
+  next-page-slot: 53
+  back-button-slot: 49
+
+# ── Logging ────────────────────────────────────────────
+logging:
+  enabled: true
+  log-file: "shop/transactions.log"
+  log-format: "[{date}] {player} {action} x{amount} {item} for {price} ({economy})"
+
+# ── Dynamic Pricing ────────────────────────────────────
+dynamic-pricing:
+  enabled: true
+  demand-scale: 500.0
+  max-buy-multiplier: 3.0
+  min-sell-multiplier: 0.2
+  decay-interval-minutes: 60
+  decay-rate: 0.05
+  save-interval-minutes: 5
+  show-trend-in-lore: true
+```
+
+### `shop/messages.yml` — Player Messages
+
+All player-facing messages. The active language is set with `language: en` in `config.yml`. Messages support `&` color codes and `{placeholder}` tokens specific to each message.
+
+### `shop/shops/` — Shop Files
+
+One `.yml` file per shop (or multiple shops per file using the `shops:` map). All `.yml` files in this folder are loaded automatically on startup, sorted alphabetically.
+
+---
+
+## Bundled Shops
+
+The following shops are bundled with OreoEssentials and deployed automatically when the `shops/` folder is created for the first time:
+
+| Shop ID | Description |
+|---|---|
+| `building_blocks` | Stone, wood, wool, concrete, glass, terracotta |
+| `ores_minerals` | Coal, iron, gold, diamonds, netherite, lapis, redstone |
+| `food` | Raw/cooked food, golden apples, soups |
+| `tools` | Pickaxes, axes, shovels, hoes, buckets, saddles |
+| `weapons_armor` | Swords, bows, crossbows, helmets, chestplates, leggings, boots |
+| `redstone` | Pistons, dispensers, hoppers, comparators, observers |
+| `farming_nature` | Seeds, saplings, flowers, sugarcane, bamboo |
+| `mob_drops` | Leather, blaze rods, ender pearls, totems, bones |
+| `nether` | Netherrack, quartz, ancient debris, netherite |
+| `end_misc` | End stone, elytra, shulker boxes, music discs |
+| `potions` | Healing, strength, speed, splash and lingering potions |
+| `enchanted_books` | Mending, Fortune, Silk Touch, Sharpness, Protection |
+| `brewing` | Blaze powder, nether wart, dragon breath, all ingredients |
+| `token_shop` | Example shop using a custom currency |
+| `daily_rotating_shop` | Example rotating shop — 8 items, 4 shown per day |
+
+To redeploy a deleted bundled shop without deleting the entire folder, set `auto-deploy-missing-shops: true` in `config.yml` and restart.
+
+---
+
+## Admin Reference
+
+### Reload
+```
+/shop reload
+```
+Reloads `config.yml`, `messages.yml`, all shop YAML files, and reinitializes dynamic pricing and rotation managers. Does not kick players currently in the GUI.
+
+### Check item price
+```
+/shop check
+```
+Hold an item in your main hand. Sends you the item's material, display name, buy price, and sell price (with your personal modifiers applied).
+
+### Force-reroll a rotating shop
+```
+/shop reroll daily_shop
+```
+Immediately picks a new random set of items for that shop and saves to disk. Players who open the shop after this command see the new selection.
+
+### Debug: dynamic pricing state
+
+Dynamic pricing counts are saved every `save-interval-minutes` and on shutdown to `shop/dynamic_prices.yml`. You can read this file directly to see current demand counts. Format:
+```yaml
+counts:
+  ores_minerals:diamond: 1247
+  building_blocks:stone: 342
+```
+
+---
+
+## Common Questions
+
+**Q: How do I make an item buyable but not sellable (or vice versa)?**
+Set only one price. Set the other to `-1` or omit it entirely. The shop lore will say "Not available" for the disabled direction.
+
+**Q: Can a shop use tokens instead of dollars?**
+Yes. Add `currency: <currencyId>` at the shop level. All items in that shop use the custom currency automatically.
+
+**Q: How do price modifiers interact with dynamic pricing?**
+The modifier is applied first to the base price, then dynamic pricing applies its multiplier on top. So a player with a 10% discount still benefits from the discount even as demand rises.
+
+**Q: What happens if a player's inventory is full when buying?**
+The transaction is rejected before any money is taken. The player receives a "inventory full" message.
+
+**Q: Does dynamic pricing reset on `/shop reload`?**
+No. Counts are saved to disk and reloaded. The only way to reset counts is to delete `shop/dynamic_prices.yml` or wait for decay to reduce them naturally.
+
+**Q: Can I add my own shops and they coexist with the bundled ones?**
+Yes. Just add any `.yml` file to `shop/shops/`. It is loaded automatically. Use unique `shop-id` values to avoid conflicts.
+
+**Q: What if two files define the same shop-id?**
+The second one is skipped and a warning is logged: `[Shop] Duplicate shop id '...' in ... — skipping.`
+
+**Q: How do I stop the rotating shop from rerolling? I want it to stay the same until I manually reroll it.**
+Set a very distant `reset-time` or do not use rotating at all. If `display-count` >= total item count, all items show every day (no visible rotation).

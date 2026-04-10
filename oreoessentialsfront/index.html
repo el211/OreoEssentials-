@@ -1,0 +1,959 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>OreoStudios — Minecraft Plugins, Server Setup & Backend</title>
+  <meta name="description" content="OreoStudios builds premium Minecraft plugins, high-performance server setups, and backend hardening with Pterodactyl, databases, firewalls, and monitoring." />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/logo.png" sizes="256x256"/>
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:title" content="OreoStudios — Minecraft Plugins, Server Setup & Backend"/>
+  <meta property="og:description" content="Premium plugins, server setups, and secure backend services."/>
+  <meta property="og:image" content="https://oreostudio.store/logo.png"/>
+  <meta property="og:url" content="https://oreostudio.store/"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+
+  <meta name="theme-color" content="#2d4ba8"/>
+
+  <!-- SEO -->
+  <link rel="canonical" href="https://oreostudio.store/"/>
+  <meta name="robots" content="index,follow"/>
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+    {
+      "@context":"https://schema.org",
+      "@type":"Organization",
+      "name":"OreoStudios",
+      "alternateName":"Oreo Studio",
+      "url":"https://oreostudio.store/",
+      "logo":"https://oreostudio.store/logo.png",
+      "sameAs":[
+        "https://discord.gg/A6wCGJD2Ez",
+        "https://github.com/el211",
+        "https://www.spigotmc.org/resources/authors/el211.1327626/",
+        "https://x.com/oreostudios"
+      ]
+    }
+  </script>
+
+  <script type="application/ld+json">
+    {
+      "@context":"https://schema.org",
+      "@type":"WebSite",
+      "url":"https://oreostudio.store/",
+      "name":"OreoStudios",
+      "potentialAction":{
+        "@type":"SearchAction",
+        "target":"https://www.google.com/search?q=site%3Aoreostudio.store+{search_term_string}",
+        "query-input":"required name=search_term_string"
+      }
+    }
+  </script>
+
+  <style>
+    /* ========= OREO STUDIOS — BLUE COSMIC THEME ========= */
+    :root{
+      /* logo-inspired colors */
+      --cosmic-blue: #2d4ba8;
+      --bright-blue: #4fa6f2;
+      --light-blue: #6eb8ff;
+      --deep-space: #0d1642;
+      --midnight: #1a2f6f;
+
+      --fg:#f6f8ff;
+      --muted:#b7c3e6;
+      --nav-h:56px;
+
+      --grad: linear-gradient(135deg, #2260d8 0%, #3695f6 45%, #4fa6f2 100%);
+      --shadow: 0 18px 60px #00000055, 0 10px 30px #00000040;
+    }
+
+    /* ========= RESET ========= */
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    html{scroll-behavior:smooth}
+
+    body{
+      /* Light blue gradient matching your logo */
+      background:
+              radial-gradient(1400px 900px at 50% 20%, #2d4ba8 0%, #1a2f6f 28%, #0d1642 55%, #06091f 100%),
+              radial-gradient(1100px 600px at 50% 60%, #1e3a8a 0%, transparent 75%);
+      color:var(--fg);
+      font:16px/1.6 Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      overflow-x:hidden;
+      min-height:100vh;
+    }
+    a{color:inherit;text-decoration:none}
+    img{display:block;max-width:100%}
+    h1,h2,h3{margin:0 0 .6rem;line-height:1.15}
+    ul{margin:0 0 .6rem 1.1rem}
+
+    /* ========= STARFIELD CANVAS ========= */
+    #starfield{
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      z-index:0;
+      pointer-events:none;
+    }
+
+    /* ========= UTIL ========= */
+    .muted{color:var(--muted)}
+    .small{font-size:.92rem}
+    .center{text-align:center}
+    .gradient-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+    /* reveal on scroll */
+    .reveal{
+      opacity:0;
+      transform:translateY(18px) scale(.985);
+      transition:opacity .7s ease, transform .7s ease;
+    }
+    .reveal.show{opacity:1;transform:translateY(0) scale(1)}
+
+    .section, .hero{scroll-margin-top:80px}
+
+    /* ========= NAV ========= */
+    .nav{
+      position:sticky;
+      top:0;
+      z-index:1100;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      height:var(--nav-h);
+      padding:14px 22px;
+      background:rgba(13,22,66,.65);
+      backdrop-filter:blur(12px);
+      border-bottom:1px solid rgba(79,166,242,.2);
+    }
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand-text{font-weight:900;letter-spacing:.2px}
+    .brand-text .accent{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+    .logo{
+      width:34px;height:34px;object-fit:contain;border-radius:10px;
+      filter: drop-shadow(0 0 12px #4fa6f266) brightness(1.1);
+    }
+
+    .nav nav{display:flex;gap:18px;align-items:center}
+    .nav nav a{position:relative;opacity:.92;transition:opacity .25s ease}
+    .nav nav a:hover{opacity:1}
+
+    .nav .btn{
+      border:1px solid rgba(79,166,242,.3);
+      padding:8px 14px;
+      border-radius:12px;
+      background:linear-gradient(180deg,rgba(79,166,242,.15),rgba(0,0,0,.2));
+    }
+
+    #menu{display:none;background:none;border:0;color:var(--fg);font-size:22px;cursor:pointer}
+    body.no-scroll{overflow:hidden}
+    .menu-overlay{display:none}
+
+    /* ========= MOBILE DRAWER ========= */
+    @media (max-width:1199px){
+      #menu{display:inline-block}
+
+      .nav nav{
+        display:none;
+        position:fixed;
+        top:var(--nav-h);
+        left:0;bottom:0;
+        width:min(84vw,420px);
+        padding:16px;
+        gap:10px;
+        flex-direction:column;
+        background:rgba(13,22,66,.97);
+        border-right:1px solid rgba(79,166,242,.2);
+        z-index:1101;
+        overflow-y:auto;
+      }
+
+      .nav.open nav{display:flex}
+
+      .nav.open .menu-overlay{
+        display:block;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.45);
+        backdrop-filter:blur(2px);
+        z-index:1100;
+      }
+    }
+
+    /* ========= LAYOUT ========= */
+    main{padding-top:24px;position:relative;z-index:1}
+    @media (max-width:1199px){ main{padding-top:calc(var(--nav-h) + 20px)} }
+
+    .hero{
+      position:relative;
+      padding:70px 22px 44px;
+      max-width:1200px;
+      margin:0 auto;
+    }
+
+    .hero-content {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 30px;
+      align-items: start;
+    }
+
+    @media (min-width: 900px) {
+      .hero-content {
+        grid-template-columns: 1fr 360px;
+      }
+    }
+
+    .hero-main {
+      text-align: center;
+    }
+
+    @media (min-width: 900px) {
+      .hero-main {
+        text-align: left;
+      }
+    }
+
+    .hero h1{
+      font-size:clamp(2rem,4vw,3.2rem);
+      letter-spacing:-.02em;
+      margin-bottom:16px;
+    }
+    .hero .accent{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .hero .lead{max-width:780px;margin:14px auto 0;color:var(--muted);font-size:1.05rem}
+
+    @media (min-width: 900px) {
+      .hero .lead {
+        margin: 14px 0 0;
+      }
+    }
+
+    .cta{display:flex;gap:12px;justify-content:center;margin:24px 0 18px;flex-wrap:wrap}
+
+    @media (min-width: 900px) {
+      .cta {
+        justify-content: flex-start;
+      }
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:10px 16px;
+      border-radius:14px;
+      border:1px solid rgba(79,166,242,.25);
+      background:linear-gradient(180deg,rgba(79,166,242,.15),rgba(0,0,0,.2));
+      transition:transform .18s ease, box-shadow .18s ease;
+    }
+    .btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(79,166,242,.3)}
+    .btn.primary{
+      background:var(--grad);
+      border-color:transparent;
+      box-shadow:0 12px 34px rgba(45,75,168,.4);
+    }
+    .btn.primary:hover{box-shadow:0 16px 44px rgba(45,75,168,.6)}
+    .btn.ghost{background:transparent;border-color:rgba(79,166,242,.3)}
+
+    /* ========= HERO LOGO ========= */
+    .hero-logo{
+      width:min(380px,75vw);
+      height:auto;
+      margin:32px auto 18px;
+      filter: drop-shadow(0 0 30px rgba(79,166,242,.4))
+      drop-shadow(0 0 60px rgba(45,75,168,.3))
+      brightness(1.05);
+      animation:logoFloat 6s ease-in-out infinite;
+    }
+
+    @keyframes logoFloat{
+      0%, 100%{transform:translateY(0) scale(1)}
+      50%{transform:translateY(-12px) scale(1.02)}
+    }
+
+    .badges{
+      margin-top:14px;
+      display:inline-flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid rgba(79,166,242,.2);
+      background:linear-gradient(180deg,rgba(79,166,242,.1),rgba(0,0,0,.15));
+    }
+
+    /* ========= OGUI BUILDER PROMO CARD ========= */
+    .ogui-promo {
+      background: linear-gradient(135deg, rgba(79,166,242,.15), rgba(45,75,168,.2));
+      border: 2px solid rgba(79,166,242,.4);
+      border-radius: 20px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: all .3s ease;
+      box-shadow: 0 8px 32px rgba(45,75,168,.3);
+    }
+
+    .ogui-promo::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(79,166,242,.15) 0%, transparent 70%);
+      animation: pulseGlow 4s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); opacity: 0.4; }
+      50% { transform: scale(1.1); opacity: 0.7; }
+    }
+
+    .ogui-promo:hover {
+      transform: translateY(-6px);
+      border-color: rgba(79,166,242,.6);
+      box-shadow: 0 16px 48px rgba(45,75,168,.5);
+    }
+
+    .ogui-promo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--grad);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
+      animation: badgeBounce 2s ease-in-out infinite;
+    }
+
+    @keyframes badgeBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    .ogui-promo h3 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      position: relative;
+      z-index: 1;
+      font-weight: 900;
+    }
+
+    .ogui-promo p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .ogui-promo-features {
+      list-style: none;
+      margin: 0 0 20px 0;
+      padding: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .ogui-promo-features li {
+      font-size: 14px;
+      padding: 8px 0;
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ogui-promo-features li::before {
+      content: "✓";
+      color: #4ade80;
+      font-weight: 900;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .ogui-promo .btn {
+      width: 100%;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      font-weight: 600;
+    }
+
+    @media (max-width: 899px) {
+      .ogui-promo {
+        margin-top: 30px;
+      }
+    }
+
+    .section{
+      max-width:1100px;
+      margin:0 auto;
+      padding:44px 22px;
+    }
+    .section h2{
+      font-size:1.7rem;
+      margin-bottom:18px;
+    }
+
+    .grid3{
+      display:grid;
+      gap:22px;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    }
+
+    .card{
+      position:relative;
+      background:
+              linear-gradient(180deg, rgba(79,166,242,.08), rgba(0,0,0,.2)),
+              linear-gradient(180deg, rgba(13,22,66,.8), rgba(6,9,31,.9));
+      border:1px solid rgba(79,166,242,.2);
+      padding:22px;
+      border-radius:18px;
+      transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    }
+    .card:hover{
+      transform:translateY(-6px);
+      box-shadow:var(--shadow);
+      border-color:rgba(79,166,242,.4);
+    }
+
+    .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:12px}
+    .facts div{
+      background:
+              linear-gradient(180deg, rgba(79,166,242,.08), rgba(0,0,0,.2)),
+              linear-gradient(180deg, rgba(13,22,66,.8), rgba(6,9,31,.9));
+      border:1px solid rgba(79,166,242,.2);
+      padding:18px;
+      border-radius:16px;
+      text-align:center;
+    }
+    .facts strong{font-size:30px;display:block;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+    .contact{text-align:center}
+    .contact-ctas{display:flex;gap:12px;justify-content:center;margin:12px 0 4px;flex-wrap:wrap}
+
+    .footer{padding:28px 22px;border-top:1px solid rgba(79,166,242,.15);text-align:center;color:var(--muted);position:relative;z-index:1}
+
+    .team-wrap{ margin-top: 22px; }
+    .team-grid{ display:grid; gap:16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @media (max-width: 980px){ .team-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 620px){ .team-grid{ grid-template-columns: 1fr; } }
+
+    .team-card{ position:relative; overflow:hidden; }
+    .handle{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      margin: 0 0 10px;
+    }
+    .tag{
+      display:inline-flex; align-items:center;
+      padding:6px 10px; border-radius:999px;
+      background: rgba(79,166,242,.1);
+      border: 1px solid rgba(79,166,242,.2);
+      font-size: 12px;
+    }
+    .handle .name{
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+    .role{ margin: 0 0 12px; opacity: .9; }
+    .chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top: 10px; }
+    .chip{
+      display:inline-flex;
+      padding:6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(79,166,242,.08);
+      border: 1px solid rgba(79,166,242,.15);
+    }
+
+    @media (max-width:720px){
+      .facts{grid-template-columns:1fr}
+      .hero{padding-top:56px}
+    }
+
+    /* ========= TOOL CARDS ========= */
+    .tool-card{
+      display:flex;flex-direction:column;gap:8px;
+      text-decoration:none;cursor:pointer;
+    }
+    .tool-card:hover h3{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .tool-icon{font-size:32px;margin-bottom:4px}
+    .tool-badge{
+      display:inline-flex;align-items:center;
+      padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;
+      background:rgba(79,166,242,.12);border:1px solid rgba(79,166,242,.22);
+      color:#4fa6f2;margin-top:auto;width:fit-content;
+    }
+    .tool-badge.new{background:var(--grad);border:none;color:#fff}
+  </style>
+</head>
+
+<body class="with-sidebar">
+<!-- MOVING STARFIELD -->
+<canvas id="starfield" aria-hidden="true"></canvas>
+
+<!-- NAV -->
+<header class="nav" id="site-nav">
+  <a class="brand" href="#home" aria-label="OreoStudios Home">
+    <img class="logo" src="/logo.png" alt="OreoStudios logo">
+    <span class="brand-text">Oreo<span class="accent">Studios</span></span>
+  </a>
+
+  <nav aria-label="Primary">
+    <a href="#services">Services</a>
+    <a href="/online-tools.html">Tools</a>
+    <a href="/backend.html">Backend</a>
+    <a href="/hosting.html">Hosting</a>
+    <a href="#work">Work</a>
+    <a href="/about-us.html">About</a>
+    <a href="/wiki/index.html">Wiki</a>
+    <a href="/panel-login.html" class="btn">Panel</a>
+    <a href="#contact" class="btn">Contact</a>
+  </nav>
+
+  <button id="menu" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+  <div class="menu-overlay" hidden></div>
+</header>
+
+<!-- HERO -->
+<main id="home">
+  <section class="hero reveal">
+    <div class="hero-content">
+      <!-- Left: Main Content -->
+      <div class="hero-main">
+        <h1>Games & Plugins that <span class="accent">scale</span>. Setups that <span class="accent">sell</span>.</h1>
+        <p class="lead">We craft production-grade Games, Softwares & Minecraft plugins, server infrastructures, and game systems, shipped fast, maintained long-term.</p>
+
+        <div class="cta">
+          <a href="#contact" class="btn primary">Get a quote</a>
+          <a href="#work" class="btn ghost">See projects</a>
+        </div>
+
+        <!-- ⭐ YOUR 3D LOGO ⭐ -->
+        <img class="hero-logo" src="/logoRM.png" alt="OreoStudios 3D Logo" loading="eager">
+
+        <div class="badges muted">ModelEngine • MythicMobs • Paper • LuckPerms • Vault • WorldGuard • Folia</div>
+      </div>
+
+      <!-- Right: OGUI Builder Promo Card -->
+      <div class="ogui-promo">
+        <span class="ogui-promo-badge">🎨 NEW TOOL</span>
+
+        <h3>OGUI Builder</h3>
+        <p>Create Minecraft GUI configs visually — no coding required!</p>
+
+        <ul class="ogui-promo-features">
+          <li>All 16 condition types</li>
+          <li>Live YAML preview</li>
+          <li>Drag-free interface</li>
+          <li>Export ready configs</li>
+        </ul>
+
+        <a href="/ogui-builder.html" class="btn primary">Launch Builder →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services" class="section reveal">
+    <h2 class="gradient-text">What we do</h2>
+
+    <div class="grid3">
+      <article class="card">
+        <h3>Custom Games , Softwares & Plugins</h3>
+        <p>Modeled NPCs, traders, boosters, jobs, anti-piracy (LicenseGate) & more. Clean APIs, docs, updates.</p>
+        <ul>
+          <li>1.20–1.21+ • Paper/Folia</li>
+          <li>ModelEngine & MythicMobs integrations</li>
+          <li>SmartInvs GUIs & polished UX</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h3>Server Setup</h3>
+        <p>High-performance stacks with Pterodactyl, MariaDB, Redis, RabbitMQ. CI pipelines, backups, monitoring.</p>
+        <ul>
+          <li>Optimized JVM flags</li>
+          <li>Anti-dupe & protections</li>
+          <li>Velocity/Bungee networks</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h3>Maintenance & Support</h3>
+        <p>SLAs, bug fixes, content drops, and performance audits to keep your server profitable.</p>
+        <ul>
+          <li>Roadmaps & milestones</li>
+          <li>Discord ticket support</li>
+          <li>Uptime & scaling help</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h3>Backend & Hardening</h3>
+        <p>Firewall lockdown, SSH keys only, Pterodactyl panel/wings, databases, backups, monitoring.</p>
+        <ul>
+          <li>Ubuntu/Debian • Docker</li>
+          <li>MariaDB/PostgreSQL • Mongo/Redis/RabbitMQ</li>
+          <li>Point of contact: Mathias — @tacticianfr</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <!-- ONLINE TOOLS -->
+  <section id="tools" class="section reveal">
+    <h2 class="gradient-text">Online Tools</h2>
+    <p class="muted" style="margin-bottom:28px">Free browser-based builders and editors for OreoEssentials and your Minecraft server — no install needed.</p>
+
+    <div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+
+      <a href="/ogui-builder.html" class="card tool-card">
+        <div class="tool-icon">🎨</div>
+        <h3>OGUI Builder</h3>
+        <p>Design Minecraft GUI configs visually with all 16 condition types and live YAML preview.</p>
+        <span class="tool-badge">GUI</span>
+      </a>
+
+      <a href="/oreoessentials-config-editor.html" class="card tool-card">
+        <div class="tool-icon">⚙️</div>
+        <h3>Config Editor</h3>
+        <p>Full OreoEssentials configuration builder — economy, homes, chat, kits, scoreboards and more.</p>
+        <span class="tool-badge">Config</span>
+      </a>
+
+      <a href="/scoreboard-advanced.html" class="card tool-card">
+        <div class="tool-icon">📋</div>
+        <h3>Scoreboard Builder</h3>
+        <p>Build animated scoreboards visually — title frames, placeholder browser, color pickers.</p>
+        <span class="tool-badge">Builder</span>
+      </a>
+
+      <a href="/tab-advanced.html" class="card tool-card">
+        <div class="tool-icon">🗂️</div>
+        <h3>Tab List Builder</h3>
+        <p>Create header/footer tab animations, rank colors and player list format configs.</p>
+        <span class="tool-badge">Builder</span>
+      </a>
+
+      <a href="/embed-editor.html" class="card tool-card">
+        <div class="tool-icon">💬</div>
+        <h3>Embed Editor</h3>
+        <p>Craft Discord embed messages with live preview — colors, fields, author, footer.</p>
+        <span class="tool-badge">Editor</span>
+      </a>
+
+      <a href="/panel-login.html" class="card tool-card" style="border-color:rgba(79,166,242,.45)">
+        <div class="tool-icon">🌐</div>
+        <h3>Web Panel</h3>
+        <p>View your Minecraft stats, inventory, balance and orders directly from the browser. Owners can register their server.</p>
+        <span class="tool-badge new">NEW</span>
+      </a>
+
+      <a href="/INTEGRATION-SNIPPET.html" class="card tool-card">
+        <div class="tool-icon">🧩</div>
+        <h3>Integration Snippets</h3>
+        <p>Drop-in HTML and JS snippets for embedding OreoStudios tools into your own Minecraft server website.</p>
+        <span class="tool-badge">Dev</span>
+      </a>
+
+    </div>
+
+    <div style="text-align:center;margin-top:22px">
+      <a href="/online-tools.html" class="btn ghost">Browse all tools →</a>
+    </div>
+  </section>
+
+  <!-- WORK -->
+  <section id="work" class="section reveal">
+    <h2 class="gradient-text">Selected work</h2>
+
+    <div class="grid3 gallery">
+      <article class="card">
+        <h3>ModeledNPCs</h3>
+        <p>Animated quest NPCs with traders & dialogs</p>
+      </article>
+
+      <article class="card">
+        <h3>OreoEssentials</h3>
+        <p>Essentials core with modern UX & server features</p>
+      </article>
+
+      <article class="card">
+        <h3>UltimateShopGUI</h3>
+        <p>All-in-one economy & auctions</p>
+      </article>
+    </div>
+
+    <!-- TEAM -->
+    <div class="team-wrap">
+      <p class="muted center" style="margin:22px 0 14px;">OUR TEAM</p>
+
+      <div class="team-grid">
+        <article class="card team-card">
+          <div class="handle">
+            <span class="tag">Discord</span>
+            <span class="name">saladedecaprisun</span>
+          </div>
+          <p class="role"><strong>Java Game Engineer</strong> • Software Developer</p>
+          <div class="chips" aria-label="skills">
+            <span class="chip">Java</span>
+            <span class="chip">C#</span>
+            <span class="chip">Golang</span>
+            <span class="chip">Unity</span>
+          </div>
+        </article>
+
+        <article class="card team-card">
+          <div class="handle">
+            <span class="tag">Discord</span>
+            <span class="name">axio_41</span>
+          </div>
+          <p class="role"><strong>Configurator</strong> • Server setup & tuning</p>
+          <div class="chips" aria-label="skills">
+            <span class="chip">Configs</span>
+            <span class="chip">Performance</span>
+            <span class="chip">UX Polish</span>
+            <span class="chip">Deployment</span>
+          </div>
+        </article>
+
+        <article class="card team-card">
+          <div class="handle">
+            <span class="tag">Discord</span>
+            <span class="name">arko_ter</span>
+          </div>
+          <p class="role"><strong>Developer</strong> • Games & Web</p>
+          <div class="chips" aria-label="skills">
+            <span class="chip">Java</span>
+            <span class="chip">C#</span>
+            <span class="chip">Golang</span>
+            <span class="chip">C</span>
+            <span class="chip">Unreal Engine</span>
+            <span class="chip">Web</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="section reveal">
+    <h2 class="gradient-text">About OreoStudios</h2>
+    <p>We're a developer studio focused on Minecraft. We ship production-ready features with clean code, docs, and maintainability in mind. Based in France, working worldwide.</p>
+
+    <div class="facts">
+      <div><strong>7+</strong><span>Years building plugins</span></div>
+      <div><strong>50+</strong><span>Client servers shipped</span></div>
+      <div><strong>99.9%</strong><span>Managed uptime</span></div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="section contact reveal">
+    <h2 class="gradient-text">Start a project</h2>
+    <p>Tell us about your idea, features, and timeline. We'll respond quickly.</p>
+
+    <div class="contact-ctas">
+      <a class="btn primary" href="mailto:contact@oreostudio.store">Email</a>
+      <a class="btn ghost" href="https://discord.gg/A6wCGJD2Ez" target="_blank" rel="noopener">Discord</a>
+      <a class="btn ghost" href="https://www.spigotmc.org/resources/authors/el211.1327626/" target="_blank" rel="noopener">SpigotMC</a>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <p>© <span id="y"></span> OreoStudios — All rights reserved.</p>
+  <p class="muted small">
+    SIRET : 993 823 469 00017 — Code APE : 62.01Z — Entrepreneur individuel (France)
+  </p>
+  <p class="muted small">Made with ❤️ by the OreoStudios team.</p>
+</footer>
+
+<script>
+  (() => {
+    // Footer year
+    const y = document.getElementById("y");
+    if (y) y.textContent = new Date().getFullYear();
+
+    // Mobile drawer
+    const header = document.querySelector(".nav");
+    if (header) {
+      const btn = document.getElementById("menu");
+      const nav = header.querySelector("nav");
+      let overlay = header.querySelector(".menu-overlay");
+
+      if (!overlay) {
+        overlay = document.createElement("div");
+        overlay.className = "menu-overlay";
+        overlay.hidden = true;
+        header.appendChild(overlay);
+      }
+
+      const closeMenu = () => {
+        header.classList.remove("open");
+        btn && btn.setAttribute("aria-expanded", "false");
+        overlay.hidden = true;
+        document.body.classList.remove("no-scroll");
+      };
+
+      const openMenu = () => {
+        header.classList.add("open");
+        btn && btn.setAttribute("aria-expanded", "true");
+        overlay.hidden = false;
+        document.body.classList.add("no-scroll");
+      };
+
+      const toggleMenu = () => header.classList.contains("open") ? closeMenu() : openMenu();
+
+      btn && btn.addEventListener("click", toggleMenu);
+      overlay.addEventListener("click", closeMenu);
+      if (nav) nav.addEventListener("click", (e) => { if (e.target.closest("a")) closeMenu(); });
+      window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
+    }
+
+    // Scroll reveal
+    const els = document.querySelectorAll(".reveal");
+    if (els.length && "IntersectionObserver" in window) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("show");
+            io.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: "0px 0px -10% 0px", threshold: 0.08 });
+      els.forEach((el) => io.observe(el));
+    } else {
+      els.forEach((el) => el.classList.add("show"));
+    }
+
+    // ========================================
+    // STARFIELD ANIMATION - FAST MOVING STARS
+    // ========================================
+    const canvas = document.getElementById("starfield");
+    if (canvas && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const ctx = canvas.getContext("2d", { alpha: true });
+
+      let w = 0, h = 0, dpr = 1;
+      let stars = [];
+      let raf = 0;
+      let running = true;
+
+      const STAR_COUNT = 150;
+      const MIN_R = 0.5;
+      const MAX_R = 1.5;
+      const DRIFT = 0.7;
+
+      const rand = (min, max) => min + Math.random() * (max - min);
+
+      const resize = () => {
+        dpr = Math.min(2, window.devicePixelRatio || 1);
+        w = window.innerWidth;
+        h = window.innerHeight;
+
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        canvas.style.width = w + "px";
+        canvas.style.height = h + "px";
+
+        ctx.scale(dpr, dpr);
+
+        stars = Array.from({ length: STAR_COUNT }, () => ({
+          x: rand(0, w),
+          y: rand(0, h),
+          r: rand(MIN_R, MAX_R),
+          z: Math.random(),
+          a: rand(0.25, 0.85),
+          phase: rand(0, Math.PI * 2),
+          speed: rand(0.005, 0.025),
+          dx: rand(-1, 1) * DRIFT * (0.6 + Math.random() * 0.8),
+          dy: rand(-1, 1) * DRIFT * (0.6 + Math.random() * 0.8)
+        }));
+      };
+
+      const drawStar = (x, y, r, a) => {
+        const grad1 = ctx.createRadialGradient(x, y, 0, x, y, r * 6);
+        grad1.addColorStop(0, `rgba(255,255,255,${a * 0.3})`);
+        grad1.addColorStop(0.5, `rgba(110,184,255,${a * 0.15})`);
+        grad1.addColorStop(1, 'rgba(79,166,242,0)');
+        ctx.fillStyle = grad1;
+        ctx.beginPath();
+        ctx.arc(x, y, r * 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        const grad2 = ctx.createRadialGradient(x, y, 0, x, y, r * 3);
+        grad2.addColorStop(0, `rgba(255,255,255,${a * 0.6})`);
+        grad2.addColorStop(0.6, `rgba(110,184,255,${a * 0.25})`);
+        grad2.addColorStop(1, 'rgba(79,166,242,0)');
+        ctx.fillStyle = grad2;
+        ctx.beginPath();
+        ctx.arc(x, y, r * 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      };
+
+      const animate = () => {
+        if (!running) return;
+        raf = requestAnimationFrame(animate);
+
+        ctx.clearRect(0, 0, w, h);
+
+        stars.forEach(s => {
+          s.phase += s.speed;
+          const twinkle = Math.sin(s.phase) * 0.5 + 0.5;
+          const alpha = s.a * (0.65 + twinkle * 0.35);
+
+          s.x += s.dx;
+          s.y += s.dy;
+
+          if (s.x < -30) s.x = w + 30;
+          if (s.x > w + 30) s.x = -30;
+          if (s.y < -30) s.y = h + 30;
+          if (s.y > h + 30) s.y = -30;
+
+          drawStar(s.x, s.y, s.r, alpha);
+        });
+      };
+
+      window.addEventListener("resize", resize);
+      document.addEventListener("visibilitychange", () => {
+        running = !document.hidden;
+        if (running) animate();
+        else cancelAnimationFrame(raf);
+      });
+
+      resize();
+      animate();
+    }
+  })();
+</script>
+</body>
+</html>

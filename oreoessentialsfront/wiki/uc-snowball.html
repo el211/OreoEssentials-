@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>UltimateChristmas — Snowball Event | OreoStudios Wiki</title>
+<meta name="description" content="Villager snowball mini-event: rewards, cooldowns, YAML config, balancing, variations, troubleshooting."/>
+<link rel="icon" type="image/png" href="/logo.png" sizes="256x256"/>
+<link rel="stylesheet" href="/styles.css"/><link rel="stylesheet" href="/wiki/_docs.css"/>
+<link rel="canonical" href="https://oreostudio.store/wiki/uc-snowball.html"/>
+</head>
+<body class="with-sidebar">
+<header class="nav">
+  <a class="brand" href="/" aria-label="OreoStudios Home">
+    <img class="logo" src="/logo.png" alt=""><span class="brand-text">Oreo<span class="accent">Studios</span></span>
+  </a>
+  <nav>
+    <a href="/index.html#services">Services</a>
+    <a href="/backend.html">Backend</a>
+    <a href="/oreoessentials.html">OreoEssentials</a>
+    <a href="/hosting.html">Hosting</a>
+    <a href="/wiki/index.html" aria-current="page">Wiki</a>
+    <a href="/index.html#contact" class="btn">Contact</a>
+  </nav>
+  <button id="menu" aria-label="Open menu">☰</button>
+</header>
+
+<main class="docs">
+  <aside class="docs-sidebar">
+    <div class="docs-brand"><img src="/logo.png" alt=""><div>Oreo<span class="accent">Studios</span> Wiki</div></div>
+    <nav class="docs-tree">
+      <div class="docs-section">UltimateChristmas</div>
+      <a href="/wiki/uc-installation.html">🎄 Installation & Setup</a>
+      <a href="/wiki/uc-commands.html">📘 Commands & Permissions</a>
+      <a href="/wiki/uc-shards.html">💎 Shards Economy</a>
+      <a href="/wiki/uc-shardshop.html">🛍️ ShardShop</a>
+      <a href="/wiki/uc-snowball.html" aria-current="page">❄️ Snowball Event</a>
+      <a href="/wiki/uc-advent.html">🗓️ Advent Calendar</a>
+      <a href="/wiki/uc-santa.html">🎅 Santa Event</a>
+    </nav>
+  </aside>
+
+  <section class="docs-content">
+    <h1>❄️ Snowball Event — Villager Shoot</h1>
+    <p>Players throw snowballs at villagers for quick festive rewards—perfect for hubs. Ties into the shards economy and other events.</p>
+
+    <h2 class="gradient-text">🎮 What happens in-game?</h2>
+    <ul>
+      <li>On hit → per-player cooldown check → roll a reward by chance.</li>
+      <li>Reward executes console commands, sends messages, optional sound/firework.</li>
+      <li>Pairs well with Shards, Advent, and Santa.</li>
+    </ul>
+
+    <h2 class="gradient-text">⚙️ Configuration (YAML)</h2>
+    <pre><code># Configuration for snowball hitting mechanics
+villager-shoot:
+  rewards:
+    default:
+      cooldown: 30 # Cooldown per player (seconds)
+
+      # Reward 1: Small shard prize
+      small_prize:
+        chance: 80
+        commands:
+          - "shards give %player% 5"
+        messages:
+          - "&aHit! The villager is stunned and drops 5 shards."
+        event:
+          firework: false
+          sound: "BLOCK_SNOW_PLACE"
+
+      # Reward 2: Large shard prize
+      large_prize:
+        chance: 20
+        commands:
+          - "shards give %player% 25"
+        messages:
+          - "&aCritical Hit! The villager drops 25 shards!"
+        event:
+          firework: true
+          sound: "ENTITY_ARROW_HIT_PLAYER"</code></pre>
+
+    <h3>Keys explained</h3>
+    <ul>
+      <li><code>cooldown</code> — per-player seconds to prevent spam.</li>
+      <li><code>chance</code> — weight for random pick across entries.</li>
+      <li><code>commands</code> — console side; <code>%player%</code> supported.</li>
+      <li><code>messages</code> — color codes allowed.</li>
+      <li><code>event.firework</code> / <code>event.sound</code> — feedback FX.</li>
+    </ul>
+
+    <h2 class="gradient-text">🧭 Enabling</h2>
+    <ol>
+      <li>Register listener for <code>ProjectileHitEvent</code>.</li>
+      <li>Check snowball → villager, shooter is player.</li>
+      <li>Apply cooldown, roll reward from config, run commands/FX.</li>
+      <li>(Optional) Restrict to named villagers (e.g., “Elf”).</li>
+    </ol>
+
+    <h2 class="gradient-text">🎯 Balancing tips</h2>
+    <ul>
+      <li>Common 3–10 shards; rare 20–50.</li>
+      <li>Cooldown 30–60s works well.</li>
+      <li>Always use sounds; fireworks for rare wins.</li>
+      <li>Rotate rewards weekly.</li>
+    </ul>
+
+    <h2 class="gradient-text">🧪 Variations</h2>
+    <pre><code>medium_prize:
+  chance: 15
+  commands:
+    - "shards give %player% 12"
+  messages:
+    - "&aSolid hit! &f+12 shards"
+  event:
+    firework: false
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+
+cosmetic_hat:
+  chance: 5
+  commands:
+    - "give %player% leather_helmet 1"
+  messages:
+    - "&dFestive bonus! &fYou found a Santa hat!"
+  event:
+    firework: true
+    sound: "ENTITY_PLAYER_LEVELUP"</code></pre>
+
+    <h2 class="gradient-text">🧰 Troubleshooting</h2>
+    <ul>
+      <li><em>Nothing happens</em> — verify listener registration and config path.</li>
+      <li><em>Spammy</em> — raise cooldown, lower chances/values.</li>
+      <li><em>No sound/firework</em> — confirm sound ID and WG flags.</li>
+    </ul>
+
+    <h2 class="gradient-text">✅ Why players love it</h2>
+    <ul>
+      <li>Zero friction mini-event.</li>
+      <li>Constant feedback (messages/FX).</li>
+      <li>On-theme and synergistic with the whole event loop.</li>
+    </ul>
+
+    <div class="prevnext">
+      <a href="/wiki/uc-shardshop.html">← Previous: ShardShop</a>
+      <a href="/wiki/uc-advent.html">Next: Advent Calendar →</a>
+    </div>
+  </section>
+</main>
+
+<footer class="footer"><p>© <span id="y"></span> OreoStudios — Docs.</p></footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>

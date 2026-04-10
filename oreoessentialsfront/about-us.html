@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>About Us — OreoStudios</title>
+    <meta name="description" content="The story behind OreoStudios — from a Minecraft server at 11 years old to a professional game and software studio." />
+
+    <link rel="icon" type="image/png" href="/logo.png" sizes="256x256"/>
+    <link rel="stylesheet" href="/styles.css?v=12"/>
+    <meta name="theme-color" content="#090b13"/>
+</head>
+
+<body class="with-sidebar">
+
+<!-- STARFIELD -->
+<canvas id="starfield" aria-hidden="true"></canvas>
+
+<!-- NAV (same as main site) -->
+<header class="nav" id="site-nav">
+    <a class="brand" href="/" aria-label="OreoStudios Home">
+        <img class="logo" src="/logo.png" alt="OreoStudios logo">
+        <span class="brand-text">Oreo<span class="accent">Studios</span></span>
+    </a>
+
+    <nav aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/#services">Services</a>
+        <a href="/backend.html">Backend</a>
+        <a href="/hosting.html">Hosting</a>
+        <a href="/#work">Work</a>
+        <a href="/about-us.html" class="btn">About</a>
+        <a href="/wiki/index.html">Wiki</a>
+    </nav>
+
+    <button id="menu" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+    <div class="menu-overlay" hidden></div>
+</header>
+
+<main>
+
+    <!-- HERO -->
+    <section class="hero reveal">
+        <h1>Our <span class="accent">Story</span></h1>
+        <p class="lead">
+            OreoStudios is not just a development studio — it’s the result of passion, curiosity,
+            and years of learning by building.
+        </p>
+    </section>
+
+    <!-- STORY -->
+    <section class="section reveal">
+        <h2 class="gradient-text">Hi, I’m Elias 👋</h2>
+
+        <p>
+            Hi! I’m <strong>Elias</strong>, a very young developer and the founder of <strong>OreoStudios</strong>.
+            Our studio has a story — and it didn’t start with money, investors, or big companies.
+        </p>
+
+        <p>
+            It all started when I was <strong>11 years old</strong>.
+            I had a Minecraft server and a lot of ideas, but I didn’t have enough money to pay developers.
+            So instead of giving up, I decided to <strong>learn everything myself</strong>.
+        </p>
+
+        <p>
+            I started with simple plugins, then more complex systems.
+            Year after year, I evolved — learning Java, backend systems, infrastructure,
+            databases, networking, and game design.
+        </p>
+
+        <p>
+            What began as a hobby slowly became a real skillset.
+            And at some point, I realized: this could be more than just passion.
+        </p>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section class="section reveal">
+        <h2 class="gradient-text">From Freelance to Studio</h2>
+
+        <p>
+            Over the years, I worked with and for several development services and studios,
+            gaining professional experience and understanding how real production environments work.
+        </p>
+
+        <ul>
+            <li>Development services & freelance platforms</li>
+            <li>Game systems, plugins, backend infrastructure</li>
+            <li>Client communication, deadlines, and quality standards</li>
+        </ul>
+
+        <p>
+            After growing both technically and professionally, my team and I made a decision:
+            <strong>create our own studio</strong>.
+        </p>
+
+        <p>
+            That decision is how <strong>OreoStudios</strong> came to life.
+        </p>
+    </section>
+
+    <!-- ACHIEVEMENTS -->
+    <section class="section reveal">
+        <h2 class="gradient-text">What We Do Today</h2>
+
+        <div class="grid3">
+            <article class="card">
+                <h3>🎮 Game Creators</h3>
+                <p>
+                    Creators of <strong>OreoCrush</strong> and <strong>Afelia</strong>,
+                    building original game concepts and systems from scratch.
+                </p>
+            </article>
+
+            <article class="card">
+                <h3>🤝 Partnerships</h3>
+                <p>
+                    Official partners with <strong>Minestrator</strong> and <strong>Steam</strong>,
+                    working with trusted platforms in the game hosting and distribution ecosystem.
+                </p>
+            </article>
+
+            <article class="card">
+                <h3>⚙️ Studio Services</h3>
+                <p>
+                    Minecraft plugins, backend infrastructure, server optimization,
+                    and long-term maintenance for serious projects.
+                </p>
+            </article>
+        </div>
+    </section>
+
+    <!-- VALUES -->
+    <section class="section reveal">
+        <h2 class="gradient-text">Our Philosophy</h2>
+
+        <div class="facts">
+            <div>
+                <strong>Passion</strong>
+                <span>Built from curiosity and love for development</span>
+            </div>
+            <div>
+                <strong>Quality</strong>
+                <span>Clean code, maintainable systems, real solutions</span>
+            </div>
+            <div>
+                <strong>Growth</strong>
+                <span>Always learning, always improving</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section contact reveal">
+        <h2 class="gradient-text">Let’s Build Something Together</h2>
+        <p>
+            Whether you’re launching a server, a game, or a long-term project —
+            we’d love to be part of it.
+        </p>
+
+        <div class="contact-ctas">
+            <a class="btn primary" href="https://discord.gg/A6wCGJD2Ez" target="_blank" rel="noopener">Join our Discord</a>
+            <a class="btn ghost" href="/#contact">Contact Us</a>
+        </div>
+    </section>
+
+</main>
+
+<footer class="footer">
+    <p>© <span id="y"></span> OreoStudios — All rights reserved.</p>
+    <p class="muted small">Made with ❤️ by the OreoStudios team.</p>
+</footer>
+
+<!-- Shared scripts (menu + reveal + stars) -->
+<script>
+    (() => {
+        const els = document.querySelectorAll(".reveal");
+        if (!("IntersectionObserver" in window)) {
+            els.forEach(el => el.classList.add("show"));
+        } else {
+            const io = new IntersectionObserver(
+                entries => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add("show");
+                            io.unobserve(entry.target);
+                        }
+                    });
+                },
+                { rootMargin: "0px 0px -10% 0px", threshold: 0.08 }
+            );
+            els.forEach(el => io.observe(el));
+        }
+    })();
+</script>
+
+</body>
+</html>

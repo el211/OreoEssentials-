@@ -1,0 +1,20 @@
+/* compact docs layout; uses your CSS variables */
+.docs{display:grid;grid-template-columns:minmax(220px,280px) 1fr;gap:20px;max-width:1200px;margin:0 auto;padding:24px}
+.docs-sidebar{
+  position:sticky;top:calc(var(--nav-h) + 12px);
+  align-self:start;background:linear-gradient(180deg,#0f1322,#0b0f1a);
+  border:1px solid #ffffff18;border-radius:14px;padding:14px;max-height:calc(100vh - var(--nav-h) - 24px);overflow:auto
+}
+.docs-brand{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.docs-brand img{width:28px;height:28px;border-radius:8px}
+.docs-tree{display:flex;flex-direction:column;gap:6px}
+.docs-tree .docs-section{margin-top:8px;margin-bottom:4px;font-weight:800;color:var(--muted);text-transform:uppercase;font-size:.78rem;letter-spacing:.08em}
+.docs-tree a{
+  padding:8px 10px;border-radius:10px;border:1px solid transparent;
+  opacity:.92
+}
+.docs-tree a:hover{border-color:#ffffff22;background:linear-gradient(180deg,#ffffff10,#00000010);opacity:1}
+.docs-content{padding:22px;background:linear-gradient(180deg,#0f1322,#0b0f1a);border:1px solid #ffffff18;border-radius:14px}
+.docs-content .prevnext{display:flex;justify-content:space-between;gap:12px;margin-top:22px}
+.docs-content .prevnext a{padding:10px 12px;border:1px solid #ffffff22;border-radius:10px}
+@media (max-width: 980px){ .docs{grid-template-columns:1fr} .docs-sidebar{position:relative;top:auto;max-height:none} }
