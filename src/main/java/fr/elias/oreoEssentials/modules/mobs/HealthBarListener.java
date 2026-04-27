@@ -493,7 +493,8 @@ public final class HealthBarListener implements Listener {
     }
 
     private void teleport(ArmorStand as, LivingEntity host, double relY) {
-        as.teleport(host.getEyeLocation().add(0, relY, 0));
+        Location dest = host.getEyeLocation().add(0, relY, 0);
+        as.teleportAsync(dest);
     }
 
     private void proximitySweep(Map<UUID, ArmorStand> map, boolean top) {
