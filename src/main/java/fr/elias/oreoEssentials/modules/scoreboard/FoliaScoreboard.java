@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.scoreboard;
 
+import fr.elias.oreoEssentials.OreoEssentials;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
@@ -189,8 +190,10 @@ public final class FoliaScoreboard {
             sendPkt(CTOR_SET_DISPLAY_PKT.newInstance(DISPLAY_SLOT_SIDEBAR, nmsObjective));
             activeHolders.clear(); // force full line resend
             sendLines(lines);
-            LOG.info("[FoliaScoreboard] Scoreboard (re)created for " + player.getName()
-                    + " (" + lines.size() + " lines, refresh#" + refreshCount + ")");
+            if (OreoEssentials.get().getConfigService().isDebugEnabled()) {
+                LOG.info("[FoliaScoreboard] Scoreboard (re)created for " + player.getName()
+                        + " (" + lines.size() + " lines, refresh#" + refreshCount + ")");
+            }
         } catch (Throwable t) {
             LOG.warning("[FoliaScoreboard] show(create) failed for " + player.getName() + ": " + t);
             nmsObjective = null;
