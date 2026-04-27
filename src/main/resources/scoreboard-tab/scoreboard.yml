@@ -1,6 +1,6 @@
 scoreboard:
   default-enabled: true
-  update-ticks: 10  # Refresh every 0.5 seconds
+  update-ticks: 20  # Refresh every 0.5 seconds
 
   title:
     frame-ticks: 10

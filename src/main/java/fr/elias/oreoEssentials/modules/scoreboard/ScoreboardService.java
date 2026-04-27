@@ -58,6 +58,7 @@ public final class ScoreboardService implements Listener {
     private final Map<UUID, FoliaScoreboard> foliaBoards  = new ConcurrentHashMap<>();
     private final Map<UUID, Scoreboard>      playerBoards = new ConcurrentHashMap<>();
     private final Map<UUID, RenderState>     renderStates = new ConcurrentHashMap<>();
+    private final Map<String, Boolean>       sharedTemplateCache = new ConcurrentHashMap<>();
     private OreTask taskId = null;
     private final File toggleFile;
 
@@ -68,6 +69,16 @@ public final class ScoreboardService implements Listener {
         private RenderState(String title, List<String> lines) {
             this.title = title;
             this.lines = List.copyOf(lines);
+        }
+    }
+
+    private static final class RenderCycle {
+        private final boolean placeholderApiEnabled;
+        private final Map<String, String> animatedTextCache = new ConcurrentHashMap<>();
+        private final Map<String, String> sharedLegacyCache = new ConcurrentHashMap<>();
+
+        private RenderCycle(boolean placeholderApiEnabled) {
+            this.placeholderApiEnabled = placeholderApiEnabled;
         }
     }
 
@@ -100,6 +111,7 @@ public final class ScoreboardService implements Listener {
 
         taskId = OreScheduler.runTimer(plugin, () -> {
             titleAnim.tick();
+            RenderCycle cycle = new RenderCycle(isPlaceholderApiEnabled());
 
             for (UUID id : List.copyOf(shown)) {
                 Player p = Bukkit.getPlayer(id);
@@ -114,14 +126,14 @@ public final class ScoreboardService implements Listener {
                     OreScheduler.runForEntity(plugin, p, () -> {
                         if (!p.isOnline()) { shown.remove(id); return; }
                         if (!shouldShow(p)) { hide(p); return; }
-                        refresh(p);
+                        refresh(p, cycle);
                     });
                 } else {
                     if (!shouldShow(p)) {
                         hide(p);
                         continue;
                     }
-                    refresh(p);
+                    refresh(p, cycle);
                 }
             }
         }, cfg.updateTicks(), cfg.updateTicks());
@@ -196,16 +208,16 @@ public final class ScoreboardService implements Listener {
     // -------------------------------------------------------------------------
 
     /** Renders the current title frame as an Adventure Component. */
-    private Component getFoliaTitle(Player p) {
-        return renderToComponent(p, titleAnim.current());
+    private Component getFoliaTitle(Player p, RenderCycle cycle) {
+        return renderToComponent(p, titleAnim.current(), cycle);
     }
 
     /** Renders all config lines as Adventure Components (honoring \\n splits). */
-    private List<Component> getFoliaLines(Player p) {
+    private List<Component> getFoliaLines(Player p, RenderCycle cycle) {
         List<String> cfgLines = cfg.lines();
         List<Component> result = new ArrayList<>();
         for (String raw : cfgLines) {
-            String rendered = renderToLegacyString(p, raw);
+            String rendered = renderToLegacyString(p, raw, cycle);
             if (rendered.contains("\n")) {
                 for (String part : rendered.split("\n")) {
                     if (!part.trim().isEmpty()) result.add(LEGACY.deserialize(truncateVisible(part, 80)));
@@ -252,11 +264,12 @@ public final class ScoreboardService implements Listener {
     public void show(Player p) {
         if (!cfg.enabled()) return;
         if (isShown(p)) return;
+        RenderCycle cycle = new RenderCycle(isPlaceholderApiEnabled());
 
         if (OreScheduler.isFolia()) {
             FoliaScoreboard fs = foliaBoards.computeIfAbsent(p.getUniqueId(), id -> new FoliaScoreboard(p));
-            try { fs.show(getFoliaTitle(p), getFoliaLines(p)); } catch (Throwable ignored) {}
-            renderStates.put(p.getUniqueId(), renderState(p));
+            try { fs.show(getFoliaTitle(p, cycle), getFoliaLines(p, cycle)); } catch (Throwable ignored) {}
+            renderStates.put(p.getUniqueId(), renderState(p, cycle));
             shown.add(p.getUniqueId());
             return;
         }
@@ -270,7 +283,7 @@ public final class ScoreboardService implements Listener {
             Objective  obj   = board.registerNewObjective(OBJ_NAME, "dummy");
             obj.setDisplaySlot(DisplaySlot.SIDEBAR);
             obj.numberFormat(NumberFormat.blank());
-            RenderState state = renderState(p);
+            RenderState state = renderState(p, cycle);
             applyRenderState(obj, board, state);
 
             p.setScoreboard(board);
@@ -313,17 +326,17 @@ public final class ScoreboardService implements Listener {
         } catch (Throwable ignored) {}
     }
 
-    private void refresh(Player p) {
+    private void refresh(Player p, RenderCycle cycle) {
         if (OreScheduler.isFolia()) {
             FoliaScoreboard fs = foliaBoards.get(p.getUniqueId());
             if (fs == null || !fs.isActive()) {
                 shown.remove(p.getUniqueId()); // let show() re-add it
                 show(p);
             } else {
-                RenderState next = renderState(p);
+                RenderState next = renderState(p, cycle);
                 RenderState prev = renderStates.get(p.getUniqueId());
                 if (prev == null || !Objects.equals(prev.title, next.title) || !Objects.equals(prev.lines, next.lines)) {
-                    try { fs.show(getFoliaTitle(p), getFoliaLines(p)); } catch (Throwable ignored) {}
+                    try { fs.show(getFoliaTitle(p, cycle), getFoliaLines(p, cycle)); } catch (Throwable ignored) {}
                     renderStates.put(p.getUniqueId(), next);
                 }
             }
@@ -354,7 +367,7 @@ public final class ScoreboardService implements Listener {
         }
         obj.numberFormat(NumberFormat.blank());
 
-        RenderState next = renderState(p);
+        RenderState next = renderState(p, cycle);
         RenderState prev = renderStates.get(p.getUniqueId());
         boolean needsApply = prev == null
                 || !Objects.equals(prev.title, next.title)
@@ -383,19 +396,19 @@ public final class ScoreboardService implements Listener {
      */
     private void safeSetTitle(Player p, Objective obj) {
         try {
-            Component title = renderToComponent(p, titleAnim.current());
+            Component title = renderToComponent(p, titleAnim.current(), new RenderCycle(isPlaceholderApiEnabled()));
             obj.displayName(title);   // Adventure overload — gradients work here
         } catch (Throwable ignored) {}
     }
 
-    private RenderState renderState(Player p) {
-        return new RenderState(renderToLegacyString(p, titleAnim.current()), renderLines(p));
+    private RenderState renderState(Player p, RenderCycle cycle) {
+        return new RenderState(renderToLegacyString(p, titleAnim.current(), cycle), renderLines(p, cycle));
     }
 
-    private List<String> renderLines(Player p) {
+    private List<String> renderLines(Player p, RenderCycle cycle) {
         List<String> expanded = new ArrayList<>();
         for (String raw : cfg.lines()) {
-            String rendered = renderToLegacyString(p, raw);
+            String rendered = renderToLegacyString(p, raw, cycle);
             if (rendered.contains("\n")) {
                 for (String part : rendered.split("\n")) {
                     if (!part.trim().isEmpty()) expanded.add(truncateVisible(part, 80));
@@ -451,8 +464,8 @@ public final class ScoreboardService implements Listener {
      * Returns an Adventure Component — used for the scoreboard title where the
      * Paper API accepts a Component directly.
      */
-    private Component renderToComponent(Player p, String raw) {
-        String legacy = renderToLegacyString(p, raw);
+    private Component renderToComponent(Player p, String raw, RenderCycle cycle) {
+        String legacy = renderToLegacyString(p, raw, cycle);
         return LEGACY.deserialize(legacy);
     }
     private static final Map<Character, String> AMP_TO_MINI = Map.ofEntries(
@@ -513,11 +526,15 @@ public final class ScoreboardService implements Listener {
      * Paper 1.16+ team#prefix(Component) and obj#displayName(Component) both
      * support full hex natively, so no downsampling is needed.
      */
-    private String renderToLegacyString(Player p, String raw) {
+    private String renderToLegacyString(Player p, String raw, RenderCycle cycle) {
         if (raw == null) return "";
 
+        if (canShareRenderedText(raw)) {
+            return cycle.sharedLegacyCache.computeIfAbsent(raw, this::renderSharedLegacyString);
+        }
+
         // 1. Inline animation tags  →  active frame text
-        String s = applyTagAnimations(raw);
+        String s = resolveAnimatedText(raw, cycle);
 
         // 2. Simple player-name token
         s = s.replace("{player}", p.getName());
@@ -527,7 +544,7 @@ public final class ScoreboardService implements Listener {
 
         // 4. PlaceholderAPI
         try {
-            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            if (cycle.placeholderApiEnabled) {
                 s = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, s);
                 // Some placeholders themselves contain placeholders
                 if (s.contains("%"))
@@ -563,6 +580,43 @@ public final class ScoreboardService implements Listener {
         // all handle full hex natively on Paper 1.16+.
 
         return s;
+    }
+
+    private String renderSharedLegacyString(String raw) {
+        String s = applyTagAnimations(raw);
+        s = convertPapiTags(s);
+        s = AMP_HEX.matcher(s).replaceAll("<#$1>");
+        s = MiniMessageCompat.normalizeTagAliases(s);
+        s = convertAmpToMiniMessage(s);
+        if (s.indexOf('<') != -1 && s.indexOf('>') != -1) {
+            try {
+                boolean nexoEnabled = Bukkit.getPluginManager().getPlugin("Nexo") != null
+                        && Bukkit.getPluginManager().getPlugin("Nexo").isEnabled();
+                s = nexoEnabled
+                        ? parseWithNexoAdventureUtils(s)
+                        : LEGACY.serialize(MM.deserialize(s));
+            } catch (Throwable ignored) {}
+        }
+        return ChatColor.translateAlternateColorCodes('&', s);
+    }
+
+    private String resolveAnimatedText(String raw, RenderCycle cycle) {
+        return cycle.animatedTextCache.computeIfAbsent(raw, this::applyTagAnimations);
+    }
+
+    private boolean canShareRenderedText(String raw) {
+        if (raw == null || raw.isEmpty()) return true;
+        return sharedTemplateCache.computeIfAbsent(raw, key -> {
+            if (key.contains("{player}") || key.contains("<papi:")) {
+                return false;
+            }
+            String withoutAnimations = ANIM_TAG.matcher(key).replaceAll("");
+            return !withoutAnimations.contains("%");
+        });
+    }
+
+    private boolean isPlaceholderApiEnabled() {
+        return Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
     }
 
     private String parseWithNexoAdventureUtils(String input) {
@@ -843,12 +897,9 @@ public final class ScoreboardService implements Listener {
 
     private boolean shouldShow(Player p) {
         if (!isWorldAllowedByLists(p)) {
-            plugin.getLogger().info("[Scoreboard] shouldShow=" + false + " for " + p.getName() + " (world blocked: " + p.getWorld().getName() + ")");
             return false;
         }
         Boolean pref = toggles.get(p.getUniqueId());
-        boolean result = pref == null ? cfg.defaultEnabled() : pref;
-        if (!result) plugin.getLogger().info("[Scoreboard] shouldShow=false for " + p.getName() + " (pref=" + pref + " defaultEnabled=" + cfg.defaultEnabled() + ")");
-        return result;
+        return pref == null ? cfg.defaultEnabled() : pref;
     }
 }
