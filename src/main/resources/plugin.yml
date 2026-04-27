@@ -1,5 +1,5 @@
 name: OreoEssentials
-version: "4.4-SNAPSHOT"
+version: "4.5-SNAPSHOT"
 main: fr.elias.oreoEssentials.OreoEssentials
 api-version: "1.21"
 folia-supported: true
@@ -257,7 +257,7 @@ commands:
     description: Toggle vanish (hide from players and mobs)
     aliases: [ v ]
     permission: oreo.vanish
-    usage: "/vanish [on|off]"
+    usage: "/vanish [on|off|toggle]"
 
   importzhomes:
     description: "Import homes from zEssentials into OreoEssentials"

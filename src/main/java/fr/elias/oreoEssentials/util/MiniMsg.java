@@ -8,7 +8,7 @@ public final class MiniMsg {
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
     public static String toLegacy(String input) {
-        Component c = MM.deserialize(input);
+        Component c = MM.deserialize(MiniMessageCompat.normalizeTagAliases(input));
         return LegacyComponentSerializer.legacySection().serialize(c);
     }
 }

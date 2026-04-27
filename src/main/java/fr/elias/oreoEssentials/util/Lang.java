@@ -404,7 +404,7 @@ public final class Lang {
         String normalized = input.replace('§', '&');
 
         if (AMP_OR_SECTION.matcher(normalized).find()) {
-            String mm = legacyToMiniMessage(normalized);
+            String mm = MiniMessageCompat.normalizeTagAliases(legacyToMiniMessage(normalized));
             try {
                 return MM.deserialize(mm, baseResolvers()).decoration(TextDecoration.ITALIC, false);
             } catch (Throwable t) {
@@ -413,7 +413,7 @@ public final class Lang {
         }
 
         try {
-            return MM.deserialize(normalized, baseResolvers()).decoration(TextDecoration.ITALIC, false);
+            return MM.deserialize(MiniMessageCompat.normalizeTagAliases(normalized), baseResolvers()).decoration(TextDecoration.ITALIC, false);
         } catch (Throwable t) {
             // Ultimate fallback: plain text
             return Component.text(normalized).decoration(TextDecoration.ITALIC, false);

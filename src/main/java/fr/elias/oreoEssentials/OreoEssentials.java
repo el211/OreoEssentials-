@@ -1332,13 +1332,27 @@ public final class OreoEssentials extends JavaPlugin {
         this.deathBackService = new DeathBackService();
         this.godService       = new GodService();
 
-        VanishService vanishService = new VanishService(this);
+        boolean vanishCrossServer = settingsConfig.featureOption("cross-server", "vanish", true);
+        fr.elias.oreoEssentials.services.vanish.VanishStateStorage vanishStorage =
+                new fr.elias.oreoEssentials.services.vanish.YamlVanishStateStorage(this);
+
+        if (vanishCrossServer && this.homesMongoClient != null) {
+            String dbName = getConfig().getString("storage.mongo.database", "oreo");
+            String prefix = getConfig().getString("storage.mongo.collectionPrefix", "oreo_");
+            vanishStorage = new fr.elias.oreoEssentials.services.vanish.MongoVanishStateStorage(this.homesMongoClient, dbName, prefix);
+            getLogger().info("[VANISH] Using MongoDB storage for persistent cross-server state.");
+        } else {
+            getLogger().info("[VANISH] Using local YAML storage for persistent state.");
+        }
+
+        VanishService vanishService = new VanishService(this, vanishStorage, vanishCrossServer, configService.serverName());
         getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.listeners.VanishListener(vanishService, this), this);
         getServer().getPluginManager().registerEvents(new PlayerTrackingListener(backService), this);
         getServer().getPluginManager().registerEvents(new DeathBackListener(deathBackService), this);
         getServer().getPluginManager().registerEvents(new GodListener(godService), this);
         getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.rtp.listeners.DeathRespawnListener(this), this);
         getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.spawn.FirstJoinSpawnListener(this), this);
+        vanishService.restoreOnlinePlayers();
 
         // store vanishService ref for commands block
         this._vanishService = vanishService;
@@ -1409,6 +1423,12 @@ public final class OreoEssentials extends JavaPlugin {
         this.packetManager.subscribe(TradeStartPacket.class,   new TradeStartPacketHandler(this));
         this.packetManager.subscribe(PlayerJoinPacket.class,   new PlayerJoinPacketHandler(this));
         this.packetManager.subscribe(PlayerQuitPacket.class,   new PlayerQuitPacketHandler(this));
+        if (this._vanishService != null) {
+            this.packetManager.subscribe(
+                    fr.elias.oreoEssentials.modules.vanish.rabbit.VanishSyncPacket.class,
+                    (channel, pkt) -> this._vanishService.handleRemoteState(pkt.getPlayerId(), pkt.isVanished(), pkt.getSourceServer()));
+            getLogger().info("[VANISH] Cross-server sync subscribed.");
+        }
         this.packetManager.subscribe(fr.elias.oreoEssentials.rabbitmq.packet.impl.DeathMessagePacket.class, new fr.elias.oreoEssentials.rabbitmq.handler.DeathMessagePacketHandler(this));
         this.packetManager.subscribe(TradeInvitePacket.class,  new TradeInvitePacketHandler(this));
         this.packetManager.subscribe(TradeStatePacket.class,   new TradeStatePacketHandler(this));
@@ -2134,6 +2154,7 @@ public final class OreoEssentials extends JavaPlugin {
         pm.registerPacket(fr.elias.oreoEssentials.modules.chat.msg.CrossServerMsgPacket.class, fr.elias.oreoEssentials.modules.chat.msg.CrossServerMsgPacket::new);
         pm.registerPacket(PlayerJoinPacket.class, PlayerJoinPacket::new);
         pm.registerPacket(PlayerQuitPacket.class, PlayerQuitPacket::new);
+        pm.registerPacket(fr.elias.oreoEssentials.modules.vanish.rabbit.VanishSyncPacket.class, fr.elias.oreoEssentials.modules.vanish.rabbit.VanishSyncPacket::new);
         pm.registerPacket(PlayerWarpTeleportRequestPacket.class, PlayerWarpTeleportRequestPacket::new);
         pm.registerPacket(fr.elias.oreoEssentials.modules.rtp.RtpTeleportRequestPacket.class, fr.elias.oreoEssentials.modules.rtp.RtpTeleportRequestPacket::new);
         pm.registerPacket(InvseeOpenRequestPacket.class, InvseeOpenRequestPacket::new);
@@ -2162,7 +2183,7 @@ public final class OreoEssentials extends JavaPlugin {
         pm.registerPacket(fr.elias.oreoEssentials.modules.auctionhouse.rabbitmq.AuctionSyncPacket.class, fr.elias.oreoEssentials.modules.auctionhouse.rabbitmq.AuctionSyncPacket::new);
         pm.registerPacket(fr.elias.oreoEssentials.modules.orders.rabbitmq.OrderSyncPacket.class, fr.elias.oreoEssentials.modules.orders.rabbitmq.OrderSyncPacket::new);
         pm.registerPacket(fr.elias.oreoEssentials.modules.portals.rabbit.PortalTeleportPacket.class, fr.elias.oreoEssentials.modules.portals.rabbit.PortalTeleportPacket::new);
-        getLogger().info("[RABBIT] Registered 32 packet types deterministically");
+        getLogger().info("[RABBIT] Registered 33 packet types deterministically");
     }
 
     // -------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.scoreboard;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.MiniMessageCompat;
 import fr.elias.oreoEssentials.util.Lang;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.util.OreTask;
@@ -506,6 +507,7 @@ public final class ScoreboardService implements Listener {
 
         // 5. &#RRGGBB  →  <#RRGGBB>
         s = AMP_HEX.matcher(s).replaceAll("<#$1>");
+        s = MiniMessageCompat.normalizeTagAliases(s);
         // 5.5 &l, &o, &b, &6 etc. → MiniMessage equivalents
         // This makes & codes work correctly inside <gradient>, <rainbow> etc.
         s = convertAmpToMiniMessage(s);

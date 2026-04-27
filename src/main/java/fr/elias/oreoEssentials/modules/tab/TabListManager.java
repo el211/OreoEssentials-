@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.tab;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.config.SettingsConfig;
 import fr.elias.oreoEssentials.playerdirectory.PlayerDirectory;
+import fr.elias.oreoEssentials.util.MiniMessageCompat;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.util.OreTask;
 import net.kyori.adventure.text.Component;
@@ -520,7 +521,7 @@ public class TabListManager {
         //    entire string (both PAPI §-output and MiniMessage prefix tags) is handled uniformly
         if (s.indexOf('<') != -1 && s.indexOf('>') != -1) {
             try {
-                Component comp = MM.deserialize(convertAmpToMiniMessage(s));
+                Component comp = MM.deserialize(MiniMessageCompat.normalizeTagAliases(convertAmpToMiniMessage(s)));
                 s = LEGACY_HEX.serialize(comp);
                 return s.replace("\\n", "\n");
             } catch (Throwable ignored) {}

@@ -89,6 +89,7 @@ features:
     enderchest: true
     inventory: true
     invsee: true
+    vanish: true
 
   tab:
     enabled: true

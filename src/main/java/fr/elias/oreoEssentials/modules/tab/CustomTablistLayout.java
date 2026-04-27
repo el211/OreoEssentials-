@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.tab;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.MiniMessageCompat;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -138,7 +139,7 @@ public class CustomTablistLayout {
                 String mm = AMP_HEX.matcher(displayName).replaceAll("<#$1>");
                 mm = CLOSING_COLOR_TAG.matcher(mm).replaceAll("<reset>");
                 mm = mm.replace('§', '&');
-                mm = convertAmpToMiniMessage(mm);
+                mm = MiniMessageCompat.normalizeTagAliases(convertAmpToMiniMessage(mm));
                 Component comp = MM.deserialize(mm);
                 target.playerListName(comp);
             } catch (Throwable e) {
@@ -253,7 +254,7 @@ public class CustomTablistLayout {
         s = s.replace('§', '&');
 
         // 4. & codes → MiniMessage equivalents so they work inside <gradient> tags
-        s = convertAmpToMiniMessage(s);
+        s = MiniMessageCompat.normalizeTagAliases(convertAmpToMiniMessage(s));
 
         // 5. MiniMessage parse — handles <gradient>, <rainbow>, <#RRGGBB>, named tags etc.
         if (s.indexOf('<') != -1 && s.indexOf('>') != -1) {

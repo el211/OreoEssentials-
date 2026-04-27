@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.holograms.api.hologram;
 import fr.elias.oreoEssentials.modules.holograms.api.data.HologramData;
 import fr.elias.oreoEssentials.modules.holograms.api.data.TextHologramData;
 import fr.elias.oreoEssentials.modules.holograms.api.data.property.Visibility;
+import fr.elias.oreoEssentials.util.MiniMessageCompat;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -356,6 +357,7 @@ public abstract class Hologram {
         }
 
         var text = String.join("\n", textData.getText());
+        text = MiniMessageCompat.normalizeTagAliases(text);
 
         if (Bukkit.isStopping()) {
             return MiniMessage.miniMessage().deserialize(text);

@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.bossbar;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.MiniMessageCompat;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.util.OreTask;
 import net.kyori.adventure.text.Component;
@@ -177,7 +178,7 @@ public final class BossBarService implements Listener {
             }
         } catch (Throwable ignored) {}
         try {
-            Component c = MM.deserialize(s);
+            Component c = MM.deserialize(MiniMessageCompat.normalizeTagAliases(s));
             s = LEGACY.serialize(c);
         } catch (Throwable ignored) {}
         return ChatColor.translateAlternateColorCodes('&', s);

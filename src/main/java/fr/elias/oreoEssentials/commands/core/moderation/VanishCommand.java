@@ -24,7 +24,18 @@ public class VanishCommand implements OreoCommand {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         Player p = (Player) sender;
-        boolean nowVanished = service.toggle(p);
+        boolean nowVanished;
+        if (args.length == 0 || args[0].equalsIgnoreCase("toggle")) {
+            nowVanished = service.toggle(p);
+        } else if (args[0].equalsIgnoreCase("on")) {
+            service.setVanished(p, true);
+            nowVanished = true;
+        } else if (args[0].equalsIgnoreCase("off")) {
+            service.setVanished(p, false);
+            nowVanished = false;
+        } else {
+            return false;
+        }
 
         if (nowVanished) {
             Lang.send(p, "moderation.vanish.enabled",
