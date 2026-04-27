@@ -45,7 +45,7 @@ public class InvSeeMenu implements InventoryProvider {
         String targetName =
                 (op.getName() != null ? op.getName() : targetId.toString().substring(0, 8));
 
-        plugin.getLogger().info("[INVSEE-DEBUG] open(): viewer=" + viewer.getName()
+        debugInfo(plugin, "[INVSEE-DEBUG] open(): viewer=" + viewer.getName()
                 + " targetId=" + targetId + " targetName=" + targetName);
 
         SmartInventory.builder()
@@ -57,7 +57,7 @@ public class InvSeeMenu implements InventoryProvider {
                 .listener(new InventoryListener<>(InventoryCloseEvent.class, ev -> {
                     Player staff = (Player) ev.getPlayer();
                     Inventory top = ev.getInventory();
-                    plugin.getLogger().info("[INVSEE-DEBUG] InventoryCloseEvent for viewer="
+                    debugInfo(plugin, "[INVSEE-DEBUG] InventoryCloseEvent for viewer="
                             + staff.getName() + " targetId=" + targetId
                             + " topSize=" + top.getSize());
                     syncAndApply(plugin, staff, targetId, top);
@@ -68,12 +68,12 @@ public class InvSeeMenu implements InventoryProvider {
 
     @Override
     public void init(Player viewer, InventoryContents contents) {
-        plugin.getLogger().info("[INVSEE-DEBUG] init(): viewer=" + viewer.getName()
+        debugInfo(plugin, "[INVSEE-DEBUG] init(): viewer=" + viewer.getName()
                 + " targetId=" + targetId + " on server=" + plugin.getServerNameSafe());
 
         InvseeService invsee = plugin.getInvseeService();
         if (invsee == null) {
-            plugin.getLogger().warning("[INVSEE-DEBUG] init(): InvseeService is null, aborting.");
+            debugWarn(plugin, "[INVSEE-DEBUG] init(): InvseeService is null, aborting.");
             viewer.closeInventory();
             viewer.sendMessage("§cCross-server invsee service is not available.");
             return;
@@ -82,7 +82,7 @@ public class InvSeeMenu implements InventoryProvider {
         // Ask InvseeService for the *best* snapshot it can get (online local or persisted).
         InventoryService.Snapshot snap = invsee.requestSnapshot(targetId);
         if (snap == null) {
-            plugin.getLogger().warning("[INVSEE-DEBUG] init(): requestSnapshot returned NULL for targetId=" + targetId);
+            debugWarn(plugin, "[INVSEE-DEBUG] init(): requestSnapshot returned NULL for targetId=" + targetId);
             viewer.closeInventory();
             viewer.sendMessage("§cCould not fetch inventory. " +
                     "Player may be offline or has no stored inventory.");
@@ -92,7 +92,7 @@ public class InvSeeMenu implements InventoryProvider {
         if (snap.contents == null) snap.contents = new ItemStack[41];
         if (snap.armor == null)    snap.armor    = new ItemStack[4];
 
-        plugin.getLogger().info("[INVSEE-DEBUG] init(): got snapshot for targetId=" + targetId
+        debugInfo(plugin, "[INVSEE-DEBUG] init(): got snapshot for targetId=" + targetId
                 + " contentsLen=" + snap.contents.length
                 + " armorLen=" + snap.armor.length
                 + " offhand=" + (snap.offhand == null ? "null" : snap.offhand.getType().name()));
@@ -149,7 +149,7 @@ public class InvSeeMenu implements InventoryProvider {
                         .build()
         ));
 
-        plugin.getLogger().info("[INVSEE-DEBUG] init(): GUI prepared for viewer=" + viewer.getName()
+        debugInfo(plugin, "[INVSEE-DEBUG] init(): GUI prepared for viewer=" + viewer.getName()
                 + " targetId=" + targetId);
     }
 
@@ -162,12 +162,12 @@ public class InvSeeMenu implements InventoryProvider {
                                     Player viewer,
                                     UUID targetId,
                                     Inventory inv) {
-        plugin.getLogger().info("[INVSEE-DEBUG] syncAndApply(): viewer=" + viewer.getName()
+        debugInfo(plugin, "[INVSEE-DEBUG] syncAndApply(): viewer=" + viewer.getName()
                 + " targetId=" + targetId + " invSize=" + inv.getSize());
 
         InvseeService invsee = plugin.getInvseeService();
         if (invsee == null) {
-            plugin.getLogger().warning("[INVSEE-DEBUG] syncAndApply(): InvseeService is null, aborting.");
+            debugWarn(plugin, "[INVSEE-DEBUG] syncAndApply(): InvseeService is null, aborting.");
             viewer.sendMessage("§cCannot apply inventory changes: invsee service unavailable.");
             return;
         }
@@ -223,19 +223,19 @@ public class InvSeeMenu implements InventoryProvider {
             offhandNonEmpty = true;
         }
 
-        plugin.getLogger().info("[INVSEE-DEBUG] syncAndApply(): nonEmptyContents=" + nonEmptyContents
+        debugInfo(plugin, "[INVSEE-DEBUG] syncAndApply(): nonEmptyContents=" + nonEmptyContents
                 + " nonEmptyArmor=" + nonEmptyArmor
                 + " offhandNonEmpty=" + offhandNonEmpty);
 
         if (allEmpty) {
-            plugin.getLogger().warning("[INVSEE-DEBUG] syncAndApply(): snapshot fully empty, NOT applying. targetId=" + targetId);
+            debugWarn(plugin, "[INVSEE-DEBUG] syncAndApply(): snapshot fully empty, NOT applying. targetId=" + targetId);
             viewer.sendMessage("§cNot applying an empty inventory snapshot " +
                     "(inventory probably failed to load).");
             return;
         }
 
         boolean ok = invsee.applySnapshotFromGui(viewer.getUniqueId(), targetId, snap);
-        plugin.getLogger().info("[INVSEE-DEBUG] syncAndApply(): applySnapshotFromGui returned " + ok
+        debugInfo(plugin, "[INVSEE-DEBUG] syncAndApply(): applySnapshotFromGui returned " + ok
                 + " for targetId=" + targetId);
 
         if (!ok) {
@@ -298,6 +298,18 @@ public class InvSeeMenu implements InventoryProvider {
                         + staff.getName() + " edited inventory of " + targetName);
             }
         } catch (Exception ignored) {
+        }
+    }
+
+    private static void debugInfo(OreoEssentials plugin, String message) {
+        if (plugin.getConfigService().isDebugEnabled()) {
+            plugin.getLogger().info(message);
+        }
+    }
+
+    private static void debugWarn(OreoEssentials plugin, String message) {
+        if (plugin.getConfigService().isDebugEnabled()) {
+            plugin.getLogger().warning(message);
         }
     }
 }

@@ -452,6 +452,7 @@ public final class OreoEssentials extends JavaPlugin {
         initEvents();
         initNametag();
         initializeBStats();
+        warnMissingDependencies();
         showCompletionBanner();
         tryRegisterPlaceholderAPI();
         applyCommandToggles();
@@ -685,13 +686,13 @@ public final class OreoEssentials extends JavaPlugin {
 
         if (economyEnabled && this.database != null) {
             if (getServer().getPluginManager().getPlugin("Vault") == null) {
-                getLogger().severe("[ECON] Vault not found but economy.enabled=true. Disabling plugin.");
-                getServer().getPluginManager().disablePlugin(this);
-                return;
+                getLogger().warning("[ECON] Vault not found — economy module active but Vault API bridge is unavailable. " +
+                        "Other plugins cannot use economy through Vault. Install Vault to enable the bridge.");
+            } else {
+                var rsp = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
+                if (rsp == null) { getLogger().warning("[ECON] Vault present but no Economy provider registered yet."); }
+                else { this.vaultEconomy = rsp.getProvider(); getLogger().info("[ECON] Vault economy integration enabled."); }
             }
-            var rsp = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
-            if (rsp == null) { getLogger().severe("[ECON] Failed to hook Vault Economy."); }
-            else { this.vaultEconomy = rsp.getProvider(); getLogger().info("[ECON] Vault economy integration enabled."); }
 
             Bukkit.getPluginManager().registerEvents(new PlayerDataListener(this), this);
             Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
@@ -1257,7 +1258,7 @@ public final class OreoEssentials extends JavaPlugin {
             }
         }
 
-        this.spawnService = new SpawnService(storage);
+        this.spawnService = new SpawnService(storage, configService.serverName());
         this.warpService  = new WarpService(storage, this.warpDirectory);
         this.homeService  = new HomeService(this.storage, this.configService, this.homeDirectory);
     }
@@ -1360,6 +1361,10 @@ public final class OreoEssentials extends JavaPlugin {
 
     // Temporary holder so initCommands can access vanishService
     private transient VanishService _vanishService;
+
+    public VanishService getVanishService() {
+        return _vanishService;
+    }
 
     private void initRabbitMQ() {
         final boolean invSyncEnabled = settingsConfig.featureOption("cross-server", "inventory", true);
@@ -1933,7 +1938,7 @@ public final class OreoEssentials extends JavaPlugin {
     }
 
     private void initBossBar() {
-        if (settingsConfig.bossbarEnabled()) {
+        if (settingsConfig.bossbarEnabled() && uiModuleAllowed("bossbar")) {
             this.bossBarService = new BossBarService(this);
             this.bossBarService.start();
             this.commands.register(new BossBarToggleCommand(this.bossBarService));
@@ -1945,7 +1950,7 @@ public final class OreoEssentials extends JavaPlugin {
     }
 
     private void initScoreboard() {
-        if (settingsConfig.scoreboardEnabled()) {
+        if (settingsConfig.scoreboardEnabled() && uiModuleAllowed("scoreboard")) {
             ScoreboardConfig sbCfg = ScoreboardConfig.load(this);
             this.scoreboardService = new ScoreboardService(this, sbCfg);
             this.scoreboardService.start();
@@ -1959,7 +1964,7 @@ public final class OreoEssentials extends JavaPlugin {
     }
 
     private void initTab() {
-        if (settingsConfig.tabEnabled()) {
+        if (settingsConfig.tabEnabled() && uiModuleAllowed("tab")) {
             this.tabListManager = new fr.elias.oreoEssentials.modules.tab.TabListManager(this);
             this.tabListManager.start();
             getLogger().info("[TAB] Custom tab-list enabled.");
@@ -2055,7 +2060,7 @@ public final class OreoEssentials extends JavaPlugin {
         this.nametagToggleStore = new fr.elias.oreoEssentials.modules.nametag.NametageToggleStore(this);
         org.bukkit.configuration.file.FileConfiguration npCfg = customNameplatesConfig.raw();
 
-        if (npCfg.getBoolean("nametag.enabled", true)) {
+        if (npCfg.getBoolean("nametag.enabled", true) && uiModuleAllowed("nametag")) {
             try {
                 this.nametagManager = new PlayerNametagManager(this, npCfg);
                 this.nametagManager.setToggleStore(nametagToggleStore);
@@ -2071,21 +2076,33 @@ public final class OreoEssentials extends JavaPlugin {
         }
 
         try {
-            this.chatBubbleService = new fr.elias.oreoEssentials.modules.nametag.ChatBubbleService(this, npCfg);
+            if (uiModuleAllowed("chat-bubbles")) {
+                this.chatBubbleService = new fr.elias.oreoEssentials.modules.nametag.ChatBubbleService(this, npCfg);
+            } else {
+                this.chatBubbleService = null;
+            }
         } catch (Exception e) {
             getLogger().severe("[ChatBubble] Failed to initialize: " + e.getMessage());
             this.chatBubbleService = null;
         }
 
         try {
-            this.actionBarService = new fr.elias.oreoEssentials.modules.nametag.ActionBarService(this, npCfg);
+            if (uiModuleAllowed("actionbar")) {
+                this.actionBarService = new fr.elias.oreoEssentials.modules.nametag.ActionBarService(this, npCfg);
+            } else {
+                this.actionBarService = null;
+            }
         } catch (Exception e) {
             getLogger().severe("[ActionBar] Failed to initialize: " + e.getMessage());
             this.actionBarService = null;
         }
 
         try {
-            this.multiBossBarService = new fr.elias.oreoEssentials.modules.nametag.MultiBossBarService(this, npCfg);
+            if (uiModuleAllowed("multi-bossbar")) {
+                this.multiBossBarService = new fr.elias.oreoEssentials.modules.nametag.MultiBossBarService(this, npCfg);
+            } else {
+                this.multiBossBarService = null;
+            }
         } catch (Exception e) {
             getLogger().severe("[MultiBossBar] Failed to initialize: " + e.getMessage());
             this.multiBossBarService = null;
@@ -2102,16 +2119,51 @@ public final class OreoEssentials extends JavaPlugin {
         customNameplatesConfig.reload();
         org.bukkit.configuration.file.FileConfiguration npCfg = customNameplatesConfig.raw();
 
-        if (nametagManager != null) {
+        if (!uiModuleAllowed("nametag")) {
+            if (nametagManager != null) nametagManager.shutdown();
+            nametagManager = null;
+        } else if (nametagManager != null) {
             nametagManager.reload(npCfg);
         } else if (npCfg.getBoolean("nametag.enabled", true)) {
             nametagManager = new PlayerNametagManager(this, npCfg);
             nametagManager.setToggleStore(nametagToggleStore);
         }
 
-        if (chatBubbleService != null) chatBubbleService.reload(npCfg);
-        if (actionBarService != null) actionBarService.reload(npCfg);
-        if (multiBossBarService != null) multiBossBarService.reload(npCfg);
+        if (!uiModuleAllowed("chat-bubbles")) {
+            if (chatBubbleService != null) chatBubbleService.shutdown();
+            chatBubbleService = null;
+        } else if (chatBubbleService != null) {
+            chatBubbleService.reload(npCfg);
+        } else {
+            chatBubbleService = new fr.elias.oreoEssentials.modules.nametag.ChatBubbleService(this, npCfg);
+        }
+
+        if (!uiModuleAllowed("actionbar")) {
+            if (actionBarService != null) actionBarService.shutdown();
+            actionBarService = null;
+        } else if (actionBarService != null) {
+            actionBarService.reload(npCfg);
+        } else {
+            actionBarService = new fr.elias.oreoEssentials.modules.nametag.ActionBarService(this, npCfg);
+        }
+
+        if (!uiModuleAllowed("multi-bossbar")) {
+            if (multiBossBarService != null) multiBossBarService.shutdown();
+            multiBossBarService = null;
+        } else if (multiBossBarService != null) {
+            multiBossBarService.reload(npCfg);
+        } else {
+            multiBossBarService = new fr.elias.oreoEssentials.modules.nametag.MultiBossBarService(this, npCfg);
+        }
+    }
+
+    private boolean uiModuleAllowed(String moduleKey) {
+        String server = configService != null ? configService.serverName() : Bukkit.getServer().getName();
+        boolean disabled = settingsConfig != null && settingsConfig.uiModuleDisabledForServer(server, moduleKey);
+        if (disabled) {
+            getLogger().info("[UI Safeguard] Disabled " + moduleKey + " on server " + server + ".");
+        }
+        return !disabled;
     }
 
     private void applyCommandToggles() {
@@ -2263,18 +2315,93 @@ public final class OreoEssentials extends JavaPlugin {
 
     private void showStartupBanner() {
         String version = getDescription().getVersion();
-        getLogger().info("Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢â€”");
-        getLogger().info("Ã¢â€¢â€˜               STARTING OREOESSENTIALS PREMIUM              Ã¢â€¢â€˜");
-        getLogger().info("Ã¢â€¢â€˜        Version: " + String.format("%-30s", version) + " Ã¢â€¢â€˜");
-        getLogger().info("Ã¢â€¢â€˜              Loading all features and modules...           Ã¢â€¢â€˜");
-        getLogger().info("Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â");
+        getLogger().info("+------------------------------------------------------------+");
+        getLogger().info("|          STARTING OREOESSENTIALS PREMIUM                   |");
+        getLogger().info("|  Version: " + String.format("%-50s", version) + "|");
+        getLogger().info("|          Loading all features and modules...               |");
+        getLogger().info("+------------------------------------------------------------+");
     }
 
     private void showCompletionBanner() {
-        getLogger().info("Ã¢â€¢â€Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢â€”");
-        getLogger().info("Ã¢â€¢â€˜              Ã¢Å“â€œ OREOESSENTIALS READY Ã¢Å“â€œ                     Ã¢â€¢â€˜");
-        getLogger().info("Ã¢â€¢â€˜  Players online: " + String.format("%-42d", Bukkit.getOnlinePlayers().size()) + " Ã¢â€¢â€˜");
-        getLogger().info("Ã¢â€¢Å¡Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â");
+        getLogger().info("+------------------------------------------------------------+");
+        getLogger().info("|            ** OREOESSENTIALS READY **                      |");
+        getLogger().info("|  Players online: " + String.format("%-43d", Bukkit.getOnlinePlayers().size()) + "|");
+        getLogger().info("+------------------------------------------------------------+");
+    }
+
+    // -------------------------------------------------------------------------
+    // Missing-dependency warning banner
+    // -------------------------------------------------------------------------
+
+    private void warnMissingDependencies() {
+        java.util.List<String[]> missing = new java.util.ArrayList<>();
+
+        // Vault — needed for economy Vault bridge (economy still works internally without it)
+        if (economyEnabled && Bukkit.getPluginManager().getPlugin("Vault") == null) {
+            missing.add(new String[]{"Vault", "economy.enabled=true but Vault is not installed",
+                    "Economy works internally; other plugins cannot use it via Vault API",
+                    "https://www.spigotmc.org/resources/34315/"});
+        }
+
+        // PlaceholderAPI — needed for all %placeholder% expansion
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
+            missing.add(new String[]{"PlaceholderAPI", "No PlaceholderAPI found",
+                    "Scoreboards, tab, nametags and chat will show raw %placeholder% tokens",
+                    "https://www.spigotmc.org/resources/6245/"});
+        }
+
+        // ProtocolLib — needed for custom tab list
+        if (settingsConfig.tabEnabled() && Bukkit.getPluginManager().getPlugin("ProtocolLib") == null) {
+            missing.add(new String[]{"ProtocolLib", "tab.enabled=true but ProtocolLib is not installed",
+                    "Custom tab list (header/footer/player list) will not work",
+                    "https://www.spigotmc.org/resources/1997/"});
+        }
+
+        // LuckPerms — needed for prefix/suffix in chat, nametags, tab
+        if (Bukkit.getPluginManager().getPlugin("LuckPerms") == null) {
+            missing.add(new String[]{"LuckPerms", "LuckPerms not found",
+                    "%luckperms_prefix% and %luckperms_suffix% will be empty in chat/nametag/tab",
+                    "https://luckperms.net/"});
+        }
+
+        if (missing.isEmpty()) return;
+
+        String sep  = "+=================================================+";
+        String side = "|";
+
+        getLogger().warning(sep);
+        getLogger().warning(side + "                                                 " + side);
+        getLogger().warning(side + "    .oOOOo.  oOoOOoOOo ooOoOOo ooOoOOo         " + side);
+        getLogger().warning(side + "   .O     o.     O      O       O               " + side);
+        getLogger().warning(side + "   o       O     o      o       o               " + side);
+        getLogger().warning(side + "   O       o     O      O ooO   O ooO           " + side);
+        getLogger().warning(side + "   o       O     o      o       o               " + side);
+        getLogger().warning(side + "   `o     O'     O      O       O               " + side);
+        getLogger().warning(side + "    `OoooO'  OOoOOoOo ooOooOoO ooOooOoO        " + side);
+        getLogger().warning(side + "                                                 " + side);
+        getLogger().warning(side + "       !! MISSING DEPENDENCIES DETECTED !!      " + side);
+        getLogger().warning(side + "                                                 " + side);
+        getLogger().warning(sep);
+
+        int idx = 1;
+        for (String[] dep : missing) {
+            String name    = dep[0];
+            String reason  = dep[1];
+            String impact  = dep[2];
+            String url     = dep[3];
+            getLogger().warning(side + " [" + idx + "] " + name);
+            getLogger().warning(side + "     Reason : " + reason);
+            getLogger().warning(side + "     Impact : " + impact);
+            getLogger().warning(side + "     Fix    : Install from " + url);
+            if (idx < missing.size()) getLogger().warning(side);
+            idx++;
+        }
+
+        getLogger().warning(sep);
+        getLogger().warning(side + "  The plugin will continue, but affected        " + side);
+        getLogger().warning(side + "  features will be degraded or unavailable.     " + side);
+        getLogger().warning(side + "                                                 " + side);
+        getLogger().warning(sep);
     }
 
     private void checkProtocolLib() {

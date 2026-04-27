@@ -147,7 +147,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
             }
         }
 
-        plugin.getLogger().info("[PW/DEBUG] [CHAT] Waiting for password in chat for player "
+        if (plugin.getConfigService().isDebugEnabled()) plugin.getLogger().info("[PW/DEBUG] [CHAT] Waiting for password in chat for player "
                 + player.getName() + " warp=" + warp.getName());
 
         player.sendMessage(ChatColor.YELLOW + "Type the password for warp "
@@ -172,7 +172,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
 
                 String typed = msg.trim();
 
-                OreoEssentials.get().getLogger().info(
+                if (plugin.getConfigService().isDebugEnabled()) OreoEssentials.get().getLogger().info(
                         "[PW/DEBUG] [CHAT] Player "
                                 + player.getName() + " typed password='" + typed + "' for warp=" + warp.getName()
                 );
@@ -214,7 +214,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
             Lang.send(player, "pw.not-found",
                     "<red>Warp <yellow>%name%</yellow> not found.</red>",
                     Map.of("name", warp.getName().toLowerCase(Locale.ROOT)));
-            OreoEssentials.get().getLogger().info(
+            if (OreoEssentials.get().getConfigService().isDebugEnabled()) OreoEssentials.get().getLogger().info(
                     "[PW/DEBUG] [CHAT] Warp no longer exists for "
                             + player.getName() + " warp=" + warp.getName()
             );
@@ -222,7 +222,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
         }
 
         String realPassword = current.getPassword();
-        OreoEssentials.get().getLogger().info(
+        if (OreoEssentials.get().getConfigService().isDebugEnabled()) OreoEssentials.get().getLogger().info(
                 "[PW/DEBUG] [CHAT] Password check for warp '"
                         + current.getName()
                         + "': typed='" + typedPassword + "' (len=" + typedPassword.length() + ")"
@@ -230,7 +230,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
         );
 
         if (realPassword == null || realPassword.isEmpty()) {
-            OreoEssentials.get().getLogger().info(
+            if (OreoEssentials.get().getConfigService().isDebugEnabled()) OreoEssentials.get().getLogger().info(
                     "[PW/DEBUG] [CHAT] Warp '" + current.getName()
                             + "' has no password anymore, teleporting normally."
             );
@@ -247,7 +247,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
             Lang.send(player, "pw.no-permission-warp",
                     "<red>You don't have permission to use <yellow>%name%</yellow>.</red>",
                     Map.of("name", current.getName()));
-            OreoEssentials.get().getLogger().info(
+            if (OreoEssentials.get().getConfigService().isDebugEnabled()) OreoEssentials.get().getLogger().info(
                     "[PW/DEBUG] [CHAT] Player " + player.getName()
                             + " failed canUse() check for warp='" + current.getName() + "'"
             );
@@ -255,7 +255,7 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
         }
 
         String cmd = "pw use " + current.getName() + " " + typedPassword;
-        OreoEssentials.get().getLogger().info(
+        if (OreoEssentials.get().getConfigService().isDebugEnabled()) OreoEssentials.get().getLogger().info(
                 "[PW/DEBUG] [CHAT] Executing '/" + cmd + "' for " + player.getName()
         );
 

@@ -188,6 +188,66 @@ maintenance:
 holograms:
   text:
     per-player: true        # enable per-player placeholders/permissions for TEXT holograms
+
 # Nametag, chat bubbles and action bar are configured in:
 # plugins/OreoEssentials/custom-nameplates/config.yml
+
+performance:
+  ui-safeguards:
+    enabled: false
+    server-names: []   # Example: [ "survival-1", "survival-2", "prison" ]
+    disable:
+      scoreboard: false
+      tab: false
+      bossbar: false
+      nametag: false
+      chat-bubbles: false
+      actionbar: false
+      multi-bossbar: false
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # UI-SAFEGUARD PROFILES — copy the block you need into ui-safeguards above
+  # ──────────────────────────────────────────────────────────────────────────
+  #
+  # PROFILE A — Normal shards (< 100 players)
+  # No safeguards needed. Leave ui-safeguards.enabled: false.
+  # Tune nametag in custom-nameplates/config.yml:
+  #   nametag:
+  #     visibility-sweep-batch-owners: 8
+  #     move-visibility-cooldown-ticks: 5
+  #     position-interval-ticks: 2
+  #     update-interval-ticks: 40
+  #
+  # PROFILE B — Heavy shards (200–300 players)
+  #   ui-safeguards:
+  #     enabled: true
+  #     server-names: [ "your-heavy-shard" ]
+  #     disable:
+  #       multi-bossbar: true
+  #       chat-bubbles: true
+  #       scoreboard: false
+  #       tab: false
+  #       bossbar: false
+  #       nametag: false
+  #       actionbar: false
+  # Tune nametag in custom-nameplates/config.yml:
+  #   nametag:
+  #     visibility-sweep-batch-owners: 4
+  #     move-visibility-cooldown-ticks: 10
+  #     position-interval-ticks: 4
+  #     update-interval-ticks: 60
+  #
+  # PROFILE C — Very high pop shards (500+ players)
+  #   ui-safeguards:
+  #     enabled: true
+  #     server-names: [ "your-500-shard" ]
+  #     disable:
+  #       nametag: true
+  #       chat-bubbles: true
+  #       multi-bossbar: true
+  #       actionbar: true
+  #       scoreboard: false   # kept on — render-state cached, low cost
+  #       tab: false          # kept on — PlaceholderAPI reflection cached
+  #       bossbar: false
+  # ──────────────────────────────────────────────────────────────────────────
 

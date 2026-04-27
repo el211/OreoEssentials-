@@ -180,21 +180,22 @@ public final class HomeTeleportBroker implements Listener {
                 if (loc == null) {
                     log.warning("[HOME/Retry] tick=" + tick + " home not found here. subject=" + subject
                             + " owner=" + owner + " home=" + expectHome + " requestId=" + reqId);
-                    pending.remove(subject);
-                    lastRequestedHome.remove(subject);
-                    lastRequestedOwner.remove(subject);
-                    lastRequestId.remove(subject);
+                    if (tick == 20) {
+                        clearPending(subject);
+                    }
                     return;
                 }
 
                 if (OreScheduler.isFolia()) {
-                    p.teleportAsync(loc).thenRun(() ->
-                            log.info("[HOME/Retry] tick=" + tick
-                                    + " teleported=true"
-                                    + " subject=" + p.getName()
-                                    + " -> " + expectHome + " (owner=" + owner + ")"
-                                    + " requestId=" + reqId
-                                    + " " + shortLoc(loc)));
+                    p.teleportAsync(loc).thenRun(() -> {
+                        log.info("[HOME/Retry] tick=" + tick
+                                + " teleported=true"
+                                + " subject=" + p.getName()
+                                + " -> " + expectHome + " (owner=" + owner + ")"
+                                + " requestId=" + reqId
+                                + " " + shortLoc(loc));
+                        clearPending(subject);
+                    });
                 } else {
                     final boolean ok = p.teleport(loc);
                     log.info("[HOME/Retry] tick=" + tick
@@ -203,16 +204,21 @@ public final class HomeTeleportBroker implements Listener {
                             + " -> " + expectHome + " (owner=" + owner + ")"
                             + " requestId=" + reqId
                             + " " + shortLoc(loc));
+                    if (ok) clearPending(subject);
                 }
 
                 if (tick == 20) {
-                    pending.remove(subject);
-                    lastRequestedHome.remove(subject);
-                    lastRequestedOwner.remove(subject);
-                    lastRequestId.remove(subject);
+                    clearPending(subject);
                 }
             });
         }, tick);
+    }
+
+    private void clearPending(UUID subject) {
+        pending.remove(subject);
+        lastRequestedHome.remove(subject);
+        lastRequestedOwner.remove(subject);
+        lastRequestId.remove(subject);
     }
 
     private static String shortLoc(Location l) {

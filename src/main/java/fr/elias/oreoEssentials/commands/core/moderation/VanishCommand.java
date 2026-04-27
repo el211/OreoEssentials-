@@ -7,6 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class VanishCommand implements OreoCommand {
     private final VanishService service;
@@ -18,8 +19,19 @@ public class VanishCommand implements OreoCommand {
     @Override public String name() { return "vanish"; }
     @Override public List<String> aliases() { return List.of("v"); }
     @Override public String permission() { return "oreo.vanish"; }
-    @Override public String usage() { return ""; }
+    @Override public String usage() { return "[on|off|toggle]"; }
     @Override public boolean playerOnly() { return true; }
+
+    @Override
+    public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
+        if (args.length == 1) {
+            String partial = args[0].toLowerCase();
+            return List.of("on", "off", "toggle").stream()
+                    .filter(s -> s.startsWith(partial))
+                    .collect(Collectors.toList());
+        }
+        return List.of();
+    }
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {

@@ -101,7 +101,7 @@ public class MsgCommand implements OreoCommand {
                 if (resolvedName == null) resolvedName = targetName;
                 final String finalName = resolvedName;
 
-                String where = dir.getCurrentOrLastServer(targetUuid);
+                String where = dir.lookupCurrentServer(targetUuid);
                 if (where == null || where.isBlank()) {
                     OreScheduler.runForEntity(plugin, sender, () ->
                             Lang.send(sender, "msg.not-found", "<red>Player not found or offline.</red>"));

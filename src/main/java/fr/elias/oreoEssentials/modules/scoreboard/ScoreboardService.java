@@ -57,8 +57,19 @@ public final class ScoreboardService implements Listener {
     private final Map<UUID, Boolean> toggles     = new ConcurrentHashMap<>();
     private final Map<UUID, FoliaScoreboard> foliaBoards  = new ConcurrentHashMap<>();
     private final Map<UUID, Scoreboard>      playerBoards = new ConcurrentHashMap<>();
+    private final Map<UUID, RenderState>     renderStates = new ConcurrentHashMap<>();
     private OreTask taskId = null;
     private final File toggleFile;
+
+    private static final class RenderState {
+        private final String title;
+        private final List<String> lines;
+
+        private RenderState(String title, List<String> lines) {
+            this.title = title;
+            this.lines = List.copyOf(lines);
+        }
+    }
 
     public ScoreboardService(OreoEssentials plugin, ScoreboardConfig cfg) {
         this.plugin      = plugin;
@@ -127,6 +138,7 @@ public final class ScoreboardService implements Listener {
         }
         shown.clear();
         playerBoards.clear();
+        renderStates.clear();
         // Clean up Folia NMS scoreboards
         for (FoliaScoreboard fs : foliaBoards.values()) {
             try { fs.hide(); } catch (Throwable ignored) {}
@@ -244,6 +256,7 @@ public final class ScoreboardService implements Listener {
         if (OreScheduler.isFolia()) {
             FoliaScoreboard fs = foliaBoards.computeIfAbsent(p.getUniqueId(), id -> new FoliaScoreboard(p));
             try { fs.show(getFoliaTitle(p), getFoliaLines(p)); } catch (Throwable ignored) {}
+            renderStates.put(p.getUniqueId(), renderState(p));
             shown.add(p.getUniqueId());
             return;
         }
@@ -257,11 +270,12 @@ public final class ScoreboardService implements Listener {
             Objective  obj   = board.registerNewObjective(OBJ_NAME, "dummy");
             obj.setDisplaySlot(DisplaySlot.SIDEBAR);
             obj.numberFormat(NumberFormat.blank());
-            safeSetTitle(p, obj);
-            applyLines(p, board, obj);
+            RenderState state = renderState(p);
+            applyRenderState(obj, board, state);
 
             p.setScoreboard(board);
             playerBoards.put(p.getUniqueId(), board);
+            renderStates.put(p.getUniqueId(), state);
             shown.add(p.getUniqueId());
             plugin.getLogger().info("[Scoreboard] Shown for " + p.getName());
         } catch (Throwable t) {
@@ -278,6 +292,7 @@ public final class ScoreboardService implements Listener {
             return;
         }
         playerBoards.remove(p.getUniqueId());
+        renderStates.remove(p.getUniqueId());
         clearBoard(p);
         shown.remove(p.getUniqueId());
     }
@@ -305,7 +320,12 @@ public final class ScoreboardService implements Listener {
                 shown.remove(p.getUniqueId()); // let show() re-add it
                 show(p);
             } else {
-                try { fs.show(getFoliaTitle(p), getFoliaLines(p)); } catch (Throwable ignored) {}
+                RenderState next = renderState(p);
+                RenderState prev = renderStates.get(p.getUniqueId());
+                if (prev == null || !Objects.equals(prev.title, next.title) || !Objects.equals(prev.lines, next.lines)) {
+                    try { fs.show(getFoliaTitle(p), getFoliaLines(p)); } catch (Throwable ignored) {}
+                    renderStates.put(p.getUniqueId(), next);
+                }
             }
             return;
         }
@@ -320,7 +340,9 @@ public final class ScoreboardService implements Listener {
             if (board == null) return;
             playerBoards.put(p.getUniqueId(), board);
         }
-        p.setScoreboard(board);
+        if (p.getScoreboard() != board) {
+            p.setScoreboard(board);
+        }
 
         Objective obj = board.getObjective(OBJ_NAME);
         if (obj == null) {
@@ -332,19 +354,20 @@ public final class ScoreboardService implements Listener {
         }
         obj.numberFormat(NumberFormat.blank());
 
-        // FIX 1: use Component overload so gradient tags in the title are preserved
-        safeSetTitle(p, obj);
+        RenderState next = renderState(p);
+        RenderState prev = renderStates.get(p.getUniqueId());
+        boolean needsApply = prev == null
+                || !Objects.equals(prev.title, next.title)
+                || !Objects.equals(prev.lines, next.lines);
+        if (!needsApply) {
+            return;
+        }
 
         try {
-            for (String entry : new HashSet<>(board.getEntries())) {
-                board.resetScores(entry);
-            }
-        } catch (Throwable ignored) {}
-
-        try {
-            applyLines(p, board, obj);
+            applyRenderState(obj, board, next);
+            renderStates.put(p.getUniqueId(), next);
         } catch (Throwable t) {
-            plugin.getLogger().warning("[Scoreboard] refresh() applyLines failed for " + p.getName() + ": " + t);
+            plugin.getLogger().warning("[Scoreboard] refresh() applyRenderState failed for " + p.getName() + ": " + t);
         }
     }
 
@@ -365,24 +388,33 @@ public final class ScoreboardService implements Listener {
         } catch (Throwable ignored) {}
     }
 
-    private void applyLines(Player p, Scoreboard board, Objective obj) {
-        List<String> lines    = cfg.lines();
+    private RenderState renderState(Player p) {
+        return new RenderState(renderToLegacyString(p, titleAnim.current()), renderLines(p));
+    }
+
+    private List<String> renderLines(Player p) {
         List<String> expanded = new ArrayList<>();
-
-        for (String raw : lines) {
-            // FIX 2: render WITHOUT the final hex-downsampling step; we give the
-            // result to team#prefix(Component) which handles full hex natively.
+        for (String raw : cfg.lines()) {
             String rendered = renderToLegacyString(p, raw);
-
             if (rendered.contains("\n")) {
                 for (String part : rendered.split("\n")) {
-                    if (!part.trim().isEmpty()) expanded.add(part);
+                    if (!part.trim().isEmpty()) expanded.add(truncateVisible(part, 80));
                 }
             } else {
-                expanded.add(rendered);
+                expanded.add(truncateVisible(rendered, 80));
             }
         }
+        return expanded;
+    }
 
+    private void applyRenderState(Objective obj, Scoreboard board, RenderState state) {
+        try {
+            obj.displayName(LEGACY.deserialize(state.title));
+        } catch (Throwable ignored) {}
+        applyLines(board, obj, state.lines);
+    }
+
+    private void applyLines(Scoreboard board, Objective obj, List<String> expanded) {
         // Clear old teams
         for (int i = 0; i < 64; i++) {
             var t = board.getTeam("oe_ln_" + i);
@@ -394,7 +426,7 @@ public final class ScoreboardService implements Listener {
 
         int score = expanded.size();
         for (int i = 0; i < expanded.size(); i++) {
-            String text  = truncateVisible(expanded.get(i), 80);
+            String text  = expanded.get(i);
             String entry = "§" + Integer.toHexString(i % 16);
 
             String teamName = "oe_ln_" + i;

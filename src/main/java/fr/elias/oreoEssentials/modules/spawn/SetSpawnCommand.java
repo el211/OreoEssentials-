@@ -33,7 +33,7 @@ public class SetSpawnCommand implements OreoCommand {
         org.bukkit.Location loc = p.getLocation();
 
         Async.run(() -> {
-            spawn.setSpawn(local, loc);
+            spawn.setLocalSpawn(loc);
             SpawnDirectory spawnDir = plugin.getSpawnDirectory();
             if (spawnDir != null) spawnDir.setSpawnServer(local);
 

@@ -30,16 +30,20 @@ public final class TradeCrossServerBroker {
     static final class XSession {
         final UUID id;
         final UUID aId;
+        final String aName;
         final UUID bId;
+        final String bName;
         volatile boolean aReady;
         volatile boolean bReady;
         volatile ItemStack[] lastOfferA = new ItemStack[0];
         volatile ItemStack[] lastOfferB = new ItemStack[0];
 
-        XSession(UUID id, UUID aId, UUID bId) {
+        XSession(UUID id, UUID aId, String aName, UUID bId, String bName) {
             this.id = id;
             this.aId = aId;
+            this.aName = aName == null ? "Player" : aName;
             this.bId = bId;
+            this.bName = bName == null ? "Player" : bName;
         }
     }
 
@@ -77,7 +81,7 @@ public final class TradeCrossServerBroker {
         if (!checkPM(requester) || requester == null || targetId == null) return;
 
         UUID sid = TradeIds.computeTradeId(requester.getUniqueId(), targetId);
-        sessions.putIfAbsent(sid, new XSession(sid, requester.getUniqueId(), targetId));
+        sessions.putIfAbsent(sid, new XSession(sid, requester.getUniqueId(), requester.getName(), targetId, targetName));
 
         String targetServer = null;
         try {
@@ -105,8 +109,11 @@ public final class TradeCrossServerBroker {
     public void handleRemoteState(TradeStatePacket packet) {
         if (packet == null) return;
 
-        XSession s = sessions.computeIfAbsent(packet.getSessionId(),
-                id -> new XSession(id, packet.getFromPlayerId(), packet.getFromPlayerId()));
+        XSession s = sessions.get(packet.getSessionId());
+        if (s == null) {
+            log("[TRADE] handleRemoteState sid=" + packet.getSessionId() + " ignored until start metadata exists");
+            return;
+        }
 
         ItemStack[] offer = ItemStacksCodec.decodeFromBytes(packet.getOfferBytes());
         boolean fromA = packet.getFromPlayerId().equals(s.aId);
@@ -155,6 +162,7 @@ public final class TradeCrossServerBroker {
     public void publishStartToServers(UUID sid, UUID requesterId, String requesterName,
                                       String requesterServer, String acceptorServer,
                                       UUID acceptorId, String acceptorName) {
+        sessions.put(sid, new XSession(sid, requesterId, requesterName, acceptorId, acceptorName));
         TradeStartPacket pkt = new TradeStartPacket(sid, requesterId, requesterName, acceptorId, acceptorName);
         if (pm != null && pm.isInitialized()) {
             if (requesterServer != null && !requesterServer.isBlank()) {
@@ -168,11 +176,32 @@ public final class TradeCrossServerBroker {
     }
 
     public void requestStartReplay(UUID sid) {
+        XSession s = sessions.get(sid);
+        if (s == null || pm == null || !pm.isInitialized()) return;
+
+        TradeStartPacket pkt = new TradeStartPacket(s.id, s.aId, s.aName, s.bId, s.bName);
+        String nodeA = findNodeFor(s.aId);
+        String nodeB = findNodeFor(s.bId);
+
+        if (nodeA != null && !nodeA.isBlank()) {
+            pm.sendPacket(PacketChannels.individual(nodeA), pkt);
+        }
+        if (nodeB != null && !nodeB.isBlank() && !Objects.equals(nodeA, nodeB)) {
+            pm.sendPacket(PacketChannels.individual(nodeB), pkt);
+        }
+        if ((nodeA == null || nodeA.isBlank()) && (nodeB == null || nodeB.isBlank())) {
+            pm.sendPacket(PacketChannels.GLOBAL, pkt);
+        }
     }
 
     public void handleRemoteStart(TradeStartPacket p) {
         if (p == null) return;
         OreScheduler.run(plugin, () -> {
+            sessions.putIfAbsent(p.getSessionId(), new XSession(
+                    p.getSessionId(),
+                    p.getRequesterId(), p.getRequesterName(),
+                    p.getAcceptorId(), p.getAcceptorName()
+            ));
             tradeService.openOrCreateCrossServerSession(p.getSessionId(),
                     p.getRequesterId(), p.getRequesterName(),
                     p.getAcceptorId(), p.getAcceptorName());
@@ -190,7 +219,7 @@ public final class TradeCrossServerBroker {
         if (!checkPM(acceptor) || acceptor == null || requesterUuid == null) return;
 
         UUID sid = TradeIds.computeTradeId(requesterUuid, acceptor.getUniqueId());
-        sessions.putIfAbsent(sid, new XSession(sid, requesterUuid, acceptor.getUniqueId()));
+        sessions.putIfAbsent(sid, new XSession(sid, requesterUuid, requesterName, acceptor.getUniqueId(), acceptor.getName()));
 
         String requesterServer = findNodeFor(requesterUuid);
         String acceptorServer = serverName;
@@ -270,7 +299,7 @@ public final class TradeCrossServerBroker {
         }
 
         XSession xs = sessions.computeIfAbsent(sid, id ->
-                new XSession(id, session.getAId(), session.getBId()));
+                new XSession(id, session.getAId(), session.getAName(), session.getBId(), session.getBName()));
         boolean isA = from.getUniqueId().equals(xs.aId);
         if (isA) {
             xs.aReady = ready;
@@ -387,7 +416,10 @@ public final class TradeCrossServerBroker {
         log("[TRADE] handleRemoteCancel sid=" + packet.getSessionId()
                 + " reason=" + packet.getReason());
         OreScheduler.run(plugin, () ->
-                tradeService.applyRemoteCancel(packet.getSessionId(), "Trade cancelled.")
+                tradeService.applyRemoteCancel(
+                        packet.getSessionId(),
+                        packet.getReason() == null || packet.getReason().isBlank() ? "Trade cancelled." : packet.getReason()
+                )
         );
     }
 

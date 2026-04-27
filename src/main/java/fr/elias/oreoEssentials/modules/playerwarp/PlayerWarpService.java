@@ -271,7 +271,7 @@ public class PlayerWarpService {
 
         PlayerWarp warp = findByOwnerAndName(ownerId, lower);
         if (warp == null) {
-            plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] teleportToPlayerWarp: warp not found for owner="
+            debugInfo("[OreoEssentials] [PW/DEBUG] teleportToPlayerWarp: warp not found for owner="
                     + ownerId + " name=" + lower);
             Lang.send(player, "playerwarps.teleport.not-found",
                     "<red>Warp <yellow>%name%</yellow> was not found.</red>",
@@ -290,7 +290,7 @@ public class PlayerWarpService {
         }
 
         if (!canUse(player, warp)) {
-            plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] teleportToPlayerWarp: player "
+            debugInfo("[OreoEssentials] [PW/DEBUG] teleportToPlayerWarp: player "
                     + player.getName() + " lacks permission for warp id=" + warp.getId());
             Lang.send(player, "playerwarps.teleport.no-permission",
                     "<red>You don't have permission to use <yellow>%name%</yellow>.</red>",
@@ -335,12 +335,12 @@ public class PlayerWarpService {
         boolean messaging    = plugin.isMessagingAvailable();
         boolean sameServer   = localServer.equalsIgnoreCase(targetServer);
 
-        plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] Player " + player.getName()
+        debugInfo("[OreoEssentials] [PW/DEBUG] Player " + player.getName()
                 + " requested warp '" + trimmed + "'. Resolved warp: id=" + warp.getId()
                 + " owner=" + warp.getOwner()
                 + " name=" + warp.getName()
                 + " loc=" + formatLocation(warp.getLocation()));
-        plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] localServer=" + localServer
+        debugInfo("[OreoEssentials] [PW/DEBUG] localServer=" + localServer
                 + " targetServer=" + targetServer
                 + " crossEnabled=" + crossEnabled
                 + " messagingAvailable=" + messaging
@@ -348,21 +348,21 @@ public class PlayerWarpService {
 
         if (!crossEnabled || !messaging || sameServer) {
             if (!crossEnabled) {
-                plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] Cross-server playerwarps disabled in config.");
+                debugInfo("[OreoEssentials] [PW/DEBUG] Cross-server playerwarps disabled in config.");
                 Lang.send(player, "playerwarps.teleport.cross-disabled",
                         "<gray>Cross-server warps are disabled. Teleporting locally to <white>%name%</white>.</gray>",
                         Map.of("name", warp.getName()));
             } else if (!messaging) {
-                plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] Messaging unavailable; falling back to local teleport.");
+                debugInfo("[OreoEssentials] [PW/DEBUG] Messaging unavailable; falling back to local teleport.");
                 Lang.send(player, "playerwarps.teleport.messaging-disabled",
                         "<gray>Messaging offline. Teleporting locally to <white>%name%</white>.</gray>",
                         Map.of("name", warp.getName()));
             } else {
-                plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] Target warp server equals local server. Using LOCAL teleport.");
+                debugInfo("[OreoEssentials] [PW/DEBUG] Target warp server equals local server. Using LOCAL teleport.");
             }
 
             Location loc = warp.getLocation().clone();
-            plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] LOCAL teleport for player "
+            debugInfo("[OreoEssentials] [PW/DEBUG] LOCAL teleport for player "
                     + player.getName() + " to warp id=" + warp.getId()
                     + " world=" + loc.getWorld().getName()
                     + " xyz=" + formatLocation(loc));
@@ -388,7 +388,7 @@ public class PlayerWarpService {
             return true;
         }
 
-        plugin.getLogger().info("[OreoEssentials] [PW/DEBUG] Using cross-server teleport. from="
+        debugInfo("[OreoEssentials] [PW/DEBUG] Using cross-server teleport. from="
                 + localServer + " to=" + targetServer);
 
         Lang.send(player, "playerwarps.teleport.cross-send",
@@ -426,6 +426,13 @@ public class PlayerWarpService {
                 + "@" + loc.getBlockX()
                 + "," + loc.getBlockY()
                 + "," + loc.getBlockZ();
+    }
+
+    private void debugInfo(String message) {
+        OreoEssentials plugin = OreoEssentials.get();
+        if (plugin != null && plugin.getConfigService().isDebugEnabled()) {
+            plugin.getLogger().info(message);
+        }
     }
 
 

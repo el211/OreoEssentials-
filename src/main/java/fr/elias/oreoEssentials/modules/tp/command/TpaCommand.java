@@ -162,7 +162,7 @@ public class TpaCommand implements OreoCommand {
         long tPresence = System.nanoTime();
         String where = null;
         try {
-            where = dir.getCurrentOrLastServer(targetUuid);
+            where = dir.lookupCurrentServer(targetUuid);
             D(id, "presence=" + where + " in " + ms(tPresence));
             P(requester, id, "presence: " + (where == null ? "unknown" : where));
         } catch (Throwable t) {

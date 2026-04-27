@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.playerdirectory;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,29 +20,35 @@ public class DirectoryPresenceListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
-        try {
-            dir.upsertPresence(e.getPlayer().getUniqueId(), e.getPlayer().getName(), server);
-        } catch (Throwable t) {
-            OreoEssentials.get().getLogger().warning("[PlayerDirectory] upsertPresence failed: " + t.getMessage());
-        }
+        OreScheduler.runAsync(OreoEssentials.get(), () -> {
+            try {
+                dir.upsertPresence(e.getPlayer().getUniqueId(), e.getPlayer().getName(), server);
+            } catch (Throwable t) {
+                OreoEssentials.get().getLogger().warning("[PlayerDirectory] upsertPresence failed: " + t.getMessage());
+            }
+        });
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        try {
-            dir.clearCurrentServer(e.getPlayer().getUniqueId());
-        } catch (Throwable t) {
-            OreoEssentials.get().getLogger().warning("[PlayerDirectory] clearCurrentServer failed: " + t.getMessage());
-        }
+        OreScheduler.runAsync(OreoEssentials.get(), () -> {
+            try {
+                dir.clearCurrentServer(e.getPlayer().getUniqueId());
+            } catch (Throwable t) {
+                OreoEssentials.get().getLogger().warning("[PlayerDirectory] clearCurrentServer failed: " + t.getMessage());
+            }
+        });
     }
 
     /** Call once after register to seed already-online players (e.g., after /reload). */
     public void backfillOnline() {
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            try {
-                dir.upsertPresence(p.getUniqueId(), p.getName(), server);
-            } catch (Throwable ignored) {}
-        }
+        OreScheduler.runAsync(OreoEssentials.get(), () -> {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                try {
+                    dir.upsertPresence(p.getUniqueId(), p.getName(), server);
+                } catch (Throwable ignored) {}
+            }
+        });
     }
 
 }

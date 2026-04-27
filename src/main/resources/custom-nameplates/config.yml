@@ -10,8 +10,10 @@
 # ══════════════════════════════════════════════════════════════════════════════
 nametag:
   enabled: true
-  update-interval-ticks: 100     # How often text & conditions refresh (in ticks)
-  position-interval-ticks: 1    # How often entities follow the player (in ticks)
+  update-interval-ticks: 100     # How often text refresh runs
+  position-interval-ticks: 2     # How often entities follow moving players
+  visibility-sweep-batch-owners: 8   # Background owner visibility sweeps per refresh
+  move-visibility-cooldown-ticks: 5  # Per-player throttle for movement-driven visibility recalcs
   show-to-self: true             # Whether players see their own nametag
   view-range: 48.0               # Max distance (blocks) at which nametags are visible
 

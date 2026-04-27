@@ -475,8 +475,8 @@ public class ChatSyncManager {
 
 
     private void handleLegacyChat(String msg) {
-        String[] split = msg.split(";;", 4);
-        if (split.length != 4) return;
+        String[] split = msg.split(";;");
+        if (split.length < 4) return;
 
         String originServerId = split[0];
 
@@ -501,6 +501,7 @@ public class ChatSyncManager {
         }
 
         String decodedMessage = fromB64(msgB64);
+        if (decodedMessage.isEmpty()) return;
 
         Bukkit.getLogger().info("[ChatSync] Processing legacy chat from other server: " + decodedMessage.substring(0, Math.min(50, decodedMessage.length())));
 

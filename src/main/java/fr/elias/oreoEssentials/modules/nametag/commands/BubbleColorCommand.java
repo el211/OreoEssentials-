@@ -11,6 +11,9 @@ import org.bukkit.entity.Player;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * /bubblecolor <color|reset>
@@ -27,6 +30,19 @@ import java.util.Map;
 public final class BubbleColorCommand implements OreoCommand {
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
+    private static final Pattern TAG_PATTERN = Pattern.compile("<([^<>]+)>");
+    private static final Pattern HEX_COLOR = Pattern.compile("#[0-9a-f]{6}", Pattern.CASE_INSENSITIVE);
+    private static final Set<String> SIMPLE_TAGS = Set.of(
+            "white", "gray", "dark_gray", "black",
+            "red", "dark_red",
+            "gold", "yellow",
+            "green", "dark_green",
+            "aqua", "dark_aqua",
+            "blue", "dark_blue",
+            "light_purple", "dark_purple",
+            "bold", "italic", "underlined", "strikethrough", "obfuscated",
+            "reset"
+    );
 
     // Preset colors shown in tab completion
     private static final List<String> PRESETS = List.of(
@@ -97,11 +113,7 @@ public final class BubbleColorCommand implements OreoCommand {
         //   "#FF5500"          → <#FF5500>
         String colorTag = buildColorTag(input);
 
-        // Validate: deserialize a test string; if the tag is unknown MiniMessage just
-        // ignores it, so we check that the rendered component is actually styled.
-        try {
-            MM.deserialize(colorTag + "test<reset>");
-        } catch (Exception e) {
+        if (!isValidColorTag(colorTag)) {
             p.sendMessage(MM.deserialize("<red>Invalid color tag: <yellow>" + colorTag
                     + "</yellow>. Use a valid MiniMessage color."));
             return true;
@@ -179,5 +191,56 @@ public final class BubbleColorCommand implements OreoCommand {
     private String normalizeToken(String token) {
         String normalized = token.trim().toLowerCase(Locale.ROOT);
         return STYLE_ALIASES.getOrDefault(normalized, normalized);
+    }
+
+    private boolean isValidColorTag(String colorTag) {
+        if (colorTag == null || colorTag.isBlank()) return false;
+
+        int consumed = 0;
+        Matcher matcher = TAG_PATTERN.matcher(colorTag);
+        while (matcher.find()) {
+            if (matcher.start() != consumed) return false;
+            if (!isValidSingleTag(matcher.group(1))) return false;
+            consumed = matcher.end();
+        }
+        return consumed == colorTag.length();
+    }
+
+    private boolean isValidSingleTag(String rawTag) {
+        String tag = normalizeToken(rawTag.trim());
+        if (tag.isEmpty()) return false;
+        if (SIMPLE_TAGS.contains(tag) || HEX_COLOR.matcher(tag).matches()) return true;
+
+        String[] parts = tag.split(":");
+        if (parts.length < 2) return false;
+
+        if (parts[0].equals("gradient")) {
+            if (parts.length < 3) return false;
+            for (int i = 1; i < parts.length; i++) {
+                if (!isColorToken(parts[i])) return false;
+            }
+            return true;
+        }
+
+        if (parts[0].equals("transition")) {
+            if (parts.length < 3) return false;
+            for (int i = 1; i < parts.length; i++) {
+                if (!isColorToken(parts[i])) return false;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean isColorToken(String token) {
+        String normalized = normalizeToken(token);
+        return HEX_COLOR.matcher(normalized).matches() || switch (normalized) {
+            case "white", "gray", "dark_gray", "black",
+                    "red", "dark_red", "gold", "yellow",
+                    "green", "dark_green", "aqua", "dark_aqua",
+                    "blue", "dark_blue", "light_purple", "dark_purple" -> true;
+            default -> false;
+        };
     }
 }

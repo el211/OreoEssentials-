@@ -249,7 +249,7 @@ public final class AsyncChatListener implements Listener {
 
         final UUID senderUuid = player.getUniqueId();
         final String rawMsg = msg;
-        final String serverName = Bukkit.getServer().getName();
+        final String serverName = OreoEssentials.get().getConfigService().serverName();
 
         OreScheduler.run(OreoEssentials.get(), () -> {
             Player live = Bukkit.getPlayer(senderUuid);
@@ -399,7 +399,7 @@ public final class AsyncChatListener implements Listener {
         String gm = p.getGameMode() != null ? p.getGameMode().name() : "SURVIVAL";
         String uuid = p.getUniqueId().toString();
         String lpGroup = hoverPrimaryGroup(p);
-        String server = Bukkit.getServer().getName();
+        String server = OreoEssentials.get().getConfigService().serverName();
         String time24 = new SimpleDateFormat("HH:mm:ss").format(new Date());
         String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
 

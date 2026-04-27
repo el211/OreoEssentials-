@@ -75,7 +75,7 @@ public class ReplyCommand implements OreoCommand {
         final UUID targetUuid = lastUuid;
         OreScheduler.runAsync(plugin, () -> {
             try {
-                String where = dir.getCurrentOrLastServer(targetUuid);
+                String where = dir.lookupCurrentServer(targetUuid);
                 if (where == null || where.isBlank()) {
                     OreScheduler.runForEntity(plugin, p, () ->
                             Lang.send(p, "reply.offline", "<red>That player is offline.</red>"));

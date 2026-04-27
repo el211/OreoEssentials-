@@ -18,6 +18,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scoreboard.Scoreboard;
@@ -46,6 +47,8 @@ public class PlayerNametagManager implements Listener {
     private boolean enabled;
     private int updateIntervalTicks;   // text / condition refresh
     private int positionIntervalTicks; // how often entities teleport to follow the player
+    private int visibilitySweepBatchOwners;
+    private int moveVisibilityCooldownTicks;
     private boolean showToSelf;
     private float entityViewRange;     // TextDisplay render distance in blocks
     private double viewRangeSquared;   // view range in blocks² to avoid sqrt
@@ -60,8 +63,15 @@ public class PlayerNametagManager implements Listener {
     private final ConcurrentHashMap<UUID, Set<UUID>> ownerToViewers = new ConcurrentHashMap<>();
     /** entity UUID → last text Component sent to the client (avoids redundant metadata packets) */
     private final ConcurrentHashMap<UUID, Component> lastTextCache = new ConcurrentHashMap<>();
+    /** owner UUID → last anchor location used for TextDisplay teleports */
+    private final ConcurrentHashMap<UUID, Location> lastOwnerLocations = new ConcurrentHashMap<>();
     /** owner UUIDs that have a spawnNametag callback already queued — prevents duplicate spawns */
     private final Set<UUID> pendingSpawn = ConcurrentHashMap.newKeySet();
+    /** owners whose viewer visibility needs recomputing now */
+    private final Set<UUID> dirtyOwners = ConcurrentHashMap.newKeySet();
+    /** viewer UUID → last time we recomputed viewer-side proximity visibility */
+    private final ConcurrentHashMap<UUID, Long> nextViewerRefreshAtMs = new ConcurrentHashMap<>();
+    private int visibilitySweepCursor = 0;
 
     private OreTask updateTask;
     private OreTask positionTask;
@@ -164,6 +174,8 @@ public class PlayerNametagManager implements Listener {
         this.enabled = config.getBoolean("nametag.enabled", true);
         this.updateIntervalTicks = Math.max(1, config.getInt("nametag.update-interval-ticks", 40));
         this.positionIntervalTicks = Math.max(1, config.getInt("nametag.position-interval-ticks", 2));
+        this.visibilitySweepBatchOwners = Math.max(1, config.getInt("nametag.visibility-sweep-batch-owners", 8));
+        this.moveVisibilityCooldownTicks = Math.max(1, config.getInt("nametag.move-visibility-cooldown-ticks", 5));
         this.showToSelf = config.getBoolean("nametag.show-to-self", false);
         double viewRange = config.getDouble("nametag.view-range", 48.0);
         this.entityViewRange = (float) Math.max(1.0, viewRange);
@@ -248,8 +260,10 @@ public class PlayerNametagManager implements Listener {
 
             ownerToEntities.put(owner.getUniqueId(),
                     Collections.unmodifiableList(entityIds));
+            lastOwnerLocations.put(owner.getUniqueId(), owner.getLocation().clone());
             Set<UUID> currentViewers = ConcurrentHashMap.newKeySet();
             ownerToViewers.put(owner.getUniqueId(), currentViewers);
+            markOwnerDirty(owner.getUniqueId());
 
             // Immediately set correct visibility for every online player.
             // The entity is visible by default after spawn — we only need to
@@ -309,6 +323,8 @@ public class PlayerNametagManager implements Listener {
         pendingSpawn.remove(ownerUuid); // allow a fresh spawn after explicit remove
         List<UUID> entityUuids = ownerToEntities.remove(ownerUuid);
         ownerToViewers.remove(ownerUuid);
+        lastOwnerLocations.remove(ownerUuid);
+        dirtyOwners.remove(ownerUuid);
 
         if (entityUuids == null) return;
 
@@ -352,12 +368,13 @@ public class PlayerNametagManager implements Listener {
 
     /** Refreshes text content and visibility for all nametags. */
     private void updateAllNametags() {
-        refreshVanillaNameHiding();
-        for (Player owner : Bukkit.getOnlinePlayers()) {
+        List<Player> online = new ArrayList<>(Bukkit.getOnlinePlayers());
+        for (Player owner : online) {
             if (!ownerToEntities.containsKey(owner.getUniqueId())) continue;
             updateTextFor(owner);
-            updateViewersFor(owner);
         }
+        processDirtyOwners(online);
+        processVisibilitySweep(online);
     }
 
     /** Updates text content for one player's nametag. Only sends a packet when text actually changed. */
@@ -393,20 +410,97 @@ public class PlayerNametagManager implements Listener {
 
         Set<UUID> currentViewers = ownerToViewers.computeIfAbsent(owner.getUniqueId(), k -> ConcurrentHashMap.newKeySet());
 
-        for (Player viewer : Bukkit.getOnlinePlayers()) {
-            boolean shouldShow = shouldViewerSee(owner, viewer);
-
-            if (shouldShow && !currentViewers.contains(viewer.getUniqueId())) {
-                showNametag(entityUuids, viewer);
-                currentViewers.add(viewer.getUniqueId());
-            } else if (!shouldShow && currentViewers.contains(viewer.getUniqueId())) {
-                hideNametag(entityUuids, viewer);
-                currentViewers.remove(viewer.getUniqueId());
-            }
+        for (Player viewer : owner.getWorld().getPlayers()) {
+            reconcileViewer(owner, viewer, entityUuids, currentViewers);
         }
 
         // Clean up viewers who left
-        currentViewers.removeIf(viewerUuid -> Bukkit.getPlayer(viewerUuid) == null);
+        currentViewers.removeIf(viewerUuid -> {
+            Player viewer = Bukkit.getPlayer(viewerUuid);
+            if (viewer == null) return true;
+            if (!owner.getWorld().equals(viewer.getWorld()) || !shouldViewerSee(owner, viewer)) {
+                hideNametag(entityUuids, viewer);
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private void processDirtyOwners(List<Player> online) {
+        if (dirtyOwners.isEmpty()) return;
+        int processed = 0;
+        for (UUID ownerId : new ArrayList<>(dirtyOwners)) {
+            Player owner = Bukkit.getPlayer(ownerId);
+            dirtyOwners.remove(ownerId);
+            if (owner == null || !owner.isOnline() || !ownerToEntities.containsKey(ownerId)) continue;
+            updateViewersFor(owner);
+            processed++;
+            if (processed >= Math.max(visibilitySweepBatchOwners * 2, 16)) {
+                break;
+            }
+        }
+    }
+
+    private void processVisibilitySweep(List<Player> online) {
+        if (online.isEmpty()) return;
+        int processed = 0;
+        int checked = 0;
+        while (checked < online.size() && processed < visibilitySweepBatchOwners) {
+            Player owner = online.get(visibilitySweepCursor % online.size());
+            visibilitySweepCursor = (visibilitySweepCursor + 1) % Math.max(1, online.size());
+            checked++;
+            if (!ownerToEntities.containsKey(owner.getUniqueId())) continue;
+            updateViewersFor(owner);
+            processed++;
+        }
+    }
+
+    private void reconcileViewer(Player owner, Player viewer, List<UUID> entityUuids, Set<UUID> currentViewers) {
+        boolean shouldShow = shouldViewerSee(owner, viewer);
+        UUID viewerId = viewer.getUniqueId();
+        if (shouldShow && currentViewers.add(viewerId)) {
+            showNametag(entityUuids, viewer);
+        } else if (!shouldShow && currentViewers.remove(viewerId)) {
+            hideNametag(entityUuids, viewer);
+        }
+    }
+
+    private void updateVisibilityForViewer(Player viewer) {
+        if (viewer == null || !viewer.isOnline()) return;
+        UUID viewerId = viewer.getUniqueId();
+        for (Player owner : viewer.getWorld().getPlayers()) {
+            List<UUID> entityUuids = ownerToEntities.get(owner.getUniqueId());
+            if (entityUuids == null) continue;
+            Set<UUID> currentViewers = ownerToViewers.computeIfAbsent(owner.getUniqueId(), k -> ConcurrentHashMap.newKeySet());
+            reconcileViewer(owner, viewer, entityUuids, currentViewers);
+        }
+        for (Map.Entry<UUID, Set<UUID>> entry : ownerToViewers.entrySet()) {
+            if (!entry.getValue().contains(viewerId)) continue;
+            Player owner = Bukkit.getPlayer(entry.getKey());
+            List<UUID> entityUuids = ownerToEntities.get(entry.getKey());
+            if (owner == null || entityUuids == null || !owner.getWorld().equals(viewer.getWorld()) || !shouldViewerSee(owner, viewer)) {
+                if (entityUuids != null) {
+                    hideNametag(entityUuids, viewer);
+                }
+                entry.getValue().remove(viewerId);
+            }
+        }
+    }
+
+    private void markOwnerDirty(UUID ownerId) {
+        if (ownerId != null) dirtyOwners.add(ownerId);
+    }
+
+    private void removeViewerFromAllOwners(Player viewer) {
+        if (viewer == null) return;
+        UUID viewerId = viewer.getUniqueId();
+        for (Map.Entry<UUID, Set<UUID>> entry : ownerToViewers.entrySet()) {
+            if (!entry.getValue().remove(viewerId)) continue;
+            List<UUID> entityUuids = ownerToEntities.get(entry.getKey());
+            if (entityUuids != null) {
+                hideNametag(entityUuids, viewer);
+            }
+        }
     }
 
     private boolean shouldViewerSee(Player owner, Player viewer) {
@@ -512,6 +606,13 @@ public class PlayerNametagManager implements Listener {
         for (Player owner : Bukkit.getOnlinePlayers()) {
             List<UUID> entityUuids = ownerToEntities.get(owner.getUniqueId());
             if (entityUuids == null) continue;
+            Location current = owner.getLocation();
+            Location previous = lastOwnerLocations.put(owner.getUniqueId(), current.clone());
+            if (previous != null
+                    && previous.getWorld() == current.getWorld()
+                    && previous.distanceSquared(current) < 0.0025d) {
+                continue;
+            }
 
             for (int i = 0; i < entityUuids.size() && i < layers.size(); i++) {
                 UUID entityUuid = entityUuids.get(i);
@@ -519,7 +620,7 @@ public class PlayerNametagManager implements Listener {
                 if (entity == null) continue;
 
                 double yOff = layers.get(i).yOffset;
-                Location target = owner.getLocation().add(0, yOff, 0);
+                Location target = current.clone().add(0, yOff, 0);
 
                 if (OreScheduler.isFolia()) {
                     entity.teleportAsync(target);
@@ -542,19 +643,8 @@ public class PlayerNametagManager implements Listener {
 
             // Spawn this player's own nametag
             spawnNametag(joining);
-
-            // Make the joining player potentially see all existing nametags
-            for (Player other : Bukkit.getOnlinePlayers()) {
-                if (other.equals(joining)) continue;
-                List<UUID> entityUuids = ownerToEntities.get(other.getUniqueId());
-                if (entityUuids == null) continue;
-
-                if (shouldViewerSee(other, joining)) {
-                    showNametag(entityUuids, joining);
-                    ownerToViewers.computeIfAbsent(other.getUniqueId(), k -> ConcurrentHashMap.newKeySet())
-                                  .add(joining.getUniqueId());
-                }
-            }
+            updateVisibilityForViewer(joining);
+            markOwnerDirty(joining.getUniqueId());
 
             refreshVanillaNameHiding();
         }, 20L);
@@ -572,6 +662,7 @@ public class PlayerNametagManager implements Listener {
         for (Set<UUID> viewers : ownerToViewers.values()) {
             viewers.remove(uuid);
         }
+        nextViewerRefreshAtMs.remove(uuid);
 
         refreshVanillaNameHiding();
     }
@@ -583,7 +674,12 @@ public class PlayerNametagManager implements Listener {
 
         // Despawn and re-spawn in the new world
         OreScheduler.runLater(plugin, () -> {
-            if (player.isOnline()) spawnNametag(player);
+            if (player.isOnline()) {
+                removeViewerFromAllOwners(player);
+                spawnNametag(player);
+                updateVisibilityForViewer(player);
+                markOwnerDirty(player.getUniqueId());
+            }
         }, 5L);
     }
 
@@ -598,8 +694,34 @@ public class PlayerNametagManager implements Listener {
         if (!event.getFrom().getWorld().equals(event.getTo().getWorld())) return;
 
         OreScheduler.runLater(plugin, () -> {
-            if (player.isOnline()) updateViewersFor(player);
+            if (player.isOnline()) {
+                updateVisibilityForViewer(player);
+                markOwnerDirty(player.getUniqueId());
+            }
         }, 5L);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onMove(PlayerMoveEvent event) {
+        if (!enabled) return;
+        Player player = event.getPlayer();
+        if (event.getTo() == null) return;
+        if (event.getFrom().getBlockX() == event.getTo().getBlockX()
+                && event.getFrom().getBlockY() == event.getTo().getBlockY()
+                && event.getFrom().getBlockZ() == event.getTo().getBlockZ()) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        long nextAllowed = nextViewerRefreshAtMs.getOrDefault(player.getUniqueId(), 0L);
+        if (now < nextAllowed) {
+            markOwnerDirty(player.getUniqueId());
+            return;
+        }
+
+        nextViewerRefreshAtMs.put(player.getUniqueId(), now + (moveVisibilityCooldownTicks * 50L));
+        updateVisibilityForViewer(player);
+        markOwnerDirty(player.getUniqueId());
     }
 
     // ── Public API ────────────────────────────────────────────────────────────
@@ -607,7 +729,8 @@ public class PlayerNametagManager implements Listener {
     public void updateNametag(Player player) {
         if (player == null || !player.isOnline()) return;
         updateTextFor(player);
-        updateViewersFor(player);
+        updateVisibilityForViewer(player);
+        markOwnerDirty(player.getUniqueId());
     }
 
     public void forceUpdate(Player player) {
@@ -635,6 +758,10 @@ public class PlayerNametagManager implements Listener {
         for (UUID uuid : new HashSet<>(ownerToEntities.keySet())) removeNametag(uuid);
         ownerToEntities.clear();
         ownerToViewers.clear();
+        lastOwnerLocations.clear();
+        lastTextCache.clear();
+        dirtyOwners.clear();
+        nextViewerRefreshAtMs.clear();
 
         this.config = newConfig;
         loadConfig();
@@ -659,6 +786,10 @@ public class PlayerNametagManager implements Listener {
         for (UUID uuid : new HashSet<>(ownerToEntities.keySet())) removeNametag(uuid);
         ownerToEntities.clear();
         ownerToViewers.clear();
+        lastOwnerLocations.clear();
+        lastTextCache.clear();
+        dirtyOwners.clear();
+        nextViewerRefreshAtMs.clear();
         restoreVanillaNames();
 
         plugin.getLogger().info("[Nametag] Shutdown complete.");

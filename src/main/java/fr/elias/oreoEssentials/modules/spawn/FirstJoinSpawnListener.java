@@ -32,9 +32,8 @@ public final class FirstJoinSpawnListener implements Listener {
 
         // Fetch location async then teleport on entity thread (1 tick delay to let join finish)
         Async.run(() -> {
-            String localServer = plugin.getConfigService().serverName();
-            Location loc = spawn.getSpawn(localServer);
-            if (loc == null) loc = spawn.getSpawn(); // fallback to global spawn
+            Location loc = spawn.getLocalSpawn();
+            if (loc == null) loc = spawn.getGlobalSpawn();
 
             if (loc == null) {
                 plugin.getLogger().warning("[FirstJoinSpawn] No spawn location set. Skipping teleport for " + p.getName());

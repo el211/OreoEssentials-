@@ -268,6 +268,9 @@ public final class InvBridge {
                     pi.setArmorContents(Arrays.copyOf(snap.armor, 4));
                 }
                 pi.setItemInOffHand(snap.offhand);
+                local.setLevel(snap.level);
+                local.setExp(snap.exp);
+                local.setTotalExperience(snap.totalExp);
                 return true;
             } catch (Throwable t) {
                 plugin.getLogger().warning("[INV-BRIDGE] applyLiveInv(local) error for " + target + ": " + t.getMessage());
@@ -719,7 +722,10 @@ public final class InvBridge {
                         if (snap.armor != null) {
                             pi.setArmorContents(Arrays.copyOf(snap.armor, 4));
                         }
-                        p.setItemInHand(snap.offhand); // or setItemInOffHand depending on API version
+                        p.getInventory().setItemInOffHand(snap.offhand);
+                        p.setLevel(snap.level);
+                        p.setExp(snap.exp);
+                        p.setTotalExperience(snap.totalExp);
                         ack.ok = true;
                     }
                     case EC -> {
@@ -793,22 +799,50 @@ public final class InvBridge {
 
     public static final class InvLayouts {
         public static ItemStack[] toFlat(InventoryService.Snapshot s) {
-            ItemStack[] flat = new ItemStack[46];
+            ItemStack[] flat = new ItemStack[47];
             ItemStack[] cont = s.contents == null ? new ItemStack[41] : Arrays.copyOf(s.contents, 41);
             ItemStack[] arm  = s.armor == null ? new ItemStack[4]    : Arrays.copyOf(s.armor, 4);
             for (int i = 0; i < 41; i++) flat[i] = cont[i];
             for (int i = 0; i < 4;  i++) flat[41 + i] = arm[i];
             flat[45] = s.offhand;
+            flat[46] = xpMarker(s);
             return flat;
         }
 
         public static InventoryService.Snapshot fromFlat(ItemStack[] flat) {
             InventoryService.Snapshot s = new InventoryService.Snapshot();
-            ItemStack[] src = flat == null ? new ItemStack[46] : flat;
+            ItemStack[] src = flat == null ? new ItemStack[47] : flat;
             s.contents = Arrays.copyOfRange(src, 0, 41);
             s.armor    = Arrays.copyOfRange(src, 41, 45);
             s.offhand  = (src.length > 45 ? src[45] : null);
+            readXpMarker(src, 46, s);
             return s;
+        }
+
+        private static ItemStack xpMarker(InventoryService.Snapshot s) {
+            ItemStack item = new ItemStack(org.bukkit.Material.PAPER);
+            var meta = item.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName("__oreo_inv_xp__:" + s.level + ":" + s.totalExp + ":" + Float.floatToIntBits(s.exp));
+                item.setItemMeta(meta);
+            }
+            return item;
+        }
+
+        private static void readXpMarker(ItemStack[] src, int index, InventoryService.Snapshot out) {
+            if (src == null || out == null || index < 0 || index >= src.length) return;
+            ItemStack item = src[index];
+            if (item == null || item.getType().isAir() || !item.hasItemMeta()) return;
+            String name = item.getItemMeta().getDisplayName();
+            if (name == null || !name.startsWith("__oreo_inv_xp__:")) return;
+            String[] parts = name.split(":");
+            if (parts.length != 4) return;
+            try {
+                out.level = Integer.parseInt(parts[1]);
+                out.totalExp = Integer.parseInt(parts[2]);
+                out.exp = Float.intBitsToFloat(Integer.parseInt(parts[3]));
+            } catch (NumberFormatException ignored) {
+            }
         }
     }
 

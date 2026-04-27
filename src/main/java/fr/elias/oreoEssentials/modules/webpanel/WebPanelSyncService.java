@@ -47,6 +47,7 @@ public class WebPanelSyncService implements Listener {
     // Debounce: UUID → scheduled task, prevents spamming on rapid inventory changes
     private final Map<UUID, OreTask> debounce = new ConcurrentHashMap<>();
     private static final long DEBOUNCE_TICKS = 20L; // 1 second
+    private static final int PERIODIC_SYNC_BATCH_SIZE = 25;
 
     // Dedup: tracks actions recently delivered via RabbitMQ to prevent the HTTP fallback
     // poll from executing the same action a second time for the same online player.
@@ -125,9 +126,7 @@ public class WebPanelSyncService implements Listener {
         // Sync all online players every 30 seconds — catches external changes like /give
         periodicTask = OreScheduler.runTimer(plugin, () -> {
             java.util.List<Player> online = new java.util.ArrayList<>(Bukkit.getOnlinePlayers());
-            for (Player p : online) {
-                syncPlayer(p, true);
-            }
+            queueSyncPlayers(online, true);
             // Push heartbeat so the backend can mark anyone NOT in this list as offline.
             // Fixes stale flags from server crashes or failed quit syncs.
             java.util.List<String> onlineUuids = online.stream()
@@ -280,6 +279,22 @@ public class WebPanelSyncService implements Listener {
                 () -> { debounce.remove(uuid); syncPlayer(player, true); },
                 DEBOUNCE_TICKS);
         debounce.put(uuid, task);
+    }
+
+    private void queueSyncPlayers(java.util.List<Player> players, boolean online) {
+        if (players == null || players.isEmpty()) return;
+        for (int start = 0; start < players.size(); start += PERIODIC_SYNC_BATCH_SIZE) {
+            final int from = start;
+            final int to = Math.min(players.size(), start + PERIODIC_SYNC_BATCH_SIZE);
+            OreScheduler.runLater(plugin, () -> {
+                for (int i = from; i < to; i++) {
+                    Player player = players.get(i);
+                    if (player != null && player.isOnline()) {
+                        syncPlayer(player, online);
+                    }
+                }
+            }, start / PERIODIC_SYNC_BATCH_SIZE);
+        }
     }
 
     // ─── Core sync ────────────────────────────────────────────────────────────

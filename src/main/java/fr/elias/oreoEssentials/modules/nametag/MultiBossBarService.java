@@ -68,6 +68,8 @@ public final class MultiBossBarService implements Listener {
     private final ConcurrentHashMap<String, ConcurrentHashMap<UUID, BossBar>> activeBars = new ConcurrentHashMap<>();
     /** barId → carousel tick counter per player */
     private final ConcurrentHashMap<String, ConcurrentHashMap<UUID, int[]>> carouselCounters = new ConcurrentHashMap<>();
+    /** barId → last rendered title per player */
+    private final ConcurrentHashMap<String, ConcurrentHashMap<UUID, String>> lastTitles = new ConcurrentHashMap<>();
 
     private OreTask updateTask;
 
@@ -157,6 +159,7 @@ public final class MultiBossBarService implements Listener {
 
             ConcurrentHashMap<UUID, BossBar> playerBars = activeBars.computeIfAbsent(cfg.id, k -> new ConcurrentHashMap<>());
             ConcurrentHashMap<UUID, int[]> counters = carouselCounters.computeIfAbsent(cfg.id, k -> new ConcurrentHashMap<>());
+            ConcurrentHashMap<UUID, String> titles = lastTitles.computeIfAbsent(cfg.id, k -> new ConcurrentHashMap<>());
 
             if (shouldShow) {
                 // Get or create the bar
@@ -175,16 +178,20 @@ public final class MultiBossBarService implements Listener {
                 String resolved = resolvePapi(raw, player);
                 String legacy = renderToLegacy(resolved);
 
-                bar.setTitle(legacy);
-                bar.setColor(cfg.color);
-                bar.setStyle(cfg.style);
-                bar.setProgress(cfg.progress);
+                String previous = titles.put(player.getUniqueId(), legacy);
+                if (!legacy.equals(previous)) {
+                    bar.setTitle(legacy);
+                }
+                if (bar.getColor() != cfg.color) bar.setColor(cfg.color);
+                if (bar.getStyle() != cfg.style) bar.setStyle(cfg.style);
+                if (Math.abs(bar.getProgress() - cfg.progress) > 0.0001d) bar.setProgress(cfg.progress);
                 if (!bar.getPlayers().contains(player)) bar.addPlayer(player);
 
             } else {
                 // Hide the bar from this player
                 BossBar bar = playerBars.remove(player.getUniqueId());
                 counters.remove(player.getUniqueId());
+                titles.remove(player.getUniqueId());
                 if (bar != null) {
                     try { bar.removeAll(); } catch (Throwable ignored) {}
                 }
@@ -205,6 +212,8 @@ public final class MultiBossBarService implements Listener {
             }
             ConcurrentHashMap<UUID, int[]> counters = carouselCounters.get(entry.getKey());
             if (counters != null) counters.remove(player.getUniqueId());
+            ConcurrentHashMap<UUID, String> titles = lastTitles.get(entry.getKey());
+            if (titles != null) titles.remove(player.getUniqueId());
         }
     }
 
@@ -253,6 +262,7 @@ public final class MultiBossBarService implements Listener {
         shutdown();
         activeBars.clear();
         carouselCounters.clear();
+        lastTitles.clear();
 
         loadConfig(config);
 
@@ -274,6 +284,7 @@ public final class MultiBossBarService implements Listener {
         }
         activeBars.clear();
         carouselCounters.clear();
+        lastTitles.clear();
         plugin.getLogger().info("[MultiBossBar] Shutdown complete.");
     }
 }

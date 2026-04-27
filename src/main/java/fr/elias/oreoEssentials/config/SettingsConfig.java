@@ -5,8 +5,10 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class SettingsConfig {
 
@@ -155,6 +157,26 @@ public class SettingsConfig {
 
     public boolean tabEnabled() {
         return isEnabled("tab");
+    }
+
+    public boolean uiSafeguardsEnabled() {
+        return cfg.getBoolean("performance.ui-safeguards.enabled", false);
+    }
+
+    public boolean uiModuleDisabledForServer(String serverName, String moduleKey) {
+        if (!uiSafeguardsEnabled() || serverName == null || serverName.isBlank() || moduleKey == null || moduleKey.isBlank()) {
+            return false;
+        }
+        Set<String> guardedServers = new HashSet<>();
+        for (String entry : cfg.getStringList("performance.ui-safeguards.server-names")) {
+            if (entry != null && !entry.isBlank()) {
+                guardedServers.add(entry.toLowerCase(Locale.ROOT));
+            }
+        }
+        if (!guardedServers.contains(serverName.toLowerCase(Locale.ROOT))) {
+            return false;
+        }
+        return cfg.getBoolean("performance.ui-safeguards.disable." + moduleKey, false);
     }
 
     public boolean tempFlyEnabled() {

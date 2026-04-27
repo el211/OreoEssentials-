@@ -19,7 +19,7 @@ public final class DirectoryHeartbeat {
     /** Start a lightweight repeating task that "touches" presence. */
     public void start() {
         stop();
-        this.task = OreScheduler.runTimer(
+        this.task = OreScheduler.runAsyncTimer(
                 OreoEssentials.get(),
                 () -> {
                     try {

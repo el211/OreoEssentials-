@@ -62,7 +62,7 @@ public class TeleportBroker {
         pm.subscribe(SpawnTeleportRequestPacket.class, (ch, pkt) -> {
             if (!local.equalsIgnoreCase(pkt.getTargetServer())) return;
             queueOrRun(pkt.getPlayerId(), () -> {
-                Location loc = spawns.getSpawn();
+                Location loc = spawns.getLocalSpawn();
                 teleport(pkt.getPlayerId(), loc, "spawn");
             });
         });

@@ -5,18 +5,24 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 public class SpawnService {
-    private final StorageApi storage;
+    public static final String GLOBAL_SPAWN_KEY = "__global__";
 
-    public SpawnService(StorageApi storage) {
+    private final StorageApi storage;
+    private final String localServer;
+
+    public SpawnService(StorageApi storage, String localServer) {
         this.storage = storage;
+        this.localServer = (localServer == null || localServer.isBlank())
+                ? Bukkit.getServer().getName()
+                : localServer;
     }
 
     public void setSpawn(Location loc) {
-        storage.setSpawn(loc);
+        setLocalSpawn(loc);
     }
 
     public Location getSpawn() {
-        return storage.getSpawn();
+        return getLocalSpawn();
     }
 
     public void setSpawn(String server, Location loc) {
@@ -28,10 +34,18 @@ public class SpawnService {
     }
 
     public void setLocalSpawn(Location loc) {
-        setSpawn(Bukkit.getServer().getName(), loc);
+        setSpawn(localServer, loc);
     }
 
     public Location getLocalSpawn() {
-        return getSpawn(Bukkit.getServer().getName());
+        return getSpawn(localServer);
+    }
+
+    public void setGlobalSpawn(Location loc) {
+        setSpawn(GLOBAL_SPAWN_KEY, loc);
+    }
+
+    public Location getGlobalSpawn() {
+        return getSpawn(GLOBAL_SPAWN_KEY);
     }
 }

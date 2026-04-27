@@ -41,6 +41,8 @@ public class TabListManager {
     private FileConfiguration cfg;
     private OreTask task;
     private OreTask nameTask;
+    private static volatile Method papiSetPlaceholdersMethod;
+    private static volatile boolean papiLookupAttempted;
 
     private boolean enabled;
     private boolean usePapi;
@@ -451,9 +453,19 @@ public class TabListManager {
     private String runPapiIf(boolean papi, Player p, String s) {
         if (!papi || s == null || s.isEmpty()) return s;
         try {
-            Class<?> papiCls = Class.forName("me.clip.placeholderapi.PlaceholderAPI");
-            Method m = papiCls.getMethod("setPlaceholders", Player.class, String.class);
-            return (String) m.invoke(null, p, s);
+            Method m = papiSetPlaceholdersMethod;
+            if (m == null && !papiLookupAttempted) {
+                synchronized (TabListManager.class) {
+                    m = papiSetPlaceholdersMethod;
+                    if (m == null && !papiLookupAttempted) {
+                        papiLookupAttempted = true;
+                        Class<?> papiCls = Class.forName("me.clip.placeholderapi.PlaceholderAPI");
+                        papiSetPlaceholdersMethod = papiCls.getMethod("setPlaceholders", Player.class, String.class);
+                        m = papiSetPlaceholdersMethod;
+                    }
+                }
+            }
+            return m != null ? (String) m.invoke(null, p, s) : s;
         } catch (Throwable ignored) {
             return s;
         }

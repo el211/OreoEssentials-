@@ -112,7 +112,7 @@ public class MoveCommand implements OreoCommand, org.bukkit.command.TabCompleter
 
         String presence = null;
         try {
-            presence = dir.getCurrentOrLastServer(toUuid);
+            presence = dir.lookupCurrentServer(toUuid);
         } catch (Throwable ignored) {}
 
         String targetName = safeNameLookup(dir, toUuid, toArg);
@@ -200,7 +200,7 @@ public class MoveCommand implements OreoCommand, org.bukkit.command.TabCompleter
 
         String presence = null;
         try {
-            presence = dir.getCurrentOrLastServer(targetUuid);
+            presence = dir.lookupCurrentServer(targetUuid);
         } catch (Throwable ignored) {}
 
         String targetName = safeNameLookup(dir, targetUuid, arg);

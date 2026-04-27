@@ -147,21 +147,29 @@ public final class CrossServerTeleportBroker implements Listener {
 
         if (OreScheduler.isFolia()) {
             OreScheduler.runForEntity(plugin, p, () ->
-                    p.teleportAsync(loc).whenComplete((ok, error) ->
-                            log.info("[" + tag + "/Retry] tick=" + tick + " teleported=" + (error == null && Boolean.TRUE.equals(ok))
-                                    + " player=" + p.getName() + " -> " + shortLoc(loc)
-                                    + (warpNameOrNull != null ? " (warp='" + warpNameOrNull + "')" : ""))));
+                    p.teleportAsync(loc).whenComplete((ok, error) -> {
+                        boolean success = error == null && Boolean.TRUE.equals(ok);
+                        log.info("[" + tag + "/Retry] tick=" + tick + " teleported=" + success
+                                + " player=" + p.getName() + " -> " + shortLoc(loc)
+                                + (warpNameOrNull != null ? " (warp='" + warpNameOrNull + "')" : ""));
+                        if (success) clearIntent(id);
+                    }));
         } else {
             boolean ok = p.teleport(loc);
             log.info("[" + tag + "/Retry] tick=" + tick + " teleported=" + ok
                     + " player=" + p.getName() + " -> " + shortLoc(loc)
                     + (warpNameOrNull != null ? " (warp='" + warpNameOrNull + "')" : ""));
+            if (ok) clearIntent(id);
         }
 
         if (tick == 10) {
-            pendingJoin.remove(id);
-            lastIntent.remove(id);
+            clearIntent(id);
         }
+    }
+
+    private void clearIntent(UUID id) {
+        pendingJoin.remove(id);
+        lastIntent.remove(id);
     }
 
     private boolean intentMatches(String stored, String tag, String warpNameOrNull) {

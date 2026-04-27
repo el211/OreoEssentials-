@@ -7,6 +7,7 @@ import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.rabbitmq.PacketChannels;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.cross.rabbit.packets.CrossInvPacket;
+import fr.elias.oreoEssentials.services.VanishService;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
@@ -146,7 +147,9 @@ public final class ModBridge {
         Player p = Bukkit.getPlayer(targetId);
         if (p == null || !p.isOnline()) return false;
 
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "vanish " + p.getName());
+        VanishService vanishService = plugin.getVanishService();
+        if (vanishService == null) return false;
+        vanishService.toggle(p);
         return true;
     }
 

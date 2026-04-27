@@ -124,6 +124,13 @@ public final class TpaCrossServerBroker implements Listener {
             return true;
         }
 
+        if (pendingArrival.containsKey(p.requesterUuid)) {
+            Lang.send(target, "tpa.accept.busy",
+                    "<red>That requester is already being summoned to another player.</red>");
+            dbg("Rejecting accept: requester already has pending arrival " + p.requesterUuid);
+            return true;
+        }
+
         pendingArrival.put(p.requesterUuid, target.getUniqueId());
 
         if (isMessagingReady()) {

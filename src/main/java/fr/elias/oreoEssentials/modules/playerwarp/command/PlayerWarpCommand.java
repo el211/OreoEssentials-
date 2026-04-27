@@ -1278,7 +1278,7 @@ public class PlayerWarpCommand implements OreoCommand {
      * - /pw use <warp> <password>
      */
     private boolean handleWarpTeleport(OreoEssentials plugin, Player actor, String warpName, String givenPassword) {
-        plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: player="
+        if (plugin.getConfigService().isDebugEnabled()) plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: player="
                 + actor.getName()
                 + " warpName=" + warpName
                 + " givenPassword=" + (givenPassword == null ? "null" : "'" + givenPassword + "'"));
@@ -1289,24 +1289,24 @@ public class PlayerWarpCommand implements OreoCommand {
                 .orElse(null);
 
         if (targetWarp == null) {
-            plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: warp not found for name=" + warpName);
+            if (plugin.getConfigService().isDebugEnabled()) plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: warp not found for name=" + warpName);
             Lang.send(actor, "pw.not-found",
                     "<red>Warp <yellow>%name%</yellow> not found.</red>",
                     Map.of("name", warpName.toLowerCase(Locale.ROOT)));
             return true;
         }
 
-        plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: resolved warp id="
+        if (plugin.getConfigService().isDebugEnabled()) plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: resolved warp id="
                 + targetWarp.getId()
                 + " owner=" + targetWarp.getOwner()
                 + " name=" + targetWarp.getName());
 
         // Password branch
         if (givenPassword != null) {
-            plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: password branch");
+            if (plugin.getConfigService().isDebugEnabled()) plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: password branch");
 
             if (!service.canUse(actor, targetWarp)) {
-                plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: canUse()=false, blocking");
+                if (plugin.getConfigService().isDebugEnabled()) plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: canUse()=false, blocking");
                 Lang.send(actor, "pw.no-permission-warp",
                         "<red>You don't have permission to use <yellow>%name%</yellow>.</red>",
                         Map.of("name", targetWarp.getName()));
@@ -1315,29 +1315,29 @@ public class PlayerWarpCommand implements OreoCommand {
 
             String realPassword = targetWarp.getPassword();
             if (realPassword == null || realPassword.isEmpty()) {
-                plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: warp has no password, teleporting normally");
+                if (plugin.getConfigService().isDebugEnabled()) plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: warp has no password, teleporting normally");
                 teleportWithRouting(plugin, actor, targetWarp);
                 return true;
             }
 
             if (!realPassword.equals(givenPassword)) {
-                plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: wrong password");
+                if (plugin.getConfigService().isDebugEnabled()) plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: wrong password");
                 Lang.send(actor, "pw.password-wrong",
                         "<red>Wrong password for <yellow>%warp%</yellow>.</red>",
                         Map.of("warp", targetWarp.getName()));
                 return true;
             }
 
-            plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: password OK, teleporting");
+            if (plugin.getConfigService().isDebugEnabled()) plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: password OK, teleporting");
             teleportWithRouting(plugin, actor, targetWarp);
             return true;
         }
 
         // No password branch
-        plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: no password branch");
+        if (plugin.getConfigService().isDebugEnabled()) plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: no password branch");
 
         if (isPasswordProtected(targetWarp, actor)) {
-            plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: warp is password-protected, blocking");
+            if (plugin.getConfigService().isDebugEnabled()) plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: warp is password-protected, blocking");
             Lang.send(actor, "pw.password-required",
                     "<red>Warp <yellow>%warp%</yellow> requires a password.</red> <gray>Use: <white>/pw use %warp% <password></white></gray>",
                     Map.of("warp", targetWarp.getName()));
@@ -1345,14 +1345,14 @@ public class PlayerWarpCommand implements OreoCommand {
         }
 
         if (!service.canUse(actor, targetWarp)) {
-            plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: canUse()=false, blocking");
+            if (plugin.getConfigService().isDebugEnabled()) plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: canUse()=false, blocking");
             Lang.send(actor, "pw.no-permission-warp",
                     "<red>You don't have permission to use <yellow>%name%</yellow>.</red>",
                     Map.of("name", targetWarp.getName()));
             return true;
         }
 
-        plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: all checks OK, calling teleportWithRouting");
+        if (plugin.getConfigService().isDebugEnabled()) plugin.getLogger().info("[PW/DEBUG] handleWarpTeleport: all checks OK, calling teleportWithRouting");
         teleportWithRouting(plugin, actor, targetWarp);
         return true;
     }

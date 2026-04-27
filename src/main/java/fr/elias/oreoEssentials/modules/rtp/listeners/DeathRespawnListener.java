@@ -45,9 +45,8 @@ public final class DeathRespawnListener implements Listener {
             case NORMAL:
                 return; // vanilla
             case GLOBAL_SPAWN: {
-                // Use your SpawnService (same as /spawn) to keep behavior consistent.
                 SpawnService spawn = plugin.getSpawnService();
-                if (spawn != null) target = spawn.getSpawn(); // may be null
+                if (spawn != null) target = spawn.getGlobalSpawn();
                 break;
             }
             case WORLD_SPAWN: {

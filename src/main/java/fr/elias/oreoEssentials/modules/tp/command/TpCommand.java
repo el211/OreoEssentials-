@@ -91,7 +91,7 @@ public class TpCommand implements OreoCommand {
 
         String presence = null;
         try {
-            presence = dir.getCurrentOrLastServer(targetUuid);
+            presence = dir.lookupCurrentServer(targetUuid);
         } catch (Throwable ignored) {}
 
         String targetName = safeNameLookup(dir, targetUuid, arg);
