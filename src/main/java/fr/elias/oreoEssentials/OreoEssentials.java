@@ -1338,6 +1338,7 @@ public final class OreoEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new DeathBackListener(deathBackService), this);
         getServer().getPluginManager().registerEvents(new GodListener(godService), this);
         getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.rtp.listeners.DeathRespawnListener(this), this);
+        getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.modules.spawn.FirstJoinSpawnListener(this), this);
 
         // store vanishService ref for commands block
         this._vanishService = vanishService;

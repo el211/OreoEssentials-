@@ -127,8 +127,11 @@ features:
     cooldown-amount: 5    # Seconds before teleport; 0 or negative = instant
 
 
+  first-join-spawn:
+    enabled: true   # Teleport new players to spawn on their very first connection
+
   death-respawn:
-    enabled: false
+    enabled: true
     # NORMAL        -> vanilla behavior
     # GLOBAL_SPAWN  -> uses SpawnService.getSpawn() (same as /spawn)
     # WORLD_SPAWN   -> current world's spawn
