@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BooleanSupplier;
 
 public class RabbitMQSender implements PacketSender {
 
@@ -24,6 +25,7 @@ public class RabbitMQSender implements PacketSender {
 
     private final String connectionString;
     private final String serverName; // IMPORTANT: must be unique per backend (ex shard-0-0, shard-0-1)
+    private final BooleanSupplier debugEnabled;
 
     private volatile Connection connection;
     private volatile Channel channel;
@@ -40,8 +42,13 @@ public class RabbitMQSender implements PacketSender {
     private final Map<String, String> consumerTagsByQueue = new ConcurrentHashMap<>();
 
     public RabbitMQSender(String connectionString, String serverName) {
+        this(connectionString, serverName, () -> false);
+    }
+
+    public RabbitMQSender(String connectionString, String serverName, BooleanSupplier debugEnabled) {
         this.connectionString = connectionString;
         this.serverName = (serverName == null || serverName.isBlank()) ? "unknown" : serverName.trim();
+        this.debugEnabled = debugEnabled != null ? debugEnabled : () -> false;
     }
 
     @Override
@@ -68,7 +75,6 @@ public class RabbitMQSender implements PacketSender {
                 dbg("[RMQ/SEND@" + serverName + "] direct queue=" + id + " bytes=" + content.length);
             }
 
-            System.out.println("[OreoEssentials]  Sent RabbitMQ message");
         } catch (IOException e) {
             System.err.println("[OreoEssentials] ❌ Failed to send RabbitMQ message.");
             e.printStackTrace();
@@ -311,6 +317,15 @@ public class RabbitMQSender implements PacketSender {
     private void dbg(String msg) {
         // keep simple: always log RMQ debug to stdout (or change to plugin logger if you pass plugin here)
         // If you want it gated by config.debug, tell me and I’ll wire it.
+        if (!isDebugEnabled()) return;
         System.out.println("[OreoEssentials] " + msg);
+    }
+
+    private boolean isDebugEnabled() {
+        try {
+            return debugEnabled.getAsBoolean();
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 }

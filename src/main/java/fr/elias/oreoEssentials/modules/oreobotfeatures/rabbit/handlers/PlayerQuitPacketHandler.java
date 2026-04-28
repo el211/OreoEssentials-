@@ -1,6 +1,5 @@
 package fr.elias.oreoEssentials.modules.oreobotfeatures.rabbit.handlers;
 
-
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.oreobotfeatures.rabbit.packets.PlayerQuitPacket;
 import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
@@ -21,16 +20,21 @@ public class PlayerQuitPacketHandler implements PacketSubscriber<PlayerQuitPacke
         UUID playerId = packet.getPlayerId();
 
         if (playerId == null) {
-            plugin.getLogger().warning("[OreoEssentials] ⚠ Received PlayerQuitPacket with null UUID! Skipping removal.");
+            plugin.getLogger().warning("[OreoEssentials] Received PlayerQuitPacket with null UUID; skipping removal.");
             return;
         }
 
         if (plugin.getOfflinePlayerCache().contains(playerId)) {
             plugin.getOfflinePlayerCache().remove(playerId);
-            plugin.getLogger().info("📨 Received PlayerQuitPacket: " + playerId + " (removed from cache)");
-        } else {
-            plugin.getLogger().warning("⚠ Received PlayerQuitPacket for unknown UUID: " + playerId + " — not in cache.");
+            if (isDebugEnabled()) {
+                plugin.getLogger().info("[CROSS] Received PlayerQuitPacket: " + playerId + " (removed from cache)");
+            }
+        } else if (isDebugEnabled()) {
+            plugin.getLogger().info("[CROSS] Received PlayerQuitPacket for unknown UUID: " + playerId + " (not in cache)");
         }
     }
-}
 
+    private boolean isDebugEnabled() {
+        return plugin.getConfigService().isDebugEnabled();
+    }
+}

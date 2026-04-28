@@ -18,11 +18,25 @@ import org.bukkit.Bukkit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MongoDBManager implements PlayerEconomyDatabase {
+    private static final long LOCAL_BALANCE_CACHE_TTL_MS = 5000L;
+
+    private static final class CachedBalance {
+        private final double balance;
+        private final long expiresAtMillis;
+
+        private CachedBalance(double balance, long expiresAtMillis) {
+            this.balance = balance;
+            this.expiresAtMillis = expiresAtMillis;
+        }
+    }
 
     private final RedisManager redis;
+    private final Map<UUID, CachedBalance> localBalanceCache = new ConcurrentHashMap<>();
     private MongoClient mongoClient;
     private MongoDatabase database;
     private MongoCollection<Document> collection;
@@ -80,8 +94,9 @@ public class MongoDBManager implements PlayerEconomyDatabase {
                     ),
                     new UpdateOptions().upsert(true)
             );
+            localBalanceCache.remove(playerUUID);
             redis.deleteBalance(playerUUID);
-            redis.setBalance(playerUUID, getBalance(playerUUID));
+            cacheBalance(playerUUID, getBalance(playerUUID));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -106,7 +121,7 @@ public class MongoDBManager implements PlayerEconomyDatabase {
 
         try {
             collection.replaceOne(Filters.eq("playerUUID", id), doc, new ReplaceOptions().upsert(true));
-            redis.setBalance(playerUUID, clamped);
+            cacheBalance(playerUUID, clamped);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -115,13 +130,19 @@ public class MongoDBManager implements PlayerEconomyDatabase {
     @Override
     public double getBalance(UUID playerUUID) {
         if (!connected) return STARTING_BALANCE;
+        Double local = getLocalBalance(playerUUID);
+        if (local != null) return local;
+
         Double cached = redis.getBalance(playerUUID);
-        if (cached != null) return cached;
+        if (cached != null) {
+            cacheBalance(playerUUID, cached);
+            return cached;
+        }
 
         Document doc = collection.find(Filters.eq("playerUUID", playerUUID.toString())).first();
         if (doc != null) {
             double balance = readNumber(doc, "balance", STARTING_BALANCE);
-            redis.setBalance(playerUUID, balance);
+            cacheBalance(playerUUID, balance);
             return balance;
         }
         return STARTING_BALANCE;
@@ -130,13 +151,19 @@ public class MongoDBManager implements PlayerEconomyDatabase {
     @Override
     public double getOrCreateBalance(UUID playerUUID, String name) {
         if (!connected) return STARTING_BALANCE;
+        Double local = getLocalBalance(playerUUID);
+        if (local != null) return local;
+
         Double cached = redis.getBalance(playerUUID);
-        if (cached != null) return cached;
+        if (cached != null) {
+            cacheBalance(playerUUID, cached);
+            return cached;
+        }
 
         Document doc = collection.find(Filters.eq("playerUUID", playerUUID.toString())).first();
         if (doc != null) {
             double balance = readNumber(doc, "balance", STARTING_BALANCE);
-            redis.setBalance(playerUUID, balance);
+            cacheBalance(playerUUID, balance);
             return balance;
         }
 
@@ -161,11 +188,13 @@ public class MongoDBManager implements PlayerEconomyDatabase {
 
     @Override
     public void clearCache() {
+        localBalanceCache.clear();
         redis.clearCache();
     }
 
     @Override
     public void close() {
+        localBalanceCache.clear();
         if (mongoClient != null) {
             mongoClient.close();
             System.out.println("[OreoEssentials] MongoDB connection closed.");
@@ -219,5 +248,22 @@ public class MongoDBManager implements PlayerEconomyDatabase {
         double v = value;
         if (!allowNegative) v = Math.max(min, v);
         return Math.min(max, v);
+    }
+
+    private Double getLocalBalance(UUID playerUUID) {
+        CachedBalance cached = localBalanceCache.get(playerUUID);
+        if (cached == null) return null;
+
+        long now = System.currentTimeMillis();
+        if (cached.expiresAtMillis < now) {
+            localBalanceCache.remove(playerUUID, cached);
+            return null;
+        }
+        return cached.balance;
+    }
+
+    private void cacheBalance(UUID playerUUID, double balance) {
+        redis.setBalance(playerUUID, balance);
+        localBalanceCache.put(playerUUID, new CachedBalance(balance, System.currentTimeMillis() + LOCAL_BALANCE_CACHE_TTL_MS));
     }
 }

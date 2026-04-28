@@ -205,6 +205,31 @@ performance:
       actionbar: false
       multi-bossbar: false
 
+  join-flood-protection:
+    enabled: true
+    window-ms: 10000
+    ui-soft-joins-per-window: 8
+    base-ui-delay-ticks: 10
+    extra-ui-delay-ticks: 10
+    max-ui-delay-ticks: 100
+    login-rate-limit:
+      enabled: true
+      max-logins-per-window: 20
+      kick-message: "<red>Join queue is active. Please reconnect in a moment.</red>"
+
+  container-spam-guard:
+    enabled: true
+    window-ms: 1250
+    max-score-per-window: 40
+    shift-click-weight: 6
+    transfer-weight: 4
+    drag-slot-weight: 2
+    close-inventory-on-trip: true
+    kick-after-strikes: 3
+    warn-cooldown-ms: 2000
+    warn-message: "<red>Container actions are being rate-limited. Slow down.</red>"
+    kick-message: "<red>You are sending too many container actions.</red>"
+
   # ──────────────────────────────────────────────────────────────────────────
   # UI-SAFEGUARD PROFILES — copy the block you need into ui-safeguards above
   # ──────────────────────────────────────────────────────────────────────────

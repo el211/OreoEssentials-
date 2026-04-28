@@ -99,7 +99,21 @@ public class TabListManager {
             Bukkit.getPluginManager().registerEvents(new org.bukkit.event.Listener() {
                 @org.bukkit.event.EventHandler
                 public void onJoin(org.bukkit.event.player.PlayerJoinEvent e) {
-                    sendTitleOnce(e.getPlayer());
+                    Player player = e.getPlayer();
+                    long delayTicks = plugin.getJoinUiDelayTicks(player, 0L);
+                    if (delayTicks <= 0L) {
+                        sendTitleOnce(player);
+                        return;
+                    }
+                    if (OreScheduler.isFolia()) {
+                        OreScheduler.runLaterForEntity(plugin, player, () -> {
+                            if (player.isOnline()) sendTitleOnce(player);
+                        }, delayTicks);
+                    } else {
+                        OreScheduler.runLater(plugin, () -> {
+                            if (player.isOnline()) sendTitleOnce(player);
+                        }, delayTicks);
+                    }
                 }
             }, plugin);
         }
@@ -235,6 +249,7 @@ public class TabListManager {
             if (nameEnabled && !playerSectionEnabled) {
                 nameTask = OreScheduler.runTimer(plugin, () -> {
                     for (Player p : Bukkit.getOnlinePlayers()) {
+                        if (!plugin.isJoinUiReady(p)) continue;
                         applyNameFormat(p);
                     }
                 }, 1L, intervalTicks);
@@ -253,6 +268,7 @@ public class TabListManager {
     private void startClassicMode() {
         task = OreScheduler.runTimer(plugin, () -> {
             for (Player p : Bukkit.getOnlinePlayers()) {
+                if (!plugin.isJoinUiReady(p)) continue;
 
                 World world = p.getWorld();
                 WorldOverrides o = worldOverrides.get(world.getName().toLowerCase(Locale.ROOT));

@@ -179,6 +179,96 @@ public class SettingsConfig {
         return cfg.getBoolean("performance.ui-safeguards.disable." + moduleKey, false);
     }
 
+    public boolean joinFloodProtectionEnabled() {
+        return cfg.getBoolean("performance.join-flood-protection.enabled", true);
+    }
+
+    public int joinFloodWindowMillis() {
+        return Math.max(1000, cfg.getInt("performance.join-flood-protection.window-ms", 10000));
+    }
+
+    public int joinFloodUiSoftJoinsPerWindow() {
+        return Math.max(1, cfg.getInt("performance.join-flood-protection.ui-soft-joins-per-window", 8));
+    }
+
+    public long joinFloodBaseUiDelayTicks() {
+        return Math.max(0L, cfg.getLong("performance.join-flood-protection.base-ui-delay-ticks", 10L));
+    }
+
+    public long joinFloodExtraUiDelayTicks() {
+        return Math.max(1L, cfg.getLong("performance.join-flood-protection.extra-ui-delay-ticks", 10L));
+    }
+
+    public long joinFloodMaxUiDelayTicks() {
+        long configured = cfg.getLong("performance.join-flood-protection.max-ui-delay-ticks", 100L);
+        return Math.max(joinFloodBaseUiDelayTicks(), configured);
+    }
+
+    public boolean joinFloodLoginRateLimitEnabled() {
+        return cfg.getBoolean("performance.join-flood-protection.login-rate-limit.enabled", true);
+    }
+
+    public int joinFloodMaxLoginsPerWindow() {
+        return Math.max(1, cfg.getInt("performance.join-flood-protection.login-rate-limit.max-logins-per-window", 20));
+    }
+
+    public String joinFloodKickMessage() {
+        return cfg.getString(
+                "performance.join-flood-protection.login-rate-limit.kick-message",
+                "<red>Join queue is active. Please reconnect in a moment.</red>"
+        );
+    }
+
+    public boolean containerSpamGuardEnabled() {
+        return cfg.getBoolean("performance.container-spam-guard.enabled", true);
+    }
+
+    public int containerSpamGuardWindowMillis() {
+        return Math.max(250, cfg.getInt("performance.container-spam-guard.window-ms", 1250));
+    }
+
+    public int containerSpamGuardMaxScore() {
+        return Math.max(5, cfg.getInt("performance.container-spam-guard.max-score-per-window", 40));
+    }
+
+    public int containerSpamGuardShiftWeight() {
+        return Math.max(1, cfg.getInt("performance.container-spam-guard.shift-click-weight", 6));
+    }
+
+    public int containerSpamGuardTransferWeight() {
+        return Math.max(1, cfg.getInt("performance.container-spam-guard.transfer-weight", 4));
+    }
+
+    public int containerSpamGuardDragSlotWeight() {
+        return Math.max(1, cfg.getInt("performance.container-spam-guard.drag-slot-weight", 2));
+    }
+
+    public boolean containerSpamGuardCloseInventory() {
+        return cfg.getBoolean("performance.container-spam-guard.close-inventory-on-trip", true);
+    }
+
+    public int containerSpamGuardKickAfterStrikes() {
+        return Math.max(0, cfg.getInt("performance.container-spam-guard.kick-after-strikes", 3));
+    }
+
+    public int containerSpamGuardWarnCooldownMillis() {
+        return Math.max(0, cfg.getInt("performance.container-spam-guard.warn-cooldown-ms", 2000));
+    }
+
+    public String containerSpamGuardWarnMessage() {
+        return cfg.getString(
+                "performance.container-spam-guard.warn-message",
+                "<red>Container actions are being rate-limited. Slow down.</red>"
+        );
+    }
+
+    public String containerSpamGuardKickMessage() {
+        return cfg.getString(
+                "performance.container-spam-guard.kick-message",
+                "<red>You are sending too many container actions.</red>"
+        );
+    }
+
     public boolean tempFlyEnabled() {
         return isEnabled("tempfly");
     }

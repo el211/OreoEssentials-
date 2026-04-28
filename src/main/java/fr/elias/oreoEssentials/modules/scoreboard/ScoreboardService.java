@@ -59,8 +59,12 @@ public final class ScoreboardService implements Listener {
     private final Map<UUID, Scoreboard>      playerBoards = new ConcurrentHashMap<>();
     private final Map<UUID, RenderState>     renderStates = new ConcurrentHashMap<>();
     private final Map<String, Boolean>       sharedTemplateCache = new ConcurrentHashMap<>();
+    private final Map<String, String>        sharedLegacyRenderCache = new ConcurrentHashMap<>();
     private OreTask taskId = null;
     private final File toggleFile;
+    private int refreshCursor = 0;
+    private int titleAnimTickAccumulator = 0;
+    private double refreshBatchBudget = 0.0d;
 
     private static final class RenderState {
         private final String title;
@@ -75,7 +79,6 @@ public final class ScoreboardService implements Listener {
     private static final class RenderCycle {
         private final boolean placeholderApiEnabled;
         private final Map<String, String> animatedTextCache = new ConcurrentHashMap<>();
-        private final Map<String, String> sharedLegacyCache = new ConcurrentHashMap<>();
 
         private RenderCycle(boolean placeholderApiEnabled) {
             this.placeholderApiEnabled = placeholderApiEnabled;
@@ -110,33 +113,14 @@ public final class ScoreboardService implements Listener {
         }, 5L);
 
         taskId = OreScheduler.runTimer(plugin, () -> {
-            titleAnim.tick();
-            RenderCycle cycle = new RenderCycle(isPlaceholderApiEnabled());
-
-            for (UUID id : List.copyOf(shown)) {
-                Player p = Bukkit.getPlayer(id);
-                if (p == null) {
-                    shown.remove(id);
-                    continue;
-                }
-                if (OreScheduler.isFolia()) {
-                    // On Folia, player state (world name, PAPI placeholders, etc.) must be
-                    // accessed from the entity's own region thread.  Dispatch per-player work
-                    // there so we never violate Folia's thread-ownership checks.
-                    OreScheduler.runForEntity(plugin, p, () -> {
-                        if (!p.isOnline()) { shown.remove(id); return; }
-                        if (!shouldShow(p)) { hide(p); return; }
-                        refresh(p, cycle);
-                    });
-                } else {
-                    if (!shouldShow(p)) {
-                        hide(p);
-                        continue;
-                    }
-                    refresh(p, cycle);
-                }
+            titleAnimTickAccumulator++;
+            if (titleAnimTickAccumulator >= cfg.updateTicks()) {
+                titleAnim.tick();
+                titleAnimTickAccumulator = 0;
             }
-        }, cfg.updateTicks(), cfg.updateTicks());
+            RenderCycle cycle = new RenderCycle(isPlaceholderApiEnabled());
+            refreshShownPlayers(cycle);
+        }, 1L, 1L);
     }
 
     public void stop() {
@@ -151,6 +135,10 @@ public final class ScoreboardService implements Listener {
         shown.clear();
         playerBoards.clear();
         renderStates.clear();
+        sharedLegacyRenderCache.clear();
+        refreshCursor = 0;
+        titleAnimTickAccumulator = 0;
+        refreshBatchBudget = 0.0d;
         // Clean up Folia NMS scoreboards
         for (FoliaScoreboard fs : foliaBoards.values()) {
             try { fs.hide(); } catch (Throwable ignored) {}
@@ -290,7 +278,9 @@ public final class ScoreboardService implements Listener {
             playerBoards.put(p.getUniqueId(), board);
             renderStates.put(p.getUniqueId(), state);
             shown.add(p.getUniqueId());
-            plugin.getLogger().info("[Scoreboard] Shown for " + p.getName());
+            if (plugin.getConfigService().isDebugEnabled()) {
+                plugin.getLogger().info("[Scoreboard] Shown for " + p.getName());
+            }
         } catch (Throwable t) {
             plugin.getLogger().warning("[Scoreboard] show() Paper path failed for " + p.getName() + ": " + t);
         }
@@ -381,6 +371,46 @@ public final class ScoreboardService implements Listener {
             renderStates.put(p.getUniqueId(), next);
         } catch (Throwable t) {
             plugin.getLogger().warning("[Scoreboard] refresh() applyRenderState failed for " + p.getName() + ": " + t);
+        }
+    }
+
+    private void refreshShownPlayers(RenderCycle cycle) {
+        List<UUID> snapshot = List.copyOf(shown);
+        if (snapshot.isEmpty()) {
+            refreshCursor = 0;
+            refreshBatchBudget = 0.0d;
+            return;
+        }
+
+        refreshBatchBudget = Math.min(snapshot.size(), refreshBatchBudget + ((double) snapshot.size() / Math.max(1L, cfg.updateTicks())));
+        int batchSize = (int) Math.floor(refreshBatchBudget);
+        if (batchSize <= 0) {
+            return;
+        }
+        refreshBatchBudget -= batchSize;
+
+        for (int i = 0; i < batchSize; i++) {
+            UUID id = snapshot.get(refreshCursor % snapshot.size());
+            refreshCursor = (refreshCursor + 1) % Math.max(1, snapshot.size());
+
+            Player p = Bukkit.getPlayer(id);
+            if (p == null) {
+                shown.remove(id);
+                continue;
+            }
+            if (OreScheduler.isFolia()) {
+                OreScheduler.runForEntity(plugin, p, () -> {
+                    if (!p.isOnline()) { shown.remove(id); return; }
+                    if (!shouldShow(p)) { hide(p); return; }
+                    refresh(p, cycle);
+                });
+            } else {
+                if (!shouldShow(p)) {
+                    hide(p);
+                    continue;
+                }
+                refresh(p, cycle);
+            }
         }
     }
 
@@ -529,12 +559,12 @@ public final class ScoreboardService implements Listener {
     private String renderToLegacyString(Player p, String raw, RenderCycle cycle) {
         if (raw == null) return "";
 
-        if (canShareRenderedText(raw)) {
-            return cycle.sharedLegacyCache.computeIfAbsent(raw, this::renderSharedLegacyString);
-        }
-
         // 1. Inline animation tags  →  active frame text
         String s = resolveAnimatedText(raw, cycle);
+
+        if (canShareRenderedText(s)) {
+            return sharedLegacyRenderCache.computeIfAbsent(s, this::renderSharedLegacyString);
+        }
 
         // 2. Simple player-name token
         s = s.replace("{player}", p.getName());
@@ -582,8 +612,8 @@ public final class ScoreboardService implements Listener {
         return s;
     }
 
-    private String renderSharedLegacyString(String raw) {
-        String s = applyTagAnimations(raw);
+    private String renderSharedLegacyString(String resolved) {
+        String s = resolved;
         s = convertPapiTags(s);
         s = AMP_HEX.matcher(s).replaceAll("<#$1>");
         s = MiniMessageCompat.normalizeTagAliases(s);
@@ -610,8 +640,7 @@ public final class ScoreboardService implements Listener {
             if (key.contains("{player}") || key.contains("<papi:")) {
                 return false;
             }
-            String withoutAnimations = ANIM_TAG.matcher(key).replaceAll("");
-            return !withoutAnimations.contains("%");
+            return !key.contains("%");
         });
     }
 
@@ -853,13 +882,13 @@ public final class ScoreboardService implements Listener {
             OreScheduler.runLaterForEntity(plugin, p, () -> {
                 if (p.isOnline() && shouldShow(p)) show(p);
                 else if (p.isOnline()) forceNametagUpdate(p);
-            }, 20L);
+            }, plugin.getJoinUiDelayTicks(p, 20L));
         } else {
             // Paper: global scheduler on main thread, 2-tick delay is fine.
             OreScheduler.runLater(plugin, () -> {
                 if (shouldShow(p)) show(p);
                 else forceNametagUpdate(p);
-            }, 2L);
+            }, plugin.getJoinUiDelayTicks(p, 2L));
         }
     }
 

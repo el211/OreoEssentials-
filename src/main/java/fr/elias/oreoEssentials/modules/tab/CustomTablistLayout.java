@@ -51,10 +51,15 @@ public class CustomTablistLayout {
     private final Map<UUID, String> headerCache = new HashMap<>();
     private final Map<UUID, String> footerCache = new HashMap<>();
     private final Map<UUID, String> playerListNameCache = new HashMap<>();
+    private final Map<String, String> sharedColorCache = new HashMap<>();
     private OreTask updateTask;
 
     private int currentFrame = 0;
     private long lastFrameChange = 0;
+    private int updateCadenceTicks = 20;
+    private int viewerRefreshCursor = 0;
+    private int playerNameRefreshTicksRemaining = 0;
+    private double headerFooterBatchBudget = 0.0d;
 
     public CustomTablistLayout(OreoEssentials plugin, TabListManager tabManager) {
         this.plugin = plugin;
@@ -63,13 +68,15 @@ public class CustomTablistLayout {
 
     public void start(int intervalTicks) {
         stop();
+        updateCadenceTicks = Math.max(1, intervalTicks);
+        playerNameRefreshTicksRemaining = 0;
         updateTask = OreScheduler.runTimer(plugin, () -> {
             try {
                 updateCustomTablist();
             } catch (Exception e) {
                 plugin.getLogger().warning("[CustomTab] Error updating tablist: " + e.getMessage());
             }
-        }, 20L, intervalTicks);
+        }, 20L, 1L);
     }
 
     public void stop() {
@@ -80,31 +87,61 @@ public class CustomTablistLayout {
         headerCache.clear();
         footerCache.clear();
         playerListNameCache.clear();
+        sharedColorCache.clear();
+        viewerRefreshCursor = 0;
+        playerNameRefreshTicksRemaining = 0;
+        headerFooterBatchBudget = 0.0d;
     }
 
     private void updateCustomTablist() {
         FileConfiguration cfg = tabManager.getConfig();
-        List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
-        if (players.isEmpty()) {
+        List<Player> onlinePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
+        if (onlinePlayers.isEmpty()) {
             headerCache.clear();
             footerCache.clear();
             playerListNameCache.clear();
+            viewerRefreshCursor = 0;
+            headerFooterBatchBudget = 0.0d;
+            return;
+        }
+
+        List<Player> players = new ArrayList<>(onlinePlayers.size());
+        for (Player player : onlinePlayers) {
+            if (plugin.isJoinUiReady(player)) {
+                players.add(player);
+            }
+        }
+        if (players.isEmpty()) {
+            pruneCaches(onlinePlayers);
+            viewerRefreshCursor = 0;
+            headerFooterBatchBudget = 0.0d;
             return;
         }
 
         advanceFrame(cfg.getInt("tab.custom-layout.change-interval", 80));
 
-        int onlineCount = players.size();
-        for (Player viewer : players) {
+        int onlineCount = onlinePlayers.size();
+        SharedHeaderFooter sharedHeaderFooter = resolveSharedHeaderFooter(cfg);
+        headerFooterBatchBudget = Math.min(players.size(), headerFooterBatchBudget + ((double) players.size() / Math.max(1, updateCadenceTicks)));
+        int viewerBatchSize = (int) Math.floor(headerFooterBatchBudget);
+        headerFooterBatchBudget -= viewerBatchSize;
+
+        for (int i = 0; i < viewerBatchSize; i++) {
+            Player viewer = players.get(viewerRefreshCursor % players.size());
+            viewerRefreshCursor = (viewerRefreshCursor + 1) % Math.max(1, players.size());
             try {
-                updateHeaderFooter(viewer, cfg, onlineCount);
+                updateHeaderFooter(viewer, cfg, onlineCount, sharedHeaderFooter);
             } catch (Exception e) {
                 plugin.getLogger().warning("[CustomTab] Error updating header/footer for " + viewer.getName() + ": " + e.getMessage());
             }
         }
 
-        updatePlayerNames(players, cfg, onlineCount);
-        pruneCaches(players);
+        playerNameRefreshTicksRemaining--;
+        if (playerNameRefreshTicksRemaining <= 0) {
+            updatePlayerNames(players, cfg, onlineCount);
+            playerNameRefreshTicksRemaining = updateCadenceTicks;
+        }
+        pruneCaches(onlinePlayers);
     }
 
     private void advanceFrame(int changeInterval) {
@@ -117,28 +154,32 @@ public class CustomTablistLayout {
         }
     }
 
-    private void updateHeaderFooter(Player viewer, FileConfiguration cfg, int onlineCount) {
+    private void updateHeaderFooter(Player viewer, FileConfiguration cfg, int onlineCount, SharedHeaderFooter sharedHeaderFooter) {
         boolean headerAnimated = cfg.contains("tab.custom-layout.top-section.texts");
         boolean footerAnimated = cfg.contains("tab.custom-layout.bottom-section.texts");
 
         String headerText;
-        if (headerAnimated) {
+        if (sharedHeaderFooter.headerText() != null) {
+            headerText = sharedHeaderFooter.headerText();
+        } else if (headerAnimated) {
             headerText = getAnimatedText(cfg, "tab.custom-layout.top-section.texts", viewer, onlineCount);
         } else {
             String line1 = applyPlaceholders(viewer, cfg.getString("tab.custom-layout.top-section.line-1", "&f&lWelcome &b%player_displayname%"), onlineCount);
             String line2 = applyPlaceholders(viewer, cfg.getString("tab.custom-layout.top-section.line-2", "&6&lWorld: &e%player_world%"), onlineCount);
             String line3 = applyPlaceholders(viewer, cfg.getString("tab.custom-layout.top-section.line-3", "&6&lPing: &e%player_ping%ms"), onlineCount);
-            headerText = color(line1) + "\n" + color(line2) + "  " + color(line3);
+            headerText = colorMaybeCached(line1) + "\n" + colorMaybeCached(line2) + "  " + colorMaybeCached(line3);
         }
 
         String footerText;
-        if (footerAnimated) {
+        if (sharedHeaderFooter.footerText() != null) {
+            footerText = sharedHeaderFooter.footerText();
+        } else if (footerAnimated) {
             footerText = getAnimatedText(cfg, "tab.custom-layout.bottom-section.texts", viewer, onlineCount);
         } else {
             String fLine1 = applyPlaceholders(viewer, cfg.getString("tab.custom-layout.bottom-section.line-1", "&6&lPlayers: &e%oe_network_online%"), onlineCount);
             String fLine2 = applyPlaceholders(viewer, cfg.getString("tab.custom-layout.bottom-section.line-2", "&6&lBalance: &e$%vault_eco_balance_formatted%"), onlineCount);
             String fLine3 = applyPlaceholders(viewer, cfg.getString("tab.custom-layout.bottom-section.line-3", "&c&lServer"), onlineCount);
-            footerText = "\n" + color(fLine1) + "  " + color(fLine2) + "\n" + color(fLine3);
+            footerText = "\n" + colorMaybeCached(fLine1) + "  " + colorMaybeCached(fLine2) + "\n" + colorMaybeCached(fLine3);
         }
 
         UUID viewerId = viewer.getUniqueId();
@@ -156,7 +197,40 @@ public class CustomTablistLayout {
         int frameIndex = currentFrame % frames.size();
         String frame = frames.get(frameIndex);
         frame = applyPlaceholders(viewer, frame, onlineCount);
-        return color(frame);
+        return colorMaybeCached(frame);
+    }
+
+    private SharedHeaderFooter resolveSharedHeaderFooter(FileConfiguration cfg) {
+        return new SharedHeaderFooter(
+                resolveSharedAnimatedText(cfg, "tab.custom-layout.top-section.texts"),
+                resolveSharedAnimatedText(cfg, "tab.custom-layout.bottom-section.texts")
+        );
+    }
+
+    private String resolveSharedAnimatedText(FileConfiguration cfg, String path) {
+        List<String> frames = cfg.getStringList(path);
+        if (frames.isEmpty() || !allFramesShareable(frames)) {
+            return null;
+        }
+
+        int frameIndex = currentFrame % frames.size();
+        return colorMaybeCached(frames.get(frameIndex));
+    }
+
+    private boolean allFramesShareable(List<String> frames) {
+        for (String frame : frames) {
+            if (!isShareableText(frame)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isShareableText(String text) {
+        return text != null
+                && text.indexOf('%') == -1
+                && text.indexOf('{') == -1
+                && !text.contains("<papi:");
     }
 
     private void updatePlayerNames(List<Player> players, FileConfiguration cfg, int onlineCount) {
@@ -212,7 +286,7 @@ public class CustomTablistLayout {
 
         String afkIndicator = "";
         if (afk && cfg.getBoolean("tab.custom-layout.player-section.player-format.show-afk", true)) {
-            afkIndicator = color(cfg.getString("tab.custom-layout.player-section.player-format.afk-format", " &7AFK"));
+            afkIndicator = colorMaybeCached(cfg.getString("tab.custom-layout.player-section.player-format.afk-format", " &7AFK"));
         }
 
         return format.replace("%player_color%", rankColor)
@@ -223,9 +297,9 @@ public class CustomTablistLayout {
     private String getRankColor(String rank, FileConfiguration cfg) {
         ConfigurationSection rankColors = cfg.getConfigurationSection("tab.custom-layout.player-section.player-format.rank-colors");
         if (rankColors != null && rankColors.contains(rank)) {
-            return color(rankColors.getString(rank, "&a"));
+            return colorMaybeCached(rankColors.getString(rank, "&a"));
         }
-        return color(rankColors != null ? rankColors.getString("default", "&a") : "&a");
+        return colorMaybeCached(rankColors != null ? rankColors.getString("default", "&a") : "&a");
     }
 
     private int getRankPriority(String rank, FileConfiguration cfg) {
@@ -291,6 +365,13 @@ public class CustomTablistLayout {
         headerCache.keySet().removeIf(id -> !onlineIds.contains(id));
         footerCache.keySet().removeIf(id -> !onlineIds.contains(id));
         playerListNameCache.keySet().removeIf(id -> !onlineIds.contains(id));
+    }
+
+    private String colorMaybeCached(String s) {
+        if (!isShareableText(s)) {
+            return color(s);
+        }
+        return sharedColorCache.computeIfAbsent(s, CustomTablistLayout::color);
     }
 
     /**
@@ -361,4 +442,6 @@ public class CustomTablistLayout {
     }
 
     private record PlayerTabEntry(Player player, int rankPriority, String displayName) {}
+
+    private record SharedHeaderFooter(String headerText, String footerText) {}
 }

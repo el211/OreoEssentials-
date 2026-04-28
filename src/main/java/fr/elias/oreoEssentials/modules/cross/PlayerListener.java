@@ -28,12 +28,14 @@ public class PlayerListener implements Listener {
         plugin.getOfflinePlayerCache().add(playerName, playerUUID);
 
         if (playerName.startsWith(".") || playerName.startsWith("_")) {
-            plugin.getLogger().warning("⚠ Bedrock player joined with prefixed name: " + playerName + " (" + playerUUID + ")");
+            plugin.getLogger().warning("[CROSS] Bedrock player joined with prefixed name: " + playerName + " (" + playerUUID + ")");
         }
 
         if (plugin.getPacketManager() != null && plugin.getPacketManager().isInitialized()) {
             plugin.getPacketManager().sendPacket(new PlayerJoinPacket(playerUUID, playerName));
-            plugin.getLogger().info("📤 Sent PlayerJoinPacket: " + playerName + " (" + playerUUID + ")");
+            if (isDebugEnabled()) {
+                plugin.getLogger().info("[CROSS] Sent PlayerJoinPacket: " + playerName + " (" + playerUUID + ")");
+            }
         }
     }
 
@@ -44,7 +46,13 @@ public class PlayerListener implements Listener {
 
         if (plugin.getPacketManager() != null && plugin.getPacketManager().isInitialized()) {
             plugin.getPacketManager().sendPacket(new PlayerQuitPacket(playerUUID));
-            plugin.getLogger().info("📤 Sent PlayerQuitPacket: " + player.getName() + " (" + playerUUID + ")");
+            if (isDebugEnabled()) {
+                plugin.getLogger().info("[CROSS] Sent PlayerQuitPacket: " + player.getName() + " (" + playerUUID + ")");
+            }
         }
+    }
+
+    private boolean isDebugEnabled() {
+        return plugin.getConfigService().isDebugEnabled();
     }
 }

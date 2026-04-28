@@ -196,6 +196,8 @@ public final class OreoEssentials extends JavaPlugin {
     private MongoClient homesMongoClient;
     private fr.elias.oreoEssentials.config.SettingsConfig settingsConfig;
     public fr.elias.oreoEssentials.config.SettingsConfig getSettingsConfig() { return settingsConfig; }
+    private JoinFloodGuardService joinFloodGuardService;
+    public JoinFloodGuardService getJoinFloodGuardService() { return joinFloodGuardService; }
     private ShopModule shopModule;
     public ShopModule getShopModule() { return shopModule; }
     private PlayerNotesManager notesManager;
@@ -407,6 +409,7 @@ public final class OreoEssentials extends JavaPlugin {
         instance = this;
 
         initConfig();
+        initPerformanceGuards();
         initStorage();
         initRedis();
         initEconomy();
@@ -1377,7 +1380,11 @@ public final class OreoEssentials extends JavaPlugin {
             return;
         }
 
-        RabbitMQSender rabbit = new RabbitMQSender(getConfig().getString("rabbitmq.uri"), configService.serverName());
+        RabbitMQSender rabbit = new RabbitMQSender(
+                getConfig().getString("rabbitmq.uri"),
+                configService.serverName(),
+                configService::isDebugEnabled
+        );
         if (this.offlinePlayerCache == null) this.offlinePlayerCache = new OfflinePlayerCache();
         this.packetManager = new PacketManager(this, rabbit);
 
@@ -1947,6 +1954,17 @@ public final class OreoEssentials extends JavaPlugin {
             unregisterCommandHard("bossbar");
             getLogger().info("[BossBar] Disabled by settings.yml.");
         }
+    }
+
+    private void initPerformanceGuards() {
+        this.joinFloodGuardService = new JoinFloodGuardService(this);
+        getServer().getPluginManager().registerEvents(this.joinFloodGuardService, this);
+        getServer().getPluginManager().registerEvents(new ContainerSpamGuardListener(this), this);
+
+        getLogger().info("[Performance] Join flood protection "
+                + (settingsConfig.joinFloodProtectionEnabled() ? "enabled." : "disabled."));
+        getLogger().info("[Performance] Container spam guard "
+                + (settingsConfig.containerSpamGuardEnabled() ? "enabled." : "disabled."));
     }
 
     private void initScoreboard() {
@@ -2598,6 +2616,14 @@ public final class OreoEssentials extends JavaPlugin {
     public PlayerNametagManager getNametagManager() { return nametagManager; }
     public fr.elias.oreoEssentials.modules.nametag.ChatBubbleService getChatBubbleService() { return chatBubbleService; }
     public SettingsConfig getSettings() { return settings; }
+    public boolean isJoinUiReady(Player player) {
+        return joinFloodGuardService == null || joinFloodGuardService.isUiReady(player);
+    }
+    public long getJoinUiDelayTicks(Player player, long minimumDelayTicks) {
+        return joinFloodGuardService == null
+                ? Math.max(0L, minimumDelayTicks)
+                : joinFloodGuardService.getDeferredJoinDelayTicks(player, minimumDelayTicks);
+    }
     public RtpPendingService getRtpPendingService() { return rtpPendingService; }
     public fr.elias.oreoEssentials.modules.rtp.RtpCrossServerBridge getRtpBridge() { return rtpBridge; }
     public fr.elias.oreoEssentials.modules.shards.OreoShardsModule getShardsModule() { return shardsModule; }

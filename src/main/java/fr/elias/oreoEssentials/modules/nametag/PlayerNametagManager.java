@@ -75,6 +75,7 @@ public class PlayerNametagManager implements Listener {
 
     private OreTask updateTask;
     private OreTask positionTask;
+    private OreTask vanillaHideRefreshTask;
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
@@ -159,7 +160,7 @@ public class PlayerNametagManager implements Listener {
             // Show nametags for players already online on reload
             OreScheduler.runLater(plugin, () -> {
                 for (Player p : Bukkit.getOnlinePlayers()) spawnNametag(p);
-                refreshVanillaNameHiding();
+                scheduleVanillaNameHidingRefresh(1L);
             }, 20L);
 
             plugin.getLogger().info("[Nametag] TextDisplay nametags enabled (" + layers.size() + " layer(s)).");
@@ -225,6 +226,7 @@ public class PlayerNametagManager implements Listener {
     private void stopTasks() {
         if (updateTask != null) { updateTask.cancel(); updateTask = null; }
         if (positionTask != null) { positionTask.cancel(); positionTask = null; }
+        if (vanillaHideRefreshTask != null) { vanillaHideRefreshTask.cancel(); vanillaHideRefreshTask = null; }
     }
 
     // ── Spawn / remove nametag ────────────────────────────────────────────────
@@ -556,23 +558,22 @@ public class PlayerNametagManager implements Listener {
         }
     }
 
+    private void scheduleVanillaNameHidingRefresh(long delayTicks) {
+        if (vanillaHideRefreshTask != null) {
+            vanillaHideRefreshTask.cancel();
+        }
+        vanillaHideRefreshTask = OreScheduler.runLater(plugin, () -> {
+            vanillaHideRefreshTask = null;
+            refreshVanillaNameHiding();
+        }, Math.max(1L, delayTicks));
+    }
+
     private void applyVanillaNameHiding(Player viewer) {
         Scoreboard board = viewer.getScoreboard();
         if (board == null) return;
 
-        final Team team;
-        try {
-            Team existing = board.getTeam(VANILLA_HIDE_TEAM);
-            team = existing != null ? existing : board.registerNewTeam(VANILLA_HIDE_TEAM);
-        } catch (Throwable ignored) {
-            return;
-        }
-
-        try {
-            team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
-        } catch (Throwable ignored) {
-            return;
-        }
+        Team team = ensureVanillaHideTeam(board);
+        if (team == null) return;
 
         Set<String> onlineNames = new HashSet<>();
         for (Player online : Bukkit.getOnlinePlayers()) {
@@ -587,6 +588,62 @@ public class PlayerNametagManager implements Listener {
                 team.removeEntry(entry);
             }
         }
+    }
+
+    private Team ensureVanillaHideTeam(Scoreboard board) {
+        final Team team;
+        try {
+            Team existing = board.getTeam(VANILLA_HIDE_TEAM);
+            team = existing != null ? existing : board.registerNewTeam(VANILLA_HIDE_TEAM);
+        } catch (Throwable ignored) {
+            return null;
+        }
+
+        try {
+            if (team.getOption(Team.Option.NAME_TAG_VISIBILITY) != Team.OptionStatus.NEVER) {
+                team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
+            }
+        } catch (Throwable ignored) {
+            return null;
+        }
+        return team;
+    }
+
+    private void addVanillaHiddenEntryForAllViewers(String playerName) {
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            addVanillaHiddenEntry(viewer, playerName);
+        }
+    }
+
+    private void removeVanillaHiddenEntryForAllViewers(String playerName) {
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            removeVanillaHiddenEntry(viewer, playerName);
+        }
+    }
+
+    private void addVanillaHiddenEntry(Player viewer, String playerName) {
+        Scoreboard board = viewer.getScoreboard();
+        if (board == null) return;
+        Team team = ensureVanillaHideTeam(board);
+        if (team == null || team.hasEntry(playerName)) return;
+        try {
+            team.addEntry(playerName);
+        } catch (Throwable ignored) {}
+    }
+
+    private void removeVanillaHiddenEntry(Player viewer, String playerName) {
+        Scoreboard board = viewer.getScoreboard();
+        if (board == null) return;
+        Team team;
+        try {
+            team = board.getTeam(VANILLA_HIDE_TEAM);
+        } catch (Throwable ignored) {
+            return;
+        }
+        if (team == null || !team.hasEntry(playerName)) return;
+        try {
+            team.removeEntry(playerName);
+        } catch (Throwable ignored) {}
     }
 
     private void restoreVanillaNames() {
@@ -645,9 +702,10 @@ public class PlayerNametagManager implements Listener {
             spawnNametag(joining);
             updateVisibilityForViewer(joining);
             markOwnerDirty(joining.getUniqueId());
-
-            refreshVanillaNameHiding();
-        }, 20L);
+            applyVanillaNameHiding(joining);
+            addVanillaHiddenEntryForAllViewers(joining.getName());
+            scheduleVanillaNameHidingRefresh(2L);
+        }, plugin.getJoinUiDelayTicks(joining, 20L));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -663,8 +721,7 @@ public class PlayerNametagManager implements Listener {
             viewers.remove(uuid);
         }
         nextViewerRefreshAtMs.remove(uuid);
-
-        refreshVanillaNameHiding();
+        removeVanillaHiddenEntryForAllViewers(event.getPlayer().getName());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -770,7 +827,7 @@ public class PlayerNametagManager implements Listener {
             startTasks();
             OreScheduler.runLater(plugin, () -> {
                 for (Player p : Bukkit.getOnlinePlayers()) spawnNametag(p);
-                refreshVanillaNameHiding();
+                scheduleVanillaNameHidingRefresh(1L);
             }, 10L);
             plugin.getLogger().info("[Nametag] Reload complete (" + layers.size() + " layer(s)).");
         } else {
