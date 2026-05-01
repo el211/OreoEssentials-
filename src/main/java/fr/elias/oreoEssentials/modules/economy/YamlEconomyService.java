@@ -22,7 +22,7 @@ public class YamlEconomyService implements EconomyService {
         load();
     }
 
-    private void load() {
+    private synchronized void load() {
         try {
             if (!file.exists()) file.getParentFile().mkdirs();
             if (!file.exists()) file.createNewFile();
@@ -30,7 +30,7 @@ public class YamlEconomyService implements EconomyService {
         cfg = YamlConfiguration.loadConfiguration(file);
     }
 
-    public void save() {
+    public synchronized void save() {
         try {
             cfg.save(file);
         } catch (IOException e) {
@@ -43,12 +43,12 @@ public class YamlEconomyService implements EconomyService {
     }
 
     @Override
-    public double getBalance(UUID player) {
+    public synchronized double getBalance(UUID player) {
         return cfg.getDouble(path(player), 0.0);
     }
 
     @Override
-    public boolean deposit(UUID player, double amount) {
+    public synchronized boolean deposit(UUID player, double amount) {
         if (amount <= 0) return false;
         double bal = getBalance(player) + amount;
         cfg.set(path(player), round(bal));
@@ -57,7 +57,7 @@ public class YamlEconomyService implements EconomyService {
     }
 
     @Override
-    public List<TopEntry> topBalances(int limit) {
+    public synchronized List<TopEntry> topBalances(int limit) {
         if (!cfg.isConfigurationSection("balances")) {
             return List.of();
         }
@@ -99,7 +99,7 @@ public class YamlEconomyService implements EconomyService {
     }
 
     @Override
-    public boolean withdraw(UUID player, double amount) {
+    public synchronized boolean withdraw(UUID player, double amount) {
         if (amount <= 0) return false;
         double bal = getBalance(player);
         if (bal < amount) return false;

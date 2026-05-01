@@ -200,6 +200,13 @@ public class WarpCommand implements OreoCommand {
                 log.warning("[WarpCmd] Local warp not found. warp=" + warpName);
                 return;
             }
+            if (l.getWorld() == null) {
+                Lang.send(sender, "warp.world-not-loaded",
+                        "<red>Warp <yellow>%warp%</yellow> points to a world that is not loaded.</red>",
+                        Map.of("warp", warpName));
+                log.warning("[WarpCmd] Local warp world not loaded. warp=" + warpName);
+                return;
+            }
 
             try {
                 if (OreScheduler.isFolia()) {
@@ -363,6 +370,9 @@ public class WarpCommand implements OreoCommand {
 
     private boolean hasBodyMoved(Player p, Location origin) {
         Location now = p.getLocation();
+        if (now.getWorld() == null || origin.getWorld() == null) {
+            return true;
+        }
         return !now.getWorld().equals(origin.getWorld())
                 || now.getBlockX() != origin.getBlockX()
                 || now.getBlockY() != origin.getBlockY()

@@ -66,6 +66,9 @@ economy:
   min-balance: 0.0
   allow-negative: false
   baltop-size: 10
+  cheque:
+    prefer-main-hand: true
+    custom-model-data: 0
 
   # MongoDB economy backend (if type = mongodb)
   mongodb:

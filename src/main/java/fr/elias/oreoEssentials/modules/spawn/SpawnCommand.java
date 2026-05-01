@@ -103,6 +103,11 @@ public class SpawnCommand implements OreoCommand {
                     log.warning("[SpawnCmd] Local spawn not set.");
                     return;
                 }
+                if (spawnLoc.getWorld() == null) {
+                    Lang.send(p, "spawn.not-set", "<red>Spawn world is not loaded.</red>");
+                    log.warning("[SpawnCmd] Spawn location world is not loaded.");
+                    return;
+                }
                 log.info("[SpawnCmd] Spawn location: world=" + spawnLoc.getWorld().getName()
                         + " x=" + spawnLoc.getX() + " y=" + spawnLoc.getY() + " z=" + spawnLoc.getZ());
 
@@ -143,6 +148,11 @@ public class SpawnCommand implements OreoCommand {
                     }
                     if (remain[0] <= 0) {
                         if (holder[0] != null) holder[0].cancel();
+                        if (spawnLoc.getWorld() == null) {
+                            Lang.send(p, "spawn.not-set", "<red>Spawn world is not loaded.</red>");
+                            log.warning("[SpawnCmd] Spawn location world became unavailable during countdown.");
+                            return;
+                        }
                         try {
                             if (OreScheduler.isFolia()) {
                                 p.teleportAsync(spawnLoc).thenRun(() -> {

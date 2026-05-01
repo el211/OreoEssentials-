@@ -110,6 +110,10 @@ public class TeleportBroker {
             p.sendMessage("\u00A7cTarget " + label + " not found on this server.");
             return;
         }
+        if (loc.getWorld() == null) {
+            p.sendMessage("\u00A7cTarget " + label + " is in a world that is not loaded on this server.");
+            return;
+        }
         OreScheduler.runForEntity(plugin, p, () -> {
             if (OreScheduler.isFolia()) {
                 p.teleportAsync(loc).thenRun(() ->

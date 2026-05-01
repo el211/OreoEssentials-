@@ -362,6 +362,13 @@ public class PlayerWarpService {
             }
 
             Location loc = warp.getLocation().clone();
+            if (loc.getWorld() == null) {
+                Lang.send(player, "playerwarps.teleport.world-not-loaded",
+                        "<red>World <yellow>%world%</yellow> is not loaded on this server.</red>",
+                        Map.of("world", "unknown"));
+                plugin.getLogger().warning("[OreoEssentials] [PW] Local teleport world not loaded for warp id=" + warp.getId());
+                return false;
+            }
             debugInfo("[OreoEssentials] [PW/DEBUG] LOCAL teleport for player "
                     + player.getName() + " to warp id=" + warp.getId()
                     + " world=" + loc.getWorld().getName()

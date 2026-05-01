@@ -128,6 +128,12 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                 if (targetServer.equalsIgnoreCase(localServer)) {
                     // Use pre-fetched location — no more DB calls needed.
                     final Runnable action = () -> {
+                        if (preloadedLoc.getWorld() == null) {
+                            Lang.send(player, "home.world-not-loaded",
+                                    "<red>Home <yellow>%name%</yellow> points to a world that is not loaded.</red>",
+                                    Map.of("name", raw));
+                            return;
+                        }
                         if (OreScheduler.isFolia()) {
                             player.teleportAsync(preloadedLoc).thenRun(() ->
                                     Lang.send(player, "home.teleported", "<green>Teleported to home <yellow>%name%</yellow>.</green>",

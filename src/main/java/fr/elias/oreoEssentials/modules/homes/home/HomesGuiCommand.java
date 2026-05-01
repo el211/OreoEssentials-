@@ -83,6 +83,12 @@ public class HomesGuiCommand implements OreoCommand {
                         Map.of("name", homeName));
                 return false;
             }
+            if (loc.getWorld() == null) {
+                Lang.send(p, "homes.gui.world-not-loaded",
+                        "<red>Home <yellow>%name%</yellow> points to a world that is not loaded.</red>",
+                        Map.of("name", homeName));
+                return false;
+            }
             if (OreScheduler.isFolia()) {
                 p.teleportAsync(loc).thenRun(() ->
                         Lang.send(p, "homes.gui.teleported",

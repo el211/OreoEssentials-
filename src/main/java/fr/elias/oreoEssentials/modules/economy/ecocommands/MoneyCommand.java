@@ -270,7 +270,7 @@ public class MoneyCommand implements CommandExecutor, OreoCommand {
 
     @Override
     public List<String> aliases() {
-        return List.of("bal");
+        return List.of();
     }
 
     @Override

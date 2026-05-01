@@ -78,6 +78,12 @@ public class WarpsAdminCommand implements OreoCommand {
                         Map.of("warp", warpName));
                 return false;
             }
+            if (l.getWorld() == null) {
+                Lang.send(p, "warp.admin.world-not-loaded",
+                        "<red>Warp <yellow>%warp%</yellow> points to a world that is not loaded.</red>",
+                        Map.of("warp", warpName));
+                return false;
+            }
 
             OreScheduler.runForEntity(plugin, p, () -> {
                 if (OreScheduler.isFolia()) {

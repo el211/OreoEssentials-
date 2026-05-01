@@ -218,8 +218,7 @@ commands:
 
   cheque:
     description: Create/redeem money cheques
-    permission: oreo.cheque.create
-    usage: "/cheque <create|redeem> ..."
+    usage: "/cheque <amount|create <amount>|redeem>"
 
   balance:
     description: Show your balance or another player's balance

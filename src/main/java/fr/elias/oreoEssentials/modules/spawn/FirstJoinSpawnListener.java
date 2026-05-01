@@ -43,6 +43,10 @@ public final class FirstJoinSpawnListener implements Listener {
             final Location target = loc;
             OreScheduler.runLaterForEntity(plugin, p, () -> {
                 if (!p.isOnline()) return;
+                if (target.getWorld() == null) {
+                    plugin.getLogger().warning("[FirstJoinSpawn] Spawn world is not loaded. Skipping teleport for " + p.getName());
+                    return;
+                }
                 if (OreScheduler.isFolia()) {
                     p.teleportAsync(target);
                 } else {

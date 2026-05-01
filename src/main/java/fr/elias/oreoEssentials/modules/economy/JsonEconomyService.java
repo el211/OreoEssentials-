@@ -26,7 +26,7 @@ public class JsonEconomyService implements EconomyService {
         load();
     }
 
-    private void load() {
+    private synchronized void load() {
         try {
             if (!file.exists()) {
                 file.getParentFile().mkdirs();
@@ -47,7 +47,7 @@ public class JsonEconomyService implements EconomyService {
         }
     }
 
-    public void save() {
+    public synchronized void save() {
         try (Writer writer = new FileWriter(file)) {
             gson.toJson(balances, writer);
         } catch (IOException e) {
@@ -57,12 +57,12 @@ public class JsonEconomyService implements EconomyService {
     }
 
     @Override
-    public double getBalance(UUID player) {
+    public synchronized double getBalance(UUID player) {
         return balances.getOrDefault(player.toString(), 0.0);
     }
 
     @Override
-    public boolean deposit(UUID player, double amount) {
+    public synchronized boolean deposit(UUID player, double amount) {
         if (amount <= 0) return false;
 
         double currentBalance = getBalance(player);
@@ -73,7 +73,7 @@ public class JsonEconomyService implements EconomyService {
     }
 
     @Override
-    public boolean withdraw(UUID player, double amount) {
+    public synchronized boolean withdraw(UUID player, double amount) {
         if (amount <= 0) return false;
 
         double currentBalance = getBalance(player);
@@ -86,7 +86,7 @@ public class JsonEconomyService implements EconomyService {
     }
 
     @Override
-    public List<TopEntry> topBalances(int limit) {
+    public synchronized List<TopEntry> topBalances(int limit) {
         return balances.entrySet().stream()
                 .map(entry -> {
                     UUID uuid;

@@ -12,7 +12,7 @@ public interface EconomyService {
         if (amount <= 0) return false;
         if (!withdraw(from, amount)) return false;
         if (!deposit(to, amount)) {
-            withdraw(to, amount);
+            deposit(from, amount);
             return false;
         }
         return true;

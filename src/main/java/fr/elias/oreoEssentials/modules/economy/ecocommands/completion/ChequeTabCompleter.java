@@ -1,45 +1,54 @@
 package fr.elias.oreoEssentials.modules.economy.ecocommands.completion;
 
-
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ChequeTabCompleter implements TabCompleter {
+
+    private static final List<String> COMMON_AMOUNTS = List.of("100", "500", "1000", "5000", "10000");
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
 
-        if (!(sender instanceof Player)) {
-            return completions;
-        }
-
-        Player player = (Player) sender;
+        boolean canCreate = sender.hasPermission("oreo.cheque.create") || sender.hasPermission("rabbiteconomy.cheque.create");
+        boolean canRedeem = sender.hasPermission("oreo.cheque.redeem") || sender.hasPermission("rabbiteconomy.cheque.redeem");
 
         if (args.length == 1) {
-            double balance = getPlayerBalance(player);
-
-            if (balance >= 100) completions.add("100");
-            if (balance >= 500) completions.add("500");
-            if (balance >= 1000) completions.add("1000");
-            if (balance >= 5000) completions.add("5000");
-            if (balance >= 10000) completions.add("10000");
-
-            if (!args[0].isEmpty() && args[0].matches("\\d+")) {
-                completions.add(args[0]);
+            if (canCreate) {
+                completions.add("create");
+                completions.addAll(COMMON_AMOUNTS);
+                if (!args[0].isBlank() && args[0].matches("\\d+")) {
+                    completions.add(args[0]);
+                }
             }
+            if (canRedeem) {
+                completions.add("redeem");
+            }
+            return filter(completions, args[0]);
         }
 
-        return completions;
+        if (args.length == 2 && canCreate && args[0].equalsIgnoreCase("create")) {
+            completions.addAll(COMMON_AMOUNTS);
+            if (!args[1].isBlank() && args[1].matches("\\d+")) {
+                completions.add(args[1]);
+            }
+            return filter(completions, args[1]);
+        }
+
+        return List.of();
     }
 
-    private double getPlayerBalance(Player player) {
-
-        return 10000;
+    private List<String> filter(List<String> candidates, String partial) {
+        String needle = partial.toLowerCase(Locale.ROOT);
+        return candidates.stream()
+                .filter(value -> value.toLowerCase(Locale.ROOT).startsWith(needle))
+                .distinct()
+                .toList();
     }
 }

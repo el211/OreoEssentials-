@@ -6,6 +6,7 @@ import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.homes.rabbit.packet.HomeTeleportRequestPacket;
 import fr.elias.oreoEssentials.modules.homes.rabbit.packet.OtherHomeTeleportRequestPacket;
 import fr.elias.oreoEssentials.modules.homes.home.HomeService;
+import fr.elias.oreoEssentials.util.Lang;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -183,6 +184,15 @@ public final class HomeTeleportBroker implements Listener {
                     if (tick == 20) {
                         clearPending(subject);
                     }
+                    return;
+                }
+                if (loc.getWorld() == null) {
+                    Lang.send(p, "home.world-not-loaded",
+                            "<red>Home <yellow>%name%</yellow> points to a world that is not loaded.</red>",
+                            Map.of("name", expectHome));
+                    log.warning("[HOME/Retry] tick=" + tick + " world not loaded. subject=" + subject
+                            + " owner=" + owner + " home=" + expectHome + " requestId=" + reqId);
+                    clearPending(subject);
                     return;
                 }
 
