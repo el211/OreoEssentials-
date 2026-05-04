@@ -439,6 +439,7 @@ public final class OreoEssentials extends JavaPlugin {
         initRabbitMQ();
         initCurrencySystem();
         initBrokers();
+        fr.elias.oreoEssentials.commands.core.admins.OeWorldCommand.loadCustomWorlds(this);
         initCommands();
         initJails();
         initPortals();
@@ -1576,6 +1577,7 @@ public final class OreoEssentials extends JavaPlugin {
         this.commands
                 .register(new SpawnCommand(spawnService))
                 .register(new SetSpawnCommand(spawnService))
+                .register(new fr.elias.oreoEssentials.modules.spawn.SetFirstSpawnCommand(spawnService))
                 .register(new BackCommand(backService, teleportService, this))
                 .register(new WarpCommand(warpService))
                 .register(new SetWarpCommand(warpService))
@@ -1664,6 +1666,8 @@ public final class OreoEssentials extends JavaPlugin {
         var gmCmd = new fr.elias.oreoEssentials.commands.core.admins.GamemodeCommand(visitorService);
         this.getCommands().register(gmCmd);
         if (getCommand("gamemode") != null) getCommand("gamemode").setTabCompleter(gmCmd);
+
+        this.commands.register(new fr.elias.oreoEssentials.commands.core.admins.OeWorldCommand(this));
 
         initICModule();
         initMiscCommandsAndTabCompleters(muteCmd, unmuteCmd, nickCmd);

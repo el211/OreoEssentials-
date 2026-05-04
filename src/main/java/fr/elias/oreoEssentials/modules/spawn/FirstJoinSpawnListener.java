@@ -32,7 +32,9 @@ public final class FirstJoinSpawnListener implements Listener {
 
         // Fetch location async then teleport on entity thread (1 tick delay to let join finish)
         Async.run(() -> {
-            Location loc = spawn.getLocalSpawn();
+            // Priority: first-join spawn → local spawn → global spawn
+            Location loc = spawn.getFirstJoinSpawn();
+            if (loc == null) loc = spawn.getLocalSpawn();
             if (loc == null) loc = spawn.getGlobalSpawn();
 
             if (loc == null) {

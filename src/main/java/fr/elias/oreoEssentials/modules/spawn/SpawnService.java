@@ -5,7 +5,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 public class SpawnService {
-    public static final String GLOBAL_SPAWN_KEY = "__global__";
+    public static final String GLOBAL_SPAWN_KEY     = "__global__";
+    public static final String FIRST_JOIN_SPAWN_KEY = "__firstjoin__";
 
     private final StorageApi storage;
     private final String localServer;
@@ -47,5 +48,14 @@ public class SpawnService {
 
     public Location getGlobalSpawn() {
         return getSpawn(GLOBAL_SPAWN_KEY);
+    }
+
+    public void setFirstJoinSpawn(Location loc) {
+        setSpawn(FIRST_JOIN_SPAWN_KEY, loc);
+    }
+
+    /** Returns the first-join spawn, or null if none has been set. */
+    public Location getFirstJoinSpawn() {
+        return getSpawn(FIRST_JOIN_SPAWN_KEY);
     }
 }

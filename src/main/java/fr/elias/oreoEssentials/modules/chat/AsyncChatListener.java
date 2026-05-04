@@ -331,6 +331,10 @@ public final class AsyncChatListener implements Listener {
             CachedMetaData meta = LuckPermsProvider.get().getPlayerAdapter(Player.class).getMetaData(p);
             String prefix = meta.getPrefix();
             if (prefix == null || prefix.isEmpty()) return Component.empty();
+            // Resolve PAPI placeholders inside the LuckPerms prefix (e.g. %nexo_...%)
+            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                prefix = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, prefix);
+            }
             return deserializeLegacyOrMM(prefix);
         } catch (Throwable ignored) {
             return Component.empty();

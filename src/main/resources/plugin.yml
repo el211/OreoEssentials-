@@ -1,5 +1,5 @@
 name: OreoEssentials
-version: "4.6b-SNAPSHOT"
+version: "4.7a-SNAPSHOT"
 main: fr.elias.oreoEssentials.OreoEssentials
 api-version: "1.21"
 folia-supported: true
@@ -740,6 +740,7 @@ permissions:
     children:
       oreo.spawn: true
       oreo.setspawn: true
+      oreo.setfirstspawn: true
       oreo.back: true
       oreo.warp: true
       oreo.setwarp: true
@@ -818,10 +819,12 @@ permissions:
       oreo.chat.channel: true
       oreo.orders.use: true
       oreo.orders.admin: true
+      oreo.oeworld: true
 
   # Basics
   oreo.spawn:               { default: true }
   oreo.setspawn:            { default: op }
+  oreo.setfirstspawn:       { default: op }
   oreo.back:                { default: true }
   oreo.warp:                { default: true }
   oreo.setwarp:             { default: op }
@@ -1099,6 +1102,9 @@ permissions:
   oreo.world:
     default: op
     description: Use /world
+  oreo.oeworld:
+    default: op
+    description: Use /oeworld (world creation and pre-generation)
   oreo.ic:
     default: op
     description: Manage Interactive Commands

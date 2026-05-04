@@ -260,6 +260,9 @@ public class ChatChannelHandler {
         try {
             CachedMetaData meta = LuckPermsProvider.get().getPlayerAdapter(Player.class).getMetaData(p);
             String prefix = meta.getPrefix();
+            if (prefix != null && Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                prefix = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, prefix);
+            }
             return legacyOrMM(prefix);
         } catch (Throwable ignored) {
             return Component.empty();
@@ -270,6 +273,9 @@ public class ChatChannelHandler {
         try {
             CachedMetaData meta = LuckPermsProvider.get().getPlayerAdapter(Player.class).getMetaData(p);
             String suffix = meta.getSuffix();
+            if (suffix != null && Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                suffix = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, suffix);
+            }
             return legacyOrMM(suffix);
         } catch (Throwable ignored) {
             return Component.empty();
