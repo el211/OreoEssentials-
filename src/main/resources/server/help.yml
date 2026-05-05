@@ -1,0 +1,254 @@
+# ═══════════════════════════════════════════════════════════════════════
+#                    OreoEssentials - Help Command
+# ═══════════════════════════════════════════════════════════════════════
+#
+#  Fully configurable /help menu. Supports:
+#   - Multiple pages
+#   - Per-entry permission gating (optional)
+#   - MiniMessage AND legacy (&) color codes in all text fields
+#   - Custom aliases via aliases list
+#
+# ═══════════════════════════════════════════════════════════════════════
+
+help:
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Mode — choose how /help behaves:
+  #   paginated  (default) — shows a paginated list of commands
+  #   simple               — sends a fixed block of lines, no pagination
+  # ─────────────────────────────────────────────────────────────────────
+  mode: paginated
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Simple mode text
+  # Only used when mode: simple.
+  # Each list item is sent as one chat line. Supports & color codes.
+  # ─────────────────────────────────────────────────────────────────────
+  simple-text:
+    - "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r"
+    - "  &6&lWelcome to the server!"
+    - ""
+    - "  &7This server runs &6OreoEssentials&7."
+    - "  &7Visit &eour website &7for more info."
+    - ""
+    - "  &eDiscord: &fdiscord.gg/yourserver"
+    - "  &eStore:   &fstore.yourserver.net"
+    - ""
+    - "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r"
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Header & Footer  (paginated mode only)
+  # Shown above / below every page. Supports & color codes.
+  # Use {page} and {total} as placeholders.
+  # ─────────────────────────────────────────────────────────────────────
+  header: "&8&m      &r &6&lServer Help &7(Page {page}/{total}) &8&m      "
+  footer: "&8&m      &r &7Use &e/help <page> &7to navigate &8&m      "
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Entries per page
+  # ─────────────────────────────────────────────────────────────────────
+  entries-per-page: 8
+
+  # ─────────────────────────────────────────────────────────────────────
+  # "No permission" message
+  # ─────────────────────────────────────────────────────────────────────
+  no-permission: "&cYou don't have permission to use /help."
+
+  # ─────────────────────────────────────────────────────────────────────
+  # "Invalid page" message — {max} is replaced with the last page number
+  # ─────────────────────────────────────────────────────────────────────
+  invalid-page: "&cInvalid page. There are &e{max} &cpage(s)."
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Help entries
+  #
+  # Each entry supports:
+  #   command     - The text shown as the "command" (left side). Required.
+  #   description - Description shown on the right. Required.
+  #   permission  - (optional) If set, only players with this permission
+  #                 will see this entry. Omit or leave blank for everyone.
+  # ─────────────────────────────────────────────────────────────────────
+  entries:
+
+    # ── Teleportation ─────────────────────────────────────────────────
+
+    - command: "&e/spawn"
+      description: "&7Teleport to the server spawn."
+
+    - command: "&e/home &8[name]"
+      description: "&7Teleport to one of your homes."
+
+    - command: "&e/sethome &8[name]"
+      description: "&7Set a home at your current location."
+
+    - command: "&e/delhome &8<name>"
+      description: "&7Delete one of your homes."
+
+    - command: "&e/homes"
+      description: "&7List all your homes."
+
+    - command: "&e/back"
+      description: "&7Return to your previous location."
+
+    - command: "&e/warp &8<name>"
+      description: "&7Teleport to a server warp point."
+
+    - command: "&e/warps"
+      description: "&7List all available warps."
+
+    - command: "&e/tpa &8<player>"
+      description: "&7Request to teleport to a player."
+
+    - command: "&e/tpaccept"
+      description: "&7Accept an incoming teleport request."
+
+    - command: "&e/tpdeny"
+      description: "&7Deny an incoming teleport request."
+
+    - command: "&e/top"
+      description: "&7Teleport to the surface above you."
+
+    # ── Economy ───────────────────────────────────────────────────────
+
+    - command: "&e/balance &8[player]"
+      description: "&7Check your (or another player's) balance."
+
+    - command: "&e/baltop"
+      description: "&7View the richest players."
+
+    - command: "&e/pay &8<player> <amount>"
+      description: "&7Send money to another player."
+
+    # ── Player ────────────────────────────────────────────────────────
+
+    - command: "&e/msg &8<player> <message>"
+      description: "&7Send a private message to a player."
+
+    - command: "&e/reply &8<message>"
+      description: "&7Reply to your last private message."
+
+    - command: "&e/afk"
+      description: "&7Toggle AFK mode."
+
+    - command: "&e/sit"
+      description: "&7Sit on the block beneath you."
+
+    - command: "&e/workbench"
+      description: "&7Open a portable crafting table."
+      permission: "oreo.workbench"
+
+    - command: "&e/anvil"
+      description: "&7Open a portable anvil."
+      permission: "oreo.anvil"
+
+    - command: "&e/trash"
+      description: "&7Open a disposable inventory to throw items away."
+      permission: "oreo.trash"
+
+    - command: "&e/ec"
+      description: "&7Open your ender chest from anywhere."
+      permission: "oreo.ec"
+
+    - command: "&e/hat"
+      description: "&7Wear the item in your hand as a hat."
+      permission: "oreo.hat"
+
+    - command: "&e/nick &8<nickname|off>"
+      description: "&7Set or remove your display nickname."
+
+    - command: "&e/playtime"
+      description: "&7Check how long you have played."
+
+    - command: "&e/ping"
+      description: "&7Check your current connection ping."
+
+    - command: "&e/seen &8<player>"
+      description: "&7Check when a player was last online."
+
+    - command: "&e/uuid &8[player]"
+      description: "&7Show a player's UUID."
+
+    # ── Kits & Rewards ────────────────────────────────────────────────
+
+    - command: "&e/kit"
+      description: "&7Browse and claim server kits."
+
+    - command: "&e/daily"
+      description: "&7Claim your daily reward."
+
+    # ── Market ────────────────────────────────────────────────────────
+
+    - command: "&e/market"
+      description: "&7Browse and post player market orders."
+      permission: "oreo.orders.use"
+
+    # ── Admin — hidden from players without permission ─────────────────
+
+    - command: "&c/fly"
+      description: "&7Toggle flight mode."
+      permission: "oreo.fly"
+
+    - command: "&c/heal &8[player]"
+      description: "&7Fully heal yourself or another player."
+      permission: "oreo.heal"
+
+    - command: "&c/feed &8[player]"
+      description: "&7Fully feed yourself or another player."
+      permission: "oreo.feed"
+
+    - command: "&c/god &8[player]"
+      description: "&7Toggle god mode."
+      permission: "oreo.god"
+
+    - command: "&c/vanish"
+      description: "&7Toggle invisibility to other players."
+      permission: "oreo.vanish"
+
+    - command: "&c/gamemode &8<mode>"
+      description: "&7Change your game mode."
+      permission: "oreo.gamemode"
+
+    - command: "&c/tp &8<player>"
+      description: "&7Teleport to a player instantly."
+      permission: "oreo.tp"
+
+    - command: "&c/ban &8<player> [reason]"
+      description: "&7Permanently ban a player."
+      permission: "oreo.ban"
+
+    - command: "&c/kick &8<player> [reason]"
+      description: "&7Kick a player from the server."
+      permission: "oreo.kick"
+
+    - command: "&c/mute &8<player>"
+      description: "&7Mute a player."
+      permission: "oreo.mute"
+
+    - command: "&c/freeze &8<player>"
+      description: "&7Freeze a player in place."
+      permission: "oreo.freeze"
+
+    - command: "&c/broadcast &8<message>"
+      description: "&7Broadcast a message to the entire server."
+      permission: "oreo.broadcast"
+
+    - command: "&c/oeworld gamerule &8<world>"
+      description: "&7Open the gamerule GUI for a world."
+      permission: "oreo.oeworld"
+
+# ═══════════════════════════════════════════════════════════════════════
+#                              Commands
+# ═══════════════════════════════════════════════════════════════════════
+#
+# /help           - Show page 1
+# /help <page>    - Show a specific page
+# /help reload    - Reload this configuration (requires oreo.help.admin)
+#
+# ═══════════════════════════════════════════════════════════════════════
+#                            Permissions
+# ═══════════════════════════════════════════════════════════════════════
+#
+# oreo.help        - Use /help (default: true)
+# oreo.help.admin  - Use /help reload (default: op)
+#
+# ═══════════════════════════════════════════════════════════════════════

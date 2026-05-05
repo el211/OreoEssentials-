@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.chat.msg;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
+import fr.elias.oreoEssentials.modules.ignore.IgnoreService;
 import fr.elias.oreoEssentials.rabbitmq.PacketChannels;
 import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
 import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
@@ -20,6 +21,11 @@ import java.util.UUID;
 public class MsgCommand implements OreoCommand {
     private final MessageService messages;
     private final OreoEssentials plugin;
+    private IgnoreService ignoreService;
+
+    public void setIgnoreService(IgnoreService ignoreService) {
+        this.ignoreService = ignoreService;
+    }
 
     public MsgCommand(MessageService messages, OreoEssentials plugin) {
         this.messages = messages;
@@ -61,6 +67,14 @@ public class MsgCommand implements OreoCommand {
     }
 
     private void sendLocal(CommandSender sender, Player target, String msg) {
+        // Check if the target is ignoring the sender
+        if (ignoreService != null && sender instanceof Player s
+                && ignoreService.isIgnoring(target.getUniqueId(), s.getUniqueId())) {
+            Lang.send(sender, "msg.ignored", "<red><aqua>%target%</aqua> is not accepting messages.</red>",
+                    Map.of("target", target.getName()));
+            return;
+        }
+
         Lang.send(target, "msg.receive",
                 "<gray>[<light_purple>MSG</light_purple>] <aqua>%sender%</aqua>: <white>%message%</white></gray>",
                 Map.of("sender", sender.getName(), "message", msg));

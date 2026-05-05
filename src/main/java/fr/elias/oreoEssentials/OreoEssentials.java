@@ -192,6 +192,15 @@ public final class OreoEssentials extends JavaPlugin {
     private MuteService muteService;
     public MuteService getMuteService() { return muteService; }
 
+    private fr.elias.oreoEssentials.modules.ignore.IgnoreService ignoreService;
+    public fr.elias.oreoEssentials.modules.ignore.IgnoreService getIgnoreService() { return ignoreService; }
+
+    private fr.elias.oreoEssentials.modules.warnings.WarnService warnService;
+    public fr.elias.oreoEssentials.modules.warnings.WarnService getWarnService() { return warnService; }
+
+    private fr.elias.oreoEssentials.modules.punishment.PunishmentLogger punishmentLogger;
+    public fr.elias.oreoEssentials.modules.punishment.PunishmentLogger getPunishmentLogger() { return punishmentLogger; }
+
     private fr.elias.oreoEssentials.modules.shards.OreoShardsModule shardsModule;
     private MongoClient homesMongoClient;
     private fr.elias.oreoEssentials.config.SettingsConfig settingsConfig;
@@ -420,6 +429,13 @@ public final class OreoEssentials extends JavaPlugin {
         initProxyMessaging();
         initAfk();
         initMaintenance();
+        initHelp();
+        initIgnore();
+        initWarnings();
+        initPunishmentLogger();
+        initMotd();
+        initRules();
+        initMail();
         initInventoryManagers();
         initModGui();
         initNotes();
@@ -858,6 +874,85 @@ public final class OreoEssentials extends JavaPlugin {
             t.printStackTrace();
             this.maintenanceService = null;
             this.maintenanceConfig  = null;
+        }
+    }
+
+    private void initHelp() {
+        try {
+            var helpConfig = new fr.elias.oreoEssentials.modules.help.HelpConfig(this);
+            var helpCmd    = new fr.elias.oreoEssentials.modules.help.HelpCommand(helpConfig);
+            this.commands.register(helpCmd);
+            getLogger().info("[Help] Initialized.");
+        } catch (Throwable t) {
+            getLogger().severe("[Help] Failed to initialize: " + t.getMessage());
+        }
+    }
+
+    private MsgCommand buildMsgCommand(fr.elias.oreoEssentials.services.MessageService messageService) {
+        MsgCommand cmd = new MsgCommand(messageService, this);
+        if (this.ignoreService != null) cmd.setIgnoreService(this.ignoreService);
+        return cmd;
+    }
+
+    private void initIgnore() {
+        try {
+            this.ignoreService = new fr.elias.oreoEssentials.modules.ignore.IgnoreService(this);
+            getLogger().info("[Ignore] Initialized.");
+        } catch (Throwable t) {
+            getLogger().severe("[Ignore] Failed to initialize: " + t.getMessage());
+        }
+    }
+
+    private void initWarnings() {
+        try {
+            this.warnService = new fr.elias.oreoEssentials.modules.warnings.WarnService(this);
+            getLogger().info("[Warnings] Initialized.");
+        } catch (Throwable t) {
+            getLogger().severe("[Warnings] Failed to initialize: " + t.getMessage());
+        }
+    }
+
+    private void initPunishmentLogger() {
+        try {
+            this.punishmentLogger = new fr.elias.oreoEssentials.modules.punishment.PunishmentLogger(this);
+            getLogger().info("[PunishmentLogger] Initialized.");
+        } catch (Throwable t) {
+            getLogger().severe("[PunishmentLogger] Failed to initialize: " + t.getMessage());
+        }
+    }
+
+    private void initMotd() {
+        try {
+            var motdConfig  = new fr.elias.oreoEssentials.modules.motd.MotdConfig(this);
+            var motdService = new fr.elias.oreoEssentials.modules.motd.MotdService(this, motdConfig);
+            getServer().getPluginManager().registerEvents(motdService, this);
+            this.commands.register(motdService);
+            getLogger().info("[MOTD] Initialized.");
+        } catch (Throwable t) {
+            getLogger().severe("[MOTD] Failed to initialize: " + t.getMessage());
+        }
+    }
+
+    private void initRules() {
+        try {
+            var rulesCmd = new fr.elias.oreoEssentials.modules.rules.RulesCommand(this);
+            this.commands.register(rulesCmd);
+            getLogger().info("[Rules] Initialized.");
+        } catch (Throwable t) {
+            getLogger().severe("[Rules] Failed to initialize: " + t.getMessage());
+        }
+    }
+
+    private void initMail() {
+        try {
+            var mailService  = new fr.elias.oreoEssentials.modules.mail.MailService(this);
+            var mailCmd      = new fr.elias.oreoEssentials.modules.mail.MailCommand(mailService);
+            var mailListener = new fr.elias.oreoEssentials.modules.mail.MailListener(mailService);
+            this.commands.register(mailCmd);
+            getServer().getPluginManager().registerEvents(mailListener, this);
+            getLogger().info("[Mail] Initialized.");
+        } catch (Throwable t) {
+            getLogger().severe("[Mail] Failed to initialize: " + t.getMessage());
         }
     }
 
@@ -1593,7 +1688,7 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new FlyCommand())
                 .register(new HealCommand())
                 .register(new FeedCommand())
-                .register(new MsgCommand(messageService, this))
+                .register(buildMsgCommand(messageService))
                 .register(new ReplyCommand(messageService, this))
                 .register(new BroadcastCommand())
                 .register(new HomesCommand(homeService))
@@ -1625,9 +1720,17 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.SeenCommand())
                 .register(new PingCommand())
                 .register(new fr.elias.oreoEssentials.commands.core.playercommands.HatCommand())
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.TopCommand())
                 .register(new RealNameCommand())
                 .register(new FurnaceCommand(this))
-                .register(new NearCommand())
+                .register(new NearCommand(this))
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.PriceCommand(this))
+                .register(new fr.elias.oreoEssentials.commands.core.playercommands.RecipeCommand(this))
+                .register(new fr.elias.oreoEssentials.modules.ignore.IgnoreCommand(ignoreService))
+                .register(new fr.elias.oreoEssentials.modules.warnings.WarnCommand(warnService))
+                .register(new fr.elias.oreoEssentials.modules.warnings.WarningsCommand(warnService))
+                .register(new fr.elias.oreoEssentials.modules.warnings.UnwarnCommand(warnService))
+                .register(new fr.elias.oreoEssentials.modules.punishment.HistoryCommand(punishmentLogger))
                 .register(new KillCommand())
                 .register(new InvseeCommand())
                 .register(new InvlookCommand())

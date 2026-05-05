@@ -1,0 +1,16 @@
+warnings:
+  # Maximum warnings before auto-action is triggered (0 = disabled)
+  max-warnings: 3
+
+  # Action to take when a player reaches max warnings
+  # Supported: none, kick, tempban, ban
+  max-action: tempban
+
+  # Duration for tempban action when max warnings are reached (e.g. 7d, 24h)
+  max-action-duration: 7d
+
+  # Whether to broadcast a message to all players when someone is warned
+  broadcast-on-warn: false
+
+  # Expire warnings after a duration (e.g. 30d). Leave empty to never expire.
+  expire-after: ""

@@ -1,0 +1,28 @@
+# ═══════════════════════════════════════════════════════════════════════
+#                    OreoEssentials - Server Rules
+# ═══════════════════════════════════════════════════════════════════════
+#
+#  Shown when a player runs /rules.
+#  Each list item is one chat line. Supports & color codes.
+#  Reload in-game with: /rules reload  (requires oreo.rules.admin)
+#
+# ═══════════════════════════════════════════════════════════════════════
+
+rules:
+  lines:
+    - "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    - "           &6&lServer Rules"
+    - "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    - ""
+    - "  &e1. &fBe respectful to all players and staff."
+    - "  &e2. &fNo hacking, cheating, or exploiting bugs."
+    - "  &e3. &fNo griefing, stealing, or harassment."
+    - "  &e4. &fKeep chat appropriate. No spam or advertising."
+    - "  &e5. &fNo death threats, hate speech, or discrimination."
+    - "  &e6. &fFollow staff instructions at all times."
+    - "  &e7. &fNo sharing of personal information."
+    - "  &e8. &fUse common sense — if in doubt, don't do it."
+    - ""
+    - "  &7Breaking rules may result in a &cmute&7, &ckick&7, or &cban&7."
+    - ""
+    - "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

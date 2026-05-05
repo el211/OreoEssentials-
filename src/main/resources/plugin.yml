@@ -1,5 +1,5 @@
 name: OreoEssentials
-version: "4.7a-SNAPSHOT"
+version: "4.7b-SNAPSHOT"
 main: fr.elias.oreoEssentials.OreoEssentials
 api-version: "1.21"
 folia-supported: true
@@ -820,6 +820,23 @@ permissions:
       oreo.orders.use: true
       oreo.orders.admin: true
       oreo.oeworld: true
+      oreo.top: true
+      oreo.help: true
+      oreo.help.admin: true
+      oreo.mail: true
+      oreo.mail.clear: true
+      oreo.rules: true
+      oreo.rules.admin: true
+      oreo.motd: true
+      oreo.motd.admin: true
+      oreo.price: true
+      oreo.recipe: true
+      oreo.ignore: true
+      oreo.warn: true
+      oreo.unwarn: true
+      oreo.warnings: true
+      oreo.warnings.others: true
+      oreo.history: true
 
   # Basics
   oreo.spawn:               { default: true }
@@ -943,6 +960,15 @@ permissions:
   oreo.sit:
     description: "Allows using /sit"
     default: true
+  oreo.top:
+    description: "Allows using /top to teleport to the surface"
+    default: true
+  oreo.help:
+    description: "Allows using /help"
+    default: true
+  oreo.help.admin:
+    description: "Allows using /help reload"
+    default: op
   oreo.sellgui:
     description: Allows opening the Sell GUI
     default: true
@@ -1173,6 +1199,62 @@ permissions:
   oreo.homes.gui:
     description: Allows opening the Homes GUI
     default: true
+
+  # Mail
+  oreo.mail:
+    description: Use /mail to send and read mail
+    default: true
+  oreo.mail.clear:
+    description: Use /mail clear to delete all messages
+    default: true
+
+  # Rules
+  oreo.rules:
+    description: Use /rules to view server rules
+    default: true
+  oreo.rules.admin:
+    description: Use /rules reload
+    default: op
+
+  # MOTD
+  oreo.motd:
+    description: Use /motd to view the message of the day
+    default: true
+  oreo.motd.admin:
+    description: Use /motd reload
+    default: op
+
+  # Price / Recipe
+  oreo.price:
+    description: Use /price to check shop prices for held item
+    default: true
+  oreo.recipe:
+    description: Use /recipe to view crafting recipes
+    default: true
+
+  # Ignore
+  oreo.ignore:
+    description: Use /ignore to manage your ignore list
+    default: true
+
+  # Warnings
+  oreo.warn:
+    description: Warn players with /warn
+    default: op
+  oreo.unwarn:
+    description: Remove warnings with /unwarn
+    default: op
+  oreo.warnings:
+    description: View your own warnings with /warnings
+    default: true
+  oreo.warnings.others:
+    description: View other players' warnings
+    default: op
+
+  # Punishment History
+  oreo.history:
+    description: View punishment history with /history
+    default: op
 
   # 
   # CHAT CHANNELS SYSTEM PERMISSIONS

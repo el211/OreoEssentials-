@@ -1,0 +1,68 @@
+# ═══════════════════════════════════════════════════════════════════════
+#                    OreoEssentials - MOTD System
+# ═══════════════════════════════════════════════════════════════════════
+#
+#  Controls the Message of the Day shown to players on join.
+#  Supports & color codes in all text fields.
+#  Reload in-game with: /motd reload  (requires oreo.motd.admin)
+#
+# ═══════════════════════════════════════════════════════════════════════
+
+motd:
+  enabled: true
+
+  # Delay in ticks before sending the MOTD after join (20 ticks = 1 second)
+  delay-ticks: 20
+
+  # Default MOTD shown to all players with oreo.motd permission
+  default:
+    - ""
+    - "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    - "     &6&lWelcome to &e&lYourServer&6&l!"
+    - ""
+    - "     &7Type &e/help &7to see available commands."
+    - "     &7Type &e/rules &7to read the server rules."
+    - "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    - ""
+
+  # First join MOTD — shown only to brand new players
+  first-join:
+    enabled: true
+    lines:
+      - ""
+      - "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      - "   &a&lWelcome to the server for the first time!"
+      - ""
+      - "   &7Get started: &e/kit starter"
+      - "   &7Read the rules: &e/rules"
+      - "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      - ""
+
+  # Permission-based override MOTDs
+  # Players with a matching permission will see this instead of 'default'.
+  # The first matching group (top to bottom) wins.
+  groups:
+    - permission: "group.admin"
+      lines:
+        - ""
+        - "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        - "   &c&lAdmin MOTD &8— &7Hello, %player%!"
+        - "   &7Online staff: &e%online%"
+        - "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        - ""
+
+    - permission: "group.vip"
+      lines:
+        - ""
+        - "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        - "   &6&lVIP MOTD &8— &7Welcome back, %player%!"
+        - "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        - ""
+
+# ═══════════════════════════════════════════════════════════════════════
+#  Placeholders: %player% = player name, %online% = online player count
+#
+#  Permissions:
+#    oreo.motd        — receive MOTD on join (default: true)
+#    oreo.motd.admin  — use /motd reload    (default: op)
+# ═══════════════════════════════════════════════════════════════════════

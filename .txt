@@ -1,0 +1,421 @@
+# World Generators and World Generation in OreoEssentials
+
+## Overview
+
+OreoEssentials has a focused world-management system rather than a full custom terrain engine.
+
+At a high level:
+
+- `OeWorldCommand` is the admin entry point for creating, importing, and pre-generating worlds.
+- `VoidChunkGenerator` is the only custom chunk generator shipped by OreoEssentials.
+- `WorldPreGenerator` is responsible for asynchronous chunk pre-generation.
+- `plugins/OreoEssentials/worlds.yml` is used to remember custom/imported worlds so they can be auto-loaded on restart.
+
+This means OreoEssentials mostly wraps Bukkit/Paper world APIs cleanly, and only replaces chunk generation when you create a `void` world.
+
+## The Core Pieces
+
+### `OeWorldCommand`
+
+This command is the control layer for world management.
+
+Supported subcommands:
+
+- `/oeworld create <name> <normal|nether|end|void> <border> <true|false>`
+- `/oeworld import <worldname> [normal|nether|end|void] [border]`
+- `/oeworld cancel <worldname>`
+
+Permission:
+
+- `oreo.oeworld`
+
+Alias:
+
+- `/worldmanager`
+
+Important detail: `/oeworld` is dynamically registered through OreoEssentials' `CommandManager`, not just handled as a static one-off command.
+
+### `VoidChunkGenerator`
+
+This is the only custom world generator in the plugin.
+
+It creates an empty world by:
+
+- disabling noise generation
+- disabling surface generation
+- disabling bedrock generation
+- disabling cave generation
+- disabling decorations
+- disabling mob generation
+- disabling structure generation
+
+The generator only places one block:
+
+- a single `BEDROCK` at world coordinates `(0, 64, 0)`
+
+That block is generated only in chunk `(0, 0)`.
+
+After the world is created, OreoEssentials sets the spawn location to:
+
+- `(0, 65, 0)`
+
+So players land one block above the bedrock anchor.
+
+### `WorldPreGenerator`
+
+This class pre-generates chunks using Paper's asynchronous chunk API:
+
+- `world.getChunkAtAsync(cx, cz)`
+
+The goal is to reduce live exploration lag by generating chunks in advance without doing heavy work directly on the main thread.
+
+## Supported World Types
+
+OreoEssentials supports four world types in `/oeworld create`:
+
+- `normal`
+- `nether`
+- `end`
+- `void`
+
+How each one maps internally:
+
+- `normal` -> `World.Environment.NORMAL`
+- `nether` -> `World.Environment.NETHER`
+- `end` -> `World.Environment.THE_END`
+- `void` -> `World.Environment.NORMAL` + `VoidChunkGenerator`
+
+Important implication:
+
+- `normal`, `nether`, and `end` use vanilla world generation from the server.
+- `void` is the only type that uses a custom OreoEssentials generator.
+
+There is no custom biome provider, no custom overworld terrain algorithm, and no custom nether or end generator in this package.
+
+## How World Creation Works
+
+When you run:
+
+```text
+/oeworld create <name> <type> <border> <true|false>
+```
+
+the command does the following:
+
+1. Validates the world name using the regex `[a-zA-Z0-9_\-]+`.
+2. Validates the type against `normal`, `nether`, `end`, and `void`.
+3. Validates the border as an integer between `64` and `59999968`.
+4. Validates the pregeneration flag as either `true` or `false`.
+5. Checks that the world is not already loaded.
+6. Checks that a folder with that world name does not already exist in the server world container.
+7. Builds the world through `buildWorld(...)`.
+8. Applies a world border centered on the world's spawn location.
+9. Saves the world entry into `plugins/OreoEssentials/worlds.yml`.
+10. Starts async pre-generation if the last argument was `true`.
+
+Example:
+
+```text
+/oeworld create build void 1000 true
+```
+
+That creates a void world named `build`, sets a 1000-block border, stores it in `worlds.yml`, and starts pre-generating chunks.
+
+## How `buildWorld(...)` Works
+
+The shared `buildWorld(...)` method is used for both creation and startup auto-loading.
+
+Behavior by type:
+
+- `normal` sets the environment to overworld and lets vanilla generation handle the rest.
+- `nether` sets the environment to nether and lets vanilla generation handle the rest.
+- `end` sets the environment to the end and lets vanilla generation handle the rest.
+- `void` sets the environment to overworld and attaches `VoidChunkGenerator`.
+
+Then it calls:
+
+```java
+creator.createWorld();
+```
+
+If the type is `void`, OreoEssentials also sets the spawn point to `VoidChunkGenerator.SPAWN_Y + 1`.
+
+## Void World Behavior
+
+Void worlds are intentionally minimal.
+
+What you get:
+
+- an empty world
+- no terrain
+- no caves
+- no structures
+- no natural mobs from generation
+- one bedrock block at the origin
+- spawn above that bedrock block
+
+What you do not get automatically:
+
+- a large spawn platform
+- protected spawn handling
+- a custom biome layout
+- a custom sky/block palette
+- structure or island generation
+
+So OreoEssentials' void mode is a clean blank canvas, not a Skyblock-style generator.
+
+## How Pre-Generation Works
+
+If the last `create` argument is `true`, OreoEssentials starts `WorldPreGenerator`.
+
+### Border Interpretation
+
+The pre-generator receives the full border diameter in blocks.
+
+Example:
+
+- `1000` means roughly `+500 / -500` blocks from the center
+
+Internally it converts the border to a chunk radius:
+
+```text
+halfBorder = max(border / 2, 16)
+chunkRadius = ceil(halfBorder / 16.0)
+diameterInChunks = chunkRadius * 2 + 1
+totalChunks = diameterInChunks * diameterInChunks
+```
+
+This means pre-generation is done as a square chunk area around the center, not a circle matching the exact world-border shape.
+
+So for a given border, OreoEssentials may generate slightly more area than the exact border outline because chunk boundaries are square.
+
+### Scheduling Strategy
+
+The pre-generator uses a 1-tick repeating task and throttles itself with two fixed limits:
+
+- `MAX_CONCURRENT = 10`
+- `DRAIN_PER_TICK = 4`
+
+Meaning:
+
+- up to 4 new async chunk requests are submitted per tick
+- at most 10 chunk requests are in flight at the same time
+
+This keeps the main thread mostly busy with scheduling rather than chunk generation itself.
+
+### Progress Reporting
+
+Progress is reported every 5%:
+
+- `REPORT_STEP_PCT = 5`
+
+The sender is notified at start, at progress checkpoints, and at completion.
+
+### Cancellation
+
+You can cancel a running pre-generation with:
+
+```text
+/oeworld cancel <worldname>
+```
+
+What cancellation actually does:
+
+- removes the job from the active map
+- marks it as cancelled
+- stops the repeating scheduler task
+
+What it does not do:
+
+- it does not rewind already-generated chunks
+- it does not fully revoke chunk requests that were already submitted
+
+So cancellation stops future scheduling, but some already-started async work may still finish.
+
+### Persistence Note
+
+World persistence and pre-generation persistence are separate.
+
+- The world itself is saved in `worlds.yml`.
+- The active pre-generation job is only stored in memory.
+
+So if the server restarts during pre-generation:
+
+- the world will still auto-load later
+- the pre-generation job will not resume automatically
+
+## Importing Existing Worlds
+
+OreoEssentials can also import an existing world folder:
+
+```text
+/oeworld import <worldname> [type] [border]
+```
+
+The import flow:
+
+1. Validates the world name.
+2. Optionally accepts a type hint.
+3. Optionally accepts a border.
+4. Checks that the folder exists in the server world container.
+5. Checks that the folder contains `level.dat`.
+6. Loads the world if needed.
+7. Saves it into `worlds.yml` for future auto-loads.
+
+### Important `auto` Detail
+
+Internally, OreoEssentials supports an `auto` mode for import.
+
+If you omit the type, the command behaves like this:
+
+- it lets Bukkit/Paper load the world from disk using its own metadata
+- then it resolves the real type from the loaded environment
+- finally it stores that detected type into `worlds.yml`
+
+Even though the help text mainly shows `normal|nether|end|void`, the code path also accepts `auto`.
+
+### Border Handling on Import
+
+If a border is provided:
+
+- OreoEssentials centers the border on the world's spawn
+- then applies the given size
+
+If no border is provided:
+
+- OreoEssentials tries to preserve a meaningful existing border
+- otherwise it stores `0`
+
+In `worlds.yml`, a border of `0` effectively means:
+
+- do not explicitly re-apply a custom border on auto-load
+
+### Importing as `void`
+
+If you explicitly import a world as `void`, OreoEssentials will use `VoidChunkGenerator` for that world load path.
+
+That matters mostly for unexplored chunks. Existing generated terrain already saved on disk remains as-is.
+
+## Auto-Loading on Startup
+
+On plugin startup, OreoEssentials calls:
+
+```java
+OeWorldCommand.loadCustomWorlds(this);
+```
+
+This happens before command initialization finishes.
+
+The loader:
+
+- opens `plugins/OreoEssentials/worlds.yml`
+- reads the `worlds` list
+- skips worlds that are already loaded
+- skips missing folders
+- rebuilds each world through `buildWorld(...)`
+- reapplies the saved border if it is greater than `0`
+
+This is important:
+
+- OreoEssentials does not auto-load every folder in the server directory
+- it only auto-loads worlds that are registered in `worlds.yml`
+
+## `worlds.yml` Format
+
+The file is simple and list-based.
+
+Example:
+
+```yaml
+worlds:
+  - name: build
+    type: void
+    border: 1000
+  - name: survival2
+    type: normal
+    border: 5000
+  - name: imported_nether
+    type: nether
+    border: 0
+```
+
+Field meanings:
+
+- `name`: world folder name
+- `type`: `normal`, `nether`, `end`, or `void`
+- `border`: border size in blocks, or `0` for no explicit restore/apply
+
+Duplicate names are removed before saving, so the command always rewrites the entry cleanly.
+
+## Relationship With `/world`
+
+OreoEssentials has two different world-related systems here:
+
+- `/oeworld` manages creation/import/pre-generation
+- `/world` teleports players between already-loaded worlds
+
+`/world` does not generate or import worlds.
+
+It uses:
+
+- `oreo.world`
+
+and also checks an extra per-destination permission:
+
+- `cmi.command.world.<worldName>`
+
+Teleport safety behavior:
+
+- it teleports to the world's spawn area
+- it tries to place the target one block above the highest block at spawn
+
+For a void world, that still works cleanly because the spawn is set above the origin bedrock block.
+
+## Related System: Shards
+
+There is also a separate world-creation path in the shards module.
+
+`ShardCommand` can create a world with:
+
+- a configured seed
+- `WorldType.NORMAL`
+- structures enabled
+- synchronous `Bukkit.createWorld(...)`
+
+That path is separate from the `/oeworld` system:
+
+- it does not use `VoidChunkGenerator`
+- it does not use `WorldPreGenerator`
+- it is part of shard management, not the core world package
+
+## Limitations and Design Boundaries
+
+What OreoEssentials world generation does well:
+
+- simple admin-driven world creation
+- blank void worlds
+- persistent custom world registration
+- async chunk pre-generation
+
+What it does not currently do:
+
+- custom overworld terrain generation
+- custom nether generation
+- custom end generation
+- custom biome providers
+- auto-resuming pre-generation after restart
+- world deletion or unloading in this command class
+- circular border-matched pregeneration
+
+## Practical Summary
+
+If you want to understand OreoEssentials world generation in one sentence:
+
+> OreoEssentials mostly delegates world generation to Bukkit/Paper, except for its custom `void` generator and its async pre-generation system.
+
+That is the core model:
+
+- vanilla generation for `normal`, `nether`, and `end`
+- custom empty generation for `void`
+- optional async pre-generation around the world border
+- persistence through `worlds.yml`

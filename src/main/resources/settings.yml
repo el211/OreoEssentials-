@@ -68,6 +68,9 @@ features:
   scoreboard:
     enabled: true
 
+  help:
+    enabled: true
+
   sit:
     enabled: true
 
