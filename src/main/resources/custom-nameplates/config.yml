@@ -46,11 +46,13 @@ nametag:
 
   # ── Condition format ───────────────────────────────────────────────────────
   # Each condition is a map with:
-  #   type:  PERMISSION | GAMEMODE | WORLD | PAPI_EQUALS | PAPI_CONTAINS |
-  #          PAPI_GREATER | PAPI_LESS
+  #   type:  PERMISSION | GAMEMODE | WORLD | REGION | PAPI_EQUALS |
+  #          PAPI_CONTAINS | PAPI_GREATER | PAPI_LESS
   #   value: the value to check against
   #   placeholder: (only for PAPI_* types) e.g. "%player_gamemode%"
   #   negate: false  (optional, inverts the condition)
+  #
+  # REGION requires WorldGuard. All other conditions work standalone.
   #
   # Example — only show rank layer to players with oreo.staff.view permission:
   #   viewer-conditions:
@@ -141,7 +143,59 @@ bossbars:
     # color:                  BLUE | GREEN | PINK | PURPLE | RED | WHITE | YELLOW
     # style:                  SOLID | SEGMENTED_6 | SEGMENTED_10 | SEGMENTED_12 | SEGMENTED_20
     # progress:               0.0 – 1.0
-    # conditions:             Same format as nametag conditions
+    # conditions:             List of conditions — ALL must pass for this bar to show.
+    #                         Leave as [] to show to everyone.
+    # ─────────────────────────────────────────────────────────────────────────
+    #
+    # ── Condition type reference ──────────────────────────────────────────────
+    # PERMISSION    — player has a specific permission node
+    #   - type: PERMISSION
+    #     value: oreo.vip
+    #
+    # GAMEMODE      — player is in a specific gamemode
+    #   - type: GAMEMODE
+    #     value: SURVIVAL        # SURVIVAL | CREATIVE | ADVENTURE | SPECTATOR
+    #
+    # WORLD         — player is in a specific world (exact name, case-insensitive)
+    #   - type: WORLD
+    #     value: survie
+    #
+    # REGION        — player is inside a WorldGuard region (requires WorldGuard)
+    #   - type: REGION
+    #     value: spawn
+    #
+    # PAPI_EQUALS   — PlaceholderAPI placeholder equals a value (case-insensitive)
+    #   - type: PAPI_EQUALS
+    #     placeholder: "%luckperms_primary_group%"
+    #     value: "admin"
+    #
+    # PAPI_CONTAINS — PlaceholderAPI placeholder contains a substring
+    #   - type: PAPI_CONTAINS
+    #     placeholder: "%luckperms_primary_group%"
+    #     value: "staff"
+    #
+    # PAPI_GREATER  — PlaceholderAPI placeholder (as double) is greater than value
+    #   - type: PAPI_GREATER
+    #     placeholder: "%vault_eco_balance%"
+    #     value: "1000"
+    #
+    # PAPI_LESS     — PlaceholderAPI placeholder (as double) is less than value
+    #   - type: PAPI_LESS
+    #     placeholder: "%player_level%"
+    #     value: "10"
+    #
+    # Add `negate: true` to any condition to invert it:
+    #   - type: PERMISSION
+    #     value: oreo.vip
+    #     negate: true          # shows to players WITHOUT that permission
+    #
+    # Stack multiple conditions — ALL must pass (logical AND):
+    #   conditions:
+    #     - type: WORLD
+    #       value: survie
+    #     - type: PAPI_EQUALS
+    #       placeholder: "%luckperms_primary_group%"
+    #       value: "vip"
     # ─────────────────────────────────────────────────────────────────────────
     welcome:
       texts:
@@ -164,6 +218,134 @@ bossbars:
         - type: PERMISSION
           value: oreo.staff
           negate: false
+
+    # ── Example bars (uncomment to use) ────────────────────────────────────────
+    #
+    # vip-bar:                     # Only shown to VIP players
+    #   texts:
+    #     - "<gold>⭐ VIP — Thank you for your support!"
+    #   carousel-interval-ticks: 80
+    #   color: YELLOW
+    #   style: SOLID
+    #   progress: 1.0
+    #   conditions:
+    #     - type: PERMISSION
+    #       value: oreo.vip
+    #
+    # survival-bar:                # Only shown in the survival world
+    #   texts:
+    #     - "<green>🌿 Survival World"
+    #   carousel-interval-ticks: 60
+    #   color: GREEN
+    #   style: SEGMENTED_10
+    #   progress: 1.0
+    #   conditions:
+    #     - type: WORLD
+    #       value: survie
+    #
+    # arena-region-bar:            # Only shown inside a WorldGuard region
+    #   texts:
+    #     - "<red>⚔ You are in the PvP Arena!"
+    #   carousel-interval-ticks: 40
+    #   color: RED
+    #   style: SEGMENTED_6
+    #   progress: 1.0
+    #   conditions:
+    #     - type: REGION
+    #       value: pvp_arena
+    #
+    # beginner-bar:                # Shown to players below level 10
+    #   texts:
+    #     - "<aqua>💡 Tip: Type /help to see all commands!"
+    #   carousel-interval-ticks: 100
+    #   color: BLUE
+    #   style: SOLID
+    #   progress: 1.0
+    #   conditions:
+    #     - type: PAPI_LESS
+    #       placeholder: "%player_level%"
+    #       value: "10"
+    #
+    # admin-world-bar:             # Stacked: must be admin AND in creative
+    #   texts:
+    #     - "<dark_red>Admin Creative Mode"
+    #   carousel-interval-ticks: 60
+    #   color: RED
+    #   style: SEGMENTED_20
+    #   progress: 1.0
+    #   conditions:
+    #     - type: PERMISSION
+    #       value: oreo.admin
+    #     - type: GAMEMODE
+    #       value: CREATIVE
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  HOLOGRAM CONDITIONS (reference — data stored in holograms.yml at runtime)
+#  Conditions can be added to any hologram via /hologram edit <name> or by
+#  editing plugins/OreoEssentials/holograms/holograms.yml directly.
+#
+#  Each hologram entry in that file accepts a `conditions:` list.
+#  ALL listed conditions must pass for the hologram to be visible to a player.
+#
+#  ── Condition type reference ──────────────────────────────────────────────────
+#  PERMISSION    — player has a specific permission node
+#    - type: PERMISSION
+#      value: oreo.vip
+#
+#  GAMEMODE      — player is in a specific gamemode
+#    - type: GAMEMODE
+#      value: SURVIVAL          # SURVIVAL | CREATIVE | ADVENTURE | SPECTATOR
+#
+#  WORLD         — player is in a specific world (exact name, case-insensitive)
+#    - type: WORLD
+#      value: survie
+#
+#  REGION        — player is inside a WorldGuard region (requires WorldGuard)
+#    - type: REGION
+#      value: spawn
+#
+#  PAPI_EQUALS   — PlaceholderAPI placeholder equals a value (case-insensitive)
+#    - type: PAPI_EQUALS
+#      placeholder: "%luckperms_primary_group%"
+#      value: "admin"
+#
+#  PAPI_CONTAINS — PlaceholderAPI placeholder contains a substring
+#    - type: PAPI_CONTAINS
+#      placeholder: "%luckperms_primary_group%"
+#      value: "staff"
+#
+#  PAPI_GREATER  — PlaceholderAPI placeholder (as double) > value
+#    - type: PAPI_GREATER
+#      placeholder: "%vault_eco_balance%"
+#      value: "1000"
+#
+#  PAPI_LESS     — PlaceholderAPI placeholder (as double) < value
+#    - type: PAPI_LESS
+#      placeholder: "%player_level%"
+#      value: "10"
+#
+#  Add `negate: true` to any condition to invert it.
+#  Stack multiple conditions — ALL must pass (logical AND).
+#
+#  ── Example hologram YAML entry (in holograms.yml) ───────────────────────────
+#  my-hologram:
+#    type: TEXT
+#    location:
+#      world: survie
+#      x: 100.5
+#      y: 65.0
+#      z: 200.5
+#    visibility: ALL
+#    visibility_distance: -1   # -1 = use global default
+#    conditions:
+#      - type: PERMISSION        # Only VIP players see this hologram
+#        value: oreo.vip
+#      - type: WORLD             # AND only in the "survie" world
+#        value: survie
+#    text:
+#      - "<gold>⭐ VIP Area"
+#      - "<yellow>Welcome, %player_name%!"
+# ══════════════════════════════════════════════════════════════════════════════
 
 actionbar:
   enabled: true

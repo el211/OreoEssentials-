@@ -206,3 +206,139 @@ tab:
     overflow: TRIM
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  PER-WORLD TAB OVERRIDES
+#  Use the `per-world:` block to show a different tab layout when a player is
+#  in a specific world. Overrides apply to the player looking at the tab list
+#  (not to the players listed inside it).
+#
+#  Each key under `per-world:` is a world name (exact match, case-insensitive).
+#  You can optionally add a `conditions:` list — ALL conditions must pass for
+#  the override to apply. If conditions fail, the server falls back to the
+#  default layout above.
+#
+#  Supported condition types:
+#   PERMISSION      — player has a permission node
+#   GAMEMODE        — player is in a specific gamemode (SURVIVAL/CREATIVE/…)
+#   WORLD           — player is in a specific world (useful when stacking conds)
+#   REGION          — player is inside a WorldGuard region (requires WorldGuard)
+#   PAPI_EQUALS     — PlaceholderAPI placeholder equals a value
+#   PAPI_CONTAINS   — PlaceholderAPI placeholder contains a substring
+#   PAPI_GREATER    — PlaceholderAPI placeholder parsed as double > value
+#   PAPI_LESS       — PlaceholderAPI placeholder parsed as double < value
+#
+#  Add `negate: true` to any condition to invert it.
+#
+# ── Examples ──────────────────────────────────────────────────────────────────
+#
+# per-world:
+#
+#   # Simple world override — no extra conditions needed
+#   survie:
+#     top-section:
+#       texts:
+#         - |-
+#           <green>Survival World
+#     bottom-section:
+#       texts:
+#         - |-
+#           &7Type /help for commands
+#
+#   # World override that only applies when the player has a permission
+#   pvp_arena:
+#     conditions:
+#       - type: PERMISSION
+#         value: oreo.pvp.tab
+#     top-section:
+#       texts:
+#         - |-
+#           <red>⚔ PvP Arena
+#
+#   # WorldGuard region condition — only applies inside the "spawn" region
+#   lobby:
+#     conditions:
+#       - type: REGION
+#         value: spawn
+#     top-section:
+#       texts:
+#         - |-
+#           <gold>Welcome to Spawn!
+#
+#   # Gamemode condition — creative tab only for builders
+#   build_world:
+#     conditions:
+#       - type: GAMEMODE
+#         value: CREATIVE
+#     top-section:
+#       texts:
+#         - |-
+#           <aqua>Build World — Creative Mode
+#
+#   # PAPI condition — different tab for VIP rank (via LuckPerms group placeholder)
+#   hub:
+#     conditions:
+#       - type: PAPI_EQUALS
+#         placeholder: "%luckperms_primary_group%"
+#         value: "vip"
+#     top-section:
+#       texts:
+#         - |-
+#           <gold>⭐ VIP Tab
+#
+#   # PAPI condition — show tab if player has more than 100 coins
+#   hub:
+#     conditions:
+#       - type: PAPI_GREATER
+#         placeholder: "%vault_eco_balance%"
+#         value: "100"
+#     top-section:
+#       texts:
+#         - |-
+#           <yellow>Rich Player Tab
+#
+#   # PAPI_CONTAINS — matches any group whose name contains "staff"
+#   lobby:
+#     conditions:
+#       - type: PAPI_CONTAINS
+#         placeholder: "%luckperms_primary_group%"
+#         value: "staff"
+#     top-section:
+#       texts:
+#         - |-
+#           <red>⚑ Staff Tab
+#
+#   # PAPI_LESS — show tab only if player level is below 10
+#   tutorial:
+#     conditions:
+#       - type: PAPI_LESS
+#         placeholder: "%player_level%"
+#         value: "10"
+#     top-section:
+#       texts:
+#         - |-
+#           <green>Beginner Tab
+#
+#   # Negated condition — show tab to everyone EXCEPT ops
+#   survival:
+#     conditions:
+#       - type: PERMISSION
+#         value: minecraft.command.op
+#         negate: true
+#     top-section:
+#       texts:
+#         - |-
+#           <white>Survival Tab (non-op only)
+#
+#   # Stacked conditions — player must be in region AND have a permission
+#   arena:
+#     conditions:
+#       - type: REGION
+#         value: arena_zone
+#       - type: PERMISSION
+#         value: oreo.arena.access
+#     top-section:
+#       texts:
+#         - |-
+#           <red>Arena Zone — Authorized Only
+
+
