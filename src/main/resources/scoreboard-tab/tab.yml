@@ -207,138 +207,125 @@ tab:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  PER-WORLD TAB OVERRIDES
-#  Use the `per-world:` block to show a different tab layout when a player is
-#  in a specific world. Overrides apply to the player looking at the tab list
-#  (not to the players listed inside it).
+#  PER-WORLD TAB OVERRIDES  (classic header/footer mode only)
+#  Use the `per-world:` block to show a different header/footer when a player
+#  is in a specific world. Overrides apply to the LOCAL player looking at the
+#  tab list — not to remote players listed inside it.
+#
+#  NOTE: per-world overrides work in CLASSIC layout mode (layout-mode: CLASSIC).
+#  In CUSTOM layout mode the custom-layout block controls the display instead.
 #
 #  Each key under `per-world:` is a world name (exact match, case-insensitive).
 #  You can optionally add a `conditions:` list — ALL conditions must pass for
-#  the override to apply. If conditions fail, the server falls back to the
-#  default layout above.
+#  the override to apply. If they fail, the server falls back to the default
+#  header/footer above.
+#
+#  Supported per-world fields:
+#   header:             Override tab header (MiniMessage / &-codes / PAPI)
+#   footer:             Override tab footer
+#   use-placeholderapi: true/false override (optional)
+#   name-format:        Override name-format section (optional, same sub-keys)
+#   conditions:         List of conditions (see types below)
 #
 #  Supported condition types:
-#   PERMISSION      — player has a permission node
-#   GAMEMODE        — player is in a specific gamemode (SURVIVAL/CREATIVE/…)
-#   WORLD           — player is in a specific world (useful when stacking conds)
-#   REGION          — player is inside a WorldGuard region (requires WorldGuard)
-#   PAPI_EQUALS     — PlaceholderAPI placeholder equals a value
-#   PAPI_CONTAINS   — PlaceholderAPI placeholder contains a substring
-#   PAPI_GREATER    — PlaceholderAPI placeholder parsed as double > value
-#   PAPI_LESS       — PlaceholderAPI placeholder parsed as double < value
+#   PERMISSION    — player has a permission node
+#   GAMEMODE      — player is in a specific gamemode (SURVIVAL/CREATIVE/…)
+#   WORLD         — player is in a specific world (useful when stacking conds)
+#   REGION        — player is inside a WorldGuard region (requires WorldGuard)
+#   PAPI_EQUALS   — PlaceholderAPI placeholder equals a value
+#   PAPI_CONTAINS — PlaceholderAPI placeholder contains a substring
+#   PAPI_GREATER  — PlaceholderAPI placeholder parsed as double > value
+#   PAPI_LESS     — PlaceholderAPI placeholder parsed as double < value
 #
 #  Add `negate: true` to any condition to invert it.
+#  Conditions are always evaluated on the LOCAL server for the viewing player.
 #
 # ── Examples ──────────────────────────────────────────────────────────────────
 #
 # per-world:
 #
-#   # Simple world override — no extra conditions needed
+#   # Simple world override — different header/footer in survival world
 #   survie:
-#     top-section:
-#       texts:
-#         - |-
-#           <green>Survival World
-#     bottom-section:
-#       texts:
-#         - |-
-#           &7Type /help for commands
+#     header: "<green>Survival World\n<gray>%oe_local_online% players online"
+#     footer: "<gray>Type /help for commands"
 #
-#   # World override that only applies when the player has a permission
+#   # World override that only applies when the player also has a permission
 #   pvp_arena:
+#     header: "<red>⚔ PvP Arena"
+#     footer: "<gray>Good luck!"
 #     conditions:
 #       - type: PERMISSION
 #         value: oreo.pvp.tab
-#     top-section:
-#       texts:
-#         - |-
-#           <red>⚔ PvP Arena
 #
-#   # WorldGuard region condition — only applies inside the "spawn" region
+#   # WorldGuard region condition — only inside the "spawn" region
 #   lobby:
+#     header: "<gold>Welcome to Spawn!"
+#     footer: ""
 #     conditions:
 #       - type: REGION
 #         value: spawn
-#     top-section:
-#       texts:
-#         - |-
-#           <gold>Welcome to Spawn!
 #
-#   # Gamemode condition — creative tab only for builders
+#   # Gamemode condition — show creative header only to builders
 #   build_world:
+#     header: "<aqua>Build World — Creative Mode"
+#     footer: ""
 #     conditions:
 #       - type: GAMEMODE
 #         value: CREATIVE
-#     top-section:
-#       texts:
-#         - |-
-#           <aqua>Build World — Creative Mode
 #
-#   # PAPI condition — different tab for VIP rank (via LuckPerms group placeholder)
+#   # PAPI_EQUALS — different header for VIP rank (LuckPerms group)
 #   hub:
+#     header: "<gold>⭐ VIP Tab\n<yellow>Welcome back, %player_name%!"
+#     footer: ""
 #     conditions:
 #       - type: PAPI_EQUALS
 #         placeholder: "%luckperms_primary_group%"
 #         value: "vip"
-#     top-section:
-#       texts:
-#         - |-
-#           <gold>⭐ VIP Tab
-#
-#   # PAPI condition — show tab if player has more than 100 coins
-#   hub:
-#     conditions:
-#       - type: PAPI_GREATER
-#         placeholder: "%vault_eco_balance%"
-#         value: "100"
-#     top-section:
-#       texts:
-#         - |-
-#           <yellow>Rich Player Tab
 #
 #   # PAPI_CONTAINS — matches any group whose name contains "staff"
 #   lobby:
+#     header: "<red>⚑ Staff Tab"
+#     footer: ""
 #     conditions:
 #       - type: PAPI_CONTAINS
 #         placeholder: "%luckperms_primary_group%"
 #         value: "staff"
-#     top-section:
-#       texts:
-#         - |-
-#           <red>⚑ Staff Tab
 #
-#   # PAPI_LESS — show tab only if player level is below 10
+#   # PAPI_GREATER — show special header to rich players (balance > 1000)
+#   survie:
+#     header: "<yellow>💰 High Roller Tab"
+#     footer: ""
+#     conditions:
+#       - type: PAPI_GREATER
+#         placeholder: "%vault_eco_balance%"
+#         value: "1000"
+#
+#   # PAPI_LESS — beginner header for players below level 10
 #   tutorial:
+#     header: "<green>💡 Beginner — Type /help to get started"
+#     footer: ""
 #     conditions:
 #       - type: PAPI_LESS
 #         placeholder: "%player_level%"
 #         value: "10"
-#     top-section:
-#       texts:
-#         - |-
-#           <green>Beginner Tab
 #
-#   # Negated condition — show tab to everyone EXCEPT ops
+#   # Negated condition — header for everyone EXCEPT ops
 #   survival:
+#     header: "<white>Survival Server"
+#     footer: ""
 #     conditions:
 #       - type: PERMISSION
 #         value: minecraft.command.op
 #         negate: true
-#     top-section:
-#       texts:
-#         - |-
-#           <white>Survival Tab (non-op only)
 #
 #   # Stacked conditions — player must be in region AND have a permission
 #   arena:
+#     header: "<dark_red>Arena Zone — Authorized Only"
+#     footer: ""
 #     conditions:
 #       - type: REGION
 #         value: arena_zone
 #       - type: PERMISSION
 #         value: oreo.arena.access
-#     top-section:
-#       texts:
-#         - |-
-#           <red>Arena Zone — Authorized Only
 
 

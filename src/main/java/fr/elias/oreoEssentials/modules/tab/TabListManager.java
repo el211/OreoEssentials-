@@ -374,6 +374,12 @@ public class TabListManager {
         World world = p.getWorld();
         WorldOverrides o = worldOverrides.get(world.getName().toLowerCase(Locale.ROOT));
 
+        // Discard override if its extra conditions are not met by this player.
+        if (o != null && !o.conditions.isEmpty()
+                && !NametageCondition.evaluateAll(o.conditions, p)) {
+            o = null;
+        }
+
         boolean papi = (o != null && o.usePapi != null)
                 ? (o.usePapi && hasPapi())
                 : (usePapi && hasPapi());
