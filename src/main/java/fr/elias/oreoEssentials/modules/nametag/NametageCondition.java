@@ -18,6 +18,7 @@ public final class NametageCondition {
         PERMISSION,      // player has the specified permission
         GAMEMODE,        // player is in the specified gamemode
         WORLD,           // player is in the specified world
+        REGION,          // player is inside a WorldGuard region (requires WorldGuard)
         HAS_NAMETAG,     // player's nametag is enabled (owner condition)
         PAPI_EQUALS,     // PlaceholderAPI placeholder equals value
         PAPI_CONTAINS,   // PlaceholderAPI placeholder contains value
@@ -45,6 +46,22 @@ public final class NametageCondition {
                 catch (Exception e) { yield false; }
             }
             case WORLD -> player.getWorld().getName().equalsIgnoreCase(value);
+            case REGION -> {
+                try {
+                    if (!org.bukkit.Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) { yield false; }
+                    com.sk89q.worldguard.WorldGuard wg = com.sk89q.worldguard.WorldGuard.getInstance();
+                    com.sk89q.worldguard.protection.managers.RegionManager rm =
+                            wg.getPlatform().getRegionContainer().get(
+                                    com.sk89q.worldedit.bukkit.BukkitAdapter.adapt(player.getWorld()));
+                    if (rm == null) { yield false; }
+                    com.sk89q.worldedit.math.BlockVector3 pos = com.sk89q.worldedit.math.BlockVector3.at(
+                            player.getLocation().getBlockX(),
+                            player.getLocation().getBlockY(),
+                            player.getLocation().getBlockZ());
+                    yield rm.getApplicableRegions(pos).getRegions()
+                            .stream().anyMatch(r -> r.getId().equalsIgnoreCase(value));
+                } catch (Throwable e) { yield false; }
+            }
             case HAS_NAMETAG -> true; // always true unless PlayerNametagManager overrides
             case PAPI_EQUALS -> {
                 String resolved = resolvePapi(player, placeholder);
@@ -85,6 +102,18 @@ public final class NametageCondition {
             if (!c.evaluate(player)) return false;
         }
         return true;
+    }
+
+    /**
+     * Serialises this condition back to a Map so it can be stored in YAML.
+     */
+    public java.util.Map<String, Object> toMap() {
+        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("type", type.name());
+        m.put("value", value);
+        if (placeholder != null && !placeholder.isEmpty()) m.put("placeholder", placeholder);
+        if (negate) m.put("negate", true);
+        return m;
     }
 
     /**

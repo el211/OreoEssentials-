@@ -243,18 +243,27 @@ public final class OHolograms implements OHologramsPlugin {
         if (hologramsManager != null) {
             hologramsManager.saveHolograms();
         }
+        // Shut down hologram thread first and wait for it fully before shutting down
+        // the file executor — hologram-thread tasks (e.g. pending deletes) submit
+        // further work to the file executor, which would be rejected if that executor
+        // shuts down first.
         hologramThread.shutdown();
-        fileStorageExecutor.shutdown();
         try {
             if (!hologramThread.awaitTermination(5, TimeUnit.SECONDS)) {
                 fancyLogger.warn("Timed out while waiting for hologram tasks to finish during shutdown.");
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fancyLogger.warn("Interrupted while waiting for hologram thread shutdown.");
+        }
+        fileStorageExecutor.shutdown();
+        try {
             if (!fileStorageExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
                 fancyLogger.warn("Timed out while waiting for hologram storage writes to finish during shutdown.");
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            fancyLogger.warn("Interrupted while waiting for hologram shutdown tasks to finish.");
+            fancyLogger.warn("Interrupted while waiting for hologram storage writes to finish.");
         }
         INSTANCE = null;
         OHologramsPlugin.EnabledChecker.setPlugin(null);

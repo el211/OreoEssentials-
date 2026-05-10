@@ -271,6 +271,12 @@ public class FlatFileHologramStorage implements HologramStorage {
                 }
                 config.save(configFile);
             } catch (IOException e) {
+                OHolograms.get().getFancyLogger().warn("Failed to save holograms config (IO error): " + e.getMessage());
+                e.printStackTrace();
+            } catch (Exception e) {
+                // Catches unchecked exceptions such as YAML serialization failures
+                // (e.g. caused by unusual Unicode characters like ItemsAdder glyphs).
+                OHolograms.get().getFancyLogger().warn("Failed to save holograms config (serialization error): " + e.getMessage());
                 e.printStackTrace();
             } finally {
                 lock.writeLock().unlock();

@@ -39,7 +39,9 @@ public class YamlPlayerWarpStorage implements PlayerWarpStorage {
         }
 
         this.cfg = YamlConfiguration.loadConfiguration(file);
-        loadAllFromFile();
+        // Defer loading by 1 tick so that world-management plugins (e.g. Multiverse)
+        // have finished registering their worlds before we resolve Location objects.
+        Bukkit.getScheduler().runTask(plugin, this::loadAllFromFile);
     }
 
 
@@ -179,7 +181,8 @@ public class YamlPlayerWarpStorage implements PlayerWarpStorage {
         String worldName = sec.getString("world");
         World world = (worldName == null ? null : Bukkit.getWorld(worldName));
         if (world == null) {
-            // world not loaded -> skip
+            plugin.getLogger().warning("[PlayerWarps] Skipping warp '" + id
+                    + "': world '" + worldName + "' is not loaded.");
             return null;
         }
 

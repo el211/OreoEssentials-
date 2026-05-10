@@ -1,6 +1,7 @@
 package fr.elias.oreoEssentials.modules.bossbar;
 
 import fr.elias.oreoEssentials.OreoEssentials;
+import fr.elias.oreoEssentials.modules.nametag.NametageCondition;
 import fr.elias.oreoEssentials.util.MiniMessageCompat;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.util.OreTask;
@@ -18,7 +19,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +36,7 @@ public final class BossBarService implements Listener {
     private BarStyle style;
     private double progress;
     private long period;
+    private List<NametageCondition> conditions = new ArrayList<>();
 
     private OreTask taskId = null;
 
@@ -57,6 +61,7 @@ public final class BossBarService implements Listener {
         this.progress = Math.max(0.0, Math.min(1.0, p));
         long per      = cfg != null ? cfg.getLong("update-ticks", 40) : 40L;
         this.period   = Math.max(1L, per);
+        this.conditions = cfg != null ? NametageCondition.parseList(cfg, "conditions") : new ArrayList<>();
     }
 
 
@@ -72,6 +77,7 @@ public final class BossBarService implements Listener {
         taskId = OreScheduler.runTimer(plugin, () -> {
             if (!enabled) return;
             for (Player p : Bukkit.getOnlinePlayers()) {
+                if (!meetsConditions(p)) { hide(p); continue; }
                 BossBar bar = bars.get(p.getUniqueId());
                 if (bar == null) { show(p); continue; }
                 bar.setTitle(render(p, text));
@@ -113,6 +119,7 @@ public final class BossBarService implements Listener {
         }
         taskId = OreScheduler.runTimer(plugin, () -> {
             for (Player p : Bukkit.getOnlinePlayers()) {
+                if (!meetsConditions(p)) { hide(p); continue; }
                 BossBar bar = bars.get(p.getUniqueId());
                 if (bar == null) { show(p); continue; }
                 bar.setTitle(render(p, text));
@@ -133,8 +140,13 @@ public final class BossBarService implements Listener {
 
     public boolean isShown(Player p) { return bars.containsKey(p.getUniqueId()); }
 
+    private boolean meetsConditions(Player p) {
+        return conditions.isEmpty() || NametageCondition.evaluateAll(conditions, p);
+    }
+
     public void show(Player p) {
         if (!enabled) return;
+        if (!meetsConditions(p)) return;
 
         BossBar bar = bars.get(p.getUniqueId());
         if (bar == null) {

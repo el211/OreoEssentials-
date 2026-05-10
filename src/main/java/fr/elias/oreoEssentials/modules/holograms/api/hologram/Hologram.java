@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.holograms.api.hologram;
 import fr.elias.oreoEssentials.modules.holograms.api.data.HologramData;
 import fr.elias.oreoEssentials.modules.holograms.api.data.TextHologramData;
 import fr.elias.oreoEssentials.modules.holograms.api.data.property.Visibility;
+import fr.elias.oreoEssentials.modules.nametag.NametageCondition;
 import fr.elias.oreoEssentials.util.MiniMessageCompat;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -272,6 +273,11 @@ public abstract class Hologram {
     }
 
     public boolean meetsVisibilityConditions(@NotNull final Player player) {
+        // Evaluate custom conditions (world, region, permission, PAPI, …) first.
+        if (!getData().getConditions().isEmpty()
+                && !NametageCondition.evaluateAll(getData().getConditions(), player)) {
+            return false;
+        }
         return this.getData().getVisibility().canSee(player, this);
     }
 

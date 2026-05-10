@@ -279,8 +279,35 @@ public final class HologramManagerImpl implements HologramManager {
      * Reloads holograms by clearing the existing holograms and loading them again from the plugin's configuration.
      */
     public void reloadHolograms() {
-        this.unloadHolograms();
+        // Unload synchronously on the hologram thread and wait for it to complete
+        // before loading, to avoid the async unload racing against the new load.
+        try {
+            OHolograms.get().getHologramThread().submit(this::unloadHologramsSync).get();
+        } catch (Exception e) {
+            OHolograms.get().getFancyLogger().warn("Failed to await hologram unload during reload: " + e.getMessage());
+        }
         this.loadHolograms();
+    }
+
+    /** Synchronous variant — must be called from the hologram thread (or via submit().get()). */
+    private void unloadHologramsSync() {
+        List<Hologram> unloaded = new ArrayList<>();
+
+        for (final var hologram : this.getPersistentHolograms()) {
+            this.holograms.remove(hologram.getData().getName().toLowerCase(Locale.ROOT));
+            unloaded.add(hologram);
+
+            for (UUID viewer : hologram.getViewers()) {
+                Player player = Bukkit.getPlayer(viewer);
+                if (player != null) {
+                    OreScheduler.runForEntity(plugin.getPlugin(), player, () -> hologram.forceHideHologram(player));
+                }
+            }
+
+            OreScheduler.runAtLocation(plugin.getPlugin(), hologram.getData().getLocation(), hologram::deleteHologram);
+        }
+
+        OreScheduler.run(plugin.getPlugin(), () -> Bukkit.getPluginManager().callEvent(new HologramsUnloadedEvent(ImmutableList.copyOf(unloaded))));
     }
 
     public void unloadHolograms() {
@@ -288,7 +315,7 @@ public final class HologramManagerImpl implements HologramManager {
             List<Hologram> unloaded = new ArrayList<>();
 
             for (final var hologram : this.getPersistentHolograms()) {
-                this.holograms.remove(hologram.getName());
+                this.holograms.remove(hologram.getData().getName().toLowerCase(Locale.ROOT));
                 unloaded.add(hologram);
 
                 for (UUID viewer : hologram.getViewers()) {
@@ -316,7 +343,7 @@ public final class HologramManagerImpl implements HologramManager {
             OHolograms.get().getHologramStorage().saveBatch(h, false);
 
             for (final Hologram hologram : h) {
-                this.holograms.remove(hologram.getName());
+                this.holograms.remove(hologram.getData().getName().toLowerCase(Locale.ROOT));
                 online.forEach(player -> OreScheduler.runForEntity(plugin.getPlugin(), player, () -> hologram.forceHideHologram(player)));
                 OreScheduler.runAtLocation(plugin.getPlugin(), hologram.getData().getLocation(), hologram::deleteHologram);
             }

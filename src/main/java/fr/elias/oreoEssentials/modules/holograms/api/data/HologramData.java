@@ -10,6 +10,10 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import fr.elias.oreoEssentials.modules.nametag.NametageCondition;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -28,6 +32,7 @@ public class HologramData implements YamlData {
     private Visibility visibility = DEFAULT_VISIBILITY;
     private boolean persistent = DEFAULT_PERSISTENCE;
     private String linkedNpcName;
+    private List<NametageCondition> conditions = new ArrayList<>();
 
     /**
      * @param name     Name of hologram
@@ -125,6 +130,15 @@ public class HologramData implements YamlData {
         return linkedNpcName;
     }
 
+    public List<NametageCondition> getConditions() {
+        return conditions;
+    }
+
+    public HologramData setConditions(List<NametageCondition> conditions) {
+        this.conditions = conditions != null ? conditions : new ArrayList<>();
+        return this;
+    }
+
     public HologramData setLinkedNpcName(String linkedNpcName) {
         if (!Objects.equals(this.linkedNpcName, linkedNpcName)) {
             this.linkedNpcName = linkedNpcName;
@@ -158,6 +172,7 @@ public class HologramData implements YamlData {
                     return visibleByDefault ? Visibility.ALL : Visibility.PERMISSION_REQUIRED;
                 });
         linkedNpcName = section.getString("linkedNpc");
+        conditions = NametageCondition.parseList(section, "conditions");
 
         return true;
     }
@@ -176,6 +191,14 @@ public class HologramData implements YamlData {
         section.set("visibility", visibility.name());
         section.set("persistent", persistent);
         section.set("linkedNpc", linkedNpcName);
+
+        if (conditions != null && !conditions.isEmpty()) {
+            List<java.util.Map<String, Object>> serialized = new ArrayList<>();
+            for (NametageCondition c : conditions) serialized.add(c.toMap());
+            section.set("conditions", serialized);
+        } else {
+            section.set("conditions", null);
+        }
 
         return true;
     }

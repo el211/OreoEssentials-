@@ -584,6 +584,18 @@ commands:
     permission: oreo.time
     usage: "/oetime <day|night|hour(1-23)> [world|all]"
     aliases: [settime, oetime]
+  day:
+    description: Set the time to day in your current world.
+    permission: oreo.day
+    usage: "/day"
+  night:
+    description: Set the time to night in your current world.
+    permission: oreo.night
+    usage: "/night"
+  bottom:
+    description: Teleport to the lowest safe floor at your position.
+    permission: oreo.bottom
+    usage: "/bottom"
 
   weather:
     description: Controls server weather.
@@ -821,6 +833,9 @@ permissions:
       oreo.orders.admin: true
       oreo.oeworld: true
       oreo.top: true
+      oreo.bottom: true
+      oreo.day: true
+      oreo.night: true
       oreo.help: true
       oreo.help.admin: true
       oreo.mail: true
@@ -963,6 +978,15 @@ permissions:
   oreo.top:
     description: "Allows using /top to teleport to the surface"
     default: true
+  oreo.bottom:
+    description: "Allows using /bottom to teleport to the lowest floor"
+    default: true
+  oreo.day:
+    description: "Allows using /day to set time to day"
+    default: op
+  oreo.night:
+    description: "Allows using /night to set time to night"
+    default: op
   oreo.help:
     description: "Allows using /help"
     default: true

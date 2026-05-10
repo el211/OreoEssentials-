@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.tab;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.config.SettingsConfig;
+import fr.elias.oreoEssentials.modules.nametag.NametageCondition;
 import fr.elias.oreoEssentials.playerdirectory.PlayerDirectory;
 import fr.elias.oreoEssentials.util.MiniMessageCompat;
 import fr.elias.oreoEssentials.util.OreScheduler;
@@ -75,6 +76,8 @@ public class TabListManager {
         String header;
         String footer;
         NameOverrides name;
+        /** Extra conditions that must ALL pass for this override to be applied. */
+        List<NametageCondition> conditions = new ArrayList<>();
     }
 
     private static class NameOverrides {
@@ -206,6 +209,7 @@ public class TabListManager {
                 o.usePapi = w.isSet("use-placeholderapi") ? w.getBoolean("use-placeholderapi") : null;
                 o.header = w.isSet("header") ? color(w.getString("header")) : null;
                 o.footer = w.isSet("footer") ? color(w.getString("footer")) : null;
+                o.conditions = NametageCondition.parseList(w, "conditions");
 
                 if (w.isConfigurationSection("name-format")) {
                     ConfigurationSection wn = w.getConfigurationSection("name-format");
@@ -272,6 +276,12 @@ public class TabListManager {
 
                 World world = p.getWorld();
                 WorldOverrides o = worldOverrides.get(world.getName().toLowerCase(Locale.ROOT));
+
+                // Discard override if its extra conditions are not met by this player.
+                if (o != null && !o.conditions.isEmpty()
+                        && !NametageCondition.evaluateAll(o.conditions, p)) {
+                    o = null;
+                }
 
                 boolean papi = (o != null && o.usePapi != null)
                         ? (o.usePapi && hasPapi())
