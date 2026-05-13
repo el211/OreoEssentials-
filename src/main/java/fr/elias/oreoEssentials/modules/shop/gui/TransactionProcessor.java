@@ -11,7 +11,9 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public final class TransactionProcessor {
@@ -137,10 +139,6 @@ public final class TransactionProcessor {
                             send(player, "<red>Shop transaction failed.</red>");
                             return;
                         }
-                        if (!antiDupe.verifyHasItem(player, shopItem.buildItemStack(), totalItems)) {
-                            send(player, module.getShopConfig().getMessage("sell-not-enough"));
-                            return;
-                        }
                         removeItems(player, shopItem, totalItems);
                         finishSell(player, shopItem, totalItems, price, currencyId, cs.formatBalance(currencyId, price));
                     } finally {
@@ -155,8 +153,13 @@ public final class TransactionProcessor {
         if (!antiDupe.beginTransaction(player)) return -1;
 
         try {
-            LinkedHashMap<String, Double> earningsByCurrency = new LinkedHashMap<>();
-            int totalSold = 0;
+            // First pass: collect what to sell WITHOUT removing items yet.
+            // This prevents items being lost if a custom-currency deposit fails.
+            List<Integer>   slotIndices   = new ArrayList<>();
+            List<ShopItem>  shopItems     = new ArrayList<>();
+            List<Integer>   amounts       = new ArrayList<>();
+            List<String>    currencyKeys  = new ArrayList<>();
+            List<Double>    earnings      = new ArrayList<>();
 
             for (int i = 0; i < player.getInventory().getSize(); i++) {
                 ItemStack slot = player.getInventory().getItem(i);
@@ -169,19 +172,31 @@ public final class TransactionProcessor {
                 double pricePerStack = module.getPriceModifierManager()
                         .getEffectiveSellPrice(player.getUniqueId(), shopItem);
                 double earned = (pricePerStack / shopItem.getAmount()) * slot.getAmount();
-
                 String cid = getShopCurrencyId(shopItem);
-                String key = (cid != null) ? cid : "";
-                earningsByCurrency.merge(key, earned, Double::sum);
-                totalSold += slot.getAmount();
-                player.getInventory().setItem(i, null);
+
+                slotIndices.add(i);
+                shopItems.add(shopItem);
+                amounts.add(slot.getAmount());
+                currencyKeys.add(cid != null ? cid : "");
+                earnings.add(earned);
             }
 
-            player.updateInventory();
-
-            if (earningsByCurrency.isEmpty()) {
+            if (slotIndices.isEmpty()) {
                 send(player, module.getShopConfig().getMessage("sell-all-nothing"));
+                antiDupe.endTransaction(player);
                 return 0;
+            }
+
+            // Aggregate totals per currency key (preserving insertion order)
+            LinkedHashMap<String, Double>       earningsByCurrency = new LinkedHashMap<>();
+            LinkedHashMap<String, Integer>      countByCurrency    = new LinkedHashMap<>();
+            LinkedHashMap<String, List<Integer>> slotsByCurrency   = new LinkedHashMap<>();
+
+            for (int i = 0; i < slotIndices.size(); i++) {
+                String key = currencyKeys.get(i);
+                earningsByCurrency.merge(key, earnings.get(i), Double::sum);
+                countByCurrency.merge(key, amounts.get(i), Integer::sum);
+                slotsByCurrency.computeIfAbsent(key, k -> new ArrayList<>()).add(slotIndices.get(i));
             }
 
             double totalEarned = 0;
@@ -189,24 +204,33 @@ public final class TransactionProcessor {
             CompletableFuture<?> chain = CompletableFuture.completedFuture(null);
 
             for (var entry : earningsByCurrency.entrySet()) {
-                String key = entry.getKey();
+                String key    = entry.getKey();
                 double amount = entry.getValue();
+                int    sold   = countByCurrency.getOrDefault(key, 0);
+                List<Integer> slots = slotsByCurrency.getOrDefault(key, List.of());
                 totalEarned += amount;
 
                 if (key.isEmpty()) {
+                    // Vault (synchronous): remove items then deposit — Vault deposit never fails
+                    for (int s : slots) player.getInventory().setItem(s, null);
+                    player.updateInventory();
                     module.getEconomy().deposit(player, amount);
                     module.getTransactionLogger().logTransaction(
-                            player.getName(), "SOLD_ALL", totalSold, "multiple items",
+                            player.getName(), "SOLD_ALL", sold, "multiple items",
                             amount, module.getEconomy().getEconomyName());
                     send(player, module.getShopConfig().getMessage("sell-all-success")
-                            .replace("{amount}", String.valueOf(totalSold))
+                            .replace("{amount}", String.valueOf(sold))
                             .replace("{price}", module.getEconomy().format(amount)));
                 } else if (cs != null) {
-                    final int soldCount = totalSold;
+                    final int soldCount = sold;
+                    final List<Integer> finalSlots = slots;
                     chain = chain.thenCompose(ignored ->
                             cs.deposit(player.getUniqueId(), key, amount).thenAccept(success ->
                                     OreScheduler.runForEntity(module.getPlugin(), player, () -> {
                                         if (Boolean.TRUE.equals(success)) {
+                                            // Only remove items AFTER deposit succeeds
+                                            for (int s : finalSlots) player.getInventory().setItem(s, null);
+                                            player.updateInventory();
                                             module.getTransactionLogger().logTransaction(
                                                     player.getName(), "SOLD_ALL", soldCount, "multiple items", amount, key);
                                             send(player, module.getShopConfig().getMessage("sell-all-success")

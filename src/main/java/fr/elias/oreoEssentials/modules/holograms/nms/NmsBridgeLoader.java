@@ -10,6 +10,9 @@ public final class NmsBridgeLoader {
     }
 
     private static final List<String> FALLBACK_VERSIONS = List.of(
+            "v26_1_2",
+            "v26_1_1",
+            "v26_1",
             "v1_21_11",
             "v1_21_10",
             "v1_21_9",

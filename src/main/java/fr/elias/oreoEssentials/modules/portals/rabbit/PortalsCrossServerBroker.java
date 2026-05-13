@@ -16,6 +16,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Handles incoming PortalTeleportPacket messages and pending cross-server teleports.
@@ -70,13 +71,16 @@ public final class PortalsCrossServerBroker implements Listener {
         PendingTeleport pt = pending.remove(p.getUniqueId());
         if (pt == null) return;
 
-        // Try at 0, 5, 20 ticks to catch slow world loads
+        // Try at 1, 5, 20 ticks to catch slow world loads.
+        // AtomicBoolean ensures only the FIRST successful attempt fires — prevents triple-teleport.
+        AtomicBoolean done = new AtomicBoolean(false);
         long[] delays = {1L, 5L, 20L};
         for (long delay : delays) {
             OreScheduler.runLater(plugin, () -> {
-                if (!p.isOnline()) return;
-                if (!pending.containsKey(p.getUniqueId())) {
-                    // still valid — try teleport
+                if (!p.isOnline() || done.get()) return;
+                // Only proceed once the destination world is actually loaded
+                if (Bukkit.getWorld(pt.worldName()) == null) return;
+                if (done.compareAndSet(false, true)) {
                     applyTeleport(p, pt.worldName(), pt.x(), pt.y(), pt.z(),
                             pt.yaw(), pt.pitch(), pt.keepYawPitch());
                 }

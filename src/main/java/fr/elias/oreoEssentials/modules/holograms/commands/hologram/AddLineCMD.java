@@ -29,10 +29,16 @@ public class AddLineCMD implements Subcommand {
             return false;
         }
 
+        if (args.length < 4) {
+            MessageHelper.error(player, "Wrong usage: /hologram edit <hologram> addLine <text ...>");
+            return false;
+        }
+
         StringBuilder text = new StringBuilder();
         for (int i = 3; i < args.length; i++) {
             text.append(args[i]).append(" ");
         }
+        // Strip the trailing space added by the loop (safe — loop ran at least once)
         text = new StringBuilder(text.substring(0, text.length() - 1));
 
         return SetLineCMD.setLine(player, hologram, Integer.MAX_VALUE, text.toString());

@@ -19,7 +19,7 @@ public enum Constants {
             <%primary_color%>- /hologram list <dark_gray>- <white>Shows you a overview of all holograms
             <%primary_color%>- /hologram nearby <range> <dark_gray>- <white>Shows all holograms nearby you in a range
             <%primary_color%>- /hologram teleport <name> <dark_gray>- <white>Teleports you to a hologram
-            <%primary_color%>- /hologram create <name> <dark_gray>- <white>Creates a new hologram
+            <%primary_color%>- /hologram create <text|item|block> <name> <dark_gray>- <white>Creates a new hologram
             <%primary_color%>- /hologram remove <name> <dark_gray>- <white>Removes a hologram
             <%primary_color%>- /hologram copy <hologram> <new name> <dark_gray>- <white>Copies a hologram
             <%primary_color%>- /hologram edit <hologram> addLine <text ...> <dark_gray>- <white>Adds a line at the bottom

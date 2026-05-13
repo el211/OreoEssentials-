@@ -205,10 +205,10 @@ public class JumpPadsManager {
         try {
             if (soundName != null && !soundName.isEmpty()) {
                 // Convert common formats: "ENTITY_FIREWORK_ROCKET_LAUNCH" -> "entity_firework_rocket_launch"
-                String soundKey = soundName.toLowerCase(Locale.ROOT).replace("_", "_");
+                String soundKey = soundName.toLowerCase(Locale.ROOT).replace(" ", "_");
 
                 // Try with minecraft namespace
-                Sound sound = Registry.SOUNDS.get(NamespacedKey.minecraft(key));
+                Sound sound = Registry.SOUNDS.get(NamespacedKey.minecraft(soundKey));
 
                 // If not found, try parsing as namespaced key (e.g., "minecraft:entity_firework_rocket_launch")
                 if (sound == null && soundName.contains(":")) {
@@ -227,10 +227,10 @@ public class JumpPadsManager {
 
             if (particleName != null && !particleName.isEmpty() && particleCount > 0) {
                 // Convert common formats: "CLOUD" -> "cloud"
-                String particleKey = particleName.toLowerCase(Locale.ROOT).replace("_", "_");
+                String particleKey = particleName.toLowerCase(Locale.ROOT).replace(" ", "_");
 
                 // Try with minecraft namespace
-                Particle particle = Registry.PARTICLE_TYPE.get(NamespacedKey.minecraft(key));
+                Particle particle = Registry.PARTICLE_TYPE.get(NamespacedKey.minecraft(particleKey));
 
                 // If not found, try parsing as namespaced key
                 if (particle == null && particleName.contains(":")) {

@@ -74,7 +74,8 @@ public class CopyCMD implements Subcommand {
         OHolograms.get().getHologramsManager().addHologram(copy);
 
         if (OHolograms.get().getHologramConfiguration().isSaveOnChangedEnabled()) {
-            OHolograms.get().getHologramStorage().save(hologram);
+            // Save the new copy, not the original (which hasn't changed)
+            OHolograms.get().getHologramStorage().save(copy);
         }
 
         MessageHelper.success(sender, "Copied the hologram");

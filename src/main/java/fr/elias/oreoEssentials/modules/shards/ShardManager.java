@@ -152,11 +152,11 @@ public class ShardManager {
         out.writeUTF("Connect");
         out.writeUTF(targetShard);
 
-        player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
-
         if (!plugin.getServer().getMessenger().isOutgoingChannelRegistered(plugin, "BungeeCord")) {
             plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, "BungeeCord");
         }
+
+        player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
     }
 
 

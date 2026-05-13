@@ -31,72 +31,58 @@ public class FlatFileHologramStorage implements HologramStorage {
 
     @Override
     public void saveBatch(Collection<Hologram> holograms, boolean override) {
-        lock.readLock().lock();
-
-        boolean success = false;
-        YamlConfiguration config = null;
-        try {
-            config = YamlConfiguration.loadConfiguration(getWritableHologramsConfigFile());
-
-            if (override) {
-                config.set("holograms", null);
+        // Snapshot the collection immediately so callers can mutate it after returning.
+        final List<Hologram> snapshot = List.copyOf(holograms);
+        // Run the entire load → modify → write cycle on the single-threaded
+        // fileStorageExecutor under the write lock so concurrent saves cannot
+        // interleave and overwrite each other's changes (previously the readLock
+        // was used here, allowing multiple threads to load a stale file simultaneously).
+        OHolograms.get().getFileStorageExecutor().execute(() -> {
+            lock.writeLock().lock();
+            try {
+                YamlConfiguration config = YamlConfiguration.loadConfiguration(getWritableHologramsConfigFile());
+                if (override) {
+                    config.set("holograms", null);
+                }
+                for (final var hologram : snapshot) {
+                    writeHologram(config, hologram);
+                }
+                saveConfigSync(config);
+                OHolograms.get().getFancyLogger().debug("Saved " + snapshot.size() + " holograms to file (override=" + override + ")");
+            } finally {
+                lock.writeLock().unlock();
             }
-
-            for (final var hologram : holograms) {
-                writeHologram(config, hologram);
-            }
-
-            success = true;
-        } finally {
-            lock.readLock().unlock();
-            if (success) {
-                saveConfig(config);
-            }
-        }
-
-        OHolograms.get().getFancyLogger().debug("Saved " + holograms.size() + " holograms to file (override=" + override + ")");
+        });
     }
 
     @Override
     public void save(Hologram hologram) {
-        lock.readLock().lock();
-
-        boolean success = false;
-        YamlConfiguration config = null;
-        try {
-            config = YamlConfiguration.loadConfiguration(getWritableHologramsConfigFile());
-            writeHologram(config, hologram);
-
-            success = true;
-        } finally {
-            lock.readLock().unlock();
-            if (success) {
-                saveConfig(config);
+        OHolograms.get().getFileStorageExecutor().execute(() -> {
+            lock.writeLock().lock();
+            try {
+                YamlConfiguration config = YamlConfiguration.loadConfiguration(getWritableHologramsConfigFile());
+                writeHologram(config, hologram);
+                saveConfigSync(config);
+                OHolograms.get().getFancyLogger().debug("Saved hologram " + hologram.getData().getName() + " to file");
+            } finally {
+                lock.writeLock().unlock();
             }
-        }
-
-        OHolograms.get().getFancyLogger().debug("Saved hologram " + hologram.getData().getName() + " to file");
+        });
     }
 
     @Override
     public void delete(Hologram hologram) {
-        lock.readLock().lock();
-
-        boolean success = false;
-        YamlConfiguration config = null;
-        try {
-            config = YamlConfiguration.loadConfiguration(getWritableHologramsConfigFile());
-            config.set("holograms." + hologram.getData().getName(), null);
-
-            success = true;
-        } finally {
-            lock.readLock().unlock();
-            if (success) {
-                saveConfig(config);
+        OHolograms.get().getFileStorageExecutor().execute(() -> {
+            lock.writeLock().lock();
+            try {
+                YamlConfiguration config = YamlConfiguration.loadConfiguration(getWritableHologramsConfigFile());
+                config.set("holograms." + hologram.getData().getName(), null);
+                saveConfigSync(config);
+                OHolograms.get().getFancyLogger().debug("Deleted hologram " + hologram.getData().getName() + " from file");
+            } finally {
+                lock.writeLock().unlock();
             }
-        }
-
-        OHolograms.get().getFancyLogger().debug("Deleted hologram " + hologram.getData().getName() + " from file");
+        });
     }
 
     @Override
@@ -257,37 +243,32 @@ public class FlatFileHologramStorage implements HologramStorage {
         OHolograms.get().getFancyLogger().debug("Wrote hologram " + holoName + " to config");
     }
 
-    private void saveConfig(YamlConfiguration config) {
+    /**
+     * Synchronously writes the config to disk. Must be called from within the
+     * fileStorageExecutor while holding the writeLock.
+     */
+    private void saveConfigSync(YamlConfiguration config) {
         config.set("version", 2);
         config.setInlineComments("version", List.of("DO NOT CHANGE"));
-
-        OHolograms.get().getFileStorageExecutor().execute(() -> {
-            lock.writeLock().lock();
-            try {
-                File configFile = getPrimaryHologramsConfigFile();
-                File parent = configFile.getParentFile();
-                if (parent != null && !parent.exists()) {
-                    parent.mkdirs();
-                }
-                config.save(configFile);
-            } catch (IOException e) {
-                OHolograms.get().getFancyLogger().warn("Failed to save holograms config (IO error): " + e.getMessage());
-                e.printStackTrace();
-            } catch (Exception e) {
-                // Catches unchecked exceptions such as YAML serialization failures
-                // (e.g. caused by unusual Unicode characters like ItemsAdder glyphs).
-                OHolograms.get().getFancyLogger().warn("Failed to save holograms config (serialization error): " + e.getMessage());
-                e.printStackTrace();
-            } finally {
-                lock.writeLock().unlock();
+        try {
+            File configFile = getPrimaryHologramsConfigFile();
+            File parent = configFile.getParentFile();
+            if (parent != null && !parent.exists()) {
+                parent.mkdirs();
             }
-
-            if(!OHolograms.canGet()) {
-                return;
-            }
-
+            config.save(configFile);
+        } catch (IOException e) {
+            OHolograms.get().getFancyLogger().warn("Failed to save holograms config (IO error): " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            // Catches unchecked exceptions such as YAML serialization failures
+            // (e.g. caused by unusual Unicode characters like ItemsAdder glyphs).
+            OHolograms.get().getFancyLogger().warn("Failed to save holograms config (serialization error): " + e.getMessage());
+            e.printStackTrace();
+        }
+        if (OHolograms.canGet()) {
             OHolograms.get().getFancyLogger().debug("Saved config to file");
-        });
+        }
     }
 }
 

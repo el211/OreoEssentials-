@@ -34,10 +34,11 @@ public class PortalsListener implements Listener {
     }
 
     /**
-     * Clean up cooldowns and wand mode when player quits.
+     * Clean up all per-player state when player quits.
      */
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         wandListener.disableWandMode(e.getPlayer());
+        manager.onPlayerQuit(e.getPlayer().getUniqueId());
     }
 }

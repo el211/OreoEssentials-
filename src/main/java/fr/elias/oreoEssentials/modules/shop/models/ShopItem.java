@@ -98,7 +98,7 @@ public final class ShopItem {
             }
             if (customModelData > 0)
                 meta.setCustomModelData(customModelData);
-            if (!enchantments.isEmpty() && !(meta instanceof PotionMeta)) {
+            if (!enchantments.isEmpty() && !(meta instanceof PotionMeta) && !(meta instanceof EnchantmentStorageMeta)) {
                 enchantments.forEach((ench, lvl) -> meta.addEnchant(ench, lvl, true));
             }
             if (potionType != null && meta instanceof PotionMeta pm)

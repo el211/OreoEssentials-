@@ -231,7 +231,7 @@ public final class OHolograms implements OHologramsPlugin {
                 if (hologramsManager != null) {
                     hologramsManager.saveHolograms();
                 }
-            }, getHologramConfiguration().getAutosaveInterval(), getHologramConfiguration().getAutosaveInterval() * 60L, TimeUnit.SECONDS);
+            }, getHologramConfiguration().getAutosaveInterval() * 60L, getHologramConfiguration().getAutosaveInterval() * 60L, TimeUnit.SECONDS);
         }
 
         fancyLogger.info("Enable stage: converters");
@@ -343,7 +343,7 @@ public final class OHolograms implements OHologramsPlugin {
         if (ServerVersion.isVersionSupported(version)) {
             return HologramImpl::new;
         }
-        if (version.startsWith("1.21")) {
+        if (version.startsWith("1.21") || version.startsWith("26.")) {
             fancyLogger.warn("Server version %s is not in FancySitula's supported list, using the 1.21 display adapter fallback.".formatted(version));
             return HologramImpl::new;
         }
@@ -379,6 +379,11 @@ public final class OHolograms implements OHologramsPlugin {
         pluginCommand.setExecutor(executor);
         pluginCommand.setTabCompleter(completer);
         pluginCommand.setPermission(command.getPermission());
+        // Re-register in the server's CommandMap in case unregisterCommandHard removed it
+        try {
+            org.bukkit.command.CommandMap commandMap = plugin.getServer().getCommandMap();
+            commandMap.register(plugin.getName().toLowerCase(java.util.Locale.ROOT), pluginCommand);
+        } catch (Throwable ignored) {}
     }
 
     private void unbindPluginCommand(@NotNull String label) {
@@ -393,7 +398,10 @@ public final class OHolograms implements OHologramsPlugin {
     private void registerListeners() {
         plugin.getServer().getPluginManager().registerEvents(new PlayerListener(this), plugin);
         plugin.getServer().getPluginManager().registerEvents(new WorldListener(), plugin);
-        if (Set.of("1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11", "26.1").contains(Bukkit.getMinecraftVersion())) {
+        String mcVer = Bukkit.getMinecraftVersion();
+        boolean needsPlayerLoadedListener = Set.of("1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11").contains(mcVer)
+                || mcVer.startsWith("26.");
+        if (needsPlayerLoadedListener) {
             plugin.getServer().getPluginManager().registerEvents(new PlayerLoadedListener(), plugin);
         }
         if (PluginUtils.isFancyNpcsEnabled()) {

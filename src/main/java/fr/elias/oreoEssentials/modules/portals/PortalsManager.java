@@ -33,6 +33,12 @@ public class PortalsManager implements Listener {
         public String destServer;
         /** If set, destination is resolved from warp at teleport time instead of using destination coords */
         public String destWarp;
+        /**
+         * Original destination world name as stored in portals.yml.
+         * Preserved separately because for cross-server portals the destination World
+         * may not be loaded on this server, causing destination.getWorld() to return null.
+         */
+        public String destWorldName;
         public boolean keepYawPitch;
         public String permission;
         public PortalParticleConfig particles;
@@ -49,6 +55,9 @@ public class PortalsManager implements Listener {
             this.keepYawPitch = keepYawPitch;
             this.permission   = permission;
             this.particles    = particles != null ? particles : new PortalParticleConfig();
+            // Derive destWorldName from the destination if available
+            this.destWorldName = (destination != null && destination.getWorld() != null)
+                    ? destination.getWorld().getName() : "";
         }
 
         public boolean contains(Location loc) {
@@ -89,6 +98,7 @@ public class PortalsManager implements Listener {
     private PortalsCrossServerBroker crossServerBroker;
 
     private OreTask ambientTask;
+    private final Random ambientRng = new Random();
 
     // ── Constructor ───────────────────────────────────────────────────────────
 
@@ -181,6 +191,7 @@ public class PortalsManager implements Listener {
     public void updateDestination(String name, Location loc) {
         Portal p = get(name); if (p == null) return;
         p.destination = loc.clone();
+        if (loc.getWorld() != null) p.destWorldName = loc.getWorld().getName();
         savePortal(p); saveFile();
     }
 
@@ -428,11 +439,10 @@ public class PortalsManager implements Listener {
                     if (particleKey == null) continue;
                     Particle particle = Registry.PARTICLE_TYPE.get(particleKey);
                     if (particle == null) continue;
-                    Random rng = new Random();
                     BoundingBox b = portal.box;
-                    double rx = b.getMinX() + rng.nextDouble() * b.getWidthX();
-                    double ry = b.getMinY() + rng.nextDouble() * b.getHeight();
-                    double rz = b.getMinZ() + rng.nextDouble() * b.getWidthZ();
+                    double rx = b.getMinX() + ambientRng.nextDouble() * b.getWidthX();
+                    double ry = b.getMinY() + ambientRng.nextDouble() * b.getHeight();
+                    double rz = b.getMinZ() + ambientRng.nextDouble() * b.getWidthZ();
                     Location ambLoc = new Location(portal.world, rx, ry, rz);
                     portal.world.spawnParticle(particle, ambLoc, pCount, 0.15, 0.15, 0.15, 0.02);
                 } catch (Throwable ignored) {}
@@ -492,8 +502,11 @@ public class PortalsManager implements Listener {
                     pc.ambientCount    = ps.getInt("ambient-count", 3);
                 }
 
-                portals.put(key.toLowerCase(Locale.ROOT),
-                        new Portal(s.getString("name", key), w, box, dest, destSrv, destWarp, keep, perm, pc));
+                Portal portal = new Portal(s.getString("name", key), w, box, dest, destSrv, destWarp, keep, perm, pc);
+                // Always preserve the original dest world name from file, even if that world
+                // isn't loaded on this server (cross-server portals).
+                if (dWorldName != null && !dWorldName.isEmpty()) portal.destWorldName = dWorldName;
+                portals.put(key.toLowerCase(Locale.ROOT), portal);
                 loaded++;
             } catch (Throwable t) {
                 plugin.getLogger().warning("[Portals] Failed to load '" + key + "': " + t.getMessage());
@@ -515,7 +528,11 @@ public class PortalsManager implements Listener {
         portalsYml.set(base + "box.x2",      p.box.getMaxX());
         portalsYml.set(base + "box.y2",      p.box.getMaxY());
         portalsYml.set(base + "box.z2",      p.box.getMaxZ());
-        portalsYml.set(base + "dest.world",  p.destination.getWorld().getName());
+        // Use stored destWorldName to avoid NPE when destination world is not loaded (cross-server portals)
+        String dwName = (p.destWorldName != null && !p.destWorldName.isEmpty())
+                ? p.destWorldName
+                : (p.destination.getWorld() != null ? p.destination.getWorld().getName() : "");
+        portalsYml.set(base + "dest.world",  dwName);
         portalsYml.set(base + "dest.x",      p.destination.getX());
         portalsYml.set(base + "dest.y",      p.destination.getY());
         portalsYml.set(base + "dest.z",      p.destination.getZ());
@@ -541,6 +558,17 @@ public class PortalsManager implements Listener {
     }
 
     // ── Public API ────────────────────────────────────────────────────────────
+
+    /** Called when a player disconnects — cleans up per-player state to prevent memory leaks. */
+    public void onPlayerQuit(UUID playerId) {
+        cooldown.remove(playerId);
+        lastDenied.remove(playerId);
+        pos1.remove(playerId);
+        pos2.remove(playerId);
+        awaitingPermInput.remove(playerId);
+        awaitingServerInput.remove(playerId);
+        awaitingWarpInput.remove(playerId);
+    }
 
     public boolean isEnabled()       { return enabled; }
     public OreoEssentials getPlugin(){ return plugin; }

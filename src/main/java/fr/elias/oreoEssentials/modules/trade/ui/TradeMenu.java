@@ -532,10 +532,10 @@ public final class TradeMenu implements InventoryProvider {
 
     public boolean isOpenFor(UUID viewerId) {
         Player p = (viewerId != null ? Bukkit.getPlayer(viewerId) : null);
-        if (p == null || !p.isOnline() || p.getOpenInventory() == null) return false;
+        if (p == null || !p.isOnline()) return false;
         try {
-            String title = p.getOpenInventory().getTitle();
-            return title != null && title.contains("Trade: ");
+            java.util.Optional<SmartInventory> inv = plugin.getInvManager().getInventory(p);
+            return inv.isPresent() && (inv.get().getProvider() instanceof TradeMenu);
         } catch (Throwable ignored) {
             return false;
         }

@@ -23,6 +23,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
@@ -187,6 +188,13 @@ public class PlayerWarpBrowseMenu implements InventoryProvider {
 
                 String finalTyped = typed;
                 OreScheduler.run(plugin, () -> handlePasswordResult(player, warp, finalTyped));
+            }
+
+            @EventHandler
+            public void onQuit(PlayerQuitEvent event) {
+                if (event.getPlayer().getUniqueId().equals(player.getUniqueId())) {
+                    HandlerList.unregisterAll(this);
+                }
             }
 
             @EventHandler

@@ -10,9 +10,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,8 +50,45 @@ public class PlayerWarpCommand implements OreoCommand {
     private final PlayerWarpService service;
     private final Map<UUID, Integer> extraWarps = new HashMap<>();
 
+    /** File that persists admin-granted extra warp slots across restarts. */
+    private final File extraWarpsFile;
+    private YamlConfiguration extraWarpsYaml;
+
     public PlayerWarpCommand(PlayerWarpService service) {
         this.service = service;
+        this.extraWarpsFile = new File(OreoEssentials.get().getDataFolder(), "playerwarps-extra.yml");
+        loadExtraWarps();
+    }
+
+    private void loadExtraWarps() {
+        extraWarps.clear();
+        if (!extraWarpsFile.exists()) return;
+        extraWarpsYaml = YamlConfiguration.loadConfiguration(extraWarpsFile);
+        if (extraWarpsYaml.isConfigurationSection("extra")) {
+            for (String key : extraWarpsYaml.getConfigurationSection("extra").getKeys(false)) {
+                try {
+                    UUID uuid = UUID.fromString(key);
+                    int amount = extraWarpsYaml.getInt("extra." + key, 0);
+                    if (amount > 0) extraWarps.put(uuid, amount);
+                } catch (IllegalArgumentException ignored) {}
+            }
+        }
+    }
+
+    private void saveExtraWarps() {
+        if (extraWarpsYaml == null) extraWarpsYaml = new YamlConfiguration();
+        // Overwrite section cleanly
+        extraWarpsYaml.set("extra", null);
+        for (Map.Entry<UUID, Integer> e : extraWarps.entrySet()) {
+            if (e.getValue() > 0) {
+                extraWarpsYaml.set("extra." + e.getKey().toString(), e.getValue());
+            }
+        }
+        try {
+            extraWarpsYaml.save(extraWarpsFile);
+        } catch (IOException ex) {
+            OreoEssentials.get().getLogger().warning("[PlayerWarps] Failed to save playerwarps-extra.yml: " + ex.getMessage());
+        }
     }
 
     @Override public String name() { return "pw"; }
@@ -411,17 +451,11 @@ public class PlayerWarpCommand implements OreoCommand {
                 }
 
                 Location newLoc = actor.getLocation();
-                service.deleteWarp(warp);
-                PlayerWarp recreated = service.createWarp(actor, warp.getName(), newLoc);
-                if (recreated != null) {
-                    Lang.send(actor, "pw.reset-success",
-                            "<green>Reset warp <aqua>%name%</aqua> to your current location.</green>",
-                            Map.of("name", recreated.getName()));
-                } else {
-                    Lang.send(actor, "pw.reset-failed",
-                            "<red>Failed to reset warp <yellow>%name%</yellow>.</red>",
-                            Map.of("name", warp.getName()));
-                }
+                warp.setLocation(newLoc.clone());
+                service.saveWarp(warp);
+                Lang.send(actor, "pw.reset-success",
+                        "<green>Reset warp <aqua>%name%</aqua> to your current location.</green>",
+                        Map.of("name", warp.getName()));
                 return true;
             }
 
@@ -610,6 +644,7 @@ public class PlayerWarpCommand implements OreoCommand {
                 int newVal = current + amount;
                 if (newVal < 0) newVal = 0;
                 extraWarps.put(uuid, newVal);
+                saveExtraWarps();
 
                 Lang.send(sender, "pw.addwarps-success",
                         "<green>Added <white>%amount%</white> extra warp slot(s) to <yellow>%player%</yellow>. Total extra: <white>%total%</white>.</green>",

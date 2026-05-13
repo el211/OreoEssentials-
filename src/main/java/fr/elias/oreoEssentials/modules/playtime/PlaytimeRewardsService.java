@@ -72,8 +72,7 @@ public final class PlaytimeRewardsService {
 
     public void init() {
         loadConfig();
-        if (enabled) start();
-        else plugin.getLogger().info("[Prewards] Disabled by config (settings.enable=false).");
+        if (!enabled) plugin.getLogger().info("[Prewards] Disabled by config (settings.enable=false).");
     }
 
     public void loadConfig() {
@@ -145,8 +144,8 @@ public final class PlaytimeRewardsService {
             }
         }
 
-        // Apply enable toggle live
-        if (enabled && (periodicTask == null && listener == null)) start();
+        // Apply enable toggle live — start() calls stop() first, so safe on reload too
+        if (enabled) start();
         if (!enabled) stop();
     }
 
@@ -243,9 +242,7 @@ public final class PlaytimeRewardsService {
     }
 
     public boolean hasPermission(Player p, RewardEntry r) {
-        if (r.requiresPermission) {
-            return p.hasPermission("oreo.prewards." + r.id);
-        }
+        if (!r.requiresPermission) return true; // public reward — visible to everyone
         return p.hasPermission("oreo.prewards." + r.id) || p.hasPermission("oreo.prewards.*");
     }
 

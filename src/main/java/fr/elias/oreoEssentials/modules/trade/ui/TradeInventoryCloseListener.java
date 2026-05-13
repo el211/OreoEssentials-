@@ -43,6 +43,18 @@ public final class TradeInventoryCloseListener implements Listener {
                 try {
                     menu.onClose(p);
                 } catch (Throwable ignored) {}
+                // Return items and cancel the trade if the session is still active.
+                // The isClosingOrClosed() guard prevents re-entrancy when returnAllAndCleanup
+                // calls player.closeInventory(), which would fire this event again.
+                try {
+                    UUID sid = svc.getTradeIdByPlayer(viewerId);
+                    if (sid != null) {
+                        var sess = svc.getSession(sid);
+                        if (sess != null && !sess.isClosingOrClosed()) {
+                            svc.onViewerClosed(viewerId);
+                        }
+                    }
+                } catch (Throwable ignored) {}
             } else {
                 try { reg.unregister(viewerId); } catch (Throwable ignored) {}
             }

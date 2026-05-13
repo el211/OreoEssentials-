@@ -124,9 +124,11 @@ public class TempFlyService implements Listener {
     private int getDurationForPlayer(Player player) {
         String group = null;
         try {
-            group = LuckPermsProvider.get().getUserManager()
-                    .getUser(player.getUniqueId())
-                    .getPrimaryGroup();
+            net.luckperms.api.model.user.User lpUser = LuckPermsProvider.get()
+                    .getUserManager().getUser(player.getUniqueId());
+            if (lpUser != null) {
+                group = lpUser.getPrimaryGroup();
+            }
         } catch (Throwable ignored) {
         }
 

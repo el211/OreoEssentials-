@@ -209,14 +209,6 @@ public final class TradeSession {
     public void setOfferSlot(boolean forA, int slot, ItemStack item) {
         if (slot < 0 || slot >= 18) return;
         if (uiLocked || completed) return;
-        // Optional: enforce empty cursor on edit like confirm (prevents weird client timing)
-        if (cfg.requireEmptyCursorOnConfirm) {
-            Player p = Bukkit.getPlayer(forA ? aId : bId);
-            if (p != null && !isEmpty(p.getItemOnCursor())) {
-                p.sendMessage("§cEmpty your cursor before editing the offer.");
-                return;
-            }
-        }
 
         if (forA) {
             offerA[slot] = cloneOrNull(item);
