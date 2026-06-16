@@ -412,6 +412,7 @@ public final class OreoEssentials extends JavaPlugin {
     private CurrencyPlaceholderExpansion currencyPlaceholders;
     private fr.elias.oreoEssentials.modules.playtime.PlaytimeTracker playtimeTracker;
     private PlayerNametagManager nametagManager;
+    private fr.elias.oreoEssentials.dialog.OreoDialogManager dialogManager;
     private fr.elias.oreoEssentials.modules.nametag.ChatBubbleService chatBubbleService;
     private fr.elias.oreoEssentials.modules.nametag.ActionBarService actionBarService;
     private fr.elias.oreoEssentials.modules.nametag.MultiBossBarService multiBossBarService;
@@ -472,6 +473,7 @@ public final class OreoEssentials extends JavaPlugin {
         initEnderChest();
         initInventorySync();
         initCoreServices();
+        this.dialogManager = new fr.elias.oreoEssentials.dialog.OreoDialogManager(this);
         initRabbitMQ();       // async – initBrokers() called inside callback
         initCurrencySystem();
         fr.elias.oreoEssentials.commands.core.admins.OeWorldCommand.loadCustomWorlds(this);
@@ -2625,10 +2627,6 @@ public final class OreoEssentials extends JavaPlugin {
     public fr.elias.oreoEssentials.modules.chat.CustomConfig getChatConfig() { return chatConfig; }
     public org.bukkit.configuration.file.FileConfiguration getPlayerWarpsConfig() { return playerWarpsConfig; }
     public void reloadPlayerWarpsConfig() {
-        java.io.File pwCfgFile = new java.io.File(getDataFolder(), "playerwarps/config.yml");
-        this.playerWarpsConfig = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(pwCfgFile);
-    }
-    public void reloadPlayerWarpsConfig() {
         java.io.File f = new java.io.File(getDataFolder(), "playerwarps/config.yml");
         if (!f.exists()) saveResource("playerwarps/config.yml", false);
         this.playerWarpsConfig = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(f);
@@ -2709,6 +2707,7 @@ public final class OreoEssentials extends JavaPlugin {
     public java.util.Map<java.util.UUID, Long> getRtpCooldownCache() { return rtpCooldownCache; }
     public fr.elias.oreoEssentials.modules.playtime.PlaytimeTracker getPlaytimeTracker() { return this.playtimeTracker; }
     public PlayerNametagManager getNametagManager() { return nametagManager; }
+    public fr.elias.oreoEssentials.dialog.OreoDialogManager getDialogManager() { return dialogManager; }
     public fr.elias.oreoEssentials.modules.nametag.ChatBubbleService getChatBubbleService() { return chatBubbleService; }
     public SettingsConfig getSettings() { return settings; }
     public boolean isJoinUiReady(Player player) {

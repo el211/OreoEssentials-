@@ -74,6 +74,14 @@ public class SettingsConfig {
         return isEnabled("chat");
     }
 
+    public boolean isDialogEnabled() {
+        return cfg.getBoolean("dialog.enabled", false);
+    }
+
+    public boolean isDialogEnabledFor(String feature) {
+        return isDialogEnabled() && cfg.getBoolean("dialog.features." + feature, true);
+    }
+
     public boolean chatDiscordBridgeEnabled() {
         return featureOption("chat", "discord-bridge", false);
     }

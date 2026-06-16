@@ -279,3 +279,22 @@ performance:
   #       bossbar: false
   # ──────────────────────────────────────────────────────────────────────────
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Dialog API (Paper 1.21.5+)
+# Requires Paper 1.21.5 or newer. Falls back to GUI/text if unavailable.
+# GeyserMC automatically converts dialogs to Bedrock forms for Bedrock players.
+# ─────────────────────────────────────────────────────────────────────────────
+dialog:
+  enabled: false  # Set to true to enable Dialog API (requires Paper 1.21.5+)
+  features:
+    homes: true           # Use dialog for /home list and /homesgui
+    warps: true           # Use dialog for /warps
+    tpa: true             # Show Accept/Deny dialog on TPA requests
+    player-warps: true    # Use dialog for /pw gui
+    kits: true            # Use dialog for /kits
+    near: true            # Use dialog for /near
+    channels: true        # Use dialog for /oechannels
+    confirm-delhome: true   # Confirm before /delhome
+    confirm-delwarp: true   # Confirm before /delwarp
+    confirm-mailclear: true # Confirm before /mail clear
+    confirm-pwremove: true  # Confirm before /pw remove

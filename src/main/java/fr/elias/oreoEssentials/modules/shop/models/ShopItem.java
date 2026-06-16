@@ -38,13 +38,22 @@ public final class ShopItem {
     private final String itemsAdderId;
     private final String nexoId;
 
+    /** Commands run as console on purchase. Supports %player% placeholder. */
+    private final List<String> buyCommands;
+    /**
+     * When true, no item is given to the player — only the commands run.
+     * Useful for virtual rewards (crate keys, rank upgrades, etc.).
+     */
+    private final boolean commandOnly;
+
 
     public ShopItem(String id, String shopId, Material material, String displayName,
                     List<String> lore, double buyPrice, double sellPrice,
                     int amount, int slot, int page, String permission,
                     Map<Enchantment, Integer> enchantments, PotionType potionType,
                     int customModelData, short damage,
-                    String itemsAdderId, String nexoId) {
+                    String itemsAdderId, String nexoId,
+                    List<String> buyCommands, boolean commandOnly) {
         this.id             = id;
         this.shopId         = shopId;
         this.material       = material;
@@ -62,6 +71,8 @@ public final class ShopItem {
         this.damage         = damage;
         this.itemsAdderId   = itemsAdderId;
         this.nexoId         = nexoId;
+        this.buyCommands    = buyCommands != null ? buyCommands : List.of();
+        this.commandOnly    = commandOnly;
     }
 
     public ItemStack buildItemStack() {
@@ -168,9 +179,12 @@ public final class ShopItem {
     public short                getDamage()         { return damage; }
     public String               getItemsAdderId()   { return itemsAdderId; }
     public String               getNexoId()         { return nexoId; }
+    public List<String>         getBuyCommands()    { return buyCommands; }
+    public boolean              isCommandOnly()     { return commandOnly; }
 
     public boolean canBuy()          { return buyPrice  >= 0; }
     public boolean canSell()         { return sellPrice >= 0; }
     public boolean isItemsAdderItem(){ return itemsAdderId != null; }
     public boolean isNexoItem()      { return nexoId != null; }
+    public boolean hasCommands()     { return !buyCommands.isEmpty(); }
 }

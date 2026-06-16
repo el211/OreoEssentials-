@@ -41,6 +41,9 @@ public class NearCommand implements OreoCommand {
         }
 
         int finalRadius = radius;
+        if (plugin.getDialogManager() != null && plugin.getDialogManager().openNearDialog(p, finalRadius)) {
+            return true;
+        }
         SmartInventory.builder()
                 .manager(plugin.getInvManager())
                 .provider(new NearGuiProvider(plugin, finalRadius))
