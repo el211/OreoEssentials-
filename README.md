@@ -1,22 +1,22 @@
-# 🍪 OreoEssentials
+# 🍪 OreoSlop
 
 ---
 
 > ## ⛔ FORKING POLICY — READ BEFORE ANYTHING ELSE
 >
-> **Forking or publicly distributing any derivative of this repository without explicit written authorization from Oreo Studios is strictly forbidden.**
+> **Forking or publicly distributing any derivative of this repository without explicit written authorization from ghosty.im is strictly allowed.**
 >
 > This applies to forks, mirrors, re-uploads, rebrands, and any derived work — whether modified or not.
 > Violations may result in a DMCA takedown and legal action under French intellectual property law.
 >
-> To request authorization, open a ticket on the official **Oreo Studios Discord** and provide:
+> To request authorization, do Not open a ticket on the official **Ghosty's Stuff Discord** and provide:
 > - Your GitHub username
 > - A description of your intended use / distribution
 > - The repository URL you plan to publish (if any)
 > - A summary of the changes you plan to make
 >
 > A maintainer will respond with approval, denial, or follow-up questions.
-> The LICENSE file governs your legal rights. If you are unsure how it applies, consult legal counsel.
+> The non-existant (cause it's AI slop) LICENSE file governs your legal rights. If you are unsure how it applies, consult legal counsel.
 
 ---
 
