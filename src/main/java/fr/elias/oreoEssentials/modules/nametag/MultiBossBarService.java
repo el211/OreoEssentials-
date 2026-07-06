@@ -38,6 +38,7 @@ public final class MultiBossBarService implements Listener {
 
     private static final class BarConfig {
         final String id;
+        final boolean enabled;
         final List<String> texts;
         final int carouselIntervalTicks;
         final BarColor color;
@@ -45,10 +46,11 @@ public final class MultiBossBarService implements Listener {
         final double progress;
         final List<NametageCondition> conditions;
 
-        BarConfig(String id, List<String> texts, int carouselIntervalTicks,
+        BarConfig(String id, boolean enabled, List<String> texts, int carouselIntervalTicks,
                   BarColor color, BarStyle style, double progress,
                   List<NametageCondition> conditions) {
             this.id = id;
+            this.enabled = enabled;
             this.texts = texts;
             this.carouselIntervalTicks = Math.max(1, carouselIntervalTicks);
             this.color = color;
@@ -131,9 +133,10 @@ public final class MultiBossBarService implements Listener {
                 catch (Exception e) { style = BarStyle.SOLID; }
 
                 double progress = s.getDouble("progress", 1.0);
+                boolean barEnabled = s.getBoolean("enabled", true);
                 List<NametageCondition> conditions = NametageCondition.parseList(s, "conditions");
 
-                barConfigs.add(new BarConfig(key, texts, carouselTicks, color, style, progress, conditions));
+                barConfigs.add(new BarConfig(key, barEnabled, texts, carouselTicks, color, style, progress, conditions));
             } catch (Exception e) {
                 plugin.getLogger().warning("[MultiBossBar] Failed to parse bar '" + key + "': " + e.getMessage());
             }
@@ -155,7 +158,7 @@ public final class MultiBossBarService implements Listener {
 
     private void updatePlayer(Player player) {
         for (BarConfig cfg : barConfigs) {
-            boolean shouldShow = NametageCondition.evaluateAll(cfg.conditions, player);
+            boolean shouldShow = cfg.enabled && NametageCondition.evaluateAll(cfg.conditions, player);
 
             ConcurrentHashMap<UUID, BossBar> playerBars = activeBars.computeIfAbsent(cfg.id, k -> new ConcurrentHashMap<>());
             ConcurrentHashMap<UUID, int[]> counters = carouselCounters.computeIfAbsent(cfg.id, k -> new ConcurrentHashMap<>());
@@ -256,6 +259,13 @@ public final class MultiBossBarService implements Listener {
     // ── Public API ────────────────────────────────────────────────────────────
 
     public boolean isEnabled() { return enabled; }
+
+    public boolean isBarEnabled(String barId) {
+        for (BarConfig cfg : barConfigs) {
+            if (cfg.id.equals(barId)) return cfg.enabled;
+        }
+        return true; // default if bar not found
+    }
 
     public void reload(FileConfiguration config) {
         // Stop existing task & clear all bars

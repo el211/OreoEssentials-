@@ -50,6 +50,8 @@ public class OeSettingsMenu implements InventoryProvider {
         slot = addFeatureToggle(contents, slot, "playervaults", "Player Vaults", Material.ENDER_CHEST);
         slot = addFeatureToggle(contents, slot, "rtp", "Random Teleport", Material.COMPASS);
         slot = addFeatureToggle(contents, slot, "bossbar", "Boss Bar", Material.ARMOR_STAND);
+        slot = addMultiBarToggle(contents, slot, "welcome", "Welcome Bar", Material.NAME_TAG);
+        slot = addMultiBarToggle(contents, slot, "staff-bar", "Staff Bar", Material.IRON_SWORD);
         slot = addFeatureToggle(contents, slot, "scoreboard", "Scoreboard", Material.ITEM_FRAME);
         slot = addFeatureToggle(contents, slot, "tab", "Tab List", Material.PLAYER_HEAD);
         slot = addFeatureToggle(contents, slot, "sit", "Sit Command", Material.OAK_STAIRS);
@@ -116,6 +118,59 @@ public class OeSettingsMenu implements InventoryProvider {
         }));
 
         return slot + 1;
+    }
+
+    private int addMultiBarToggle(InventoryContents contents, int slot, String barId, String displayName, Material icon) {
+        int row = slot / 9;
+        int col = slot % 9;
+
+        if (col >= 8) {
+            row++;
+            col = 1;
+            slot = row * 9 + col;
+        }
+
+        var multiBar = plugin.getMultiBossBarService();
+        boolean enabled = multiBar != null && multiBar.isBarEnabled(barId);
+
+        ItemStack item = createItem(
+                enabled ? Material.LIME_DYE : Material.GRAY_DYE,
+                (enabled ? "§a✔ " : "§c✘ ") + displayName,
+                List.of(
+                        "§7Status: " + (enabled ? "§aEnabled" : "§cDisabled"),
+                        "§7Bar: §f" + barId,
+                        "§7",
+                        enabled ? "§eClick to disable" : "§eClick to enable"
+                )
+        );
+
+        contents.set(row, col, ClickableItem.of(item, e -> {
+            toggleMultiBar(barId);
+            if (e.getWhoClicked() instanceof Player p) {
+                getInventory(plugin).open(p);
+            }
+        }));
+
+        return slot + 1;
+    }
+
+    private void toggleMultiBar(String barId) {
+        var npConfig = plugin.getCustomNameplatesConfig();
+        if (npConfig == null) return;
+
+        var cfg = npConfig.raw();
+        String path = "bossbars.bars." + barId + ".enabled";
+        boolean current = cfg.getBoolean(path, true);
+        cfg.set(path, !current);
+        npConfig.save();
+
+        // Reload the multi-bossbar service to apply the change immediately
+        var multiBar = plugin.getMultiBossBarService();
+        if (multiBar != null) {
+            multiBar.reload(cfg);
+        }
+
+        plugin.getLogger().info("[Settings] Toggled multi-bossbar '" + barId + "': " + !current);
     }
 
     private void toggleFeature(String featureKey) {

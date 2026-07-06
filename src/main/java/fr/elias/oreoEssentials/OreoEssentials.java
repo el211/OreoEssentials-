@@ -418,6 +418,8 @@ public final class OreoEssentials extends JavaPlugin {
     private fr.elias.oreoEssentials.modules.nametag.MultiBossBarService multiBossBarService;
     private fr.elias.oreoEssentials.modules.nametag.CustomNameplatesConfig customNameplatesConfig;
     private fr.elias.oreoEssentials.modules.nametag.NametageToggleStore nametagToggleStore;
+    public fr.elias.oreoEssentials.modules.nametag.MultiBossBarService getMultiBossBarService() { return multiBossBarService; }
+    public fr.elias.oreoEssentials.modules.nametag.CustomNameplatesConfig getCustomNameplatesConfig() { return customNameplatesConfig; }
 
     private Gson gson = new Gson();
     public BackBroker getBackBroker() { return backBroker; }
@@ -2463,13 +2465,6 @@ public final class OreoEssentials extends JavaPlugin {
                     "https://www.spigotmc.org/resources/6245/"});
         }
 
-        // ProtocolLib — needed for custom tab list
-        if (settingsConfig.tabEnabled() && Bukkit.getPluginManager().getPlugin("ProtocolLib") == null) {
-            missing.add(new String[]{"ProtocolLib", "tab.enabled=true but ProtocolLib is not installed",
-                    "Custom tab list (header/footer/player list) will not work",
-                    "https://www.spigotmc.org/resources/1997/"});
-        }
-
         // LuckPerms — needed for prefix/suffix in chat, nametags, tab
         if (Bukkit.getPluginManager().getPlugin("LuckPerms") == null) {
             missing.add(new String[]{"LuckPerms", "LuckPerms not found",
@@ -2518,13 +2513,7 @@ public final class OreoEssentials extends JavaPlugin {
     }
 
     private void checkProtocolLib() {
-        boolean hasProtocolLib = Bukkit.getPluginManager().getPlugin("ProtocolLib") != null;
-        boolean tabEnabled = settingsConfig.tabEnabled();
-        if (tabEnabled && !hasProtocolLib) {
-            getLogger().warning("[ProtocolLib] NOT INSTALLED Ã¢â‚¬â€ custom tab-list will NOT work. Download: https://www.spigotmc.org/resources/1997/");
-        } else if (tabEnabled) {
-            getLogger().info("[ProtocolLib] Detected Ã¢â‚¬â€ custom tab-list available.");
-        }
+        // ProtocolLib no longer used -- tab and skin now run on PacketEvents.
     }
 
     // -------------------------------------------------------------------------

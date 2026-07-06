@@ -39,4 +39,13 @@ public final class CustomNameplatesConfig {
     public FileConfiguration raw() {
         return cfg;
     }
+
+    /** Saves any in-memory changes back to the config file on disk. */
+    public void save() {
+        try {
+            cfg.save(file);
+        } catch (java.io.IOException e) {
+            plugin.getLogger().warning("[CustomNameplates] Failed to save config: " + e.getMessage());
+        }
+    }
 }
