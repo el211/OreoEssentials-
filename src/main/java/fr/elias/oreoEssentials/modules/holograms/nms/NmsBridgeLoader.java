@@ -28,6 +28,17 @@ public final class NmsBridgeLoader {
     );
 
     public static NmsHologramBridge loadOrThrow() {
+
+        // Prefer PacketEvents — version-agnostic and no NMS reflection needed.
+        try {
+            Class.forName("com.github.retrooper.packetevents.PacketEvents");
+            PacketEventsBridge pe = new PacketEventsBridge();
+            Bukkit.getLogger().info("[OHolograms] Using PacketEvents bridge for hologram packets.");
+            return pe;
+        } catch (ClassNotFoundException ignored) {
+            // PacketEvents not on the server — fall through to NMS reflection bridge.
+        }
+
         String ver = craftBukkitVersion();
 
         NmsHologramBridge exact = tryLoad(ver);

@@ -178,13 +178,7 @@ public class TabListManager {
         this.useCustomLayout = "CUSTOM".equalsIgnoreCase(layoutMode);
 
         if (useCustomLayout) {
-            if (Bukkit.getPluginManager().getPlugin("ProtocolLib") == null) {
-                plugin.getLogger().warning("[TAB] Custom layout requires ProtocolLib! Falling back to classic mode.");
-                plugin.getLogger().warning("[TAB] Download ProtocolLib: https://www.spigotmc.org/resources/protocollib.1997/");
-                this.useCustomLayout = false;
-            } else {
-                plugin.getLogger().info("[TAB] Using CUSTOM layout mode (packet-based tablist like the image)");
-            }
+            plugin.getLogger().info("[TAB] Using CUSTOM layout mode (packet-based tablist like the image)");
         } else {
             plugin.getLogger().info("[TAB] Using CLASSIC layout mode (traditional header/footer)");
         }

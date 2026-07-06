@@ -1,5 +1,9 @@
 package fr.elias.oreoEssentials.modules.nametag;
 
+
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.util.Vector3d;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityTeleport;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.util.OreTask;
@@ -77,6 +81,18 @@ public class PlayerNametagManager implements Listener {
     private OreTask updateTask;
     private OreTask positionTask;
     private OreTask vanillaHideRefreshTask;
+
+    /** True when PacketEvents is on the server — enables per-viewer packet-based position updates. */
+    private static final boolean PACKET_EVENTS_AVAILABLE;
+    static {
+        boolean ok;
+        try { Class.forName("com.github.retrooper.packetevents.PacketEvents"); ok = true; }
+        catch (ClassNotFoundException e) { ok = false; }
+        PACKET_EVENTS_AVAILABLE = ok;
+    }
+
+    /** Incremented every position-task tick; used to throttle server-side sync in packet mode. */
+    private int syncTickCounter = 0;
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
@@ -294,10 +310,14 @@ public class PlayerNametagManager implements Listener {
         display.addScoreboardTag("oe_nametag");
         display.addScoreboardTag("oe_nametag:" + owner.getName().toLowerCase());
 
-        // Smooth client-side interpolation when the entity teleports to follow the player.
-        // teleportDuration = how many ticks the client spends interpolating each position update.
-        // +1 buffer so the client never "runs out" of interpolation if a tick arrives slightly late.
-        display.setTeleportDuration(Math.max(1, positionIntervalTicks + 1));
+        // Smooth client-side interpolation between position updates.
+        // In PacketEvents mode packets arrive with no scheduler delay, so exactly
+        // positionIntervalTicks of interpolation gives perfectly gapless movement.
+        // Without PacketEvents, add +1 as a buffer for scheduler scheduling jitter.
+        int td = PACKET_EVENTS_AVAILABLE
+                ? Math.max(1, positionIntervalTicks)
+                : Math.max(1, positionIntervalTicks + 1);
+        display.setTeleportDuration(td);
 
         // Text
         Component initialText = renderText(layer.text, owner, null);
@@ -666,6 +686,12 @@ public class PlayerNametagManager implements Listener {
 
     /** Teleports all nametag entities to follow their owners. */
     private void updateAllPositions() {
+        syncTickCounter++;
+        // How many position-task ticks between server-side syncs in PacketEvents mode.
+        // Every ~1 s (20 ticks) we do a real entity.teleport() to keep the server-side
+        // position in sync (important for chunk tracking, other plugins, etc.).
+        final int syncEveryTicks = Math.max(1, 20 / Math.max(1, positionIntervalTicks));
+
         for (Player owner : Bukkit.getOnlinePlayers()) {
             List<UUID> entityUuids = ownerToEntities.get(owner.getUniqueId());
             if (entityUuids == null) continue;
@@ -677,6 +703,8 @@ public class PlayerNametagManager implements Listener {
                 continue;
             }
 
+            Set<UUID> viewerIds = ownerToViewers.get(owner.getUniqueId());
+
             for (int i = 0; i < entityUuids.size() && i < layers.size(); i++) {
                 UUID entityUuid = entityUuids.get(i);
                 org.bukkit.entity.Entity entity = Bukkit.getEntity(entityUuid);
@@ -684,11 +712,43 @@ public class PlayerNametagManager implements Listener {
 
                 double yOff = layers.get(i).yOffset;
                 Location target = current.clone().add(0, yOff, 0);
+                target.setYaw(0f);
+                target.setPitch(0f);
 
-                if (OreScheduler.isFolia()) {
-                    entity.teleportAsync(target);
+                if (PACKET_EVENTS_AVAILABLE && viewerIds != null && !viewerIds.isEmpty()) {
+                    // Send a per-viewer teleport packet directly — no scheduler overhead,
+                    // no Bukkit broadcast to unrelated players. The nametag is always
+                    // visually glued to the player even at high speed or during jumps.
+                    WrapperPlayServerEntityTeleport packet = new WrapperPlayServerEntityTeleport(
+                            entity.getEntityId(),
+                            new Vector3d(target.getX(), target.getY(), target.getZ()),
+                            0f, 0f,
+                            false
+                    );
+                    for (UUID viewerId : new ArrayList<>(viewerIds)) {
+                        Player viewer = Bukkit.getPlayer(viewerId);
+                        if (viewer == null || !viewer.isOnline()) continue;
+                        try {
+                            PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, packet);
+                        } catch (Exception ignored) {}
+                    }
+
+                    // Periodic server-side sync so the entity's world position stays correct.
+                    if ((syncTickCounter % syncEveryTicks) == 0) {
+                        final Location syncTarget = target;
+                        if (OreScheduler.isFolia()) {
+                            entity.teleportAsync(syncTarget);
+                        } else {
+                            OreScheduler.runForEntity(plugin, entity, () -> entity.teleport(syncTarget));
+                        }
+                    }
                 } else {
-                    OreScheduler.runForEntity(plugin, entity, () -> entity.teleport(target));
+                    // Fallback: standard Bukkit teleport (broadcasts to all nearby clients)
+                    if (OreScheduler.isFolia()) {
+                        entity.teleportAsync(target);
+                    } else {
+                        OreScheduler.runForEntity(plugin, entity, () -> entity.teleport(target));
+                    }
                 }
             }
         }
