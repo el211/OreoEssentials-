@@ -85,8 +85,9 @@ public final class ShopGUI {
             // ── Back button ──────────────────────────────────────────────────
             ShopGuiLayout.Button backBtn = layout.getBack();
             if (backBtn.isEnabled()) {
-                int slot = backBtn.getSlot();
-                contents.set(slot / 9, slot % 9, ClickableItem.from(
+                // Use navRow as row — the configured slot only provides the column.
+                // This keeps the button visible regardless of the shop's row count.
+                contents.set(navRow, backBtn.getSlot() % 9, ClickableItem.from(
                         navItem(backBtn.getMaterial(), backBtn.getName(),
                                 backBtn.getLore(), backBtn.getModelData()),
                         e -> module.getMainMenuGUI().open(player)));
@@ -95,11 +96,10 @@ public final class ShopGUI {
             // ── Previous page ────────────────────────────────────────────────
             ShopGuiLayout.Button prevBtn = layout.getPrevPage();
             if (prevBtn.isEnabled() && page > 1) {
-                int slot = prevBtn.getSlot();
                 String name = prevBtn.getName();
                 String lore = String.join("\n", prevBtn.getLore())
                         .replace("{page}", String.valueOf(page - 1));
-                contents.set(slot / 9, slot % 9, ClickableItem.from(
+                contents.set(navRow, prevBtn.getSlot() % 9, ClickableItem.from(
                         navItem(prevBtn.getMaterial(), name, List.of(lore.split("\n")),
                                 prevBtn.getModelData()),
                         e -> module.getShopGUI().open(player, shop, page - 1)));
@@ -108,11 +108,10 @@ public final class ShopGUI {
             // ── Next page ────────────────────────────────────────────────────
             ShopGuiLayout.Button nextBtn = layout.getNextPage();
             if (nextBtn.isEnabled() && page < total) {
-                int slot = nextBtn.getSlot();
                 String name = nextBtn.getName();
                 String lore = String.join("\n", nextBtn.getLore())
                         .replace("{page}", String.valueOf(page + 1));
-                contents.set(slot / 9, slot % 9, ClickableItem.from(
+                contents.set(navRow, nextBtn.getSlot() % 9, ClickableItem.from(
                         navItem(nextBtn.getMaterial(), name, List.of(lore.split("\n")),
                                 nextBtn.getModelData()),
                         e -> module.getShopGUI().open(player, shop, page + 1)));
@@ -121,7 +120,6 @@ public final class ShopGUI {
             // ── Page indicator ───────────────────────────────────────────────
             ShopGuiLayout.Button pgBtn = layout.getPageIndicator();
             if (pgBtn.isEnabled()) {
-                int slot = pgBtn.getSlot();
                 String name = pgBtn.getName()
                         .replace("{page}", String.valueOf(page))
                         .replace("{total}", String.valueOf(total));
@@ -129,7 +127,7 @@ public final class ShopGUI {
                         .map(l -> l.replace("{page}", String.valueOf(page))
                                    .replace("{total}", String.valueOf(total)))
                         .toList();
-                contents.set(slot / 9, slot % 9, ClickableItem.empty(
+                contents.set(navRow, pgBtn.getSlot() % 9, ClickableItem.empty(
                         navItem(pgBtn.getMaterial(), name, lore, pgBtn.getModelData())));
             }
 

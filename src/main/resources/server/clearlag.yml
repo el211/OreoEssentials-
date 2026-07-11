@@ -6,7 +6,6 @@ config-version: 1
 enable: true
 
 settings:
-  language: "English"
   enable-api: true
   use-internal-tps: true
   auto-update: false

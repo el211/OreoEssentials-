@@ -687,14 +687,10 @@ public class PlayerNametagManager implements Listener {
     /** Teleports all nametag entities to follow their owners. */
     private void updateAllPositions() {
         syncTickCounter++;
-        // How many position-task ticks between server-side syncs in PacketEvents mode.
-        // Every ~1 s (20 ticks) we do a real entity.teleport() to keep the server-side
-        // position in sync (important for chunk tracking, other plugins, etc.).
-        final int syncEveryTicks = Math.max(1, 20 / Math.max(1, positionIntervalTicks));
-
         for (Player owner : Bukkit.getOnlinePlayers()) {
             List<UUID> entityUuids = ownerToEntities.get(owner.getUniqueId());
             if (entityUuids == null) continue;
+
             Location current = owner.getLocation();
             Location previous = lastOwnerLocations.put(owner.getUniqueId(), current.clone());
             if (previous != null
@@ -703,51 +699,41 @@ public class PlayerNametagManager implements Listener {
                 continue;
             }
 
-            Set<UUID> viewerIds = ownerToViewers.get(owner.getUniqueId());
+            Set<UUID> viewers = ownerToViewers.get(owner.getUniqueId());
 
             for (int i = 0; i < entityUuids.size() && i < layers.size(); i++) {
                 UUID entityUuid = entityUuids.get(i);
                 org.bukkit.entity.Entity entity = Bukkit.getEntity(entityUuid);
                 if (entity == null) continue;
 
-                double yOff = layers.get(i).yOffset;
-                Location target = current.clone().add(0, yOff, 0);
+                Location target = current.clone().add(0, layers.get(i).yOffset, 0);
                 target.setYaw(0f);
                 target.setPitch(0f);
 
-                if (PACKET_EVENTS_AVAILABLE && viewerIds != null && !viewerIds.isEmpty()) {
-                    // Send a per-viewer teleport packet directly — no scheduler overhead,
-                    // no Bukkit broadcast to unrelated players. The nametag is always
-                    // visually glued to the player even at high speed or during jumps.
-                    WrapperPlayServerEntityTeleport packet = new WrapperPlayServerEntityTeleport(
-                            entity.getEntityId(),
-                            new Vector3d(target.getX(), target.getY(), target.getZ()),
-                            0f, 0f,
-                            false
-                    );
-                    for (UUID viewerId : new ArrayList<>(viewerIds)) {
-                        Player viewer = Bukkit.getPlayer(viewerId);
-                        if (viewer == null || !viewer.isOnline()) continue;
-                        try {
-                            PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, packet);
-                        } catch (Exception ignored) {}
-                    }
-
-                    // Periodic server-side sync so the entity's world position stays correct.
-                    if ((syncTickCounter % syncEveryTicks) == 0) {
-                        final Location syncTarget = target;
-                        if (OreScheduler.isFolia()) {
-                            entity.teleportAsync(syncTarget);
-                        } else {
-                            OreScheduler.runForEntity(plugin, entity, () -> entity.teleport(syncTarget));
-                        }
-                    }
+                // Server-side teleport — keeps entity position correct so new viewers
+                // see the nametag at the right spot immediately (no stale-position bug).
+                if (OreScheduler.isFolia()) {
+                    entity.teleportAsync(target);
                 } else {
-                    // Fallback: standard Bukkit teleport (broadcasts to all nearby clients)
-                    if (OreScheduler.isFolia()) {
-                        entity.teleportAsync(target);
-                    } else {
-                        OreScheduler.runForEntity(plugin, entity, () -> entity.teleport(target));
+                    OreScheduler.runForEntity(plugin, entity, () -> entity.teleport(target));
+                }
+
+                // PacketEvents per-viewer smooth teleport — sends a direct position packet
+                // to every current viewer so movement is interpolated client-side each tick.
+                if (PACKET_EVENTS_AVAILABLE && viewers != null && !viewers.isEmpty()) {
+                    final int entityId = entity.getEntityId();
+                    final double tx = target.getX();
+                    final double ty = target.getY();
+                    final double tz = target.getZ();
+                    WrapperPlayServerEntityTeleport packet = new WrapperPlayServerEntityTeleport(
+                            entityId,
+                            new Vector3d(tx, ty, tz),
+                            0f, 0f, false);
+                    for (UUID viewerId : viewers) {
+                        Player viewer = Bukkit.getPlayer(viewerId);
+                        if (viewer != null && viewer.isOnline()) {
+                            PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, packet);
+                        }
                     }
                 }
             }
