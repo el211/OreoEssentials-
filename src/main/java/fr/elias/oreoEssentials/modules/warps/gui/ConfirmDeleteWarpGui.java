@@ -52,7 +52,7 @@ public class ConfirmDeleteWarpGui implements InventoryProvider {
                 actionItem(p, Material.GREEN_CONCRETE,
                         Lang.msgLegacy("warps.delete.yes", "<green>Yes, delete</green>", p)),
                 e -> {
-                    boolean ok = warps.delWarp(warpName.toLowerCase());
+                    boolean ok = warps.delWarp(warpName.toLowerCase(java.util.Locale.ROOT));
 
                     if (ok) {
                         Lang.send(p, "warps.delete.success",

@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.homes;
 
 import fr.elias.oreoEssentials.modules.homes.home.HomeService;
 import fr.elias.oreoEssentials.util.Lang;
+import java.util.logging.Logger;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
 import fr.minuskube.inv.content.InventoryProvider;
@@ -59,6 +60,9 @@ public class ConfirmDeleteGui implements InventoryProvider {
                                 "<red>Deleted home <yellow>%home%</yellow>.</red>",
                                 Map.of("home", homeName));
                     } else {
+                        Logger.getLogger("OreoEssentials").warning(
+                                "[HOME] ConfirmDeleteGui: delHome returned false for player="
+                                        + p.getUniqueId() + " home=" + homeName);
                         Lang.send(p, "homes.delete.failed",
                                 "<red>Failed to delete home <yellow>%home%</yellow>.</red>",
                                 Map.of("home", homeName));

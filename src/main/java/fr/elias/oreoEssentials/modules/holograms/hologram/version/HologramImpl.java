@@ -162,6 +162,9 @@ public final class HologramImpl extends Hologram {
 
         final Entity entity = display;
         if (entity == null) {
+            OHolograms.get().getPlugin().getLogger().warning(
+                    "[Holograms] Cannot show hologram at " + data.getLocation()
+                    + ": world is not loaded or entity creation failed.");
             return false;
         }
 
@@ -268,7 +271,10 @@ public final class HologramImpl extends Hologram {
     private static @Nullable NmsHologramBridge loadTextBridge() {
         try {
             return NmsBridgeLoader.loadOrThrow();
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            OHolograms.get().getPlugin().getLogger().warning(
+                    "[Holograms] Failed to load NMS text bridge: " + t.getMessage()
+                    + " — per-player text placeholders will be disabled.");
             return null;
         }
     }

@@ -54,7 +54,21 @@ public final class NmsBridgeLoader {
             }
         }
 
-        throw new IllegalStateException("No NMS bridge for " + ver);
+        // Last-resort: try the highest known version (first entry in FALLBACK_VERSIONS)
+        if (!FALLBACK_VERSIONS.isEmpty()) {
+            String lastResort = FALLBACK_VERSIONS.get(0);
+            NmsHologramBridge bridge = tryLoad(lastResort);
+            if (bridge != null) {
+                Bukkit.getLogger().warning("[OHolograms] Server version " + ver
+                        + " is not supported — loaded last-resort NMS bridge " + lastResort
+                        + ". Per-player text placeholders may not function correctly.");
+                return bridge;
+            }
+        }
+
+        Bukkit.getLogger().warning("[OHolograms] No NMS bridge could be loaded for server version " + ver
+                + ". Per-player text placeholders will be disabled. Holograms will still render using Bukkit API.");
+        return null;
     }
 
     private static NmsHologramBridge tryLoad(String ver) {

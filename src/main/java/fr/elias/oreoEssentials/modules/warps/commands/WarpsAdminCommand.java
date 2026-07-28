@@ -11,10 +11,13 @@ import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.warps.rabbit.packets.WarpTeleportRequestPacket;
 import fr.elias.oreoEssentials.util.Lang;
 import fr.elias.oreoEssentials.util.OreScheduler;
+import fr.elias.oreoEssentials.util.OreTask;
 import fr.minuskube.inv.SmartInventory;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.io.ByteArrayOutputStream;
@@ -86,16 +89,33 @@ public class WarpsAdminCommand implements OreoCommand {
             }
 
             OreScheduler.runForEntity(plugin, p, () -> {
-                if (OreScheduler.isFolia()) {
-                    p.teleportAsync(l).thenRun(() ->
-                            Lang.send(p, "warp.admin.teleported",
-                                    "<green>Teleported to warp <aqua>%warp%</aqua>.</green>",
-                                    Map.of("warp", warpName)));
+                Runnable doTeleport = () -> {
+                    if (OreScheduler.isFolia()) {
+                        p.teleportAsync(l).thenRun(() ->
+                                Lang.send(p, "warp.admin.teleported",
+                                        "<green>Teleported to warp <aqua>%warp%</aqua>.</green>",
+                                        Map.of("warp", warpName)));
+                    } else {
+                        p.teleport(l);
+                        Lang.send(p, "warp.admin.teleported",
+                                "<green>Teleported to warp <aqua>%warp%</aqua>.</green>",
+                                Map.of("warp", warpName));
+                    }
+                };
+
+                // Apply cooldown when admin teleports themselves, unless they have bypass permission.
+                if (p.hasPermission("oreo.warp.bypasscooldown")) {
+                    doTeleport.run();
                 } else {
-                    p.teleport(l);
-                    Lang.send(p, "warp.admin.teleported",
-                            "<green>Teleported to warp <aqua>%warp%</aqua>.</green>",
-                            Map.of("warp", warpName));
+                    FileConfiguration settings = plugin.getSettingsConfig().getRoot();
+                    ConfigurationSection warpSection = settings.getConfigurationSection("features.warp");
+                    boolean useCooldown = warpSection != null && warpSection.getBoolean("cooldown", false);
+                    int seconds = (warpSection != null ? warpSection.getInt("cooldown-amount", 0) : 0);
+                    if (useCooldown && seconds > 0) {
+                        startCooldownThenTeleport(plugin, p, warpName, seconds, doTeleport);
+                    } else {
+                        doTeleport.run();
+                    }
                 }
             });
             return true;
@@ -147,6 +167,46 @@ public class WarpsAdminCommand implements OreoCommand {
                     Map.of("server", serverName));
             return false;
         }
+    }
+
+    private static void startCooldownThenTeleport(OreoEssentials plugin, Player p, String warpName, int seconds, Runnable action) {
+        final Location origin = p.getLocation().clone();
+        final int[] remaining = {seconds};
+        final OreTask[] taskHolder = {OreTask.EMPTY};
+
+        taskHolder[0] = OreScheduler.runTimerForEntity(plugin, p, () -> {
+            if (!p.isOnline()) {
+                taskHolder[0].cancel();
+                return;
+            }
+            Location now = p.getLocation();
+            boolean moved = now.getWorld() == null || origin.getWorld() == null
+                    || !now.getWorld().equals(origin.getWorld())
+                    || now.getBlockX() != origin.getBlockX()
+                    || now.getBlockY() != origin.getBlockY()
+                    || now.getBlockZ() != origin.getBlockZ();
+            if (moved) {
+                taskHolder[0].cancel();
+                Lang.send(p, "warp.cancelled-moved",
+                        "<red>Teleport to warp <yellow>%warp%</yellow> cancelled: you moved.</red>",
+                        Map.of("warp", warpName));
+                return;
+            }
+            if (remaining[0] <= 0) {
+                taskHolder[0].cancel();
+                action.run();
+                return;
+            }
+            String title = Lang.msgWithDefault("teleport.countdown.title", "<yellow>Teleporting...</yellow>", p);
+            String subtitle = Lang.msgWithDefault(
+                    "teleport.countdown.subtitle",
+                    "<gray>In <white>%seconds%</white>s...</gray>",
+                    Map.of("seconds", String.valueOf(remaining[0])),
+                    p
+            );
+            p.sendTitle(title, subtitle, 0, 20, 0);
+            remaining[0]--;
+        }, 0L, 20L);
     }
 
     public static void openAdmin(Player p, WarpService warps, int page) {

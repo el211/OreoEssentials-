@@ -274,8 +274,11 @@ public final class ScoreboardService implements Listener {
             RenderState state = renderState(p, cycle);
             applyRenderState(obj, board, state);
 
-            p.setScoreboard(board);
+            // S3 — put into playerBoards BEFORE calling setScoreboard so that any
+            // concurrent refresh() call sees a non-null board and does not create
+            // a duplicate board in the narrow window between these two operations.
             playerBoards.put(p.getUniqueId(), board);
+            p.setScoreboard(board);
             renderStates.put(p.getUniqueId(), state);
             shown.add(p.getUniqueId());
             if (plugin.getConfigService().isDebugEnabled()) {
@@ -914,8 +917,27 @@ public final class ScoreboardService implements Listener {
     @EventHandler
     public void onWorld(PlayerChangedWorldEvent e) {
         Player p = e.getPlayer();
-        if (shouldShow(p)) show(p);
-        else hide(p);
+        if (OreScheduler.isFolia()) {
+            // S4 — on Folia entity API must be called on the entity's own region thread.
+            OreScheduler.runForEntity(plugin, p, () -> {
+                if (!p.isOnline()) return;
+                if (shouldShow(p)) {
+                    // S1 — force-clear the shown state so show() doesn't return early.
+                    hide(p);
+                    show(p);
+                } else {
+                    hide(p);
+                }
+            });
+        } else {
+            if (shouldShow(p)) {
+                // S1 — force-clear the shown state so show() doesn't return early.
+                hide(p);
+                show(p);
+            } else {
+                hide(p);
+            }
+        }
     }
 
     // -------------------------------------------------------------------------

@@ -124,10 +124,11 @@ public final class OreoDialogManager {
     public boolean confirmDelHome(Player player, String homeName) {
         if (!isEnabledFor("confirm-delhome")) return false;
         try {
+            String safeHome = ConfirmDialogHandler.sanitizeCommandArg(homeName);
             ConfirmDialogHandler.open(plugin, player,
                     Component.text("Delete Home", NamedTextColor.RED),
                     Component.text("Delete home \u201c" + homeName + "\u201d? This cannot be undone.", NamedTextColor.GRAY),
-                    "delhome " + homeName + " --confirmed"
+                    "delhome " + safeHome + " --confirmed"
             );
             return true;
         } catch (Throwable t) {
@@ -140,10 +141,11 @@ public final class OreoDialogManager {
     public boolean confirmDelWarp(Player player, String warpName) {
         if (!isEnabledFor("confirm-delwarp")) return false;
         try {
+            String safeWarp = ConfirmDialogHandler.sanitizeCommandArg(warpName);
             ConfirmDialogHandler.open(plugin, player,
                     Component.text("Delete Warp", NamedTextColor.RED),
                     Component.text("Delete warp \u201c" + warpName + "\u201d? This cannot be undone.", NamedTextColor.GRAY),
-                    "delwarp " + warpName + " --confirmed"
+                    "delwarp " + safeWarp + " --confirmed"
             );
             return true;
         } catch (Throwable t) {
@@ -172,10 +174,11 @@ public final class OreoDialogManager {
     public boolean confirmPlayerWarpRemove(Player player, String warpName) {
         if (!isEnabledFor("confirm-pwremove")) return false;
         try {
+            String safeWarp = ConfirmDialogHandler.sanitizeCommandArg(warpName);
             ConfirmDialogHandler.open(plugin, player,
                     Component.text("Remove Player Warp", NamedTextColor.RED),
                     Component.text("Remove your player warp \u201c" + warpName + "\u201d?", NamedTextColor.GRAY),
-                    "pw remove " + warpName + " --confirmed"
+                    "pw remove " + safeWarp + " --confirmed"
             );
             return true;
         } catch (Throwable t) {

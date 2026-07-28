@@ -63,7 +63,7 @@ public class WarpConfirmDeleteGui implements InventoryProvider {
         contents.set(SlotPos.of(1, 3), ClickableItem.of(
                 actionItem(Material.GREEN_CONCRETE, yesName),
                 e -> {
-                    boolean ok = warps.delWarp(warpName);
+                    boolean ok = warps.delWarp(warpName.toLowerCase(java.util.Locale.ROOT));
                     if (ok) {
                         // clear directory metadata too
                         WarpDirectory dir = OreoEssentials.get().getWarpDirectory();

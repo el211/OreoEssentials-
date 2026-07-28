@@ -9,6 +9,9 @@ import java.io.UncheckedIOException;
 import java.util.UUID;
 
 public final class TradeStatePacket extends Packet {
+    // TR8: Version byte written as the very first field so cross-version mismatches are caught early.
+    static final byte PACKET_VERSION = 1;
+
     private UUID sessionId;
     private UUID fromPlayerId;
     private boolean ready;
@@ -30,6 +33,8 @@ public final class TradeStatePacket extends Packet {
 
     @Override
     protected void write(FriendlyByteOutputStream out) {
+        // TR8: Write protocol version first so the reader can detect incompatible packets.
+        out.writeByte(PACKET_VERSION);
         out.writeUUID(sessionId);
         out.writeUUID(fromPlayerId);
         out.writeBoolean(ready);
@@ -38,6 +43,12 @@ public final class TradeStatePacket extends Packet {
 
     @Override
     protected void read(FriendlyByteInputStream in) {
+        // TR8: Read and validate version byte before parsing any fields.
+        byte readVersion = in.readByte();
+        if (readVersion != PACKET_VERSION) {
+            throw new UncheckedIOException(new IOException(
+                    "Unsupported TradeStatePacket version: " + readVersion));
+        }
         sessionId   = in.readUUID();
         fromPlayerId= in.readUUID();
         ready       = in.readBoolean();

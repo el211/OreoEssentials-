@@ -476,6 +476,12 @@ public final class TradeService implements Listener {
         TradeSession s = getSession(sid);
         if (s == null) return;
 
+        // TR7: If session was already closed by returnAllAndCleanup, do not proceed.
+        if (s.isClosed()) {
+            log("[TRADE] finalizeIfBothReady skipped (session closed) sid=" + sid);
+            return;
+        }
+
         if (!s.tryMarkGrantingOnce()) {
             log("[TRADE] finalizeIfBothReady skipped (grant already in progress) sid=" + sid);
             return;
@@ -507,6 +513,24 @@ public final class TradeService implements Listener {
                             + " toA=" + summarize(itemsForA)
                             + " toB=" + summarize(itemsForB));
 
+                    // TR2: Persist pending grants to DAO FIRST before clearing session or sending
+                    // packets. This guarantees items survive a network failure between persist and send.
+                    try {
+                        pendingGrantsDao.storePending(s.getAId(), s.getId(), itemsForA);
+                        pendingGrantsDao.storePending(s.getBId(), s.getId(), itemsForB);
+                        log("[TRADE] Persisted pending grants for both sides sid=" + s.getId());
+                    } catch (Throwable daoErr) {
+                        plugin.getLogger().severe("[TRADE] Failed to persist pending grants before send, "
+                                + "falling back to local completion to avoid item loss. sid=" + s.getId()
+                                + " error=" + daoErr.getMessage());
+                        completeTradeLocally(s);
+                        return;
+                    }
+
+                    // Session cleared after safe persistence so items are never in limbo.
+                    s.clearOfferA();
+                    s.clearOfferB();
+
                     try {
                         broker.sendTradeGrant(s.getId(), s.getAId(), itemsForA);
                         broker.sendTradeGrant(s.getId(), s.getBId(), itemsForB);
@@ -514,15 +538,13 @@ public final class TradeService implements Listener {
                                 + " grantToA=" + countNonAir(itemsForA)
                                 + " grantToB=" + countNonAir(itemsForB));
                     } catch (Throwable netErr) {
-                        plugin.getLogger().warning("[TRADE] sendTradeGrant failed, falling back to local completion: "
-                                + netErr.getMessage());
-                        completeTradeLocally(s);
-                        return;
+                        // Items are already in DAO — they will be delivered on next join.
+                        plugin.getLogger().warning("[TRADE] sendTradeGrant failed after DAO persist; "
+                                + "items are safe in pending grants DAO. sid=" + s.getId()
+                                + " error=" + netErr.getMessage());
                     }
 
                     s.closeLocalViewers();
-                    s.clearOfferA();
-                    s.clearOfferB();
                     s.markCompleted();
                     cleanupSession(s);
                 } else {
@@ -578,6 +600,12 @@ public final class TradeService implements Listener {
     }
 
     private void returnAllAndCleanup(TradeSession s, String reason) {
+        // TR7: Mark the session as fully closed so any queued onFinish callback can detect
+        // it has already been cancelled and must not proceed with item grants.
+        if (!s.tryClose()) {
+            log("[TRADE] returnAllAndCleanup skipped — session already closed sid=" + s.getId());
+            return;
+        }
         s.beginClosing();
         s.lockUiNow();
 
@@ -757,8 +785,13 @@ public final class TradeService implements Listener {
             return;
         }
 
-        long newVersion = s.getVersion() + 1;
-        s.applyRemoteState(newA, newB, readyA, readyB, newVersion);
+        // TR3: Synchronize version check + increment + apply to prevent two concurrent remote-state
+        // packets from computing the same version number and overwriting each other's data.
+        long newVersion;
+        synchronized (s) {
+            newVersion = s.getVersion() + 1;
+            s.applyRemoteState(newA, newB, readyA, readyB, newVersion);
+        }
         log("[TRADE] applied remote state sid=" + p.getSessionId() + " v=" + newVersion
                 + " Aready=" + readyA + " Bready=" + readyB);
 
@@ -824,10 +857,17 @@ public final class TradeService implements Listener {
             Player target = Bukkit.getPlayer(to);
             if (target == null || !target.isOnline()) {
                 plugin.getLogger().warning("[TRADE] Grant target offline; saving pending grant. sid=" + sid);
+                // TR4: On DAO save failure, log full error with item details and do NOT clean up the
+                // session so items remain in memory for manual recovery.
                 try {
                     pendingGrantsDao.storePending(to, sid, items);
                 } catch (Throwable t) {
-                    plugin.getLogger().severe("[TRADE] Failed to save pending grant: " + t.getMessage());
+                    plugin.getLogger().severe("[TRADE] CRITICAL – failed to save pending grant for player "
+                            + to + " sid=" + sid + " items=" + summarize(items)
+                            + " – session NOT cleaned up to preserve in-memory items. Error: " + t.getMessage());
+                    t.printStackTrace();
+                    // Do NOT clean up session; items must stay in memory for recovery.
+                    return;
                 }
                 if (sess != null) {
                     sess.markCompleted();
@@ -837,7 +877,18 @@ public final class TradeService implements Listener {
                 return;
             }
 
-            grantItems(target, items);
+            // TR4: Wrap online grant in try/catch; on failure log item details and keep session alive.
+            try {
+                grantItems(target, items);
+            } catch (Throwable grantErr) {
+                plugin.getLogger().severe("[TRADE] CRITICAL – grantItems failed for online player "
+                        + target.getName() + " (" + to + ") sid=" + sid
+                        + " items=" + summarize(items)
+                        + " – session NOT cleaned up to preserve in-memory items. Error: " + grantErr.getMessage());
+                grantErr.printStackTrace();
+                // Do NOT clean up session; items are still in session memory for recovery.
+                return;
+            }
 
             if (sess != null) {
                 sess.markCompleted();

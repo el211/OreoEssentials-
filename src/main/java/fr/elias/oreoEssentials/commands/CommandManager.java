@@ -123,10 +123,23 @@ public class CommandManager {
 
             if (cmd instanceof org.bukkit.command.TabCompleter tc) {
                 // Command implements Bukkit's TabCompleter directly (e.g. OeCommand)
-                pc.setTabCompleter(tc);
+                // DC7: wrap to enforce permission check before returning completions
+                pc.setTabCompleter((sender, command, alias, args) -> {
+                    String perm = cmd.permission();
+                    if (perm != null && !perm.isBlank() && !sender.hasPermission(perm)) {
+                        return Collections.emptyList();
+                    }
+                    try { return tc.onTabComplete(sender, command, alias, args); }
+                    catch (Throwable t) { return Collections.emptyList(); }
+                });
             } else {
                 // Delegate to OreoCommand.tabComplete() which receives full args[]
                 pc.setTabCompleter((sender, command, alias, args) -> {
+                    // DC7: suppress completions for players lacking the command permission
+                    String perm = cmd.permission();
+                    if (perm != null && !perm.isBlank() && !sender.hasPermission(perm)) {
+                        return Collections.emptyList();
+                    }
                     try { return cmd.tabComplete(sender, alias, args); }
                     catch (Throwable t) { return Collections.emptyList(); }
                 });

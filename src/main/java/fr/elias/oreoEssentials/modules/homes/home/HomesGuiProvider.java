@@ -217,9 +217,10 @@ public class HomesGuiProvider implements InventoryProvider {
                     p));
 
             if (sh != null) {
+                String worldName = sh.getWorld() != null ? sh.getWorld() : "(unloaded world)";
                 lore.add(Lang.msgLegacy("homes.gui.home.lore.world",
                         "<gray>World: <yellow>%world%</yellow></gray>",
-                        Map.of("world", sh.getWorld()),
+                        Map.of("world", worldName),
                         p));
 
                 String coords = fmt(sh.getX()) + " " + fmt(sh.getY()) + " " + fmt(sh.getZ());

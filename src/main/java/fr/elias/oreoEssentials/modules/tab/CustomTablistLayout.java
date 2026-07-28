@@ -367,6 +367,7 @@ public class CustomTablistLayout {
 
                 // Get skin textures via PacketEvents
                 List<TextureProperty> skin = packetTablistManager.getPlayerSkin(target);
+                if (skin == null) skin = PacketTablistManager.NO_SKIN;
                 boolean skinChanged = packetTablistManager.checkAndUpdateSkinVersion(target.getUniqueId(), skin);
 
                 Component display = parseToComponent(entry.displayName());
@@ -617,6 +618,7 @@ public class CustomTablistLayout {
                     PlayerTabEntry e = sortedEntries.get(pIdx);
                     Player target = e.player();
                     List<TextureProperty> skin = packetTablistManager.getPlayerSkin(target);
+                    if (skin == null) skin = PacketTablistManager.NO_SKIN;
                     boolean skinChanged = packetTablistManager.checkAndUpdateSkinVersion(target.getUniqueId(), skin);
                     cols[c][row] = new PacketTablistManager.TabSlot(
                             PacketTablistManager.colSlotUuid(c, row), prefix + fmt2(row),

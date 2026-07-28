@@ -85,7 +85,7 @@ public class PacketTablistManager {
      */
     public void initViewer(Player viewer, List<TabSlot> slots) {
         List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> infos = new ArrayList<>(slots.size());
-        Map<UUID, String> textCache = new HashMap<>(slots.size());
+        Map<UUID, String> textCache = new ConcurrentHashMap<>(slots.size());
 
         for (TabSlot slot : slots) {
             UserProfile profile = buildProfile(slot);
@@ -227,6 +227,7 @@ public class PacketTablistManager {
         );
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             if (viewer.equals(newPlayer)) continue;
+            if (!viewer.isOnline()) continue;
             try {
                 PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, packet);
             } catch (Exception ignored) {}

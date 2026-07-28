@@ -41,7 +41,7 @@ public abstract class Hologram {
     /**
      * Set of UUIDs of players to whom the hologram is currently shown.
      */
-    protected final @NotNull Set<UUID> viewers = new HashSet<>();
+    protected final @NotNull Set<UUID> viewers = new java.util.concurrent.CopyOnWriteArraySet<>();
 
     protected Hologram(@NotNull final HologramData data) {
         this.data = data;
@@ -371,11 +371,17 @@ public abstract class Hologram {
 
         Player parserPlayer = player;
         if (parserPlayer == null) {
-            parserPlayer = viewers.stream()
+            parserPlayer = getViewers().stream()
                     .map(Bukkit::getPlayer)
                     .filter(Objects::nonNull)
                     .findFirst()
                     .orElse(null);
+        }
+
+        // TH15: ModernChatColorHandler may not handle null player safely;
+        // fall back to plain deserialize when no online viewer is available.
+        if (parserPlayer == null) {
+            return MiniMessage.miniMessage().deserialize(text);
         }
 
         try {

@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -52,8 +53,10 @@ public final class TradeSession {
 
 
     private long version = 0L;         // monotonic session version (local + remote edits)
-    private boolean aReady = false;     // A confirmed?
-    private boolean bReady = false;     // B confirmed?
+    private volatile boolean aReady = false;     // A confirmed?
+    private volatile boolean bReady = false;     // B confirmed?
+    // TR1: guard to ensure onFinish is triggered exactly once even under concurrent confirm clicks
+    private final AtomicBoolean finishTriggered = new AtomicBoolean(false);
 
     private final ItemStack[] offerA = new ItemStack[18];
     private final ItemStack[] offerB = new ItemStack[18];
@@ -154,21 +157,31 @@ public final class TradeSession {
             return;
         }
 
-        if (forA) {
-            aReady = !aReady;
-            safePlay(p, aReady ? cfg.confirmSound : cfg.clickSound, 1f, 1f);
-        } else {
-            bReady = !bReady;
-            safePlay(p, bReady ? cfg.confirmSound : cfg.clickSound, 1f, 1f);
+        // TR1: Synchronize the read-check-set-trigger sequence to prevent concurrent confirms
+        // from both reading false and both triggering onFinish (item duplication).
+        boolean shouldFinish = false;
+        boolean newReady;
+        synchronized (this) {
+            if (uiLocked || completed) return;
+            if (forA) {
+                aReady = !aReady;
+                newReady = aReady;
+            } else {
+                bReady = !bReady;
+                newReady = bReady;
+            }
+            // Only trigger finish once: use finishTriggered to prevent double execution
+            if (aReady && bReady && finishTriggered.compareAndSet(false, true)) {
+                shouldFinish = true;
+            }
         }
 
+        safePlay(p, newReady ? cfg.confirmSound : cfg.clickSound, 1f, 1f);
         bumpVersionAndFire();
 
-        if (aReady && bReady) {
+        if (shouldFinish) {
             lockUiNow();
-
             beginClosing();
-
             OreScheduler.run(plugin, () -> {
                 closeLocalViewers();
                 onFinish.accept(this);

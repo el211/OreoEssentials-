@@ -17,15 +17,27 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("UnstableApiUsage")
 public final class NearDialogHandler {
 
     private NearDialogHandler() {}
 
+    /** Tracks players who already have a /near dialog open to prevent spam. */
+    private static final Set<UUID> openDialogs = ConcurrentHashMap.newKeySet();
+
     public static void open(OreoEssentials plugin, Player player, int radius) {
+        // DC2: prevent double-open if player spams /near
+        if (!openDialogs.add(player.getUniqueId())) return;
+
         OreScheduler.runForEntity(plugin, player, () -> {
-            if (!player.isOnline()) return;
+            if (!player.isOnline()) {
+                openDialogs.remove(player.getUniqueId());
+                return;
+            }
 
             Location me = player.getLocation();
             List<Player> nearby = new ArrayList<>();
@@ -50,6 +62,7 @@ public final class NearDialogHandler {
                         )))
                 );
                 player.showDialog(dialog);
+                openDialogs.remove(player.getUniqueId());
                 return;
             }
 
@@ -90,6 +103,7 @@ public final class NearDialogHandler {
             );
 
             player.showDialog(dialog);
+            openDialogs.remove(player.getUniqueId());
         });
     }
 }

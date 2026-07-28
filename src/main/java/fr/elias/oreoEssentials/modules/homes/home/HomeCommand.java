@@ -81,6 +81,10 @@ public class HomeCommand implements OreoCommand, TabCompleter {
                                 Map.of("sethome", "/sethome"));
                         return;
                     }
+                    if (args.length == 0 && names.size() == 1) {
+                        execute(player, lbl, new String[]{names.get(0)});
+                        return;
+                    }
                     String list = names.stream()
                             .sorted(String.CASE_INSENSITIVE_ORDER)
                             .collect(Collectors.joining(", "));

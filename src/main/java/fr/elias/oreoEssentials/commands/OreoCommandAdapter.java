@@ -4,6 +4,7 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.traqueur.commands.api.arguments.Arguments;
 import fr.traqueur.commands.api.arguments.Infinite;
 import org.bukkit.command.CommandSender;
+import java.util.logging.Level;
 
 /**
  * Bridges the existing {@link OreoCommand} interface with the CommandsAPI framework.
@@ -23,6 +24,9 @@ public final class OreoCommandAdapter extends fr.traqueur.commands.spigot.Comman
         String perm = delegate.permission();
         if (perm != null && !perm.isBlank()) {
             this.setPermission(perm);
+        } else {
+            // DC9: flag commands with no permission node so admins can catch oversights early
+            plugin.getLogger().warning("[CommandManager] Command '" + delegate.getName() + "' has no permission node defined.");
         }
 
         String usage = delegate.usage();
@@ -50,7 +54,8 @@ public final class OreoCommandAdapter extends fr.traqueur.commands.spigot.Comman
                         + (u == null || u.isBlank() ? "" : " " + u));
             }
         } catch (Throwable t) {
-            getPlugin().getLogger().warning("[Commands] Exception in /" + delegate.name() + ": " + t.getMessage());
+            // DC8: log full stack trace, not just the message
+            getPlugin().getLogger().log(Level.SEVERE, "Error executing command " + delegate.getName(), t);
         }
     }
 

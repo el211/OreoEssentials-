@@ -7,6 +7,7 @@ import fr.elias.oreoEssentials.util.Async;
 import fr.elias.oreoEssentials.util.Lang;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Location;
+import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -37,6 +38,19 @@ public class SetHomeCommand implements OreoCommand {
         String rawName = args[0];
         String key = rawName.toLowerCase(Locale.ROOT);
         Location loc = p.getLocation();
+
+        if (loc.getY() < 0) {
+            Lang.send(p, "sethome.unsafe-void",
+                    "<red>You cannot set a home in the void.</red>");
+            return true;
+        }
+        org.bukkit.block.Block feet = loc.getBlock();
+        org.bukkit.block.Block head = feet.getRelative(BlockFace.UP);
+        if (feet.getType().isSolid() || head.getType().isSolid()) {
+            Lang.send(p, "sethome.unsafe-block",
+                    "<red>You cannot set a home inside a block.</red>");
+            return true;
+        }
 
         // Capture max homes on entity thread before going async.
         int max = config.getMaxHomesFor(p);

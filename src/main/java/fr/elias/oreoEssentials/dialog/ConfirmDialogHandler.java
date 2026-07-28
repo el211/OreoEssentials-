@@ -18,11 +18,24 @@ import java.util.List;
 /**
  * Generic reusable confirmation dialog (Confirm / Cancel).
  * confirmCmd is run via performCommand on confirm; cancel closes the dialog.
+ *
+ * SECURITY: callers must pass pre-sanitized command strings. Dynamic user-controlled
+ * parts (home names, warp names, etc.) must be sanitized via {@link #sanitizeCommandArg}
+ * before being embedded in the command string.
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class ConfirmDialogHandler {
 
     private ConfirmDialogHandler() {}
+
+    /**
+     * Strips any character that is not alphanumeric, underscore, hyphen, or period
+     * from a user-supplied command argument to prevent command injection.
+     */
+    public static String sanitizeCommandArg(String s) {
+        if (s == null) return "";
+        return s.replaceAll("[^a-zA-Z0-9_\\-.]", "");
+    }
 
     public static void open(OreoEssentials plugin, Player player,
                             Component title, Component body,

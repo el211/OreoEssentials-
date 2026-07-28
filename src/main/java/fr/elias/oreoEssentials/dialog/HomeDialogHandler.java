@@ -31,7 +31,12 @@ public final class HomeDialogHandler {
             OreScheduler.runForEntity(plugin, player, () -> {
                 if (!player.isOnline()) return;
 
-                if (names == null || names.isEmpty()) {
+                // DC10: distinguish a fetch failure (null) from an empty result
+                if (names == null) {
+                    player.sendMessage("§cFailed to load homes. Try again.");
+                    return;
+                }
+                if (names.isEmpty()) {
                     Lang.send(player, "home.no-homes",
                             "<yellow>You have no homes. Use <aqua>/sethome</aqua> to create one.</yellow>");
                     return;

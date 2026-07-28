@@ -213,6 +213,10 @@ public final class TradeMenu implements InventoryProvider {
         int[] otherSlots = isAViewer ? B_AREA_SLOTS : A_AREA_SLOTS;
 
         OreScheduler.run(plugin, () -> {
+            // TR6: Guard against modifying inventory slots after the session has ended or the
+            // player has gone offline — the scheduled task may fire after the GUI was closed.
+            if (sess.isClosingOrClosed() || sess.isCompleted() || !viewer.isOnline()) return;
+
             for (int i = 0; i < otherSlots.length; i++) {
                 int slot = otherSlots[i];
                 ItemStack want = (other != null && i < other.length) ? cloneOrNull(other[i]) : null;
@@ -314,6 +318,14 @@ public final class TradeMenu implements InventoryProvider {
                 final int idx = i;
                 final ItemStack itemCopy = cloneOrNull(now);
                 OreScheduler.run(plugin, () -> {
+                    // TR6: Re-fetch session state on the main thread; bail out if session ended
+                    // or viewer went offline since the task was scheduled.
+                    UUID currentSid = service.getTradeIdByPlayer(viewer.getUniqueId());
+                    if (currentSid == null) return;
+                    TradeSession currentSess = service.getSession(currentSid);
+                    if (currentSess == null || currentSess.isClosingOrClosed() || currentSess.isCompleted()) return;
+                    if (!viewer.isOnline()) return;
+
                     boolean viewerIsA = (a != null && viewer.getUniqueId().equals(a.getUniqueId()));
                     Player opp = viewerIsA ? b : a;
 

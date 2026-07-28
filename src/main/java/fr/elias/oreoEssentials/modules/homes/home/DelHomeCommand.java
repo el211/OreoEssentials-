@@ -24,6 +24,8 @@ public class DelHomeCommand implements OreoCommand {
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
+        // Permission "oreo.delhome" is enforced by the CommandManager framework via permission()
+        // before execute() is invoked; no explicit sender.hasPermission() check is needed here.
         if (args.length < 1) {
             Lang.send(sender,
                     "delhome.usage",

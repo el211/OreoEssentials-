@@ -30,6 +30,12 @@ public class SetWarpCommand implements OreoCommand {
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
+        if (!sender.hasPermission("oreo.setwarp")) {
+            Lang.send(sender, "admin.setwarp.no-permission",
+                    "<red>You don't have permission to use this command.</red>");
+            return true;
+        }
+
         if (args.length < 1) {
             Lang.send(sender, "admin.setwarp.usage",
                     "<yellow>Usage: /%label% <name></yellow>",
@@ -39,6 +45,17 @@ public class SetWarpCommand implements OreoCommand {
 
         Player p = (Player) sender;
         String name = args[0].trim().toLowerCase(Locale.ROOT);
+
+        if (name.length() > 32) {
+            Lang.send(sender, "admin.setwarp.invalid-name-length",
+                    "<red>Warp name must be 32 characters or fewer.</red>");
+            return true;
+        }
+        if (!name.matches("[a-z0-9_\\-]+")) {
+            Lang.send(sender, "admin.setwarp.invalid-name-chars",
+                    "<red>Warp name may only contain letters, digits, underscores, and hyphens.</red>");
+            return true;
+        }
         org.bukkit.Location loc = p.getLocation();
         OreoEssentials plugin = OreoEssentials.get();
         String local = plugin.getConfig().getString("server.name", Bukkit.getServer().getName());

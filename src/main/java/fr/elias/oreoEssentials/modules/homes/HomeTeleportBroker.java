@@ -15,6 +15,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
@@ -61,6 +62,11 @@ public final class HomeTeleportBroker implements Listener {
             final String hm    = pkt.getHomeName();
             final String rid   = pkt.getRequestId();
 
+            if (hm == null || hm.isBlank()) {
+                log.warning("[HOME/REQ] Ignoring packet with blank homeName for player=" + subject);
+                return;
+            }
+
             lastRequestedHome.put(subject, hm);
             lastRequestId.put(subject, rid);
             lastRequestedOwner.remove(subject);         // self-home: clear any “other” owner
@@ -104,6 +110,15 @@ public final class HomeTeleportBroker implements Listener {
         // Events
         Bukkit.getPluginManager().registerEvents(this, plugin);
         log.info("[BROKER/HOME] listening. server=" + thisServer + " pm.init=" + pm.isInitialized());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onQuit(PlayerQuitEvent e) {
+        final UUID id = e.getPlayer().getUniqueId();
+        lastRequestedHome.remove(id);
+        lastRequestId.remove(id);
+        lastRequestedOwner.remove(id);
+        pending.remove(id);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

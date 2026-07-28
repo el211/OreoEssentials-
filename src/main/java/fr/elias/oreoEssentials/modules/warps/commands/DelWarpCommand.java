@@ -32,7 +32,7 @@ public class DelWarpCommand implements OreoCommand {
             return true;
         }
 
-        String name = args[0].toLowerCase();
+        String name = args[0].trim().toLowerCase(java.util.Locale.ROOT);
 
         // Show confirm dialog for player senders (not console)
         boolean isConfirmed = args.length >= 2 && args[1].equals("--confirmed");

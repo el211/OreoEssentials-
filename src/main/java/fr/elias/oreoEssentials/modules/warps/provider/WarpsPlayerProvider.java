@@ -217,10 +217,11 @@ public class WarpsPlayerProvider implements InventoryProvider {
 
             // World and coordinates (if available)
             if (loc != null) {
+                String worldName = (loc.getWorld() != null) ? loc.getWorld().getName() : "(unloaded world)";
                 lore.add(Lang.msgWithDefault(
                         "warp.player.list.warp-world",
                         "<gray>World: <yellow>%world%</yellow></gray>",
-                        Map.of("world", loc.getWorld().getName()),
+                        Map.of("world", worldName),
                         p
                 ));
 

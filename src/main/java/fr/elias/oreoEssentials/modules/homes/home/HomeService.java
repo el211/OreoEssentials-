@@ -43,8 +43,14 @@ public class HomeService {
 
         boolean ok = storage.setHome(player.getUniqueId(), n, loc);
         if (ok) {
-            tryDirectory(() -> directory.setHomeServer(player.getUniqueId(), n, localServer),
-                    "[HOME] Failed to set directory server for " + player.getUniqueId() + "/" + n);
+            if (directory != null) {
+                try {
+                    directory.setHomeServer(player.getUniqueId(), n, localServer);
+                } catch (Throwable t) {
+                    logger.warning("[HOME] Storage succeeded but directory.setHomeServer failed for "
+                            + player.getUniqueId() + "/" + n + ": " + t.getMessage());
+                }
+            }
         }
         return ok;
     }

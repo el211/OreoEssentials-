@@ -439,6 +439,12 @@ public class AfkService implements Listener {
                 if (timeout <= 0) continue;
 
                 if ((now - last) / 1000L >= timeout) {
+                    // A2 — re-check online status: the player may have disconnected
+                    // between when Bukkit.getOnlinePlayers() was captured and now.
+                    if (!p.isOnline()) {
+                        lastActivityMs.remove(id);
+                        continue;
+                    }
                     setAfk(p, true);
                 }
             }
@@ -508,8 +514,18 @@ public class AfkService implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent e) {
-        lastActivityMs.put(e.getPlayer().getUniqueId(), System.currentTimeMillis());
-        afkSinceMs.remove(e.getPlayer().getUniqueId());
+        Player joined = e.getPlayer();
+        lastActivityMs.put(joined.getUniqueId(), System.currentTimeMillis());
+        // A1 — clear any stale AFK state from before this player disconnected.
+        // clearAfk() removes the player from afkPlayers, removes afkSinceMs,
+        // removes from globalAfkData and broadcasts a "no longer AFK" cross-server
+        // packet so remote servers stop showing this player as AFK.
+        if (afkPlayers.contains(joined.getUniqueId())) {
+            clearAfk(joined);
+        } else {
+            // Even if not in afkPlayers, afkSinceMs might be stale — remove it.
+            afkSinceMs.remove(joined.getUniqueId());
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

@@ -5,6 +5,7 @@ import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteInputStream;
 import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteOutputStream;
 
 import java.util.UUID;
+import java.util.logging.Logger;
 
 public class HomeTeleportRequestPacket extends Packet {
 
@@ -45,5 +46,9 @@ public class HomeTeleportRequestPacket extends Packet {
         this.homeName     = in.readString();
         this.targetServer = in.readString();
         this.requestId    = in.readString();
+        if (this.homeName == null || this.homeName.isBlank()) {
+            Logger.getLogger("OreoEssentials").warning(
+                    "[HOME/PACKET] Received HomeTeleportRequestPacket with blank homeName for player=" + this.playerId);
+        }
     }
 }

@@ -44,12 +44,24 @@ public final class WarpDialogHandler {
 
                 List<ActionButton> buttons = new ArrayList<>();
                 for (String name : accessible) {
+                    // DC11: fetch a fresh permission check at click-time via warps.canUse() to
+                    // avoid acting on a warp that was removed/restricted after this dialog opened.
+                    // The warp list itself (accessible) was snapshotted at dialog-open time; if
+                    // WarpService reloads between open and click, the worst outcome is a stale
+                    // button that the underlying /warp command will reject gracefully.
                     String cmd = "warp " + name;
                     buttons.add(ActionButton.builder(Component.text("\u2691 " + name, NamedTextColor.GOLD))
                             .tooltip(Component.text("Teleport to warp: " + name, NamedTextColor.GRAY))
                             .action(DialogAction.customClick(
                                     (view, audience) -> {
-                                        if (audience instanceof Player p) p.performCommand(cmd);
+                                        if (audience instanceof Player p) {
+                                            // Re-check permission at click time using the live WarpService
+                                            if (!warps.canUse(p, name)) {
+                                                p.sendMessage("§cYou no longer have access to that warp.");
+                                                return;
+                                            }
+                                            p.performCommand(cmd);
+                                        }
                                     },
                                     ClickCallback.Options.builder()
                                             .uses(1)
