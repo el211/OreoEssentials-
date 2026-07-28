@@ -370,6 +370,12 @@ public final class Lang {
     }
 
 
+    private static String timeUnit(long value, String singular, String plural) {
+        String unit = value == 1 ? singular : plural;
+        if (unit.contains("%value%")) return unit.replace("%value%", String.valueOf(value));
+        return value + " " + unit;
+    }
+
     public static String timeHuman(long seconds) {
         if (seconds < 0) seconds = 0;
         long d = seconds / 86400; seconds %= 86400;
@@ -377,10 +383,10 @@ public final class Lang {
         long m = seconds / 60;    long s = seconds % 60;
 
         List<String> parts = new ArrayList<>(4);
-        if (d > 0) parts.add(d + " " + (d == 1 ? get("time.day", "day") : get("time.days", "days")));
-        if (h > 0) parts.add(h + " " + (h == 1 ? get("time.hour", "hour") : get("time.hours", "hours")));
-        if (m > 0) parts.add(m + " " + (m == 1 ? get("time.minute", "minute") : get("time.minutes", "minutes")));
-        if (s > 0 || parts.isEmpty()) parts.add(s + " " + (s == 1 ? get("time.second", "second") : get("time.seconds", "seconds")));
+        if (d > 0) parts.add(timeUnit(d, get("time.day", "day"), get("time.days", "days")));
+        if (h > 0) parts.add(timeUnit(h, get("time.hour", "hour"), get("time.hours", "hours")));
+        if (m > 0) parts.add(timeUnit(m, get("time.minute", "minute"), get("time.minutes", "minutes")));
+        if (s > 0 || parts.isEmpty()) parts.add(timeUnit(s, get("time.second", "second"), get("time.seconds", "seconds")));
 
         String sep = get("time.separator", ", ");
         String last = get("time.last-separator", " and ");
