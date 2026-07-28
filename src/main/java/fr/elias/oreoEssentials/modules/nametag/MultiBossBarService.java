@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -175,7 +176,8 @@ public final class MultiBossBarService implements Listener {
                 // Tick carousel
                 int[] counter = counters.computeIfAbsent(player.getUniqueId(), k -> new int[]{0});
                 counter[0] += refreshIntervalTicks;
-                int carouselIndex = (counter[0] / cfg.carouselIntervalTicks) % cfg.texts.size();
+                if (cfg.texts == null || cfg.texts.isEmpty()) continue;
+                int carouselIndex = (counter[0] / Math.max(1, cfg.carouselIntervalTicks)) % cfg.texts.size();
 
                 String raw = cfg.texts.get(carouselIndex);
                 String resolved = resolvePapi(raw, player);
@@ -234,6 +236,17 @@ public final class MultiBossBarService implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         if (!enabled) return;
         removePlayer(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onWorldChange(PlayerChangedWorldEvent event) {
+        if (!enabled) return;
+        Player player = event.getPlayer();
+        removePlayer(player); // clear bars accumulated in the previous world
+        // Re-initialize bars for the new world context
+        OreScheduler.runLater(plugin, () -> {
+            if (player.isOnline()) updatePlayer(player);
+        }, 5L);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

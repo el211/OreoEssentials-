@@ -15,6 +15,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -291,6 +292,18 @@ public final class OrderService {
                                             + " (remaining=" + (updated != null ? updated.getRemainingQty() : "?") + ")");
 
                                     result.complete(fillResult);
+                                })
+                                .exceptionally(t -> {
+                                    log.severe("[Orders] fillOrder: deposit of " + netPay
+                                            + " FAILED for " + filler.getName()
+                                            + " on order " + orderId
+                                            + " — items were already taken and fill committed."
+                                            + " Manual correction required! Cause: " + t.getMessage());
+                                    // Attempt to give the filler their items back as compensation
+                                    OreScheduler.run(plugin, () ->
+                                            giveOrDrop(filler, buildStack(template, fillQty)));
+                                    result.complete(FillResult.error());
+                                    return null;
                                 });
                     });
         });
@@ -554,7 +567,11 @@ public final class OrderService {
     private boolean itemMatches(ItemStack candidate, ItemStack template) {
         if (candidate.getType() != template.getType()) return false;
         if (template.hasItemMeta()) {
-            return template.getItemMeta().equals(candidate.getItemMeta());
+            ItemMeta templateMeta   = template.getItemMeta();
+            ItemMeta candidateMeta  = candidate.getItemMeta();
+            if (templateMeta == null && candidateMeta == null) return true;
+            if (templateMeta == null || candidateMeta == null) return false;
+            return templateMeta.equals(candidateMeta);
         }
         return true;
     }
@@ -569,6 +586,7 @@ public final class OrderService {
         if (item == null || player == null) return;
         int remaining = item.getAmount();
         int maxStack  = item.getType().getMaxStackSize();
+        int droppedStacks = 0;
         while (remaining > 0) {
             ItemStack stack = item.clone();
             stack.setAmount(Math.min(remaining, maxStack));
@@ -576,7 +594,13 @@ public final class OrderService {
             Map<Integer, ItemStack> leftover = player.getInventory().addItem(stack);
             for (ItemStack drop : leftover.values()) {
                 player.getWorld().dropItemNaturally(player.getLocation(), drop);
+                droppedStacks++;
             }
+        }
+        if (droppedStacks > 0) {
+            player.sendMessage("§e[Orders] Your inventory was full! Some items were dropped at your feet.");
+            Bukkit.getLogger().info("[Orders] Dropped " + droppedStacks + " item stack(s) for "
+                    + player.getName() + " (inventory full)");
         }
     }
 

@@ -149,7 +149,8 @@ public final class ActionBarService implements Listener {
             if (!NametageCondition.evaluateAll(entry.conditions, player)) continue;
 
             // Pick the current carousel text
-            int carouselIndex = (counters[i] / entry.carouselIntervalTicks) % entry.texts.size();
+            if (entry.texts == null || entry.texts.isEmpty()) continue;
+            int carouselIndex = (counters[i] / Math.max(1, entry.carouselIntervalTicks)) % entry.texts.size();
             String raw = entry.texts.get(carouselIndex);
 
             // Resolve PlaceholderAPI + MiniMessage

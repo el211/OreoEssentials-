@@ -276,7 +276,7 @@ public class KitsManager {
                 }
 
                 long runAt = delayTicks;
-                OreScheduler.runLater(plugin, () -> runKitCommand(p, line), runAt);
+                OreScheduler.runLater(plugin, () -> runKitCommand(p, kit.getId(), line), runAt);
             }
 
             Lang.send(p, "kits.commands-ran",
@@ -317,9 +317,12 @@ public class KitsManager {
         }
     }
 
-    private void runKitCommand(Player p, String raw) {
+    private void runKitCommand(Player p, String kitId, String raw) {
         String line = raw == null ? "" : raw.trim();
         if (line.isEmpty()) return;
+
+        // Audit log — every kit command execution is visible to admins in console
+        plugin.getLogger().info("[Kits] " + p.getName() + " claiming kit '" + kitId + "' runs: " + line);
 
         String withPlayer = line.replace("%player%", p.getName());
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
@@ -334,6 +337,14 @@ public class KitsManager {
         }
         if (lower.startsWith("player:")) {
             String cmd = withPlayer.substring("player:".length()).trim();
+            // Warn if a player-executed command contains privilege-escalation patterns
+            String cmdLower = cmd.toLowerCase(Locale.ROOT);
+            if (cmdLower.contains("op")
+                    || cmdLower.contains("lp user")
+                    || cmdLower.contains("perm")) {
+                plugin.getLogger().warning("[Kits] SUSPICIOUS player command in kit '"
+                        + kitId + "' executed by " + p.getName() + ": " + line);
+            }
             Bukkit.dispatchCommand(p, cmd);
             return;
         }

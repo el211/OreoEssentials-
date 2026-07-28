@@ -4,6 +4,8 @@ import fr.elias.oreoEssentials.rabbitmq.packet.Packet;
 import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteInputStream;
 import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteOutputStream;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.UUID;
 
 public final class TradeStatePacket extends Packet {
@@ -50,7 +52,11 @@ public final class TradeStatePacket extends Packet {
     }
 
     private static byte[] readBlob(FriendlyByteInputStream in) {
-        int n = Math.max(0, in.readInt());
+        int n = in.readInt();
+        if (n < 0 || n > 10_000_000) {
+            throw new UncheckedIOException(new IOException(
+                    "[Trade] Received malformed packet: invalid blob size " + n));
+        }
         byte[] b = new byte[n];
         for (int i = 0; i < n; i++) b[i] = in.readByte();
         return b;

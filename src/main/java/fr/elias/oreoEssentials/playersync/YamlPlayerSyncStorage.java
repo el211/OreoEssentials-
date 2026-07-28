@@ -18,13 +18,14 @@ public final class YamlPlayerSyncStorage implements PlayerSyncStorage {
     }
 
     @Override
-    public void save(UUID uuid, PlayerSyncSnapshot snap) throws Exception {
+    public synchronized void save(UUID uuid, PlayerSyncSnapshot snap) throws Exception {
         cfg.set("players." + uuid + ".blob", PlayerSyncSnapshot.toBase64(snap));
         cfg.save(file);
     }
 
     @Override
-    public PlayerSyncSnapshot load(UUID uuid) throws Exception {
+    public synchronized PlayerSyncSnapshot load(UUID uuid) throws Exception {
+        cfg.load(file); // reload from disk to avoid stale in-memory cache
         String b64 = cfg.getString("players." + uuid + ".blob", null);
         if (b64 == null) return null;
         return PlayerSyncSnapshot.fromBase64(b64);

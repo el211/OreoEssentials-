@@ -540,10 +540,20 @@ public final class OreoEssentials extends JavaPlugin {
 
         try { if (backBroker != null) { backBroker.shutdown(); getLogger().info("[BackBroker] Shutdown complete."); } } catch (Exception ignored) {}
         try { pendingBackTeleports.clear(); getLogger().info("[BackBroker] Cleared pending teleports."); } catch (Exception ignored) {}
+        // Null out cross-server brokers that have no explicit shutdown method (packet subscriptions
+        // are cleaned up when packetManager closes below)
+        try { if (modBridge != null) { modBridge = null; } } catch (Exception ignored) {}
+        try { if (homeTpBroker != null) { homeTpBroker = null; } } catch (Exception ignored) {}
+        try { if (tpaBroker != null) { tpaBroker = null; } } catch (Exception ignored) {}
+        try { if (tpBroker != null) { tpBroker = null; } } catch (Exception ignored) {}
+        try { if (rtpBridge != null) { rtpBridge = null; } } catch (Exception ignored) {}
+        try { if (tradeBroker != null) { tradeBroker = null; } } catch (Exception ignored) {}
+        try { if (afkService != null) { afkService.shutdown(); } } catch (Exception ignored) {}
         try { if (teleportService != null) teleportService.shutdown(); } catch (Exception ignored) {}
         try { if (storage != null) { storage.flush(); storage.close(); } } catch (Exception ignored) {}
         try { if (database != null) database.close(); } catch (Exception ignored) {}
         try { if (packetManager != null) packetManager.close(); } catch (Exception ignored) {}
+        try { if (redis != null) { redis.shutdown(); getLogger().info("[REDIS] Connection closed."); } } catch (Exception ignored) {}
         try { if (ecoBootstrap != null) ecoBootstrap.disable(); } catch (Exception ignored) {}
         try { if (chatSyncManager != null) chatSyncManager.close(); } catch (Exception ignored) {}
         try { if (shopModule != null) shopModule.shutdown(); } catch (Exception ignored) {}

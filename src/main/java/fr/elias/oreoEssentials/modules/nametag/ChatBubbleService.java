@@ -157,11 +157,11 @@ public final class ChatBubbleService implements Listener {
         String rawMessage = PlainTextComponentSerializer.plainText().serialize(event.message());
         if (rawMessage.startsWith("/")) return;
 
-        if (!NametageCondition.evaluateAll(senderConditions, sender)) return;
-
-        // Schedule on the player's entity thread (we're async here)
+        // Condition check uses Bukkit API (hasPermission, getGameMode, getWorld) — must run sync.
+        // Schedule on the player's entity thread (we're async here) and evaluate conditions there.
         OreScheduler.runForEntity(plugin, sender, () -> {
             if (!sender.isOnline()) return;
+            if (!NametageCondition.evaluateAll(senderConditions, sender)) return;
             spawnBubble(sender, rawMessage);
         });
     }

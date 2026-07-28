@@ -127,7 +127,12 @@ public final class GroupRtpService {
     }
 
     private void removeFromSession(GroupSession session, GroupRtpPortalDef def, UUID playerId) {
-        if (session.isTeleporting()) return; // Already locked in, don't interfere
+        if (session.isTeleporting()) {
+            // Player disconnected mid-teleport — remove from the session's inside set
+            // and reset to IDLE if the session is now empty.
+            session.removeFromTeleporting(playerId);
+            return;
+        }
         session.remove(playerId);
 
         if (session.size() == 0) {
@@ -229,6 +234,13 @@ public final class GroupRtpService {
         // ── Cross-server branch ───────────────────────────────────────────────
         String rtpServer = def.getRtpServer();
         if (rtpServer != null && !rtpServer.isBlank()) {
+            // Apply cooldowns before dispatching cross-server so players cannot
+            // immediately re-enter the portal if they switch back to this server.
+            for (UUID uid : group) {
+                cooldowns.put(uid, System.currentTimeMillis() + def.getCooldownMs());
+            }
+            // Reset session state now that the teleport is being handed off
+            session.resetToIdle();
             dispatchCrossServerRtp(def, group);
             return;
         }
@@ -283,6 +295,9 @@ public final class GroupRtpService {
                 // Apply cooldown
                 cooldowns.put(uid, System.currentTimeMillis() + def.getCooldownMs());
             }
+
+            // Teleport sequence dispatched — reset session so it can be reused
+            session.resetToIdle();
         });
     }
 

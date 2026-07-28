@@ -25,11 +25,33 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 
 public class ChatChannelHandler {
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
+
+    /**
+     * Strips dangerous MiniMessage interaction tags from user-supplied input
+     * while preserving cosmetic formatting tags (color, gradient, bold, etc.).
+     */
+    private static final Pattern DANGEROUS_MM_TAGS = Pattern.compile(
+            "(?i)</?(?:click(?::[^>]*)?"
+            + "|hover(?::[^>]*)?"
+            + "|run_command(?::[^>]*)?"
+            + "|suggest_command(?::[^>]*)?"
+            + "|open_url(?::[^>]*)?"
+            + "|open_file(?::[^>]*)?"
+            + "|copy_to_clipboard(?::[^>]*)?"
+            + "|insertion(?::[^>]*)?)>"
+    );
+
+    private static String sanitizeMiniMessage(String input) {
+        if (input == null || input.isEmpty()) return input;
+        return DANGEROUS_MM_TAGS.matcher(input).replaceAll("");
+    }
+
     private static final LegacyComponentSerializer LEGACY_AMP =
             LegacyComponentSerializer.legacyAmpersand();
     private static final LegacyComponentSerializer LEGACY_SEC =
@@ -104,9 +126,12 @@ public class ChatChannelHandler {
         }
         Component component = buildChannelMessage(sender, rawMessage, channel);
 
-        // [item] placeholder
+        // [item] placeholder — read inventory on the main thread (sendChannelMessage is
+        // always dispatched via OreScheduler.run(), so we are safely on the main thread here).
         if (chatItemHandler.containsItemPlaceholder(rawMessage)) {
-            component = chatItemHandler.processItemPlaceholder(component, sender);
+            org.bukkit.inventory.ItemStack heldItem =
+                    sender.getInventory().getItemInMainHand().clone();
+            component = chatItemHandler.processItemPlaceholder(component, heldItem);
         }
 
         // Hover – attach to sender's name and any mentioned player names
@@ -212,7 +237,7 @@ public class ChatChannelHandler {
         boolean canColors = player.hasPermission("oreo.chat.colors");
         String msgForParsing = canColors ? FormatManager.convertLegacyToMiniMessage(rawMessage) : rawMessage;
         TagResolver msgResolver = canColors
-                ? Placeholder.parsed("chat_message", msgForParsing)
+                ? Placeholder.parsed("chat_message", sanitizeMiniMessage(msgForParsing))
                 : Placeholder.unparsed("chat_message", rawMessage);
 
         Component lpPrefix = buildLpPrefix(player);

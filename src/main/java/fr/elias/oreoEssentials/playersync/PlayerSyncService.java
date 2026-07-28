@@ -75,9 +75,11 @@ public final class PlayerSyncService {
 
     public void loadAndApply(Player p) {
         try {
+            if (!p.isOnline()) return; // guard: player may have disconnected before load completes
             PlayerSyncPrefs pr = prefs.get(p.getUniqueId());
             PlayerSyncSnapshot s = storage.load(p.getUniqueId());
             if (s == null) return;
+            if (!p.isOnline()) return; // guard: player may have disconnected during async load
 
             if (pr.inv) {
                 if (s.inventory != null) {

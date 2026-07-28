@@ -73,6 +73,32 @@ public final class GroupSession {
         inside.clear(); // prevent re-entry during teleport phase
     }
 
+    /**
+     * Resets the session back to IDLE after a teleport completes or is aborted.
+     * Clears any stale task reference so the session can be reused.
+     */
+    public void resetToIdle() {
+        if (countdownTask != null) {
+            countdownTask.cancel();
+            countdownTask = null;
+        }
+        inside.clear();
+        secondsLeft = 0;
+        state = State.IDLE;
+    }
+
+    /**
+     * Removes a member during the TELEPORTING phase (e.g. player disconnects
+     * mid-teleport). If the session becomes empty the state is reset to IDLE so
+     * the session cannot remain stuck forever.
+     */
+    public void removeFromTeleporting(UUID uuid) {
+        inside.remove(uuid);
+        if (inside.isEmpty() && state == State.TELEPORTING) {
+            resetToIdle();
+        }
+    }
+
     // ── Getters ───────────────────────────────────────────────────────────────
 
     public String getPortalId()    { return portalId; }

@@ -36,8 +36,11 @@ public final class GroupRtpCrossServerBroker implements Listener {
     private final ConcurrentHashMap<UUID, Location> pending = new ConcurrentHashMap<>();
     /** playerId → error message to deliver once the player joins (when location search failed) */
     private final ConcurrentHashMap<UUID, String> pendingFailed = new ConcurrentHashMap<>();
-    /** requestId dedup — prevents double-processing on RabbitMQ redelivery */
-    private final ConcurrentHashMap<String, Boolean> seenRequests = new ConcurrentHashMap<>();
+    /** requestId dedup — prevents double-processing on RabbitMQ redelivery.
+     *  Value is the timestamp (ms epoch) when the entry was recorded; old entries
+     *  are evicted on each check to prevent unbounded growth. */
+    private final ConcurrentHashMap<String, Long> seenRequests = new ConcurrentHashMap<>();
+    private static final long SEEN_REQUESTS_TTL_MS = 30_000L; // 30 seconds
 
     private final OreoEssentials plugin;
 
@@ -49,8 +52,11 @@ public final class GroupRtpCrossServerBroker implements Listener {
             if (pkt.getRequestId() == null || pkt.getPlayerUuids() == null
                     || pkt.getPlayerUuids().isEmpty()) return;
 
-            // Dedup — ignore redeliveries of the same request
-            if (seenRequests.putIfAbsent(pkt.getRequestId(), Boolean.TRUE) != null) return;
+            // Dedup — ignore redeliveries of the same request.
+            // Sweep expired entries first to keep the map bounded.
+            long now = System.currentTimeMillis();
+            seenRequests.entrySet().removeIf(e -> now - e.getValue() > SEEN_REQUESTS_TTL_MS);
+            if (seenRequests.putIfAbsent(pkt.getRequestId(), now) != null) return;
 
             List<UUID> players = new ArrayList<>(pkt.getPlayerUuids());
             Set<String> unsafeBlocks     = new HashSet<>(pkt.getUnsafeBlocks());

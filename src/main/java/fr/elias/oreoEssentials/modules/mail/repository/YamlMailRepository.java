@@ -160,14 +160,25 @@ public final class YamlMailRepository implements MailRepository {
         for (Map.Entry<UUID, List<MailMessage>> e : mailbox.entrySet()) {
             cfg.set("mail." + e.getKey(), toMapList(e.getValue()));
         }
-        // Broadcasts
-        cfg.set("broadcasts", toMapList(broadcasts));
+        // Broadcasts — take a snapshot to avoid ConcurrentModificationException during iteration
+        List<MailMessage> broadcastSnapshot;
+        synchronized (broadcasts) {
+            broadcastSnapshot = new ArrayList<>(broadcasts);
+        }
+        cfg.set("broadcasts", toMapList(broadcastSnapshot));
         // Acks
         for (Map.Entry<UUID, Set<String>> e : bcastAck.entrySet()) {
             cfg.set("received_broadcasts." + e.getKey(), new ArrayList<>(e.getValue()));
         }
-        try { cfg.save(file); }
-        catch (IOException ex) { plugin.getLogger().severe("[Mail] Failed to save mail.yml: " + ex.getMessage()); }
+        try {
+            File tmp = new File(file.getParentFile(), file.getName() + ".tmp");
+            cfg.save(tmp);
+            // Atomic rename: delete old file first (required on Windows), then rename
+            if (file.exists()) file.delete();
+            tmp.renameTo(file);
+        } catch (IOException ex) {
+            plugin.getLogger().severe("[Mail] Failed to save mail.yml: " + ex.getMessage());
+        }
     }
 
     // ── Serialisation helpers ─────────────────────────────────────────────────

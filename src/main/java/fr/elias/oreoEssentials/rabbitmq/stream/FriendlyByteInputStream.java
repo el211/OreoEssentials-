@@ -1,6 +1,9 @@
 package fr.elias.oreoEssentials.rabbitmq.stream;
 
 import java.io.ByteArrayInputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -17,27 +20,44 @@ public class FriendlyByteInputStream {
         this.stream = new ByteArrayInputStream(new byte[0]);
     }
 
-    private int u() {
+    private int u() throws EOFException {
         int v = stream.read();
-        return (v < 0) ? 0 : v; // avoid -1 poisoning
+        if (v == -1) throw new EOFException("Unexpected end of packet data");
+        return v;
     }
 
     public byte readByte() {
-        return (byte) u();
+        try {
+            return (byte) u();
+        } catch (EOFException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
     }
 
     public int readInt() {
-        return (u() << 24) | (u() << 16) | (u() << 8) | u();
+        try {
+            return (u() << 24) | (u() << 16) | (u() << 8) | u();
+        } catch (EOFException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
     }
 
     public short readShort() {
-        return (short) ((u() << 8) | u());
+        try {
+            return (short) ((u() << 8) | u());
+        } catch (EOFException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
     }
 
     public long readLong() {
-        long v = 0;
-        for (int i = 0; i < 8; i++) v = (v << 8) | (u() & 0xFFL);
-        return v;
+        try {
+            long v = 0;
+            for (int i = 0; i < 8; i++) v = (v << 8) | (u() & 0xFFL);
+            return v;
+        } catch (EOFException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
     }
 
     public float readFloat() {
@@ -56,7 +76,7 @@ public class FriendlyByteInputStream {
         int length = readShort() & 0xFFFF;
         byte[] bytes = new byte[length];
         for (int i = 0; i < length; i++) bytes[i] = readByte();
-        return new String(bytes);
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     public byte[] readBytes(int length) {

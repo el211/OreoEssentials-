@@ -332,8 +332,10 @@ public class SpawnCommand implements OreoCommand {
 
     private boolean hasBodyMoved(Player p, Location origin) {
         Location now = p.getLocation();
-        return !now.getWorld().equals(origin.getWorld())
-                || now.getBlockX() != origin.getBlockX()
+        if (now == null || origin == null) return true; // consider moved if locations invalid
+        if (now.getWorld() == null || origin.getWorld() == null) return true;
+        if (!now.getWorld().equals(origin.getWorld())) return true;
+        return now.getBlockX() != origin.getBlockX()
                 || now.getBlockY() != origin.getBlockY()
                 || now.getBlockZ() != origin.getBlockZ();
     }
