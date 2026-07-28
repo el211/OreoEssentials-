@@ -409,18 +409,20 @@ public final class GroupRtpService {
 
     private static void playSound(Player p, String soundName) {
         if (soundName == null || soundName.isBlank()) return;
-        try {
-            Sound s = Sound.valueOf(soundName.toUpperCase());
-            p.playSound(p.getLocation(), s, 0.8f, 1f);
-        } catch (IllegalArgumentException ignored) {}
+        NamespacedKey key = NamespacedKey.fromString(soundName.toLowerCase(java.util.Locale.ROOT));
+        if (key == null) key = NamespacedKey.minecraft(soundName.toLowerCase(java.util.Locale.ROOT));
+        Sound s = org.bukkit.Registry.SOUNDS.get(key);
+        if (s == null) return;
+        p.playSound(p.getLocation(), s, 0.8f, 1f);
     }
 
     private static void spawnParticleAt(Location loc, String particleName, int count) {
         if (particleName == null || particleName.isBlank() || loc.getWorld() == null) return;
-        try {
-            Particle pt = Particle.valueOf(particleName.toUpperCase());
-            loc.getWorld().spawnParticle(pt, loc, count, 0.3, 0.3, 0.3, 0.05);
-        } catch (IllegalArgumentException ignored) {}
+        NamespacedKey key = NamespacedKey.fromString(particleName.toLowerCase(java.util.Locale.ROOT));
+        if (key == null) key = NamespacedKey.minecraft(particleName.toLowerCase(java.util.Locale.ROOT));
+        Particle pt = org.bukkit.Registry.PARTICLE_TYPE.get(key);
+        if (pt == null) return;
+        loc.getWorld().spawnParticle(pt, loc, count, 0.3, 0.3, 0.3, 0.05);
     }
 
     private static void sendTitle(Player p, String title, String subtitle) {
