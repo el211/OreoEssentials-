@@ -274,14 +274,21 @@ public final class GroupRtpService {
             // Teleport each player on their own entity thread
             for (UUID uid : group) {
                 Player p = Bukkit.getPlayer(uid);
-                if (p == null || !p.isOnline()) continue;
+                if (p == null || !p.isOnline()) continue; // skip — don't apply cooldown to disconnected players
 
                 // Scatter players within clusterRadius of base location
                 Location dest = SafeLocationFinder.scatter(base, def.getClusterRadius(),
                         world, def.getUnsafeBlocks());
 
+                // Apply cooldown only after confirming the player is online
+                cooldowns.put(uid, System.currentTimeMillis() + def.getCooldownMs());
+
                 OreScheduler.runForEntity(plugin, p, () -> {
-                    if (!p.isOnline()) return;
+                    if (!p.isOnline()) {
+                        // Player went offline between the online-check and task execution — remove cooldown
+                        cooldowns.remove(uid);
+                        return;
+                    }
                     p.teleportAsync(dest).thenRun(() ->
                             OreScheduler.runForEntity(plugin, p, () -> {
                                 if (!p.isOnline()) return;
@@ -291,9 +298,6 @@ public final class GroupRtpService {
                                 playSound(p, def.getSoundTeleport());
                             }));
                 });
-
-                // Apply cooldown
-                cooldowns.put(uid, System.currentTimeMillis() + def.getCooldownMs());
             }
 
             // Teleport sequence dispatched — reset session so it can be reused

@@ -126,8 +126,12 @@ public class KitsManager {
                 List<String> commands = k.getStringList("commands");
                 if (commands != null && commands.isEmpty()) commands = null;
 
-                kits.put(id.toLowerCase(Locale.ROOT),
-                        new Kit(id, display, icon, items, cooldown, slot, commands));
+                String key = id.toLowerCase(Locale.ROOT);
+                if (kits.containsKey(key)) {
+                    plugin.getLogger().warning("[Kits] Duplicate kit ID '" + key + "' — second definition ignored.");
+                    continue;
+                }
+                kits.put(key, new Kit(id, display, icon, items, cooldown, slot, commands));
                 loaded++;
             } catch (Throwable t) {
                 plugin.getLogger().severe("[Kits] Failed to load kit '" + id + "': " + t.getMessage());
@@ -255,10 +259,19 @@ public class KitsManager {
                     Map.of("kit_name", kit.getDisplayName()));
         }
 
+        int droppedCount = 0;
         for (ItemStack it : kit.getItems()) {
             if (it == null) continue;
             Map<Integer, ItemStack> leftover = p.getInventory().addItem(it.clone());
-            leftover.values().forEach(drop -> p.getWorld().dropItemNaturally(p.getLocation(), drop));
+            for (ItemStack drop : leftover.values()) {
+                p.getWorld().dropItemNaturally(p.getLocation(), drop);
+                droppedCount++;
+            }
+        }
+        if (droppedCount > 0) {
+            Lang.send(p, "kits.inventory-full",
+                    "<yellow>[Kits] Your inventory was full! <white>%dropped%</white> item(s) were dropped at your feet.</yellow>",
+                    Map.of("dropped", String.valueOf(droppedCount)));
         }
 
         if (kit.getCommands() != null) {

@@ -170,6 +170,7 @@ public class KitsMenuSI implements InventoryProvider {
 
         if (anyFixed) {
             // Place fixed-slot kits first
+            Set<Integer> usedSlots = new HashSet<>();
             for (int i = 0; i < kitList.size(); i++) {
                 Kit k = kitList.get(i);
                 if (k.getSlot() == null) continue;
@@ -177,6 +178,25 @@ public class KitsMenuSI implements InventoryProvider {
                 int slot = k.getSlot();
                 if (slot < 0 || slot >= rows * cols) continue;
 
+                if (usedSlots.contains(slot)) {
+                    // Find next available empty slot
+                    int fallback = -1;
+                    for (int s = 0; s < rows * cols; s++) {
+                        if (!usedSlots.contains(s)) {
+                            int fr = s / cols;
+                            int fc = s % cols;
+                            if (!contents.get(SlotPos.of(fr, fc)).isPresent()) {
+                                fallback = s;
+                                break;
+                            }
+                        }
+                    }
+                    plugin.getLogger().warning("[Kits] Kit '" + k.getId() + "' has duplicate slot " + slot + ", placing in next available slot.");
+                    if (fallback == -1) continue; // no room left, skip
+                    slot = fallback;
+                }
+
+                usedSlots.add(slot);
                 int r = slot / cols;
                 int c = slot % cols;
 

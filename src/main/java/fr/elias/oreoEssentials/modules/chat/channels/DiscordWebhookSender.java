@@ -40,6 +40,8 @@ public class DiscordWebhookSender {
         try {
             URL url = new URL(webhookUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setConnectTimeout(5000);  // 5 seconds to connect
+            connection.setReadTimeout(10000);    // 10 seconds to read response
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("User-Agent", "OreoEssentials-Discord-Bridge");

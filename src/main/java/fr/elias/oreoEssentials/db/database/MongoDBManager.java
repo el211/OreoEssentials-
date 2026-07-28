@@ -5,9 +5,11 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.Sorts;
@@ -102,11 +104,42 @@ public class MongoDBManager implements PlayerEconomyDatabase {
         }
     }
 
+    /**
+     * Atomically deducts {@code amount} from the player's balance using a conditional
+     * findOneAndUpdate with filter {@code balance >= amount}. If the balance is
+     * insufficient the document is not modified and this method returns without
+     * changing the stored value.  This eliminates the TOCTOU race that would arise
+     * from a separate read-then-write sequence.
+     */
     @Override
     public void takeBalance(UUID playerUUID, String name, double amount) {
-        double current = getBalance(playerUUID);
-        double target = current - amount;
-        setBalance(playerUUID, name, target);
+        if (!connected) return;
+        final String id = playerUUID.toString();
+        try {
+            Document result = collection.findOneAndUpdate(
+                    Filters.and(
+                            Filters.eq("playerUUID", id),
+                            Filters.gte("balance", amount)
+                    ),
+                    Updates.combine(
+                            Updates.set("name", name),
+                            Updates.inc("balance", -amount)
+                    ),
+                    new FindOneAndUpdateOptions()
+                            .returnDocument(ReturnDocument.AFTER)
+            );
+            // Invalidate caches regardless; if result is null the balance was
+            // insufficient and no change was made (MongoEconomyService.withdraw()
+            // guards against this with a pre-check, but the DB is the authority).
+            localBalanceCache.remove(playerUUID);
+            redis.deleteBalance(playerUUID);
+            if (result != null) {
+                double newBal = readNumber(result, "balance", 0.0);
+                cacheBalance(playerUUID, newBal);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

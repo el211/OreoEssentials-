@@ -188,24 +188,36 @@ public final class OrderBrowserMenu implements InventoryProvider {
 
         if (!pg.isFirst()) {
             int slot = cfg.guiSlot("browse", "prev-page", 48);
-            c.set(slot / 9, slot % 9, ClickableItem.of(
-                    named(cfg.guiMaterial("browse", "prev-page", Material.ARROW),
-                            cfg.guiNameRaw("browse", "prev-page", "&e&lPrevious Page")),
-                    e -> { click(p); getInventory(module).open(p, pg.previous().getPage()); }));
+            if (slot < 0 || slot > 53) {
+                module.getPlugin().getLogger().warning("[Orders] Invalid GUI slot " + slot + " for 'prev-page' in config, skipping.");
+            } else {
+                c.set(slot / 9, slot % 9, ClickableItem.of(
+                        named(cfg.guiMaterial("browse", "prev-page", Material.ARROW),
+                                cfg.guiNameRaw("browse", "prev-page", "&e&lPrevious Page")),
+                        e -> { click(p); getInventory(module).open(p, pg.previous().getPage()); }));
+            }
         }
 
         if (!pg.isLast()) {
             int slot = cfg.guiSlot("browse", "next-page", 50);
-            c.set(slot / 9, slot % 9, ClickableItem.of(
-                    named(cfg.guiMaterial("browse", "next-page", Material.ARROW),
-                            cfg.guiNameRaw("browse", "next-page", "&e&lNext Page")),
-                    e -> { click(p); getInventory(module).open(p, pg.next().getPage()); }));
+            if (slot < 0 || slot > 53) {
+                module.getPlugin().getLogger().warning("[Orders] Invalid GUI slot " + slot + " for 'next-page' in config, skipping.");
+            } else {
+                c.set(slot / 9, slot % 9, ClickableItem.of(
+                        named(cfg.guiMaterial("browse", "next-page", Material.ARROW),
+                                cfg.guiNameRaw("browse", "next-page", "&e&lNext Page")),
+                        e -> { click(p); getInventory(module).open(p, pg.next().getPage()); }));
+            }
         }
 
         int piSlot = cfg.guiSlot("browse", "page-indicator", 49);
-        String piName = cfg.guiNameRaw("browse", "page-indicator", "&ePage &f{page}")
-                .replace("{page}", String.valueOf(pg.getPage() + 1));
-        c.set(piSlot / 9, piSlot % 9, ClickableItem.empty(named(Material.PAPER, piName)));
+        if (piSlot < 0 || piSlot > 53) {
+            module.getPlugin().getLogger().warning("[Orders] Invalid GUI slot " + piSlot + " for 'page-indicator' in config, skipping.");
+        } else {
+            String piName = cfg.guiNameRaw("browse", "page-indicator", "&ePage &f{page}")
+                    .replace("{page}", String.valueOf(pg.getPage() + 1));
+            c.set(piSlot / 9, piSlot % 9, ClickableItem.empty(named(Material.PAPER, piName)));
+        }
     }
 
     private void renderControls(Player p, InventoryContents c) {
@@ -213,24 +225,36 @@ public final class OrderBrowserMenu implements InventoryProvider {
 
         // Create order button
         int createSlot = cfg.guiSlot("browse", "create-order", 45);
-        c.set(createSlot / 9, createSlot % 9, ClickableItem.of(
-                named(cfg.guiMaterial("browse", "create-order", Material.WRITABLE_BOOK),
-                        cfg.guiNameRaw("browse", "create-order", "&a&lCreate Order")),
-                e -> { click(p); CreateOrderFlow.openItemStep(module, p); }));
+        if (createSlot < 0 || createSlot > 53) {
+            module.getPlugin().getLogger().warning("[Orders] Invalid GUI slot " + createSlot + " for 'create-order' in config, skipping.");
+        } else {
+            c.set(createSlot / 9, createSlot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("browse", "create-order", Material.WRITABLE_BOOK),
+                            cfg.guiNameRaw("browse", "create-order", "&a&lCreate Order")),
+                    e -> { click(p); CreateOrderFlow.openItemStep(module, p); }));
+        }
 
         // My orders button
         int mySlot = cfg.guiSlot("browse", "my-orders", 46);
-        c.set(mySlot / 9, mySlot % 9, ClickableItem.of(
-                named(cfg.guiMaterial("browse", "my-orders", Material.CHEST),
-                        cfg.guiNameRaw("browse", "my-orders", "&6&lMy Orders")),
-                e -> { click(p); MyOrdersMenu.getInventory(module).open(p); }));
+        if (mySlot < 0 || mySlot > 53) {
+            module.getPlugin().getLogger().warning("[Orders] Invalid GUI slot " + mySlot + " for 'my-orders' in config, skipping.");
+        } else {
+            c.set(mySlot / 9, mySlot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("browse", "my-orders", Material.CHEST),
+                            cfg.guiNameRaw("browse", "my-orders", "&6&lMy Orders")),
+                    e -> { click(p); MyOrdersMenu.getInventory(module).open(p); }));
+        }
 
         // Close button
         int closeSlot = cfg.guiSlot("browse", "close", 53);
-        c.set(closeSlot / 9, closeSlot % 9, ClickableItem.of(
-                named(cfg.guiMaterial("browse", "close", Material.BARRIER),
-                        cfg.guiNameRaw("browse", "close", "&c&lClose")),
-                e -> { click(p); p.closeInventory(); }));
+        if (closeSlot < 0 || closeSlot > 53) {
+            module.getPlugin().getLogger().warning("[Orders] Invalid GUI slot " + closeSlot + " for 'close' in config, skipping.");
+        } else {
+            c.set(closeSlot / 9, closeSlot % 9, ClickableItem.of(
+                    named(cfg.guiMaterial("browse", "close", Material.BARRIER),
+                            cfg.guiNameRaw("browse", "close", "&c&lClose")),
+                    e -> { click(p); p.closeInventory(); }));
+        }
     }
 
 

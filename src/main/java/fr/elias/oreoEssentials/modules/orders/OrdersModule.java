@@ -98,6 +98,10 @@ public final class OrdersModule {
     public void stop() {
         instance = null;
         ready    = false;
+        if (guiManager != null) {
+            guiManager.shutdown();
+            guiManager = null;
+        }
         if (repository != null) {
             repository.close();
             repository = null;

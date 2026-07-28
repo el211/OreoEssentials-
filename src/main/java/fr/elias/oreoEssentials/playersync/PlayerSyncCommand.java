@@ -57,17 +57,21 @@ public final class PlayerSyncCommand implements OreoCommand, Listener {
     private ItemStack toggleItem(Material m, String name, boolean on) {
         ItemStack it = new ItemStack(m);
         ItemMeta meta = it.getItemMeta();
-        meta.setDisplayName((on ? "§a" : "§c") + name + " §7[" + (on ? "ON" : "OFF") + "]");
-        meta.setLore(List.of("§7Click to toggle"));
-        it.setItemMeta(meta);
+        if (meta != null) {
+            meta.setDisplayName((on ? "§a" : "§c") + name + " §7[" + (on ? "ON" : "OFF") + "]");
+            meta.setLore(List.of("§7Click to toggle"));
+            it.setItemMeta(meta);
+        }
         return it;
     }
 
     private ItemStack disabledCenter() {
         ItemStack it = new ItemStack(Material.BARRIER);
         ItemMeta meta = it.getItemMeta();
-        meta.setDisplayName("§cSync disabled by server config");
-        it.setItemMeta(meta);
+        if (meta != null) {
+            meta.setDisplayName("§cSync disabled by server config");
+            it.setItemMeta(meta);
+        }
         return it;
     }
 

@@ -103,8 +103,8 @@ public final class SafeLocationFinder {
 
             // ── Biome blacklist ───────────────────────────────────────────────
             if (checkBiomes) {
-                String biome = ground.getBiome().name();
-                if (badBiomes.contains(biome)) continue;
+                String biome = ground.getBiome().name().toUpperCase(java.util.Locale.ROOT);
+                if (badBiomes.stream().anyMatch(b -> b.toUpperCase(java.util.Locale.ROOT).equals(biome))) continue;
             }
 
             // ── Success ───────────────────────────────────────────────────────

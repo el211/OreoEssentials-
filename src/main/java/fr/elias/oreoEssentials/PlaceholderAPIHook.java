@@ -19,12 +19,18 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class PlaceholderAPIHook extends PlaceholderExpansion {
     private final OreoEssentials plugin;
     private boolean debug;
     private final String thisServerName;
+
+    // --- Vault-access cache (avoids repeated sync DB/permission checks per placeholder tick) ---
+    private final ConcurrentHashMap<UUID, long[]> vaultCacheTime = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, List<Integer>> vaultAccessibleCache = new ConcurrentHashMap<>();
+    private static final long VAULT_CACHE_TTL = 4_000L;
 
     public PlaceholderAPIHook(OreoEssentials plugin) {
         this.plugin = plugin;
@@ -332,11 +338,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             PlayerVaultsService pv = pvService();
             if (p == null || pv == null || !pv.enabled()) return "0";
             int max = pvConfigMax();
-            int count = 0;
-            for (int i = 1; i <= max; i++) {
-                if (pv.canAccess(p, i)) count++;
-            }
-            return String.valueOf(count);
+            return String.valueOf(getCachedAccessibleVaults(p, pv, max).size());
         }
 
         if (id.equals("vaults_unlocked_list")) {
@@ -345,9 +347,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             if (p == null || pv == null || !pv.enabled()) return "";
             int max = pvConfigMax();
             List<String> ids = new ArrayList<>();
-            for (int i = 1; i <= max; i++) {
-                if (pv.canAccess(p, i)) ids.add(String.valueOf(i));
-            }
+            for (int vid : getCachedAccessibleVaults(p, pv, max)) ids.add(String.valueOf(vid));
             return trim64(String.join(", ", ids));
         }
 
@@ -356,9 +356,10 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             PlayerVaultsService pv = pvService();
             if (p == null || pv == null || !pv.enabled()) return "";
             int max = pvConfigMax();
+            List<Integer> accessible = getCachedAccessibleVaults(p, pv, max);
             List<String> ids = new ArrayList<>();
             for (int i = 1; i <= max; i++) {
-                if (!pv.canAccess(p, i)) ids.add(String.valueOf(i));
+                if (!accessible.contains(i)) ids.add(String.valueOf(i));
             }
             return trim64(String.join(", ", ids));
         }
@@ -569,6 +570,32 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         } catch (Throwable ignored) {
             return null;
         }
+    }
+
+    /**
+     * Returns the list of vault IDs (1-based, up to {@code max}) that {@code p} can
+     * access, using a short-lived per-player cache (TTL: {@value #VAULT_CACHE_TTL} ms).
+     *
+     * <p>Without caching, each of the three vault placeholder handlers
+     * ({@code vaults_unlocked_count}, {@code vaults_unlocked_list},
+     * {@code vaults_locked_list}) would invoke {@code pv.canAccess()} in a tight loop
+     * on every placeholder refresh, potentially causing synchronous DB or permission
+     * I/O on the main thread for every online player.</p>
+     */
+    private List<Integer> getCachedAccessibleVaults(Player p, PlayerVaultsService pv, int max) {
+        UUID uuid = p.getUniqueId();
+        long now = System.currentTimeMillis();
+        long[] ts = vaultCacheTime.get(uuid);
+        if (ts != null && now - ts[0] < VAULT_CACHE_TTL) {
+            return vaultAccessibleCache.getOrDefault(uuid, Collections.emptyList());
+        }
+        List<Integer> accessible = new ArrayList<>();
+        for (int i = 1; i <= max; i++) {
+            if (pv.canAccess(p, i)) accessible.add(i);
+        }
+        vaultAccessibleCache.put(uuid, accessible);
+        vaultCacheTime.put(uuid, new long[]{now});
+        return accessible;
     }
 
     private PlayerVaultsService pvService() {

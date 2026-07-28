@@ -97,6 +97,19 @@ public final class OrdersGuiManager implements Listener {
         return dirtyViewers.remove(uuid);
     }
 
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+    public void shutdown() {
+        if (globalDebounceTask != null) {
+            globalDebounceTask.cancel();
+            globalDebounceTask = null;
+        }
+        debounceTasks.values().forEach(task -> {
+            if (task != null) task.cancel();
+        });
+        debounceTasks.clear();
+    }
+
     // ── Internal ──────────────────────────────────────────────────────────────
 
     private void cancelDebounceTask(UUID uuid) {

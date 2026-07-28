@@ -130,6 +130,7 @@ public final class MailboxMenu implements InventoryProvider {
             if (e.isShiftClick()) {
                 service.clearMail(player.getUniqueId()).thenRun(() ->
                         OreScheduler.run(plugin, () -> {
+                            if (!player.isOnline()) return; // player disconnected before callback
                             player.sendMessage(c("&a[Mail] Your mailbox has been cleared."));
                             getInventory(plugin, service).open(player);
                         }));
@@ -197,11 +198,13 @@ public final class MailboxMenu implements InventoryProvider {
             if (e.isShiftClick()) {
                 service.deleteMail(player.getUniqueId(), mail.getId()).thenRun(() ->
                         OreScheduler.run(plugin, () -> {
+                            if (!player.isOnline()) return; // player disconnected before callback
                             player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 0.5f, 1f);
                             getInventory(plugin, service).open(player);
                         }));
             } else if (mail.hasItem() && !mail.isItemClaimed()) {
                 service.claimItem(player, mail.getId()).thenAccept(success -> {
+                    if (!player.isOnline()) return; // player disconnected before callback
                     if (success) {
                         player.sendMessage(c("&a[Mail] Item claimed from &e" + sender + "&a!"));
                         if (mail.hasMessage()) {

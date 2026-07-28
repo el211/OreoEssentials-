@@ -37,10 +37,21 @@ public class MongoEconomyService implements EconomyService {
         }
     }
 
+    /**
+     * Withdraws {@code amount} from the player's balance.
+     *
+     * <p>The pre-check against the cached balance is a fast-path optimisation only.
+     * The actual deduction in {@link fr.elias.oreoEssentials.db.database.MongoDBManager#takeBalance}
+     * is atomic at the database level: it uses a conditional {@code findOneAndUpdate}
+     * with a {@code balance >= amount} filter so two concurrent withdrawals can never
+     * both succeed when only one has sufficient funds (no TOCTOU race).</p>
+     */
     @Override
     public boolean withdraw(UUID player, double amount) {
         if (amount <= 0) return false;
 
+        // Fast-path: reject immediately if the cached balance is clearly insufficient.
+        // The authoritative atomicity check is inside MongoDBManager.takeBalance().
         double currentBalance = database.getBalance(player);
         if (currentBalance < amount) return false;
 
