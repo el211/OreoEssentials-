@@ -450,7 +450,7 @@ public class ChatSyncManager {
 
             Component component;
             try {
-                component = GsonComponentSerializer.gson().deserialize(messageJson);
+                component = stripInteractiveEvents(GsonComponentSerializer.gson().deserialize(messageJson));
             } catch (Exception ex) {
                 component = Component.text(messageJson);
             }
@@ -553,5 +553,20 @@ public class ChatSyncManager {
 
     private static String nullSafe(String s) {
         return (s == null) ? "" : s;
+    }
+
+    /**
+     * Strips all interactive events (click, hover, insertion) from a component
+     * received from a remote server. Cosmetic styling (color, bold, italic, etc.)
+     * is preserved; only events that could execute commands or open URLs are removed.
+     */
+    private static Component stripInteractiveEvents(Component component) {
+        return component
+                .clickEvent(null)
+                .hoverEvent(null)
+                .insertion(null)
+                .children(component.children().stream()
+                        .map(ChatSyncManager::stripInteractiveEvents)
+                        .collect(java.util.stream.Collectors.toList()));
     }
 }

@@ -750,9 +750,12 @@ public class PlayerNametagManager implements Listener {
         OreScheduler.runLater(plugin, () -> {
             if (!joining.isOnline()) return;
 
-            // Spawn this player's own nametag
+            // Spawn this player's own nametag, then update viewer visibility
+            // one tick later so the entity exists before reconciliation runs.
             spawnNametag(joining);
-            updateVisibilityForViewer(joining);
+            OreScheduler.runLater(plugin, () -> {
+                if (joining.isOnline()) updateVisibilityForViewer(joining);
+            }, 1L);
             markOwnerDirty(joining.getUniqueId());
             applyVanillaNameHiding(joining);
             addVanillaHiddenEntryForAllViewers(joining.getName());

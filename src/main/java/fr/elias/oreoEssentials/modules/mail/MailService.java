@@ -77,10 +77,11 @@ public final class MailService {
      */
     public void broadcastText(String senderName, String message) {
         MailMessage bcast = newBroadcast(senderName, message, null);
-        repo.saveBroadcast(bcast);
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            deliverBroadcast(p.getUniqueId(), bcast);
-        }
+        repo.saveBroadcast(bcast).thenRun(() -> {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                deliverBroadcast(p.getUniqueId(), bcast);
+            }
+        });
     }
 
     /**
@@ -95,10 +96,11 @@ public final class MailService {
             return;
         }
         MailMessage bcast = newBroadcast(senderName, message, data);
-        repo.saveBroadcast(bcast);
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            deliverBroadcast(p.getUniqueId(), bcast);
-        }
+        repo.saveBroadcast(bcast).thenRun(() -> {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                deliverBroadcast(p.getUniqueId(), bcast);
+            }
+        });
     }
 
     /**
