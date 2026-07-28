@@ -67,13 +67,31 @@ public class ChatItemHandler {
     }
 
 
-    public Component processItemPlaceholder(Component component, Player player) {
-        Component itemComponent = buildItemComponent(player.getInventory().getItemInMainHand(), player);
+    /**
+     * Replaces the item placeholder in the given component using a pre-fetched ItemStack.
+     * Callers are responsible for reading the item on the main thread before invoking this.
+     *
+     * @param component  the chat component that may contain the item placeholder
+     * @param heldItem   a clone of the player's main-hand item, obtained on the main thread
+     */
+    public Component processItemPlaceholder(Component component, ItemStack heldItem) {
+        Component itemComponent = buildItemComponent(heldItem, null);
 
         return component.replaceText(TextReplacementConfig.builder()
                 .matchLiteral(placeholder)
                 .replacement(itemComponent)
                 .build());
+    }
+
+    /**
+     * @deprecated Accessing player inventory may be unsafe on async threads.
+     *             Prefer {@link #processItemPlaceholder(Component, ItemStack)} and read
+     *             the item on the main thread before dispatching to an async context.
+     */
+    @Deprecated
+    public Component processItemPlaceholder(Component component, Player player) {
+        ItemStack heldItem = player.getInventory().getItemInMainHand().clone();
+        return processItemPlaceholder(component, heldItem);
     }
 
 

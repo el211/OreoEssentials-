@@ -15,6 +15,7 @@ public class Currency {
     private final boolean tradeable;
     private final boolean crossServer;
     private final boolean allowNegative;
+    private final boolean wholeNumbers;
 
     private Currency(Builder builder) {
         this.id = builder.id;
@@ -24,7 +25,8 @@ public class Currency {
         this.defaultBalance = builder.defaultBalance;
         this.tradeable = builder.tradeable;
         this.crossServer = builder.crossServer;
-        this.allowNegative = builder.allowNegative; // ← NEW
+        this.allowNegative = builder.allowNegative;
+        this.wholeNumbers = builder.wholeNumbers;
     }
 
     public String getId() { return id; }
@@ -34,17 +36,28 @@ public class Currency {
     public double getDefaultBalance() { return defaultBalance; }
     public boolean isTradeable() { return tradeable; }
     public boolean isCrossServer() { return crossServer; }
-    public boolean isAllowNegative() { return allowNegative; } // ← NEW
+    public boolean isAllowNegative() { return allowNegative; }
+    public boolean isWholeNumbers() { return wholeNumbers; }
 
     /**
-     * Format a currency amount with the currency symbol
-     * IMPORTANT: Space between symbol and amount prevents "410" concatenation bug
+     * Format a currency amount with the currency symbol.
+     * Displays as a whole number when the value has no fractional part,
+     * otherwise shows up to 2 decimal places.
+     * IMPORTANT: Space between symbol and amount prevents "410" concatenation bug.
      *
      * @param amount The amount to format
-     * @return Formatted string (e.g., "💎 10.00" or "$ 25.50")
+     * @return Formatted string (e.g., "💎 10" or "$ 25.50")
      */
     public String format(double amount) {
-        return symbol + " " + String.format("%.2f", amount);
+        String formatted;
+        if (wholeNumbers) {
+            formatted = String.valueOf((long) amount);
+        } else {
+            formatted = (amount == Math.floor(amount) && !Double.isInfinite(amount))
+                    ? String.valueOf((long) amount)
+                    : String.format("%.2f", amount);
+        }
+        return symbol + " " + formatted;
     }
 
     @Override
@@ -77,7 +90,8 @@ public class Currency {
         private double defaultBalance = 0.0;
         private boolean tradeable = true;
         private boolean crossServer = false;
-        private boolean allowNegative = false; // ← NEW
+        private boolean allowNegative = false;
+        private boolean wholeNumbers = true;
 
         public Builder id(String id) {
             this.id = id;
@@ -114,8 +128,13 @@ public class Currency {
             return this;
         }
 
-        public Builder allowNegative(boolean allowNegative) { // ← NEW
+        public Builder allowNegative(boolean allowNegative) {
             this.allowNegative = allowNegative;
+            return this;
+        }
+
+        public Builder wholeNumbers(boolean wholeNumbers) {
+            this.wholeNumbers = wholeNumbers;
             return this;
         }
 

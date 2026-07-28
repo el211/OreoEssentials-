@@ -3,6 +3,9 @@ package fr.elias.oreoEssentials.modules.clearlag;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.clearlag.config.ClearLagConfig;
 import fr.elias.oreoEssentials.modules.clearlag.logic.EntityMatcher;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
@@ -293,18 +296,37 @@ public class ClearLagManager {
         return n != null && !n.isBlank();
     }
 
+    private static final MiniMessage MM = MiniMessage.miniMessage();
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
+
     private void broadcast(String message) {
         if (!cfg.masterEnabled) return;
         if (!cfg.broadcast.enabled()) return;
+        Component component = parseMessage(message);
         if (cfg.broadcast.usePerm()) {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 if (p.hasPermission(cfg.broadcast.perm())) {
-                    p.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
+                    p.sendMessage(component);
                 }
             }
         } else {
-            Bukkit.getServer().broadcastMessage(ChatColor.translateAlternateColorCodes('&', message));
+            Bukkit.getServer().broadcast(component);
         }
+    }
+
+    private static Component parseMessage(String message) {
+        if (message == null || message.isEmpty()) return Component.empty();
+        // Convert &#RRGGBB hex codes to MiniMessage <#RRGGBB>
+        message = message.replaceAll("&#([A-Fa-f0-9]{6})", "<#$1>");
+        // Convert legacy § codes to & so MiniMessage can handle them
+        message = message.replace('§', '&');
+        // If MiniMessage tags are present, use MM parser; otherwise fall back to legacy
+        if (message.contains("<") && message.contains(">")) {
+            try {
+                return MM.deserialize(message);
+            } catch (Throwable ignored) {}
+        }
+        return LEGACY.deserialize(ChatColor.translateAlternateColorCodes('&', message));
     }
 
     private double getServerTPS() {

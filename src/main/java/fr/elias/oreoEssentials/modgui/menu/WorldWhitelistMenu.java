@@ -4,6 +4,7 @@ import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modgui.ModGuiService;
 import fr.elias.oreoEssentials.modgui.util.ItemBuilder;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.SmartInventory;
 import fr.minuskube.inv.content.InventoryContents;
@@ -41,7 +42,7 @@ public class WorldWhitelistMenu implements InventoryProvider {
                 e -> {
                     svc.cfg().setWorldWhitelistEnabled(world, !enabled);
                     if (e.getWhoClicked() instanceof Player viewer) {
-                        c.inventory().open(viewer); // Refresh
+                        OreScheduler.runLater(plugin, () -> c.inventory().open(viewer), 1L); // Refresh
                     }
                 }
         ));
@@ -85,7 +86,7 @@ public class WorldWhitelistMenu implements InventoryProvider {
                             svc.cfg().addWorldWhitelist(world, t.getUniqueId());
                         }
                         if (e.getWhoClicked() instanceof Player viewer) {
-                            c.inventory().open(viewer); // Refresh
+                            OreScheduler.runLater(plugin, () -> c.inventory().open(viewer), 1L); // Refresh
                         }
                     }
             ));

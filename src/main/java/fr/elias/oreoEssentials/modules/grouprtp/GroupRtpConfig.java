@@ -97,6 +97,20 @@ public final class GroupRtpConfig {
         cfg.set(path + ".group.cluster-radius",    def.getClusterRadius());
         cfg.set(path + ".cooldown",                def.getCooldownMs());
         cfg.set(path + ".permission",              def.getPermission());
+
+        // Messages — write raw (un-translated) values so & codes stay editable in the file
+        for (Map.Entry<String, String> e : def.getMessages().entrySet()) {
+            cfg.set(path + ".messages." + e.getKey(), e.getValue());
+        }
+
+        // Effects
+        cfg.set(path + ".effects.ambient-particle",  def.getAmbientParticle());
+        cfg.set(path + ".effects.ambient-count",     def.getAmbientCount());
+        cfg.set(path + ".effects.teleport-particle", def.getTeleportParticle());
+        cfg.set(path + ".effects.teleport-count",    def.getTeleportCount());
+        cfg.set(path + ".effects.sound-enter",       def.getSoundEnter());
+        cfg.set(path + ".effects.sound-teleport",    def.getSoundTeleport());
+
         saveFile(cfg);
         portals.put(id, def);
     }

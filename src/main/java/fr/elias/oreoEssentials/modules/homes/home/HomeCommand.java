@@ -67,6 +67,10 @@ public class HomeCommand implements OreoCommand, TabCompleter {
         }
 
         if (args.length == 0 || args[0].equalsIgnoreCase("list")) {
+            OreoEssentials plugin2 = OreoEssentials.get();
+            if (plugin2.getDialogManager() != null && plugin2.getDialogManager().openHomeDialog(player, homes)) {
+                return true;
+            }
             final String lbl = label;
             Async.run(() -> {
                 List<String> names = crossServerNames(player.getUniqueId());

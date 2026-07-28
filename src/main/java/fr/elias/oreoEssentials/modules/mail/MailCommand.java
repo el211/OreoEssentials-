@@ -70,7 +70,14 @@ public final class MailCommand implements OreoCommand, TabCompleter {
             case "senditem"      -> handleSendItem(sender, label, args);
             case "read"          -> handleRead(sender);
             case "delete"        -> handleDelete(sender, args);
-            case "clear"         -> handleClear(sender);
+            case "clear"         -> {
+                boolean confirmed = args.length >= 2 && args[1].equals("--confirmed");
+                if (!confirmed && sender instanceof Player cp) {
+                    var dm = plugin.getDialogManager();
+                    if (dm != null && dm.confirmMailClear(cp)) break;
+                }
+                handleClear(sender);
+            }
             case "admin"         -> handleAdmin(sender, label, args);
             default              -> sendUsage(sender, label);
         }

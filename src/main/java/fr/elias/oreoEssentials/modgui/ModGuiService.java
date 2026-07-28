@@ -29,10 +29,7 @@ public class ModGuiService implements TabExecutor {
         this.config = new ModGuiConfig(plugin);
         this.config.load();
 
-        if (plugin.getCommand("modgui") != null) {
-            plugin.getCommand("modgui").setExecutor(this);
-            plugin.getCommand("modgui").setTabCompleter(this);
-        }
+        plugin.getCommands().registerLegacy("modgui", this);
     }
 
     public ModGuiConfig cfg() { return config; }

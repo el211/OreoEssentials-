@@ -132,17 +132,19 @@ public class CurrencyPlaceholderExpansion extends PlaceholderExpansion {
             return formatted ? currency.format(balance) : decimalFormat.format(balance);
         }
 
-        // Fetch from service (async, but we need sync result for placeholder)
-        // Use a blocking get with timeout
-        try {
-            CompletableFuture<Double> future = currencyService.getBalance(player.getUniqueId(), currencyId);
-            double balance = future.get(1000, java.util.concurrent.TimeUnit.MILLISECONDS);            // Cache result
-            balanceCache.put(cacheKey, new CachedValue<>(balance, CACHE_DURATION_MS));
+        // Trigger async refresh — never block the main thread
+        final boolean isFormatted = formatted;
+        final Currency finalCurrency = currency;
+        currencyService.getBalance(player.getUniqueId(), currencyId).thenAccept(bal -> {
+            balanceCache.put(cacheKey, new CachedValue<>(bal, CACHE_DURATION_MS));
+        });
 
-            return formatted ? currency.format(balance) : decimalFormat.format(balance);
-        } catch (Exception e) {
-            return formatted ? currency.format(0) : "0.00";
+        // Return stale cached value if available, otherwise indicate loading
+        if (cached != null) {
+            double staleBalance = cached.getValue();
+            return isFormatted ? finalCurrency.format(staleBalance) : decimalFormat.format(staleBalance);
         }
+        return "...";
     }
 
     /**

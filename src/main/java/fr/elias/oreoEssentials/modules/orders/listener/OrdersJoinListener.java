@@ -6,10 +6,13 @@ import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.modules.orders.model.PendingDelivery;
 import fr.elias.oreoEssentials.modules.orders.service.OrderService;
 import org.bukkit.entity.Player;
+import fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow;
+import fr.elias.oreoEssentials.modules.orders.gui.FillOrderMenu;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -54,6 +57,12 @@ public final class OrdersJoinListener implements Listener {
                         });
                     });
         }, 20L); // 1 second after join
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onQuit(PlayerQuitEvent event) {
+        CreateOrderFlow.clearPlayer(event.getPlayer().getUniqueId());
+        FillOrderMenu.clearPlayer(event.getPlayer().getUniqueId());
     }
 
     private void tryDeliver(Player player, PendingDelivery delivery) {

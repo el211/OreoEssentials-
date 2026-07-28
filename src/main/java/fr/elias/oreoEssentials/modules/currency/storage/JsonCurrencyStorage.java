@@ -63,6 +63,7 @@ public class JsonCurrencyStorage implements CurrencyStorage {
                             .tradeable(currencyData.tradeable)
                             .crossServer(currencyData.crossServer)
                             .allowNegative(currencyData.allowNegative)
+                            .wholeNumbers(currencyData.wholeNumbers)
                             .build();
                     currencyCache.put(id, currency);
                 });
@@ -107,6 +108,7 @@ public class JsonCurrencyStorage implements CurrencyStorage {
                 currencyData.tradeable = currency.isTradeable();
                 currencyData.crossServer = currency.isCrossServer();
                 currencyData.allowNegative = currency.isAllowNegative();
+                currencyData.wholeNumbers = currency.isWholeNumbers();
                 data.put(id, currencyData);
             });
 
@@ -239,5 +241,6 @@ public class JsonCurrencyStorage implements CurrencyStorage {
         boolean tradeable;
         boolean crossServer;
         boolean allowNegative;
+        boolean wholeNumbers = true; // default: show whole numbers (no decimals)
     }
 }

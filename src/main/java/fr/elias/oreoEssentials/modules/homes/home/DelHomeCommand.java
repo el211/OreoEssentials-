@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.homes.home;
 
+import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.command.CommandSender;
@@ -33,6 +34,15 @@ public class DelHomeCommand implements OreoCommand {
 
         Player p = (Player) sender;
         String rawName = args[0];
+
+        // If dialog confirm is enabled and this isn't already the confirmed execution, show dialog
+        boolean isConfirmed = args.length >= 2 && args[1].equals("--confirmed");
+        if (!isConfirmed) {
+            var dm = OreoEssentials.get().getDialogManager();
+            if (dm != null && dm.confirmDelHome(p, rawName)) {
+                return true;
+            }
+        }
 
         if (homes.delHome(p.getUniqueId(), rawName)) {
             Lang.send(p,

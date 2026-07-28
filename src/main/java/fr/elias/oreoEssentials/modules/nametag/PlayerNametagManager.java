@@ -1,5 +1,9 @@
 package fr.elias.oreoEssentials.modules.nametag;
 
+
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.util.Vector3d;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityTeleport;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.util.OreTask;
@@ -21,6 +25,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
@@ -76,6 +81,18 @@ public class PlayerNametagManager implements Listener {
     private OreTask updateTask;
     private OreTask positionTask;
     private OreTask vanillaHideRefreshTask;
+
+    /** True when PacketEvents is on the server — enables per-viewer packet-based position updates. */
+    private static final boolean PACKET_EVENTS_AVAILABLE;
+    static {
+        boolean ok;
+        try { Class.forName("com.github.retrooper.packetevents.PacketEvents"); ok = true; }
+        catch (ClassNotFoundException e) { ok = false; }
+        PACKET_EVENTS_AVAILABLE = ok;
+    }
+
+    /** Incremented every position-task tick; used to throttle server-side sync in packet mode. */
+    private int syncTickCounter = 0;
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
@@ -293,10 +310,14 @@ public class PlayerNametagManager implements Listener {
         display.addScoreboardTag("oe_nametag");
         display.addScoreboardTag("oe_nametag:" + owner.getName().toLowerCase());
 
-        // Smooth client-side interpolation when the entity teleports to follow the player.
-        // teleportDuration = how many ticks the client spends interpolating each position update.
-        // +1 buffer so the client never "runs out" of interpolation if a tick arrives slightly late.
-        display.setTeleportDuration(Math.max(1, positionIntervalTicks + 1));
+        // Smooth client-side interpolation between position updates.
+        // In PacketEvents mode packets arrive with no scheduler delay, so exactly
+        // positionIntervalTicks of interpolation gives perfectly gapless movement.
+        // Without PacketEvents, add +1 as a buffer for scheduler scheduling jitter.
+        int td = PACKET_EVENTS_AVAILABLE
+                ? Math.max(1, positionIntervalTicks)
+                : Math.max(1, positionIntervalTicks + 1);
+        display.setTeleportDuration(td);
 
         // Text
         Component initialText = renderText(layer.text, owner, null);
@@ -489,7 +510,7 @@ public class PlayerNametagManager implements Listener {
         }
     }
 
-    private void markOwnerDirty(UUID ownerId) {
+    public void markOwnerDirty(UUID ownerId) {
         if (ownerId != null) dirtyOwners.add(ownerId);
     }
 
@@ -510,6 +531,11 @@ public class PlayerNametagManager implements Listener {
         if (!showToSelf && viewer.getUniqueId().equals(owner.getUniqueId())) return false;
         // Respect the owner's own toggle
         if (toggleStore != null && toggleStore.isToggledOff(owner.getUniqueId())) return false;
+        // Hide nametag for vanished players
+        fr.elias.oreoEssentials.services.VanishService vanishSvc = plugin.getVanishService();
+        if (vanishSvc != null && vanishSvc.isVanished(owner)) return false;
+        // Hide nametag when the owner is sneaking
+        if (owner.isSneaking()) return false;
 
         // Must be in the same world
         if (!owner.getWorld().equals(viewer.getWorld())) return false;
@@ -660,9 +686,11 @@ public class PlayerNametagManager implements Listener {
 
     /** Teleports all nametag entities to follow their owners. */
     private void updateAllPositions() {
+        syncTickCounter++;
         for (Player owner : Bukkit.getOnlinePlayers()) {
             List<UUID> entityUuids = ownerToEntities.get(owner.getUniqueId());
             if (entityUuids == null) continue;
+
             Location current = owner.getLocation();
             Location previous = lastOwnerLocations.put(owner.getUniqueId(), current.clone());
             if (previous != null
@@ -671,18 +699,42 @@ public class PlayerNametagManager implements Listener {
                 continue;
             }
 
+            Set<UUID> viewers = ownerToViewers.get(owner.getUniqueId());
+
             for (int i = 0; i < entityUuids.size() && i < layers.size(); i++) {
                 UUID entityUuid = entityUuids.get(i);
                 org.bukkit.entity.Entity entity = Bukkit.getEntity(entityUuid);
                 if (entity == null) continue;
 
-                double yOff = layers.get(i).yOffset;
-                Location target = current.clone().add(0, yOff, 0);
+                Location target = current.clone().add(0, layers.get(i).yOffset, 0);
+                target.setYaw(0f);
+                target.setPitch(0f);
 
+                // Server-side teleport — keeps entity position correct so new viewers
+                // see the nametag at the right spot immediately (no stale-position bug).
                 if (OreScheduler.isFolia()) {
                     entity.teleportAsync(target);
                 } else {
                     OreScheduler.runForEntity(plugin, entity, () -> entity.teleport(target));
+                }
+
+                // PacketEvents per-viewer smooth teleport — sends a direct position packet
+                // to every current viewer so movement is interpolated client-side each tick.
+                if (PACKET_EVENTS_AVAILABLE && viewers != null && !viewers.isEmpty()) {
+                    final int entityId = entity.getEntityId();
+                    final double tx = target.getX();
+                    final double ty = target.getY();
+                    final double tz = target.getZ();
+                    WrapperPlayServerEntityTeleport packet = new WrapperPlayServerEntityTeleport(
+                            entityId,
+                            new Vector3d(tx, ty, tz),
+                            0f, 0f, false);
+                    for (UUID viewerId : viewers) {
+                        Player viewer = Bukkit.getPlayer(viewerId);
+                        if (viewer != null && viewer.isOnline()) {
+                            PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, packet);
+                        }
+                    }
                 }
             }
         }
@@ -698,9 +750,12 @@ public class PlayerNametagManager implements Listener {
         OreScheduler.runLater(plugin, () -> {
             if (!joining.isOnline()) return;
 
-            // Spawn this player's own nametag
+            // Spawn this player's own nametag, then update viewer visibility
+            // one tick later so the entity exists before reconciliation runs.
             spawnNametag(joining);
-            updateVisibilityForViewer(joining);
+            OreScheduler.runLater(plugin, () -> {
+                if (joining.isOnline()) updateVisibilityForViewer(joining);
+            }, 1L);
             markOwnerDirty(joining.getUniqueId());
             applyVanillaNameHiding(joining);
             addVanillaHiddenEntryForAllViewers(joining.getName());
@@ -779,6 +834,12 @@ public class PlayerNametagManager implements Listener {
         nextViewerRefreshAtMs.put(player.getUniqueId(), now + (moveVisibilityCooldownTicks * 50L));
         updateVisibilityForViewer(player);
         markOwnerDirty(player.getUniqueId());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onSneak(PlayerToggleSneakEvent event) {
+        if (!enabled) return;
+        markOwnerDirty(event.getPlayer().getUniqueId());
     }
 
     // ── Public API ────────────────────────────────────────────────────────────

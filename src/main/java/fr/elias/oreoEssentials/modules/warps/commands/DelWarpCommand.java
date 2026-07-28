@@ -1,9 +1,11 @@
 package fr.elias.oreoEssentials.modules.warps.commands;
 
+import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.modules.warps.WarpService;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,15 @@ public class DelWarpCommand implements OreoCommand {
         }
 
         String name = args[0].toLowerCase();
+
+        // Show confirm dialog for player senders (not console)
+        boolean isConfirmed = args.length >= 2 && args[1].equals("--confirmed");
+        if (!isConfirmed && sender instanceof Player p) {
+            var dm = OreoEssentials.get().getDialogManager();
+            if (dm != null && dm.confirmDelWarp(p, name)) {
+                return true;
+            }
+        }
 
         if (warps.delWarp(name)) {
             Lang.send(sender, "admin.delwarp.deleted",

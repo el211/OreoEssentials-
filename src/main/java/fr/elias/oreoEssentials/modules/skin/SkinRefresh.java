@@ -10,18 +10,18 @@ public final class SkinRefresh {
     private SkinRefresh() {}
 
     private static SkinRefresher pick() {
-        boolean hasProtocolLib = Bukkit.getPluginManager().getPlugin("ProtocolLib") != null;
+        boolean hasPacketEvents = Bukkit.getPluginManager().getPlugin("packetevents") != null;
 
-        if (hasProtocolLib) {
-            SkinDebug.log("Picker: Using ProtocolLib");
+        if (hasPacketEvents) {
+            SkinDebug.log("Picker: Using PacketEvents");
             try {
-                return new SkinRefresherProtocolLib();
+                return new SkinRefresherPacketEvents();
             } catch (Throwable t) {
-                SkinDebug.log("Picker: ProtocolLib present but failed to load: " + t.getMessage());
+                SkinDebug.log("Picker: PacketEvents present but failed to load: " + t.getMessage());
             }
         }
 
-        SkinDebug.log("Picker: Using fallback (hide/show) - install ProtocolLib for instant updates");
+        SkinDebug.log("Picker: Using fallback (hide/show) - install PacketEvents for instant updates");
         return new SkinRefresherFallback();
     }
 

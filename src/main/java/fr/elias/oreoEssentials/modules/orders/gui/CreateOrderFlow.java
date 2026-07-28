@@ -63,6 +63,12 @@ public final class CreateOrderFlow {
         return waitingQty.containsKey(uuid);
     }
 
+    /** Removes a player from all pending chat-input maps. Call on disconnect. */
+    public static void clearPlayer(UUID uuid) {
+        waitingQty.remove(uuid);
+        waitingPrice.remove(uuid);
+    }
+
     public static boolean consumeQtyInput(OrdersModule module, Player p, String raw) {
         module.getPlugin().getLogger().info("[Orders] consumeQtyInput called for " + p.getName() + " raw='" + raw + "'");
         PendingQty pq = waitingQty.remove(p.getUniqueId());

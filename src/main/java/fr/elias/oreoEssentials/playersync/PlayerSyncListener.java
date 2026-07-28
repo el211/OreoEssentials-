@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.playersync;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.OreScheduler;
+import org.bukkit.Bukkit;
 import org.bukkit.event.*;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -35,7 +36,11 @@ public final class PlayerSyncListener implements Listener {
         OreScheduler.runLaterForEntity(
                 OreoEssentials.get(),
                 p,
-                () -> service.loadAndApply(p),
+                () -> {
+                    Player online = Bukkit.getPlayer(p.getUniqueId());
+                    if (online == null || !online.isOnline()) return; // player disconnected during delay
+                    service.loadAndApply(online);
+                },
                 10L
         );
     }

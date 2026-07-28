@@ -96,6 +96,9 @@ public class VanishService {
                 show(onlinePlayer);
             }
         }
+        // Refresh custom nametag visibility immediately
+        fr.elias.oreoEssentials.modules.nametag.PlayerNametagManager nm = plugin.getNametagManager();
+        if (nm != null) nm.markOwnerDirty(playerId);
         return changed;
     }
 

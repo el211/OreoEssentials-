@@ -46,10 +46,12 @@ public final class TransactionProcessor {
                             .replace("{price}", module.getEconomy().format(price)));
                     return false;
                 }
-                ItemStack proto = shopItem.buildItemStack();
-                if (!antiDupe.verifyHasSpace(player, proto, totalItems)) {
-                    send(player, module.getShopConfig().getMessage("buy-inventory-full"));
-                    return false;
+                if (!shopItem.isCommandOnly()) {
+                    ItemStack proto = shopItem.buildItemStack();
+                    if (!antiDupe.verifyHasSpace(player, proto, totalItems)) {
+                        send(player, module.getShopConfig().getMessage("buy-inventory-full"));
+                        return false;
+                    }
                 }
                 module.getEconomy().withdraw(player, price);
                 finishBuy(player, shopItem, totalItems, price, module.getEconomy().getEconomyName(), module.getEconomy().format(price));
@@ -59,7 +61,6 @@ public final class TransactionProcessor {
             }
         }
 
-        ItemStack proto = shopItem.buildItemStack();
         cs.getBalance(player.getUniqueId(), currencyId).whenComplete((balance, error) -> {
             if (error != null) {
                 OreScheduler.runForEntity(module.getPlugin(), player, () -> {
@@ -76,10 +77,13 @@ public final class TransactionProcessor {
                     antiDupe.endTransaction(player);
                     return;
                 }
-                if (!antiDupe.verifyHasSpace(player, proto, totalItems)) {
-                    send(player, module.getShopConfig().getMessage("buy-inventory-full"));
-                    antiDupe.endTransaction(player);
-                    return;
+                if (!shopItem.isCommandOnly()) {
+                    ItemStack proto = shopItem.buildItemStack();
+                    if (!antiDupe.verifyHasSpace(player, proto, totalItems)) {
+                        send(player, module.getShopConfig().getMessage("buy-inventory-full"));
+                        antiDupe.endTransaction(player);
+                        return;
+                    }
                 }
 
                 cs.withdraw(player.getUniqueId(), currencyId, price).whenComplete((success, withdrawError) ->
@@ -254,14 +258,28 @@ public final class TransactionProcessor {
     }
 
     private void finishBuy(Player player, ShopItem shopItem, int totalItems, double price, String ecoName, String formattedPrice) {
-        int remaining = totalItems;
-        while (remaining > 0) {
-            int stackAmt = Math.min(remaining, shopItem.buildItemStack().getMaxStackSize());
-            ItemStack stack = shopItem.buildItemStack();
-            stack.setAmount(stackAmt);
-            player.getInventory().addItem(stack).forEach((idx, leftover) ->
-                    player.getWorld().dropItemNaturally(player.getLocation(), leftover));
-            remaining -= stackAmt;
+        // Give physical items unless this is a command-only product
+        if (!shopItem.isCommandOnly()) {
+            int remaining = totalItems;
+            while (remaining > 0) {
+                int stackAmt = Math.min(remaining, shopItem.buildItemStack().getMaxStackSize());
+                ItemStack stack = shopItem.buildItemStack();
+                stack.setAmount(stackAmt);
+                player.getInventory().addItem(stack).forEach((idx, leftover) ->
+                        player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+                remaining -= stackAmt;
+            }
+        }
+
+        // Run buy commands (console-dispatched). Runs once per quantity purchased.
+        if (shopItem.hasCommands()) {
+            org.bukkit.Server server = module.getPlugin().getServer();
+            for (int i = 0; i < (shopItem.isCommandOnly() ? totalItems / Math.max(1, shopItem.getAmount()) : 1); i++) {
+                for (String rawCmd : shopItem.getBuyCommands()) {
+                    String cmd = rawCmd.replace("%player%", player.getName());
+                    server.dispatchCommand(server.getConsoleSender(), cmd);
+                }
+            }
         }
 
         module.getDynamicPricingManager().recordBuy(shopItem, totalItems);

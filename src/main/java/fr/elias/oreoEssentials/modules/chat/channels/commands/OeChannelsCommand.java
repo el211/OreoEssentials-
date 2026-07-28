@@ -56,6 +56,9 @@ public class OeChannelsCommand implements OreoCommand {
             return true;
         }
 
+        if (plugin.getDialogManager() != null && plugin.getDialogManager().openChannelsDialog(player, channelManager)) {
+            return true;
+        }
         ChannelsGUI.getInventory(plugin, channelManager).open(player);
         return true;
     }

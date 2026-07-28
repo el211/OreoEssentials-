@@ -77,9 +77,10 @@ public class CurrencyEditGUI implements InventoryProvider {
                             .symbol(currency.getSymbol())
                             .displayName(currency.getDisplayName())
                             .defaultBalance(currency.getDefaultBalance())
-                            .tradeable(!currency.isTradeable()) // Toggle
+                            .tradeable(!currency.isTradeable())
                             .crossServer(currency.isCrossServer())
                             .allowNegative(currency.isAllowNegative())
+                            .wholeNumbers(currency.isWholeNumbers())
                             .build();
 
                     plugin.getCurrencyService().createCurrency(updated).thenRun(() -> {
@@ -109,7 +110,8 @@ public class CurrencyEditGUI implements InventoryProvider {
                             .defaultBalance(currency.getDefaultBalance())
                             .tradeable(currency.isTradeable())
                             .crossServer(currency.isCrossServer())
-                            .allowNegative(!currency.isAllowNegative()) // Toggle
+                            .allowNegative(!currency.isAllowNegative())
+                            .wholeNumbers(currency.isWholeNumbers())
                             .build();
 
                     plugin.getCurrencyService().createCurrency(updated).thenRun(() -> {
@@ -145,12 +147,46 @@ public class CurrencyEditGUI implements InventoryProvider {
                             .displayName(currency.getDisplayName())
                             .defaultBalance(currency.getDefaultBalance())
                             .tradeable(currency.isTradeable())
-                            .crossServer(!currency.isCrossServer()) // Toggle
+                            .crossServer(!currency.isCrossServer())
                             .allowNegative(currency.isAllowNegative())
+                            .wholeNumbers(currency.isWholeNumbers())
                             .build();
 
                     plugin.getCurrencyService().createCurrency(updated).thenRun(() -> {
                         player.sendMessage("§a✔ Toggled cross-server to: " + !currency.isCrossServer());
+                        getInventory(plugin, updated).open(player);
+                    });
+                }
+        ));
+
+        contents.set(3, 2, ClickableItem.of(
+                createItem(
+                        currency.isWholeNumbers() ? Material.LIME_DYE : Material.GRAY_DYE,
+                        "§e§lWhole Numbers",
+                        "§7Current: " + (currency.isWholeNumbers() ? "§aEnabled" : "§cDisabled"),
+                        "",
+                        "§7Enabled: balances show as integers",
+                        "§7  e.g. §f$ 42",
+                        "§7Disabled: show up to 2 decimals",
+                        "§7  e.g. §f$ 42.50",
+                        "",
+                        "§e§lClick to toggle"
+                ),
+                e -> {
+                    Currency updated = Currency.builder()
+                            .id(currency.getId())
+                            .name(currency.getName())
+                            .symbol(currency.getSymbol())
+                            .displayName(currency.getDisplayName())
+                            .defaultBalance(currency.getDefaultBalance())
+                            .tradeable(currency.isTradeable())
+                            .crossServer(currency.isCrossServer())
+                            .allowNegative(currency.isAllowNegative())
+                            .wholeNumbers(!currency.isWholeNumbers())
+                            .build();
+
+                    plugin.getCurrencyService().createCurrency(updated).thenRun(() -> {
+                        player.sendMessage("§a✔ Toggled whole numbers to: " + !currency.isWholeNumbers());
                         getInventory(plugin, updated).open(player);
                     });
                 }

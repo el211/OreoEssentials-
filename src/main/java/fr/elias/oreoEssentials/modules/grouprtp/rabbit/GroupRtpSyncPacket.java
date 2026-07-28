@@ -20,20 +20,22 @@ import java.util.UUID;
  */
 public final class GroupRtpSyncPacket extends Packet {
 
-    private String     requestId;
-    private String     portalId;
-    private String     worldName;
-    private List<UUID> playerUuids;
+    private String       requestId;
+    private String       portalId;
+    private String       worldName;
+    private List<UUID>   playerUuids;
 
     // RTP search params (sent so target server doesn't need portal config)
-    private double rtpCenterX;
-    private double rtpCenterZ;
-    private double rtpRadius;
-    private double rtpMinRadius;
-    private int    rtpMinY;
-    private int    rtpMaxY;
-    private int    rtpAttempts;
-    private double clusterRadius;
+    private double       rtpCenterX;
+    private double       rtpCenterZ;
+    private double       rtpRadius;
+    private double       rtpMinRadius;
+    private int          rtpMinY;
+    private int          rtpMaxY;
+    private int          rtpAttempts;
+    private double       clusterRadius;
+    private List<String> unsafeBlocks;
+    private List<String> blacklistedBiomes;
 
     public GroupRtpSyncPacket() {}
 
@@ -42,19 +44,22 @@ public final class GroupRtpSyncPacket extends Packet {
                                double rtpCenterX, double rtpCenterZ,
                                double rtpRadius, double rtpMinRadius,
                                int rtpMinY, int rtpMaxY, int rtpAttempts,
-                               double clusterRadius) {
-        this.requestId     = requestId;
-        this.portalId      = portalId;
-        this.worldName     = worldName;
-        this.playerUuids   = playerUuids;
-        this.rtpCenterX    = rtpCenterX;
-        this.rtpCenterZ    = rtpCenterZ;
-        this.rtpRadius     = rtpRadius;
-        this.rtpMinRadius  = rtpMinRadius;
-        this.rtpMinY       = rtpMinY;
-        this.rtpMaxY       = rtpMaxY;
-        this.rtpAttempts   = rtpAttempts;
-        this.clusterRadius = clusterRadius;
+                               double clusterRadius,
+                               List<String> unsafeBlocks, List<String> blacklistedBiomes) {
+        this.requestId         = requestId;
+        this.portalId          = portalId;
+        this.worldName         = worldName;
+        this.playerUuids       = playerUuids;
+        this.rtpCenterX        = rtpCenterX;
+        this.rtpCenterZ        = rtpCenterZ;
+        this.rtpRadius         = rtpRadius;
+        this.rtpMinRadius      = rtpMinRadius;
+        this.rtpMinY           = rtpMinY;
+        this.rtpMaxY           = rtpMaxY;
+        this.rtpAttempts       = rtpAttempts;
+        this.clusterRadius     = clusterRadius;
+        this.unsafeBlocks      = unsafeBlocks;
+        this.blacklistedBiomes = blacklistedBiomes;
     }
 
     @Override
@@ -72,6 +77,10 @@ public final class GroupRtpSyncPacket extends Packet {
         out.writeInt(rtpMaxY);
         out.writeInt(rtpAttempts);
         out.writeDouble(clusterRadius);
+        out.writeInt(unsafeBlocks.size());
+        for (String s : unsafeBlocks) out.writeString(s);
+        out.writeInt(blacklistedBiomes.size());
+        for (String s : blacklistedBiomes) out.writeString(s);
     }
 
     @Override
@@ -90,18 +99,26 @@ public final class GroupRtpSyncPacket extends Packet {
         rtpMaxY       = in.readInt();
         rtpAttempts   = in.readInt();
         clusterRadius = in.readDouble();
+        int ubSize    = in.readInt();
+        unsafeBlocks  = new ArrayList<>(ubSize);
+        for (int i = 0; i < ubSize; i++) unsafeBlocks.add(in.readString());
+        int bbSize         = in.readInt();
+        blacklistedBiomes  = new ArrayList<>(bbSize);
+        for (int i = 0; i < bbSize; i++) blacklistedBiomes.add(in.readString());
     }
 
-    public String     getRequestId()    { return requestId; }
-    public String     getPortalId()     { return portalId; }
-    public String     getWorldName()    { return worldName; }
-    public List<UUID> getPlayerUuids()  { return playerUuids; }
-    public double     getRtpCenterX()   { return rtpCenterX; }
-    public double     getRtpCenterZ()   { return rtpCenterZ; }
-    public double     getRtpRadius()    { return rtpRadius; }
-    public double     getRtpMinRadius() { return rtpMinRadius; }
-    public int        getRtpMinY()      { return rtpMinY; }
-    public int        getRtpMaxY()      { return rtpMaxY; }
-    public int        getRtpAttempts()  { return rtpAttempts; }
-    public double     getClusterRadius(){ return clusterRadius; }
+    public String       getRequestId()         { return requestId; }
+    public String       getPortalId()          { return portalId; }
+    public String       getWorldName()         { return worldName; }
+    public List<UUID>   getPlayerUuids()       { return playerUuids; }
+    public double       getRtpCenterX()        { return rtpCenterX; }
+    public double       getRtpCenterZ()        { return rtpCenterZ; }
+    public double       getRtpRadius()         { return rtpRadius; }
+    public double       getRtpMinRadius()      { return rtpMinRadius; }
+    public int          getRtpMinY()           { return rtpMinY; }
+    public int          getRtpMaxY()           { return rtpMaxY; }
+    public int          getRtpAttempts()       { return rtpAttempts; }
+    public double       getClusterRadius()     { return clusterRadius; }
+    public List<String> getUnsafeBlocks()      { return unsafeBlocks; }
+    public List<String> getBlacklistedBiomes() { return blacklistedBiomes; }
 }

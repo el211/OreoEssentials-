@@ -274,7 +274,9 @@ public final class TpaCrossServerBroker implements Listener {
 
     private boolean hasBodyMoved(Player p, Location origin) {
         Location now = p.getLocation();
-        return now.getBlockX() != origin.getBlockX() || now.getBlockZ() != origin.getBlockZ();
+        return now.getBlockX() != origin.getBlockX()
+                || now.getBlockY() != origin.getBlockY()
+                || now.getBlockZ() != origin.getBlockZ();
     }
 
     @EventHandler

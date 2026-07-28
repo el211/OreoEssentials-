@@ -265,7 +265,7 @@ public final class AsyncChatListener implements Listener {
             boolean canColors = live.hasPermission("oreo.chat.colors");
             String msgForParsing = canColors ? FormatManager.convertLegacyToMiniMessage(msgForResolver) : msgForResolver;
             TagResolver msgResolver = canColors
-                    ? Placeholder.parsed("chat_message", msgForParsing)
+                    ? Placeholder.parsed("chat_message", sanitizeMiniMessage(msgForParsing))
                     : Placeholder.unparsed("chat_message", msgForResolver);
 
             Component lpPrefixComp = buildLpPrefixComponent(live);
@@ -282,7 +282,11 @@ public final class AsyncChatListener implements Listener {
                 Component out = MM.deserialize(fmt, resolver);
 
                 if (chatItemHandler.containsItemPlaceholder(rawMsg)) {
-                    out = chatItemHandler.processItemPlaceholder(out, live);
+                    // getItemInMainHand() is safe here — we are already on the main thread
+                    // via OreScheduler.run(), so inventory access is thread-safe.
+                    org.bukkit.inventory.ItemStack heldItem =
+                            live.getInventory().getItemInMainHand().clone();
+                    out = chatItemHandler.processItemPlaceholder(out, heldItem);
                 }
 
                 if (hover.isEnabled()) {
@@ -351,6 +355,29 @@ public final class AsyncChatListener implements Listener {
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    /**
+     * Removes dangerous MiniMessage interaction tags from user-supplied chat input.
+     * Color/formatting tags (gradient, bold, italic, color, etc.) are preserved so that
+     * players with oreo.chat.colors can still use cosmetic formatting.
+     * Tags that could execute actions or open URLs (click, hover, run_command,
+     * suggest_command, open_url, open_file, copy_to_clipboard, insertion) are stripped.
+     */
+    private static final Pattern DANGEROUS_MM_TAGS = Pattern.compile(
+            "(?i)</?(?:click(?::[^>]*)?"
+            + "|hover(?::[^>]*)?"
+            + "|run_command(?::[^>]*)?"
+            + "|suggest_command(?::[^>]*)?"
+            + "|open_url(?::[^>]*)?"
+            + "|open_file(?::[^>]*)?"
+            + "|copy_to_clipboard(?::[^>]*)?"
+            + "|insertion(?::[^>]*)?)>"
+    );
+
+    private static String sanitizeMiniMessage(String input) {
+        if (input == null || input.isEmpty()) return input;
+        return DANGEROUS_MM_TAGS.matcher(input).replaceAll("");
+    }
 
     private String applyPapi(String input, Player p) {
         if (input == null || input.isEmpty()) return input;

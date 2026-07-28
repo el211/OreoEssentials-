@@ -24,10 +24,12 @@ public final class GroupRtpListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMove(PlayerMoveEvent e) {
         if (e.getTo() == null) return;
-        // Only process when the player has moved to a different block
-        if (e.getFrom().getBlockX() == e.getTo().getBlockX()
-                && e.getFrom().getBlockY() == e.getTo().getBlockY()
-                && e.getFrom().getBlockZ() == e.getTo().getBlockZ()) {
+        // Skip pure head-rotation events (no position change at all).
+        // Intentionally NOT using the block-change optimisation here — portals can be
+        // smaller than one block, so we must check every sub-block position change.
+        if (e.getFrom().getX() == e.getTo().getX()
+                && e.getFrom().getY() == e.getTo().getY()
+                && e.getFrom().getZ() == e.getTo().getZ()) {
             return;
         }
         service.onPlayerMove(e.getPlayer(), e.getTo());

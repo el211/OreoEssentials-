@@ -6,191 +6,204 @@ tab:
 
   network:
     all-servers: true
-    # Servers whose players are hidden from the tab list of other servers.
-    # Use the exact server name as registered in your proxy (case-insensitive).
     excluded-servers:
       - hub
 
+  # ── 2-column layout ─────────────────────────────────────────────────────────
+  # Sends exactly 40 fake entries → Minecraft renders them as 2 columns of 20 rows.
+  # The gradient border is sent as tab header/footer (full-width above/below the list).
+  # Left column  → profile-name prefix "\u0001A_" (sorted first  → col 1)
+  # Right column → profile-name prefix "\u0001B_" (sorted second → col 2)
+  two-column-layout:
+    enabled: true
+
+    # ── Number of columns ────────────────────────────────────────────────────
+    # 1 → 20 slots  (1 column,  fits ~16 players with 2 top + 2 bottom rows)
+    # 2 → 40 slots  (2 columns, fits ~32 players)   ← default
+    # 3 → 60 slots  (3 columns, fits ~48 players)
+    # For 3 columns, add top-center / bottom-center sections below (optional).
+    # If more players are online than available slots, the overflow is not shown.
+    columns: 2
+
+    # ── Shared border line (top and bottom of the header/footer) ────────────
+    # Kept short deliberately so the overall tab list stays compact.
+    border: '<#9827F5>◀<gradient:#7D2D9D:#F179B5>━━━━━━━━━━━━━━━━━━━</gradient><gold>◈</gold><gradient:#F179B5:#7D2D9D>━━━━━━━━━━━━━━━━━━━</gradient><#9827F5>▶'
+
+    # ── Animated server name — shown centered below the border in the header ─
+    # Each entry is ONE line (no \n needed — the code appends it after the border).
+    # 4 frames pulsing purple ↔ pink.
+    header-title-texts:
+      - '<gradient:#9827F5:#F179B5><bold>✦  OreoStudios  ✦</bold></gradient>'
+      - '<gradient:#AA3FCC:#FF99CC><bold>✦  OreoStudios  ✦</bold></gradient>'
+      - '<#F179B5><bold>✦  OreoStudios  ✦</bold>'
+      - '<gradient:#F179B5:#9827F5><bold>✦  OreoStudios  ✦</bold></gradient>'
+
+    # ── Footer — matching border below the list ──────────────────────────────
+    footer: '<#9827F5>◀<gradient:#7D2D9D:#F179B5>━━━━━━━━━━━━━━━━━━━</gradient><gold>◈</gold><gradient:#F179B5:#7D2D9D>━━━━━━━━━━━━━━━━━━━</gradient><#9827F5>▶'
+
+    # ── Col1 top: animated player count + separator ───────────────────────────
+    top-left:
+      texts:
+        - |-
+          <center><gray>En ligne: <#9827F5>%oe_network_online% <gray>joueur(s)</center>
+          <dark_gray>──────────────
+        - |-
+          <center><gray>En ligne: <gradient:#9827F5:#F179B5>%oe_network_online% <gray>joueur(s)</center>
+          <dark_gray>──────────────
+        - |-
+          <center><gray>En ligne: <#F179B5>%oe_network_online% <gray>joueur(s)</center>
+          <dark_gray>──────────────
+        - |-
+          <center><gray>En ligne: <gradient:#F179B5:#9827F5>%oe_network_online% <gray>joueur(s)</center>
+          <dark_gray>──────────────
+
+    # ── Col2 top: animated ping + separator ───────────────────────────────────
+    top-right:
+      texts:
+        - |-
+          <center><gray>Ping: <#9827F5>%player_ping% <gray>ms</center>
+          <dark_gray>──────────────
+        - |-
+          <center><gray>Ping: <gradient:#9827F5:#F179B5>%player_ping% <gray>ms</center>
+          <dark_gray>──────────────
+        - |-
+          <center><gray>Ping: <#F179B5>%player_ping% <gray>ms</center>
+          <dark_gray>──────────────
+        - |-
+          <center><gray>Ping: <gradient:#F179B5:#9827F5>%player_ping% <gray>ms</center>
+          <dark_gray>──────────────
+
+    # ── Bottom-left: animated News / Support / Shop ───────────────────────────
+    bottom-left:
+      texts:
+        - |-
+          <dark_gray>──────────────
+          <center><gray>News <#9827F5>◆<gray> Support <#9827F5>◆<gray> Shop</center>
+        - |-
+          <dark_gray>──────────────
+          <center><gradient:#9827F5:#F179B5>News ◆ Support ◆ Shop</gradient></center>
+        - |-
+          <dark_gray>──────────────
+          <center><#F179B5>News ◆ Support ◆ Shop</center>
+        - |-
+          <dark_gray>──────────────
+          <center><gradient:#F179B5:#9827F5>News ◆ Support ◆ Shop</gradient></center>
+
+    # ── Bottom-right: animated URL ────────────────────────────────────────────
+    bottom-right:
+      texts:
+        - |-
+          <dark_gray>──────────────
+          <center><#9827F5>oreostudios.fr</center>
+        - |-
+          <dark_gray>──────────────
+          <center><gradient:#9827F5:#F179B5>oreostudios.fr</gradient></center>
+        - |-
+          <dark_gray>──────────────
+          <center><#F179B5>oreostudios.fr</center>
+        - |-
+          <dark_gray>──────────────
+          <center><gradient:#F179B5:#9827F5>oreostudios.fr</gradient></center>
+
   custom-layout:
     enabled: true
-    change-interval: 1 # Smooth flowing animation!
+    change-interval: 30
 
+    # ── TOP SECTION ─────────────────────────────────────────────────────────
+    # 3 rows:
+    #   1 — gradient border (full-width, frames the whole list)
+    #   2 — server title + online count (animated pulse purple ↔ pink)
+    #   3 — thin dashed line (player-list separator — TOP)
     top-section:
       texts:
         - |-
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-          <gradient:#7D2D9D:#F179B5>OreoEssentials</gradient>
-          &f
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><gold>◈</gold><gradient:#F179B5:#7D2D9D>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><#9827F5>▶
+          <center><gradient:#9827F5:#F179B5><bold>✦ OreoStudios</bold></gradient>  <dark_gray>·  <gray>%oe_network_online% joueurs en ligne</center>
+          <center><dark_gray>──────────────────────────────────────────</center>
+        - |-
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><gold>◈</gold><gradient:#F179B5:#7D2D9D>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><#9827F5>▶
+          <center><gradient:#AA3FCC:#FF99CC><bold>✦ OreoStudios</bold></gradient>  <dark_gray>·  <gray>%oe_network_online% joueurs en ligne</center>
+          <center><dark_gray>──────────────────────────────────────────</center>
+        - |-
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><gold>◈</gold><gradient:#F179B5:#7D2D9D>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><#9827F5>▶
+          <center><#F179B5><bold>✦ OreoStudios</bold>  <dark_gray>·  <gray>%oe_network_online% joueurs en ligne</center>
+          <center><dark_gray>──────────────────────────────────────────</center>
+        - |-
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><gold>◈</gold><gradient:#F179B5:#7D2D9D>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><#9827F5>▶
+          <center><gradient:#F179B5:#9827F5><bold>✦ OreoStudios</bold></gradient>  <dark_gray>·  <gray>%oe_network_online% joueurs en ligne</center>
+          <center><dark_gray>──────────────────────────────────────────</center>
+
+    # ── PLAYER SECTION ──────────────────────────────────────────────────────
     player-section:
       enabled: true
       player-format:
-        format: '%luckperms_prefix%%player_displayname%%afk_indicator%'
+        # <center> centers the name within its column (TAB_COL2_PX = 180px target)
+        # %luckperms_prefix% → rank prefix from LuckPerms (requires LuckPerms-PAPI expansion)
+        # %player_color%     → color from rank-colors below (MiniMessage hex or &-codes)
+        # %player_name%      → raw player name
+        # %afk_indicator%    → AFK suffix
+        format: '<center>%luckperms_prefix%%player_color%%player_name%%afk_indicator%</center>'
+        # Map LuckPerms primary group → color  (MiniMessage or &-codes, both supported)
+        # Edit these to match your actual LuckPerms group names.
         rank-colors:
-          admin: '&b' # Aqua
-          default: '&f' # White
+          owner:     '<gradient:#FF4500:#FF8C00>'
+          fondateur: '<gradient:#FF4500:#FF8C00>'
+          admin:     '<#FF5555>'
+          moderateur: '<#5599FF>'
+          helper:    '<#77CCFF>'
+          staff:     '<#AAAAFF>'
+          vip_plus:  '<gradient:#FFD700:#FF8C00>'
+          vip:       '<#FFD700>'
+          default:   '<white>'
         show-afk: true
-        afk-format: ' &7AFK'
+        afk-format: ' <dark_gray>[AFK]'
         show-ping-bars: true
 
+    # ── BOTTOM SECTION ──────────────────────────────────────────────────────
+    # 4 rows:
+    #   1 — thin dashed line (player-list separator — BOTTOM)
+    #   2 — quick links
+    #   3 — website URL (animated color pulse)
+    #   4 — gradient border (mirrors top)
     bottom-section:
       texts:
         - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5oreostudios.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+          <center><dark_gray>──────────────────────────────────────────</center>
+          <center><gray>News  <#9827F5>◆<gray>  Support  <#9827F5>◆<gray>  Shop</center>
+          <center><#9827F5>oreostudios.fr</center>
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><gold>◈</gold><gradient:#F179B5:#7D2D9D>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><#9827F5>▶
         - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &doreostudios.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+          <center><dark_gray>──────────────────────────────────────────</center>
+          <center><gray>News  <#9827F5>◆<gray>  Support  <#9827F5>◆<gray>  Shop</center>
+          <center><gradient:#9827F5:#F179B5>oreostudios.fr</gradient></center>
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><gold>◈</gold><gradient:#F179B5:#7D2D9D>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><#9827F5>▶
         - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5oreostudios.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+          <center><dark_gray>──────────────────────────────────────────</center>
+          <center><gray>News  <#9827F5>◆<gray>  Support  <#9827F5>◆<gray>  Shop</center>
+          <center><#F179B5>oreostudios.fr</center>
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><gold>◈</gold><gradient:#F179B5:#7D2D9D>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><#9827F5>▶
         - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5o&dreostudios.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5or&de&5ostudios.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5ore&do&5studios.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5oreo&ds&5tudios.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5oreos&dt&5udios.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5oreost&du&5dios.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5oreostu&dd&5ios.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5oreostud&di&5os.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5oreostudi&do&5s.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5oreostudio&ds&5.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5oreostudios&d.&5fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5oreostudios.&df&5r&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5oreostudios.f&dr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &doreostudios.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
-        - |-
-          &f
-          &9◆   &8◆   ◆
-          &9📣 &lɴᴇᴡs&r &7◈ 📱 sᴜᴘᴘᴏʀᴛ ◈ 💰 sʜᴏᴘ
-          &f
-          &7For &9&lnews&r&7, checkout our website!
-          &5oreostudios.fr&r
-          <#9827F5>◀<gradient:#7D2D9D:#F179B5>------------------</gradient> <gold>◈ <gradient:#F179B5:#7D2D9D>------------------</gradient><#9827F5>▶<reset>
+          <center><dark_gray>──────────────────────────────────────────</center>
+          <center><gray>News  <#9827F5>◆<gray>  Support  <#9827F5>◆<gray>  Shop</center>
+          <center><gradient:#F179B5:#9827F5>oreostudios.fr</gradient></center>
+          <#9827F5>◀<gradient:#7D2D9D:#F179B5>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><gold>◈</gold><gradient:#F179B5:#7D2D9D>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</gradient><#9827F5>▶
+
     sorting:
       method: RANK
+      # Higher number = higher position in the tab list
       rank-priority:
-        default: 10
+        owner:     100
+        fondateur: 100
+        admin:      90
+        moderateur: 80
+        helper:     70
+        staff:      60
+        vip_plus:   50
+        vip:        40
+        default:    10
 
   title:
     enabled: false
-    show-on-join: false
-    text: '&9&lOREO&b&lESSENTIALS'
-    subtitle: '&7Welcome &b%player_displayname%&7!'
-    fade-in: 10
-    stay: 60
-    fade-out: 10
 
   name-format:
     enabled: true
@@ -204,128 +217,3 @@ tab:
     enforce-max-length: false
     max-length: 64
     overflow: TRIM
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-#  PER-WORLD TAB OVERRIDES  (classic header/footer mode only)
-#  Use the `per-world:` block to show a different header/footer when a player
-#  is in a specific world. Overrides apply to the LOCAL player looking at the
-#  tab list — not to remote players listed inside it.
-#
-#  NOTE: per-world overrides work in CLASSIC layout mode (layout-mode: CLASSIC).
-#  In CUSTOM layout mode the custom-layout block controls the display instead.
-#
-#  Each key under `per-world:` is a world name (exact match, case-insensitive).
-#  You can optionally add a `conditions:` list — ALL conditions must pass for
-#  the override to apply. If they fail, the server falls back to the default
-#  header/footer above.
-#
-#  Supported per-world fields:
-#   header:             Override tab header (MiniMessage / &-codes / PAPI)
-#   footer:             Override tab footer
-#   use-placeholderapi: true/false override (optional)
-#   name-format:        Override name-format section (optional, same sub-keys)
-#   conditions:         List of conditions (see types below)
-#
-#  Supported condition types:
-#   PERMISSION    — player has a permission node
-#   GAMEMODE      — player is in a specific gamemode (SURVIVAL/CREATIVE/…)
-#   WORLD         — player is in a specific world (useful when stacking conds)
-#   REGION        — player is inside a WorldGuard region (requires WorldGuard)
-#   PAPI_EQUALS   — PlaceholderAPI placeholder equals a value
-#   PAPI_CONTAINS — PlaceholderAPI placeholder contains a substring
-#   PAPI_GREATER  — PlaceholderAPI placeholder parsed as double > value
-#   PAPI_LESS     — PlaceholderAPI placeholder parsed as double < value
-#
-#  Add `negate: true` to any condition to invert it.
-#  Conditions are always evaluated on the LOCAL server for the viewing player.
-#
-# ── Examples ──────────────────────────────────────────────────────────────────
-#
-# per-world:
-#
-#   # Simple world override — different header/footer in survival world
-#   survie:
-#     header: "<green>Survival World\n<gray>%oe_local_online% players online"
-#     footer: "<gray>Type /help for commands"
-#
-#   # World override that only applies when the player also has a permission
-#   pvp_arena:
-#     header: "<red>⚔ PvP Arena"
-#     footer: "<gray>Good luck!"
-#     conditions:
-#       - type: PERMISSION
-#         value: oreo.pvp.tab
-#
-#   # WorldGuard region condition — only inside the "spawn" region
-#   lobby:
-#     header: "<gold>Welcome to Spawn!"
-#     footer: ""
-#     conditions:
-#       - type: REGION
-#         value: spawn
-#
-#   # Gamemode condition — show creative header only to builders
-#   build_world:
-#     header: "<aqua>Build World — Creative Mode"
-#     footer: ""
-#     conditions:
-#       - type: GAMEMODE
-#         value: CREATIVE
-#
-#   # PAPI_EQUALS — different header for VIP rank (LuckPerms group)
-#   hub:
-#     header: "<gold>⭐ VIP Tab\n<yellow>Welcome back, %player_name%!"
-#     footer: ""
-#     conditions:
-#       - type: PAPI_EQUALS
-#         placeholder: "%luckperms_primary_group%"
-#         value: "vip"
-#
-#   # PAPI_CONTAINS — matches any group whose name contains "staff"
-#   lobby:
-#     header: "<red>⚑ Staff Tab"
-#     footer: ""
-#     conditions:
-#       - type: PAPI_CONTAINS
-#         placeholder: "%luckperms_primary_group%"
-#         value: "staff"
-#
-#   # PAPI_GREATER — show special header to rich players (balance > 1000)
-#   survie:
-#     header: "<yellow>💰 High Roller Tab"
-#     footer: ""
-#     conditions:
-#       - type: PAPI_GREATER
-#         placeholder: "%vault_eco_balance%"
-#         value: "1000"
-#
-#   # PAPI_LESS — beginner header for players below level 10
-#   tutorial:
-#     header: "<green>💡 Beginner — Type /help to get started"
-#     footer: ""
-#     conditions:
-#       - type: PAPI_LESS
-#         placeholder: "%player_level%"
-#         value: "10"
-#
-#   # Negated condition — header for everyone EXCEPT ops
-#   survival:
-#     header: "<white>Survival Server"
-#     footer: ""
-#     conditions:
-#       - type: PERMISSION
-#         value: minecraft.command.op
-#         negate: true
-#
-#   # Stacked conditions — player must be in region AND have a permission
-#   arena:
-#     header: "<dark_red>Arena Zone — Authorized Only"
-#     footer: ""
-#     conditions:
-#       - type: REGION
-#         value: arena_zone
-#       - type: PERMISSION
-#         value: oreo.arena.access
-
-

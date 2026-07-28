@@ -21,14 +21,8 @@ public class KitCommands implements CommandExecutor, TabCompleter {
         this.plugin = plugin;
         this.manager = manager;
 
-        if (plugin.getCommand("kits") != null) {
-            plugin.getCommand("kits").setExecutor(this);
-            plugin.getCommand("kits").setTabCompleter(this);
-        }
-        if (plugin.getCommand("kit") != null) {
-            plugin.getCommand("kit").setExecutor(this);
-            plugin.getCommand("kit").setTabCompleter(this);
-        }
+        plugin.getCommands().registerLegacy("kits", this, this);
+        plugin.getCommands().registerLegacy("kit",  this, this);
     }
 
     @Override
@@ -84,7 +78,10 @@ public class KitCommands implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            // Open SmartInvs menu
+            // Try dialog first, fall back to SmartInvs
+            if (plugin.getDialogManager() != null && plugin.getDialogManager().openKitsDialog(p, manager)) {
+                return true;
+            }
             KitsMenuSI.open(plugin, manager, p);
             return true;
         }

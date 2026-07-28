@@ -2,9 +2,9 @@ package fr.elias.oreoEssentials.modules.economy.ecocommands;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.commands.OreoCommand;
-import fr.elias.oreoEssentials.modules.economy.EconomyService;
 import fr.elias.oreoEssentials.util.Async;
 import fr.elias.oreoEssentials.util.OreScheduler;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -13,7 +13,6 @@ import org.bukkit.entity.Player;
 
 import java.text.DecimalFormat;
 import java.util.List;
-import java.util.UUID;
 
 public class BalanceCommand implements OreoCommand {
     private final OreoEssentials plugin;
@@ -31,10 +30,8 @@ public class BalanceCommand implements OreoCommand {
     @Override
     @SuppressWarnings("deprecation")
     public boolean execute(CommandSender sender, String label, String[] args) {
-        EconomyService eco;
-        try {
-            eco = plugin.getEcoBootstrap().api();
-        } catch (Throwable t) {
+        Economy eco = resolveVaultEconomy();
+        if (eco == null) {
             sender.sendMessage(ChatColor.RED + "Economy is not available.");
             return true;
         }
@@ -44,9 +41,8 @@ public class BalanceCommand implements OreoCommand {
                 sender.sendMessage(ChatColor.RED + "Usage: /" + label + " <player>");
                 return true;
             }
-            final UUID selfId = p.getUniqueId();
             Async.run(() -> {
-                double bal = eco.getBalance(selfId);
+                double bal = eco.getBalance(p);
                 OreScheduler.runForEntity(plugin, p,
                         () -> p.sendMessage(ChatColor.GOLD + "Your balance: " + ChatColor.AQUA + format(bal)));
             });
@@ -65,15 +61,27 @@ public class BalanceCommand implements OreoCommand {
             return true;
         }
 
-        final UUID targetId = op.getUniqueId();
+        final OfflinePlayer target = op;
         final String displayName = op.getName() == null ? targetName : op.getName();
         Async.run(() -> {
-            double bal = eco.getBalance(targetId);
+            double bal = eco.getBalance(target);
             OreScheduler.run(plugin, () ->
                     sender.sendMessage(ChatColor.GOLD + displayName
                             + ChatColor.GRAY + "'s balance: " + ChatColor.AQUA + format(bal)));
         });
         return true;
+    }
+
+    private Economy resolveVaultEconomy() {
+        Economy eco = plugin.getVaultEconomy();
+        if (eco != null) return eco;
+
+        try {
+            var rsp = Bukkit.getServicesManager().getRegistration(Economy.class);
+            return rsp == null ? null : rsp.getProvider();
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     private String format(double amount) {

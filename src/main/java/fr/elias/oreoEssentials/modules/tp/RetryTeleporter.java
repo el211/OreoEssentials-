@@ -59,7 +59,8 @@ public final class RetryTeleporter {
     }
 
     private static String shortLoc(Location l) {
-        return "loc=" + l.getWorld().getName()
+        String worldName = l.getWorld() != null ? l.getWorld().getName() : "null_world";
+        return "loc=" + worldName
                 + "(" + fmt(l.getX()) + ", " + fmt(l.getY()) + ", " + fmt(l.getZ()) + ")"
                 + " yaw=" + fmt(l.getYaw()) + " pitch=" + fmt(l.getPitch());
     }

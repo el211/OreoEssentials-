@@ -286,7 +286,7 @@ commands:
 
   balance:
     enabled: true
-    aliases: ["bal", "money", "cash", "wallet", "$", "eco", "econ"]
+    aliases: ["bal", "wallet", "$", "eco", "econ"]
 
   baltop:
     enabled: true

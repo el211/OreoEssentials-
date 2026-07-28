@@ -106,20 +106,10 @@ public final class ShopModule {
 
     private void registerCommands() {
         ShopCommand shopCmd = new ShopCommand(this);
-        if (plugin.getCommand("shop") != null) {
-            plugin.getCommand("shop").setExecutor(shopCmd);
-            plugin.getCommand("shop").setTabCompleter(shopCmd);
-        } else {
-            plugin.getLogger().warning("[Shop] Command 'shop' not found in plugin.yml.");
-        }
+        plugin.getCommands().registerLegacy("shop", shopCmd, shopCmd);
 
         SellCommand sellCmd = new SellCommand(this);
-        if (plugin.getCommand("sell") != null) {
-            plugin.getCommand("sell").setExecutor(sellCmd);
-            plugin.getCommand("sell").setTabCompleter(sellCmd);
-        } else {
-            plugin.getLogger().warning("[Shop] Command 'sell' not found in plugin.yml.");
-        }
+        plugin.getCommands().registerLegacy("sell", sellCmd, sellCmd);
     }
 
 

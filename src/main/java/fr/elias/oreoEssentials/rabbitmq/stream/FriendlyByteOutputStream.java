@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.rabbitmq.stream;
 
 
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.function.Consumer;
 
@@ -49,7 +50,7 @@ public class FriendlyByteOutputStream {
     }
 
     public void writeString(String value) {
-        byte[] bytes = value.getBytes();
+        byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
 
         writeShort((short) bytes.length);
         writeBytes(bytes);

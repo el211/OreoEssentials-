@@ -37,18 +37,29 @@ public final class SafeLocationFinder {
      * @return a safe {@link Location} or {@code null} if none found within attempts
      */
     public static Location find(World world, GroupRtpPortalDef def) {
+        return find(world,
+                def.getRtpRadius(), def.getRtpMinRadius(),
+                def.getRtpCenterX(), def.getRtpCenterZ(),
+                def.getRtpMinY(), def.getRtpMaxY(), def.getRtpAttempts(),
+                def.getUnsafeBlocks(), def.getBlacklistedBiomes());
+    }
+
+    /**
+     * Overload that accepts raw RTP parameters — used by the cross-server broker
+     * which receives params via {@code GroupRtpSyncPacket} without a portal def.
+     */
+    public static Location find(World world,
+            double radius, double minRadius, double cx, double cz,
+            int minY, int maxY, int attempts,
+            Set<String> unsafeBlocks, Set<String> blacklistedBiomes) {
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
 
-        int    attempts  = def.getRtpAttempts();
-        double radius    = def.getRtpRadius();
-        double minRadius = Math.max(0, def.getRtpMinRadius());
-        double cx        = def.getRtpCenterX();
-        double cz        = def.getRtpCenterZ();
-        int    minY      = Math.max(5, def.getRtpMinY());
-        int    maxY      = Math.min(world.getMaxHeight() - 1, def.getRtpMaxY());
+        minRadius = Math.max(0, minRadius);
+        minY      = Math.max(5, minY);
+        maxY      = Math.min(world.getMaxHeight() - 1, maxY);
 
-        Set<String> unsafe         = def.getUnsafeBlocks();
-        Set<String> badBiomes      = def.getBlacklistedBiomes();
+        Set<String> unsafe         = unsafeBlocks;
+        Set<String> badBiomes      = blacklistedBiomes;
         boolean     isNether       = world.getEnvironment() == World.Environment.NETHER;
         boolean     checkBiomes    = !badBiomes.isEmpty();
 

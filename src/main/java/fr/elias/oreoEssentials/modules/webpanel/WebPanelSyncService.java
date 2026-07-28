@@ -977,7 +977,9 @@ public class WebPanelSyncService implements Listener {
         OreScheduler.runAsync(plugin, () -> {
             int sent = 0;
             for (String filename : files) {
-                java.io.File f = new java.io.File(plugin.getDataFolder(), filename);
+                String resolvedPath = resolveConfigPath(filename);
+                if (resolvedPath == null) continue;
+                java.io.File f = new java.io.File(plugin.getDataFolder(), resolvedPath);
                 if (!f.exists()) continue;
                 try {
                     String content = new String(
@@ -996,32 +998,87 @@ public class WebPanelSyncService implements Listener {
     }
 
     /**
+     * Maps a canonical backend filename (e.g. "scoreboard.yml") to the actual
+     * relative path inside the plugin's data folder (e.g. "scoreboard-tab/scoreboard.yml").
+     * Returns {@code null} for unknown names.
+     */
+    private String resolveConfigPath(String canonicalName) {
+        return switch (canonicalName) {
+            case "config.yml"             -> "config.yml";
+            case "settings.yml"           -> "settings.yml";
+            case "rtp.yml"                -> "rtp.yml";
+            case "playerwarps.yml"        -> "playerwarps/config.yml";
+            case "scoreboard.yml"         -> "scoreboard-tab/scoreboard.yml";
+            case "tab.yml"                -> "scoreboard-tab/tab.yml";
+            case "dailyrewards.yml"       -> "dailyrewards/dailyrewards.yml";
+            case "afk.yml"                -> "afk/config.yml";
+            case "maintenance.yml"        -> "server/maintenance.yml";
+            case "clearlag.yml"           -> "server/clearlag.yml";
+            case "craft-actions.yml"      -> "server/craft-actions.yml";
+            case "playervaults.yml"       -> "playervaults/config.yml";
+            case "chat-format.yml"        -> "chat-messaging/chat-format.yml";
+            case "join-quit-messages.yml" -> "chat-messaging/join-quit-messages.yml";
+            default                       -> null;
+        };
+    }
+
+    /**
+     * Reloads the in-memory config object(s) that correspond to the given
+     * canonical backend filename. Must be called on the main server thread.
+     */
+    private void reloadConfigByName(String canonicalName) {
+        switch (canonicalName) {
+            case "config.yml"             -> plugin.reloadConfig();
+            case "settings.yml"           -> plugin.getSettingsConfig().reload();
+            case "scoreboard.yml"         -> plugin.getScoreboardService().reload();
+            case "tab.yml"                -> plugin.getTabListManager().reload();
+            case "dailyrewards.yml"       -> {
+                plugin.getDailyConfig().load();
+                plugin.getDailyRewardsConfig().load();
+            }
+            case "afk.yml"                -> plugin.getAfkService().getAfkConfig().reload();
+            case "maintenance.yml"        -> plugin.getMaintenanceService().getConfig().reload();
+            case "clearlag.yml"           -> plugin.getClearLagManager().reload();
+            case "craft-actions.yml"      -> plugin.getCraftActionsConfig().reload();
+            case "playervaults.yml"       -> plugin.getPlayerVaultsService().reload();
+            case "playerwarps.yml"        -> plugin.reloadPlayerWarpsConfig();
+            case "chat-format.yml",
+                 "join-quit-messages.yml" -> plugin.reloadChat();
+            case "rtp.yml"                -> plugin.getRtpConfig().reload();
+        }
+    }
+
+    /**
      * Handles CONFIG_FILE_PUSH: writes the received YAML content to the plugin's
-     * data folder and reloads the affected config.
+     * data folder (resolving the canonical name to the actual sub-path) and
+     * reloads the affected config into memory.
      */
     private void handleConfigFilePush(JsonObject action) {
         String filename = action.has("filename") ? action.get("filename").getAsString() : null;
         String content  = action.has("content")  ? action.get("content").getAsString()  : null;
         if (filename == null || content == null || content.isBlank()) return;
 
-        // Prevent path traversal
+        // Prevent path traversal on the canonical name before we look it up
         if (filename.contains("/") || filename.contains("\\") || filename.contains("..")) {
             plugin.getLogger().warning("[WebPanel] CONFIG_FILE_PUSH rejected — unsafe filename: " + filename);
             return;
         }
 
+        String resolvedPath = resolveConfigPath(filename);
+        if (resolvedPath == null) {
+            plugin.getLogger().warning("[WebPanel] CONFIG_FILE_PUSH rejected — unknown config: " + filename);
+            return;
+        }
+
         OreScheduler.runAsync(plugin, () -> {
             try {
-                java.io.File configFile = new java.io.File(plugin.getDataFolder(), filename);
+                java.io.File configFile = new java.io.File(plugin.getDataFolder(), resolvedPath);
+                configFile.getParentFile().mkdirs();
                 java.nio.file.Files.write(configFile.toPath(),
                         content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 // Reload on main thread
                 OreScheduler.run(plugin, () -> {
-                    if ("config.yml".equals(filename)) {
-                        plugin.reloadConfig();
-                    } else if ("settings.yml".equals(filename)) {
-                        plugin.getSettingsConfig().reload();
-                    }
+                    reloadConfigByName(filename);
                     plugin.getLogger().info("[WebPanel] CONFIG_FILE_PUSH: '" + filename + "' written and reloaded.");
                 });
             } catch (Exception e) {

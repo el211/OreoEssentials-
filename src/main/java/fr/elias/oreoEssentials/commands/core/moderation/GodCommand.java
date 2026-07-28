@@ -20,7 +20,7 @@ public class GodCommand implements OreoCommand {
     }
 
     @Override public String name() { return "god"; }
-    @Override public List<String> aliases() { return List.of(".god"); }
+    @Override public List<String> aliases() { return List.of(); }
     @Override public String permission() { return "oreo.god"; }
     @Override public String usage() { return "[player]"; }
     @Override public boolean playerOnly() { return false; } // allow console for others

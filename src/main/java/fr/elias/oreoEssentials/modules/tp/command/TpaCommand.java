@@ -118,6 +118,11 @@ public class TpaCommand implements OreoCommand {
                     "<green>TPA sent to <aqua>%target%</aqua>.</green>",
                     Map.of("target", local.getName()));
 
+            OreoEssentials pluginRef = OreoEssentials.get();
+            if (pluginRef.getDialogManager() != null) {
+                pluginRef.getDialogManager().sendTpaRequestDialog(local, requester, false);
+            }
+
             D(id, "same-server request queued in " + ms(t0));
             P(requester, id, "same server ✓");
             return true;
@@ -180,6 +185,10 @@ public class TpaCommand implements OreoCommand {
                     return true;
                 }
                 teleportService.request(requester, byId);
+                OreoEssentials pluginRef2 = OreoEssentials.get();
+                if (pluginRef2.getDialogManager() != null) {
+                    pluginRef2.getDialogManager().sendTpaRequestDialog(byId, requester, false);
+                }
                 D(id, "same-server via UUID ok in " + ms(t0));
                 P(requester, id, "same server (UUID) ✓");
                 return true;
@@ -252,6 +261,10 @@ public class TpaCommand implements OreoCommand {
                 return true;
             }
             teleportService.request(requester, byId);
+            OreoEssentials pluginRef3 = OreoEssentials.get();
+            if (pluginRef3.getDialogManager() != null) {
+                pluginRef3.getDialogManager().sendTpaRequestDialog(byId, requester, false);
+            }
             D(id, "last-chance UUID accepted in " + ms(t0));
             P(requester, id, "found (late) ✓");
             return true;

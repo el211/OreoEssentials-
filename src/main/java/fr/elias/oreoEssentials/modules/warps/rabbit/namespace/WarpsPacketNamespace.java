@@ -5,7 +5,7 @@ import fr.elias.oreoEssentials.modules.warps.rabbit.packets.WarpTeleportRequestP
 
 public final class WarpsPacketNamespace extends PacketNamespace {
 
-    public static final int WARP_TP_REQ_ID = 1002;
+    public static final int WARP_TP_REQ_ID = 1004;
 
     public WarpsPacketNamespace() {
         super((short) 11);

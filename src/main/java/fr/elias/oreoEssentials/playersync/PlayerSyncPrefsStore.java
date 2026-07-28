@@ -24,7 +24,10 @@ public final class PlayerSyncPrefsStore {
         this.cfg  = YamlConfiguration.loadConfiguration(file);
     }
 
-    public PlayerSyncPrefs get(UUID id) {
+    public synchronized PlayerSyncPrefs get(UUID id) {
+        try {
+            cfg.load(file); // reload from disk to avoid stale in-memory cache
+        } catch (Exception ignored) {}
         String base = "prefs." + id + ".";
         if (!cfg.contains(base)) return PlayerSyncPrefs.defaults(dInv, dXp, dHealth, dHunger, dPotions);
         PlayerSyncPrefs p = new PlayerSyncPrefs();
@@ -36,7 +39,7 @@ public final class PlayerSyncPrefsStore {
         return p;
     }
 
-    public void set(UUID id, PlayerSyncPrefs p) {
+    public synchronized void set(UUID id, PlayerSyncPrefs p) {
         String base = "prefs." + id + ".";
         cfg.set(base + "inv",     p.inv);
         cfg.set(base + "xp",      p.xp);

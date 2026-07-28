@@ -189,18 +189,18 @@ public class RabbitMQSender implements PacketSender {
     public void close() {
         try {
             // Try to cancel consumers (best-effort)
-            try {
-                for (Map.Entry<String, String> entry : consumerTagsByQueue.entrySet()) {
-                    String q = entry.getKey();
-                    String tag = entry.getValue();
-                    if (tag != null && channel != null && channel.isOpen()) {
-                        try {
-                            channel.basicCancel(tag);
-                            dbg("[RMQ/CANCEL@" + serverName + "] queue=" + q + " tag=" + tag);
-                        } catch (Throwable ignored) {}
+            for (Map.Entry<String, String> entry : consumerTagsByQueue.entrySet()) {
+                String q = entry.getKey();
+                String tag = entry.getValue();
+                if (tag != null && channel != null && channel.isOpen()) {
+                    try {
+                        channel.basicCancel(tag);
+                        dbg("[RMQ/CANCEL@" + serverName + "] queue=" + q + " tag=" + tag);
+                    } catch (Exception e) {
+                        System.err.println("[RabbitMQ] Failed to cancel consumer tag " + tag + ": " + e.getMessage());
                     }
                 }
-            } catch (Throwable ignored) {}
+            }
 
             consumerTagsByQueue.clear();
             consumingQueues.clear();

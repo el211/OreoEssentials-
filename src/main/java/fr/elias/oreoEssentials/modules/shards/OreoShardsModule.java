@@ -114,34 +114,9 @@ public class OreoShardsModule {
                 config
         );
 
-        org.bukkit.command.PluginCommand cmd = plugin.getCommand("shard");
-
-        if (cmd == null) {
-            plugin.getLogger().severe("[Sharding] ✗ FAILED: Command 'shard' not found in plugin.yml!");
-            plugin.getLogger().severe("[Sharding] ✗ Make sure your plugin.yml contains:");
-            plugin.getLogger().severe("[Sharding] ✗   shard:");
-            plugin.getLogger().severe("[Sharding] ✗     description: Manage world sharding");
-            plugin.getLogger().severe("[Sharding] ✗     permission: oreo.shard.admin");
-            return;
-        }
-
-        cmd.setExecutor(shardCmd);
-        cmd.setTabCompleter(shardCmd);
+        ((fr.elias.oreoEssentials.OreoEssentials) plugin).getCommands().registerLegacy("shard", shardCmd, shardCmd);
 
         plugin.getLogger().info("[Sharding] ✓ /shard command registered successfully!");
-        plugin.getLogger().info("[Sharding] ✓ Executor: " + shardCmd.getClass().getSimpleName());
-        plugin.getLogger().info("[Sharding] ✓ Command name: " + cmd.getName());
-        plugin.getLogger().info("[Sharding] ✓ Aliases: " + cmd.getAliases());
-
-        try {
-            if (cmd.getExecutor() == null) {
-                plugin.getLogger().severe("[Sharding] ✗ WARNING: Executor is null after registration!");
-            } else {
-                plugin.getLogger().info("[Sharding] ✓ Executor verified: " + cmd.getExecutor().getClass().getSimpleName());
-            }
-        } catch (Exception e) {
-            plugin.getLogger().severe("[Sharding] ✗ Error verifying executor: " + e.getMessage());
-        }
     }
 
     private void createDefaultConfig(File configFile) {

@@ -458,25 +458,32 @@ public final class ScoreboardService implements Listener {
     }
 
     private void applyLines(Scoreboard board, Objective obj, List<String> expanded) {
-        // Clear old teams
-        for (int i = 0; i < 64; i++) {
+        int newSize = expanded.size();
+
+        // Only remove teams/entries that exceed the new line count (line count shrank).
+        // Never clear everything — that sends blank packets and causes visible flicker.
+        for (int i = newSize; i < 64; i++) {
             var t = board.getTeam("oe_ln_" + i);
-            if (t != null) t.unregister();
-        }
-        for (String e : new HashSet<>(board.getEntries())) {
-            board.resetScores(e);
-        }
-
-        int score = expanded.size();
-        for (int i = 0; i < expanded.size(); i++) {
-            String text  = expanded.get(i);
+            if (t == null) break; // teams are sequential, safe to stop early
             String entry = "§" + Integer.toHexString(i % 16);
+            board.resetScores(entry);
+            t.unregister();
+        }
 
+        int score = newSize;
+        for (int i = 0; i < newSize; i++) {
+            String text     = expanded.get(i);
+            String entry    = "§" + Integer.toHexString(i % 16);
             String teamName = "oe_ln_" + i;
-            var team = board.getTeam(teamName);
-            if (team == null) team = board.registerNewTeam(teamName);
 
-            team.addEntry(entry);
+            var team = board.getTeam(teamName);
+            if (team == null) {
+                // New team (line count grew or first render) — register and bind entry.
+                team = board.registerNewTeam(teamName);
+                team.addEntry(entry);
+            }
+
+            // Update prefix in-place — no unregister/reset, so no blank-frame flicker.
             // LEGACY.deserialize re-inflates §x… hex sequences into proper Components,
             // so full-colour gradients survive all the way to the client.
             team.prefix(LEGACY.deserialize(text));

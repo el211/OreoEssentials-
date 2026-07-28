@@ -135,6 +135,13 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
             return true;
         }
 
+        // Check inventory space before touching economy — avoids withdraw-then-refund roundtrip
+        if (player.getInventory().firstEmpty() == -1) {
+            Lang.send(player, "economy.cheque.create.fail-inventory",
+                    "<red>Free a slot in your inventory to receive the cheque.</red>");
+            return true;
+        }
+
         UUID playerId = player.getUniqueId();
         Async.run(() -> {
             double balance = eco.getBalance(playerId);
@@ -159,10 +166,17 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
                     return;
                 }
 
-                if (!giveChequeItem(player, buildChequeItem(amount))) {
+                Map<Integer, ItemStack> leftover = player.getInventory().addItem(buildChequeItem(amount));
+                if (!leftover.isEmpty()) {
+                    // Edge case: inventory filled up between the pre-check and now — refund
                     Lang.send(player, "economy.cheque.create.fail-inventory",
                             "<red>Free a slot in your inventory to receive the cheque.</red>");
-                    Async.run(() -> eco.deposit(playerId, amount));
+                    Async.run(() -> {
+                        eco.deposit(playerId, amount);
+                        Lang.send(player, "economy.cheque.create.refunded",
+                                "<yellow>Your <white>%currency_symbol%%amount_formatted%</white> has been refunded.</yellow>",
+                                Map.of("amount_formatted", fmt(amount), "currency_symbol", currencySymbol()));
+                    });
                     return;
                 }
 

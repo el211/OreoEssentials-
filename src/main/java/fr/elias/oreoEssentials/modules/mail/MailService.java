@@ -16,6 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Core business-logic layer for the mail system.
@@ -30,6 +31,7 @@ public final class MailService {
 
     private final OreoEssentials plugin;
     private final MailRepository  repo;
+    private final ConcurrentHashMap<String, Object> claimLocks = new ConcurrentHashMap<>();
 
     public MailService(OreoEssentials plugin) {
         this.plugin = plugin;
@@ -75,10 +77,11 @@ public final class MailService {
      */
     public void broadcastText(String senderName, String message) {
         MailMessage bcast = newBroadcast(senderName, message, null);
-        repo.saveBroadcast(bcast);
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            deliverBroadcast(p.getUniqueId(), bcast);
-        }
+        repo.saveBroadcast(bcast).thenRun(() -> {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                deliverBroadcast(p.getUniqueId(), bcast);
+            }
+        });
     }
 
     /**
@@ -93,10 +96,11 @@ public final class MailService {
             return;
         }
         MailMessage bcast = newBroadcast(senderName, message, data);
-        repo.saveBroadcast(bcast);
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            deliverBroadcast(p.getUniqueId(), bcast);
-        }
+        repo.saveBroadcast(bcast).thenRun(() -> {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                deliverBroadcast(p.getUniqueId(), bcast);
+            }
+        });
     }
 
     /**
@@ -155,20 +159,26 @@ public final class MailService {
      * @return true if the item was successfully claimed and given
      */
     public CompletableFuture<Boolean> claimItem(Player player, String mailId) {
+        Object lock = claimLocks.computeIfAbsent(mailId, k -> new Object());
         return repo.loadForPlayer(player.getUniqueId()).thenCompose(list -> {
-            for (MailMessage m : list) {
-                if (!m.getId().equals(mailId)) continue;
-                if (!m.hasItem() || m.isItemClaimed()) return cf(false);
-                ItemStack item = deserializeItem(m.getItemData());
-                if (item == null) return cf(false);
-                m.setItemClaimed(true);
-                m.setRead(true);
-                return repo.update(player.getUniqueId(), m).thenApply(v -> {
-                    OreScheduler.run(plugin, () -> giveOrDrop(player, item));
-                    return true;
-                });
+            synchronized (lock) {
+                for (MailMessage m : list) {
+                    if (!m.getId().equals(mailId)) continue;
+                    if (!m.hasItem() || m.isItemClaimed()) return cf(false);
+                    ItemStack item = deserializeItem(m.getItemData());
+                    if (item == null || item.getType() == org.bukkit.Material.AIR || item.getAmount() <= 0) {
+                        return cf(false);
+                    }
+                    m.setItemClaimed(true);
+                    m.setRead(true);
+                    return repo.update(player.getUniqueId(), m).thenApply(v -> {
+                        claimLocks.remove(mailId);
+                        OreScheduler.run(plugin, () -> giveOrDrop(player, item));
+                        return true;
+                    });
+                }
+                return cf(false);
             }
-            return cf(false);
         });
     }
 

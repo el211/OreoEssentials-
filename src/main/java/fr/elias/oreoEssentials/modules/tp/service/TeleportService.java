@@ -10,12 +10,15 @@ import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class TeleportService {
+public class TeleportService implements Listener {
     private final OreoEssentials plugin;
     private final BackService back;
     private final int timeoutSec;
@@ -37,6 +40,7 @@ public class TeleportService {
         this.timeoutSec = config.tpaTimeoutSeconds();
 
         OreScheduler.runTimer(plugin, this::cleanup, 20L * 30, 20L * 30);
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     public boolean request(Player from, Player to) {
@@ -158,6 +162,15 @@ public class TeleportService {
     private void cleanup() {
         long now = System.currentTimeMillis();
         pendingToTarget.entrySet().removeIf(e -> e.getValue().expiresAt < now);
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        UUID uuid = event.getPlayer().getUniqueId();
+        // Remove any pending request where this player is the target
+        pendingToTarget.remove(uuid);
+        // Remove any pending requests where this player is the sender
+        pendingToTarget.entrySet().removeIf(e -> e.getValue().from.equals(uuid));
     }
 
 

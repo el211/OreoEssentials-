@@ -36,6 +36,11 @@ public final class FillOrderMenu implements InventoryProvider {
 
     public static boolean isWaitingForFillQty(UUID uuid) { return waitingFill.containsKey(uuid); }
 
+    /** Removes a player from the pending fill-qty map. Call on disconnect. */
+    public static void clearPlayer(UUID uuid) {
+        waitingFill.remove(uuid);
+    }
+
     public static boolean consumeFillQtyInput(OrdersModule module, Player p, String raw) {
         PendingFill pf = waitingFill.remove(p.getUniqueId());
         if (pf == null) return false;

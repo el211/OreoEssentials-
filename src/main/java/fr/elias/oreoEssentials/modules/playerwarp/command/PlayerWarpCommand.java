@@ -223,6 +223,8 @@ public class PlayerWarpCommand implements OreoCommand {
                     return true;
                 }
                 String name = args[1];
+                // --confirmed flag bypasses the dialog (used by dialog confirm button)
+                boolean pwConfirmed = args.length >= 3 && args[2].equals("--confirmed");
                 PlayerWarp warp = service.findByOwnerAndName(actor.getUniqueId(), name);
                 if (warp == null) {
                     Lang.send(actor, "pw.not-found-owner",
@@ -236,6 +238,12 @@ public class PlayerWarpCommand implements OreoCommand {
                             "<red>You don't have permission to remove warps.</red>",
                             Map.of());
                     return true;
+                }
+                if (!pwConfirmed) {
+                    var dm = plugin.getDialogManager();
+                    if (dm != null && dm.confirmPlayerWarpRemove(actor, name)) {
+                        return true;
+                    }
                 }
                 if (service.deleteWarp(warp)) {
                     Lang.send(actor, "pw.remove-success",

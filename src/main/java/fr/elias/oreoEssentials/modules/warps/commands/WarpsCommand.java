@@ -27,12 +27,17 @@ public class WarpsCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
 
+        OreoEssentials plugin = OreoEssentials.get();
+        if (plugin.getDialogManager() != null && plugin.getDialogManager().openWarpDialog(p, warps)) {
+            return true;
+        }
+
         SmartInventory.builder()
                 .id("oreo:warps_player")
                 .provider(new WarpsPlayerProvider(warps))
                 .size(6, 9)
                 .title(ChatColor.DARK_AQUA + "Warps")
-                .manager(OreoEssentials.get().getInvManager())
+                .manager(plugin.getInvManager())
                 .build()
                 .open(p);
 

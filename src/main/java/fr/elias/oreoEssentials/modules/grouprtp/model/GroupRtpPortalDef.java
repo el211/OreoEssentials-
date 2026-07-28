@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.grouprtp.model;
 import org.bukkit.Material;
 import org.bukkit.util.BoundingBox;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -98,7 +99,13 @@ public final class GroupRtpPortalDef {
     public boolean contains(org.bukkit.Location loc) {
         if (loc.getWorld() == null) return false;
         if (!loc.getWorld().getName().equals(worldName)) return false;
-        return box.contains(loc.toVector());
+        // BoundingBox.contains(Vector) is exclusive on the max boundary, so a player
+        // standing exactly on the top face (e.g. Y == maxY) would never be detected.
+        // Use explicit inclusive comparisons instead.
+        double x = loc.getX(), y = loc.getY(), z = loc.getZ();
+        return x >= box.getMinX() && x <= box.getMaxX()
+            && y >= box.getMinY() && y <= box.getMaxY()
+            && z >= box.getMinZ() && z <= box.getMaxZ();
     }
 
     public boolean hasPermission(org.bukkit.entity.Player p) {
@@ -111,6 +118,10 @@ public final class GroupRtpPortalDef {
 
     public String msg(String key, String def) {
         return messages.getOrDefault(key, def);
+    }
+
+    public Map<String, String> getMessages() {
+        return Collections.unmodifiableMap(messages);
     }
 
     // ── Getters ───────────────────────────────────────────────────────────────

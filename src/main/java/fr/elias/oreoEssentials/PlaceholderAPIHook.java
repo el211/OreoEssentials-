@@ -234,18 +234,6 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             return (k != null && isKitReady(km, p, k)) ? "true" : "false";
         }
 
-        if (id.startsWith("kit_cooldown_")) {
-            Player p = player.getPlayer();
-            if (p == null) return "";
-            String kitId = id.substring("kit_cooldown_".length());
-            KitsManager km = kits();
-            if (km == null) return "";
-            Kit k = km.getKits().get(kitId.toLowerCase(Locale.ROOT));
-            if (k == null) return "";
-            long left = Math.max(0, km.getSecondsLeft(p, k));
-            return left <= 0 ? "ready" : String.valueOf(left);
-        }
-
         if (id.startsWith("kit_cooldown_formatted_") || (id.startsWith("kit_") && id.endsWith("_cooldown_formatted"))) {
             Player p = player.getPlayer();
             if (p == null) return "";
@@ -266,6 +254,18 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             if (left <= 0) return "ready";
 
             return Lang.timeHuman(left);
+        }
+
+        if (id.startsWith("kit_cooldown_")) {
+            Player p = player.getPlayer();
+            if (p == null) return "";
+            String kitId = id.substring("kit_cooldown_".length());
+            KitsManager km = kits();
+            if (km == null) return "";
+            Kit k = km.getKits().get(kitId.toLowerCase(Locale.ROOT));
+            if (k == null) return "";
+            long left = Math.max(0, km.getSecondsLeft(p, k));
+            return left <= 0 ? "ready" : String.valueOf(left);
         }
 
         if (id.equals("playtime_total_seconds")) {

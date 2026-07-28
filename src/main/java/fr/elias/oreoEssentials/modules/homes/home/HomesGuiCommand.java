@@ -37,6 +37,11 @@ public class HomesGuiCommand implements OreoCommand {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
 
+        OreoEssentials plugin = OreoEssentials.get();
+        if (plugin.getDialogManager() != null && plugin.getDialogManager().openHomeDialog(p, homes)) {
+            return true;
+        }
+
         String title = Lang.msgLegacy("homes.gui.title",
                 "<dark_green>Your Homes</dark_green>",
                 p);
@@ -46,7 +51,7 @@ public class HomesGuiCommand implements OreoCommand {
                 .provider(new HomesGuiProvider(homes))
                 .size(6, 9)
                 .title(title)
-                .manager(OreoEssentials.get().getInvManager())
+                .manager(plugin.getInvManager())
                 .build();
 
         inv.open(p);

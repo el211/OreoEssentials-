@@ -1,12 +1,15 @@
 package fr.elias.oreoEssentials.modules.grouprtp.service;
 
+import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.grouprtp.GroupRtpConfig;
 import fr.elias.oreoEssentials.modules.grouprtp.model.GroupRtpPortalDef;
 import fr.elias.oreoEssentials.modules.grouprtp.model.GroupSession;
+import fr.elias.oreoEssentials.modules.grouprtp.rabbit.GroupRtpSyncPacket;
+import fr.elias.oreoEssentials.rabbitmq.PacketChannels;
+import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +30,7 @@ import java.util.logging.Logger;
  */
 public final class GroupRtpService {
 
-    private final Plugin         plugin;
+    private final OreoEssentials plugin;
     private final GroupRtpConfig config;
     private final Logger         log;
 
@@ -38,7 +41,7 @@ public final class GroupRtpService {
     /** playerId → cooldown expiry (ms epoch) */
     private final Map<UUID, Long>           cooldowns = new ConcurrentHashMap<>();
 
-    public GroupRtpService(Plugin plugin, GroupRtpConfig config) {
+    public GroupRtpService(OreoEssentials plugin, GroupRtpConfig config) {
         this.plugin = plugin;
         this.config = config;
         this.log    = plugin.getLogger();
@@ -124,7 +127,12 @@ public final class GroupRtpService {
     }
 
     private void removeFromSession(GroupSession session, GroupRtpPortalDef def, UUID playerId) {
-        if (session.isTeleporting()) return; // Already locked in, don't interfere
+        if (session.isTeleporting()) {
+            // Player disconnected mid-teleport — remove from the session's inside set
+            // and reset to IDLE if the session is now empty.
+            session.removeFromTeleporting(playerId);
+            return;
+        }
         session.remove(playerId);
 
         if (session.size() == 0) {
@@ -223,7 +231,21 @@ public final class GroupRtpService {
             });
         }
 
-        // Find safe location ASYNC — do not block main thread
+        // ── Cross-server branch ───────────────────────────────────────────────
+        String rtpServer = def.getRtpServer();
+        if (rtpServer != null && !rtpServer.isBlank()) {
+            // Apply cooldowns before dispatching cross-server so players cannot
+            // immediately re-enter the portal if they switch back to this server.
+            for (UUID uid : group) {
+                cooldowns.put(uid, System.currentTimeMillis() + def.getCooldownMs());
+            }
+            // Reset session state now that the teleport is being handed off
+            session.resetToIdle();
+            dispatchCrossServerRtp(def, group);
+            return;
+        }
+
+        // ── Same-server: find safe location ASYNC ─────────────────────────────
         OreScheduler.runAsync(plugin, () -> {
             World world = Bukkit.getWorld(def.getRtpWorld());
             if (world == null) {
@@ -273,7 +295,67 @@ public final class GroupRtpService {
                 // Apply cooldown
                 cooldowns.put(uid, System.currentTimeMillis() + def.getCooldownMs());
             }
+
+            // Teleport sequence dispatched — reset session so it can be reused
+            session.resetToIdle();
         });
+    }
+
+    // ── Cross-server dispatch ─────────────────────────────────────────────────
+
+    private void dispatchCrossServerRtp(GroupRtpPortalDef def, Set<UUID> group) {
+        PacketManager pm = plugin.getPacketManager();
+        if (pm == null || !pm.isInitialized()) {
+            log.warning("[GroupRTP] Cross-server RTP configured but PacketManager is unavailable for portal " + def.getId());
+            for (UUID uid : group) {
+                Player p = Bukkit.getPlayer(uid);
+                if (p != null) OreScheduler.runForEntity(plugin, p, () -> {
+                    if (p.isOnline()) p.sendMessage(def.msg("no-location",
+                            "&cCross-server RTP is unavailable. Please try again later."));
+                });
+            }
+            return;
+        }
+
+        String requestId = UUID.randomUUID().toString();
+        GroupRtpSyncPacket pkt = new GroupRtpSyncPacket(
+                requestId, def.getId(), def.getRtpWorld(),
+                new ArrayList<>(group),
+                def.getRtpCenterX(), def.getRtpCenterZ(),
+                def.getRtpRadius(), def.getRtpMinRadius(),
+                def.getRtpMinY(), def.getRtpMaxY(), def.getRtpAttempts(),
+                def.getClusterRadius(),
+                new ArrayList<>(def.getUnsafeBlocks()),
+                new ArrayList<>(def.getBlacklistedBiomes())
+        );
+
+        try {
+            pm.sendPacket(PacketChannels.individual(def.getRtpServer()), pkt);
+        } catch (Throwable t) {
+            log.warning("[GroupRTP] Failed to send cross-server packet for portal "
+                    + def.getId() + ": " + t.getMessage());
+            for (UUID uid : group) {
+                Player p = Bukkit.getPlayer(uid);
+                if (p != null) OreScheduler.runForEntity(plugin, p, () -> {
+                    if (p.isOnline()) p.sendMessage(def.msg("no-location",
+                            "&cCross-server RTP failed. Please try again later."));
+                });
+            }
+            return;
+        }
+
+        // Give RabbitMQ enough time to deliver the packet and the target server time to
+        // begin the async location search before players arrive.
+        // The broker handles late-arriving players via the pending map, so this delay is
+        // just a best-effort head-start, not a hard requirement.
+        OreScheduler.runLater(plugin, () -> {
+            for (UUID uid : group) {
+                Player p = Bukkit.getPlayer(uid);
+                if (p != null && p.isOnline()) {
+                    plugin.getProxyMessenger().sendToServer(p, def.getRtpServer());
+                }
+            }
+        }, 20L); // 1 second
     }
 
     // ── Ambient particles (called from module tick) ───────────────────────────

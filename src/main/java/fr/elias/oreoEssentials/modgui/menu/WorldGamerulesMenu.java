@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modgui.menu;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modgui.ModGuiService;
 import fr.elias.oreoEssentials.modgui.util.ItemBuilder;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.content.InventoryContents;
 import fr.minuskube.inv.content.InventoryProvider;
@@ -111,7 +112,7 @@ public class WorldGamerulesMenu implements InventoryProvider {
                 e -> {
                     world.setGameRule(rule, !value);
                     persist(rule.getName(), String.valueOf(!value));
-                    c.inventory().open(p);
+                    OreScheduler.runLater(plugin, () -> c.inventory().open(p), 1L);
                 }
         );
     }
@@ -144,7 +145,7 @@ public class WorldGamerulesMenu implements InventoryProvider {
                     int next = Math.max(0, value + delta);
                     world.setGameRule(rule, next);
                     persist(rule.getName(), String.valueOf(next));
-                    c.inventory().open(p);
+                    OreScheduler.runLater(plugin, () -> c.inventory().open(p), 1L);
                 }
         );
     }
@@ -163,7 +164,7 @@ public class WorldGamerulesMenu implements InventoryProvider {
                             .name("&a« Previous")
                             .lore("&7Go to page &f" + page + " &7/ &f" + totalPages)
                             .build(),
-                    e -> { page--; c.inventory().open(p); }
+                    e -> { page--; OreScheduler.runLater(plugin, () -> c.inventory().open(p), 1L); }
             ));
         } else {
             c.set(5, 0, ClickableItem.empty(blank));
@@ -191,7 +192,7 @@ public class WorldGamerulesMenu implements InventoryProvider {
                             .name("&aNext »")
                             .lore("&7Go to page &f" + (page + 2) + " &7/ &f" + totalPages)
                             .build(),
-                    e -> { page++; c.inventory().open(p); }
+                    e -> { page++; OreScheduler.runLater(plugin, () -> c.inventory().open(p), 1L); }
             ));
         } else {
             c.set(5, 8, ClickableItem.empty(blank));

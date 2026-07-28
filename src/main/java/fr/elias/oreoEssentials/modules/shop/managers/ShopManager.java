@@ -213,9 +213,13 @@ public final class ShopManager {
             }
         }
 
+        List<String> buyCommands = s.getStringList("buy-commands");
+        boolean commandOnly = s.getBoolean("command-only", false);
+
         return new ShopItem(itemId, shopId, material, name, lore,
                 buy, sell, amount, slot, page, perm,
-                enchants, potionType, cmd, damage, iaId, nexoId);
+                enchants, potionType, cmd, damage, iaId, nexoId,
+                buyCommands, commandOnly);
     }
 
 

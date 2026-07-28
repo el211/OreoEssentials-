@@ -6,7 +6,7 @@
 
     <groupId>fr.elias</groupId>
     <artifactId>OreoEssentials</artifactId>
-    <version>5.3-SNAPSHOT</version>
+    <version>6.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>OreoEssentials</name>
@@ -40,6 +40,10 @@
                         </goals>
                         <configuration>
                             <relocations>
+                                <relocation>
+                                    <pattern>fr.traqueur.commands</pattern>
+                                    <shadedPattern>fr.elias.oreoessentials.libs.commands</shadedPattern>
+                                </relocation>
                                 <relocation>
                                     <pattern>net.byteflux.libby</pattern>
                                     <shadedPattern>fr.elias.oreoessentials.libs.libby</shadedPattern>
@@ -118,13 +122,13 @@
         </repository>
         <repository>
             <id>fancyplugins-snapshots</id>
-            <url>https://repo.fancyplugins.de/snapshots</url>
+            <url>https://repo.groupez.dev/snapshots</url>
             <releases><updatePolicy>never</updatePolicy></releases>
             <snapshots><updatePolicy>never</updatePolicy></snapshots>
         </repository>
         <repository>
             <id>fancyplugins-releases</id>
-            <url>https://repo.fancyplugins.de/releases</url>
+            <url>https://repo.groupez.dev/releases</url>
             <releases><updatePolicy>never</updatePolicy></releases>
             <snapshots><updatePolicy>never</updatePolicy></snapshots>
         </repository>
@@ -167,6 +171,15 @@
         </dependencies>
     </dependencyManagement>
     <dependencies>
+
+        <!-- CommandsAPI - shaded and relocated to fr.elias.oreoessentials.libs.commands -->
+        <dependency>
+            <groupId>fr.traqueur.commands</groupId>
+            <artifactId>platform-spigot</artifactId>
+            <version>5.1.1</version>
+            <scope>compile</scope>
+        </dependency>
+
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
@@ -229,11 +242,6 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>net.byteflux</groupId>
-            <artifactId>libby-bukkit</artifactId>
-            <version>1.3.1</version>
-        </dependency>
-        <dependency>
             <groupId>com.sk89q.worldguard</groupId>
             <artifactId>worldguard-bukkit</artifactId>
             <version>7.1.0-SNAPSHOT</version>
@@ -264,13 +272,7 @@
             <artifactId>triumph-gui</artifactId>
             <version>3.1.13</version>
         </dependency>
-        <dependency>
-            <groupId>com.comphenix.protocol</groupId>
-            <artifactId>ProtocolLib</artifactId>
-            <version>5.3.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
+<dependency>
             <groupId>io.lumine</groupId>
             <artifactId>Mythic-Dist</artifactId>
             <version>5.6.1</version>

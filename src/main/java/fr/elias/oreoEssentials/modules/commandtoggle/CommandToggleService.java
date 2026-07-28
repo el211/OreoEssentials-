@@ -3,7 +3,6 @@ package fr.elias.oreoEssentials.modules.commandtoggle;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -70,17 +69,10 @@ public class CommandToggleService {
 
             if (keyLower.equals(lower) || keyLower.endsWith(":" + lower)) {
                 Command cmd = knownCommands.get(key);
-
-                if (cmd instanceof PluginCommand) {
-                    PluginCommand pc = (PluginCommand) cmd;
-                    try {
-                        if (pc.getPlugin() == plugin) {
-                            toRemove.add(key);
-                            if (!unregisteredCommands.containsKey(lower)) {
-                                unregisteredCommands.put(lower, cmd);
-                            }
-                        }
-                    } catch (Exception ignored) {}
+                if (cmd == null) continue;
+                toRemove.add(key);
+                if (!unregisteredCommands.containsKey(lower)) {
+                    unregisteredCommands.put(lower, cmd);
                 }
             }
         }

@@ -370,29 +370,26 @@ public final class OHolograms implements OHologramsPlugin {
     }
 
     private void bindPluginCommand(@NotNull String label, @NotNull Command command) {
-        PluginCommand pluginCommand = plugin.getCommand(label);
-        if (pluginCommand == null) {
-            return;
-        }
-        CommandExecutor executor = (sender, cmd, usedLabel, args) -> command.execute(sender, usedLabel, args);
-        TabCompleter completer = (sender, cmd, usedLabel, args) -> command.tabComplete(sender, usedLabel, args);
-        pluginCommand.setExecutor(executor);
-        pluginCommand.setTabCompleter(completer);
-        pluginCommand.setPermission(command.getPermission());
-        // Re-register in the server's CommandMap in case unregisterCommandHard removed it
-        try {
-            org.bukkit.command.CommandMap commandMap = plugin.getServer().getCommandMap();
-            commandMap.register(plugin.getName().toLowerCase(java.util.Locale.ROOT), pluginCommand);
-        } catch (Throwable ignored) {}
+        ((fr.elias.oreoEssentials.OreoEssentials) plugin).getCommands().registerLegacy(label,
+                (sender, cmd, usedLabel, args) -> command.execute(sender, usedLabel, args),
+                (sender, cmd, usedLabel, args) -> command.tabComplete(sender, usedLabel, args));
     }
 
     private void unbindPluginCommand(@NotNull String label) {
-        PluginCommand pluginCommand = plugin.getCommand(label);
-        if (pluginCommand == null) {
-            return;
-        }
-        pluginCommand.setExecutor(null);
-        pluginCommand.setTabCompleter(null);
+        try {
+            org.bukkit.command.CommandMap map = plugin.getServer().getCommandMap();
+            if (!(map instanceof org.bukkit.command.SimpleCommandMap scm)) return;
+            java.lang.reflect.Field f = org.bukkit.command.SimpleCommandMap.class.getDeclaredField("knownCommands");
+            f.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, org.bukkit.command.Command> known =
+                    (java.util.Map<String, org.bukkit.command.Command>) f.get(scm);
+            String lower = label.toLowerCase(java.util.Locale.ROOT);
+            known.entrySet().removeIf(e -> {
+                String k = e.getKey().toLowerCase(java.util.Locale.ROOT);
+                return k.equals(lower) || k.endsWith(":" + lower);
+            });
+        } catch (Throwable ignored) {}
     }
 
     private void registerListeners() {
