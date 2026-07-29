@@ -14,6 +14,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -91,6 +92,25 @@ public final class VaultView {
                 // Save only the first allowedSlots
                 ItemStack[] all = e.getInventory().getContents();
                 svc.saveLimited(player, id, rowsVisible, allowedSlots, all);
+
+                HandlerList.unregisterAll(this);
+            }
+
+            // PV-5: Force-save and unregister if the player disconnects (crash/kick)
+            // so the listener never leaks and items are persisted
+            @EventHandler
+            public void onQuit(PlayerQuitEvent e) {
+                if (!Objects.equals(e.getPlayer().getUniqueId(), player.getUniqueId())) return;
+
+                // Player is quitting — their open inventory contents may still be readable
+                org.bukkit.inventory.InventoryView openView = player.getOpenInventory();
+                if (openView != null) {
+                    ItemStack[] all = openView.getTopInventory().getContents();
+                    svc.saveLimited(player, id, rowsVisible, allowedSlots, all);
+                } else {
+                    // Inventory already closed; just release the session guard
+                    svc.releaseSession(player.getUniqueId());
+                }
 
                 HandlerList.unregisterAll(this);
             }

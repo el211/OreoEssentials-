@@ -20,7 +20,9 @@ public final class PlayerSyncListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent e) {
         if (!enabled) return;
-        service.saveIfEnabled(e.getPlayer());
+        // BUG-16: Save on async thread — YAML I/O must not block the main thread.
+        final Player quitting = e.getPlayer();
+        OreScheduler.runAsync(OreoEssentials.get(), () -> service.saveIfEnabled(quitting));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

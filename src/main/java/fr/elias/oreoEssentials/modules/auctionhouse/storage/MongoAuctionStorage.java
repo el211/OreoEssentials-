@@ -2,6 +2,9 @@ package fr.elias.oreoEssentials.modules.auctionhouse.storage;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoClient;
+import com.mongodb.client.model.ReplaceOneModel;
+import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.WriteModel;
 import fr.elias.oreoEssentials.modules.auctionhouse.models.Auction;
 import fr.elias.oreoEssentials.modules.auctionhouse.models.AuctionCategory;
 import fr.elias.oreoEssentials.modules.auctionhouse.models.AuctionStatus;
@@ -50,15 +53,26 @@ public final class MongoAuctionStorage implements AuctionStorage {
 
     @Override
     public synchronized void saveAll(AuctionSnapshot snap) {
+        // BUG-04: replaced deleteMany+insertMany with upsert bulk-write.
+        // This is atomic per-document — no window where all data is wiped and not yet re-inserted.
         try {
-            col.deleteMany(new Document());
+            List<WriteModel<Document>> ops = new ArrayList<>();
+            ReplaceOptions upsert = new ReplaceOptions().upsert(true);
 
-            List<Document> docs = new ArrayList<>();
-            for (Auction a : snap.active())  docs.add(toDoc(a));
-            for (Auction a : snap.expired()) docs.add(toDoc(a));
-            for (Auction a : snap.sold())    docs.add(toDoc(a));
+            for (Auction a : snap.active())  ops.add(new ReplaceOneModel<>(new Document("_id", a.getId()), toDoc(a), upsert));
+            for (Auction a : snap.expired()) ops.add(new ReplaceOneModel<>(new Document("_id", a.getId()), toDoc(a), upsert));
+            for (Auction a : snap.sold())    ops.add(new ReplaceOneModel<>(new Document("_id", a.getId()), toDoc(a), upsert));
 
-            if (!docs.isEmpty()) col.insertMany(docs);
+            // Collect all known IDs so we can delete any that were removed from all three lists
+            Set<String> knownIds = new HashSet<>();
+            snap.active().forEach(a  -> knownIds.add(a.getId()));
+            snap.expired().forEach(a -> knownIds.add(a.getId()));
+            snap.sold().forEach(a    -> knownIds.add(a.getId()));
+
+            if (!ops.isEmpty()) col.bulkWrite(ops);
+
+            // Remove documents no longer in any list
+            col.deleteMany(new Document("_id", new Document("$nin", new ArrayList<>(knownIds))));
         } catch (Exception e) {
             logger.severe("[AuctionHouse] Failed to save to MongoDB: " + e.getMessage());
         }

@@ -4,12 +4,17 @@ import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Vault Economy Provider - Bridges OreoEssentials economy to Vault API
@@ -21,6 +26,8 @@ public class OreoVaultProvider implements Economy {
     private final EconomyService service;
     private final String currencyName;
     private final String currencyPlural;
+    /** E-4: Per-player locks to prevent TOCTOU race in withdrawPlayer. */
+    private final ConcurrentHashMap<UUID, Object> withdrawLocks = new ConcurrentHashMap<>();
 
     public OreoVaultProvider(Plugin plugin, EconomyService service) {
         this.plugin = plugin;
@@ -180,19 +187,23 @@ public class OreoVaultProvider implements Economy {
         }
 
         UUID uuid = player.getUniqueId();
-        double balance = service.getBalance(uuid);
+        // E-4: Serialize the balance-check and deduct atomically per player to prevent TOCTOU.
+        Object lock = withdrawLocks.computeIfAbsent(uuid, k -> new Object());
+        synchronized (lock) {
+            double balance = service.getBalance(uuid);
 
-        if (balance < amount) {
-            return new EconomyResponse(0, balance, EconomyResponse.ResponseType.FAILURE, "Insufficient funds");
-        }
+            if (balance < amount) {
+                return new EconomyResponse(0, balance, EconomyResponse.ResponseType.FAILURE, "Insufficient funds");
+            }
 
-        boolean success = service.withdraw(uuid, amount);
+            boolean success = service.withdraw(uuid, amount);
 
-        if (success) {
-            double newBalance = service.getBalance(uuid);
-            return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, null);
-        } else {
-            return new EconomyResponse(0, balance, EconomyResponse.ResponseType.FAILURE, "Withdrawal failed");
+            if (success) {
+                double newBalance = service.getBalance(uuid);
+                return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, null);
+            } else {
+                return new EconomyResponse(0, balance, EconomyResponse.ResponseType.FAILURE, "Withdrawal failed");
+            }
         }
     }
     @Override
@@ -286,19 +297,22 @@ public class OreoVaultProvider implements Economy {
     }
 
 
-    @SuppressWarnings("deprecation")
     private OfflinePlayer resolvePlayer(String playerName) {
-        for (OfflinePlayer player : Bukkit.getOnlinePlayers()) {
+        // Check online players first (free).
+        for (org.bukkit.entity.Player player : Bukkit.getOnlinePlayers()) {
             if (player.getName() != null && player.getName().equalsIgnoreCase(playerName)) {
                 return player;
             }
         }
-
-        for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-            if (player.getName() != null && player.getName().equalsIgnoreCase(playerName)) {
-                return player;
-            }
+        // BUG-6: Never call Bukkit.getOfflinePlayers() — it scans every offline player file.
+        // Try UUID parse, then fall back to name-based lookup (cache lookup, not a full scan).
+        try {
+            return Bukkit.getOfflinePlayer(UUID.fromString(playerName));
+        } catch (IllegalArgumentException ignored) {
+            // playerName is not a UUID — use name-based offline lookup (cached, not a scan)
+            @SuppressWarnings("deprecation")
+            OfflinePlayer op = Bukkit.getOfflinePlayer(playerName);
+            return op;
         }
-        return Bukkit.getOfflinePlayer(playerName);
     }
 }

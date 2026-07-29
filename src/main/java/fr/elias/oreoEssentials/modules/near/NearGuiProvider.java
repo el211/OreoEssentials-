@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modules.near;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modgui.util.ItemBuilder;
+import fr.elias.oreoEssentials.services.VanishService;
 import fr.minuskube.inv.ClickableItem;
 import fr.minuskube.inv.content.InventoryContents;
 import fr.minuskube.inv.content.InventoryProvider;
@@ -41,9 +42,17 @@ public class NearGuiProvider implements InventoryProvider {
         }
 
         Location me = p.getLocation();
+        // N-1: filter out vanished players unless the viewer has oreo.vanish.see
+        VanishService vanishService = plugin.getVanishService();
+        boolean canSeeVanished = p.hasPermission("oreo.vanish.see");
         List<Player> nearby = new ArrayList<>();
         for (Player other : p.getWorld().getPlayers()) {
             if (other == p) continue;
+            // Skip vanished players for viewers without the see-vanish permission
+            if (!canSeeVanished) {
+                if (other.hasMetadata("vanished")) continue;
+                if (vanishService != null && vanishService.isVanished(other.getUniqueId())) continue;
+            }
             if (other.getLocation().distance(me) <= radius) nearby.add(other);
         }
         nearby.sort(Comparator.comparingDouble(o -> o.getLocation().distance(me)));
@@ -125,12 +134,13 @@ public class NearGuiProvider implements InventoryProvider {
     @Override public void update(Player p, InventoryContents c) {}
 
     private void openPage(Player p, int page) {
+        // N-3: pass the page argument through to open() instead of always opening page 0
         fr.minuskube.inv.SmartInventory.builder()
                 .manager(plugin.getInvManager())
                 .provider(new NearGuiProvider(plugin, radius))
                 .title("§6Nearby Players §7(radius: " + radius + ")")
                 .size(6, 9)
                 .build()
-                .open(p);
+                .open(p, page);
     }
 }

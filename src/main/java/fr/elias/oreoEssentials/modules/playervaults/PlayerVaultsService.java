@@ -12,12 +12,18 @@ import org.bukkit.entity.Player;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class PlayerVaultsService {
 
     private final OreoEssentials plugin;
     private PlayerVaultsConfig cfg;
     private PlayerVaultsStorage storage;
+
+    // PV-3: Track open vault sessions to prevent concurrent double-open (item loss)
+    private final Set<UUID> openSessions = ConcurrentHashMap.newKeySet();
 
 
     public PlayerVaultsService(OreoEssentials plugin) {
@@ -85,7 +91,20 @@ public final class PlayerVaultsService {
     public void openVault(Player p, int id) {
         if (!enabled()) return;
 
+        // PV-4: Reject vault IDs outside the valid range
+        if (id < 1 || id > cfg.maxVaults()) {
+            p.sendMessage("\u00a7cInvalid vault number.");
+            return;
+        }
+
+        // PV-3: Prevent double-open / concurrent sessions for the same player
+        if (!openSessions.add(p.getUniqueId())) {
+            p.sendMessage("\u00a7cYour vault is already open.");
+            return;
+        }
+
         if (!canAccess(p, id)) {
+            openSessions.remove(p.getUniqueId());
             deny(p, cfg.denyMessage().replace("%id%", String.valueOf(id)));
             return;
         }
@@ -119,6 +138,16 @@ public final class PlayerVaultsService {
         org.bukkit.inventory.ItemStack[] toSave = new org.bukkit.inventory.ItemStack[allowedSlots];
         System.arraycopy(inv, 0, toSave, 0, Math.min(allowedSlots, inv.length));
         storage.save(p.getUniqueId(), id, rowsVisible, toSave);
+        // PV-3: Release the session lock after save so the player can reopen their vault
+        openSessions.remove(p.getUniqueId());
+    }
+
+    /**
+     * PV-3: Release the session lock without saving (e.g. player kicked mid-session).
+     * Called by VaultView when the player quits before inventory close is fired.
+     */
+    public void releaseSession(UUID uuid) {
+        openSessions.remove(uuid);
     }
 
     public void stop() {

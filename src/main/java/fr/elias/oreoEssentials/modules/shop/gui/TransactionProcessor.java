@@ -61,7 +61,19 @@ public final class TransactionProcessor {
             }
         }
 
-        cs.getBalance(player.getUniqueId(), currencyId).whenComplete((balance, error) -> {
+        // BUG-09 fix: add exceptionally() so that if the CompletableFuture never
+        // completes normally (e.g. async balance fetch hangs or throws), endTransaction
+        // is still guaranteed to be called and the player is not permanently locked.
+        cs.getBalance(player.getUniqueId(), currencyId)
+                .exceptionally(ex -> {
+                    OreScheduler.runForEntity(module.getPlugin(), player, () -> {
+                        send(player, "§cError checking balance.");
+                        antiDupe.endTransaction(player);
+                    });
+                    return null;
+                })
+                .whenComplete((balance, error) -> {
+            if (balance == null) return; // handled by exceptionally above
             if (error != null) {
                 OreScheduler.runForEntity(module.getPlugin(), player, () -> {
                     send(player, "<red>Shop transaction failed.</red>");
@@ -127,8 +139,13 @@ public final class TransactionProcessor {
 
         if (cs == null) {
             try {
+                // BUG-02 fix: deposit first; only remove items if the deposit succeeds.
+                net.milkbowl.vault.economy.EconomyResponse resp = module.getEconomy().depositPlayer(player, price);
+                if (resp == null || !resp.transactionSuccess()) {
+                    send(player, "<red>Shop transaction failed.</red>");
+                    return false;
+                }
                 removeItems(player, shopItem, totalItems);
-                module.getEconomy().deposit(player, price);
                 finishSell(player, shopItem, totalItems, price, module.getEconomy().getEconomyName(), module.getEconomy().format(price));
                 return true;
             } finally {
@@ -262,8 +279,12 @@ public final class TransactionProcessor {
         if (!shopItem.isCommandOnly()) {
             int remaining = totalItems;
             while (remaining > 0) {
-                int stackAmt = Math.min(remaining, shopItem.buildItemStack().getMaxStackSize());
+                // BUG-07 fix: call buildItemStack() once per iteration (not twice),
+                // and guard against getMaxStackSize() == 0 to prevent an infinite loop.
                 ItemStack stack = shopItem.buildItemStack();
+                int maxStack = stack.getMaxStackSize();
+                if (maxStack <= 0) break;
+                int stackAmt = Math.min(remaining, maxStack);
                 stack.setAmount(stackAmt);
                 player.getInventory().addItem(stack).forEach((idx, leftover) ->
                         player.getWorld().dropItemNaturally(player.getLocation(), leftover));
@@ -305,10 +326,13 @@ public final class TransactionProcessor {
     }
 
     private void removeItems(Player player, ShopItem shopItem, int totalItems) {
+        // BUG-04 fix: use isSimilar() instead of material-only matching so that
+        // enchanted/named items are not consumed in place of plain ones (and vice versa).
+        ItemStack template = shopItem.buildItemStack();
         int toRemove = totalItems;
         for (ItemStack slot : player.getInventory().getContents()) {
             if (slot == null || slot.getType() == Material.AIR) continue;
-            if (slot.getType() == shopItem.getMaterial()) {
+            if (template.isSimilar(slot)) {
                 int take = Math.min(toRemove, slot.getAmount());
                 slot.setAmount(slot.getAmount() - take);
                 toRemove -= take;

@@ -51,6 +51,9 @@ public class EconomyBootstrap {
             try {
                 EconomyMigration migration = new EconomyMigration(plugin);
 
+                // E-9: Persist backup to disk BEFORE migrating — crash-safe.
+                migration.backupToDisk(oldService);
+
                 Map<UUID, Double> backup = migration.backup(oldService);
 
                 if (!backup.isEmpty()) {

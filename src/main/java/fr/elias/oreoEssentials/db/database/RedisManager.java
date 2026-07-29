@@ -103,7 +103,12 @@ public class RedisManager {
         if (!enabled || jedisPool == null) return;
 
         try (Jedis jedis = jedisPool.getResource()) {
-            jedis.flushDB();
+            // E-11: Never flushDB — that would wipe data from all plugins.
+            // Only delete OreoEssentials balance keys.
+            java.util.Set<String> keys = jedis.keys("balance:*");
+            if (!keys.isEmpty()) {
+                jedis.del(keys.toArray(new String[0]));
+            }
         } catch (Exception ignored) {}
     }
 

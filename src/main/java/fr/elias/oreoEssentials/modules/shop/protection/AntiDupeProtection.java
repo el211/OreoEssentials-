@@ -28,13 +28,17 @@ public final class AntiDupeProtection {
     public boolean beginTransaction(Player player) {
         UUID uuid = player.getUniqueId();
 
-        if (locked.contains(uuid)) {
-            flag(player, "Double-transaction attempt");
-            return false;
+        // BUG-16 fix: atomically check+add under the locked set's intrinsic lock
+        // to prevent two threads from both passing the contains() check simultaneously.
+        synchronized (locked) {
+            if (locked.contains(uuid)) {
+                flag(player, "Double-transaction attempt");
+                return false;
+            }
+            locked.add(uuid);
         }
 
         if (player.hasPermission("oshopgui.bypass.cooldown")) {
-            locked.add(uuid);
             return true;
         }
 
@@ -46,6 +50,7 @@ public final class AntiDupeProtection {
                 Lang.sendRaw(player,
                         module.getShopConfig().getMessage("transaction-cooldown")
                                 .replace("{time}", String.valueOf(remaining)));
+                synchronized (locked) { locked.remove(uuid); }
                 return false;
             }
 
@@ -55,12 +60,12 @@ public final class AntiDupeProtection {
             times.removeIf(t -> now - t > 1000);
             if (times.size() >= maxRate) {
                 flag(player, "Rate exceeded (" + times.size() + "/s)");
+                synchronized (locked) { locked.remove(uuid); }
                 return false;
             }
             times.add(now);
         }
 
-        locked.add(uuid);
         return true;
     }
 

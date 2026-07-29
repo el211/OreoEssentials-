@@ -241,7 +241,8 @@ public class PortalsCommand implements CommandExecutor, TabCompleter {
                             "<red>You don't have permission.</red>");
                     return true;
                 }
-                manager.loadAll();
+                // P-3: use reload() so the ambient particle task is also restarted
+                manager.reload();
                 Lang.send(sender, "portals.reload.success",
                         "<green>Portals reloaded. <white>%count%</white> portal(s) loaded.</green>",
                         Map.of("count", String.valueOf(manager.listNames().size())));
@@ -293,14 +294,18 @@ public class PortalsCommand implements CommandExecutor, TabCompleter {
     }
 
     private String locStr(Location l) {
-        return l.getWorld().getName() + " (" +
+        // P-2: null-check world to avoid NPE for cross-server portals
+        String worldName = l.getWorld() != null ? l.getWorld().getName() : "unknown";
+        return worldName + " (" +
                 String.format("%.1f", l.getX()) + ", " +
                 String.format("%.1f", l.getY()) + ", " +
                 String.format("%.1f", l.getZ()) + ")";
     }
 
     private String shortLocStr(Location l) {
-        return l.getWorld().getName() + " (" +
+        // P-2: null-check world to avoid NPE for cross-server portals
+        String worldName = l.getWorld() != null ? l.getWorld().getName() : "unknown";
+        return worldName + " (" +
                 String.format("%.0f", l.getX()) + ", " +
                 String.format("%.0f", l.getY()) + ", " +
                 String.format("%.0f", l.getZ()) + ")";

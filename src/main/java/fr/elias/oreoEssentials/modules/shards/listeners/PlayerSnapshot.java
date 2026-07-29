@@ -45,6 +45,9 @@ public class PlayerSnapshot {
     public float fallDistance;
     public PotionEffect[] potionEffects;
 
+    // Inventory (S1: Base64-encoded BukkitObjectOutputStream blob)
+    public String inventoryBase64;
+
     // Meta
     public long timestamp;
 

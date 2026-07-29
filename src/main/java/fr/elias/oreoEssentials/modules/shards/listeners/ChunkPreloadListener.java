@@ -25,6 +25,9 @@ public class ChunkPreloadListener implements Listener {
 
     // Store pending teleports: UUID -> Location
     private final Map<UUID, PendingTeleport> pendingTeleports = new ConcurrentHashMap<>();
+    // S5: flag to break the retry loop on intentional shutdown
+    private volatile boolean running = true;
+    private Thread subscriberThread;
 
     public ChunkPreloadListener(Plugin plugin, String redisHost, int redisPort, String redisPassword) {
         this.plugin = plugin;
@@ -35,26 +38,36 @@ public class ChunkPreloadListener implements Listener {
         startRedisListener();
     }
 
+    /** S5: Retry loop — reconnects automatically if the Redis pub/sub thread dies. */
     private void startRedisListener() {
-        new Thread(() -> {
-            try (Jedis sub = new Jedis(redisHost, redisPort)) {
-                if (redisPassword != null && !redisPassword.isEmpty()) {
-                    sub.auth(redisPassword);
-                }
-
-                plugin.getLogger().info("[ShardPreload] Listening for chunk preload requests...");
-
-                sub.subscribe(new JedisPubSub() {
-                    @Override
-                    public void onMessage(String channel, String message) {
-                        handlePreloadRequest(message);
+        subscriberThread = new Thread(() -> {
+            while (running) {
+                try (Jedis sub = new Jedis(redisHost, redisPort)) {
+                    if (redisPassword != null && !redisPassword.isEmpty()) {
+                        sub.auth(redisPassword);
                     }
-                }, "shard_preload_chunks");
-
-            } catch (Exception e) {
-                plugin.getLogger().severe("[ShardPreload] Redis listener died: " + e.getMessage());
+                    plugin.getLogger().info("[ShardPreload] Listening for chunk preload requests...");
+                    sub.subscribe(new JedisPubSub() {
+                        @Override
+                        public void onMessage(String channel, String message) {
+                            handlePreloadRequest(message);
+                        }
+                    }, "shard_preload_chunks");
+                } catch (Exception e) {
+                    if (!running) break;
+                    plugin.getLogger().warning("[ChunkPreload] Redis subscriber died, reconnecting in 3s: " + e.getMessage());
+                    try { Thread.sleep(3000); } catch (InterruptedException ie) { break; }
+                }
             }
-        }, "ShardPreload-Redis").start();
+        }, "ShardPreload-Redis");
+        subscriberThread.setDaemon(true);
+        subscriberThread.start();
+    }
+
+    /** Call this on plugin disable to stop the retry loop. */
+    public void shutdown() {
+        running = false;
+        if (subscriberThread != null) subscriberThread.interrupt();
     }
 
     private void handlePreloadRequest(String message) {
@@ -82,7 +95,10 @@ public class ChunkPreloadListener implements Listener {
 
             // Pre-load chunks on main thread
             OreScheduler.run(plugin, () -> {
-                World world = Bukkit.getWorld("world");
+                // S6: Don't hardcode "world" — use the server's primary world.
+                String worldName = plugin.getServer().getWorlds().isEmpty()
+                        ? "world" : plugin.getServer().getWorlds().get(0).getName();
+                World world = Bukkit.getWorld(worldName);
                 if (world != null) {
                     // Load chunk
                     world.getChunkAt((int) x >> 4, (int) z >> 4);

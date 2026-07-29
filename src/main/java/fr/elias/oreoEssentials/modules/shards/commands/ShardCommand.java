@@ -107,7 +107,7 @@ public class ShardCommand implements CommandExecutor, TabCompleter {
 
         // Update shards.yml
         try {
-            File configFile = new File(plugin.getDataFolder(), "shards.yml");
+            File configFile = new File(plugin.getDataFolder(), "server/shards.yml");
             YamlConfiguration yml = YamlConfiguration.loadConfiguration(configFile);
 
             yml.set("sharding.enabled", true);
@@ -181,7 +181,7 @@ public class ShardCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage("§6Creating world '" + worldName + "' on this server...");
 
         // Load config to get seed
-        File configFile = new File(plugin.getDataFolder(), "shards.yml");
+        File configFile = new File(plugin.getDataFolder(), "server/shards.yml");
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(configFile);
 
         long seed = yml.getLong("sharding.worlds." + worldName + ".seed", System.currentTimeMillis());

@@ -5,10 +5,16 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.util.io.BukkitObjectInputStream;
+import org.bukkit.util.io.BukkitObjectOutputStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -87,6 +93,14 @@ public class ShardHandoffManager {
 
             // Potion effects
             snapshot.potionEffects = player.getActivePotionEffects().toArray(new PotionEffect[0]);
+
+            // Inventory (S1: serialize with BukkitObjectOutputStream → Base64)
+            try {
+                snapshot.inventoryBase64 = itemStacksToBase64(player.getInventory().getContents());
+            } catch (Exception e) {
+                e.printStackTrace();
+                // Non-fatal: log and continue without inventory (better than blocking transfer)
+            }
 
             // Timestamp for debugging
             snapshot.timestamp = System.currentTimeMillis();
@@ -189,6 +203,37 @@ public class ShardHandoffManager {
     public void shutdown() {
         if (jedisPool != null && !jedisPool.isClosed()) {
             jedisPool.close();
+        }
+    }
+
+    // ---- Inventory serialization helpers (S1) ----
+
+    /**
+     * Serialize an ItemStack array to a Base64 string using BukkitObjectOutputStream.
+     */
+    public static String itemStacksToBase64(ItemStack[] contents) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (BukkitObjectOutputStream boos = new BukkitObjectOutputStream(baos)) {
+            boos.writeInt(contents.length);
+            for (ItemStack item : contents) {
+                boos.writeObject(item);
+            }
+        }
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
+    }
+
+    /**
+     * Deserialize a Base64 string back to an ItemStack array.
+     */
+    public static ItemStack[] itemStacksFromBase64(String base64) throws Exception {
+        byte[] data = Base64.getDecoder().decode(base64);
+        try (BukkitObjectInputStream bois = new BukkitObjectInputStream(new ByteArrayInputStream(data))) {
+            int length = bois.readInt();
+            ItemStack[] items = new ItemStack[length];
+            for (int i = 0; i < length; i++) {
+                items[i] = (ItemStack) bois.readObject();
+            }
+            return items;
         }
     }
 

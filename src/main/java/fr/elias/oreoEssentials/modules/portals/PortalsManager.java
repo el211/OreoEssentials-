@@ -10,9 +10,10 @@ import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.util.BoundingBox;
 
 import java.io.File;
@@ -78,11 +79,13 @@ public class PortalsManager implements Listener {
     private final PortalConfig config;
     private final boolean enabled;
 
-    private final Map<String, Portal> portals   = new ConcurrentHashMap<>(64);
-    private final Map<UUID, Location> pos1       = new ConcurrentHashMap<>();
-    private final Map<UUID, Location> pos2       = new ConcurrentHashMap<>();
-    private final Map<UUID, Long> cooldown       = new ConcurrentHashMap<>();
-    private final Map<UUID, String> lastDenied   = new ConcurrentHashMap<>();
+    private final Map<String, Portal> portals       = new ConcurrentHashMap<>(64);
+    private final Map<UUID, Location> pos1           = new ConcurrentHashMap<>();
+    private final Map<UUID, Location> pos2           = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> cooldown            = new ConcurrentHashMap<>();
+    private final Map<UUID, String> lastDenied        = new ConcurrentHashMap<>();
+    /** P-1: grace period after teleport to prevent re-trigger if dest is inside source bbox */
+    private final Map<UUID, Long> recentlyTeleported = new ConcurrentHashMap<>();
 
     /** Players waiting to type a permission string in chat */
     private final Map<UUID, String> awaitingPermInput  = new ConcurrentHashMap<>();
@@ -257,14 +260,16 @@ public class PortalsManager implements Listener {
         awaitingWarpInput.put(player, portalName);
     }
 
+    // P-9: use Paper 1.21 AsyncChatEvent instead of deprecated AsyncPlayerChatEvent
+    @SuppressWarnings("UnstableApiUsage")
     @EventHandler
-    public void onChat(AsyncPlayerChatEvent event) {
+    public void onChat(AsyncChatEvent event) {
         UUID pid = event.getPlayer().getUniqueId();
+        String input = PlainTextComponentSerializer.plainText().serialize(event.message()).trim();
 
         String pendingPerm = awaitingPermInput.remove(pid);
         if (pendingPerm != null) {
             event.setCancelled(true);
-            String input = event.getMessage().trim();
             OreScheduler.run(plugin, () -> {
                 updatePermission(pendingPerm, input);
                 event.getPlayer().sendMessage(ChatColor.GREEN + "Permission for portal "
@@ -277,7 +282,6 @@ public class PortalsManager implements Listener {
         String pendingServer = awaitingServerInput.remove(pid);
         if (pendingServer != null) {
             event.setCancelled(true);
-            String input = event.getMessage().trim();
             OreScheduler.run(plugin, () -> {
                 updateDestServer(pendingServer, input);
                 event.getPlayer().sendMessage(ChatColor.GREEN + "Destination server for portal "
@@ -290,7 +294,6 @@ public class PortalsManager implements Listener {
         String pendingWarp = awaitingWarpInput.remove(pid);
         if (pendingWarp != null) {
             event.setCancelled(true);
-            String input = event.getMessage().trim();
             OreScheduler.run(plugin, () -> {
                 if (!input.equalsIgnoreCase("none")) {
                     fr.elias.oreoEssentials.modules.warps.WarpService ws = plugin.getWarpService();
@@ -314,8 +317,18 @@ public class PortalsManager implements Listener {
 
         long now = System.currentTimeMillis();
         UUID pid  = p.getUniqueId();
-        Long cd   = cooldown.get(pid);
-        if (cd != null && now < cd) return;
+
+        // P-1: skip if player was just teleported (2s grace period to prevent loop
+        // when destination falls inside the source portal's bounding box)
+        if (now - recentlyTeleported.getOrDefault(pid, 0L) < 2000L) return;
+
+        // P-4: atomic cooldown check+set — use compute so check and set are one CAS operation
+        boolean[] onCooldown = {false};
+        cooldown.compute(pid, (k, existing) -> {
+            if (existing != null && now < existing) { onCooldown[0] = true; return existing; }
+            return existing; // don't set yet; set only when we actually teleport
+        });
+        if (onCooldown[0]) return;
 
         for (Portal portal : portals.values()) {
             if (!portal.contains(to)) continue;
@@ -332,6 +345,7 @@ public class PortalsManager implements Listener {
             }
 
             lastDenied.remove(pid);
+            // P-4: atomically set cooldown expiry
             cooldown.put(pid, now + Math.max(0, config.getCooldownMs()));
             playTeleportEffects(p, to, portal);
 
@@ -359,6 +373,8 @@ public class PortalsManager implements Listener {
                 PacketManager pm = plugin.getPacketManager();
                 if (pm == null) { return; }
 
+                // P-1: record teleport time before sending cross-server
+                recentlyTeleported.put(pid, now);
                 Location dest = resolvedDest.clone();
                 crossServerBroker.sendCrossServerPortal(pm, p,
                         portal.destServer,
@@ -375,6 +391,8 @@ public class PortalsManager implements Listener {
                 dest.setPitch(p.getLocation().getPitch());
             }
 
+            // P-1: record teleport time to prevent re-trigger loop
+            recentlyTeleported.put(pid, now);
             if (config.isTeleportAsync() || OreScheduler.isFolia()) {
                 OreScheduler.runForEntity(plugin, p, () -> {
                     if (OreScheduler.isFolia()) p.teleportAsync(dest);
@@ -563,11 +581,21 @@ public class PortalsManager implements Listener {
     public void onPlayerQuit(UUID playerId) {
         cooldown.remove(playerId);
         lastDenied.remove(playerId);
+        recentlyTeleported.remove(playerId);
         pos1.remove(playerId);
         pos2.remove(playerId);
         awaitingPermInput.remove(playerId);
         awaitingServerInput.remove(playerId);
         awaitingWarpInput.remove(playerId);
+    }
+
+    /** P-3: Full reload — reloads portals from disk and restarts the ambient particle task. */
+    public void reload() {
+        // Reload portals.yml from disk
+        portalsYml = YamlConfiguration.loadConfiguration(portalsFile);
+        loadAll();
+        // Restart ambient particle task so new config takes effect
+        startAmbientTask();
     }
 
     public boolean isEnabled()       { return enabled; }

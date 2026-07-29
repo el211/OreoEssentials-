@@ -1,7 +1,9 @@
 package fr.elias.oreoEssentials.modules.economy;
 
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +47,14 @@ public class EconomyMigration {
                     UUID uuid = entry.uuid();
                     double balance = entry.balance();
 
+                    // E-8: Skip if destination already has data — avoid doubling balances on re-run.
+                    double destBalance = to.getBalance(uuid);
+                    if (destBalance > 0) {
+                        plugin.getLogger().warning("[Economy Migration] Skipping " + entry.name()
+                                + " — destination already has balance: " + destBalance);
+                        continue;
+                    }
+
                     if (to.deposit(uuid, balance)) {
                         successCount++;
                         plugin.getLogger().info("[Economy Migration] Migrated " + entry.name() + ": " + balance);
@@ -68,6 +78,29 @@ public class EconomyMigration {
         }
     }
 
+
+    /**
+     * E-9: Writes all balances to a timestamped YAML backup file on disk
+     * before any migration begins, so data is recoverable even if the server crashes mid-migration.
+     */
+    public File backupToDisk(EconomyService service) {
+        File backup = new File(plugin.getDataFolder(),
+                "migration-backup-" + System.currentTimeMillis() + ".yml");
+        YamlConfiguration cfg = new YamlConfiguration();
+        try {
+            List<EconomyService.TopEntry> all = service.topBalances(Integer.MAX_VALUE);
+            for (EconomyService.TopEntry e : all) {
+                cfg.set("balances." + e.uuid().toString(), e.balance());
+            }
+            backup.getParentFile().mkdirs();
+            cfg.save(backup);
+            plugin.getLogger().info("[Economy Backup] Written to " + backup.getName()
+                    + " (" + all.size() + " entries)");
+        } catch (Exception e) {
+            plugin.getLogger().severe("[Economy Backup] Failed to write backup file: " + e.getMessage());
+        }
+        return backup;
+    }
 
     public Map<UUID, Double> backup(EconomyService service) {
         Map<UUID, Double> backup = new HashMap<>();

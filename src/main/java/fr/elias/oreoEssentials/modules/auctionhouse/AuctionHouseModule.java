@@ -44,6 +44,9 @@ public final class AuctionHouseModule {
     /** Players waiting to type a price in chat after selecting a currency. */
     private final Map<UUID, PendingSell> pendingSells = new ConcurrentHashMap<>();
 
+    // BUG-01: per-auction-ID locks to prevent concurrent double-purchase
+    private final ConcurrentHashMap<String, Object> purchaseLocks = new ConcurrentHashMap<>();
+
     public record PendingSell(ItemStack item, String currencyId, long durationHours) {}
 
     // ─── Browse-GUI viewer registry ───────────────────────────────────────────
@@ -68,6 +71,8 @@ public final class AuctionHouseModule {
 
     private OreTask expirationTask = OreTask.EMPTY;
     private OreTask autoSaveTask   = OreTask.EMPTY;
+    // BUG-10: keep a reference so we can unregister before re-registering on reload
+    private AHGuiListener guiListener = null;
 
     public AuctionHouseModule(OreoEssentials plugin) {
         this.plugin = plugin;
@@ -97,7 +102,13 @@ public final class AuctionHouseModule {
 
         startTasks();
 
-        Bukkit.getPluginManager().registerEvents(new AHGuiListener(this), plugin);
+        // BUG-10: unregister old listener before registering a new one to prevent
+        //         accumulation of duplicate handlers across reloads.
+        if (guiListener != null) {
+            org.bukkit.event.HandlerList.unregisterAll(guiListener);
+        }
+        guiListener = new AHGuiListener(this);
+        Bukkit.getPluginManager().registerEvents(guiListener, plugin);
 
         plugin.getLogger().info("[AuctionHouse] Reloaded (storage=" +
                 (storage instanceof MongoAuctionStorage ? "mongodb" : "json") + ", " +
@@ -181,56 +192,103 @@ public final class AuctionHouseModule {
     }
 
     public boolean purchaseAuction(Player buyer, String auctionId) {
-        Auction auction = activeAuctions.stream()
-                .filter(a -> a.getId().equals(auctionId))
-                .findFirst().orElse(null);
-        if (auction == null) {
-            buyer.sendMessage(cfg.getMessage("errors.auction-not-found"));
-            return false;
-        }
-        if (auction.getSeller().equals(buyer.getUniqueId())) {
-            buyer.sendMessage(cfg.getMessage("errors.cannot-buy-own"));
-            return false;
-        }
-        if (auction.isExpired()) {
-            buyer.sendMessage(cfg.getMessage("errors.auction-expired"));
-            return false;
-        }
-        double price = auction.getPrice();
-        String auctionCurrencyId = auction.getCurrencyId(); // per-listing currency
-        CurrencyService cs = (auctionCurrencyId != null) ? plugin.getCurrencyService() : null;
-        double tax = price * cfg.taxPercent() / 100.0;
-        double sellerReceives = price - tax;
-
-        if (cs != null) {
-            cs.getBalance(buyer.getUniqueId(), auctionCurrencyId).thenAccept(balance ->
-                    OreScheduler.runForEntity(plugin, buyer, () -> {
-                        if (!buyer.isOnline()) return;
-                        if (balance < price) {
-                            buyer.sendMessage(cfg.getMessage("errors.not-enough-money"));
-                            playSound(buyer, Sound.ENTITY_VILLAGER_NO);
-                            return;
-                        }
-                        cs.withdraw(buyer.getUniqueId(), auctionCurrencyId, price).thenAccept(unused ->
-                                cs.deposit(auction.getSeller(), auctionCurrencyId, sellerReceives).thenAccept(unused2 ->
-                                        OreScheduler.runForEntity(plugin, buyer, () -> {
-                                            if (!buyer.isOnline()) return;
-                                            finalizeAuctionPurchase(buyer, auction, price, sellerReceives, auctionCurrencyId);
-                                        })));
-                    }));
-            return true;
-        } else {
-            if (economy == null) return false;
-            if (!economy.has(buyer, price)) {
-                buyer.sendMessage(cfg.getMessage("errors.not-enough-money"));
+        // BUG-01: acquire a per-auction lock to prevent two concurrent buyers
+        //         both passing the "is ACTIVE?" check and both receiving the item.
+        Object lock = purchaseLocks.computeIfAbsent(auctionId, k -> new Object());
+        synchronized (lock) {
+            Auction auction = activeAuctions.stream()
+                    .filter(a -> a.getId().equals(auctionId))
+                    .findFirst().orElse(null);
+            if (auction == null) {
+                buyer.sendMessage(cfg.getMessage("errors.auction-not-found"));
+                purchaseLocks.remove(auctionId, lock);
                 return false;
             }
-            economy.withdrawPlayer(buyer, price);
-            economy.depositPlayer(Bukkit.getOfflinePlayer(auction.getSeller()), sellerReceives);
-        }
+            if (auction.getSeller().equals(buyer.getUniqueId())) {
+                buyer.sendMessage(cfg.getMessage("errors.cannot-buy-own"));
+                return false;
+            }
+            if (auction.isExpired()) {
+                buyer.sendMessage(cfg.getMessage("errors.auction-expired"));
+                return false;
+            }
 
-        finalizeAuctionPurchase(buyer, auction, price, sellerReceives, auctionCurrencyId);
-        return true;
+            double price = auction.getPrice();
+            String auctionCurrencyId = auction.getCurrencyId();
+            CurrencyService cs = (auctionCurrencyId != null) ? plugin.getCurrencyService() : null;
+            double tax = price * cfg.taxPercent() / 100.0;
+            double sellerReceives = price - tax;
+
+            if (cs != null) {
+                // BUG-01: remove from active list atomically inside the lock so no
+                //         second buyer can also claim this auction.
+                activeAuctions.remove(auction);
+                purchaseLocks.remove(auctionId, lock);
+
+                cs.getBalance(buyer.getUniqueId(), auctionCurrencyId).thenAccept(balance ->
+                        OreScheduler.runForEntity(plugin, buyer, () -> {
+                            if (!buyer.isOnline()) {
+                                // BUG-03: buyer disconnected before payment — restore the listing
+                                activeAuctions.add(auction);
+                                return;
+                            }
+                            if (balance < price) {
+                                buyer.sendMessage(cfg.getMessage("errors.not-enough-money"));
+                                playSound(buyer, Sound.ENTITY_VILLAGER_NO);
+                                // BUG-03: cannot charge — restore the listing
+                                activeAuctions.add(auction);
+                                return;
+                            }
+                            // BUG-07: check inventory space BEFORE charging
+                            ItemStack auctionItem = auction.getItem();
+                            Map<Integer, ItemStack> overflow = buyer.getInventory().addItem(auctionItem);
+                            if (!overflow.isEmpty()) {
+                                // BUG-07: inventory full — give back the item slot and abort
+                                overflow.values().forEach(leftover ->
+                                        buyer.getInventory().removeItem(leftover));
+                                buyer.sendMessage(cfg.getMessage("errors.inventory-full"));
+                                playSound(buyer, Sound.ENTITY_VILLAGER_NO);
+                                // BUG-03: restore the listing, item was never truly delivered
+                                activeAuctions.add(auction);
+                                return;
+                            }
+                            // BUG-03: item successfully placed in inventory — now charge money
+                            cs.withdraw(buyer.getUniqueId(), auctionCurrencyId, price).thenAccept(unused ->
+                                    cs.deposit(auction.getSeller(), auctionCurrencyId, sellerReceives).thenAccept(unused2 ->
+                                            OreScheduler.runForEntity(plugin, buyer, () ->
+                                                    completePurchase(buyer, auction, price, sellerReceives, auctionCurrencyId))));
+                        }));
+                return true;
+            } else {
+                // BUG-08: null check before using economy
+                if (economy == null) {
+                    buyer.sendMessage("§cEconomy system unavailable.");
+                    return false;
+                }
+                if (!economy.has(buyer, price)) {
+                    buyer.sendMessage(cfg.getMessage("errors.not-enough-money"));
+                    return false;
+                }
+                // BUG-07: check inventory space before charging
+                ItemStack auctionItem = auction.getItem();
+                Map<Integer, ItemStack> overflow = buyer.getInventory().addItem(auctionItem);
+                if (!overflow.isEmpty()) {
+                    // inventory full — remove what we just tried to add and abort
+                    overflow.values().forEach(leftover ->
+                            buyer.getInventory().removeItem(leftover));
+                    buyer.sendMessage(cfg.getMessage("errors.inventory-full"));
+                    return false;
+                }
+                // BUG-03: item delivered — now safely charge money
+                economy.withdrawPlayer(buyer, price);
+                economy.depositPlayer(Bukkit.getOfflinePlayer(auction.getSeller()), sellerReceives);
+                // BUG-01: remove from active list inside the lock
+                activeAuctions.remove(auction);
+                purchaseLocks.remove(auctionId, lock);
+                completePurchase(buyer, auction, price, sellerReceives, auctionCurrencyId);
+                return true;
+            }
+        }
     }
 
     private void finalizeAuctionCreate(Player seller, ItemStack item, double price,
@@ -261,16 +319,15 @@ public final class AuctionHouseModule {
         }
     }
 
-    private void finalizeAuctionPurchase(Player buyer, Auction auction, double price,
-                                         double sellerReceives, String auctionCurrencyId) {
-        Map<Integer, ItemStack> overflow = buyer.getInventory().addItem(auction.getItem());
-        if (!overflow.isEmpty()) {
-            overflow.values().forEach(i ->
-                    buyer.getWorld().dropItemNaturally(buyer.getLocation(), i));
-        }
-
+    /**
+     * Called after item has already been placed in buyer's inventory and money has been
+     * transferred. Updates in-memory state and sends notifications / Discord webhook.
+     * BUG-03: item and money are handled by the caller before this is called.
+     */
+    private void completePurchase(Player buyer, Auction auction, double price,
+                                  double sellerReceives, String auctionCurrencyId) {
+        // auction was already removed from activeAuctions by purchaseAuction()
         auction.markAsSold(buyer.getUniqueId(), buyer.getName());
-        activeAuctions.remove(auction);
         soldAuctions.add(auction);
         broadcastSync(AuctionSyncPacket.purchase(serverName(), auction.getId(),
                 buyer.getUniqueId(), buyer.getName()));
@@ -307,15 +364,21 @@ public final class AuctionHouseModule {
                 .findFirst().orElse(null);
         if (auction == null) return false;
 
+        // BUG-06: check inventory space BEFORE removing the auction from the active list
+        ItemStack returned = auction.getItem();
+        Map<Integer, ItemStack> overflow = owner.getInventory().addItem(returned);
+        if (!overflow.isEmpty()) {
+            // revert — remove what we just added, then abort
+            overflow.values().forEach(leftover -> owner.getInventory().removeItem(leftover));
+            owner.sendMessage(cfg.getMessage("errors.inventory-full"));
+            return false;
+        }
+
+        // Inventory had space — now safe to remove from listing
         auction.markAsCancelled();
         activeAuctions.remove(auction);
         broadcastSync(AuctionSyncPacket.remove(serverName(), AuctionSyncPacket.Action.CANCEL, auction.getId()));
 
-        Map<Integer, ItemStack> overflow = owner.getInventory().addItem(auction.getItem());
-        if (!overflow.isEmpty()) {
-            overflow.values().forEach(i ->
-                    owner.getWorld().dropItemNaturally(owner.getLocation(), i));
-        }
         owner.sendMessage(cfg.getMessage("listing.cancelled"));
         return true;
     }
@@ -378,6 +441,9 @@ public final class AuctionHouseModule {
 
         for (Auction a : nowExpired) {
             a.markAsExpired();
+            // BUG-05: persist the expiry BEFORE removing from active list so a crash
+            //         in this window cannot cause the item to be re-listed on next load.
+            saveAuctions();
             activeAuctions.remove(a);
             expiredAuctions.add(a);
             broadcastSync(AuctionSyncPacket.remove(serverName(), AuctionSyncPacket.Action.EXPIRE, a.getId()));

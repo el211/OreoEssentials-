@@ -45,14 +45,20 @@ public class ConfirmGUI implements InventoryProvider {
 
         ItemStack display = auction.getItem().clone();
         ItemMeta dm = display.getItemMeta();
-        dm.setLore(List.of("",
-                c("&7Seller: &e" + auction.getSellerName()),
-                c("&7Price: &a" + module.formatMoney(auction.getPrice())),
-                c("&7Time Left: &e" + TimeFormatter.format(auction.getTimeRemaining())),
-                "", c("&6&lPurchase Confirmation"), ""));
-        display.setItemMeta(dm);
+        // BUG-09: null guard for ItemMeta
+        if (dm != null) {
+            dm.setLore(List.of("",
+                    c("&7Seller: &e" + auction.getSellerName()),
+                    c("&7Price: &a" + module.formatMoney(auction.getPrice())),
+                    c("&7Time Left: &e" + TimeFormatter.format(auction.getTimeRemaining())),
+                    "", c("&6&lPurchase Confirmation"), ""));
+            display.setItemMeta(dm);
+        }
         contents.set(1, 4, ClickableItem.empty(display));
 
+        // BUG-02: register the purchase click handler ONLY here in init(), not in update().
+        //         Registering it in update() re-adds the handler every tick, causing every
+        //         click to fire multiple times (once per elapsed tick).
         int confirmSlot = cfg.guiSlot("confirm", "confirm", 11);
         contents.set(confirmSlot / 9, confirmSlot % 9, ClickableItem.of(confirmBtn(player, cfg), e -> {
             click(player); player.closeInventory();
@@ -69,32 +75,41 @@ public class ConfirmGUI implements InventoryProvider {
         ItemStack info = named(cfg.guiMaterial("confirm", "info", Material.PAPER),
                 cfg.guiNameRaw("confirm", "info", "&e&lPurchase Information"));
         ItemMeta im = info.getItemMeta();
-        im.setLore(List.of("",
-                c("&7• Item will be added to your inventory"),
-                c("&7• Money will be deducted from your balance"),
-                c("&7• Seller will receive payment"),
-                c("&7• Transaction cannot be reversed"), ""));
-        info.setItemMeta(im);
+        // BUG-09: null guard for ItemMeta
+        if (im != null) {
+            im.setLore(List.of("",
+                    c("&7• Item will be added to your inventory"),
+                    c("&7• Money will be deducted from your balance"),
+                    c("&7• Seller will receive payment"),
+                    c("&7• Transaction cannot be reversed"), ""));
+            info.setItemMeta(im);
+        }
         contents.set(infoSlot / 9, infoSlot % 9, ClickableItem.empty(info));
     }
 
     @Override
     public void update(Player player, InventoryContents contents) {
+        // BUG-02: do NOT re-register click handlers here — only update the visual of the
+        //         confirm button (balance display) without re-attaching any click logic.
         var cfg = module.getConfig();
         int confirmSlot = cfg.guiSlot("confirm", "confirm", 11);
-        contents.set(confirmSlot / 9, confirmSlot % 9, ClickableItem.of(confirmBtn(player, cfg), e -> {
-            click(player); player.closeInventory();
-            module.purchaseAuction(player, auction.getId());
-        }));
+        contents.set(confirmSlot / 9, confirmSlot % 9, ClickableItem.empty(confirmBtn(player, cfg)));
     }
 
     private ItemStack confirmBtn(Player p, fr.elias.oreoEssentials.modules.auctionhouse.AuctionHouseConfig cfg) {
         ItemStack btn = new ItemStack(cfg.guiMaterial("confirm", "confirm", Material.GREEN_WOOL));
         ItemMeta m = btn.getItemMeta();
+        // BUG-09: null guard for ItemMeta
+        if (m == null) return btn;
         m.setDisplayName(c(cfg.guiNameRaw("confirm", "confirm", "&a&l✔ CONFIRM PURCHASE")));
+        // BUG-08: null check for economy before calling getBalance()
+        net.milkbowl.vault.economy.Economy eco = module.getEconomy();
+        String balance = eco != null
+                ? module.formatMoney(eco.getBalance(p))
+                : "§cUnavailable";
         m.setLore(List.of("",
                 c("&7You will pay: &a" + module.formatMoney(auction.getPrice())),
-                c("&7Your balance: &e" + module.formatMoney(module.getEconomy().getBalance(p))),
+                c("&7Your balance: &e" + balance),
                 "", c("&a&lClick to confirm!"), ""));
         btn.setItemMeta(m);
         return btn;

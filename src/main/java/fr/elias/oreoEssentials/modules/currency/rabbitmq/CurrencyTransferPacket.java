@@ -43,6 +43,11 @@ public final class CurrencyTransferPacket extends Packet {
         if (this.currencyId == null) this.currencyId = "unknown";
         if (this.fromServer == null) this.fromServer = "unknown";
         if (this.toServer == null) this.toServer = "unknown";
+
+        // BUG-1: reject crafted packets with invalid amounts
+        if (this.amount <= 0 || !Double.isFinite(this.amount)) {
+            throw new IllegalArgumentException("Invalid amount: " + this.amount);
+        }
     }
 
     @Override

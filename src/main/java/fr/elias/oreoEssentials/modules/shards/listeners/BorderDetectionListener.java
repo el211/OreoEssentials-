@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.shards.listeners;
 import fr.elias.oreoEssentials.modules.shards.ShardManager;
 import fr.elias.oreoEssentials.modules.shards.config.ShardConfig;
 import fr.elias.oreoEssentials.modules.shards.redis.ShardHandoffManager;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

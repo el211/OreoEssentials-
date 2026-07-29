@@ -52,7 +52,7 @@ public class FriendlyByteOutputStream {
     public void writeString(String value) {
         byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
 
-        writeShort((short) bytes.length);
+        writeInt(bytes.length);
         writeBytes(bytes);
     }
 

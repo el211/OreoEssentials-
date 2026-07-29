@@ -5,6 +5,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import fr.elias.oreoEssentials.modules.playervaults.PlayerVaultsStorage;
 import org.bson.Document;
+import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
@@ -13,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Base64;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public final class MongoPlayerVaultsStorage implements PlayerVaultsStorage {
     private final MongoCollection<Document> col;
@@ -43,6 +45,14 @@ public final class MongoPlayerVaultsStorage implements PlayerVaultsStorage {
 
     @Override
     public void save(UUID playerId, int vaultId, int rows, ItemStack[] contents) {
+        // PV-2: Guard against encoding failure — never write empty/null encoded data
+        String encoded = encode(contents);
+        if (encoded == null || encoded.isEmpty()) {
+            Bukkit.getLogger().log(Level.SEVERE,
+                    "CRITICAL: Failed to encode vault " + vaultId + " for " + playerId + " — save aborted to prevent data loss.");
+            return;
+        }
+
         Document doc = col.find(Filters.and(
                 Filters.eq("uuid", playerId.toString()),
                 Filters.eq("server", "global")
@@ -53,7 +63,7 @@ public final class MongoPlayerVaultsStorage implements PlayerVaultsStorage {
                     .append("vaults", new Document());
         }
         Document vaults = doc.get("vaults", Document.class);
-        Document one = new Document("rows", rows).append("data", encode(contents));
+        Document one = new Document("rows", rows).append("data", encoded);
         vaults.put(String.valueOf(vaultId), one);
         doc.put("vaults", vaults);
         col.replaceOne(Filters.and(
@@ -62,6 +72,7 @@ public final class MongoPlayerVaultsStorage implements PlayerVaultsStorage {
         ), doc, new ReplaceOptions().upsert(true));
     }
 
+    // PV-2: Returns null on failure so callers can detect and abort the write
     private static String encode(ItemStack[] items) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              BukkitObjectOutputStream oos = new BukkitObjectOutputStream(baos)) {
@@ -69,7 +80,7 @@ public final class MongoPlayerVaultsStorage implements PlayerVaultsStorage {
             for (ItemStack it : items) oos.writeObject(it);
             return Base64.getEncoder().encodeToString(baos.toByteArray());
         } catch (Exception e) {
-            return "";
+            return null;
         }
     }
 

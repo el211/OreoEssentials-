@@ -198,34 +198,43 @@ public class ChequeCommand implements CommandExecutor, Listener, OreoCommand {
             return;
         }
 
-        if (!consumeOneCheque(item)) {
-            Lang.send(player, "economy.cheque.redeem.fail-none",
-                    "<red>You must hold a cheque in your main hand to redeem it.</red>");
-            return;
-        }
-
+        // E-6: Deposit FIRST — only consume the cheque item after a confirmed successful deposit.
         UUID playerId = player.getUniqueId();
         Async.run(() -> {
             if (!eco.deposit(playerId, amount)) {
                 OreScheduler.runForEntity(plugin, player, () -> {
                     if (!player.isOnline()) return;
-                    giveChequeItem(player, buildChequeItem(amount));
                     Lang.send(player, "economy.errors.no-economy",
                             "<red>Economy is not available.</red>");
                 });
                 return;
             }
 
-            double balance = eco.getBalance(playerId);
+            // Deposit succeeded — now consume the item on the main thread.
             OreScheduler.runForEntity(plugin, player, () -> {
-                if (!player.isOnline()) return;
-                Lang.send(player, "economy.cheque.redeem.success",
-                        "<green>Redeemed cheque for <white>%currency_symbol%%amount_formatted%</white>. New balance: <white>%currency_symbol%%balance_formatted%</white>.</green>",
-                        Map.of(
-                                "amount_formatted", fmt(amount),
-                                "balance_formatted", fmt(balance),
-                                "currency_symbol", currencySymbol()
-                        ));
+                if (!player.isOnline()) {
+                    // Player went offline after deposit; refund asynchronously.
+                    Async.run(() -> eco.withdraw(playerId, amount));
+                    return;
+                }
+                if (!consumeOneCheque(item)) {
+                    // Item already gone (e.g. double-click race); refund.
+                    Async.run(() -> eco.withdraw(playerId, amount));
+                    return;
+                }
+                Async.run(() -> {
+                    double balance = eco.getBalance(playerId);
+                    OreScheduler.runForEntity(plugin, player, () -> {
+                        if (!player.isOnline()) return;
+                        Lang.send(player, "economy.cheque.redeem.success",
+                                "<green>Redeemed cheque for <white>%currency_symbol%%amount_formatted%</white>. New balance: <white>%currency_symbol%%balance_formatted%</white>.</green>",
+                                Map.of(
+                                        "amount_formatted", fmt(amount),
+                                        "balance_formatted", fmt(balance),
+                                        "currency_symbol", currencySymbol()
+                                ));
+                    });
+                });
             });
         });
     }

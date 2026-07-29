@@ -79,6 +79,12 @@ public class BrowseGUI implements InventoryProvider {
 
     @Override
     public void init(Player player, InventoryContents contents) {
+        // BUG-08: close GUI immediately if economy is unavailable
+        if (module.getEconomy() == null) {
+            player.sendMessage("§cEconomy system unavailable.");
+            player.closeInventory();
+            return;
+        }
         Pagination pagination = contents.pagination();
         contents.fillBorders(ClickableItem.empty(glass(module.getConfig().guiBorder("browse", Material.GRAY_STAINED_GLASS_PANE))));
         // Register this player so applyIncomingSync() can push live updates to them.
@@ -165,8 +171,10 @@ public class BrowseGUI implements InventoryProvider {
     private ClickableItem auctionItem(Player viewer, Auction a) {
         ItemStack display = a.getItem().clone();
         ItemMeta meta = display.getItemMeta();
+        // BUG-09: null guard for ItemMeta
+        if (meta == null) meta = display.getItemMeta(); // attempt re-fetch; create blank lore list if still null
 
-        List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+        List<String> lore = (meta != null && meta.hasLore()) ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         lore.add("");
         lore.add(c("&7Seller: &e" + a.getSellerName()));
         lore.add(c("&7Price: &a" + module.formatMoney(a.getPrice(), a.getCurrencyId())));
@@ -181,8 +189,11 @@ public class BrowseGUI implements InventoryProvider {
                 ? c("&e&lYOUR LISTING — click to manage")
                 : c("&a&lClick to purchase!"));
 
-        meta.setLore(lore);
-        display.setItemMeta(meta);
+        // BUG-09: only set meta if it is non-null
+        if (meta != null) {
+            meta.setLore(lore);
+            display.setItemMeta(meta);
+        }
 
         return ClickableItem.of(display, e -> {
             click(viewer);
@@ -260,9 +271,16 @@ public class BrowseGUI implements InventoryProvider {
     private ItemStack balanceHead(Player p) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         ItemMeta m = head.getItemMeta();
+        // BUG-09: null guard for ItemMeta
+        if (m == null) return head;
         m.setDisplayName(c("&6&lYour Balance"));
+        // BUG-08: null check economy before calling getBalance()
+        net.milkbowl.vault.economy.Economy eco = module.getEconomy();
+        String balance = eco != null
+                ? module.formatMoney(eco.getBalance(p))
+                : "§cUnavailable";
         m.setLore(List.of("",
-                c("&7Balance: &a" + module.formatMoney(module.getEconomy().getBalance(p))),
+                c("&7Balance: &a" + balance),
                 c("&7Your Listings: &e" + module.getPlayerActiveListings(p.getUniqueId()).size()),
                 ""));
         head.setItemMeta(m);

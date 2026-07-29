@@ -152,6 +152,9 @@ public class PacketManager implements IncomingPacketListener {
             dispatch(channel, packet);
 
         } catch (Throwable t) {
+            // R4: Log at SEVERE so packet decode failures are not silently swallowed.
+            plugin.getLogger().log(java.util.logging.Level.SEVERE,
+                    "[PM/RECV] Packet handling error — message rejected (not requeued)", t);
             warn("[PM/RECV] Failed to decode packet. err=" + t.getMessage()
                     + " channel=" + renderChannel(channel)
                     + " contentLen=" + content.length);

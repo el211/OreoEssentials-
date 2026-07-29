@@ -30,6 +30,20 @@ public interface EconomyService {
     }
 
 
+    /**
+     * Atomically sets a player's balance to {@code amount}.
+     * Implementations backed by a real database should override this with a
+     * single atomic UPDATE instead of a read-diff-write.
+     */
+    default boolean setBalance(UUID player, double amount) {
+        if (amount < 0) return false;
+        double cur = getBalance(player);
+        double diff = amount - cur;
+        if (diff > 0) return deposit(player, diff);
+        if (diff < 0) return withdraw(player, -diff);
+        return true;
+    }
+
     List<TopEntry> topBalances(int limit);
 
 

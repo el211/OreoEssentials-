@@ -102,7 +102,8 @@ public final class PortalWandListener implements Listener {
     }
 
     private String locStr(Location l) {
-        return l.getWorld().getName()
-                + " (" + l.getBlockX() + ", " + l.getBlockY() + ", " + l.getBlockZ() + ")";
+        // P-2: null-check world to avoid NPE when world is not loaded
+        String worldName = l.getWorld() != null ? l.getWorld().getName() : "unknown";
+        return worldName + " (" + l.getBlockX() + ", " + l.getBlockY() + ", " + l.getBlockZ() + ")";
     }
 }

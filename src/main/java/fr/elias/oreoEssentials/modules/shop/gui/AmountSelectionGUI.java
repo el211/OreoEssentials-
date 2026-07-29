@@ -159,7 +159,10 @@ public final class AmountSelectionGUI {
                             "",
                             isBuy ? "&aClick to buy!" : "&2Click to sell!"));
             contents.set(3, 3, ClickableItem.from(confirmItem, e -> {
-                int units = Math.max(1, qty[0] / Math.max(1, shopItem.getAmount()));
+                // BUG-08 fix: use ceil division so a partial pack is rounded up to the next
+                // whole pack, preventing truncation that would charge 0 for qty < packSize.
+                int packSize = Math.max(1, shopItem.getAmount());
+                int units = Math.max(1, (int) Math.ceil((double) qty[0] / packSize));
                 if (isBuy) module.getTransactionProcessor().processBuy(player,  shopItem, units);
                 else       module.getTransactionProcessor().processSell(player, shopItem, units);
                 fr.elias.oreoEssentials.util.OreScheduler.runLater(module.getPlugin(),

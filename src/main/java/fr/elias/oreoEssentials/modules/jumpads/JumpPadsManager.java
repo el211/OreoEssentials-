@@ -34,7 +34,11 @@ public class JumpPadsManager {
         }
 
         public boolean isAt(Location l) {
-            return l != null && l.getWorld() == world && l.getBlockX()==x && l.getBlockY()==y && l.getBlockZ()==z;
+            // J-5: compare worlds by name instead of reference to survive world reloads
+            return l != null
+                    && l.getWorld() != null
+                    && l.getWorld().getName().equals(world.getName())
+                    && l.getBlockX() == x && l.getBlockY() == y && l.getBlockZ() == z;
         }
 
         public Vector launchVector(Player p) {
@@ -106,6 +110,11 @@ public class JumpPadsManager {
 
     public Set<String> listNames() {
         return new TreeSet<>(byName.keySet());
+    }
+
+    /** J-1: remove cooldown entry when player quits to prevent memory leak. */
+    public void removeCooldown(UUID playerId) {
+        cooldown.remove(playerId);
     }
 
     public JumpPad getByName(String name) {

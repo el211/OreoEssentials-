@@ -57,10 +57,13 @@ public class VanishService {
         boolean persisted = loadPersistedState(joiner.getUniqueId());
         applyStateLocal(joiner.getUniqueId(), persisted, joiner);
 
-        for (UUID id : vanished) {
-            Player vanishedPlayer = Bukkit.getPlayer(id);
-            if (vanishedPlayer != null && vanishedPlayer.isOnline() && !vanishedPlayer.equals(joiner)) {
-                joiner.hidePlayer(plugin, vanishedPlayer);
+        // V-2: Only hide vanished players from joiners who cannot see them
+        if (!joiner.hasPermission("oreo.vanish.see")) {
+            for (UUID id : vanished) {
+                Player vanishedPlayer = Bukkit.getPlayer(id);
+                if (vanishedPlayer != null && vanishedPlayer.isOnline() && !vanishedPlayer.equals(joiner)) {
+                    joiner.hidePlayer(plugin, vanishedPlayer);
+                }
             }
         }
     }
@@ -70,6 +73,8 @@ public class VanishService {
         if (isVanished(quitter)) {
             persistState(quitter.getUniqueId(), true);
         }
+        // V-4: Always remove UUID from in-memory vanished set on quit
+        vanished.remove(quitter.getUniqueId());
     }
 
     public void restoreOnlinePlayers() {
@@ -83,8 +88,9 @@ public class VanishService {
         if (sourceServer != null && sourceServer.equalsIgnoreCase(localServerName)) return;
 
         Player online = Bukkit.getPlayer(playerId);
+        // V-5: Apply cross-server vanish state in memory only — do NOT persist to local YAML
+        // (vanish state is authoritative per-server; persisting would cause cross-server desync)
         applyStateLocal(playerId, vanish, online);
-        persistState(playerId, vanish);
     }
 
     private boolean applyStateLocal(UUID playerId, boolean vanish, Player onlinePlayer) {
@@ -105,7 +111,10 @@ public class VanishService {
     private void hide(Player p) {
         for (Player other : Bukkit.getOnlinePlayers()) {
             if (other.equals(p)) continue;
-            other.hidePlayer(plugin, p);
+            // V-2: Hide from tab list for players who cannot see vanished players
+            if (!other.hasPermission("oreo.vanish.see")) {
+                other.hidePlayer(plugin, p);
+            }
         }
     }
 

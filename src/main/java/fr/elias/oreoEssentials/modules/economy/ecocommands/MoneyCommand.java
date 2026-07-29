@@ -96,12 +96,13 @@ public class MoneyCommand implements CommandExecutor, OreoCommand {
                         }
                     }
                     case "set" -> {
-                        double current = eco.getBalance(target);
-                        double diff = amount - current;
-                        if (diff > 0) {
-                            eco.depositPlayer(target, diff);
-                        } else if (diff < 0) {
-                            eco.withdrawPlayer(target, -diff);
+                        // E-5: Use EconomyService.setBalance directly — avoids non-atomic read-diff-write
+                        try {
+                            plugin.getEcoBootstrap().api().setBalance(finalTargetId, amount);
+                        } catch (Throwable t) {
+                            sendSync(sender, Lang.msg("economy.errors.no-economy",
+                                    sender instanceof Player ? (Player) sender : null));
+                            return;
                         }
                     }
                 }

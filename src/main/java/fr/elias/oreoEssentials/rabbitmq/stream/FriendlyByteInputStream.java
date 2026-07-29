@@ -73,7 +73,7 @@ public class FriendlyByteInputStream {
     }
 
     public String readString() {
-        int length = readShort() & 0xFFFF;
+        int length = readInt();
         byte[] bytes = new byte[length];
         for (int i = 0; i < length; i++) bytes[i] = readByte();
         return new String(bytes, StandardCharsets.UTF_8);

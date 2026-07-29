@@ -13,6 +13,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 
 public class RabbitMQSender implements PacketSender {
@@ -40,6 +44,16 @@ public class RabbitMQSender implements PacketSender {
 
     // Track consumer tags so we can avoid duplicate consumers after reconnect.
     private final Map<String, String> consumerTagsByQueue = new ConcurrentHashMap<>();
+
+    // Reconnect backoff state
+    private final ScheduledExecutorService reconnectScheduler =
+            Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "OreoEssentials-RMQ-Reconnect");
+                t.setDaemon(true);
+                return t;
+            });
+    private final AtomicInteger reconnectAttempts = new AtomicInteger(0);
+    private volatile boolean reconnecting = false;
 
     public RabbitMQSender(String connectionString, String serverName) {
         this(connectionString, serverName, () -> false);
@@ -143,19 +157,37 @@ public class RabbitMQSender implements PacketSender {
     }
 
     private void reconnect() {
-        System.err.println("[OreoEssentials] 🔄 Attempting to reconnect to RabbitMQ...");
-        close();
-        if (connect()) {
-            System.out.println("[OreoEssentials]  Successfully reconnected to RabbitMQ!");
-            try {
-                rebindAllConsumers();
-            } catch (Exception e) {
-                System.err.println("[OreoEssentials] ❌ Failed to rebind consumers after reconnect:");
-                e.printStackTrace();
-            }
-        } else {
-            System.err.println("[OreoEssentials] ❌ Reconnection failed!");
+        // Guard: only schedule one reconnect attempt at a time
+        if (reconnecting) {
+            return;
         }
+        reconnecting = true;
+
+        int attempt = reconnectAttempts.getAndIncrement();
+        // Exponential backoff: 1s, 2s, 4s, 8s, ... capped at 30s
+        long delaySeconds = Math.min((long) Math.pow(2, attempt), 30L);
+
+        System.err.println("[OreoEssentials] Scheduling RabbitMQ reconnect attempt #" + (attempt + 1)
+                + " in " + delaySeconds + "s...");
+
+        reconnectScheduler.schedule(() -> {
+            reconnecting = false;
+            System.err.println("[OreoEssentials] Attempting to reconnect to RabbitMQ (attempt #" + (attempt + 1) + ")...");
+            close();
+            if (connect()) {
+                reconnectAttempts.set(0);
+                System.out.println("[OreoEssentials] Successfully reconnected to RabbitMQ!");
+                try {
+                    rebindAllConsumers();
+                } catch (Exception e) {
+                    System.err.println("[OreoEssentials] Failed to rebind consumers after reconnect:");
+                    e.printStackTrace();
+                }
+            } else {
+                System.err.println("[OreoEssentials] Reconnection attempt #" + (attempt + 1) + " failed. Will retry...");
+                reconnect();
+            }
+        }, delaySeconds, TimeUnit.SECONDS);
     }
 
     public boolean connect() {
@@ -187,6 +219,8 @@ public class RabbitMQSender implements PacketSender {
     }
 
     public void close() {
+        reconnectScheduler.shutdownNow();
+        reconnecting = false;
         try {
             // Try to cancel consumers (best-effort)
             for (Map.Entry<String, String> entry : consumerTagsByQueue.entrySet()) {
@@ -254,12 +288,23 @@ public class RabbitMQSender implements PacketSender {
 
                 channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
             } catch (Exception ex) {
-                try {
-                    channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
-                } catch (IOException ioEx) {
-                    System.err.println("[OreoEssentials] ❌ basicNack failed: " + ioEx.getMessage());
+                // R4: reject WITHOUT requeue (requeue=false) to avoid infinite redelivery loop.
+                // Log raw hex bytes for post-mortem debugging.
+                byte[] rawBody = delivery.getBody();
+                StringBuilder hex = new StringBuilder();
+                for (int bi = 0; bi < Math.min(rawBody.length, 64); bi++) {
+                    hex.append(String.format("%02x", rawBody[bi]));
                 }
-                throw ex;
+                System.err.println("[OreoEssentials] SEVERE packet handler threw on queue=" + queue
+                        + " deliveryTag=" + delivery.getEnvelope().getDeliveryTag()
+                        + " rawHex(first64)=" + hex
+                        + " error=" + ex.getMessage());
+                ex.printStackTrace();
+                try {
+                    channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, false);
+                } catch (IOException ioEx) {
+                    System.err.println("[OreoEssentials] basicNack failed: " + ioEx.getMessage());
+                }
             }
         }, consumerTag -> {
             dbg("[RMQ/CANCELLED@" + serverName + "] consumerTag=" + consumerTag + " queue=" + queue);
@@ -276,8 +321,14 @@ public class RabbitMQSender implements PacketSender {
         consumerTagsByQueue.clear();
         consumingQueues.clear();
 
+        // Snapshot the logical IDs we need to re-register, then clear the set so
+        // registerChannel()'s early-return guard ("already registered") is bypassed
+        // and each consumer is properly re-bound to the new channel.
+        List<String> toRebind = new ArrayList<>(subscribedLogicalIds);
+        subscribedLogicalIds.clear();
+
         // Re-register each logical subscription to rebuild infra + consumers
-        for (String logical : new ArrayList<>(subscribedLogicalIds)) {
+        for (String logical : toRebind) {
             // reuse existing method to keep logic identical
             registerChannel(PacketChannels.individual(logical));
         }

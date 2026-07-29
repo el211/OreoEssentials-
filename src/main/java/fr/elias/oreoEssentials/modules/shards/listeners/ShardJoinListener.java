@@ -12,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 
@@ -113,10 +114,21 @@ public class ShardJoinListener implements Listener {
                 }
             }
 
-            // 10. Release lock (transfer complete)
+            // 10. Restore inventory (S1)
+            if (snapshot.inventoryBase64 != null && !snapshot.inventoryBase64.isEmpty()) {
+                try {
+                    ItemStack[] contents = ShardHandoffManager.itemStacksFromBase64(snapshot.inventoryBase64);
+                    player.getInventory().setContents(contents);
+                } catch (Exception e) {
+                    plugin.getLogger().severe("Failed to restore inventory for " + player.getName() + ": " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+
+            // 12. Release lock (transfer complete)
             handoffManager.releaseLock(player.getUniqueId());
 
-            // 11. Log successful transfer (for debugging)
+            // 13. Log successful transfer (for debugging)
             long transferTime = System.currentTimeMillis() - snapshot.timestamp;
             plugin.getLogger().info(String.format(
                     "Shard transfer complete for %s in %dms (from %s)",

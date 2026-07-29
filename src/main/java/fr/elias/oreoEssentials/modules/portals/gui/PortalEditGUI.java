@@ -219,8 +219,9 @@ public final class PortalEditGUI implements InventoryProvider {
     }
 
     private static String shortLoc(org.bukkit.Location l) {
-        return l.getWorld().getName() + " ("
-                + (int) l.getX() + ", " + (int) l.getY() + ", " + (int) l.getZ() + ")";
+        // P-2: null-check world to avoid NPE for cross-server portal destinations
+        String worldName = l.getWorld() != null ? l.getWorld().getName() : "unknown";
+        return worldName + " (" + (int) l.getX() + ", " + (int) l.getY() + ", " + (int) l.getZ() + ")";
     }
 
     private static String fmt(double v) {

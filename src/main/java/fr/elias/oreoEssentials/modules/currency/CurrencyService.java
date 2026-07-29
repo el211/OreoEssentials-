@@ -6,6 +6,7 @@ import fr.elias.oreoEssentials.modules.currency.storage.CurrencyStorage;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 /**
  * Main service for managing multiple custom currencies
@@ -18,6 +19,8 @@ public class CurrencyService {
 
     private final Map<String, Currency> currencyCache = new ConcurrentHashMap<>();
     private final Map<UUID, Map<String, Double>> balanceCache = new ConcurrentHashMap<>();
+    // BUG-2: per-UUID locks to make withdraw() check-then-deduct atomic
+    private final ConcurrentHashMap<UUID, Object> withdrawLocks = new ConcurrentHashMap<>();
 
     public CurrencyService(OreoEssentials plugin, CurrencyStorage storage, CurrencyConfig config) {
         this.plugin = plugin;
@@ -181,7 +184,8 @@ public class CurrencyService {
         plugin.getLogger().info("[Currency][DBG] reloadCurrenciesAsync START (thread=" + Thread.currentThread().getName() + ")");
 
         return storage.loadAllCurrencies().thenAccept(currencies -> {
-            currencyCache.clear();
+            // BUG-4: build new map first, then merge atomically — never expose an empty cache to readers
+            Map<String, Currency> newMap = new ConcurrentHashMap<>();
 
             int loaded = 0;
             List<String> ids = new ArrayList<>();
@@ -189,12 +193,16 @@ public class CurrencyService {
             for (Currency currency : currencies) {
                 if (currency == null || currency.getId() == null) continue;
                 String key = currency.getId().toLowerCase(Locale.ROOT).trim();
-                currencyCache.put(key, currency);
+                newMap.put(key, currency);
                 loaded++;
                 ids.add(key);
 
                 plugin.getLogger().info("[Currency] Loaded: " + currency.getName() + " (" + currency.getSymbol() + ")");
             }
+
+            // Single atomic swap: remove keys no longer present, then add/update all new entries
+            currencyCache.keySet().retainAll(newMap.keySet());
+            currencyCache.putAll(newMap);
 
             long took = System.currentTimeMillis() - start;
             plugin.getLogger().info("[Currency][DBG] reloadCurrenciesAsync DONE loaded=" + loaded
@@ -310,23 +318,27 @@ public class CurrencyService {
         final String finalCurrencyId = currencyId;
 
         final String resolvedCurrencyId = currencyId;
+        // BUG-2: acquire a per-UUID lock so the balance check and deduction are atomic
+        final Object lock = withdrawLocks.computeIfAbsent(playerId, k -> new Object());
         return getBalance(playerId, currencyId).thenCompose(balance -> {
-            Currency currency = getCurrency(resolvedCurrencyId);
-            boolean allowNegative = currency != null && currency.isAllowNegative();
-            if (!allowNegative && balance < amount) {
-                plugin.getLogger().info("[Currency][DBG] withdraw rejected: balance=" + balance
-                        + " amount=" + amount + " allowNegative=false currency=" + resolvedCurrencyId);
-                return CompletableFuture.completedFuture(false);
-            }
+            synchronized (lock) {
+                Currency currency = getCurrency(resolvedCurrencyId);
+                boolean allowNegative = currency != null && currency.isAllowNegative();
+                if (!allowNegative && balance < amount) {
+                    plugin.getLogger().info("[Currency][DBG] withdraw rejected: balance=" + balance
+                            + " amount=" + amount + " allowNegative=false currency=" + resolvedCurrencyId);
+                    return CompletableFuture.completedFuture(false);
+                }
 
-            double newBalance = balance - amount;
-            return setBalance(playerId, finalCurrencyId, newBalance)
-                    .thenApply(v -> {
-                        clearPlaceholderCache(playerId);
-                        plugin.getLogger().info("[Currency][DBG] withdraw OK: player=" + playerId
-                                + " currency=" + finalCurrencyId + " old=" + balance + " new=" + newBalance);
-                        return true;
-                    });
+                double newBalance = balance - amount;
+                return setBalance(playerId, finalCurrencyId, newBalance)
+                        .thenApply(v -> {
+                            clearPlaceholderCache(playerId);
+                            plugin.getLogger().info("[Currency][DBG] withdraw OK: player=" + playerId
+                                    + " currency=" + finalCurrencyId + " old=" + balance + " new=" + newBalance);
+                            return true;
+                        });
+            }
         });
     }
 
@@ -352,15 +364,24 @@ public class CurrencyService {
 
         final String finalCurrencyId = currencyId;
 
+        final UUID senderUuid = from;
+        final double transferAmount = amount;
         return withdraw(from, currencyId, amount).thenCompose(success -> {
             if (!success) {
                 return CompletableFuture.completedFuture(false);
             }
 
-            return deposit(to, finalCurrencyId, amount).thenApply(depositSuccess -> {
+            return deposit(to, finalCurrencyId, transferAmount).thenApply(depositSuccess -> {
                 if (!depositSuccess) {
-                    // Rollback (fire-and-forget)
-                    deposit(from, finalCurrencyId, amount);
+                    // BUG-3: rollback with error handling — log critical failure if rollback also fails
+                    deposit(senderUuid, finalCurrencyId, transferAmount)
+                            .exceptionally(ex -> {
+                                plugin.getLogger().log(Level.SEVERE,
+                                        "CRITICAL: Rollback failed for " + senderUuid
+                                                + ", amount=" + transferAmount
+                                                + ", currency=" + finalCurrencyId, ex);
+                                return null;
+                            });
                     return false;
                 }
                 return true;
