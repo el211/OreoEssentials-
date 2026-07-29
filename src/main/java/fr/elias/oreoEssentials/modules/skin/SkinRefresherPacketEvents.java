@@ -93,6 +93,7 @@ public final class SkinRefresherPacketEvents implements SkinRefresher {
                 // DC3: re-filter to only players still online at step 2
                 List<Player> step2Viewers = Bukkit.getOnlinePlayers().stream()
                         .filter(Player::isOnline)
+                        .map(v -> (Player) v)
                         .toList();
 
                 // Step 2: add player back with updated skin profile
@@ -106,6 +107,7 @@ public final class SkinRefresherPacketEvents implements SkinRefresher {
                     // DC3: re-filter to only players still online at step 3
                     List<Player> step3Viewers = Bukkit.getOnlinePlayers().stream()
                             .filter(v -> v.isOnline() && !v.equals(player))
+                            .map(v -> (Player) v)
                             .toList();
 
                     // Step 3: destroy entity + hide for other viewers
@@ -120,6 +122,7 @@ public final class SkinRefresherPacketEvents implements SkinRefresher {
                         // DC3: re-filter to only players still online at step 4
                         List<Player> step4Viewers = Bukkit.getOnlinePlayers().stream()
                                 .filter(v -> v.isOnline() && !v.equals(player))
+                                .map(v -> (Player) v)
                                 .toList();
 
                         // Step 4: show player again

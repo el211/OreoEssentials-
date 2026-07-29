@@ -26,7 +26,7 @@ public final class OreoCommandAdapter extends fr.traqueur.commands.spigot.Comman
             this.setPermission(perm);
         } else {
             // DC9: flag commands with no permission node so admins can catch oversights early
-            plugin.getLogger().warning("[CommandManager] Command '" + delegate.getName() + "' has no permission node defined.");
+            plugin.getLogger().warning("[CommandManager] Command '" + delegate.name() + "' has no permission node defined.");
         }
 
         String usage = delegate.usage();
@@ -55,7 +55,7 @@ public final class OreoCommandAdapter extends fr.traqueur.commands.spigot.Comman
             }
         } catch (Throwable t) {
             // DC8: log full stack trace, not just the message
-            getPlugin().getLogger().log(Level.SEVERE, "Error executing command " + delegate.getName(), t);
+            getPlugin().getLogger().log(Level.SEVERE, "Error executing command " + delegate.name(), t);
         }
     }
 

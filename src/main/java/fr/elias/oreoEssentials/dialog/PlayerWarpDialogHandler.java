@@ -32,7 +32,7 @@ public final class PlayerWarpDialogHandler {
         } catch (Throwable t) {
             // DC5: inform the player and log the error
             player.sendMessage("§cFailed to open warp menu. Please try again.");
-            OreoEssentials.getInstance().getLogger().warning("[PlayerWarpDialog] Error getting service: " + t.getMessage());
+            OreoEssentials.get().getLogger().warning("[PlayerWarpDialog] Error getting service: " + t.getMessage());
             return;
         }
         if (service == null) return;
@@ -45,7 +45,7 @@ public final class PlayerWarpDialogHandler {
                 // DC5: inform the player and log the error
                 OreScheduler.runForEntity(plugin, player, () ->
                         player.sendMessage("§cFailed to open warp menu. Please try again."));
-                OreoEssentials.getInstance().getLogger().warning("[PlayerWarpDialog] Error listing warps: " + t.getMessage());
+                OreoEssentials.get().getLogger().warning("[PlayerWarpDialog] Error listing warps: " + t.getMessage());
                 all = List.of();
             }
             final List<PlayerWarp> warps = all;

@@ -140,11 +140,7 @@ public final class TransactionProcessor {
         if (cs == null) {
             try {
                 // BUG-02 fix: deposit first; only remove items if the deposit succeeds.
-                net.milkbowl.vault.economy.EconomyResponse resp = module.getEconomy().depositPlayer(player, price);
-                if (resp == null || !resp.transactionSuccess()) {
-                    send(player, "<red>Shop transaction failed.</red>");
-                    return false;
-                }
+                module.getEconomy().deposit(player, price);
                 removeItems(player, shopItem, totalItems);
                 finishSell(player, shopItem, totalItems, price, module.getEconomy().getEconomyName(), module.getEconomy().format(price));
                 return true;

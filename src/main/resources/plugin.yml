@@ -1,5 +1,5 @@
 name: OreoEssentials
-version: "6.1-SNAPSHOT"
+version: "6.2"
 main: fr.elias.oreoEssentials.OreoEssentials
 api-version: "1.21"
 folia-supported: true
