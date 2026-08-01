@@ -735,8 +735,10 @@ public final class OreoEssentials extends JavaPlugin {
             }
         }
 
-        this.ecoBootstrap = new EconomyBootstrap(this);
-        this.ecoBootstrap.enable();
+        if (economyEnabled) {
+            this.ecoBootstrap = new EconomyBootstrap(this);
+            this.ecoBootstrap.enable();
+        }
 
         if (economyEnabled && this.database != null) {
             if (getServer().getPluginManager().getPlugin("Vault") == null) {
