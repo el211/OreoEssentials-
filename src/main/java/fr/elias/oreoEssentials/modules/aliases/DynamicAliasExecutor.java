@@ -164,7 +164,8 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
                 String rem = s.substring("check:".length()).trim();
                 int bang = rem.indexOf('!');
                 String expr = (bang == -1 ? rem : rem.substring(0, bang)).trim();
-                if (!expr.isEmpty()) inlineChecks.add(expr);
+                // Expand $1/$2/[playerName] now so evaluateSingle receives resolved values.
+                if (!expr.isEmpty()) inlineChecks.add(expandVariables(sender, expr, args));
                 s = (bang == -1 ? "" : rem.substring(bang + 1)).trim();
                 changed = true;
             }
