@@ -19,9 +19,6 @@ import java.sql.SQLException;
 
 public final class OrdersModule {
 
-    private static OrdersModule instance;
-    public static OrdersModule getInstance() { return instance; }
-
     private final OreoEssentials plugin;
 
     private OrdersConfig              cfg;
@@ -47,15 +44,11 @@ public final class OrdersModule {
 
         if (!cfg.enabled()) {
             plugin.getLogger().info("[Orders] Disabled by config.");
-            instance = null;
             return;
         }
 
-        instance = this;
-
         if (!initRepository()) {
             plugin.getLogger().severe("[Orders] Failed to initialise storage. Module disabled.");
-            instance = null;
             return;
         }
 
@@ -96,8 +89,7 @@ public final class OrdersModule {
     private com.mongodb.client.MongoClient ownedMongoClient = null;
 
     public void stop() {
-        instance = null;
-        ready    = false;
+        ready = false;
         if (guiManager != null) {
             guiManager.shutdown();
             guiManager = null;

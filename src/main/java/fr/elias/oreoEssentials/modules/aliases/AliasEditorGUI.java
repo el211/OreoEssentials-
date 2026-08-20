@@ -260,7 +260,7 @@ public final class AliasEditorGUI {
             for (int i = 0; i < def.checks.size(); i++) {
                 int displayIndex = i + 1;
                 AliasService.Check ch = def.checks.get(i);
-                String label = "§f" + displayIndex + ") " + ch.expr;
+                String label = "§f" + displayIndex + ") " + ch.expr();
                 ClickableItem item = ClickableItem.of(
                         makeNamed(Material.MAP, label, List.of("§cClick to delete this check")),
                         e -> {

@@ -171,7 +171,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage("§7Checks: §f" + checks);
                 if (checks > 0) {
                     for (AliasService.Check ch : def.checks) {
-                        sender.sendMessage("§7  " + (i++) + ") §f" + ch.expr);
+                        sender.sendMessage("§7  " + (i++) + ") §f" + ch.expr());
                     }
                 }
                 for (String cLine : def.commands) sender.sendMessage("§7• §f" + cLine);
@@ -190,7 +190,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 var def = service.get(args[1]); if (def == null) { sender.sendMessage("§cAlias not found."); return true; }
                 String expr = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
                 if (expr.isEmpty()) { sender.sendMessage("§cExpression cannot be empty."); return true; }
-                AliasService.Check ch = new AliasService.Check(); ch.expr = expr;
+                AliasService.Check ch = new AliasService.Check(expr);
                 def.checks.add(ch);
                 service.save();
                 sender.sendMessage("§aAdded check #" + def.checks.size() + " to /" + def.name + ".");
@@ -214,7 +214,7 @@ public final class AliasEditorCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage("§8—— §7Checks for /" + def.name + " §8(Logic: §f" + (def.logic == null ? "AND" : def.logic.name()) + "§8) ——");
                 if (def.checks.isEmpty()) { sender.sendMessage("§7(no checks)"); return true; }
                 int i = 1;
-                for (AliasService.Check ch : def.checks) sender.sendMessage("§7" + (i++) + ") §f" + ch.expr);
+                for (AliasService.Check ch : def.checks) sender.sendMessage("§7" + (i++) + ") §f" + ch.expr());
                 return true;
             }
 

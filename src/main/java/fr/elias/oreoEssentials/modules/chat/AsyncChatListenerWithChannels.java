@@ -61,8 +61,8 @@ public class AsyncChatListenerWithChannels implements Listener {
         final String raw = event.getMessage();
 
         try {
-            AuctionHouseModule ahm = AuctionHouseModule.getInstance();
-            if (ahm != null && ahm.isWaitingForPrice(player.getUniqueId())) {
+            AuctionHouseModule ahm = plugin.getAuctionHouseModule();
+            if (ahm != null && ahm.enabled() && ahm.isWaitingForPrice(player.getUniqueId())) {
                 event.setCancelled(true);
                 event.getRecipients().clear();
                 ahm.consumePriceInput(player, raw);
@@ -71,9 +71,8 @@ public class AsyncChatListenerWithChannels implements Listener {
         } catch (Throwable ignored) {}
 
         try {
-            fr.elias.oreoEssentials.modules.orders.OrdersModule om =
-                    fr.elias.oreoEssentials.modules.orders.OrdersModule.getInstance();
-            if (om != null) {
+            fr.elias.oreoEssentials.modules.orders.OrdersModule om = plugin.getOrdersModule();
+            if (om != null && om.enabled()) {
                 java.util.UUID uid = player.getUniqueId();
                 if (fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.isWaitingForQty(uid)) {
                     event.setCancelled(true);
@@ -116,8 +115,8 @@ public class AsyncChatListenerWithChannels implements Listener {
     public void onChatInput(AsyncChatEvent event) {
         final Player player = event.getPlayer();
         try {
-            AuctionHouseModule ahm = AuctionHouseModule.getInstance();
-            if (ahm != null && ahm.isWaitingForPrice(player.getUniqueId())) {
+            AuctionHouseModule ahm = plugin.getAuctionHouseModule();
+            if (ahm != null && ahm.enabled() && ahm.isWaitingForPrice(player.getUniqueId())) {
                 event.viewers().clear();
                 event.setCancelled(true);
                 String raw = PlainTextComponentSerializer.plainText().serialize(event.message());
@@ -127,9 +126,8 @@ public class AsyncChatListenerWithChannels implements Listener {
         } catch (Throwable ignored) {}
 
         try {
-            fr.elias.oreoEssentials.modules.orders.OrdersModule om =
-                    fr.elias.oreoEssentials.modules.orders.OrdersModule.getInstance();
-            if (om != null) {
+            fr.elias.oreoEssentials.modules.orders.OrdersModule om = plugin.getOrdersModule();
+            if (om != null && om.enabled()) {
                 String raw = PlainTextComponentSerializer.plainText().serialize(event.message());
                 java.util.UUID uid = player.getUniqueId();
                 if (fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.isWaitingForQty(uid)) {

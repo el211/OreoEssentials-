@@ -66,8 +66,6 @@ public final class AuctionHouseModule {
         browseViewers.computeIfPresent(uuid, (k, v) -> new ViewerContext(v.category(), v.searchQuery(), page));
     }
 
-    private static AuctionHouseModule instance;
-    public static AuctionHouseModule getInstance() { return instance; }
 
     private OreTask expirationTask = OreTask.EMPTY;
     private OreTask autoSaveTask   = OreTask.EMPTY;
@@ -92,8 +90,6 @@ public final class AuctionHouseModule {
             return;
         }
 
-        instance = this;
-
         setupEconomy();
 
         setupStorage();
@@ -116,7 +112,6 @@ public final class AuctionHouseModule {
     }
 
     public void stop() {
-        instance = null;
         pendingSells.clear();
         expirationTask.cancel();
         autoSaveTask.cancel();

@@ -1,5 +1,6 @@
 package fr.elias.oreoEssentials.modules.aliases;
 
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -7,6 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 public final class AliasService {
 
@@ -14,9 +16,7 @@ public final class AliasService {
     public enum RunAs { PLAYER, CONSOLE }
     public enum LogicType { AND, OR }
 
-    public static final class Check {
-        public String expr;
-    }
+    public record Check(String expr) {}
 
     public static final class AliasDef {
         public String name;
@@ -36,30 +36,53 @@ public final class AliasService {
 
 
     private final JavaPlugin plugin;
-    private final File file;
+    private final Logger     logger;
+    private final File       file;
+    /** Copies the bundled default config into place when the file is missing. No-op in tests. */
+    private final Runnable   defaultResourceExtractor;
     private YamlConfiguration cfg;
 
-    private final Map<String, AliasDef> aliases = new ConcurrentHashMap<>();
-    private final Map<String, Long> cooldowns = new ConcurrentHashMap<>();
-    private final Map<String, Long> lineCooldowns = new ConcurrentHashMap<>();
+    private final Map<String, AliasDef> aliases      = new ConcurrentHashMap<>();
+    private final Map<String, Long>     cooldowns     = new ConcurrentHashMap<>();
+    private final Map<String, Long>     lineCooldowns = new ConcurrentHashMap<>();
 
 
     public AliasService(JavaPlugin plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "commandsmodule/aliases.yml");
+        this.logger = plugin.getLogger();
+        this.file   = new File(plugin.getDataFolder(), "commandsmodule/aliases.yml");
+        this.defaultResourceExtractor = () -> {
+            try {
+                file.getParentFile().mkdirs();
+                plugin.saveResource("commandsmodule/aliases.yml", false);
+            } catch (Exception e) {
+                logger.warning("[Aliases] Could not extract default aliases.yml: " + e.getMessage());
+            }
+        };
+    }
+
+    /**
+     * Package-private constructor used by unit tests.
+     * Skips {@code saveResource} and does not require a live Bukkit plugin instance.
+     */
+    AliasService(Logger logger, File dataFolder) {
+        this.plugin                   = null;
+        this.logger                   = Objects.requireNonNull(logger, "logger");
+        this.file                     = new File(dataFolder, "commandsmodule/aliases.yml");
+        this.defaultResourceExtractor = () -> {}; // no-op — tests supply their own files
     }
 
     /** Loads aliases from commandsmodule/aliases.yml (creates the file from resources if missing). */
     public void load() {
         if (!file.exists()) {
-            try { file.getParentFile().mkdirs(); plugin.saveResource("commandsmodule/aliases.yml", false); } catch (Throwable ignored) {}
+            defaultResourceExtractor.run();
         }
 
         YamlConfiguration loaded;
         try {
             loaded = YamlConfiguration.loadConfiguration(file);
-        } catch (Throwable t) {
-            plugin.getLogger().warning("[Aliases] Failed to load aliases.yml: " + t.getMessage());
+        } catch (Exception t) {
+            logger.warning("[Aliases] Failed to load aliases.yml: " + t.getMessage());
             return;
         }
 
@@ -68,7 +91,7 @@ public final class AliasService {
 
         ConfigurationSection root = cfg.getConfigurationSection("aliases");
         if (root == null) {
-            plugin.getLogger().info("[Aliases] aliases.yml has no 'aliases' section (yet).");
+            logger.info("[Aliases] aliases.yml has no 'aliases' section (yet).");
             return;
         }
 
@@ -79,7 +102,7 @@ public final class AliasService {
             AliasDef def = new AliasDef();
             def.name = (key == null ? null : key.toLowerCase(Locale.ROOT));
             if (def.name == null || def.name.isBlank()) {
-                plugin.getLogger().warning("[Aliases] Skipping alias with empty name node.");
+                logger.warning("[Aliases] Skipping alias with empty name node.");
                 continue;
             }
 
@@ -93,9 +116,9 @@ public final class AliasService {
             String logicStr = String.valueOf(a.getString("logic", "AND")).toUpperCase(Locale.ROOT);
             try {
                 def.logic = LogicType.valueOf(logicStr);
-            } catch (Throwable ignored) {
+            } catch (IllegalArgumentException ignored) {
                 def.logic = LogicType.AND;
-                plugin.getLogger().warning("[Aliases] Alias '" + def.name + "' has invalid logic '" + logicStr + "', defaulting to AND.");
+                logger.warning("[Aliases] Alias '" + def.name + "' has invalid logic '" + logicStr + "', defaulting to AND.");
             }
 
             def.failMessage = a.getString("fail-message", def.failMessage);
@@ -107,9 +130,7 @@ public final class AliasService {
                     if (rc == null) continue;
                     String expr = rc.trim();
                     if (expr.isEmpty()) continue;
-                    Check ch = new Check();
-                    ch.expr = expr;
-                    def.checks.add(ch);
+                    def.checks.add(new Check(expr));
                 }
             }
 
@@ -135,7 +156,7 @@ public final class AliasService {
             aliases.put(def.name, def);
         }
 
-        plugin.getLogger().info("[Aliases] Loaded " + aliases.size() + " alias definition(s) from aliases.yml.");
+        logger.info("[Aliases] Loaded " + aliases.size() + " alias definition(s) from aliases.yml.");
     }
 
     /** Saves the current in-memory aliases to aliases.yml (including checks/logic/fail-message + new fields). */
@@ -154,8 +175,8 @@ public final class AliasService {
             List<String> exprs = new ArrayList<>();
             if (def.checks != null) {
                 for (Check ch : def.checks) {
-                    if (ch != null && ch.expr != null && !ch.expr.trim().isEmpty()) {
-                        exprs.add(ch.expr.trim());
+                    if (ch != null && ch.expr() != null && !ch.expr().trim().isEmpty()) {
+                        exprs.add(ch.expr().trim());
                     }
                 }
             }
@@ -180,9 +201,9 @@ public final class AliasService {
         try {
             out.save(file);
             this.cfg = out;
-            plugin.getLogger().info("[Aliases] Saved " + aliases.size() + " alias definition(s) to aliases.yml.");
+            logger.info("[Aliases] Saved " + aliases.size() + " alias definition(s) to aliases.yml.");
         } catch (Exception e) {
-            plugin.getLogger().warning("[Aliases] Failed to save aliases.yml: " + e.getMessage());
+            logger.warning("[Aliases] Failed to save aliases.yml: " + e.getMessage());
         }
     }
 
@@ -203,14 +224,14 @@ public final class AliasService {
             );
             count++;
         }
-        plugin.getLogger().info("[Aliases] Registered " + count + " alias command(s).");
+        logger.info("[Aliases] Registered " + count + " alias command(s).");
     }
 
     public void shutdown() {
         try {
             DynamicAliasRegistry.unregisterAll(plugin);
         } catch (Throwable t) {
-            plugin.getLogger().warning("[Aliases] Unregister failed: " + t.getMessage());
+            logger.warning("[Aliases] Unregister failed: " + t.getMessage());
         }
     }
 
@@ -267,12 +288,12 @@ public final class AliasService {
 
         if (def.logic == LogicType.AND) {
             for (Check ch : def.checks) {
-                if (!evaluateSingle(sender, ch == null ? null : ch.expr)) return false;
+                if (!evaluateSingle(sender, ch == null ? null : ch.expr())) return false;
             }
             return true;
         } else { // OR
             for (Check ch : def.checks) {
-                if (evaluateSingle(sender, ch == null ? null : ch.expr)) return true;
+                if (evaluateSingle(sender, ch == null ? null : ch.expr())) return true;
             }
             return false;
         }
@@ -409,15 +430,12 @@ public final class AliasService {
 
     private String resolve(org.bukkit.command.CommandSender sender, String token) {
         String s = stripQuotes(token);
-        if (sender instanceof org.bukkit.entity.Player p) {
-            org.bukkit.plugin.Plugin papi = org.bukkit.Bukkit.getPluginManager().getPlugin("PlaceholderAPI");
-            if (papi != null && (s.contains("%"))) {
-                try {
-                    Class<?> papiCls = Class.forName("me.clip.placeholderapi.PlaceholderAPI");
-                    java.lang.reflect.Method m = papiCls.getMethod("setPlaceholders", org.bukkit.entity.Player.class, String.class);
-                    s = (String) m.invoke(null, p, s);
-                } catch (Throwable ignored) {}
-            }
+        if (sender instanceof org.bukkit.entity.Player p
+                && s.contains("%")
+                && org.bukkit.Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            try {
+                s = PlaceholderAPI.setPlaceholders(p, s);
+            } catch (Exception ignored) {}
         }
         return s;
     }
@@ -436,6 +454,6 @@ public final class AliasService {
 
     private RunAs parseRunAs(String s) {
         try { return RunAs.valueOf(s.toUpperCase(Locale.ROOT)); }
-        catch (Throwable ignored) { return RunAs.PLAYER; }
+        catch (IllegalArgumentException ignored) { return RunAs.PLAYER; }
     }
 }

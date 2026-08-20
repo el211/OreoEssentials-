@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
+import java.util.Objects;
 
 public class MuteService {
 
@@ -38,24 +40,47 @@ public class MuteService {
     }
 
     private final Plugin plugin;
+    private final Logger logger;
     private final File file;
     private final FileConfiguration cfg;
     private final Map<UUID, MuteData> mutes = new ConcurrentHashMap<>();
 
     public MuteService(Plugin plugin) {
         this.plugin = plugin;
+        this.logger = plugin.getLogger();
         this.file = new File(plugin.getDataFolder(), "mutes.yml");
         if (!file.exists()) {
             try {
                 plugin.getDataFolder().mkdirs();
                 file.createNewFile();
             } catch (IOException e) {
-                plugin.getLogger().severe("Failed to create mutes.yml: " + e.getMessage());
+                logger.severe("Failed to create mutes.yml: " + e.getMessage());
             }
         }
         this.cfg = YamlConfiguration.loadConfiguration(file);
         loadAll();
         OreScheduler.runAsyncTimer(plugin, this::cleanupExpired, 20L*60, 20L*60);
+    }
+
+    /**
+     * Package-private constructor for unit tests.
+     * Skips the Bukkit scheduler — no live server required.
+     */
+    MuteService(Logger logger, File dataFolder) {
+        this.plugin = null;
+        this.logger = Objects.requireNonNull(logger, "logger");
+        this.file   = new File(dataFolder, "mutes.yml");
+        if (!this.file.exists()) {
+            try {
+                dataFolder.mkdirs();
+                this.file.createNewFile();
+            } catch (IOException e) {
+                logger.severe("Failed to create mutes.yml: " + e.getMessage());
+            }
+        }
+        this.cfg = YamlConfiguration.loadConfiguration(this.file);
+        loadAll();
+        // No scheduler — tests drive time explicitly.
     }
 
     public boolean isMuted(UUID uuid) {
@@ -108,7 +133,7 @@ public class MuteService {
                 MuteData md = new MuteData(uuid, until, reason, by);
                 if (!md.expired()) mutes.put(uuid, md);
             } catch (Throwable t) {
-                plugin.getLogger().warning("Failed to load mute for key " + key + ": " + t.getMessage());
+                logger.warning("Failed to load mute for key " + key + ": " + t.getMessage());
             }
         }
         saveFile();
@@ -123,7 +148,7 @@ public class MuteService {
 
     private void saveFile() {
         try { cfg.save(file); }
-        catch (IOException e) { plugin.getLogger().severe("Failed to save mutes.yml: " + e.getMessage()); }
+        catch (IOException e) { logger.severe("Failed to save mutes.yml: " + e.getMessage()); }
     }
 
     private void cleanupExpired() {

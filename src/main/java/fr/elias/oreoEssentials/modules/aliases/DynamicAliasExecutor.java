@@ -249,8 +249,6 @@ final class DynamicAliasExecutor implements org.bukkit.command.CommandExecutor {
             plugin.getLogger().warning("[Aliases] Step failed for /" + alias + ": " + cs.line + " -> " + t.getMessage());
         }
 
-        if (!ok) {
-        }
         runStepsRecursive(sender, player, plan, i + 1);
     }
 

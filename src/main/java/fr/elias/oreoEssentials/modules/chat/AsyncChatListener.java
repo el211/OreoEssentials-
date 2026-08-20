@@ -91,8 +91,8 @@ public final class AsyncChatListener implements Listener {
         final String raw = event.getMessage();
 
         try {
-            AuctionHouseModule ahm = AuctionHouseModule.getInstance();
-            if (ahm != null && ahm.isWaitingForPrice(player.getUniqueId())) {
+            AuctionHouseModule ahm = OreoEssentials.get().getAuctionHouseModule();
+            if (ahm != null && ahm.enabled() && ahm.isWaitingForPrice(player.getUniqueId())) {
                 event.setCancelled(true);
                 event.getRecipients().clear();
                 ahm.consumePriceInput(player, raw);
@@ -102,8 +102,8 @@ public final class AsyncChatListener implements Listener {
 
         try {
             fr.elias.oreoEssentials.modules.orders.OrdersModule om =
-                    fr.elias.oreoEssentials.modules.orders.OrdersModule.getInstance();
-            if (om != null) {
+                    OreoEssentials.get().getOrdersModule();
+            if (om != null && om.enabled()) {
                 java.util.UUID uid = player.getUniqueId();
                 if (fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.isWaitingForQty(uid)) {
                     event.setCancelled(true);
@@ -151,8 +151,8 @@ public final class AsyncChatListener implements Listener {
 
         final Player player = event.getPlayer();
         try {
-            AuctionHouseModule ahm = AuctionHouseModule.getInstance();
-            if (ahm != null && ahm.isWaitingForPrice(player.getUniqueId())) {
+            AuctionHouseModule ahm = OreoEssentials.get().getAuctionHouseModule();
+            if (ahm != null && ahm.enabled() && ahm.isWaitingForPrice(player.getUniqueId())) {
                 event.viewers().clear();
                 event.setCancelled(true);
                 String raw = PlainTextComponentSerializer.plainText().serialize(event.message());
@@ -163,8 +163,8 @@ public final class AsyncChatListener implements Listener {
 
         try {
             fr.elias.oreoEssentials.modules.orders.OrdersModule om =
-                    fr.elias.oreoEssentials.modules.orders.OrdersModule.getInstance();
-            if (om != null) {
+                    OreoEssentials.get().getOrdersModule();
+            if (om != null && om.enabled()) {
                 String raw = PlainTextComponentSerializer.plainText().serialize(event.message());
                 UUID uid = player.getUniqueId();
                 if (fr.elias.oreoEssentials.modules.orders.gui.CreateOrderFlow.isWaitingForQty(uid)) {

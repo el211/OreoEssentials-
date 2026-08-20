@@ -21,6 +21,16 @@
 #     custom-tabs:                 # per-argument suggestions (1 line = one arg level)
 #       - "arg1,opt1,opt2"
 #       - "arg2,optA,optB"
+#
+#     Dynamic tokens (resolved live at tab-completion time, NOT at config load):
+#       [players]    — expands to all currently online player names
+#       [playerName] — legacy alias for [players] inside custom-tabs only
+#                      (Note: [playerName] inside *commands* still replaces with the sender's name)
+#
+#     Examples:
+#       custom-tabs:
+#         - "[players]"            # arg1: all online players
+#         - "[players],console"   # arg1: all online players + the literal "console"
 
 aliases:
 
@@ -216,6 +226,38 @@ aliases:
     perm-gate: false
     add-tabs: false
     custom-tabs: []
+
+  # [players] dynamic tab completion — arg1 suggests all online player names
+  # Usage: /playerinfo <player>
+  playerinfo:
+    enabled: true
+    run-as: PLAYER
+    cooldown-seconds: 0
+    commands:
+      - "msg $1 Hello!"
+    checks: []
+    logic: AND
+    fail-message: "§cYou can't use /%alias%."
+    perm-gate: false
+    add-tabs: true
+    custom-tabs:
+      - "[players]"             # expands to online player names at completion time
+
+  # Mixed static + dynamic — online players AND a literal "console" option
+  # Usage: /msgorlog <player|console>
+  msgorlog:
+    enabled: true
+    run-as: PLAYER
+    cooldown-seconds: 0
+    commands:
+      - "msg $1 Hello!"
+    checks: []
+    logic: AND
+    fail-message: "§cYou can't use /%alias%."
+    perm-gate: false
+    add-tabs: true
+    custom-tabs:
+      - "[players],console"    # online players + static "console"
 
   # Simple back-to-grave showcase
   bback:
