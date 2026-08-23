@@ -1,12 +1,12 @@
 package fr.elias.oreoEssentials.modules.tp.rabbit.brokers;
 
 import fr.elias.oreoEssentials.OreoEssentials;
-import fr.elias.oreoEssentials.rabbitmq.PacketChannels;
-import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
-import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.modules.tp.rabbit.packets.TpaRequestPacket;
 import fr.elias.oreoEssentials.modules.tp.rabbit.packets.TpaSummonPacket;
 import fr.elias.oreoEssentials.modules.tp.service.TeleportService;
+import fr.elias.oreoEssentials.rabbitmq.PacketChannels;
+import fr.elias.oreoEssentials.rabbitmq.channel.PacketChannel;
+import fr.elias.oreoEssentials.rabbitmq.packet.PacketManager;
 import fr.elias.oreoEssentials.util.Lang;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import fr.elias.oreoEssentials.util.OreTask;
@@ -20,7 +20,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.lang.reflect.Method;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class TpaCrossServerBroker implements Listener {
 
     private final OreoEssentials plugin;
+    @SuppressWarnings("unused")
     private final TeleportService teleportService;
     private final PacketManager pm;
     private final ProxyMessenger proxy;
@@ -35,11 +35,10 @@ public final class TpaCrossServerBroker implements Listener {
 
     private final Map<UUID, Pending> pendingForTarget = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> pendingArrival = new ConcurrentHashMap<>();
-
     private final long expireMs;
     private final boolean offlineUuidCompat;
 
-    private static class Pending {
+    private static final class Pending {
         UUID requesterUuid;
         String requesterName;
         String fromServer;
@@ -54,28 +53,16 @@ public final class TpaCrossServerBroker implements Listener {
         this.proxy = proxy;
         this.localServer = localServer;
 
-        long cfgSec = 60L;
-        try {
-            cfgSec = plugin.getConfig().getLong("features.tpa.expire-seconds",
-                    plugin.getConfig().getLong("tpa.expire-seconds", 60L));
-            if (cfgSec <= 0) cfgSec = 60L;
-        } catch (Throwable ignored) {}
+        long cfgSec = plugin.getConfig().getLong("features.tpa.expire-seconds",
+                plugin.getConfig().getLong("tpa.expire-seconds", 60L));
+        if (cfgSec <= 0) cfgSec = 60L;
         this.expireMs = cfgSec * 1000L;
-
-        boolean compat = true;
-        try {
-            compat = plugin.getConfig().getBoolean("features.tpa.offline-uuid-compat", true);
-        } catch (Throwable ignored) {}
-        this.offlineUuidCompat = compat;
+        this.offlineUuidCompat = plugin.getConfig().getBoolean("features.tpa.offline-uuid-compat", true);
 
         if (pm != null && pm.isInitialized()) {
             pm.subscribe(TpaRequestPacket.class, this::onTpaRequest);
             pm.subscribe(TpaSummonPacket.class, this::onTpaSummon);
-            dbg("Subscribed TpaRequestPacket + TpaSummonPacket (expire=" + cfgSec + "s, offlineCompat=" + offlineUuidCompat + ")");
-        } else {
-            dbg("PacketManager not initialized; cross-server TPA disabled on this node.");
         }
-
         Bukkit.getPluginManager().registerEvents(this, plugin);
         OreScheduler.runTimer(plugin, this::purgeExpired, 20L * 30, 20L * 30);
     }
@@ -91,185 +78,139 @@ public final class TpaCrossServerBroker implements Listener {
     public void sendRequestToServer(Player requester, UUID targetUuid, String targetName, String destServer) {
         if (!isMessagingReady() || requester == null) return;
         long now = System.currentTimeMillis();
-        TpaRequestPacket pkt = new TpaRequestPacket(requester.getUniqueId(), requester.getName(),
-                targetUuid, targetName != null ? targetName : "", localServer, now + expireMs);
-        pm.sendPacket(PacketChannel.individual(destServer), pkt);
-        dbg("Send TpaRequest -> server=" + destServer + " requester=" + requester.getName()
-                + " target=" + targetUuid + (targetName != null && !targetName.isBlank() ? " (" + targetName + ")" : ""));
+        pm.sendPacket(PacketChannel.individual(destServer), new TpaRequestPacket(
+                requester.getUniqueId(), requester.getName(), targetUuid,
+                targetName == null ? "" : targetName, localServer, now + expireMs));
     }
 
     public void sendRequestGlobal(Player requester, UUID targetUuid, String targetName) {
         if (!isMessagingReady() || requester == null) return;
         long now = System.currentTimeMillis();
-        TpaRequestPacket pkt = new TpaRequestPacket(requester.getUniqueId(), requester.getName(),
-                targetUuid, targetName != null ? targetName : "", localServer, now + expireMs);
-        pm.sendPacket(PacketChannels.GLOBAL, pkt);
-        dbg("Send TpaRequest (GLOBAL) requester=" + requester.getName()
-                + " target=" + targetUuid + (targetName != null && !targetName.isBlank() ? " (" + targetName + ")" : ""));
+        pm.sendPacket(PacketChannels.GLOBAL, new TpaRequestPacket(
+                requester.getUniqueId(), requester.getName(), targetUuid,
+                targetName == null ? "" : targetName, localServer, now + expireMs));
     }
 
     public boolean acceptCrossServer(Player target) {
         if (target == null) return false;
-
         Pending p = pendingForTarget.remove(target.getUniqueId());
-        if (p == null) {
-            dbg("No cross-server pending for " + target.getName());
-            return false;
-        }
+        if (p == null) return false;
 
         long now = System.currentTimeMillis();
         if (p.expiresAt > 0 && p.expiresAt < now) {
             Lang.send(target, "tpa.accept.expired", "<red>That teleport request expired.</red>");
-            dbg("Pending expired (target=" + target.getUniqueId() + ")");
             return true;
         }
-
-        if (pendingArrival.containsKey(p.requesterUuid)) {
-            Lang.send(target, "tpa.accept.busy",
-                    "<red>That requester is already being summoned to another player.</red>");
-            dbg("Rejecting accept: requester already has pending arrival " + p.requesterUuid);
+        if (pendingArrival.putIfAbsent(p.requesterUuid, target.getUniqueId()) != null) {
+            Lang.send(target, "tpa.accept.busy", "<red>That requester is already being summoned to another player.</red>");
             return true;
         }
-
-        pendingArrival.put(p.requesterUuid, target.getUniqueId());
 
         if (isMessagingReady()) {
-            pm.sendPacket(PacketChannel.individual(p.fromServer),
-                    new TpaSummonPacket(p.requesterUuid, localServer));
+            pm.sendPacket(PacketChannel.individual(p.fromServer), new TpaSummonPacket(p.requesterUuid, localServer));
         }
-
         Lang.send(target, "tpa.accept.summon",
                 "<green>Teleport request accepted.</green> <gray>Summoning</gray> <yellow>%player%</yellow><gray>…</gray>",
                 Map.of("player", p.requesterName));
-        dbg("Accept -> summon requester=" + p.requesterUuid
-                + " from=" + p.fromServer + " to=" + localServer
-                + " (target=" + target.getName() + ")");
-
-        OreScheduler.runLater(plugin,
-                () -> pendingArrival.remove(p.requesterUuid), 20L * 60);
-
+        OreScheduler.runLater(plugin, () -> pendingArrival.remove(p.requesterUuid), 20L * 60);
         return true;
     }
 
     public boolean denyCrossServer(Player target) {
         Pending p = pendingForTarget.remove(target.getUniqueId());
         if (p == null) return false;
-
         Lang.send(target, "tpa.deny.target",
                 "<yellow>Denied the teleport request from</yellow> <white>%player%</white>.",
                 Map.of("player", p.requesterName));
-        dbg("Denied pending for target=" + target.getName() + " requester=" + p.requesterUuid);
         return true;
     }
 
     public boolean hasPendingFor(Player target) {
-        return pendingForTarget.containsKey(target.getUniqueId());
+        return target != null && pendingForTarget.containsKey(target.getUniqueId());
     }
 
     private void onTpaRequest(PacketChannel channel, TpaRequestPacket pkt) {
         if (pkt == null) return;
-
         long now = System.currentTimeMillis();
-        if (pkt.getExpiresAtEpochMs() > 0 && pkt.getExpiresAtEpochMs() < now) {
-            dbg("TpaRequestPacket expired; ignoring. from=" + pkt.getFromServer());
-            return;
-        }
+        if (pkt.getExpiresAtEpochMs() > 0 && pkt.getExpiresAtEpochMs() < now) return;
 
-        Player target = resolveTarget(pkt.getTargetUuid(), pkt.getTargetName());
-        if (target == null) {
-            return;
-        }
+        Player target = resolveOnlineTarget(pkt.getTargetUuid(), pkt.getTargetName());
+        if (target == null) return;
 
         Pending p = new Pending();
         p.requesterUuid = pkt.getRequesterUuid();
         p.requesterName = pkt.getRequesterName();
         p.fromServer = pkt.getFromServer();
-        p.expiresAt = (pkt.getExpiresAtEpochMs() > 0 ? pkt.getExpiresAtEpochMs() : now + expireMs);
+        p.expiresAt = pkt.getExpiresAtEpochMs() > 0 ? pkt.getExpiresAtEpochMs() : now + expireMs;
 
-        pendingForTarget.put(target.getUniqueId(), p);
-
-        Lang.send(target, "tpa.request-target",
-                "<yellow><bold>%player%</bold></yellow> <gray>wants to teleport to you.</gray> "
-                        + "<dark_gray>(expires in</dark_gray> <white>%timeout%</white><dark_gray>s)</dark_gray> "
-                        + "<gray>Use</gray> <green>/tpaccept</green> <gray>or</gray> <red>/tpdeny</red>.",
-                Map.of("player", p.requesterName, "timeout", String.valueOf((p.expiresAt - now) / 1000L)));
-        dbg("Saved pending for target=" + target.getUniqueId() + " name=" + target.getName()
-                + " fromServer=" + p.fromServer + " expiresAt=" + p.expiresAt);
+        OreScheduler.runForEntity(plugin, target, () -> {
+            if (!target.isOnline()) return;
+            pendingForTarget.put(target.getUniqueId(), p);
+            Lang.send(target, "tpa.request-target",
+                    "<yellow><bold>%player%</bold></yellow> <gray>wants to teleport to you.</gray> "
+                            + "<dark_gray>(expires in</dark_gray> <white>%timeout%</white><dark_gray>s)</dark_gray> "
+                            + "<gray>Use</gray> <green>/tpaccept</green> <gray>or</gray> <red>/tpdeny</red>.",
+                    Map.of("player", p.requesterName,
+                            "timeout", String.valueOf(Math.max(0L, (p.expiresAt - System.currentTimeMillis()) / 1000L))));
+        });
     }
 
     private void onTpaSummon(PacketChannel channel, TpaSummonPacket pkt) {
         if (pkt == null) return;
-
         Player requester = Bukkit.getPlayer(pkt.getRequesterUuid());
-        if (requester == null) {
-            dbg("Summon received, but requester not online here: " + pkt.getRequesterUuid());
-            return;
-        }
+        if (requester == null) return;
 
-        var root = plugin.getSettingsConfig().getRoot();
-        var sec = root.getConfigurationSection("features.tpa");
+        OreScheduler.runForEntity(plugin, requester, () -> {
+            if (!requester.isOnline()) return;
 
-        boolean enabled = sec != null && sec.getBoolean("cooldown", false);
-        int seconds = (sec != null ? sec.getInt("cooldown-amount", 0) : 0);
+            var sec = plugin.getSettingsConfig().getRoot().getConfigurationSection("features.tpa");
+            boolean countdownEnabled = sec != null && sec.getBoolean("cooldown", false);
+            int seconds = sec != null ? sec.getInt("cooldown-amount", 0) : 0;
+            String destServer = pkt.getDestServer();
 
-        if (!enabled || seconds <= 0) {
-            boolean ok = connectToServer(requester, pkt.getDestServer());
-            if (ok) {
-                Lang.send(requester, "tpa.cross.connecting",
-                        "<gray>Connecting you to</gray> <yellow>%server%</yellow><gray>…</gray>",
-                        Map.of("server", pkt.getDestServer()));
-            } else {
-                plugin.getLogger().warning("[TPA-X] Could not send " + requester.getName()
-                        + " to server " + pkt.getDestServer() + " (no ProxyMessenger method matched)");
-            }
-            return;
-        }
-
-        final String destServer = pkt.getDestServer();
-        final Location origin = requester.getLocation().clone();
-
-        dbg("Starting cross-server TPA countdown for requester=" + requester.getName()
-                + " destServer=" + destServer + " seconds=" + seconds);
-
-        final int[] remain = {seconds};
-        final OreTask[] taskHolder = new OreTask[1];
-        taskHolder[0] = OreScheduler.runTimerForEntity(plugin, requester, () -> {
-            if (!requester.isOnline()) {
-                dbg("Requester went offline during cross-server countdown; cancel.");
-                taskHolder[0].cancel();
+            if (!countdownEnabled || seconds <= 0) {
+                connectAndNotify(requester, destServer);
                 return;
             }
 
-            if (hasBodyMoved(requester, origin)) {
-                Lang.send(requester, "teleport.countdown.cancelled-moved",
-                        "<red>Teleport cancelled: you moved.</red>");
-                dbg("Requester moved; cancelling cross-server countdown.");
-                taskHolder[0].cancel();
-                return;
-            }
-
-            if (remain[0] <= 0) {
-                taskHolder[0].cancel();
-                dbg("Cross-server countdown finished; connecting " + requester.getName() + " -> " + destServer);
-                boolean ok = connectToServer(requester, destServer);
-                if (ok) {
-                    Lang.send(requester, "tpa.cross.connecting",
-                            "<gray>Connecting you to</gray> <yellow>%server%</yellow><gray>…</gray>",
-                            Map.of("server", destServer));
-                } else {
-                    plugin.getLogger().warning("[TPA-X] Failed to connect " + requester.getName() + " to " + destServer);
+            Location origin = requester.getLocation().clone();
+            int[] remain = {seconds};
+            OreTask[] holder = new OreTask[1];
+            holder[0] = OreScheduler.runTimerForEntity(plugin, requester, () -> {
+                if (!requester.isOnline()) {
+                    holder[0].cancel();
+                    return;
                 }
-                return;
-            }
+                if (hasBodyMoved(requester, origin)) {
+                    Lang.send(requester, "teleport.countdown.cancelled-moved", "<red>Teleport cancelled: you moved.</red>");
+                    holder[0].cancel();
+                    return;
+                }
+                if (remain[0] <= 0) {
+                    holder[0].cancel();
+                    connectAndNotify(requester, destServer);
+                    return;
+                }
 
-            String title = Lang.msg("teleport.countdown.title", "<yellow>Teleporting…</yellow>", requester);
-            String subtitle = Lang.msgWithDefault("teleport.countdown.subtitle",
-                    "<gray>Teleporting in <white>%seconds%</white>s…</gray>",
-                    Map.of("seconds", String.valueOf(remain[0])), requester);
+                String title = Lang.msg("teleport.countdown.title", "<yellow>Teleporting…</yellow>", requester);
+                String subtitle = Lang.msgWithDefault("teleport.countdown.subtitle",
+                        "<gray>Teleporting in <white>%seconds%</white>s…</gray>",
+                        Map.of("seconds", String.valueOf(remain[0])), requester);
+                requester.sendTitle(title, subtitle, 0, 20, 0);
+                remain[0]--;
+            }, 0L, 20L);
+        });
+    }
 
-            requester.sendTitle(title, subtitle, 0, 20, 0);
-            remain[0]--;
-        }, 0L, 20L);
+    private void connectAndNotify(Player requester, String destServer) {
+        boolean ok = connectToServer(requester, destServer);
+        if (ok) {
+            Lang.send(requester, "tpa.cross.connecting",
+                    "<gray>Connecting you to</gray> <yellow>%server%</yellow><gray>…</gray>",
+                    Map.of("server", destServer));
+        } else {
+            plugin.getLogger().warning("[TPA-X] Failed to connect " + requester.getName() + " to " + destServer);
+        }
     }
 
     private boolean hasBodyMoved(Player p, Location origin) {
@@ -281,29 +222,33 @@ public final class TpaCrossServerBroker implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
-        UUID targetUuid = pendingArrival.remove(e.getPlayer().getUniqueId());
+        Player requester = e.getPlayer();
+        UUID targetUuid = pendingArrival.remove(requester.getUniqueId());
         if (targetUuid == null) return;
 
         Player target = Bukkit.getPlayer(targetUuid);
         if (target == null) {
-            Lang.send(e.getPlayer(), "tpa.arrival.target-offline", "<red>Teleport target went offline.</red>");
-            dbg("Arrival: target offline for requester=" + e.getPlayer().getName());
+            Lang.send(requester, "tpa.arrival.target-offline", "<red>Teleport target went offline.</red>");
             return;
         }
 
-        OreScheduler.runLaterForEntity(plugin, e.getPlayer(), () -> {
-            try {
-                Location to = target.getLocation();
-                if (OreScheduler.isFolia()) {
-                    e.getPlayer().teleportAsync(to);
-                } else {
-                    e.getPlayer().teleport(to);
-                }
-                dbg("Arrival: snapped " + e.getPlayer().getName() + " -> " + target.getName());
-            } catch (Throwable t) {
-                plugin.getLogger().warning("[TPA-X] Arrival teleport failed: " + t.getMessage());
+        // Capture the destination on the target's region, then teleport the requester on
+        // the requester's region. Never read target.getLocation() from another region.
+        OreScheduler.runForEntity(plugin, target, () -> {
+            if (!target.isOnline()) {
+                OreScheduler.runForEntity(plugin, requester, () ->
+                        Lang.send(requester, "tpa.arrival.target-offline", "<red>Teleport target went offline.</red>"));
+                return;
             }
-        }, 3L);
+            Location destination = target.getLocation().clone();
+            String targetName = target.getName();
+            OreScheduler.runLaterForEntity(plugin, requester, () -> {
+                if (!requester.isOnline()) return;
+                if (OreScheduler.isFolia()) requester.teleportAsync(destination);
+                else requester.teleport(destination);
+                dbg("Arrival: snapped " + requester.getName() + " -> " + targetName);
+            }, 3L);
+        });
     }
 
     @EventHandler
@@ -315,40 +260,22 @@ public final class TpaCrossServerBroker implements Listener {
         return pm != null && pm.isInitialized();
     }
 
-    private Player resolveTarget(UUID targetUuid, String targetName) {
+    private Player resolveOnlineTarget(UUID targetUuid, String targetName) {
         Player p = Bukkit.getPlayer(targetUuid);
         if (p != null) return p;
-
-        if (!offlineUuidCompat) return null;
-
-        if (targetName != null && !targetName.isBlank()) {
-            Player byExact = Bukkit.getPlayerExact(targetName);
-            if (byExact != null) return byExact;
-            String want = targetName.toLowerCase(java.util.Locale.ROOT);
-            for (Player op : Bukkit.getOnlinePlayers()) {
-                if (op.getName().equalsIgnoreCase(want)) return op;
-            }
+        if (!offlineUuidCompat || targetName == null || targetName.isBlank()) return null;
+        Player exact = Bukkit.getPlayerExact(targetName);
+        if (exact != null) return exact;
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (online.getName().equalsIgnoreCase(targetName)) return online;
         }
-
-        try {
-            var dir = plugin.getPlayerDirectory();
-            if (dir != null) {
-                String lastKnownName = dir.lookupNameByUuid(targetUuid);
-                if (lastKnownName != null && !lastKnownName.isBlank()) {
-                    Player byExact = Bukkit.getPlayerExact(lastKnownName);
-                    if (byExact != null) return byExact;
-                    String want = lastKnownName.toLowerCase(java.util.Locale.ROOT);
-                    for (Player op : Bukkit.getOnlinePlayers()) {
-                        if (op.getName().equalsIgnoreCase(want)) return op;
-                    }
-                }
-            }
-        } catch (Throwable ignored) {}
-
+        // Intentionally no PlayerDirectory/Mongo lookup here: packet callbacks must never
+        // block a server/region thread. The packet already carries UUID + last-known name.
         return null;
     }
 
     private boolean connectToServer(Player player, String server) {
+        if (proxy == null || player == null || server == null || server.isBlank()) return false;
         try {
             for (String m : new String[]{"connect", "send", "sendToServer"}) {
                 Method method = find(proxy.getClass(), m, Player.class, String.class);
@@ -357,9 +284,6 @@ public final class TpaCrossServerBroker implements Listener {
                     return true;
                 }
             }
-        } catch (Throwable ignored) {}
-
-        try {
             for (String m : new String[]{"connect", "send", "sendToServer"}) {
                 Method method = find(proxy.getClass(), m, String.class);
                 if (method != null) {
@@ -368,7 +292,6 @@ public final class TpaCrossServerBroker implements Listener {
                 }
             }
         } catch (Throwable ignored) {}
-
         return false;
     }
 
@@ -384,28 +307,13 @@ public final class TpaCrossServerBroker implements Listener {
 
     private void purgeExpired() {
         long now = System.currentTimeMillis();
-        int removed = 0;
-        Iterator<Map.Entry<UUID, Pending>> it = pendingForTarget.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<UUID, Pending> e = it.next();
-            Pending p = e.getValue();
-            if (p == null) {
-                it.remove();
-                removed++;
-                continue;
-            }
-            if (p.expiresAt > 0 && p.expiresAt < now) {
-                it.remove();
-                removed++;
-            }
-        }
-        if (removed > 0) dbg("Purged " + removed + " expired pending requests.");
+        pendingForTarget.entrySet().removeIf(e -> e.getValue() == null
+                || (e.getValue().expiresAt > 0 && e.getValue().expiresAt < now));
     }
 
     private void dbg(String msg) {
         try {
-            if (plugin.getConfig().getBoolean("features.tpa.debug",
-                    plugin.getConfig().getBoolean("debug", false))) {
+            if (plugin.getConfig().getBoolean("features.tpa.debug", plugin.getConfig().getBoolean("debug", false))) {
                 plugin.getLogger().info("[TPA-X@" + localServer + "] " + msg);
             }
         } catch (Throwable ignored) {}
