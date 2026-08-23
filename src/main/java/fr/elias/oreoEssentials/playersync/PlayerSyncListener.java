@@ -3,10 +3,14 @@ package fr.elias.oreoEssentials.playersync;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
-import org.bukkit.event.*;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.entity.Player;
+
+import java.util.UUID;
 
 public final class PlayerSyncListener implements Listener {
     private final PlayerSyncService service;
@@ -20,30 +24,52 @@ public final class PlayerSyncListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent e) {
         if (!enabled) return;
-        // BUG-16: Save on async thread — YAML I/O must not block the main thread.
+
         final Player quitting = e.getPlayer();
-        OreScheduler.runAsync(OreoEssentials.get(), () -> service.saveIfEnabled(quitting));
+        final UUID uuid = quitting.getUniqueId();
+
+        // Read Bukkit player state while we still own the player's region/thread,
+        // then perform only serialization/storage work asynchronously.
+        final PlayerSyncSnapshot snapshot;
+        try {
+            snapshot = service.captureSnapshot(quitting);
+        } catch (Throwable t) {
+            OreoEssentials.get().getLogger().warning("[SYNC] capture failed for " + uuid + ": " + t.getMessage());
+            return;
+        }
+
+        OreScheduler.runAsync(OreoEssentials.get(), () -> service.saveSnapshot(uuid, snapshot));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent e) {
         if (!enabled) return;
-        Player p = e.getPlayer();
+        final Player p = e.getPlayer();
+        final UUID uuid = p.getUniqueId();
+        final String name = p.getName();
 
-        try {
-            OreoEssentials.get().getPlayerDirectory().saveMapping(p.getName(), p.getUniqueId());
-        } catch (Exception ex) {
-        }
+        // PlayerDirectory uses the synchronous Mongo driver, so never query/write it on a region thread.
+        OreScheduler.runAsync(OreoEssentials.get(), () -> {
+            try {
+                var directory = OreoEssentials.get().getPlayerDirectory();
+                if (directory != null) directory.saveMapping(name, uuid);
+            } catch (Throwable ignored) {}
+        });
 
-        OreScheduler.runLaterForEntity(
-                OreoEssentials.get(),
-                p,
-                () -> {
-                    Player online = Bukkit.getPlayer(p.getUniqueId());
-                    if (online == null || !online.isOnline()) return; // player disconnected during delay
-                    service.loadAndApply(online);
-                },
-                10L
-        );
+        // Preserve the original 10-tick join grace period, but move the storage load off-thread.
+        OreScheduler.runLaterForEntity(OreoEssentials.get(), p, () -> {
+            if (!p.isOnline()) return;
+
+            OreScheduler.runAsync(OreoEssentials.get(), () -> {
+                PlayerSyncSnapshot snapshot = service.loadSnapshot(uuid);
+                if (snapshot == null) return;
+
+                OreScheduler.runForEntity(OreoEssentials.get(), p, () -> {
+                    Player online = Bukkit.getPlayer(uuid);
+                    if (online == null || !online.isOnline()) return;
+                    service.applySnapshot(online, snapshot);
+                });
+            });
+        }, 10L);
     }
 }
