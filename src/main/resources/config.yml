@@ -7,7 +7,7 @@
 # ==================== CORE SERVER SETTINGS ====================
 server:
   name: "survival-1"  # Unique logical name for THIS server
-  language: fr       # Options: en, fr, es, de, pt
+  language: en       # Options: en, fr, es, de, pt
 # ==================== WEB PANEL ====================
 # Set enabled: true and paste the api-key generated when you register your server on the OreoStudios panel.
 # Players can run /weblink in-game to get a one-time login code instead of typing their UUID.
