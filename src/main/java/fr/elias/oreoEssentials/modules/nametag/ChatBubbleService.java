@@ -279,8 +279,6 @@ public final class ChatBubbleService implements Listener {
     }
 
     private void updateEntityVisibility(Player sender, TextDisplay display) {
-        // Capture the sender position from the sender's region, then evaluate each viewer on
-        // that viewer's own entity scheduler. This avoids cross-region Player access on Folia.
         OreScheduler.runForEntity(plugin, sender, () -> {
             if (!sender.isOnline()) return;
             final Location senderLoc = sender.getLocation().clone();
@@ -301,13 +299,8 @@ public final class ChatBubbleService implements Listener {
         });
     }
 
-    /** Keeps a TextDisplay positioned relative to its owner. */
     private void startPositionTracker(Player sender, TextDisplay display, double xOffset, double yOffsetTotal) {
         OreTask[] taskRef = {null};
-
-        // Keep the lifecycle timer attached to the display entity, but capture the owner's
-        // location on the owner's entity scheduler. On Folia, moving the display must use
-        // teleportAsync even when both entities happen to be in the same region.
         taskRef[0] = OreScheduler.runTimerForEntity(plugin, display, () -> {
             if (!display.isValid()) {
                 if (taskRef[0] != null) taskRef[0].cancel();
@@ -323,11 +316,8 @@ public final class ChatBubbleService implements Listener {
                 if (!sender.isOnline() || !display.isValid()) return;
                 Location target = sender.getLocation().clone().add(xOffset, yOffsetTotal, 0);
                 try {
-                    if (OreScheduler.isFolia()) {
-                        display.teleportAsync(target);
-                    } else {
-                        display.teleport(target);
-                    }
+                    if (OreScheduler.isFolia()) display.teleportAsync(target);
+                    else display.teleport(target);
                 } catch (Throwable t) {
                     if (taskRef[0] != null) taskRef[0].cancel();
                     plugin.getLogger().fine("[ChatBubble] Position tracker stopped: " + t.getMessage());
