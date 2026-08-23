@@ -15,6 +15,13 @@ disabled-command-message: "&cThis command is currently disabled."
 #                    TELEPORTATION COMMANDS
 # ═══════════════════════════════════════════════════════════
 
+# SAFETY NOTE:
+# The following vanilla-collision primaries are intentionally not managed here:
+# tp, ban, kick, gamemode, clear, msg, enchant, kill, bossbar.
+# CommandsAPI 5.1.1 does not create Oreo's Bukkit command when the primary
+# label already exists, so CommandToggle cannot safely alias/disable those
+# without risking the vanilla command. Fix those later at the CommandsAPI
+# registration layer, not inside CommandToggleService.
 commands:
   spawn:
     enabled: true
@@ -30,7 +37,9 @@ commands:
 
   warp:
     enabled: true
-    aliases: ["w", "warpto", "goto"]
+    aliases:
+      - "warpto"
+      - "goto"
 
   setwarp:
     enabled: true
@@ -72,9 +81,12 @@ commands:
     enabled: true
     aliases: ["playerhomes", "checkthomes", "seehomes"]
 
+  # Module-only toggle key. AuctionHouse registers /ah, /ahs, /ahsearch,
+  # /ahexpired, /ahsold and /ahadmin separately; do not bind them as
+  # aliases of a nonexistent /auctionhouse command.
   auctionhouse:
     enabled: true
-    aliases: ["ah", "ahs", "ahsearch", "ahexpired", "ahsold", "ahadmin"]
+    aliases: []
 
   otherhome:
     enabled: true
@@ -86,19 +98,18 @@ commands:
 
   tpaccept:
     enabled: true
-    aliases: ["tpyes", "tpaccept", "accepttp", "tpallow"]
+    aliases: ["tpyes", "accepttp", "tpallow"]
 
   tpdeny:
     enabled: true
     aliases: ["tpno", "tpdecline", "declinetp", "refusetp", "tpreject"]
 
-  tp:
-    enabled: true
-    aliases: ["teleport", "tele"]
-
   tphere:
     enabled: true
-    aliases: ["tph", "s", "summon", "bring"]
+    aliases:
+      - "tph"
+      - "s"
+      - "bring"
 
   move:
     enabled: true
@@ -106,7 +117,10 @@ commands:
 
   rtp:
     enabled: true
-    aliases: ["wild", "randomtp", "wilderness", "random"]
+    aliases:
+      - "wild"
+      - "randomtp"
+      - "wilderness"
 
   deathback:
     enabled: true
@@ -124,21 +138,11 @@ commands:
     enabled: true
     aliases: ["pwwl", "playerwarpwhitelist", "pwarpwhitelist"]
 
-  # ═══════════════════════════════════════════════════════════
-  #                    MODERATION COMMANDS
-  # ═══════════════════════════════════════════════════════════
-
-  ban:
-    enabled: true
-    aliases: ["banplayer", "permban", "banhammer"]
-
   unban:
     enabled: true
-    aliases: ["pardon", "unbanplayer", "removeban"]
-
-  kick:
-    enabled: true
-    aliases: ["kickplayer", "boot", "remove"]
+    aliases:
+      - "unbanplayer"
+      - "removeban"
 
   mute:
     enabled: true
@@ -150,7 +154,11 @@ commands:
 
   freeze:
     enabled: true
-    aliases: ["freezeplayer", "ss", "screenshare", "halt", "stop"]
+    aliases:
+      - "freezeplayer"
+      - "ss"
+      - "screenshare"
+      - "halt"
 
   jail:
     enabled: true
@@ -186,7 +194,10 @@ commands:
 
   feed:
     enabled: true
-    aliases: ["eat", "food", "hunger", "satisfy"]
+    aliases:
+      - "food"
+      - "hunger"
+      - "satisfy"
 
   god:
     enabled: true
@@ -196,21 +207,16 @@ commands:
     enabled: true
     aliases: ["v", "invis", "invisible", "hide", "disappear"]
 
-  gamemode:
-    enabled: true
-    aliases: ["gm", "gms", "gmc", "gma", "gmsp", "mode"]
-
-  clear:
-    enabled: true
-    aliases: ["ci", "clearinv", "clearinventory", "wipeinv"]
-
   world:
     enabled: true
     aliases: ["teleportworld", "worldtp", "worldteleport", "gotoworld"]
 
   oetime:
     enabled: true
-    aliases: ["time", "settime", "timechange", "changetime"]
+    aliases:
+      - "settime"
+      - "timechange"
+      - "changetime"
 
   weather:
     enabled: true
@@ -218,7 +224,9 @@ commands:
 
   sun:
     enabled: true
-    aliases: ["clear", "clearweather", "sunny", "day"]
+    aliases:
+      - "clearweather"
+      - "sunny"
 
   rain:
     enabled: true
@@ -227,10 +235,14 @@ commands:
   storm:
     enabled: true
     aliases: ["thunder", "thunderstorm", "lightning"]
-
-  reloadall:
+  oereload:
     enabled: true
-    aliases: ["rl", "reload", "reloadserver", "pluginreload"]
+    aliases:
+      - oereloadall
+      - oer
+      - rl
+      - reloadserver
+      - pluginreload
 
   modgui:
     enabled: true
@@ -239,14 +251,6 @@ commands:
   oesettings:
     enabled: true
     aliases: ["settings", "oresettings", "config", "configuration"]
-
-  # ═══════════════════════════════════════════════════════════
-  #                    COMMUNICATION COMMANDS
-  # ═══════════════════════════════════════════════════════════
-
-  msg:
-    enabled: true
-    aliases: ["m", "tell", "w", "whisper", "pm", "dm", "message", "t"]
 
   reply:
     enabled: true
@@ -262,7 +266,10 @@ commands:
 
   oechannel:
     enabled: true
-    aliases: ["channel", "ch", "joinchannel", "switchchannel"]
+    aliases:
+      - "channel"
+      - "joinchannel"
+      - "switchchannel"
 
   oechannels:
     enabled: true
@@ -278,7 +285,10 @@ commands:
 
   pay:
     enabled: true
-    aliases: ["send", "give", "transfer", "sendmoney", "paymoney"]
+    aliases:
+      - "send"
+      - "sendmoney"
+      - "paymoney"
 
   cheque:
     enabled: true
@@ -290,7 +300,12 @@ commands:
 
   baltop:
     enabled: true
-    aliases: ["balancetop", "moneytop", "richest", "top", "leaderboard", "wealthiest"]
+    aliases:
+      - "balancetop"
+      - "moneytop"
+      - "richest"
+      - "leaderboard"
+      - "wealthiest"
 
   currency:
     enabled: true
@@ -342,7 +357,7 @@ commands:
 
   seen:
     enabled: true
-    aliases: ["lastseen", "whois", "lookup", "check"]
+    aliases: ["lastseen", "whois", "lookup"]
 
   ping:
     enabled: true
@@ -362,7 +377,7 @@ commands:
 
   playtime:
     enabled: true
-    aliases: ["timeplayed", "playedtime", "onlinetime", "time"]
+    aliases: ["timeplayed", "playedtime", "onlinetime"]
 
   # ═══════════════════════════════════════════════════════════
   #                    INVENTORY COMMANDS
@@ -398,23 +413,15 @@ commands:
 
   anvil:
     enabled: true
-    aliases: ["repair", "fix", "anvilgui", "combine"]
+    aliases: ["repair", "anvilgui", "combine"]
 
   furnace:
     enabled: true
-    aliases: ["smelt", "furnacegui", "cook", "kiln"]
+    aliases: ["smelt", "furnacegui", "kiln"]
 
   playersync:
     enabled: true
     aliases: ["psync", "sync", "inventorysync", "syncplayer"]
-
-  # ═══════════════════════════════════════════════════════════
-  #                    ITEM COMMANDS
-  # ═══════════════════════════════════════════════════════════
-
-  enchant:
-    enabled: true
-    aliases: ["ench", "enchantitem", "addenchant", "enchantment"]
 
   disenchant:
     enabled: true
@@ -426,7 +433,9 @@ commands:
 
   sellgui:
     enabled: true
-    aliases: ["sell", "shop", "sellitems", "sellmenu"]
+    aliases:
+      - "sellitems"
+      - "sellmenu"
 
   # ═══════════════════════════════════════════════════════════
   #                    EFFECTS & MOBS COMMANDS
@@ -434,7 +443,10 @@ commands:
 
   effectme:
     enabled: true
-    aliases: ["effect", "potion", "addeffect", "potioneffect"]
+    aliases:
+      - "potion"
+      - "addeffect"
+      - "potioneffect"
 
   effectto:
     enabled: true
@@ -443,10 +455,6 @@ commands:
   spawnmob:
     enabled: true
     aliases: ["mob", "spawncreature", "summonmob", "mobspawn"]
-
-  kill:
-    enabled: true
-    aliases: ["suicide", "die", "kms"]
 
   killallr:
     enabled: true
@@ -475,10 +483,6 @@ commands:
   sit:
     enabled: true
     aliases: ["chair", "sitdown", "rest"]
-
-  bossbar:
-    enabled: true
-    aliases: ["bb", "actionbar", "bar", "topbar"]
 
   scoreboard:
     enabled: true
@@ -551,14 +555,22 @@ commands:
   oe:
     enabled: true
     aliases: ["oreoessentials", "oreo", "essentials"]
-
-  afeliusreload:
+  afelius:
     enabled: true
-    aliases: ["afreload", "reloadafelius", "afelreload"]
-
-  zessentialshomesimport:
+    aliases:
+      - af
+      - afreload
+      - reloadafelius
+      - afelreload
+  importzhomes:
     enabled: true
-    aliases: ["zehomesimport", "importhomes", "zessimport", "homesimport"]
+    aliases:
+      - zhomesimport
+      - zessentialsimport
+      - zehomesimport
+      - importhomes
+      - zessimport
+      - homesimport
 
   # ═══════════════════════════════════════════════════════════
   #                    COMMAND TOGGLE MANAGEMENT
@@ -567,3 +579,4 @@ commands:
   commandtoggle:
     enabled: true
     aliases: ["cmdtoggle", "cmdt", "togglecommand", "commandmanager"]
+

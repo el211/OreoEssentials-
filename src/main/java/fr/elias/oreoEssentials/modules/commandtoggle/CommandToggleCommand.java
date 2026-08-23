@@ -39,42 +39,38 @@ public class CommandToggleCommand implements CommandExecutor, TabCompleter {
         String subCommand = args[0].toLowerCase(Locale.ROOT);
 
         switch (subCommand) {
-            case "list":
-                listCommands(sender);
-                break;
+            case "list" -> listCommands(sender);
 
-            case "enable":
+            case "enable" -> {
                 if (args.length < 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /commandtoggle enable <command>");
+                    sender.sendMessage(ChatColor.RED + "Usage: /commandtoggle enable <command|alias>");
                     return true;
                 }
                 toggleCommand(sender, args[1], true);
-                break;
+            }
 
-            case "disable":
+            case "disable" -> {
                 if (args.length < 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /commandtoggle disable <command>");
+                    sender.sendMessage(ChatColor.RED + "Usage: /commandtoggle disable <command|alias>");
                     return true;
                 }
                 toggleCommand(sender, args[1], false);
-                break;
+            }
 
-            case "reload":
+            case "reload" -> {
                 service.reload();
-                sender.sendMessage(ChatColor.GREEN + "[CommandToggle] Configuration reloaded and toggles reapplied!");
-                break;
+                sender.sendMessage(ChatColor.GREEN + "[CommandToggle] Configuration reloaded, aliases rebuilt and toggles reapplied!");
+            }
 
-            case "status":
+            case "status" -> {
                 if (args.length < 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /commandtoggle status <command>");
+                    sender.sendMessage(ChatColor.RED + "Usage: /commandtoggle status <command|alias>");
                     return true;
                 }
                 checkStatus(sender, args[1]);
-                break;
+            }
 
-            default:
-                sendHelp(sender);
-                break;
+            default -> sendHelp(sender);
         }
 
         return true;
@@ -85,10 +81,10 @@ public class CommandToggleCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.GOLD + "║     " + ChatColor.YELLOW + "Command Toggle Management" + ChatColor.GOLD + "      ║");
         sender.sendMessage(ChatColor.GOLD + "╚════════════════════════════════════════╝");
         sender.sendMessage(ChatColor.YELLOW + "/commandtoggle list " + ChatColor.GRAY + "- List all commands");
-        sender.sendMessage(ChatColor.YELLOW + "/commandtoggle enable <cmd> " + ChatColor.GRAY + "- Enable a command");
-        sender.sendMessage(ChatColor.YELLOW + "/commandtoggle disable <cmd> " + ChatColor.GRAY + "- Disable a command");
-        sender.sendMessage(ChatColor.YELLOW + "/commandtoggle status <cmd> " + ChatColor.GRAY + "- Check command status");
-        sender.sendMessage(ChatColor.YELLOW + "/commandtoggle reload " + ChatColor.GRAY + "- Reload configuration");
+        sender.sendMessage(ChatColor.YELLOW + "/commandtoggle enable <cmd|alias> " + ChatColor.GRAY + "- Enable a command");
+        sender.sendMessage(ChatColor.YELLOW + "/commandtoggle disable <cmd|alias> " + ChatColor.GRAY + "- Disable a command");
+        sender.sendMessage(ChatColor.YELLOW + "/commandtoggle status <cmd|alias> " + ChatColor.GRAY + "- Check command status");
+        sender.sendMessage(ChatColor.YELLOW + "/commandtoggle reload " + ChatColor.GRAY + "- Reload config and rebuild aliases");
     }
 
     private void listCommands(CommandSender sender) {
@@ -100,46 +96,59 @@ public class CommandToggleCommand implements CommandExecutor, TabCompleter {
         List<String> disabled = new ArrayList<>();
 
         for (var entry : config.getAllCommands().entrySet()) {
-            if (entry.getValue().isEnabled()) {
-                enabled.add(entry.getKey());
-            } else {
-                disabled.add(entry.getKey());
-            }
+            if (entry.getValue().isEnabled()) enabled.add(entry.getKey());
+            else disabled.add(entry.getKey());
         }
 
         sender.sendMessage(ChatColor.GREEN + "✓ Enabled (" + enabled.size() + "): " + ChatColor.GRAY + String.join(", ", enabled));
         sender.sendMessage(ChatColor.RED + "✗ Disabled (" + disabled.size() + "): " + ChatColor.GRAY + String.join(", ", disabled));
     }
 
-    private void toggleCommand(CommandSender sender, String commandName, boolean enable) {
-        String lower = commandName.toLowerCase(Locale.ROOT);
-
-        if (!config.getAllCommands().containsKey(lower)) {
-            sender.sendMessage(ChatColor.RED + "Command '" + commandName + "' not found in commands-toggle.yml");
+    private void toggleCommand(CommandSender sender, String label, boolean enable) {
+        String resolved = config.resolveCommandName(label);
+        if (resolved == null) {
+            sender.sendMessage(ChatColor.RED + "Command or alias '" + label + "' was not found in commands-toggle.yml");
             return;
         }
 
-        config.setCommandEnabled(lower, enable);
+        config.setCommandEnabled(resolved, enable);
         service.applyToggles();
 
         String status = enable ? ChatColor.GREEN + "enabled" : ChatColor.RED + "disabled";
-        sender.sendMessage(ChatColor.YELLOW + "Command '" + ChatColor.WHITE + commandName + ChatColor.YELLOW + "' has been " + status);
+        String normalized = CommandToggleConfig.normalizeLabel(label);
+        String suffix = normalized.equals(resolved)
+                ? ""
+                : ChatColor.GRAY + " (alias of /" + resolved + ")";
+
+        sender.sendMessage(
+                ChatColor.YELLOW + "Command '" + ChatColor.WHITE + "/" + resolved
+                        + ChatColor.YELLOW + "' has been " + status + suffix
+        );
     }
 
-    private void checkStatus(CommandSender sender, String commandName) {
-        String lower = commandName.toLowerCase(Locale.ROOT);
-
-        if (!config.getAllCommands().containsKey(lower)) {
-            sender.sendMessage(ChatColor.RED + "Command '" + commandName + "' not found in commands-toggle.yml");
+    private void checkStatus(CommandSender sender, String label) {
+        String resolved = config.resolveCommandName(label);
+        if (resolved == null) {
+            sender.sendMessage(ChatColor.RED + "Command or alias '" + label + "' was not found in commands-toggle.yml");
             return;
         }
 
-        boolean enabled = config.isCommandEnabled(lower);
+        boolean enabled = config.isCommandEnabled(resolved);
         String status = enabled ? ChatColor.GREEN + "ENABLED ✓" : ChatColor.RED + "DISABLED ✗";
+        CommandToggleConfig.CommandToggleEntry entry = config.getCommand(resolved);
 
         sender.sendMessage(ChatColor.GOLD + "╔════════════════════════════════════════╗");
-        sender.sendMessage(ChatColor.GOLD + "║     " + ChatColor.YELLOW + "Command: " + ChatColor.WHITE + commandName + ChatColor.GOLD + "                  ║");
-        sender.sendMessage(ChatColor.GOLD + "║     " + ChatColor.YELLOW + "Status: " + status + ChatColor.GOLD + "                 ║");
+        sender.sendMessage(ChatColor.YELLOW + "Command: " + ChatColor.WHITE + "/" + resolved);
+        sender.sendMessage(ChatColor.YELLOW + "Status: " + status);
+        if (entry != null && !entry.getAliases().isEmpty()) {
+            sender.sendMessage(ChatColor.YELLOW + "Configured aliases: " + ChatColor.GRAY
+                    + entry.getAliases().stream().map(a -> "/" + a).collect(Collectors.joining(", ")));
+        }
+        String normalized = CommandToggleConfig.normalizeLabel(label);
+        if (!normalized.equals(resolved)) {
+            sender.sendMessage(ChatColor.YELLOW + "Requested label: " + ChatColor.GRAY + "/" + normalized
+                    + " → /" + resolved);
+        }
         sender.sendMessage(ChatColor.GOLD + "╚════════════════════════════════════════╝");
     }
 
@@ -160,9 +169,10 @@ public class CommandToggleCommand implements CommandExecutor, TabCompleter {
                 || args[0].equalsIgnoreCase("disable")
                 || args[0].equalsIgnoreCase("status"))) {
 
+            String prefix = args[1].toLowerCase(Locale.ROOT);
             return config.getAllCommands().keySet()
                     .stream()
-                    .filter(s -> s.startsWith(args[1].toLowerCase(Locale.ROOT)))
+                    .filter(s -> s.startsWith(prefix))
                     .sorted()
                     .collect(Collectors.toList());
         }

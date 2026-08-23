@@ -211,20 +211,32 @@ public final class AliasService {
     public void applyRuntimeRegistration() {
         DynamicAliasRegistry.unregisterAll(plugin);
 
-        int count = 0;
+        int enabled = 0;
+        int registered = 0;
+        int skipped = 0;
+
         for (AliasDef def : aliases.values()) {
             if (!def.enabled) continue;
+            enabled++;
 
-            DynamicAliasRegistry.register(
+            boolean ok = DynamicAliasRegistry.register(
                     plugin,
                     def.name,
                     new DynamicAliasExecutor(plugin, this, def.name),
                     "Oreo alias",
                     def.addTabs ? new DynamicAliasTabCompleter(this, def.name) : null
             );
-            count++;
+
+            if (ok) registered++;
+            else skipped++;
         }
-        logger.info("[Aliases] Registered " + count + " alias command(s).");
+
+        logger.info("[Aliases] Enabled=" + enabled
+                + ", registered=" + registered
+                + ", skipped/conflicted=" + skipped + ".");
+
+        // Runtime CommandMap changes are not automatically sent to online clients.
+        DynamicAliasRegistry.syncCommands(plugin);
     }
 
     public void shutdown() {
@@ -317,7 +329,7 @@ public final class AliasService {
             return evaluateNumericStat(sender, lower);
         }
 
-        String[] ops = {">=", "<=", "!=", "<-", "!<-", "|-", "!|-", "-|", "!-|", ">", "<", "="};
+        String[] ops = {">=", "<=", "!=", "==", "<-", "!<-", "|-", "!|-", "-|", "!-|", ">", "<", "="};
         String op = null; int idx = -1;
         for (String candidate : ops) {
             idx = indexOfOp(expr, candidate);
@@ -340,14 +352,14 @@ public final class AliasService {
                 case ">"  -> l >  r;
                 case "<=" -> l <= r;
                 case "<"  -> l <  r;
-                case "="  -> l == r;
+                case "=", "==" -> l == r;
                 case "!=" -> l != r;
                 default   -> false;
             };
         }
 
         return switch (op) {
-            case "="   -> Objects.equals(leftResolved, rightResolved);
+            case "=", "==" -> Objects.equals(leftResolved, rightResolved);
             case "!="  -> !Objects.equals(leftResolved, rightResolved);
             case "<-"  -> leftResolved.contains(rightResolved);
             case "!<-" -> !leftResolved.contains(rightResolved);
@@ -374,7 +386,7 @@ public final class AliasService {
     }
 
     private boolean evaluateNumericStat(org.bukkit.command.CommandSender sender, String expr) {
-        String[] nops = {">=", "<=", "!=", ">", "<", "="};
+        String[] nops = {">=", "<=", "!=", "==", ">", "<", "="};
         String op = null; int idx = -1;
         for (String candidate : nops) {
             idx = expr.indexOf(candidate);
@@ -399,7 +411,7 @@ public final class AliasService {
             case ">"  -> left >  right;
             case "<=" -> left <= right;
             case "<"  -> left <  right;
-            case "="  -> left == right;
+            case "=", "==" -> left == right;
             case "!=" -> left != right;
             default   -> true;
         };
@@ -453,7 +465,9 @@ public final class AliasService {
     }
 
     private RunAs parseRunAs(String s) {
+        if (s == null || s.isBlank()) return RunAs.PLAYER;
         try { return RunAs.valueOf(s.toUpperCase(Locale.ROOT)); }
         catch (IllegalArgumentException ignored) { return RunAs.PLAYER; }
     }
 }
+
