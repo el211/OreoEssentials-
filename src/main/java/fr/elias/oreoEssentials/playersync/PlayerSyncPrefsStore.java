@@ -24,10 +24,11 @@ public final class PlayerSyncPrefsStore {
         this.cfg  = YamlConfiguration.loadConfiguration(file);
     }
 
+    /**
+     * Returns the cached preferences without touching disk.
+     * Disk I/O belongs off the server/region thread; call reload() explicitly when needed.
+     */
     public synchronized PlayerSyncPrefs get(UUID id) {
-        try {
-            cfg.load(file); // reload from disk to avoid stale in-memory cache
-        } catch (Exception ignored) {}
         String base = "prefs." + id + ".";
         if (!cfg.contains(base)) return PlayerSyncPrefs.defaults(dInv, dXp, dHealth, dHunger, dPotions);
         PlayerSyncPrefs p = new PlayerSyncPrefs();
@@ -47,5 +48,9 @@ public final class PlayerSyncPrefsStore {
         cfg.set(base + "hunger",  p.hunger);
         cfg.set(base + "potions", p.potions);
         try { cfg.save(file); } catch (Exception ignored) {}
+    }
+
+    public synchronized void reload() {
+        this.cfg = YamlConfiguration.loadConfiguration(file);
     }
 }

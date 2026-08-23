@@ -12,6 +12,7 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 public final class PlayerSyncService {
     private final OreoEssentials plugin;
@@ -24,66 +25,64 @@ public final class PlayerSyncService {
         this.prefs = prefs;
     }
 
-    public void saveIfEnabled(Player p) {
+    /** Capture Bukkit player state. Must run on the player's owning thread/region. */
+    public PlayerSyncSnapshot captureSnapshot(Player p) {
+        PlayerSyncPrefs pr = prefs.get(p.getUniqueId());
+        PlayerSyncSnapshot s = new PlayerSyncSnapshot();
+
+        if (pr.inv) {
+            s.inventory = p.getInventory().getContents();
+            s.armor     = p.getInventory().getArmorContents();
+            s.offhand   = p.getInventory().getItemInOffHand();
+        } else {
+            s.inventory = new ItemStack[0];
+            s.armor     = new ItemStack[0];
+            s.offhand   = null;
+        }
+
+        if (pr.xp) {
+            s.level = Math.max(0, p.getLevel());
+            s.exp   = Math.max(0f, Math.min(1f, p.getExp()));
+        } else {
+            s.level = 0;
+            s.exp   = 0f;
+        }
+
+        s.health = Math.max(0.0, p.getHealth());
+        s.food = Math.max(0, Math.min(20, p.getFoodLevel()));
+        s.saturation = Math.max(0f, Math.min(20f, p.getSaturation()));
+        s.potionData = pr.potions ? serializePotions(p.getActivePotionEffects()) : null;
+        return s;
+    }
+
+    /** Storage-only operation; safe to run asynchronously. */
+    public void saveSnapshot(UUID uuid, PlayerSyncSnapshot snapshot) {
         try {
-            PlayerSyncPrefs pr = prefs.get(p.getUniqueId());
-            PlayerSyncSnapshot s = new PlayerSyncSnapshot();
-
-            if (pr.inv) {
-                s.inventory = p.getInventory().getContents();
-                s.armor     = p.getInventory().getArmorContents();
-                s.offhand   = p.getInventory().getItemInOffHand();
-            } else {
-                s.inventory = new ItemStack[0];
-                s.armor     = new ItemStack[0];
-                s.offhand   = null;
-            }
-
-            if (pr.xp) {
-                s.level = Math.max(0, p.getLevel());
-                s.exp   = Math.max(0f, Math.min(1f, p.getExp()));
-            } else {
-                s.level = 0;
-                s.exp   = 0f;
-            }
-
-            if (pr.health) {
-                s.health = Math.max(0.0, p.getHealth());
-            } else {
-                s.health = p.getHealth();
-            }
-
-            if (pr.hunger) {
-                s.food       = Math.max(0, Math.min(20, p.getFoodLevel()));
-                s.saturation = Math.max(0f, Math.min(20f, p.getSaturation()));
-            } else {
-                s.food       = p.getFoodLevel();
-                s.saturation = p.getSaturation();
-            }
-
-            if (pr.potions) {
-                s.potionData = serializePotions(p.getActivePotionEffects());
-            } else {
-                s.potionData = null;
-            }
-
-            storage.save(p.getUniqueId(), s);
+            storage.save(uuid, snapshot);
         } catch (Throwable t) {
-            plugin.getLogger().warning("[SYNC] save failed for " + p.getUniqueId() + ": " + t.getMessage());
+            plugin.getLogger().warning("[SYNC] save failed for " + uuid + ": " + t.getMessage());
         }
     }
 
-    public void loadAndApply(Player p) {
+    /** Storage-only operation; safe to run asynchronously. */
+    public PlayerSyncSnapshot loadSnapshot(UUID uuid) {
         try {
-            if (!p.isOnline()) return; // guard: player may have disconnected before load completes
+            return storage.load(uuid);
+        } catch (Throwable t) {
+            plugin.getLogger().warning("[SYNC] load failed for " + uuid + ": " + t.getMessage());
+            return null;
+        }
+    }
+
+    /** Apply a previously loaded snapshot. Must run on the player's owning thread/region. */
+    public void applySnapshot(Player p, PlayerSyncSnapshot s) {
+        try {
+            if (p == null || s == null || !p.isOnline()) return;
             PlayerSyncPrefs pr = prefs.get(p.getUniqueId());
-            PlayerSyncSnapshot s = storage.load(p.getUniqueId());
-            if (s == null) return;
-            if (!p.isOnline()) return; // guard: player may have disconnected during async load
 
             if (pr.inv) {
                 if (s.inventory != null) {
-                    ItemStack[] main = EnderChestStorage.clamp(s.inventory, 4); // 4 rows = 36 slots
+                    ItemStack[] main = EnderChestStorage.clamp(s.inventory, 4);
                     p.getInventory().setContents(main);
                 }
                 if (s.armor != null) {
@@ -92,7 +91,6 @@ public final class PlayerSyncService {
                 p.getInventory().setItemInOffHand(s.offhand);
             }
 
-            // XP
             if (pr.xp) {
                 p.setLevel(Math.max(0, s.level));
                 p.setExp(Math.max(0f, Math.min(1f, s.exp)));
@@ -101,16 +99,8 @@ public final class PlayerSyncService {
             if (pr.health) {
                 AttributeInstance maxHealthAttr = p.getAttribute(Attribute.MAX_HEALTH);
                 double max = (maxHealthAttr != null ? maxHealthAttr.getValue() : 20.0);
-
                 double raw = s.health;
-                double target;
-
-                if (raw <= 0.0) {
-                    target = max;
-                } else {
-                    target = Math.max(1.0, Math.min(max, raw));
-                }
-
+                double target = raw <= 0.0 ? max : Math.max(1.0, Math.min(max, raw));
                 try {
                     p.setHealth(target);
                 } catch (IllegalArgumentException ignored) {
@@ -118,11 +108,9 @@ public final class PlayerSyncService {
                 }
             }
 
-            // Hunger
             if (pr.hunger) {
                 int food = s.food;
                 float sat = s.saturation;
-
                 if (food <= 0 && sat <= 0f) {
                     p.setFoodLevel(20);
                     p.setSaturation(10f);
@@ -132,7 +120,6 @@ public final class PlayerSyncService {
                 }
             }
 
-            // Potions
             if (pr.potions && s.potionData != null && !s.potionData.isEmpty()) {
                 List<PotionEffect> effects = deserializePotions(s.potionData);
                 for (PotionEffect active : p.getActivePotionEffects()) {
@@ -143,7 +130,7 @@ public final class PlayerSyncService {
                 }
             }
         } catch (Throwable t) {
-            plugin.getLogger().warning("[SYNC] load/apply failed for " + p.getUniqueId() + ": " + t.getMessage());
+            plugin.getLogger().warning("[SYNC] apply failed for " + (p != null ? p.getUniqueId() : "unknown") + ": " + t.getMessage());
         }
     }
 
