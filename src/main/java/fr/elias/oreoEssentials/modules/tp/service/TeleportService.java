@@ -46,27 +46,35 @@ public class TeleportService implements Listener {
     public boolean request(Player from, Player to) {
         if (from == null || to == null || !from.isOnline() || !to.isOnline()) return false;
 
+        final UUID fromId = from.getUniqueId();
+        final UUID toId = to.getUniqueId();
+        final String fromName = from.getName();
+        final String toName = to.getName();
         long exp = System.currentTimeMillis() + timeoutSec * 1000L;
-        pendingToTarget.put(to.getUniqueId(), new TpaRequest(from.getUniqueId(), exp));
+        pendingToTarget.put(toId, new TpaRequest(fromId, exp));
 
-        // Notify target
-        Lang.send(
-                to,
-                "tpa.request-target",
-                "<yellow><bold>%player%</bold></yellow> <gray>wants to teleport to you.</gray> "
-                        + "<dark_gray>(expires in</dark_gray> <white>%timeout%</white><dark_gray>s)</dark_gray>",
-                Map.of(
-                        "player", from.getName(),
-                        "timeout", String.valueOf(timeoutSec)
-                )
-        );
+        // Each player is messaged on their own entity scheduler. This matters on Folia when
+        // requester and target are in different regions.
+        OreScheduler.runForEntity(plugin, to, () -> {
+            if (!to.isOnline()) return;
+            Lang.send(
+                    to,
+                    "tpa.request-target",
+                    "<yellow><bold>%player%</bold></yellow> <gray>wants to teleport to you.</gray> "
+                            + "<dark_gray>(expires in</dark_gray> <white>%timeout%</white><dark_gray>s)</dark_gray>",
+                    Map.of("player", fromName, "timeout", String.valueOf(timeoutSec))
+            );
+        });
 
-        Lang.send(
-                from,
-                "tpa.sent.local",
-                "<green>Teleport request sent to <yellow>%target%</yellow>.</green>",
-                Map.of("target", to.getName())
-        );
+        OreScheduler.runForEntity(plugin, from, () -> {
+            if (!from.isOnline()) return;
+            Lang.send(
+                    from,
+                    "tpa.sent.local",
+                    "<green>Teleport request sent to <yellow>%target%</yellow>.</green>",
+                    Map.of("target", toName)
+            );
+        });
         return true;
     }
 
@@ -77,54 +85,47 @@ public class TeleportService implements Listener {
         long now = System.currentTimeMillis();
 
         if (req == null || req.expiresAt < now) {
-            Lang.send(
-                    target,
-                    "tpa.accept.none",
-                    "<red>No pending teleport requests.</red>"
-            );
+            Lang.send(target, "tpa.accept.none", "<red>No pending teleport requests.</red>");
             return false;
         }
 
         Player from = Bukkit.getPlayer(req.from);
         if (from == null || !from.isOnline()) {
-            Lang.send(
-                    target,
-                    "tpa.accept.requester-offline",
-                    "<red>The requester is no longer online.</red>"
-            );
+            Lang.send(target, "tpa.accept.requester-offline", "<red>The requester is no longer online.</red>");
             return false;
         }
 
-        // record /back
-        try { if (back != null) back.setLast(from.getUniqueId(), from.getLocation()); } catch (Throwable ignored) {}
+        // accept() is invoked from the target's entity thread, so capture the destination here.
+        final Location dest = target.getLocation().clone();
+        final String targetName = target.getName();
+        final String requesterName = from.getName();
 
-        // do TP
-        Location dest = target.getLocation();
-        if (dest != null) {
-            OreScheduler.runForEntity(plugin, from, () -> {
+        OreScheduler.runForEntity(plugin, from, () -> {
+            if (!from.isOnline()) return;
+            try { if (back != null) back.setLast(from.getUniqueId(), from.getLocation()); } catch (Throwable ignored) {}
+
+            try {
                 if (OreScheduler.isFolia()) {
                     from.teleportAsync(dest);
                 } else {
                     from.teleport(dest);
                 }
-            });
-        }
+            } catch (Throwable ignored) {}
 
-        // messages
-        Lang.send(
-                from,
-                "tpa.teleported",
-                "<green>Teleported to <yellow>%target%</yellow>.</green>",
-                Map.of("target", target.getName())
-        );
+            Lang.send(
+                    from,
+                    "tpa.teleported",
+                    "<green>Teleported to <yellow>%target%</yellow>.</green>",
+                    Map.of("target", targetName)
+            );
+        });
 
         Lang.send(
                 target,
                 "tpa.accept.accepted",
                 "<green>Accepted teleport request from <yellow>%player%</yellow>.</green>",
-                Map.of("player", from.getName())
+                Map.of("player", requesterName)
         );
-
         return true;
     }
 
@@ -133,29 +134,25 @@ public class TeleportService implements Listener {
 
         TpaRequest req = pendingToTarget.remove(target.getUniqueId());
         if (req == null) {
-            Lang.send(
-                    target,
-                    "tpa.accept.none",
-                    "<red>No pending teleport requests.</red>"
-            );
+            Lang.send(target, "tpa.accept.none", "<red>No pending teleport requests.</red>");
             return false;
         }
 
+        final String targetName = target.getName();
         Player from = Bukkit.getPlayer(req.from);
         if (from != null && from.isOnline()) {
-            Lang.send(
-                    from,
-                    "tpa.deny.requester",
-                    "<red>Your teleport request to <yellow>%target%</yellow> was denied.</red>",
-                    Map.of("target", target.getName())
-            );
+            OreScheduler.runForEntity(plugin, from, () -> {
+                if (!from.isOnline()) return;
+                Lang.send(
+                        from,
+                        "tpa.deny.requester",
+                        "<red>Your teleport request to <yellow>%target%</yellow> was denied.</red>",
+                        Map.of("target", targetName)
+                );
+            });
         }
 
-        Lang.send(
-                target,
-                "tpa.deny.target",
-                "<yellow>Denied the teleport request.</yellow>"
-        );
+        Lang.send(target, "tpa.deny.target", "<yellow>Denied the teleport request.</yellow>");
         return true;
     }
 
@@ -167,23 +164,22 @@ public class TeleportService implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
-        // Remove any pending request where this player is the target
         pendingToTarget.remove(uuid);
-        // Remove any pending requests where this player is the sender
         pendingToTarget.entrySet().removeIf(e -> e.getValue().from.equals(uuid));
     }
 
-
     public void teleportSilently(Player who, Location to) {
         if (who == null || to == null) return;
-        try { if (back != null) back.setLast(who.getUniqueId(), who.getLocation()); } catch (Throwable ignored) {}
+        final Location destination = to.clone();
 
         OreScheduler.runForEntity(plugin, who, () -> {
+            if (!who.isOnline()) return;
+            try { if (back != null) back.setLast(who.getUniqueId(), who.getLocation()); } catch (Throwable ignored) {}
             try {
                 if (OreScheduler.isFolia()) {
-                    who.teleportAsync(to);
+                    who.teleportAsync(destination);
                 } else {
-                    who.teleport(to);
+                    who.teleport(destination);
                 }
             } catch (Throwable ignored) {}
         });
@@ -191,7 +187,12 @@ public class TeleportService implements Listener {
 
     public void teleportSilently(Player who, Player target) {
         if (who == null || target == null || !target.isOnline()) return;
-        teleportSilently(who, target.getLocation());
+        // Read the target's location on the target's owning region, then hand the immutable
+        // Location snapshot to the requester's entity scheduler.
+        OreScheduler.runForEntity(plugin, target, () -> {
+            if (!target.isOnline()) return;
+            teleportSilently(who, target.getLocation().clone());
+        });
     }
 
     public Player getRequester(Player target) {
@@ -206,41 +207,36 @@ public class TeleportService implements Listener {
         TpaRequest req = pendingToTarget.remove(target.getUniqueId());
         if (req == null) return false;
 
+        final String requesterName = requester != null ? requester.getName() : "unknown";
         if (requester != null && requester.isOnline()) {
-            Lang.send(
-                    requester,
-                    "tpa.cancelled-moved-requester",
-                    "<red>Your teleport request was cancelled because you moved.</red>"
-            );
+            Lang.send(requester, "tpa.cancelled-moved-requester",
+                    "<red>Your teleport request was cancelled because you moved.</red>");
         }
 
         if (target.isOnline()) {
-            String name = requester != null ? requester.getName() : "unknown";
-            Lang.send(
-                    target,
-                    "tpa.cancelled-moved-target",
-                    "<yellow>Teleport request from <white>%requester%</white> was cancelled (requester moved).</yellow>",
-                    Map.of("requester", name)
-            );
+            OreScheduler.runForEntity(plugin, target, () -> {
+                if (!target.isOnline()) return;
+                Lang.send(
+                        target,
+                        "tpa.cancelled-moved-target",
+                        "<yellow>Teleport request from <white>%requester%</white> was cancelled (requester moved).</yellow>",
+                        Map.of("requester", requesterName)
+                );
+            });
         }
-
         return true;
     }
-
 
     public boolean teleportToServerLocation(Player who, BackLocation loc) {
         if (who == null || loc == null) return false;
 
         String localServer = plugin.getConfigService().serverName();
-
-        // same server → local tp
         if (loc.getServer() == null
                 || loc.getServer().isBlank()
                 || loc.getServer().equalsIgnoreCase(localServer)) {
 
             Location dest = loc.toLocalLocation();
             if (dest == null) return false;
-
             teleportSilently(who, dest);
             return true;
         }
@@ -250,7 +246,6 @@ public class TeleportService implements Listener {
             backBroker.requestCrossServerBack(who, loc);
             return true;
         }
-
         return false;
     }
 
