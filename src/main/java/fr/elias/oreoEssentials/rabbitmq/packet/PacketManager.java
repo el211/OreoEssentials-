@@ -9,9 +9,9 @@ import fr.elias.oreoEssentials.rabbitmq.packet.event.IncomingPacketListener;
 import fr.elias.oreoEssentials.rabbitmq.packet.event.PacketSender;
 import fr.elias.oreoEssentials.rabbitmq.packet.event.PacketSubscriber;
 import fr.elias.oreoEssentials.rabbitmq.packet.event.PacketSubscriptionQueue;
-import fr.elias.oreoEssentials.modules.homes.rabbit.packet.HomeTeleportRequestPacket;
 import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteInputStream;
 import fr.elias.oreoEssentials.rabbitmq.stream.FriendlyByteOutputStream;
+import fr.elias.oreoEssentials.util.OreScheduler;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,34 +37,28 @@ public class PacketManager implements IncomingPacketListener {
         this.sender.registerListener(this);
     }
 
-    public void subscribeChannel(PacketChannel channel) {
-        this.sender.registerChannel(channel);
-    }
+    public void subscribeChannel(PacketChannel channel) { this.sender.registerChannel(channel); }
 
     public <T extends Packet> void registerPacket(Class<T> packetClass, Supplier<T> constructor) {
         try {
             packetRegistry.register(packetClass, constructor);
         } catch (NoSuchMethodError e) {
             boolean ok = tryReflectiveRegister(packetClass, constructor);
-            if (!ok) {
-                warn("[PM/REG] Failed to register packet " + packetClass.getName()
-                        + " — PacketRegistry has no compatible register(...) method.");
-            }
+            if (!ok) warn("[PM/REG] Failed to register packet " + packetClass.getName()
+                    + " — PacketRegistry has no compatible register(...) method.");
         } catch (Throwable t) {
             warn("[PM/REG] Error registering packet " + packetClass.getName() + ": " + t.getMessage());
         }
     }
 
     private <T extends Packet> boolean tryReflectiveRegister(Class<T> packetClass, Supplier<T> constructor) {
-        String[] names = {"register", "define", "put"};
-        for (String m : names) {
+        for (String m : new String[]{"register", "define", "put"}) {
             try {
                 var method = PacketRegistry.class.getMethod(m, Class.class, Supplier.class);
                 method.invoke(packetRegistry, packetClass, constructor);
                 return true;
             } catch (NoSuchMethodException ignored) {
-            } catch (Throwable ignored) {
-            }
+            } catch (Throwable ignored) {}
         }
         return false;
     }
@@ -78,14 +72,12 @@ public class PacketManager implements IncomingPacketListener {
             warn("[PM/PUBLISH] packet is null. channel=" + renderChannel(target));
             return;
         }
-
         if (!initialized) {
-            warn("[PM/PUBLISH] PacketManager not initialized (init() not called?)"
-                    + " type=" + packet.getClass().getName()
-                    + " channel=" + renderChannel(target));
+            warn("[PM/PUBLISH] PacketManager not initialized (init() not called?) type="
+                    + packet.getClass().getName() + " channel=" + renderChannel(target));
         }
 
-        PacketDefinition<?> definition = this.packetRegistry.getDefinition(packet.getClass());
+        PacketDefinition<?> definition = packetRegistry.getDefinition(packet.getClass());
         if (definition == null) {
             warn("[PM/PUBLISH] NO DEFINITION for type=" + packet.getClass().getName()
                     + " channel=" + renderChannel(target)
@@ -98,25 +90,20 @@ public class PacketManager implements IncomingPacketListener {
         packet.writeData(out);
 
         try {
-            this.sender.sendPacket(target, out.toByteArray());
+            sender.sendPacket(target, out.toByteArray());
         } catch (Throwable t) {
-            warn("[PM/PUBLISH] sender.sendPacket FAILED for type="
-                    + packet.getClass().getSimpleName()
-                    + " id=" + definition.getRegistryId()
-                    + " channel=" + renderChannel(target)
+            warn("[PM/PUBLISH] sender.sendPacket FAILED for type=" + packet.getClass().getSimpleName()
+                    + " id=" + definition.getRegistryId() + " channel=" + renderChannel(target)
                     + " error=" + t.getMessage());
         }
     }
 
-    public void sendPacket(Packet packet) {
-        sendPacket(PacketChannels.GLOBAL, packet);
-    }
+    public void sendPacket(Packet packet) { sendPacket(PacketChannels.GLOBAL, packet); }
 
     public <T extends Packet> void subscribe(Class<T> packetClass, PacketSubscriber<T> subscriber) {
         @SuppressWarnings("unchecked")
-        PacketSubscriptionQueue<T> queue =
-                (PacketSubscriptionQueue<T>) this.subscriptions.computeIfAbsent(
-                        packetClass, key -> new PacketSubscriptionQueue<>(packetClass));
+        PacketSubscriptionQueue<T> queue = (PacketSubscriptionQueue<T>) subscriptions.computeIfAbsent(
+                packetClass, key -> new PacketSubscriptionQueue<>(packetClass));
         queue.subscribe(subscriber);
     }
 
@@ -135,12 +122,9 @@ public class PacketManager implements IncomingPacketListener {
         try {
             FriendlyByteInputStream in = new FriendlyByteInputStream(content);
             long registryId = in.readLong();
-
-            PacketDefinition<?> definition = this.packetRegistry.getDefinition(registryId);
-
+            PacketDefinition<?> definition = packetRegistry.getDefinition(registryId);
             if (definition == null) {
-                warn("[PM/RECV] Unknown registry id: " + registryId
-                        + " bytes=" + content.length
+                warn("[PM/RECV] Unknown registry id: " + registryId + " bytes=" + content.length
                         + " channel=" + renderChannel(channel)
                         + " (Packet ids must match across servers; check register order & missing registerPacket calls)");
                 return;
@@ -148,24 +132,18 @@ public class PacketManager implements IncomingPacketListener {
 
             Packet packet = definition.getProvider().createPacket();
             packet.readData(in);
-
             dispatch(channel, packet);
-
         } catch (Throwable t) {
-            // R4: Log at SEVERE so packet decode failures are not silently swallowed.
             plugin.getLogger().log(java.util.logging.Level.SEVERE,
                     "[PM/RECV] Packet handling error — message rejected (not requeued)", t);
             warn("[PM/RECV] Failed to decode packet. err=" + t.getMessage()
-                    + " channel=" + renderChannel(channel)
-                    + " contentLen=" + content.length);
+                    + " channel=" + renderChannel(channel) + " contentLen=" + content.length);
         }
     }
 
     private <T extends Packet> void dispatch(PacketChannel channel, T packet) {
         @SuppressWarnings("unchecked")
-        PacketSubscriptionQueue<T> queue =
-                (PacketSubscriptionQueue<T>) this.subscriptions.get(packet.getClass());
-
+        PacketSubscriptionQueue<T> queue = (PacketSubscriptionQueue<T>) subscriptions.get(packet.getClass());
         if (queue == null) {
             warn("[PM/DISPATCH] No subscribers for " + packet.getClass().getName()
                     + " channel=" + renderChannel(channel)
@@ -173,24 +151,18 @@ public class PacketManager implements IncomingPacketListener {
             return;
         }
 
-        try {
-            queue.dispatch(channel, packet);
-        } catch (Throwable t) {
-            warn("[PM/DISPATCH] Subscriber dispatch failed for type="
-                    + packet.getClass().getSimpleName()
-                    + " err=" + t.getMessage()
-                    + " channel=" + renderChannel(channel));
-        }
-    }
-
-    private int safeSubscribersCount(PacketSubscriptionQueue<?> queue) {
-        try {
-            var m = queue.getClass().getMethod("size");
-            Object v = m.invoke(queue);
-            if (v instanceof Number n) return n.intValue();
-        } catch (Throwable ignored) {
-        }
-        return -1;
+        // RabbitMQ consumers run on RabbitMQ-owned threads. Never execute plugin/Bukkit
+        // subscriber code directly there. Move the dispatch onto the server scheduler first;
+        // entity-specific subscribers must still hop to the relevant entity scheduler.
+        OreScheduler.run(plugin, () -> {
+            try {
+                queue.dispatch(channel, packet);
+            } catch (Throwable t) {
+                warn("[PM/DISPATCH] Subscriber dispatch failed for type="
+                        + packet.getClass().getSimpleName() + " err=" + t.getMessage()
+                        + " channel=" + renderChannel(channel));
+            }
+        });
     }
 
     private String renderChannel(PacketChannel ch) {
@@ -208,37 +180,9 @@ public class PacketManager implements IncomingPacketListener {
         }
     }
 
-    private String serverName() {
-        try {
-            return plugin.getConfigService().serverName();
-        } catch (Throwable t) {
-            return "unknown";
-        }
-    }
-
-    private void warn(String msg) {
-        plugin.getLogger().warning(msg);
-    }
-
-    private void dbg(String msg) {
-        if (isDebug()) plugin.getLogger().info(msg);
-    }
-
-    private boolean isDebug() {
-        try {
-            return plugin.getConfig().getBoolean("debug", false);
-        } catch (Throwable t) {
-            return false;
-        }
-    }
-
-    public PacketRegistry getPacketRegistry() {
-        return packetRegistry;
-    }
-
-    public boolean isInitialized() {
-        return initialized;
-    }
+    private void warn(String msg) { plugin.getLogger().warning(msg); }
+    public PacketRegistry getPacketRegistry() { return packetRegistry; }
+    public boolean isInitialized() { return initialized; }
 
     public void close() {
         initialized = false;
@@ -246,10 +190,7 @@ public class PacketManager implements IncomingPacketListener {
     }
 
     public String registryChecksum() {
-        try {
-            return Integer.toHexString(packetRegistry.hashCode());
-        } catch (Throwable t) {
-            return "n/a";
-        }
+        try { return Integer.toHexString(packetRegistry.hashCode()); }
+        catch (Throwable t) { return "n/a"; }
     }
 }

@@ -15,6 +15,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.world.ChunkUnloadEvent;
@@ -29,6 +30,8 @@ public final class HealthBarListener implements Listener {
     private static final String HOLO_TAG = "oe_mobhb";
     private static final double DEFAULT_Y_OFFSET = 0.5;
     private static final Attribute MAX_HEALTH_ATTR = resolveMaxHealthAttribute();
+    private static final Object INSTANCE_LOCK = new Object();
+    private static HealthBarListener activeInstance;
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY =
@@ -113,6 +116,17 @@ public final class HealthBarListener implements Listener {
         this.requireLOS      = hb == null || hb.getBoolean("require-line-of-sight", true);
         this.spawnPerTickCap = (hb != null) ? Math.max(1, hb.getInt("spawn-per-tick-cap", 40)) : 40;
 
+        // /oereload creates a fresh HealthBarListener. Retire the previous instance
+        // before activating this one so old listeners/sweepers cannot accumulate.
+        synchronized (INSTANCE_LOCK) {
+            HealthBarListener previous = activeInstance;
+            activeInstance = this;
+            if (previous != null && previous != this) {
+                previous.shutdownInternal(false);
+                HandlerList.unregisterAll(previous);
+            }
+        }
+
         if (enabled) {
             sweeper = OreScheduler.runTimer(plugin, this::sweepTick, updateInterval, updateInterval);
         }
@@ -121,11 +135,20 @@ public final class HealthBarListener implements Listener {
     public boolean isEnabled() { return enabled; }
 
     public void shutdown() {
+        shutdownInternal(true);
+    }
+
+    private void shutdownInternal(boolean clearActive) {
         if (sweeper != null) { sweeper.cancel(); sweeper = null; }
         removeAll(topLine);
         removeAll(bottomLine);
         topLine.clear();
         bottomLine.clear();
+        if (clearActive) {
+            synchronized (INSTANCE_LOCK) {
+                if (activeInstance == this) activeInstance = null;
+            }
+        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -198,13 +221,6 @@ public final class HealthBarListener implements Listener {
     }
 
     private void sweepTick() {
-        // On Folia the GlobalRegionScheduler has no region ownership:
-        // getNearbyEntities(), getEntities(), getEntity(uuid), and entity
-        // teleport all require the owning region thread.  Health-bar
-        // creation/updates still happen through onSpawn/onDamage/onRegain
-        // events, so no bars are silently lost – only the proactive sweep
-        // (which shows bars for mobs already in range before a damage event)
-        // is skipped.
         if (OreScheduler.isFolia()) return;
 
         int created = 0;
@@ -532,7 +548,6 @@ public final class HealthBarListener implements Listener {
     private void removeStand(ArmorStand as) {
         if (as == null || as.isDead()) return;
         if (OreScheduler.isFolia()) {
-            // ArmorStand removal must run on its owning region thread on Folia.
             as.getScheduler().run(plugin, ctx -> { try { as.remove(); } catch (Throwable ignored) {} }, null);
         } else {
             try { as.remove(); } catch (Throwable ignored) {}

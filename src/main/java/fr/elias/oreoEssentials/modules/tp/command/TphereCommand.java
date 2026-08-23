@@ -5,6 +5,7 @@ import fr.elias.oreoEssentials.commands.OreoCommand;
 import fr.elias.oreoEssentials.util.Lang;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -19,9 +20,7 @@ public class TphereCommand implements OreoCommand, org.bukkit.command.TabComplet
 
     private final OreoEssentials plugin;
 
-    public TphereCommand(OreoEssentials plugin) {
-        this.plugin = plugin;
-    }
+    public TphereCommand(OreoEssentials plugin) { this.plugin = plugin; }
 
     @Override public String name() { return "tphere"; }
     @Override public List<String> aliases() { return List.of(); }
@@ -32,83 +31,62 @@ public class TphereCommand implements OreoCommand, org.bukkit.command.TabComplet
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         Player self = (Player) sender;
-
         if (args.length < 1) {
-            Lang.send(self, "admin.tphere.usage",
-                    "<yellow>Usage: /%label% <player></yellow>",
-                    Map.of("label", label));
+            Lang.send(self, "admin.tphere.usage", "<yellow>Usage: /%label% <player></yellow>", Map.of("label", label));
             return true;
         }
 
         Player target = Bukkit.getPlayerExact(args[0]);
         if (target == null) {
-            Lang.send(self, "admin.tphere.not-found",
-                    "<red>Player not found: <yellow>%target%</yellow>.</red>",
-                    Map.of("target", args[0]));
+            Lang.send(self, "admin.tphere.not-found", "<red>Player not found: <yellow>%target%</yellow>.</red>", Map.of("target", args[0]));
             return true;
         }
 
-        final Player finalTarget = target;
-        final Player finalSelf = self;
-        OreScheduler.runForEntity(plugin, target, () -> {
-            if (OreScheduler.isFolia()) {
-                finalTarget.teleportAsync(finalSelf.getLocation());
-            } else {
-                finalTarget.teleport(finalSelf.getLocation());
-            }
+        OreScheduler.runForEntity(plugin, self, () -> {
+            if (!self.isOnline()) return;
+            final Location destination = self.getLocation().clone();
+            final String selfName = self.getName();
+            final String targetName = target.getName();
 
-            Lang.send(finalSelf, "admin.tphere.brought",
-                    "<green>Brought <aqua>%target%</aqua> to you.</green>",
-                    Map.of("target", finalTarget.getName()));
-
-            if (!finalTarget.equals(finalSelf)) {
-                Lang.send(finalTarget, "admin.tphere.notice",
-                        "<yellow>You were teleported to <aqua>%player%</aqua>.</yellow>",
-                        Map.of("player", finalSelf.getName()));
-            }
+            OreScheduler.runForEntity(plugin, target, () -> {
+                if (!target.isOnline()) return;
+                if (OreScheduler.isFolia()) {
+                    target.teleportAsync(destination).whenComplete((ok, err) -> {
+                        OreScheduler.runForEntity(plugin, self, () -> {
+                            if (err == null && Boolean.TRUE.equals(ok)) {
+                                Lang.send(self, "admin.tphere.brought", "<green>Brought <aqua>%target%</aqua> to you.</green>", Map.of("target", targetName));
+                            } else {
+                                Lang.send(self, "admin.tphere.failed", "<red>Teleport failed.</red>");
+                            }
+                        });
+                        if (!target.equals(self) && err == null && Boolean.TRUE.equals(ok)) {
+                            OreScheduler.runForEntity(plugin, target, () -> Lang.send(target, "admin.tphere.notice", "<yellow>You were teleported to <aqua>%player%</aqua>.</yellow>", Map.of("player", selfName)));
+                        }
+                    });
+                } else {
+                    boolean ok = target.teleport(destination);
+                    if (ok) {
+                        Lang.send(self, "admin.tphere.brought", "<green>Brought <aqua>%target%</aqua> to you.</green>", Map.of("target", targetName));
+                        if (!target.equals(self)) Lang.send(target, "admin.tphere.notice", "<yellow>You were teleported to <aqua>%player%</aqua>.</yellow>", Map.of("player", selfName));
+                    } else {
+                        Lang.send(self, "admin.tphere.failed", "<red>Teleport failed.</red>");
+                    }
+                }
+            });
         });
-
         return true;
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender,
-                                      org.bukkit.command.Command cmd,
-                                      String alias,
-                                      String[] args) {
-        if (args.length != 1) {
-            return List.of();
-        }
-
-        final String partial = args[0];
-        final String want = partial.toLowerCase(Locale.ROOT);
-
-        // Sorted, case-insensitive
+    public List<String> onTabComplete(CommandSender sender, org.bukkit.command.Command cmd, String alias, String[] args) {
+        if (args.length != 1) return List.of();
+        String want = args[0].toLowerCase(Locale.ROOT);
         Set<String> out = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-
-        // 1) Local online players
         for (Player p : Bukkit.getOnlinePlayers()) {
             String n = p.getName();
-            if (n != null && n.toLowerCase(Locale.ROOT).startsWith(want)) {
-                out.add(n);
-            }
+            if (n != null && n.toLowerCase(Locale.ROOT).startsWith(want)) out.add(n);
         }
-
-        // 2) Network-wide suggestions (if directory available)
-        var dir = plugin.getPlayerDirectory();
-        if (dir != null) {
-            try {
-                var names = dir.suggestOnlineNames(want, 50);
-                if (names != null) {
-                    for (String n : names) {
-                        if (n != null && n.toLowerCase(Locale.ROOT).startsWith(want)) {
-                            out.add(n);
-                        }
-                    }
-                }
-            } catch (Throwable ignored) {}
-        }
-
+        // Deliberately do not query PlayerDirectory/MongoDB from tab completion.
         return out.stream().limit(50).collect(Collectors.toList());
     }
 }
