@@ -18,26 +18,13 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Handles incoming PortalTeleportPacket messages and pending cross-server teleports.
- *
- * Flow:
- *  1. Server A detects player in cross-server portal
- *  2. Server A sends PortalTeleportPacket(playerId, destWorld, x/y/z/yaw/pitch) → Server B
- *  3. Server A sends BungeeCord "Connect" plugin message to transfer the player to Server B
- *  4. This broker on Server B receives the packet and stores a pending teleport
- *  5. On PlayerJoinEvent, the pending teleport is executed
- */
 public final class PortalsCrossServerBroker implements Listener {
 
-    /** playerId → pending teleport info */
     private final ConcurrentHashMap<UUID, PendingTeleport> pending = new ConcurrentHashMap<>();
-    /** requestId dedup — prevents double-teleports on redelivery */
     private final ConcurrentHashMap<UUID, String> lastRequestId = new ConcurrentHashMap<>();
-
     private final OreoEssentials plugin;
 
-    private static final record PendingTeleport(
+    private record PendingTeleport(
             String worldName, double x, double y, double z,
             float yaw, float pitch, boolean keepYawPitch, String requestId) {}
 
@@ -48,20 +35,27 @@ public final class PortalsCrossServerBroker implements Listener {
         pm.subscribe(PortalTeleportPacket.class, (channel, pkt) -> {
             if (pkt.getPlayerId() == null) return;
 
-            // Dedup
             String last = lastRequestId.get(pkt.getPlayerId());
             if (pkt.getRequestId() != null && pkt.getRequestId().equals(last)) return;
             lastRequestId.put(pkt.getPlayerId(), pkt.getRequestId());
 
+            PendingTeleport pt = new PendingTeleport(
+                    pkt.getWorldName(), pkt.getX(), pkt.getY(), pkt.getZ(),
+                    pkt.getYaw(), pkt.getPitch(), pkt.isKeepYawPitch(), pkt.getRequestId());
+
             Player online = Bukkit.getPlayer(pkt.getPlayerId());
-            if (online != null && online.isOnline()) {
-                applyTeleport(online, pkt.getWorldName(), pkt.getX(), pkt.getY(), pkt.getZ(),
-                        pkt.getYaw(), pkt.getPitch(), pkt.isKeepYawPitch());
-            } else {
-                pending.put(pkt.getPlayerId(), new PendingTeleport(
-                        pkt.getWorldName(), pkt.getX(), pkt.getY(), pkt.getZ(),
-                        pkt.getYaw(), pkt.getPitch(), pkt.isKeepYawPitch(), pkt.getRequestId()));
+            if (online == null) {
+                pending.put(pkt.getPlayerId(), pt);
+                return;
             }
+
+            OreScheduler.runForEntity(plugin, online, () -> {
+                if (!online.isOnline()) {
+                    pending.put(pkt.getPlayerId(), pt);
+                    return;
+                }
+                applyTeleportOnEntityThread(online, pt);
+            });
         });
     }
 
@@ -71,50 +65,33 @@ public final class PortalsCrossServerBroker implements Listener {
         PendingTeleport pt = pending.remove(p.getUniqueId());
         if (pt == null) return;
 
-        // Try at 1, 5, 20 ticks to catch slow world loads.
-        // AtomicBoolean ensures only the FIRST successful attempt fires — prevents triple-teleport.
         AtomicBoolean done = new AtomicBoolean(false);
-        long[] delays = {1L, 5L, 20L};
-        for (long delay : delays) {
-            OreScheduler.runLater(plugin, () -> {
+        for (long delay : new long[]{1L, 5L, 20L}) {
+            OreScheduler.runLaterForEntity(plugin, p, () -> {
                 if (!p.isOnline() || done.get()) return;
-                // Only proceed once the destination world is actually loaded
-                if (Bukkit.getWorld(pt.worldName()) == null) return;
-                if (done.compareAndSet(false, true)) {
-                    applyTeleport(p, pt.worldName(), pt.x(), pt.y(), pt.z(),
-                            pt.yaw(), pt.pitch(), pt.keepYawPitch());
-                }
+                World world = Bukkit.getWorld(pt.worldName());
+                if (world == null) return;
+                if (done.compareAndSet(false, true)) applyTeleportOnEntityThread(p, pt);
             }, delay);
         }
     }
 
-    private void applyTeleport(Player p, String worldName, double x, double y, double z,
-                                float yaw, float pitch, boolean keepYawPitch) {
-        World world = Bukkit.getWorld(worldName);
+    private void applyTeleportOnEntityThread(Player p, PendingTeleport pt) {
+        World world = Bukkit.getWorld(pt.worldName());
         if (world == null) {
-            plugin.getLogger().warning("[Portals] Cross-server teleport: world '" + worldName
+            plugin.getLogger().warning("[Portals] Cross-server teleport: world '" + pt.worldName()
                     + "' not found on this server.");
             return;
         }
 
-        float finalYaw   = keepYawPitch ? p.getLocation().getYaw()   : yaw;
-        float finalPitch = keepYawPitch ? p.getLocation().getPitch() : pitch;
-        Location dest = new Location(world, x, y, z, finalYaw, finalPitch);
+        float finalYaw = pt.keepYawPitch() ? p.getLocation().getYaw() : pt.yaw();
+        float finalPitch = pt.keepYawPitch() ? p.getLocation().getPitch() : pt.pitch();
+        Location dest = new Location(world, pt.x(), pt.y(), pt.z(), finalYaw, finalPitch);
 
-        OreScheduler.runForEntity(plugin, p, () -> {
-            if (!p.isOnline()) return;
-            if (OreScheduler.isFolia()) {
-                p.teleportAsync(dest);
-            } else {
-                p.teleport(dest);
-            }
-        });
+        if (OreScheduler.isFolia()) p.teleportAsync(dest);
+        else p.teleport(dest);
     }
 
-    /**
-     * Sends a BungeeCord "Connect" plugin message to transfer a player to another server.
-     * Requires "BungeeCord" channel registered in plugin.yml (bungeecord: true in spigot.yml).
-     */
     public static void connectToServer(OreoEssentials plugin, Player player, String serverName) {
         try {
             ByteArrayOutputStream b = new ByteArrayOutputStream();
@@ -127,23 +104,16 @@ public final class PortalsCrossServerBroker implements Listener {
         }
     }
 
-    /**
-     * Sends a cross-server portal teleport request:
-     *  - Queues the destination teleport on the target server via RabbitMQ
-     *  - Then transfers the player via BungeeCord plugin message
-     */
     public void sendCrossServerPortal(PacketManager pm, Player player,
                                       String destServer, String destWorld,
                                       double x, double y, double z,
                                       float yaw, float pitch, boolean keepYawPitch) {
         PortalTeleportPacket pkt = new PortalTeleportPacket(
                 player.getUniqueId(), destWorld, x, y, z, yaw, pitch, keepYawPitch);
-
-        // Send the destination info to the target server first, then switch the player
         pm.sendPacket(PacketChannels.individual(destServer), pkt);
 
-        // Small delay to give RabbitMQ time to deliver before the player arrives
-        OreScheduler.runLater(plugin, () ->
-                connectToServer(plugin, player, destServer), 3L);
+        OreScheduler.runLaterForEntity(plugin, player, () -> {
+            if (player.isOnline()) connectToServer(plugin, player, destServer);
+        }, 3L);
     }
 }
