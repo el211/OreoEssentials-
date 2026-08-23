@@ -113,10 +113,9 @@ public class TpaCommand implements OreoCommand {
                 D(id, "self target");
                 return true;
             }
+            // TeleportService.request() already sends the requester confirmation
+            // and target notification, so don't duplicate tpa.sent.local here.
             teleportService.request(requester, local);
-            Lang.send(requester, "tpa.sent.local",
-                    "<green>TPA sent to <aqua>%target%</aqua>.</green>",
-                    Map.of("target", local.getName()));
 
             OreoEssentials pluginRef = OreoEssentials.get();
             if (pluginRef.getDialogManager() != null) {
