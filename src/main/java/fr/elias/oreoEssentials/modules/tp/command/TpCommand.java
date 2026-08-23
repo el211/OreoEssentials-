@@ -6,6 +6,7 @@ import fr.elias.oreoEssentials.playerdirectory.PlayerDirectory;
 import fr.elias.oreoEssentials.modules.tp.service.TeleportService;
 import fr.elias.oreoEssentials.modules.tp.rabbit.brokers.TpCrossServerBroker;
 import fr.elias.oreoEssentials.util.Lang;
+import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -34,27 +35,23 @@ public class TpCommand implements OreoCommand {
         if (!(sender instanceof Player admin)) return true;
 
         if (args.length < 1) {
-            Lang.send(admin, "admin.tp.usage",
-                    "<red>Usage: /tp <player></red>");
+            Lang.send(admin, "admin.tp.usage", "<red>Usage: /tp <player></red>");
             return true;
         }
 
         String arg = args[0].trim();
         if (arg.isEmpty()) {
-            Lang.send(admin, "admin.tp.usage",
-                    "<red>Usage: /tp <player></red>");
+            Lang.send(admin, "admin.tp.usage", "<red>Usage: /tp <player></red>");
             return true;
         }
 
         OreoEssentials plugin = OreoEssentials.get();
         String localServer = plugin.getConfigService().serverName();
 
-        // 1) Try local online
         Player localTarget = resolveOnline(arg);
         if (localTarget != null) {
             if (localTarget.equals(admin)) {
-                Lang.send(admin, "admin.tp.self",
-                        "<red>You are already yourself.</red>");
+                Lang.send(admin, "admin.tp.self", "<red>You are already yourself.</red>");
                 return true;
             }
             teleportService.teleportSilently(admin, localTarget);
@@ -64,7 +61,6 @@ public class TpCommand implements OreoCommand {
             return true;
         }
 
-        // 2) Cross-server via PlayerDirectory
         PlayerDirectory dir = plugin.getPlayerDirectory();
         if (dir == null) {
             Lang.send(admin, "admin.tp.not-found-no-directory",
@@ -72,63 +68,67 @@ public class TpCommand implements OreoCommand {
             return true;
         }
 
-        UUID targetUuid = null;
-        try {
-            targetUuid = dir.lookupUuidByName(arg);
-        } catch (Throwable ignored) {}
-
-        if (targetUuid == null) {
+        // PlayerDirectory uses synchronous MongoDB. Resolve presence asynchronously and
+        // return to the admin's entity scheduler before touching Bukkit/player state again.
+        OreScheduler.runAsync(plugin, () -> {
+            UUID targetUuid = null;
+            String presence = null;
+            String targetName = arg;
             try {
-                targetUuid = UUID.fromString(arg);
-            } catch (Exception ignored) {}
-        }
-
-        if (targetUuid == null) {
-            Lang.send(admin, "admin.tp.not-found",
-                    "<red>Player not found online.</red>");
-            return true;
-        }
-
-        String presence = null;
-        try {
-            presence = dir.lookupCurrentServer(targetUuid);
-        } catch (Throwable ignored) {}
-
-        String targetName = safeNameLookup(dir, targetUuid, arg);
-
-        // If directory says: same server -> re-check just in case
-        if (presence != null && presence.equalsIgnoreCase(localServer)) {
-            Player again = Bukkit.getPlayer(targetUuid);
-            if (again != null && again.isOnline()) {
-                if (again.equals(admin)) {
-                    Lang.send(admin, "admin.tp.self",
-                            "<red>You are already yourself.</red>");
-                    return true;
+                targetUuid = dir.lookupUuidByName(arg);
+                if (targetUuid == null) {
+                    try { targetUuid = UUID.fromString(arg); } catch (Exception ignored) {}
                 }
-                teleportService.teleportSilently(admin, again);
-                Lang.send(admin, "admin.tp.teleported",
-                        "<green>Teleported to <aqua>%target%</aqua>.</green>",
-                        Map.of("target", again.getName()));
-                return true;
-            }
-        }
+                if (targetUuid != null) {
+                    presence = dir.lookupCurrentServer(targetUuid);
+                    String resolved = dir.lookupNameByUuid(targetUuid);
+                    if (resolved != null && !resolved.isBlank()) targetName = resolved;
+                }
+            } catch (Throwable ignored) {}
 
-        // 3) Remote server: use TpCrossServerBroker
-        if (presence != null && !presence.isBlank() && !presence.equalsIgnoreCase(localServer)) {
-            TpCrossServerBroker tpBroker = plugin.getTpBroker();
-            if (tpBroker == null) {
-                Lang.send(admin, "admin.tp.no-broker",
-                        "<red>Cross-server teleport broker not available; cannot /tp to other servers.</red>");
-                return true;
-            }
+            final UUID resolvedUuid = targetUuid;
+            final String resolvedPresence = presence;
+            final String resolvedName = targetName;
 
-            tpBroker.requestCrossServerTp(admin, targetUuid, targetName, presence);
-            return true;
-        }
+            OreScheduler.runForEntity(plugin, admin, () -> {
+                if (!admin.isOnline()) return;
 
-        // 4) Unknown presence
-        Lang.send(admin, "admin.tp.not-found",
-                "<red>Player not found online.</red>");
+                if (resolvedUuid == null) {
+                    Lang.send(admin, "admin.tp.not-found", "<red>Player not found online.</red>");
+                    return;
+                }
+
+                if (resolvedPresence != null && resolvedPresence.equalsIgnoreCase(localServer)) {
+                    Player again = Bukkit.getPlayer(resolvedUuid);
+                    if (again != null && again.isOnline()) {
+                        if (again.equals(admin)) {
+                            Lang.send(admin, "admin.tp.self", "<red>You are already yourself.</red>");
+                            return;
+                        }
+                        teleportService.teleportSilently(admin, again);
+                        Lang.send(admin, "admin.tp.teleported",
+                                "<green>Teleported to <aqua>%target%</aqua>.</green>",
+                                Map.of("target", again.getName()));
+                        return;
+                    }
+                }
+
+                if (resolvedPresence != null && !resolvedPresence.isBlank()
+                        && !resolvedPresence.equalsIgnoreCase(localServer)) {
+                    TpCrossServerBroker tpBroker = plugin.getTpBroker();
+                    if (tpBroker == null) {
+                        Lang.send(admin, "admin.tp.no-broker",
+                                "<red>Cross-server teleport broker not available; cannot /tp to other servers.</red>");
+                        return;
+                    }
+                    tpBroker.requestCrossServerTp(admin, resolvedUuid, resolvedName, resolvedPresence);
+                    return;
+                }
+
+                Lang.send(admin, "admin.tp.not-found", "<red>Player not found online.</red>");
+            });
+        });
+
         return true;
     }
 
@@ -148,14 +148,5 @@ public class TpCommand implements OreoCommand {
         } catch (Exception ignored) {}
 
         return null;
-    }
-
-    private String safeNameLookup(PlayerDirectory dir, UUID uuid, String fallback) {
-        try {
-            String n = dir.lookupNameByUuid(uuid);
-            return (n == null || n.isBlank()) ? fallback : n;
-        } catch (Throwable ignored) {
-            return fallback;
-        }
     }
 }
