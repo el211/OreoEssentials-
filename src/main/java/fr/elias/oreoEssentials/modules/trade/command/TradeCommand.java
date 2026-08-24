@@ -5,14 +5,17 @@ import fr.elias.oreoEssentials.modules.trade.service.TradeService;
 import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-public final class TradeCommand implements CommandExecutor {
+public final class TradeCommand implements TabExecutor {
 
     private final OreoEssentials plugin;
     private final TradeService service;
@@ -123,5 +126,29 @@ public final class TradeCommand implements CommandExecutor {
                 "<red>Player not found here.</red> <gray>If this is a cross-server trade, type <aqua>/trade %player%</aqua> on the server where you received the invite.</gray>",
                 Map.of("player", targetName));
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length != 1) return List.of();
+        if (!(sender instanceof Player player)) return List.of();
+        if (!player.hasPermission("oreo.trade")) return List.of();
+
+        String prefix = args[0].toLowerCase(Locale.ROOT);
+        List<String> matches = new ArrayList<>();
+
+        // Keep tab completion fast and Folia-safe: use Bukkit's already-loaded local
+        // player list only. Do not perform synchronous MongoDB queries from tab completion.
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (online.getUniqueId().equals(player.getUniqueId())) continue;
+
+            String name = online.getName();
+            if (name != null && name.toLowerCase(Locale.ROOT).startsWith(prefix)) {
+                matches.add(name);
+            }
+        }
+
+        matches.sort(String.CASE_INSENSITIVE_ORDER);
+        return matches;
     }
 }
