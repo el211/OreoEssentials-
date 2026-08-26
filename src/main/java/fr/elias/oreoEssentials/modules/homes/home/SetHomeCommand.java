@@ -39,7 +39,7 @@ public class SetHomeCommand implements OreoCommand {
         String key = rawName.toLowerCase(Locale.ROOT);
         Location loc = p.getLocation();
 
-        if (loc.getY() < 0) {
+        if (loc.getY() < loc.getWorld().getMinHeight()) {
             Lang.send(p, "sethome.unsafe-void",
                     "<red>You cannot set a home in the void.</red>");
             return true;

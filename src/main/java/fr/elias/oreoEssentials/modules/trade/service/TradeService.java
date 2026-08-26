@@ -489,7 +489,17 @@ public final class TradeService implements Listener {
 
         String localServer = plugin.getConfigService().serverName();
         String nodeA = findNodeFor(s.getAId());
-        boolean weAreLeader = localServer != null && localServer.equalsIgnoreCase(nodeA);
+
+        // If the player directory can tell us which server A is on, use it to elect the leader.
+        // If it returns null (directory unavailable, player not yet synced, or single-server setup),
+        // fall back to local presence: this server is the leader only if A is actually here.
+        boolean weAreLeader;
+        if (nodeA == null) {
+            Player localA = Bukkit.getPlayer(s.getAId());
+            weAreLeader = localA != null && localA.isOnline();
+        } else {
+            weAreLeader = localServer != null && localServer.equalsIgnoreCase(nodeA);
+        }
 
         if (!weAreLeader) {
             log("[TRADE] finalizeIfBothReady skipped (we are not leader) sid=" + sid

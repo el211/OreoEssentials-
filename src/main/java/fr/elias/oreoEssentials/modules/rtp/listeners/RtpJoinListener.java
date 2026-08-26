@@ -26,13 +26,7 @@ public class RtpJoinListener implements Listener {
 
             plugin.getLogger().info("[RTP] Executing pending RTP for " + p.getName() + " in world=" + worldName);
 
-            boolean ok = RtpCommand.doLocalRtp(plugin, p, worldName);
-            if (!ok) {
-                plugin.getLogger().warning("[RTP] Failed to perform pending RTP for " + p.getName() + " in world=" + worldName);
-                return;
-            }
-
-            RtpCommand.applyCooldownNow(plugin, p);
+            RtpCommand.doLocalRtp(plugin, p, worldName, true);
         }, 1L);
     }
 }

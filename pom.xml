@@ -6,7 +6,7 @@
 
     <groupId>fr.elias</groupId>
     <artifactId>OreoEssentials</artifactId>
-    <version>6.4b</version>
+    <version>6.4d</version>
     <packaging>jar</packaging>
 
     <name>OreoEssentials</name>

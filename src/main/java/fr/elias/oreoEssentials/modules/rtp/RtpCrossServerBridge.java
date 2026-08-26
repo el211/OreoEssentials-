@@ -61,7 +61,7 @@ public final class RtpCrossServerBridge {
                 if (w != null && !w.isBlank()) {
                     plugin.getLogger().info("[RTP-BRIDGE] Player already online, executing pending RTP for "
                             + pp.getName() + " in world=" + w);
-                    RtpCommand.doLocalRtp(plugin, pp, w);
+                    RtpCommand.doLocalRtp(plugin, pp, w, false);
                 }
             }, 1L);
         }

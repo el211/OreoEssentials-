@@ -129,12 +129,7 @@ public class RtpCommand implements OreoCommand {
             return true;
         }
 
-        final Runnable action = () -> {
-            boolean ok = doLocalRtp(plugin, p, targetWorldName);
-            if (ok) {
-                applyCooldownNow(plugin, p); // apply *after* success
-            }
-        };
+        final Runnable action = () -> doLocalRtp(plugin, p, targetWorldName, true);
 
         if (bypass) action.run();
         else startRtpCountdown(plugin, p, seconds, targetWorldName, action);
@@ -217,16 +212,17 @@ public class RtpCommand implements OreoCommand {
     }
 
 
-    public static boolean doLocalRtp(OreoEssentials plugin,
-                                     Player p,
-                                     String targetWorldName) {
+    public static void doLocalRtp(OreoEssentials plugin,
+                                  Player p,
+                                  String targetWorldName,
+                                  boolean applyCooldown) {
 
-        if (p == null || !p.isOnline()) return false;
+        if (p == null || !p.isOnline()) return;
 
         RtpConfig cfg = plugin.getRtpConfig();
         if (cfg == null) {
             Lang.send(p, "rtp.not-configured", "<red>RTP is not properly configured.</red>");
-            return false;
+            return;
         }
 
         World world = Bukkit.getWorld(targetWorldName);
@@ -237,12 +233,12 @@ public class RtpCommand implements OreoCommand {
                     "<red>World <yellow>%world%</yellow> is not loaded.</red>",
                     Map.of("world", targetWorldName)
             );
-            return false;
+            return;
         }
 
         if (!cfg.allowedWorlds().isEmpty() && !cfg.allowedWorlds().contains(world.getName())) {
             Lang.send(p, "rtp.not-allowed-world", "<red>You cannot RTP to this world.</red>");
-            return false;
+            return;
         }
 
         int radius = cfg.radiusFor(p, List.of(world.getName()));
@@ -251,7 +247,9 @@ public class RtpCommand implements OreoCommand {
         if (minRadius < 0) minRadius = 0;
         if (minRadius > radius) minRadius = radius;
 
-        Location center = world.getSpawnLocation();
+        final Location center = world.getSpawnLocation();
+        final int finalRadius = radius;
+        final int finalMinRadius = minRadius;
 
         Lang.send(
                 p,
@@ -263,52 +261,52 @@ public class RtpCommand implements OreoCommand {
                 )
         );
 
-        Location dest = findSafeLocation(world, center, radius, minRadius, cfg);
-        if (dest == null) {
-            Lang.send(p, "rtp.no-safe-spot", "<red>Could not find a safe location. Try again.</red>");
-            return false;
-        }
+        // Run chunk loading and location search off the main thread so the server
+        // does not freeze while distant/ungenerated chunks are being loaded.
+        OreScheduler.runAsync(plugin, () -> {
+            Location dest = findSafeLocationAsync(world, center, finalRadius, finalMinRadius, cfg);
 
-        if (OreScheduler.isFolia()) {
-            p.teleportAsync(dest).thenRun(() -> Lang.send(
-                    p,
-                    "rtp.teleported",
-                    "<green>Teleported to <white>%x%</white>, <white>%y%</white>, <white>%z%</white> in <aqua>%world%</aqua>!</green>",
-                    Map.of(
-                            "x", String.valueOf(dest.getBlockX()),
-                            "y", String.valueOf(dest.getBlockY()),
-                            "z", String.valueOf(dest.getBlockZ()),
-                            "world", world.getName()
-                    )
-            ));
-            return true;
-        }
+            if (!p.isOnline()) return;
 
-        boolean ok = p.teleport(dest);
-        if (ok) {
-            Lang.send(
-                    p,
-                    "rtp.teleported",
-                    "<green>Teleported to <white>%x%</white>, <white>%y%</white>, <white>%z%</white> in <aqua>%world%</aqua>!</green>",
-                    Map.of(
-                            "x", String.valueOf(dest.getBlockX()),
-                            "y", String.valueOf(dest.getBlockY()),
-                            "z", String.valueOf(dest.getBlockZ()),
-                            "world", world.getName()
-                    )
-            );
-        } else {
-            Lang.send(p, "rtp.failed", "<red>Teleport failed. Please try again.</red>");
-        }
-        return ok;
+            if (dest == null) {
+                OreScheduler.runForEntity(plugin, p, () ->
+                        Lang.send(p, "rtp.no-safe-spot", "<red>Could not find a safe location. Try again.</red>"));
+                return;
+            }
+
+            // teleportAsync works on both Paper and Folia and is safe from async context.
+            p.teleportAsync(dest).thenAccept(ok -> {
+                if (!p.isOnline()) return;
+                if (ok) {
+                    if (applyCooldown) applyCooldownNow(plugin, p);
+                    Lang.send(
+                            p,
+                            "rtp.teleported",
+                            "<green>Teleported to <white>%x%</white>, <white>%y%</white>, <white>%z%</white> in <aqua>%world%</aqua>!</green>",
+                            Map.of(
+                                    "x", String.valueOf(dest.getBlockX()),
+                                    "y", String.valueOf(dest.getBlockY()),
+                                    "z", String.valueOf(dest.getBlockZ()),
+                                    "world", world.getName()
+                            )
+                    );
+                } else {
+                    Lang.send(p, "rtp.failed", "<red>Teleport failed. Please try again.</red>");
+                }
+            });
+        });
     }
 
 
-    private static Location findSafeLocation(World world,
-                                             Location center,
-                                             int radius,
-                                             int minRadius,
-                                             RtpConfig cfg) {
+    /**
+     * Finds a safe landing location. Must be called from an async thread.
+     * Uses {@link World#getChunkAtAsync} to load chunks without blocking the main thread.
+     */
+    private static Location findSafeLocationAsync(World world,
+                                                   Location center,
+                                                   int radius,
+                                                   int minRadius,
+                                                   RtpConfig cfg) {
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
 
         int attempts = cfg.attempts();
@@ -327,10 +325,11 @@ public class RtpCommand implements OreoCommand {
             int x = center.getBlockX() + (int) Math.round(Math.cos(angle) * dist);
             int z = center.getBlockZ() + (int) Math.round(Math.sin(angle) * dist);
 
-            // Ensure chunk is loaded
-            Chunk chunk = world.getChunkAt(new Location(world, x, 0, z));
-            if (!chunk.isLoaded()) {
-                chunk.load(true);
+            // Load the chunk asynchronously — blocks this async thread only, not the main thread.
+            try {
+                world.getChunkAtAsync(x >> 4, z >> 4).get();
+            } catch (Exception e) {
+                continue; // chunk load failed; try another location
             }
 
             int top = Math.min(maxY, world.getMaxHeight() - 1);
