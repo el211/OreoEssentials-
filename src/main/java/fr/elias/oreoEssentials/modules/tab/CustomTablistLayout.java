@@ -96,8 +96,6 @@ public class CustomTablistLayout {
     private int cachedFrameAtLastSend = -1;
     private int contentRefreshCounter = 0;
     private volatile boolean entriesDirty = true;
-    private int delistResyncCounter = 0;
-    private static final int DELIST_RESYNC_INTERVAL = 100; // every 5 seconds
     // Viewer batching — spreads per-viewer slot builds across multiple ticks
     private int pendingViewerUpdates = 0;
     private int viewerBatchCursor = 0;
@@ -143,7 +141,6 @@ public class CustomTablistLayout {
         cachedFrameAtLastSend = -1;
         contentRefreshCounter = 0;
         entriesDirty = true;
-        delistResyncCounter = 0;
         pendingViewerUpdates = 0;
         viewerBatchCursor = 0;
         if (packetTablistManager != null) {
@@ -241,15 +238,6 @@ public class CustomTablistLayout {
 
         // ── 3. Nothing pending — nothing to do ───────────────────────────────
         if (pendingViewerUpdates <= 0) return;
-
-        // ── 4. Periodic de-list resync (every 100 ticks) ─────────────────────
-        delistResyncCounter++;
-        if (delistResyncCounter >= DELIST_RESYNC_INTERVAL) {
-            delistResyncCounter = 0;
-            for (Player viewer : players) {
-                packetTablistManager.delistRealPlayers(viewer);
-            }
-        }
 
         boolean twoCol = cfg.getBoolean("tab.two-column-layout.enabled", false);
         int numCols;

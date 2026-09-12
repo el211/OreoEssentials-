@@ -155,17 +155,9 @@ public class PacketTablistManager {
             }
         }
 
-        // Remove slots that disappeared from the layout
-        Set<UUID> gone = new HashSet<>(cache.keySet());
-        gone.removeAll(currentSlotUuids);
-        if (!gone.isEmpty()) {
-            try {
-                PacketEvents.getAPI().getPlayerManager().sendPacket(
-                        viewer, new WrapperPlayServerPlayerInfoRemove(new ArrayList<>(gone)));
-            } catch (Exception ignored) {}
-            gone.forEach(cache::remove);
-        }
-
+        // ADD new/reinit slots BEFORE removing gone ones — this ensures the client
+        // never sees a gap where slots have been removed but replacements haven't
+        // arrived yet, which is the primary cause of visible tab-list flicker.
         if (!toReinit.isEmpty()) {
             try {
                 PacketEvents.getAPI().getPlayerManager().sendPacket(viewer,
@@ -186,6 +178,18 @@ public class PacketTablistManager {
                                 EnumSet.of(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_DISPLAY_NAME),
                                 toUpdateText));
             } catch (Exception ignored) {}
+        }
+
+        // Remove slots that disappeared from the layout — sent last so new slots
+        // are already visible before old ones disappear.
+        Set<UUID> gone = new HashSet<>(cache.keySet());
+        gone.removeAll(currentSlotUuids);
+        if (!gone.isEmpty()) {
+            try {
+                PacketEvents.getAPI().getPlayerManager().sendPacket(
+                        viewer, new WrapperPlayServerPlayerInfoRemove(new ArrayList<>(gone)));
+            } catch (Exception ignored) {}
+            gone.forEach(cache::remove);
         }
     }
 
