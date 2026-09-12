@@ -58,16 +58,15 @@ public class VanishListener implements Listener {
         e.setCancelled(true);
         e.setTarget(null);
 
-        // Always log — but throttle to once per 10 s per player to avoid console spam.
-        long now = System.currentTimeMillis();
-        Long last = lastMobBlockLog.get(player.getUniqueId());
-        if (last == null || now - last >= MOB_BLOCK_LOG_THROTTLE_MS) {
-            lastMobBlockLog.put(player.getUniqueId(), now);
-            plugin.getLogger().warning(
-                "[VANISH] OreoEssentials blocked a " + e.getEntity().getType()
-                + " from targeting " + player.getName()
-                + " — they are in the vanished set (possibly a stuck/persisted vanish state)."
-                + " Run: /vanish off " + player.getName() + "  to fix.");
+        if (plugin.getConfig().getBoolean("debug", false)) {
+            long now = System.currentTimeMillis();
+            Long last = lastMobBlockLog.get(player.getUniqueId());
+            if (last == null || now - last >= MOB_BLOCK_LOG_THROTTLE_MS) {
+                lastMobBlockLog.put(player.getUniqueId(), now);
+                plugin.getLogger().info(
+                    "[VANISH-DEBUG] Blocked " + e.getEntity().getType()
+                    + " from targeting vanished player " + player.getName() + ".");
+            }
         }
     }
 

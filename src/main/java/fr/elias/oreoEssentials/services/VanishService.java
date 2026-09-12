@@ -84,15 +84,16 @@ public class VanishService {
 
         boolean persisted = loadPersistedState(joiner.getUniqueId());
 
-        // Always log vanish state restoration so admins can spot accidental persistent vanish
-        if (persisted) {
-            plugin.getLogger().warning(
-                "[VANISH] Player " + joiner.getName() + " joined with persisted vanish=TRUE."
-                + " To fix one player: /vanish off " + joiner.getName()
-                + "  |  To fix everyone at once: /vanish clearall");
-        } else if (plugin.getConfig().getBoolean("debug", false)) {
-            plugin.getLogger().info(
-                "[VANISH-DEBUG] Player " + joiner.getName() + " joined with persisted vanish=false (normal).");
+        if (plugin.getConfig().getBoolean("debug", false)) {
+            if (persisted) {
+                plugin.getLogger().info(
+                    "[VANISH-DEBUG] Player " + joiner.getName() + " joined with persisted vanish=TRUE."
+                    + " To fix one player: /vanish off " + joiner.getName()
+                    + "  |  To fix everyone at once: /vanish clearall");
+            } else {
+                plugin.getLogger().info(
+                    "[VANISH-DEBUG] Player " + joiner.getName() + " joined with persisted vanish=false (normal).");
+            }
         }
 
         applyStateLocal(joiner.getUniqueId(), persisted, joiner);
