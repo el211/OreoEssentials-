@@ -252,7 +252,19 @@ public class CustomTablistLayout {
         }
 
         boolean twoCol = cfg.getBoolean("tab.two-column-layout.enabled", false);
-        int numCols = twoCol ? Math.max(1, Math.min(3, cfg.getInt("tab.two-column-layout.columns", 2))) : 0;
+        int numCols;
+        if (twoCol) {
+            boolean dynamic = cfg.getBoolean("tab.two-column-layout.dynamic-columns", true);
+            if (dynamic) {
+                int minCols = Math.max(1, cfg.getInt("tab.two-column-layout.min-columns", 1));
+                int maxCols = Math.max(minCols, Math.min(3, cfg.getInt("tab.two-column-layout.max-columns", 3)));
+                numCols = computeDynamicColumns(cfg, cachedSortedEntries, minCols, maxCols);
+            } else {
+                numCols = Math.max(1, Math.min(3, cfg.getInt("tab.two-column-layout.columns", 2)));
+            }
+        } else {
+            numCols = 0;
+        }
 
         // Build header/footer once per tick (shared across all viewers in this batch)
         Component tabHeader = Component.empty();
@@ -535,6 +547,43 @@ public class CustomTablistLayout {
             {"bottom-left", "bottom-right"},
             {"bottom-left", "bottom-center", "bottom-right"}
     };
+
+    /**
+     * Compute how many columns are needed to fit all players, starting from minCols
+     * and growing up to maxCols as the server fills up.
+     *
+     * Each column has COL_ROWS (20) rows. The decoration rows (top/bottom sections)
+     * are estimated from the left column's section line count, leaving the rest for players.
+     *
+     * Example with 2 top rows + 2 bottom rows → 16 player rows per column:
+     *   0–16  players → 1 column
+     *   17–32 players → 2 columns
+     *   33–48 players → 3 columns
+     */
+    private int computeDynamicColumns(FileConfiguration cfg,
+                                      List<PlayerTabEntry> sortedEntries,
+                                      int minCols, int maxCols) {
+        // Count decoration rows in the left column without applying placeholders —
+        // we only need the line count, not the content.
+        int topRows = countSectionLines(cfg, "tab.two-column-layout.top-left.texts");
+        int botRows = countSectionLines(cfg, "tab.two-column-layout.bottom-left.texts");
+        topRows = Math.min(topRows, COL_ROWS - 2);
+        botRows = Math.min(botRows, COL_ROWS - topRows);
+        int playerRowsPerCol = Math.max(1, COL_ROWS - topRows - botRows);
+
+        int playerCount = sortedEntries.size();
+        int needed = playerCount == 0 ? minCols
+                : (int) Math.ceil((double) playerCount / playerRowsPerCol);
+        return Math.max(minCols, Math.min(maxCols, needed));
+    }
+
+    /** Count the number of lines in the current animated frame of a section (no placeholder resolution). */
+    private int countSectionLines(FileConfiguration cfg, String path) {
+        List<String> frames = cfg.getStringList(path);
+        if (frames.isEmpty()) return 0;
+        String frame = frames.get(currentFrame % Math.max(1, frames.size()));
+        return frame.split("\n", -1).length;
+    }
 
     /**
      * Build exactly {@code numCols × 20} tab slots.

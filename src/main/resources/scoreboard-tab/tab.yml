@@ -17,9 +17,21 @@ tab:
   two-column-layout:
     enabled: true
 
-    # ── Number of columns ────────────────────────────────────────────────────
+    # ── Dynamic column expansion ─────────────────────────────────────────────
+    # When true, columns grow automatically as players join:
+    #   1 col → fills up → 2 cols → fills up → 3 cols (up to max-columns)
+    # When false, the fixed 'columns' value below is used instead.
+    dynamic-columns: true
+
+    # Minimum columns shown even when the server is empty (default: 1).
+    min-columns: 1
+
+    # Maximum columns allowed — the tab will never grow beyond this (default: 3).
+    max-columns: 3
+
+    # ── Fixed column count (only used when dynamic-columns: false) ───────────
     # 1 → 20 slots  (1 column,  fits ~16 players with 2 top + 2 bottom rows)
-    # 2 → 40 slots  (2 columns, fits ~32 players)   ← default
+    # 2 → 40 slots  (2 columns, fits ~32 players)
     # 3 → 60 slots  (3 columns, fits ~48 players)
     # For 3 columns, add top-center / bottom-center sections below (optional).
     # If more players are online than available slots, the overflow is not shown.
