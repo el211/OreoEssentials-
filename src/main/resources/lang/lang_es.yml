@@ -702,6 +702,8 @@ moderation:
   vanish:
     enabled: "<green>Ahora estás invisible.</green>"
     disabled: "<yellow>Ahora estás visible.</yellow>"
+    fake-quit: "<yellow>%player% ha abandonado el juego</yellow>"
+    fake-join: "<yellow>%player% se ha unido al juego</yellow>"
 
 # ============================================================================
 # CHAT Y MENSAJERÍA
@@ -1390,6 +1392,7 @@ playerinspect:
 enderchest:
   storage:
     opened-cross-server: "<gray>Abriendo tu cofre de ender entre servidores...</gray>"
+    opened: "<gray>Abriendo tu cofre de ender...</gray>"
     save-failed: "<red>Error al guardar tu cofre de ender. Por favor contacta a un administrador.</red>"
 
   gui:

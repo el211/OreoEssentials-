@@ -620,7 +620,11 @@ public class TabListManager {
     private String applyInternalPlaceholders(Player viewer, String input) {
         if (input == null || input.isEmpty()) return input;
 
-        int localOnline = Bukkit.getOnlinePlayers().size();
+        fr.elias.oreoEssentials.services.VanishService vanishSvc = plugin.getVanishService();
+        boolean viewerCanSeeVanished = viewer.hasPermission("oreo.vanish.see");
+        int localOnline = (int) Bukkit.getOnlinePlayers().stream()
+                .filter(op -> viewerCanSeeVanished || vanishSvc == null || !vanishSvc.isVanished(op))
+                .count();
         int networkOnline = localOnline;
         List<String> networkLines = Collections.emptyList();
 

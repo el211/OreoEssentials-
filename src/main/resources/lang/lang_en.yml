@@ -702,6 +702,8 @@ moderation:
   vanish:
     enabled: "<green>You are now vanished.</green>"
     disabled: "<yellow>You are now visible.</yellow>"
+    fake-quit: "<yellow>%player% left the game</yellow>"
+    fake-join: "<yellow>%player% joined the game</yellow>"
 
 # ============================================================================
 # CHAT & MESSAGING
@@ -1436,6 +1438,7 @@ playerinspect:
 enderchest:
   storage:
     opened-cross-server: "<gray>Opening your cross-server ender chest...</gray>"
+    opened: "<gray>Opening your ender chest...</gray>"
     save-failed: "<red>Failed to save your ender chest. Please contact an administrator.</red>"
 
   gui:

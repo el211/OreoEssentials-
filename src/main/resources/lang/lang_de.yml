@@ -701,6 +701,8 @@ moderation:
   vanish:
     enabled: "<green>Du bist jetzt unsichtbar.</green>"
     disabled: "<yellow>Du bist jetzt sichtbar.</yellow>"
+    fake-quit: "<yellow>%player% hat das Spiel verlassen</yellow>"
+    fake-join: "<yellow>%player% hat das Spiel betreten</yellow>"
 
 # ============================================================================
 # CHAT & NACHRICHTEN
@@ -1390,6 +1392,7 @@ playerinspect:
 enderchest:
   storage:
     opened-cross-server: "<gray>Öffne deine server-übergreifende Endertruhe...</gray>"
+    opened: "<gray>Öffne deine Endertruhe...</gray>"
     save-failed: "<red>Fehler beim Speichern deiner Endertruhe. Bitte kontaktiere einen Administrator.</red>"
 
   gui:

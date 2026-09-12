@@ -6,7 +6,7 @@
 
     <groupId>fr.elias</groupId>
     <artifactId>OreoEssentials</artifactId>
-    <version>6.4d</version>
+    <version>6.6</version>
     <packaging>jar</packaging>
 
     <name>OreoEssentials</name>
@@ -238,7 +238,7 @@
         <dependency>
             <groupId>org.bstats</groupId>
             <artifactId>bstats-bukkit</artifactId>
-            <version>3.1.0</version>
+            <version>3.2.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

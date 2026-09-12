@@ -702,6 +702,8 @@ moderation:
   vanish:
     enabled: "<green>透明化しました。</green>"
     disabled: "<yellow>可視化しました。</yellow>"
+    fake-quit: "<yellow>%player% がゲームから退出しました</yellow>"
+    fake-join: "<yellow>%player% がゲームに参加しました</yellow>"
 
 # ============================================================================
 # チャットとメッセージング
@@ -1391,6 +1393,7 @@ playerinspect:
 enderchest:
   storage:
     opened-cross-server: "<gray>クロスサーバーエンダーチェストを開いています...</gray>"
+    opened: "<gray>エンダーチェストを開いています...</gray>"
     save-failed: "<red>エンダーチェストの保存に失敗しました。管理者に連絡してください。</red>"
 
   gui:

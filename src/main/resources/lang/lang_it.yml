@@ -702,6 +702,8 @@ moderation:
   vanish:
     enabled: "<green>Ora sei invisibile.</green>"
     disabled: "<yellow>Ora sei visibile.</yellow>"
+    fake-quit: "<yellow>%player% ha lasciato il gioco</yellow>"
+    fake-join: "<yellow>%player% è entrato nel gioco</yellow>"
 
 # ============================================================================
 # CHAT E MESSAGGISTICA
@@ -1391,6 +1393,7 @@ playerinspect:
 enderchest:
   storage:
     opened-cross-server: "<gray>Apertura del tuo baule dell'ender cross-server...</gray>"
+    opened: "<gray>Apertura del tuo baule dell'ender...</gray>"
     save-failed: "<red>Errore nel salvataggio del tuo baule dell'ender. Per favore contatta un amministratore.</red>"
 
   gui:

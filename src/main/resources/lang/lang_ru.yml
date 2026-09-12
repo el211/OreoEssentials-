@@ -702,6 +702,8 @@ moderation:
   vanish:
     enabled: "<green>Вы теперь невидимы.</green>"
     disabled: "<yellow>Вы теперь видимы.</yellow>"
+    fake-quit: "<yellow>%player% вышел из игры</yellow>"
+    fake-join: "<yellow>%player% вошёл в игру</yellow>"
 
 # ============================================================================
 # ЧАТ И СООБЩЕНИЯ
@@ -1391,6 +1393,7 @@ playerinspect:
 enderchest:
   storage:
     opened-cross-server: "<gray>Открытие вашего кросс-серверного сундука Края...</gray>"
+    opened: "<gray>Открытие вашего сундука Края...</gray>"
     save-failed: "<red>Не удалось сохранить ваш сундук Края. Пожалуйста свяжитесь с администратором.</red>"
 
   gui:

@@ -84,7 +84,33 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
             log.info("[ECSEE] Opening EC for " + targetName + " (" + targetSlots + " slots, " + targetRows + " rows)");
         }
 
-        ItemStack[] contents = EnderChestStorage.clamp(svc.loadFor(targetId, targetRows), targetRows);
+        // If the target player currently has their virtual EC open, read live from that
+        // inventory — items aren't persisted to storage until they close it.
+        // Use color-stripped title comparison: Paper 1.21 may serialize the title
+        // differently from the raw §-coded string, causing a direct equals() to fail.
+        ItemStack[] rawContents;
+        boolean loadedFromLive;
+        Player liveForLoad = Bukkit.getPlayer(targetId);
+        if (liveForLoad != null && liveForLoad.isOnline()
+                && isVirtualEcOpen(liveForLoad)) {
+            rawContents = Arrays.copyOf(
+                    liveForLoad.getOpenInventory().getTopInventory().getContents(), guiSize);
+            // Strip any lock-barrier sentinels so they don't bleed into the admin view
+            for (int i = 0; i < rawContents.length; i++) {
+                if (svc.isLockItem(rawContents[i])) rawContents[i] = null;
+            }
+            loadedFromLive = true;
+        } else {
+            rawContents = svc.loadFor(targetId, targetRows);
+            loadedFromLive = false;
+        }
+        // shouldSaveOnClose: only persist the admin's edits if we loaded real data.
+        // If rawContents == null (no storage entry) AND we didn't load from live,
+        // the admin saw an empty GUI because we had no data — saving would corrupt
+        // items that exist in a live EC we failed to read.
+        final boolean shouldSaveOnClose = loadedFromLive || rawContents != null;
+
+        ItemStack[] contents = EnderChestStorage.clamp(rawContents, targetRows);
         if (contents == null) {
             contents = new ItemStack[guiSize];
         }
@@ -112,30 +138,36 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
 
                 ItemStack[] edited = Arrays.copyOf(gui.getContents(), finalGuiSize);
 
-                svc.saveFor(targetId, finalTargetRows, edited);
+                // Only persist if we loaded real data on open. If we had no stored data
+                // AND no live inventory to read, saving would overwrite items that exist
+                // in a live EC we couldn't access (e.g. title check race).
+                if (shouldSaveOnClose) {
+                    svc.saveFor(targetId, finalTargetRows, edited);
 
-                Player liveNow = Bukkit.getPlayer(targetId);
-                if (liveNow != null && liveNow.isOnline()) {
-                    try {
-                        boolean viewingVirtual =
-                                liveNow.getOpenInventory() != null
-                                        && EnderChestService.TITLE.equals(liveNow.getOpenInventory().getTitle());
-
-                        if (viewingVirtual) {
-                            Inventory targetGui = liveNow.getOpenInventory().getTopInventory();
-                            for (int i = 0; i < Math.min(finalGuiSize, targetGui.getSize()); i++) {
-                                targetGui.setItem(i, edited[i]);
+                    // Push changes to the player's live virtual EC only when we originally
+                    // loaded from that same live inventory — pushing from a stale/storage
+                    // load could overwrite items the player placed after we opened ecsee.
+                    if (loadedFromLive) {
+                        Player liveNow = Bukkit.getPlayer(targetId);
+                        if (liveNow != null && liveNow.isOnline()) {
+                            try {
+                                if (isVirtualEcOpen(liveNow)) {
+                                    Inventory targetGui = liveNow.getOpenInventory().getTopInventory();
+                                    for (int i = 0; i < Math.min(finalGuiSize, targetGui.getSize()); i++) {
+                                        targetGui.setItem(i, edited[i]);
+                                    }
+                                    svc.saveFromInventory(liveNow, targetGui);
+                                    if (debug) log.info("[ECSEE] Updated " + finalTargetName + "'s open EC GUI");
+                                }
+                            } catch (Throwable t) {
+                                log.warning("[ECSEE] Failed to update live EC for " + finalTargetName + ": " + t.getMessage());
                             }
-                            svc.saveFromInventory(liveNow, targetGui);
-                            if (debug) log.info("[ECSEE] Updated " + finalTargetName + "'s open EC GUI");
-                        } else {
-                            ItemStack[] vanillaContents = Arrays.copyOf(edited, Math.min(27, edited.length));
-                            liveNow.getEnderChest().setContents(vanillaContents);
-                            if (debug) log.info("[ECSEE] Updated " + finalTargetName + "'s vanilla EC");
                         }
-                    } catch (Throwable t) {
-                        log.warning("[ECSEE] Failed to update live EC for " + finalTargetName + ": " + t.getMessage());
                     }
+                } else {
+                    if (debug) log.warning("[ECSEE] Skipped save for " + finalTargetName
+                            + " — no data was loaded (live EC unreadable and no storage entry). "
+                            + "Player's items are safe.");
                 }
 
                 if (debug) {
@@ -161,6 +193,22 @@ public class EcSeeCommand implements OreoCommand, TabCompleter {
                 Map.of("player", targetName));
 
         return true;
+    }
+
+    /**
+     * Returns true if the player currently has the plugin's virtual ender chest open.
+     * Uses color-stripped title comparison because Paper 1.21 may serialize the
+     * inventory title differently from the raw §-coded string stored in TITLE.
+     */
+    private static boolean isVirtualEcOpen(Player p) {
+        try {
+            if (p.getOpenInventory() == null) return false;
+            String viewTitle = org.bukkit.ChatColor.stripColor(p.getOpenInventory().getTitle());
+            String ecTitle   = org.bukkit.ChatColor.stripColor(EnderChestService.TITLE);
+            return ecTitle != null && ecTitle.equalsIgnoreCase(viewTitle);
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     private static UUID resolveTargetId(String arg) {

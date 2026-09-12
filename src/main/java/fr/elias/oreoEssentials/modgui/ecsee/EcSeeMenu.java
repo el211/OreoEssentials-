@@ -68,16 +68,17 @@ public class EcSeeMenu implements InventoryProvider {
         for (int i = allowed; i < 54; i++) {
             int row = i / 9;
             int col = i % 9;
-            c.set(row, col, ClickableItem.empty(locked));
+            c.set(row, col, ClickableItem.of(locked, e -> e.setCancelled(true)));
         }
 
         String titleName = Lang.get("modgui.ecsee.title", "&bEditing EnderChest of &e%target%")
                 .replace("%target%", targetName);
 
-        c.set(5, 4, ClickableItem.empty(
+        c.set(5, 4, ClickableItem.of(
                 new ItemBuilder(Material.ENDER_CHEST)
                         .name(titleName)
-                        .build()
+                        .build(),
+                e -> e.setCancelled(true)
         ));
     }
 

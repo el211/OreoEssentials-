@@ -44,17 +44,18 @@ public class EnderChestListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onOpen(InventoryOpenEvent e) {
-        if (!crossServer) return;
         if (!(e.getPlayer() instanceof Player p)) return;
 
+        // Always intercept vanilla ender chest opens and replace with the
+        // plugin's virtual EC — this applies in both single-server and
+        // cross-server modes so players never see the empty vanilla chest.
         if (e.getInventory().getType() == InventoryType.ENDER_CHEST) {
             e.setCancelled(true);
             p.closeInventory();
             service.open(p);
 
-            // Notify player that cross-server storage is being used
-            Lang.send(p, "enderchest.storage.opened-cross-server",
-                    "<gray>Opening your cross-server ender chest...</gray>",
+            Lang.send(p, "enderchest.storage.opened",
+                    "<gray>Opening your ender chest...</gray>",
                     Map.of());
         }
     }

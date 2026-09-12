@@ -702,6 +702,8 @@ moderation:
   vanish:
     enabled: "<green>你现在是隐身的。</green>"
     disabled: "<yellow>你现在是可见的。</yellow>"
+    fake-quit: "<yellow>%player% 离开了游戏</yellow>"
+    fake-join: "<yellow>%player% 加入了游戏</yellow>"
 
 # ============================================================================
 # 聊天和消息
@@ -1390,6 +1392,7 @@ playerinspect:
 enderchest:
   storage:
     opened-cross-server: "<gray>正在打开你的跨服务器末影箱...</gray>"
+    opened: "<gray>正在打开你的末影箱...</gray>"
     save-failed: "<red>保存你的末影箱失败。请联系管理员。</red>"
 
   gui:

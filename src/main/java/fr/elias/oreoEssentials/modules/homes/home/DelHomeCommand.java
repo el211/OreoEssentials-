@@ -6,8 +6,12 @@ import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class DelHomeCommand implements OreoCommand {
     private final HomeService homes;
@@ -21,6 +25,25 @@ public class DelHomeCommand implements OreoCommand {
     @Override public String permission() { return "oreo.delhome"; }
     @Override public String usage() { return "<name>"; }
     @Override public boolean playerOnly() { return true; }
+
+    @Override
+    public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
+        if (!(sender instanceof Player p)) return List.of();
+        if (args.length == 1) {
+            String prefix = args[0].toLowerCase(Locale.ROOT);
+            try {
+                Set<String> h = homes.homes(p.getUniqueId());
+                if (h == null) return List.of();
+                return h.stream()
+                        .filter(n -> n.startsWith(prefix))
+                        .sorted(String.CASE_INSENSITIVE_ORDER)
+                        .collect(Collectors.toList());
+            } catch (Throwable t) {
+                return Collections.emptyList();
+            }
+        }
+        return List.of();
+    }
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {

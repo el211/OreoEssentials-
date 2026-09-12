@@ -702,6 +702,8 @@ moderation:
   vanish:
     enabled: "<green>Je bent nu onzichtbaar.</green>"
     disabled: "<yellow>Je bent nu zichtbaar.</yellow>"
+    fake-quit: "<yellow>%player% heeft het spel verlaten</yellow>"
+    fake-join: "<yellow>%player% heeft het spel betreden</yellow>"
 
 # ============================================================================
 # CHAT & BERICHTEN
@@ -1391,6 +1393,7 @@ playerinspect:
 enderchest:
   storage:
     opened-cross-server: "<gray>Je cross-server ender chest openen...</gray>"
+    opened: "<gray>Je ender chest openen...</gray>"
     save-failed: "<red>Je ender chest opslaan mislukt. Neem contact op met een administrator.</red>"
 
   gui:

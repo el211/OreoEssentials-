@@ -2,6 +2,7 @@ package fr.elias.oreoEssentials.modgui.menu;
 
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modgui.ecsee.EcSeeMenu;
+import fr.elias.oreoEssentials.modgui.homes.AdminHomesGuiProvider;
 import fr.elias.oreoEssentials.modgui.inspect.PlayerInspectMenu;
 import fr.elias.oreoEssentials.modgui.ip.IpAltsMenu;
 import fr.elias.oreoEssentials.modgui.notes.NotesChatListener;
@@ -291,7 +292,7 @@ public class PlayerActionsMenu implements InventoryProvider {
 
     private void setupInformationTracking(Player p, InventoryContents c, String name) {
         setupNotesButton(p, c, name);
-        setupStatsButton(p, c);
+        setupHomesButton(p, c, name);
         setupIpAltsButton(p, c, name);
     }
 
@@ -315,12 +316,14 @@ public class PlayerActionsMenu implements InventoryProvider {
         ));
     }
 
-    private void setupStatsButton(Player p, InventoryContents c) {
-        c.set(4, 4, ClickableItem.empty(
-                new ItemBuilder(Material.BOOK)
-                        .name("&7Stats (placeholder)")
-                        .lore("&7Add your own stats view here")
-                        .build()
+    private void setupHomesButton(Player p, InventoryContents c, String name) {
+        c.set(4, 4, ClickableItem.of(
+                new ItemBuilder(Material.ENDER_PEARL)
+                        .name("&bHomes")
+                        .lore("&7View, teleport to and delete",
+                                "&7" + name + "'s homes.")
+                        .build(),
+                e -> AdminHomesGuiProvider.open(p, plugin, target, name)
         ));
     }
 
