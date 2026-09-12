@@ -5,4 +5,6 @@ import java.util.UUID;
 public interface VanishStateStorage {
     boolean isVanished(UUID playerId) throws Exception;
     void setVanished(UUID playerId, boolean vanished) throws Exception;
+    /** Remove all persisted vanish entries. Used by /vanish clearall. */
+    void clearAll() throws Exception;
 }

@@ -30,6 +30,8 @@ public final class AuctionHouseConfig {
     private double listingFeeFlat;
     private double taxPercent;
 
+    private boolean forceVaultOnly;
+
     private boolean discordEnabled;
     private String discordWebhookUrl;
     private String discordBotName;
@@ -74,6 +76,8 @@ public final class AuctionHouseConfig {
         listingFeeFlat     = cfg.getDouble("fees.listing-flat", 0.0);
         taxPercent         = cfg.getDouble("fees.tax-percent", 0.0);
 
+        forceVaultOnly     = cfg.getBoolean("economy.force_vault_only", false);
+
         discordEnabled     = cfg.getBoolean("discord.enabled", false);
         discordWebhookUrl  = cfg.getString("discord.webhook-url", "");
         discordBotName     = cfg.getString("discord.bot-name", "OreoAuctions");
@@ -91,6 +95,7 @@ public final class AuctionHouseConfig {
 
 
     public boolean   enabled()               { return enabled; }
+    public boolean   forceVaultOnly()        { return forceVaultOnly; }
     public String    storageType()           { return storageType; }
     public String    mongoCollection()       { return mongoCollection; }
     public double    minPrice()              { return minPrice; }

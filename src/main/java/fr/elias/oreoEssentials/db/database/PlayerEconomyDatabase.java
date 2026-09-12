@@ -20,6 +20,12 @@ public interface PlayerEconomyDatabase {
     void populateCache(OfflinePlayerCache cache);
     void clearCache();
     void close();
+    /** Resets every account's balance to 0. */
+    default void resetAll() { throw new UnsupportedOperationException("resetAll not supported by this backend"); }
+
+    /** Sets every account's balance to {@code amount}. */
+    default void setAll(double amount) { throw new UnsupportedOperationException("setAll not supported by this backend"); }
+
     /** Optional: does this backend support leaderboard queries? */
     default boolean supportsLeaderboard() { return false; }
 

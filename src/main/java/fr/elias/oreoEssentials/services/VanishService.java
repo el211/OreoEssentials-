@@ -3,9 +3,11 @@ package fr.elias.oreoEssentials.services;
 import fr.elias.oreoEssentials.OreoEssentials;
 import fr.elias.oreoEssentials.modules.vanish.rabbit.VanishSyncPacket;
 import fr.elias.oreoEssentials.services.vanish.VanishStateStorage;
+import fr.elias.oreoEssentials.util.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +38,32 @@ public class VanishService {
         return playerId != null && vanished.contains(playerId);
     }
 
+    /** Returns a snapshot of the vanished UUID set — for diagnostic/admin use only. */
+    public Set<UUID> getVanishedSnapshot() {
+        return java.util.Collections.unmodifiableSet(vanished);
+    }
+
+    /**
+     * Wipe ALL persisted vanish state from storage and clear in-memory set.
+     * Also un-vanishes every currently online player.
+     * Used by /vanish clearall to recover from mass-contamination of vanish state.
+     */
+    public void clearAllPersisted() {
+        // Un-vanish everyone currently in-memory
+        for (UUID id : new java.util.HashSet<>(vanished)) {
+            Player online = Bukkit.getPlayer(id);
+            if (online != null && online.isOnline()) {
+                show(online);
+            }
+        }
+        vanished.clear();
+        try {
+            storage.clearAll();
+        } catch (Exception e) {
+            plugin.getLogger().warning("[VANISH] Failed to clearAll persisted state: " + e.getMessage());
+        }
+    }
+
     public boolean toggle(Player p) {
         boolean next = !isVanished(p);
         setVanished(p, next);
@@ -55,6 +83,18 @@ public class VanishService {
         if (joiner == null) return;
 
         boolean persisted = loadPersistedState(joiner.getUniqueId());
+
+        // Always log vanish state restoration so admins can spot accidental persistent vanish
+        if (persisted) {
+            plugin.getLogger().warning(
+                "[VANISH] Player " + joiner.getName() + " joined with persisted vanish=TRUE."
+                + " To fix one player: /vanish off " + joiner.getName()
+                + "  |  To fix everyone at once: /vanish clearall");
+        } else if (plugin.getConfig().getBoolean("debug", false)) {
+            plugin.getLogger().info(
+                "[VANISH-DEBUG] Player " + joiner.getName() + " joined with persisted vanish=false (normal).");
+        }
+
         applyStateLocal(joiner.getUniqueId(), persisted, joiner);
 
         // V-2: Only hide vanished players from joiners who cannot see them
@@ -70,10 +110,11 @@ public class VanishService {
 
     public void handleQuit(Player quitter) {
         if (quitter == null) return;
-        if (isVanished(quitter)) {
-            persistState(quitter.getUniqueId(), true);
-        }
-        // V-4: Always remove UUID from in-memory vanished set on quit
+        // V-4: Always remove UUID from in-memory vanished set on quit.
+        // We deliberately do NOT re-persist vanish=true here — vanish state is already
+        // written to storage the moment setVanished() is called. Re-persisting on quit
+        // caused all players to accumulate vanish=true across restarts (especially with
+        // shared MongoDB storage on a network), making mobs unable to target anyone.
         vanished.remove(quitter.getUniqueId());
     }
 
@@ -88,6 +129,16 @@ public class VanishService {
         if (sourceServer != null && sourceServer.equalsIgnoreCase(localServerName)) return;
 
         Player online = Bukkit.getPlayer(playerId);
+
+        // V-6: If the player is currently online on THIS server and the remote packet says
+        // "vanished=true", only honour it when our local persisted state also says vanished.
+        // This prevents a stale RabbitMQ packet (sent before an un-vanish was ACKed) from
+        // re-adding an online player to the vanished set and silently blocking mob targeting.
+        if (vanish && online != null && online.isOnline()) {
+            boolean localState = loadPersistedState(playerId);
+            if (!localState) return; // local authority wins — player is NOT vanished here
+        }
+
         // V-5: Apply cross-server vanish state in memory only — do NOT persist to local YAML
         // (vanish state is authoritative per-server; persisting would cause cross-server desync)
         applyStateLocal(playerId, vanish, online);
@@ -95,33 +146,62 @@ public class VanishService {
 
     private boolean applyStateLocal(UUID playerId, boolean vanish, Player onlinePlayer) {
         boolean changed = vanish ? vanished.add(playerId) : vanished.remove(playerId);
-        if (onlinePlayer != null && onlinePlayer.isOnline()) {
+        // Only call hide/show when the state actually changed — avoids fake join/quit messages
+        // and unnecessary showPlayer() calls on every join for non-vanished players.
+        if (changed && onlinePlayer != null && onlinePlayer.isOnline()) {
             if (vanish) {
                 hide(onlinePlayer);
             } else {
                 show(onlinePlayer);
             }
         }
-        // Refresh custom nametag visibility immediately
+        // Refresh custom nametag visibility immediately — bypass the periodic sweep
+        // so the nametag appears/disappears in the same tick as the vanish toggle.
         fr.elias.oreoEssentials.modules.nametag.PlayerNametagManager nm = plugin.getNametagManager();
-        if (nm != null) nm.markOwnerDirty(playerId);
+        if (nm != null) {
+            if (onlinePlayer != null && onlinePlayer.isOnline()) {
+                nm.refreshOwnerVisibility(onlinePlayer);
+            } else {
+                nm.markOwnerDirty(playerId);
+            }
+        }
         return changed;
     }
 
     private void hide(Player p) {
+        String fakeQuit = Lang.get(
+                "moderation.vanish.fake-quit",
+                "<yellow>%player% left the game</yellow>");
+        boolean sendQuit = !fakeQuit.isBlank();
         for (Player other : Bukkit.getOnlinePlayers()) {
             if (other.equals(p)) continue;
-            // V-2: Hide from tab list for players who cannot see vanished players
             if (!other.hasPermission("oreo.vanish.see")) {
+                // Remove from world view AND tab list
                 other.hidePlayer(plugin, p);
+                // Fake quit message so non-admins think the player disconnected
+                if (sendQuit) {
+                    Lang.send(other, "moderation.vanish.fake-quit",
+                            "<yellow>%player% left the game</yellow>",
+                            Map.of("player", p.getName()));
+                }
             }
         }
     }
 
     private void show(Player p) {
+        String fakeJoin = Lang.get(
+                "moderation.vanish.fake-join",
+                "<yellow>%player% joined the game</yellow>");
+        boolean sendJoin = !fakeJoin.isBlank();
         for (Player other : Bukkit.getOnlinePlayers()) {
             if (other.equals(p)) continue;
             other.showPlayer(plugin, p);
+            // Fake join message only for non-admins — admins already knew the player was there
+            if (!other.hasPermission("oreo.vanish.see") && sendJoin) {
+                Lang.send(other, "moderation.vanish.fake-join",
+                        "<yellow>%player% joined the game</yellow>",
+                        Map.of("player", p.getName()));
+            }
         }
     }
 

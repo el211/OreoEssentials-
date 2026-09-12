@@ -88,20 +88,27 @@ public final class CreateOrderFlow {
                     Map.of("max", String.valueOf(module.getConfig().maxQtyPerOrder()))));
             return true;
         }
-        // Move to step 3 — open currency picker on main thread
+        // Move to step 3 — if force_vault_only, skip the picker and use Vault directly
         final int finalQty = qty;
-        fr.elias.oreoEssentials.util.OreScheduler.run(module.getPlugin(), () -> {
-            if (!p.isOnline()) return;
-            try {
-                module.getPlugin().getLogger().info("[Orders] Opening CurrencyPickerMenu for " + p.getName());
-                CurrencyPickerMenu.getInventory(module, pq.item(), finalQty).open(p);
-                module.getPlugin().getLogger().info("[Orders] CurrencyPickerMenu opened for " + p.getName());
-            } catch (Throwable t) {
-                module.getPlugin().getLogger().severe("[Orders] Failed to open CurrencyPickerMenu for " + p.getName() + ": " + t);
-                t.printStackTrace();
-                p.sendMessage(module.getConfig().msg("create.invalid-qty"));
-            }
-        });
+        if (module.getConfig().forceVaultOnly()) {
+            fr.elias.oreoEssentials.util.OreScheduler.run(module.getPlugin(), () -> {
+                if (!p.isOnline()) return;
+                startPriceInput(module, p, pq.item(), finalQty, null);
+            });
+        } else {
+            fr.elias.oreoEssentials.util.OreScheduler.run(module.getPlugin(), () -> {
+                if (!p.isOnline()) return;
+                try {
+                    module.getPlugin().getLogger().info("[Orders] Opening CurrencyPickerMenu for " + p.getName());
+                    CurrencyPickerMenu.getInventory(module, pq.item(), finalQty).open(p);
+                    module.getPlugin().getLogger().info("[Orders] CurrencyPickerMenu opened for " + p.getName());
+                } catch (Throwable t) {
+                    module.getPlugin().getLogger().severe("[Orders] Failed to open CurrencyPickerMenu for " + p.getName() + ": " + t);
+                    t.printStackTrace();
+                    p.sendMessage(module.getConfig().msg("create.invalid-qty"));
+                }
+            });
+        }
         return true;
     }
 

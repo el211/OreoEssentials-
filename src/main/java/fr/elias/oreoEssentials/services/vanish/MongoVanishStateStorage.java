@@ -36,4 +36,9 @@ public final class MongoVanishStateStorage implements VanishStateStorage {
                 .append("updatedAt", System.currentTimeMillis());
         coll.replaceOne(eq("_id", playerId.toString()), doc, new ReplaceOptions().upsert(true));
     }
+
+    @Override
+    public void clearAll() {
+        coll.deleteMany(new Document());
+    }
 }

@@ -514,6 +514,17 @@ public class PlayerNametagManager implements Listener {
         if (ownerId != null) dirtyOwners.add(ownerId);
     }
 
+    /**
+     * Immediately re-evaluates nametag visibility for all viewers of the given owner.
+     * Call this when the owner's vanish state changes so the nametag is hidden/shown
+     * without waiting for the next periodic update sweep.
+     */
+    public void refreshOwnerVisibility(Player owner) {
+        if (!enabled || owner == null) return;
+        markOwnerDirty(owner.getUniqueId());
+        updateViewersFor(owner);
+    }
+
     private void removeViewerFromAllOwners(Player viewer) {
         if (viewer == null) return;
         UUID viewerId = viewer.getUniqueId();
@@ -531,9 +542,10 @@ public class PlayerNametagManager implements Listener {
         if (!showToSelf && viewer.getUniqueId().equals(owner.getUniqueId())) return false;
         // Respect the owner's own toggle
         if (toggleStore != null && toggleStore.isToggledOff(owner.getUniqueId())) return false;
-        // Hide nametag for vanished players
+        // Hide nametag for vanished players unless the viewer can see vanished players
         fr.elias.oreoEssentials.services.VanishService vanishSvc = plugin.getVanishService();
-        if (vanishSvc != null && vanishSvc.isVanished(owner)) return false;
+        if (vanishSvc != null && vanishSvc.isVanished(owner)
+                && !viewer.hasPermission("oreo.vanish.see")) return false;
         // Hide nametag when the owner is sneaking
         if (owner.isSneaking()) return false;
 
@@ -573,10 +585,35 @@ public class PlayerNametagManager implements Listener {
         }
     }
 
+    // ── Per-viewer personal scoreboards ──────────────────────────────────────
+    //
+    // CRITICAL: We must NOT touch the main scoreboard (Bukkit.getScoreboardManager()
+    // .getMainScoreboard()) for the nametag-hiding team.  Paper 1.21's mob AI goal
+    // NearestAttackableTargetGoal reads team data from the main scoreboard when
+    // deciding whether a player is a "visible" target.  Putting every player on a
+    // team with NAME_TAG_VISIBILITY=NEVER on the main scoreboard causes all hostile
+    // mobs to silently stop targeting players server-wide (the hoglin exception
+    // confirms this: hoglins use a hardcoded AI goal that bypasses the team check).
+    //
+    // Fix: each viewer gets their own dedicated Scoreboard (not the main one).
+    // The oe_nt_hidden team lives only on that private scoreboard, so the main
+    // scoreboard — and mob AI — remain completely unaffected.
+
+    /** Per-viewer private scoreboards that hold the vanilla-name-hiding team. */
+    private final ConcurrentHashMap<UUID, Scoreboard> viewerBoards = new ConcurrentHashMap<>();
+
+    private Scoreboard getOrCreateViewerBoard(Player viewer) {
+        return viewerBoards.computeIfAbsent(viewer.getUniqueId(), k -> {
+            Scoreboard board = Bukkit.getScoreboardManager().getNewScoreboard();
+            viewer.setScoreboard(board);
+            return board;
+        });
+    }
+
     /**
-     * Hide the vanilla player name on the viewer scoreboard so the custom TextDisplay
-     * is the only label rendered. This is a best-effort no-op on scoreboards that
-     * do not support team mutations.
+     * Hide the vanilla player name on the viewer's PRIVATE scoreboard so the
+     * custom TextDisplay is the only label rendered.
+     * Never touches the main scoreboard — mob AI reads from the main scoreboard.
      */
     private void refreshVanillaNameHiding() {
         for (Player viewer : Bukkit.getOnlinePlayers()) {
@@ -595,8 +632,7 @@ public class PlayerNametagManager implements Listener {
     }
 
     private void applyVanillaNameHiding(Player viewer) {
-        Scoreboard board = viewer.getScoreboard();
-        if (board == null) return;
+        Scoreboard board = getOrCreateViewerBoard(viewer);
 
         Team team = ensureVanillaHideTeam(board);
         if (team == null) return;
@@ -648,8 +684,7 @@ public class PlayerNametagManager implements Listener {
     }
 
     private void addVanillaHiddenEntry(Player viewer, String playerName) {
-        Scoreboard board = viewer.getScoreboard();
-        if (board == null) return;
+        Scoreboard board = getOrCreateViewerBoard(viewer);
         Team team = ensureVanillaHideTeam(board);
         if (team == null || team.hasEntry(playerName)) return;
         try {
@@ -658,7 +693,7 @@ public class PlayerNametagManager implements Listener {
     }
 
     private void removeVanillaHiddenEntry(Player viewer, String playerName) {
-        Scoreboard board = viewer.getScoreboard();
+        Scoreboard board = viewerBoards.get(viewer.getUniqueId());
         if (board == null) return;
         Team team;
         try {
@@ -674,14 +709,12 @@ public class PlayerNametagManager implements Listener {
 
     private void restoreVanillaNames() {
         for (Player viewer : Bukkit.getOnlinePlayers()) {
-            Scoreboard board = viewer.getScoreboard();
-            if (board == null) continue;
-
             try {
-                Team team = board.getTeam(VANILLA_HIDE_TEAM);
-                if (team != null) team.unregister();
+                // Restore the main scoreboard so team-hiding is gone
+                viewer.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
             } catch (Throwable ignored) {}
         }
+        viewerBoards.clear();
     }
 
     /** Teleports all nametag entities to follow their owners. */

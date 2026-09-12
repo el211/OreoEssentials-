@@ -92,6 +92,21 @@ public class YamlEconomyService implements EconomyService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public synchronized void resetAll() {
+        setAll(0.0);
+    }
+
+    @Override
+    public synchronized void setAll(double amount) {
+        double clamped = Math.max(0, amount);
+        if (!cfg.isConfigurationSection("balances")) { save(); return; }
+        for (String key : cfg.getConfigurationSection("balances").getKeys(false)) {
+            cfg.set("balances." + key, clamped);
+        }
+        save();
+    }
+
     private String resolveName(UUID uuid) {
         OfflinePlayer p = Bukkit.getOfflinePlayer(uuid);
         String name = p.getName();

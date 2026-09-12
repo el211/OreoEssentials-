@@ -56,6 +56,10 @@ orders:
     # Default currency shown first in the picker (use "vault" for Vault or a currency ID).
     default_currency: "money"
 
+    # Set to true to skip the currency picker entirely and always use Vault money.
+    # Players will never be prompted to choose a currency — orders are always paid with Vault.
+    force_vault_only: false
+
   # ── UI ───────────────────────────────────────────────────────────────────────
   ui:
     # Ticks to wait before refreshing open GUIs after a cross-server event.

@@ -12,6 +12,12 @@ storage:
   mongodb:
     collection: "oreo_auctions"
 
+# ── Economy ──
+economy:
+  # Set to true to skip the currency picker entirely and always use Vault money.
+  # Players will never be prompted to choose a currency when listing an item.
+  force_vault_only: false
+
 # ── Listing Rules ──
 listings:
   min-price: 1.0

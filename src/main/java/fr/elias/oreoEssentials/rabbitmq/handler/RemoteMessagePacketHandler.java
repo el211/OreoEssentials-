@@ -17,8 +17,18 @@ public class RemoteMessagePacketHandler implements PacketSubscriber<SendRemoteMe
         UUID targetId = packet.getTargetId();
         String message = packet.getMessage();
 
-        if (targetId == null || message == null || message.trim().isEmpty()) {
-            Bukkit.getLogger().warning("[OreoEssentials] ⚠ Received invalid SendRemoteMessagePacket: targetId or message is null/empty.");
+        if (message == null || message.trim().isEmpty()) {
+            Bukkit.getLogger().warning("[OreoEssentials] ⚠ Received invalid SendRemoteMessagePacket: message is null/empty.");
+            return;
+        }
+
+        // null UUID = broadcast to all online players on this server
+        if (targetId == null) {
+            OreScheduler.run(OreoEssentials.get(), () -> {
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    p.sendMessage(message);
+                }
+            });
             return;
         }
 

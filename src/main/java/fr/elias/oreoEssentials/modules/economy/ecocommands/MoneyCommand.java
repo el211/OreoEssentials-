@@ -38,8 +38,39 @@ public class MoneyCommand implements CommandExecutor, OreoCommand {
         }
 
         if (args.length == 1) {
+            final String sub1 = args[0].toLowerCase(Locale.ROOT);
+
+            // /money resetall
+            if (sub1.equals("resetall")) {
+                if (!sender.hasPermission("oreo.money.resetall")) {
+                    sender.sendMessage(Lang.msg("economy.errors.no-permission", sender instanceof Player ? (Player) sender : null));
+                    return true;
+                }
+                runBulkOperation(sender, 0.0, true);
+                return true;
+            }
+
             showOtherBalance(sender, args[0]);
             return true;
+        }
+
+        if (args.length >= 2) {
+            final String sub = args[0].toLowerCase(Locale.ROOT);
+
+            // /money setall <amount>
+            if (sub.equals("setall") && args.length == 2) {
+                if (!sender.hasPermission("oreo.money.setall")) {
+                    sender.sendMessage(Lang.msg("economy.errors.no-permission", sender instanceof Player ? (Player) sender : null));
+                    return true;
+                }
+                final Double amount = parsePositiveAmount(args[1]);
+                if (amount == null || amount < 0) {
+                    sender.sendMessage(Lang.msg("economy.errors.not-a-number", sender instanceof Player ? (Player) sender : null));
+                    return true;
+                }
+                runBulkOperation(sender, amount, false);
+                return true;
+            }
         }
 
         if (args.length >= 3) {
@@ -138,6 +169,74 @@ public class MoneyCommand implements CommandExecutor, OreoCommand {
 
         sender.sendMessage(Lang.msg("economy.money.usage.view", sender instanceof Player ? (Player) sender : null));
         return true;
+    }
+
+    private void runBulkOperation(CommandSender sender, double amount, boolean isReset) {
+        var eco = plugin.getEcoBootstrap();
+        if (eco == null) {
+            sender.sendMessage(Lang.msg("economy.errors.no-economy", sender instanceof Player ? (Player) sender : null));
+            return;
+        }
+
+        Async.run(() -> {
+            try {
+                if (isReset) {
+                    eco.api().resetAll();
+                } else {
+                    eco.api().setAll(amount);
+                }
+            } catch (UnsupportedOperationException e) {
+                sendSync(sender, "§c[Economy] This economy backend does not support bulk operations.");
+                return;
+            } catch (Throwable t) {
+                sendSync(sender, "§c[Economy] Bulk operation failed: " + t.getMessage());
+                return;
+            }
+
+            String amtStr = isReset ? "0" : fmt(amount);
+
+            // Notify sender
+            String senderMsg = isReset
+                    ? Lang.msg("economy.money.resetall.done", Map.of("currency_symbol", currencySymbol()), sender instanceof Player ? (Player) sender : null)
+                    : Lang.msg("economy.money.setall.done", Map.of("amount_formatted", amtStr, "currency_symbol", currencySymbol()), sender instanceof Player ? (Player) sender : null);
+            if (senderMsg == null || senderMsg.isBlank()) {
+                senderMsg = isReset
+                        ? "§aAll player balances have been reset to 0."
+                        : "§aAll player balances have been set to " + amtStr + ".";
+            }
+            sendSync(sender, senderMsg);
+
+            // Notify all online players on this server
+            String playerMsg = isReset
+                    ? Lang.msg("economy.money.resetall.notify", Map.of("currency_symbol", currencySymbol()), null)
+                    : Lang.msg("economy.money.setall.notify", Map.of("amount_formatted", amtStr, "currency_symbol", currencySymbol()), null);
+            if (playerMsg == null || playerMsg.isBlank()) {
+                playerMsg = isReset
+                        ? "§eYour balance has been reset to 0 by an administrator."
+                        : "§eYour balance has been set to " + amtStr + " by an administrator.";
+            }
+            final String finalPlayerMsg = playerMsg;
+            OreScheduler.run(plugin, () -> {
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    p.sendMessage(finalPlayerMsg);
+                }
+            });
+
+            // Cross-server: broadcast notification to all other servers via RabbitMQ global channel
+            try {
+                var pm = plugin.getPacketManager();
+                if (pm != null && pm.isInitialized()) {
+                    pm.sendPacket(
+                            fr.elias.oreoEssentials.rabbitmq.PacketChannels.GLOBAL,
+                            new fr.elias.oreoEssentials.rabbitmq.packet.impl.SendRemoteMessagePacket(null, finalPlayerMsg)
+                    );
+                }
+            } catch (Throwable t) {
+                if (plugin.getConfig().getBoolean("debug", false)) {
+                    plugin.getLogger().warning("[MONEY][BULK] Cross-server broadcast failed: " + t.getMessage());
+                }
+            }
+        });
     }
 
     private void notifyReceiverCrossServer(UUID targetUuid, String message) {

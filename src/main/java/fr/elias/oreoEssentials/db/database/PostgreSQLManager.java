@@ -203,6 +203,27 @@ public class PostgreSQLManager implements PlayerEconomyDatabase {
         }
     }
 
+    @Override
+    public void resetAll() {
+        setAll(0.0);
+    }
+
+    @Override
+    public void setAll(double amount) {
+        double clamped = Math.max(0, Math.min(amount, MAX_BALANCE));
+        String sql = "UPDATE " + TABLE + " SET balance = ?";
+        OreScheduler.runAsync(plugin, () -> {
+            try (Connection conn = openConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setDouble(1, clamped);
+                ps.executeUpdate();
+                redis.clearCache();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "❌ Error in setAll for PostgreSQL", e);
+            }
+        });
+    }
+
     public void deleteBalance(UUID playerUUID) {
         String query = "DELETE FROM " + TABLE + " WHERE player_uuid = ?";
         OreScheduler.runAsync(plugin, () -> {

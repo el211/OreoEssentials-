@@ -69,6 +69,16 @@ public class MongoEconomyService implements EconomyService {
     }
 
     @Override
+    public void resetAll() {
+        database.resetAll();
+    }
+
+    @Override
+    public void setAll(double amount) {
+        database.setAll(amount);
+    }
+
+    @Override
     public List<TopEntry> topBalances(int limit) {
         if (!database.supportsLeaderboard()) {
             return List.of();

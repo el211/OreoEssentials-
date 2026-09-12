@@ -46,6 +46,11 @@ public interface EconomyService {
 
     List<TopEntry> topBalances(int limit);
 
+    /** Resets every account to 0. */
+    default void resetAll() { throw new UnsupportedOperationException("resetAll not supported by this backend"); }
+
+    /** Sets every account to the given amount. */
+    default void setAll(double amount) { throw new UnsupportedOperationException("setAll not supported by this backend"); }
 
     record TopEntry(UUID uuid, String name, double balance) {}
 }

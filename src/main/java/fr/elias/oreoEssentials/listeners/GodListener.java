@@ -4,11 +4,13 @@ import fr.elias.oreoEssentials.services.GodService;
 import fr.elias.oreoEssentials.util.OreScheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityAirChangeEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 
 public class GodListener implements Listener {
@@ -16,6 +18,18 @@ public class GodListener implements Listener {
 
     public GodListener(GodService god) {
         this.god = god;
+    }
+
+    // On join: clear any stale invulnerable flag left over from a previous god-mode session.
+    // setInvulnerable() is saved to the player's NBT data, so a server restart loses the
+    // in-memory GodService state while the flag stays true — making mobs unable to target the
+    // player (vanilla: invulnerable entities are excluded from NearestAttackableTargetGoal).
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onJoin(PlayerJoinEvent e) {
+        Player p = e.getPlayer();
+        if (!god.isGod(p.getUniqueId()) && p.isInvulnerable()) {
+            p.setInvulnerable(false);
+        }
     }
 
     @EventHandler

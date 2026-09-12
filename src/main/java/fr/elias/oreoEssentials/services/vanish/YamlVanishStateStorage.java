@@ -36,4 +36,10 @@ public final class YamlVanishStateStorage implements VanishStateStorage {
         }
         cfg.save(file);
     }
+
+    @Override
+    public synchronized void clearAll() throws IOException {
+        cfg.set("players", null);
+        cfg.save(file);
+    }
 }

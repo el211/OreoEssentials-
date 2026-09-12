@@ -1,5 +1,5 @@
 name: OreoEssentials
-version: "6.4d"
+version: "6.6"
 main: fr.elias.oreoEssentials.OreoEssentials
 api-version: "1.21"
 folia-supported: true
@@ -47,6 +47,8 @@ permissions:
       oreo.money.give: true
       oreo.money.take: true
       oreo.money.set: true
+      oreo.money.resetall: true
+      oreo.money.setall: true
       oreo.pay: true
       oreo.cheque.create: true
       oreo.cheque.redeem: true
@@ -58,6 +60,8 @@ permissions:
       oreo.portal: true
       oreo.jumpad: true
       oreo.vanish: true
+      oreo.vanish.admin: true
+      oreo.vanish.see: true
       oreo.homes.other: true
       oreo.ban: true
       oreo.unban: true
@@ -128,6 +132,8 @@ permissions:
       oreo.warnings: true
       oreo.warnings.others: true
       oreo.history: true
+      oreo.walkspeed: true
+      oreo.walkspeed.others: true
 
   # Basics
   oreo.spawn:               { default: true }
@@ -158,6 +164,8 @@ permissions:
   oreo.money.give:          { default: op }
   oreo.money.take:          { default: op }
   oreo.money.set:           { default: op }
+  oreo.money.resetall:      { default: op }
+  oreo.money.setall:        { default: op }
   oreo.pay:                 { default: true }
   oreo.cheque.create:       { default: op }
   oreo.cheque.redeem:       { default: true }
@@ -171,6 +179,8 @@ permissions:
   oreo.portal:              { default: op }
   oreo.jumpad:              { default: op }
   oreo.vanish:              { default: op }
+  oreo.vanish.admin:        { default: op, description: "Vanish/unvanish other players and list who is vanished" }
+  oreo.vanish.see:          { default: op, description: "See vanished players and receive their join/quit messages" }
   oreo.ban:                 { default: op }
   oreo.unban:               { default: op }
   oreo.kick:                { default: op }
@@ -426,8 +436,11 @@ permissions:
     default: true
     description: Allow using /flyspeed on yourself
   oreo.walkspeed:
-    default: true
+    default: op
     description: Allow using /walkspeed on yourself
+  oreo.walkspeed.others:
+    default: op
+    description: Allow using /walkspeed to change another player's walk speed
   oreo.time:
     default: op
     description: Use /oetime
@@ -644,4 +657,8 @@ permissions:
 
   oreo.chat.channel.admin:
     description: Bypass all channel restrictions
+    default: op
+
+  oreo.admin.migrate.cmi:
+    description: Run the CMI → OreoEssentials data migration
     default: op

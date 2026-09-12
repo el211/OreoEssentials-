@@ -15,15 +15,20 @@ import java.util.UUID;
 public final class PlayerSyncListener implements Listener {
     private final PlayerSyncService service;
     private final boolean enabled;
+    private final boolean saveOnQuit;
 
-    public PlayerSyncListener(PlayerSyncService service, boolean enabled) {
+    public PlayerSyncListener(PlayerSyncService service, boolean enabled, boolean saveOnQuit) {
         this.service = service;
         this.enabled = enabled;
+        this.saveOnQuit = saveOnQuit;
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent e) {
         if (!enabled) return;
+        // playersync.save-on-quit: false → lobby/hub servers that should never overwrite
+        // the shared sync storage with empty/hub inventories when players leave.
+        if (!saveOnQuit) return;
 
         final Player quitting = e.getPlayer();
         final UUID uuid = quitting.getUniqueId();

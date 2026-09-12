@@ -93,6 +93,7 @@ import fr.elias.oreoEssentials.modules.currency.storage.JsonCurrencyStorage;
 import fr.elias.oreoEssentials.modules.currency.storage.MongoCurrencyStorage;
 import fr.elias.oreoEssentials.modules.enderchest.EcCommand;
 import fr.elias.oreoEssentials.modules.enderchest.EcSeeCommand;
+import fr.elias.oreoEssentials.migration.cmi.CMIMigrateCommand;
 import fr.elias.oreoEssentials.migration.commands.ZEssentialsHomesImportCommand;
 import fr.elias.oreoEssentials.migration.commands.ZImportCommand;
 import fr.elias.oreoEssentials.migration.essentialsx.command.MigrateEssentialsXCommand;
@@ -1403,9 +1404,12 @@ public final class OreoEssentials extends JavaPlugin {
             getLogger().info("[SYNC] Using local YAML storage.");
         }
 
+        final boolean syncSaveOnQuit = getConfig().getBoolean("playersync.save-on-quit", true);
+        if (!syncSaveOnQuit) getLogger().info("[SYNC] save-on-quit=false — this server will load sync but not save on player quit (lobby/hub mode).");
+
         final var syncPrefsStore    = new fr.elias.oreoEssentials.playersync.PlayerSyncPrefsStore(this);
         final var playerSyncService = new fr.elias.oreoEssentials.playersync.PlayerSyncService(this, invStorage, syncPrefsStore);
-        getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.playersync.PlayerSyncListener(playerSyncService, invSyncEnabled), this);
+        getServer().getPluginManager().registerEvents(new fr.elias.oreoEssentials.playersync.PlayerSyncListener(playerSyncService, invSyncEnabled, syncSaveOnQuit), this);
 
         final fr.elias.oreoEssentials.playersync.PlayerSyncStorage finalInvStorage = invStorage;
         fr.elias.oreoEssentials.services.InventoryService invSvc = new fr.elias.oreoEssentials.services.InventoryService() {
@@ -1785,6 +1789,7 @@ public final class OreoEssentials extends JavaPlugin {
                 .register(new ZEssentialsHomesImportCommand(this, storage, homeDirectory))
                 .register(new ZImportCommand(this, homeDirectory))
                 .register(new MigrateEssentialsXCommand(this, homeDirectory))
+                .register(new CMIMigrateCommand(this, homeDirectory))
                 .register(new MoveCommand(teleportService))
                 .register(new EcoMigrateCommand(this))
                 .register(new fr.elias.oreoEssentials.modules.currency.commands.CurrencyAdminCommand(this));
@@ -2534,7 +2539,7 @@ public final class OreoEssentials extends JavaPlugin {
 
     private void initializeBStats() {
         try {
-            int pluginId = 28852;
+            int pluginId = 33870;
             this.metrics = new Metrics(this, pluginId);
             metrics.addCustomChart(new SimplePie("storage_type", () -> getConfig().getString("essentials.storage", "yaml").toUpperCase()));
             metrics.addCustomChart(new SimplePie("economy_type", () -> economyEnabled ? getConfig().getString("economy.type", "none").toUpperCase() : "Disabled"));

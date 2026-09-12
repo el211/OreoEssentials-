@@ -13,7 +13,7 @@ server:
 # Players can run /weblink in-game to get a one-time login code instead of typing their UUID.
 web-panel:
   enabled: false
-  url: "https://oreostudios.fr"  # URL of your OreoStudios web panel
+  url: "https://api.oreostudios.fr"  # URL of your OreoStudios web panel
   api-key: ""    # Paste the key shown on the panel after registering your server
 
 # ==================== FEATURE TOGGLES =====================
@@ -127,6 +127,10 @@ playersync:
   xp: true
   health: true
   hunger: true
+  # Set to false on lobby/hub servers so they never overwrite the shared sync storage
+  # when players leave. Players will still have sync loaded on join, but quitting lobby
+  # won't wipe their survival inventory. Leave true (default) on all game servers.
+  save-on-quit: true
 
 # AFK system → configured in plugins/OreoEssentials/afk/config.yml
 
@@ -261,6 +265,18 @@ zessentials-migration:
   # zEssentials persists ConfigStorage (which holds all warps) to this JSON file.
   # Relative paths are resolved from the server root directory.
   warp-json-path: "plugins/zEssentials/config_storage.json"
+
+# CMI migration
+# Migrates homes / warps / economy from a live CMI instance into OreoEssentials.
+# CMI must be installed and loaded on the same server.
+# Set enabled: true, run /cmimigrate all, then set back to false.
+cmi-migration:
+  enabled: false
+
+  # What to do when an OreoEssentials record already exists:
+  #   skip      – leave the existing data untouched
+  #   overwrite – replace it with the CMI value
+  on-conflict: "skip"
 
 # EssentialsX migration
 # Set enabled: true, run /migrateessentials, then set back to false.

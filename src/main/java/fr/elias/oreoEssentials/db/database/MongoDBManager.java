@@ -205,6 +205,24 @@ public class MongoDBManager implements PlayerEconomyDatabase {
     }
 
     @Override
+    public void resetAll() {
+        setAll(0.0);
+    }
+
+    @Override
+    public void setAll(double amount) {
+        if (!connected) return;
+        double clamped = clamp(amount, MIN_BALANCE, MAX_BALANCE, ALLOW_NEGATIVE);
+        try {
+            collection.updateMany(new Document(), Updates.set("balance", clamped));
+            localBalanceCache.clear();
+            redis.clearCache();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void populateCache(OfflinePlayerCache cache) {
         if (!connected) return;
         for (Document doc : collection.find()) {

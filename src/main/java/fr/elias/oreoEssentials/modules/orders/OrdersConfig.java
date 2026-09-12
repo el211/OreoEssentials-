@@ -35,6 +35,7 @@ public final class OrdersConfig {
     private boolean allowVault;
     private boolean allowCustomCurrencies;
     private String  defaultCurrency;
+    private boolean forceVaultOnly;
 
     private int liveRefreshDebounceTicks;
 
@@ -89,6 +90,7 @@ public final class OrdersConfig {
         allowVault             = settings.getBoolean("orders.economy.allow_vault", true);
         allowCustomCurrencies  = settings.getBoolean("orders.economy.allow_custom_currencies", true);
         defaultCurrency        = settings.getString("orders.economy.default_currency", "money");
+        forceVaultOnly         = settings.getBoolean("orders.economy.force_vault_only", false);
 
         liveRefreshDebounceTicks = settings.getInt("orders.ui.live_refresh_debounce_ticks", 10);
 
@@ -150,6 +152,7 @@ public final class OrdersConfig {
     public boolean allowVault()                { return allowVault; }
     public boolean allowCustomCurrencies()     { return allowCustomCurrencies; }
     public String  defaultCurrency()           { return defaultCurrency; }
+    public boolean forceVaultOnly()            { return forceVaultOnly; }
     public int     liveRefreshDebounceTicks()  { return liveRefreshDebounceTicks; }
     public boolean feesEnabled()               { return feesEnabled; }
     public double  createFeePercent()          { return createFeePercent; }

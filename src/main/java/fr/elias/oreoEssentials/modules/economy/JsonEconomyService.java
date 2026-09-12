@@ -107,6 +107,19 @@ public class JsonEconomyService implements EconomyService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public synchronized void resetAll() {
+        balances.replaceAll((k, v) -> 0.0);
+        save();
+    }
+
+    @Override
+    public synchronized void setAll(double amount) {
+        double clamped = Math.max(0, amount);
+        balances.replaceAll((k, v) -> clamped);
+        save();
+    }
+
     private String resolveName(UUID uuid) {
         OfflinePlayer p = Bukkit.getOfflinePlayer(uuid);
         String name = p.getName();

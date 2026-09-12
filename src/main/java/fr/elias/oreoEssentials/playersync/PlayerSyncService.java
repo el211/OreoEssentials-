@@ -34,18 +34,17 @@ public final class PlayerSyncService {
             s.inventory = p.getInventory().getContents();
             s.armor     = p.getInventory().getArmorContents();
             s.offhand   = p.getInventory().getItemInOffHand();
-        } else {
-            s.inventory = new ItemStack[0];
-            s.armor     = new ItemStack[0];
-            s.offhand   = null;
         }
+        // When inv sync is disabled, leave s.inventory/armor/offhand as null.
+        // null = "not captured on this server" — applySnapshot will skip the field entirely,
+        // so an inv-disabled server (e.g. lobby) never overwrites items in the shared storage.
 
         if (pr.xp) {
             s.level = Math.max(0, p.getLevel());
             s.exp   = Math.max(0f, Math.min(1f, p.getExp()));
         } else {
-            s.level = 0;
-            s.exp   = 0f;
+            s.level = -1; // sentinel: not captured — applySnapshot will skip XP
+            s.exp   = -1f;
         }
 
         s.health = Math.max(0.0, p.getHealth());
@@ -81,6 +80,7 @@ public final class PlayerSyncService {
             PlayerSyncPrefs pr = prefs.get(p.getUniqueId());
 
             if (pr.inv) {
+                // null means the saving server had inv-sync disabled — skip to avoid wiping items
                 if (s.inventory != null) {
                     ItemStack[] main = EnderChestStorage.clamp(s.inventory, 4);
                     p.getInventory().setContents(main);
@@ -88,10 +88,12 @@ public final class PlayerSyncService {
                 if (s.armor != null) {
                     p.getInventory().setArmorContents(s.armor);
                 }
-                p.getInventory().setItemInOffHand(s.offhand);
+                if (s.offhand != null) {
+                    p.getInventory().setItemInOffHand(s.offhand);
+                }
             }
 
-            if (pr.xp) {
+            if (pr.xp && s.level >= 0) { // level=-1 means not captured on the saving server
                 p.setLevel(Math.max(0, s.level));
                 p.setExp(Math.max(0f, Math.min(1f, s.exp)));
             }

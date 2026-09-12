@@ -3,6 +3,7 @@ package fr.elias.oreoEssentials.modules.auctionhouse.commands;
 import fr.elias.oreoEssentials.modules.auctionhouse.AuctionHouseModule;
 import fr.elias.oreoEssentials.modules.auctionhouse.gui.CurrencyPickerGUI;
 import fr.elias.oreoEssentials.modules.auctionhouse.gui.SellGUI;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -44,9 +45,15 @@ public final class SellCommand implements CommandExecutor {
             catch (NumberFormatException e) { p.sendMessage("§cInvalid duration."); return true; }
         }
 
-        // No price argument → open currency picker; player types price in chat after selecting.
+        // No price argument → open currency picker (or skip it if force_vault_only is enabled).
         if (args.length == 0) {
-            CurrencyPickerGUI.getInventory(module, item, duration).open(p);
+            if (module.getConfig().forceVaultOnly()) {
+                // Skip picker — use Vault directly and prompt for price in chat.
+                module.addPendingSell(p, item, null, duration);
+                p.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Auction House " + ChatColor.DARK_GRAY + "» " + ChatColor.YELLOW + "Type the " + ChatColor.GOLD + "listing price" + ChatColor.YELLOW + " in chat:");
+            } else {
+                CurrencyPickerGUI.getInventory(module, item, duration).open(p);
+            }
             return true;
         }
 
