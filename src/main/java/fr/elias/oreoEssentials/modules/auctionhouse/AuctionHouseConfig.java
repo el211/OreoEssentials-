@@ -76,7 +76,7 @@ public final class AuctionHouseConfig {
         listingFeeFlat     = cfg.getDouble("fees.listing-flat", 0.0);
         taxPercent         = cfg.getDouble("fees.tax-percent", 0.0);
 
-        forceVaultOnly     = cfg.getBoolean("economy.force_vault_only", false);
+        forceVaultOnly     = cfg.getBoolean("economy.force_vault_only", true);
 
         discordEnabled     = cfg.getBoolean("discord.enabled", false);
         discordWebhookUrl  = cfg.getString("discord.webhook-url", "");

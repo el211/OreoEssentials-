@@ -90,7 +90,7 @@ public final class OrdersConfig {
         allowVault             = settings.getBoolean("orders.economy.allow_vault", true);
         allowCustomCurrencies  = settings.getBoolean("orders.economy.allow_custom_currencies", true);
         defaultCurrency        = settings.getString("orders.economy.default_currency", "money");
-        forceVaultOnly         = settings.getBoolean("orders.economy.force_vault_only", false);
+        forceVaultOnly         = settings.getBoolean("orders.economy.force_vault_only", true);
 
         liveRefreshDebounceTicks = settings.getInt("orders.ui.live_refresh_debounce_ticks", 10);
 

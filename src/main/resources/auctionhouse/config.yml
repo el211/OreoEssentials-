@@ -16,7 +16,7 @@ storage:
 economy:
   # Set to true to skip the currency picker entirely and always use Vault money.
   # Players will never be prompted to choose a currency when listing an item.
-  force_vault_only: false
+  force_vault_only: true
 
 # ── Listing Rules ──
 listings:
