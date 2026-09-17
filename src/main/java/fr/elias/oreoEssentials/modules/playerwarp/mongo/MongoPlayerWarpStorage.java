@@ -177,10 +177,10 @@ public class MongoPlayerWarpStorage implements PlayerWarpStorage {
         if (d == null) return null;
 
         String worldName = d.getString(F_WORLD);
+        // World may be null when this warp belongs to a different server — that is fine.
+        // Cross-server teleport uses the directory to route and never checks loc.getWorld().
+        // Local teleport already guards against null world at the call site.
         World world = (worldName == null ? null : Bukkit.getWorld(worldName));
-        if (world == null) {
-            return null;
-        }
 
         double x = num(d, F_X, 0.0);
         double y = num(d, F_Y, 0.0);

@@ -13,7 +13,12 @@ import java.util.stream.Collectors;
 
 public class PlayerWarpTabCompleter implements TabCompleter {
 
+    private static final long CACHE_TTL_MS = 5_000L;
+
     private final PlayerWarpService playerWarpService;
+
+    private List<PlayerWarp> cachedAll = Collections.emptyList();
+    private long cacheTimestamp = 0L;
 
     public PlayerWarpTabCompleter(PlayerWarpService playerWarpService) {
         this.playerWarpService = playerWarpService;
@@ -229,20 +234,23 @@ public class PlayerWarpTabCompleter implements TabCompleter {
 
 
     private List<PlayerWarp> safeListAll() {
-        try {
-            List<PlayerWarp> list = playerWarpService.listAll();
-            return (list != null) ? list : Collections.emptyList();
-        } catch (Throwable t) {
-            return Collections.emptyList();
+        long now = System.currentTimeMillis();
+        if (now - cacheTimestamp > CACHE_TTL_MS) {
+            try {
+                List<PlayerWarp> list = playerWarpService.listAll();
+                cachedAll = (list != null) ? list : Collections.emptyList();
+            } catch (Throwable t) {
+                cachedAll = Collections.emptyList();
+            }
+            cacheTimestamp = now;
         }
+        return cachedAll;
     }
 
     private List<PlayerWarp> safeListOwned(Player player) {
-        try {
-            List<PlayerWarp> list = playerWarpService.listByOwner(player.getUniqueId());
-            return (list != null) ? list : Collections.emptyList();
-        } catch (Throwable t) {
-            return Collections.emptyList();
-        }
+        UUID uuid = player.getUniqueId();
+        return safeListAll().stream()
+                .filter(w -> uuid.equals(w.getOwner()))
+                .collect(Collectors.toList());
     }
 }

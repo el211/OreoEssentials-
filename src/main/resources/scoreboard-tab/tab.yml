@@ -53,39 +53,41 @@ tab:
     # ── Footer — matching border below the list ──────────────────────────────
     footer: '<#9827F5>◀<gradient:#7D2D9D:#F179B5>━━━━━━━━━━━━━━━━━━━</gradient><gold>◈</gold><gradient:#F179B5:#7D2D9D>━━━━━━━━━━━━━━━━━━━</gradient><#9827F5>▶'
 
-    # ── Col1 top: animated player count + separator ───────────────────────────
+    # ── Col1 top: player count + separator
+    # These sections are now sent via sendPlayerListHeaderAndFooter (TAB_LIST packet)
+    # which is safe for animation — it never triggers a tab list re-render on the client.
     top-left:
       texts:
         - |-
           <center><gray>En ligne: <#9827F5>%oe_network_online% <gray>joueur(s)</center>
           <dark_gray>──────────────
         - |-
-          <center><gray>En ligne: <gradient:#9827F5:#F179B5>%oe_network_online% <gray>joueur(s)</center>
+          <center><gray>En ligne: <gradient:#9827F5:#F179B5>%oe_network_online%</gradient> <gray>joueur(s)</center>
           <dark_gray>──────────────
         - |-
           <center><gray>En ligne: <#F179B5>%oe_network_online% <gray>joueur(s)</center>
           <dark_gray>──────────────
         - |-
-          <center><gray>En ligne: <gradient:#F179B5:#9827F5>%oe_network_online% <gray>joueur(s)</center>
+          <center><gray>En ligne: <gradient:#F179B5:#9827F5>%oe_network_online%</gradient> <gray>joueur(s)</center>
           <dark_gray>──────────────
 
-    # ── Col2 top: animated ping + separator ───────────────────────────────────
+    # ── Col2 top: ping + separator
     top-right:
       texts:
         - |-
           <center><gray>Ping: <#9827F5>%player_ping% <gray>ms</center>
           <dark_gray>──────────────
         - |-
-          <center><gray>Ping: <gradient:#9827F5:#F179B5>%player_ping% <gray>ms</center>
+          <center><gray>Ping: <gradient:#9827F5:#F179B5>%player_ping%</gradient> <gray>ms</center>
           <dark_gray>──────────────
         - |-
           <center><gray>Ping: <#F179B5>%player_ping% <gray>ms</center>
           <dark_gray>──────────────
         - |-
-          <center><gray>Ping: <gradient:#F179B5:#9827F5>%player_ping% <gray>ms</center>
+          <center><gray>Ping: <gradient:#F179B5:#9827F5>%player_ping%</gradient> <gray>ms</center>
           <dark_gray>──────────────
 
-    # ── Bottom-left: animated News / Support / Shop ───────────────────────────
+    # ── Bottom-left: animated News / Support / Shop
     bottom-left:
       texts:
         - |-
@@ -101,7 +103,7 @@ tab:
           <dark_gray>──────────────
           <center><gradient:#F179B5:#9827F5>News ◆ Support ◆ Shop</gradient></center>
 
-    # ── Bottom-right: animated URL ────────────────────────────────────────────
+    # ── Bottom-right: animated URL
     bottom-right:
       texts:
         - |-

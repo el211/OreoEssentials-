@@ -7,6 +7,7 @@ import com.github.retrooper.packetevents.protocol.player.User;
 import com.github.retrooper.packetevents.protocol.player.UserProfile;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoRemove;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoUpdate;
+import fr.elias.oreoEssentials.OreoEssentials;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -76,6 +77,14 @@ public class PacketTablistManager {
 
     /** real player UUID → texture value from last render (detects skin changes). */
     private final Map<UUID, String> skinVersionCache = new ConcurrentHashMap<>();
+
+    /**
+     * Last successfully retrieved skin per player.
+     * Falls back to this when PacketEvents temporarily returns NO_SKIN (e.g. version
+     * compat issues in MC 26.2+), preventing the cache from oscillating "" ↔ value
+     * and triggering spurious ADD_PLAYER packets that cause tab flicker.
+     */
+    private final Map<UUID, List<TextureProperty>> lastKnownSkinCache = new ConcurrentHashMap<>();
 
     // ── Public API ────────────────────────────────────────────────────────────
 
@@ -171,11 +180,21 @@ public class PacketTablistManager {
             } catch (Exception ignored) {}
         }
 
+        // Use ADD_PLAYER (full re-add) instead of UPDATE_DISPLAY_NAME for incremental text
+        // changes. UPDATE_DISPLAY_NAME triggers a full list re-sort/re-render on the client
+        // while the tab overlay is open, causing a visible flash on every animation frame
+        // change. ADD_PLAYER for an already-known UUID is treated as an atomic slot replace
+        // and does not trigger the re-render.
         if (!toUpdateText.isEmpty()) {
             try {
                 PacketEvents.getAPI().getPlayerManager().sendPacket(viewer,
                         new WrapperPlayServerPlayerInfoUpdate(
-                                EnumSet.of(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_DISPLAY_NAME),
+                                EnumSet.of(
+                                        WrapperPlayServerPlayerInfoUpdate.Action.ADD_PLAYER,
+                                        WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LISTED,
+                                        WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_DISPLAY_NAME,
+                                        WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LATENCY
+                                ),
                                 toUpdateText));
             } catch (Exception ignored) {}
         }
@@ -194,41 +213,32 @@ public class PacketTablistManager {
     }
 
     /**
-     * Hide all real players from their vanilla tab positions for this viewer.
-     * Must be called before (or alongside) initViewer so real entries don't
-     * bleed through alongside fake ones.
+     * Remove all real players from this viewer's client tab cache entirely.
+     * Using REMOVE_PLAYER (instead of UPDATE_LISTED=false) means the client has
+     * no real entries to fall back to during a Tab key-repeat render reset — the
+     * primary cause of visible tab-list flicker while holding the Tab key.
      */
     public void delistRealPlayers(Player viewer) {
-        List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> infos = new ArrayList<>();
+        List<UUID> uuids = new ArrayList<>();
         for (Player real : Bukkit.getOnlinePlayers()) {
             if (!real.isOnline()) continue;
-            UserProfile profile = getRealProfile(real);
-            infos.add(new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
-                    profile, false, 0, GameMode.SURVIVAL, null, null
-            ));
+            uuids.add(real.getUniqueId());
         }
-        if (!infos.isEmpty()) {
+        if (!uuids.isEmpty()) {
             try {
                 PacketEvents.getAPI().getPlayerManager().sendPacket(viewer,
-                        new WrapperPlayServerPlayerInfoUpdate(
-                                EnumSet.of(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LISTED), infos));
+                        new WrapperPlayServerPlayerInfoRemove(uuids));
             } catch (Exception ignored) {}
         }
     }
 
     /**
-     * De-list a specific real player from all other viewers' vanilla tab.
+     * Remove a specific real player from all other viewers' client tab cache.
      * Call when a new player joins so they don't appear in other viewers' vanilla list.
      */
     public void delistPlayerForAll(Player newPlayer) {
-        UserProfile profile = getRealProfile(newPlayer);
-        List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> infos = List.of(
-                new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
-                        profile, false, 0, GameMode.SURVIVAL, null, null)
-        );
-        WrapperPlayServerPlayerInfoUpdate packet = new WrapperPlayServerPlayerInfoUpdate(
-                EnumSet.of(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LISTED), infos
-        );
+        WrapperPlayServerPlayerInfoRemove packet =
+                new WrapperPlayServerPlayerInfoRemove(List.of(newPlayer.getUniqueId()));
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             if (viewer.equals(newPlayer)) continue;
             if (!viewer.isOnline()) continue;
@@ -245,6 +255,7 @@ public class PacketTablistManager {
     public void removePlayerFakeEntry(Player quitter) {
         UUID fakeUuid = playerFakeUuid(quitter.getUniqueId());
         skinVersionCache.remove(quitter.getUniqueId());
+        lastKnownSkinCache.remove(quitter.getUniqueId());
 
         WrapperPlayServerPlayerInfoRemove removePacket =
                 new WrapperPlayServerPlayerInfoRemove(List.of(fakeUuid));
@@ -258,6 +269,11 @@ public class PacketTablistManager {
         }
     }
 
+    /** Returns true if this viewer has received a full init. */
+    public boolean isInitialized(UUID viewerUuid) {
+        return initializedViewers.contains(viewerUuid);
+    }
+
     /** Clean up all state for a viewer who disconnected. */
     public void cleanupViewer(UUID viewerUuid) {
         viewerTextCache.remove(viewerUuid);
@@ -269,6 +285,7 @@ public class PacketTablistManager {
         viewerTextCache.clear();
         initializedViewers.clear();
         skinVersionCache.clear();
+        lastKnownSkinCache.clear();
     }
 
     // ── Skin helpers ──────────────────────────────────────────────────────────
@@ -278,16 +295,23 @@ public class PacketTablistManager {
      * Returns NO_SKIN if unavailable.
      */
     public List<TextureProperty> getPlayerSkin(Player player) {
+        UUID uuid = player.getUniqueId();
         try {
             User user = PacketEvents.getAPI().getPlayerManager().getUser(player);
-            if (user == null) return NO_SKIN;
-            UserProfile profile = user.getProfile();
-            if (profile == null) return NO_SKIN;
-            List<TextureProperty> props = profile.getTextureProperties();
-            return (props != null && !props.isEmpty()) ? props : NO_SKIN;
-        } catch (Throwable ignored) {
-            return NO_SKIN;
-        }
+            if (user != null) {
+                UserProfile profile = user.getProfile();
+                if (profile != null) {
+                    List<TextureProperty> props = profile.getTextureProperties();
+                    if (props != null && !props.isEmpty()) {
+                        lastKnownSkinCache.put(uuid, props);
+                        return props;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+        // PacketEvents temporarily returned empty skin — fall back to last known value
+        // so skinVersionCache never oscillates "" ↔ value and triggers spurious ADD_PLAYER.
+        return lastKnownSkinCache.getOrDefault(uuid, NO_SKIN);
     }
 
     /**
