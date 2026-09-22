@@ -7,7 +7,6 @@ import com.github.retrooper.packetevents.protocol.player.User;
 import com.github.retrooper.packetevents.protocol.player.UserProfile;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoRemove;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoUpdate;
-import fr.elias.oreoEssentials.OreoEssentials;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -68,9 +67,9 @@ public class PacketTablistManager {
 
     /**
      * viewer UUID → (slotUUID → last text string sent).
-     * Comparing strings is cheaper than Component.equals across many slots.
+     * Each viewer keeps the last successfully sent text, profile and latency.
      */
-    private final Map<UUID, Map<UUID, String>> viewerTextCache = new ConcurrentHashMap<>();
+    private final Map<UUID, Map<UUID, SlotState>> viewerSlotCache = new ConcurrentHashMap<>();
 
     /** Viewers for whom a full ADD_PLAYER init has been sent. */
     private final Set<UUID> initializedViewers = ConcurrentHashMap.newKeySet();
@@ -93,158 +92,141 @@ public class PacketTablistManager {
      * Call once after a viewer joins (or to force re-init).
      */
     public void initViewer(Player viewer, List<TabSlot> slots) {
+        // Re-initializing an active viewer uses the same diff, so repeated calls do
+        // not rebuild profiles that the client already has.
+        if (initializedViewers.contains(viewer.getUniqueId())) {
+            updateViewer(viewer, slots);
+            return;
+        }
         List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> infos = new ArrayList<>(slots.size());
-        Map<UUID, String> textCache = new ConcurrentHashMap<>(slots.size());
-
+        Map<UUID, SlotState> states = new ConcurrentHashMap<>();
         for (TabSlot slot : slots) {
-            UserProfile profile = buildProfile(slot);
-            infos.add(new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
-                    profile, true, slot.latency(), GameMode.SURVIVAL, slot.displayName(), null
-            ));
-            textCache.put(slot.uuid(), miniText(slot.displayName()));
+            infos.add(buildInfo(slot));
+            states.put(slot.uuid(), SlotState.of(slot));
         }
-
-        if (!infos.isEmpty()) {
-            try {
-                WrapperPlayServerPlayerInfoUpdate packet = new WrapperPlayServerPlayerInfoUpdate(
-                        EnumSet.of(
-                                WrapperPlayServerPlayerInfoUpdate.Action.ADD_PLAYER,
-                                WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LISTED,
-                                WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_DISPLAY_NAME,
-                                WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LATENCY
-                        ), infos
-                );
-                PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, packet);
-            } catch (Exception ignored) {}
+        try {
+            sendAdd(viewer, infos);
+            viewerSlotCache.put(viewer.getUniqueId(), states);
+            initializedViewers.add(viewer.getUniqueId());
+        } catch (Exception ignored) {
+            // Leave the viewer uninitialized so the next render retries.
         }
-
-        viewerTextCache.put(viewer.getUniqueId(), textCache);
-        initializedViewers.add(viewer.getUniqueId());
     }
 
-    /**
-     * Incremental update — only sends packets for slots whose text or skin changed.
-     * Falls back to {@link #initViewer} if this viewer hasn't been initialised yet.
-     */
+    /** Send only fields which changed for this viewer's copy of each slot. */
     public void updateViewer(Player viewer, List<TabSlot> slots) {
-        if (!initializedViewers.contains(viewer.getUniqueId())) {
+        UUID viewerId = viewer.getUniqueId();
+        if (!initializedViewers.contains(viewerId)) {
             initViewer(viewer, slots);
             return;
         }
-
-        UUID vid = viewer.getUniqueId();
-        Map<UUID, String> cache = viewerTextCache.computeIfAbsent(vid, k -> new ConcurrentHashMap<>());
-
-        List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> toUpdateText  = new ArrayList<>();
-        List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> toReinit = new ArrayList<>(); // skin changed
-        Set<UUID> currentSlotUuids = new HashSet<>(slots.size());
+        Map<UUID, SlotState> previous = viewerSlotCache.getOrDefault(viewerId, Map.of());
+        Map<UUID, SlotState> next = new ConcurrentHashMap<>();
+        List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> additions = new ArrayList<>();
+        List<UUID> changedProfiles = new ArrayList<>();
+        List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> textUpdates = new ArrayList<>();
+        List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> latencyUpdates = new ArrayList<>();
 
         for (TabSlot slot : slots) {
-            currentSlotUuids.add(slot.uuid());
-            String text = miniText(slot.displayName());
-            String cached = cache.get(slot.uuid());
-
-            if (cached == null) {
-                // New slot that wasn't in the last render — full ADD_PLAYER
-                toReinit.add(new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
-                        buildProfile(slot), true, slot.latency(), GameMode.SURVIVAL, slot.displayName(), null
-                ));
-                cache.put(slot.uuid(), text);
-            } else if (slot.skinChanged()) {
-                // Skin changed — must re-send ADD_PLAYER to push new texture
-                toReinit.add(new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
-                        buildProfile(slot), true, slot.latency(), GameMode.SURVIVAL, slot.displayName(), null
-                ));
-                cache.put(slot.uuid(), text);
-            } else if (!text.equals(cached)) {
-                toUpdateText.add(new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
-                        buildProfile(slot), true, slot.latency(), GameMode.SURVIVAL, slot.displayName(), null
-                ));
-                cache.put(slot.uuid(), text);
+            SlotState state = SlotState.of(slot);
+            SlotState old = previous.get(slot.uuid());
+            next.put(slot.uuid(), state);
+            if (old == null || !state.sameProfile(old)) {
+                // Existing profiles need removal before their new textures can be
+                // installed. This happens only on actual profile changes, never
+                // for animation or ping changes.
+                if (old != null) changedProfiles.add(slot.uuid());
+                additions.add(buildInfo(slot));
+            } else {
+                if (!state.text().equals(old.text())) textUpdates.add(buildInfo(slot));
+                if (state.latency() != old.latency()) latencyUpdates.add(buildInfo(slot));
             }
         }
 
-        // ADD new/reinit slots BEFORE removing gone ones — this ensures the client
-        // never sees a gap where slots have been removed but replacements haven't
-        // arrived yet, which is the primary cause of visible tab-list flicker.
-        if (!toReinit.isEmpty()) {
-            try {
+        Set<UUID> gone = new HashSet<>(previous.keySet());
+        gone.removeAll(next.keySet());
+        // Merge text-only changes into additions so they go via ADD_PLAYER (atomic slot replace).
+        // UPDATE_DISPLAY_NAME triggers a full list re-sort/re-render on the client while the tab
+        // overlay is open, causing a visible flash on every animation frame change. ADD_PLAYER for
+        // an already-known UUID is treated as an atomic slot replace and does not trigger the re-render.
+        additions.addAll(textUpdates);
+        try {
+            if (!changedProfiles.isEmpty()) {
                 PacketEvents.getAPI().getPlayerManager().sendPacket(viewer,
-                        new WrapperPlayServerPlayerInfoUpdate(
-                                EnumSet.of(
-                                        WrapperPlayServerPlayerInfoUpdate.Action.ADD_PLAYER,
-                                        WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LISTED,
-                                        WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_DISPLAY_NAME,
-                                        WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LATENCY
-                                ), toReinit));
-            } catch (Exception ignored) {}
-        }
-
-        // Use ADD_PLAYER (full re-add) instead of UPDATE_DISPLAY_NAME for incremental text
-        // changes. UPDATE_DISPLAY_NAME triggers a full list re-sort/re-render on the client
-        // while the tab overlay is open, causing a visible flash on every animation frame
-        // change. ADD_PLAYER for an already-known UUID is treated as an atomic slot replace
-        // and does not trigger the re-render.
-        if (!toUpdateText.isEmpty()) {
-            try {
+                        new WrapperPlayServerPlayerInfoRemove(changedProfiles));
+            }
+            sendAdd(viewer, additions);
+            sendUpdate(viewer, WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LATENCY, latencyUpdates);
+            if (!gone.isEmpty()) {
                 PacketEvents.getAPI().getPlayerManager().sendPacket(viewer,
-                        new WrapperPlayServerPlayerInfoUpdate(
-                                EnumSet.of(
-                                        WrapperPlayServerPlayerInfoUpdate.Action.ADD_PLAYER,
-                                        WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LISTED,
-                                        WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_DISPLAY_NAME,
-                                        WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LATENCY
-                                ),
-                                toUpdateText));
-            } catch (Exception ignored) {}
-        }
-
-        // Remove slots that disappeared from the layout — sent last so new slots
-        // are already visible before old ones disappear.
-        Set<UUID> gone = new HashSet<>(cache.keySet());
-        gone.removeAll(currentSlotUuids);
-        if (!gone.isEmpty()) {
-            try {
-                PacketEvents.getAPI().getPlayerManager().sendPacket(
-                        viewer, new WrapperPlayServerPlayerInfoRemove(new ArrayList<>(gone)));
-            } catch (Exception ignored) {}
-            gone.forEach(cache::remove);
-        }
+                        new WrapperPlayServerPlayerInfoRemove(new ArrayList<>(gone)));
+            }
+            // Keep snapshots per viewer and slot: a shared skin-change flag is
+            // consumed by the first viewer and misses occupants moving slots.
+            // Commit only after sends succeed, allowing failed updates to retry.
+            viewerSlotCache.put(viewerId, next);
+        } catch (Exception ignored) {}
     }
 
-    /**
-     * Remove all real players from this viewer's client tab cache entirely.
-     * Using REMOVE_PLAYER (instead of UPDATE_LISTED=false) means the client has
-     * no real entries to fall back to during a Tab key-repeat render reset — the
-     * primary cause of visible tab-list flicker while holding the Tab key.
-     */
+    /** Hide real tab rows while retaining profiles used by entities and signed chat. */
     public void delistRealPlayers(Player viewer) {
-        List<UUID> uuids = new ArrayList<>();
+        List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> infos = new ArrayList<>();
         for (Player real : Bukkit.getOnlinePlayers()) {
             if (!real.isOnline()) continue;
-            uuids.add(real.getUniqueId());
+            infos.add(new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
+                    getRealProfile(real), false, 0, GameMode.SURVIVAL, null, null));
         }
-        if (!uuids.isEmpty()) {
+        try {
+            sendUpdate(viewer, WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LISTED, infos);
+        } catch (Exception ignored) {}
+    }
+
+    /** Hide a joining player's real tab row for the other viewers. */
+    public void delistPlayerForAll(Player newPlayer) {
+        List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> infos = List.of(
+                new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
+                        getRealProfile(newPlayer), false, 0, GameMode.SURVIVAL, null, null));
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            if (viewer.equals(newPlayer) || !viewer.isOnline()) continue;
             try {
-                PacketEvents.getAPI().getPlayerManager().sendPacket(viewer,
-                        new WrapperPlayServerPlayerInfoRemove(uuids));
+                sendUpdate(viewer, WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LISTED, infos);
             } catch (Exception ignored) {}
         }
     }
 
-    /**
-     * Remove a specific real player from all other viewers' client tab cache.
-     * Call when a new player joins so they don't appear in other viewers' vanilla list.
-     */
-    public void delistPlayerForAll(Player newPlayer) {
-        WrapperPlayServerPlayerInfoRemove packet =
-                new WrapperPlayServerPlayerInfoRemove(List.of(newPlayer.getUniqueId()));
-        for (Player viewer : Bukkit.getOnlinePlayers()) {
-            if (viewer.equals(newPlayer)) continue;
-            if (!viewer.isOnline()) continue;
-            try {
-                PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, packet);
-            } catch (Exception ignored) {}
+    private static WrapperPlayServerPlayerInfoUpdate.PlayerInfo buildInfo(TabSlot slot) {
+        return new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
+                buildProfile(slot), true, slot.latency(), GameMode.SURVIVAL, slot.displayName(), null);
+    }
+
+    private static void sendAdd(Player viewer, List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> infos) {
+        if (infos.isEmpty()) return;
+        PacketEvents.getAPI().getPlayerManager().sendPacket(viewer,
+                new WrapperPlayServerPlayerInfoUpdate(EnumSet.of(
+                        WrapperPlayServerPlayerInfoUpdate.Action.ADD_PLAYER,
+                        WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LISTED,
+                        WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_DISPLAY_NAME,
+                        WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LATENCY), infos));
+    }
+
+    private static void sendUpdate(Player viewer, WrapperPlayServerPlayerInfoUpdate.Action action,
+                                   List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo> infos) {
+        if (infos.isEmpty()) return;
+        PacketEvents.getAPI().getPlayerManager().sendPacket(viewer,
+                new WrapperPlayServerPlayerInfoUpdate(EnumSet.of(action), infos));
+    }
+
+    private record SkinProperty(String name, String value, String signature) {}
+
+    private record SlotState(String text, String profileName, List<SkinProperty> skin, int latency) {
+        private static SlotState of(TabSlot slot) {
+            List<SkinProperty> properties = slot.skin() == null ? List.of() : slot.skin().stream()
+                    .map(p -> new SkinProperty(p.getName(), p.getValue(), p.getSignature())).toList();
+            return new SlotState(miniText(slot.displayName()), slot.profileName(), properties, slot.latency());
+        }
+
+        private boolean sameProfile(SlotState other) {
+            return Objects.equals(profileName, other.profileName) && skin.equals(other.skin);
         }
     }
 
@@ -264,7 +246,7 @@ public class PacketTablistManager {
             try {
                 PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, removePacket);
             } catch (Exception ignored) {}
-            Map<UUID, String> cache = viewerTextCache.get(viewer.getUniqueId());
+            Map<UUID, SlotState> cache = viewerSlotCache.get(viewer.getUniqueId());
             if (cache != null) cache.remove(fakeUuid);
         }
     }
@@ -276,13 +258,23 @@ public class PacketTablistManager {
 
     /** Clean up all state for a viewer who disconnected. */
     public void cleanupViewer(UUID viewerUuid) {
-        viewerTextCache.remove(viewerUuid);
+        viewerSlotCache.remove(viewerUuid);
         initializedViewers.remove(viewerUuid);
     }
 
     /** Clean up all state (called on plugin disable / tab stop). */
     public void cleanupAll() {
-        viewerTextCache.clear();
+        // Clear owned entries on the client too, otherwise shrinking the layout
+        // during a reload leaves old slots which the fresh cache cannot remove.
+        for (Map.Entry<UUID, Map<UUID, SlotState>> entry : viewerSlotCache.entrySet()) {
+            Player viewer = Bukkit.getPlayer(entry.getKey());
+            if (viewer == null || !viewer.isOnline() || entry.getValue().isEmpty()) continue;
+            try {
+                PacketEvents.getAPI().getPlayerManager().sendPacket(viewer,
+                        new WrapperPlayServerPlayerInfoRemove(new ArrayList<>(entry.getValue().keySet())));
+            } catch (Exception ignored) {}
+        }
+        viewerSlotCache.clear();
         initializedViewers.clear();
         skinVersionCache.clear();
         lastKnownSkinCache.clear();
@@ -359,7 +351,7 @@ public class PacketTablistManager {
      * @param displayName What the viewer sees in the tab row.
      * @param skin        Texture properties (head icon). Use {@link #NO_SKIN} for default.
      * @param latency     Ping bars: 1 = green, ~300 = yellow, ~600 = red, -1 = no bars (X icon on some clients).
-     * @param skinChanged Whether the skin changed since last render (triggers ADD_PLAYER re-send).
+     * @param skinChanged Legacy hint; actual profile changes are compared separately for each viewer.
      */
     public record TabSlot(
             UUID uuid,

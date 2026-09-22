@@ -54,8 +54,7 @@ tab:
     footer: '<#9827F5>◀<gradient:#7D2D9D:#F179B5>━━━━━━━━━━━━━━━━━━━</gradient><gold>◈</gold><gradient:#F179B5:#7D2D9D>━━━━━━━━━━━━━━━━━━━</gradient><#9827F5>▶'
 
     # ── Col1 top: player count + separator
-    # These sections are now sent via sendPlayerListHeaderAndFooter (TAB_LIST packet)
-    # which is safe for animation — it never triggers a tab list re-render on the client.
+    # Animated decoration stays inside its column; only the title/border spans the list.
     top-left:
       texts:
         - |-
